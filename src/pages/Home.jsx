@@ -8,6 +8,7 @@ import Testimonials from "@/components/exmortis/Testimonials";
 import MusicSection from "@/components/exmortis/MusicSection";
 import PodcastSection from "@/components/exmortis/PodcastSection";
 import ContactSection from "@/components/exmortis/ContactSection";
+import ForWhom from "@/components/exmortis/ForWhom";
 import { Image } from "@/components/ui/image";
 
 const HERO_IMG = "https://media.base44.com/images/public/6aa08bc6318b0f886cc3b9a3/b1f31269c_generated_f9afed1e.jpg";
@@ -173,12 +174,15 @@ export default function Home() {
         </div>
       </section>
 
+      {/* ===== DLA KOGO ===== */}
+      <ForWhom />
+
       {/* ===== SKLEP PREVIEW ===== */}
       <section className="relative py-32 px-5 md:px-10 border-t hairline bg-[#070708]">
         <div className="mx-auto max-w-[1400px]">
           <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 mb-16">
             <div>
-              <p className="technical text-[11px] gold-text mb-4">SKARBIEC · 04</p>
+              <p className="technical text-[11px] gold-text mb-4">SKARBIEC · 05</p>
               <h2 className="relic-heading text-4xl md:text-6xl leading-[0.95]">
                 Droga<br />powrotu
               </h2>

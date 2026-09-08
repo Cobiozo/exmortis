@@ -17,7 +17,7 @@ export default function PodcastSection() {
   return (
     <section className="py-32 px-5 md:px-10">
       <div className="mx-auto max-w-[1400px]">
-        <p className="technical text-[11px] gold-text mb-4">GŁOS · 07</p>
+        <p className="technical text-[11px] gold-text mb-4">GŁOS · 08</p>
         <h2 className="relic-heading text-4xl md:text-6xl mb-6 leading-[0.95]">
           Podcast<br /><span className="gold-text">exmortis</span>
         </h2>
