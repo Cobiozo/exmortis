@@ -1,0 +1,77 @@
+{
+  "name": "Product",
+  "type": "object",
+  "properties": {
+    "name": {
+      "type": "string"
+    },
+    "slug": {
+      "type": "string"
+    },
+    "subtitle": {
+      "type": "string"
+    },
+    "description": {
+      "type": "string"
+    },
+    "long_description": {
+      "type": "string"
+    },
+    "price": {
+      "type": "number"
+    },
+    "old_price": {
+      "type": "number"
+    },
+    "category": {
+      "type": "string",
+      "enum": [
+        "ebook",
+        "warsztat",
+        "mentoring",
+        "mastermind",
+        "retreat",
+        "darmowe"
+      ],
+      "default": "ebook"
+    },
+    "image_url": {
+      "type": "string"
+    },
+    "gallery": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "featured": {
+      "type": "boolean",
+      "default": false
+    },
+    "active": {
+      "type": "boolean",
+      "default": true
+    },
+    "details": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "format": {
+      "type": "string"
+    },
+    "duration": {
+      "type": "string"
+    },
+    "spots": {
+      "type": "string"
+    }
+  },
+  "required": [
+    "name",
+    "slug",
+    "price",
+    "category"
+  ]
+}

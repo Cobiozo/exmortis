@@ -6,6 +6,13 @@ import PageNotFound from './lib/PageNotFound';
 import { AuthProvider, useAuth } from '@/lib/AuthContext';
 import UserNotRegisteredError from '@/components/UserNotRegisteredError';
 import ScrollToTop from './components/ScrollToTop';
+import { CartProvider } from '@/components/exmortis/CartContext';
+import Layout from '@/components/exmortis/Layout';
+import Home from '@/pages/Home';
+import About from '@/pages/About';
+import Shop from '@/pages/Shop';
+import ProductDetail from '@/pages/ProductDetail';
+import Checkout from '@/pages/Checkout';
 // Add page imports here
 
 const AuthenticatedApp = () => {
@@ -33,10 +40,18 @@ const AuthenticatedApp = () => {
 
   // Render the main app
   return (
-    <Routes>
-      {/* Add your page Route elements here */}
-      <Route path="*" element={<PageNotFound />} />
-    </Routes>
+    <CartProvider>
+      <Routes>
+        <Route element={<Layout />}>
+          <Route path="/" element={<Home />} />
+          <Route path="/o-mnie" element={<About />} />
+          <Route path="/sklep" element={<Shop />} />
+          <Route path="/produkt/:slug" element={<ProductDetail />} />
+          <Route path="/kasa" element={<Checkout />} />
+        </Route>
+        <Route path="*" element={<PageNotFound />} />
+      </Routes>
+    </CartProvider>
   );
 };
 
