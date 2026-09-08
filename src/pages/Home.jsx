@@ -4,6 +4,10 @@ import { ArrowRight, ArrowDown } from "lucide-react";
 import { base44 } from "@/api/base44Client";
 import Logo from "@/components/exmortis/Logo";
 import ProductCard from "@/components/exmortis/ProductCard";
+import Testimonials from "@/components/exmortis/Testimonials";
+import MusicSection from "@/components/exmortis/MusicSection";
+import PodcastSection from "@/components/exmortis/PodcastSection";
+import ContactSection from "@/components/exmortis/ContactSection";
 import { Image } from "@/components/ui/image";
 
 const HERO_IMG = "https://media.base44.com/images/public/6aa08bc6318b0f886cc3b9a3/b1f31269c_generated_f9afed1e.jpg";
@@ -199,6 +203,18 @@ export default function Home() {
           )}
         </div>
       </section>
+
+      {/* ===== ŚWIADECTWA ===== */}
+      <Testimonials />
+
+      {/* ===== MUZYKA ===== */}
+      <MusicSection />
+
+      {/* ===== PODCAST ===== */}
+      <PodcastSection />
+
+      {/* ===== KONTAKT ===== */}
+      <ContactSection />
 
       {/* ===== CTA — POWRÓT ===== */}
       <section className="relative py-40 px-5 md:px-10 overflow-hidden">

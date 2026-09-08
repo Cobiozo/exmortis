@@ -16,7 +16,7 @@ export default function Footer() {
   };
 
   return (
-    <footer id="kontakt" className="relative bg-[#0A0A0B] border-t hairline overflow-hidden">
+    <footer className="relative bg-[#0A0A0B] border-t hairline overflow-hidden">
       {/* Blood-trail top line */}
       <div className="absolute top-0 left-0 right-0 h-px spine" />
 
