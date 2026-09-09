@@ -5,8 +5,8 @@ import { useCart } from "./CartContext";
 import Logo from "./Logo";
 
 const NAV = [
-  { label: "Powrót", to: "/" },
-  { label: "Manifest", to: "/#manifest" },
+  { label: "Powrót", to: "/powrot" },
+  { label: "Głos", to: "/glos" },
   { label: "O mnie", to: "/o-mnie" },
   { label: "Sklep", to: "/sklep" },
   { label: "Kontakt", to: "/#kontakt" },

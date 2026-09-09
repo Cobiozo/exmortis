@@ -88,8 +88,9 @@ export default function Footer() {
             <p className="technical text-[10px] text-foreground/40 mb-5">Kontakt</p>
             <ul className="space-y-3 text-sm">
               <li><a href="mailto:kontakt@exmortis.pl" className="text-foreground/70 hover:gold-text transition-colors">kontakt@exmortis.pl</a></li>
-              <li><a href="https://instagram.com" target="_blank" rel="noreferrer" className="text-foreground/70 hover:gold-text transition-colors">Instagram</a></li>
-              <li><a href="https://facebook.com" target="_blank" rel="noreferrer" className="text-foreground/70 hover:gold-text transition-colors">Facebook</a></li>
+              <li><a href="https://www.instagram.com/e.x.m.o.r.t.i.s/" target="_blank" rel="noreferrer" className="text-foreground/70 hover:gold-text transition-colors">Instagram</a></li>
+              <li><a href="https://www.facebook.com/dawidkowalczyk.exmortis" target="_blank" rel="noreferrer" className="text-foreground/70 hover:gold-text transition-colors">Facebook</a></li>
+              <li><a href="https://www.youtube.com/@e.x.m.o.r.t.i.s" target="_blank" rel="noreferrer" className="text-foreground/70 hover:gold-text transition-colors">YouTube</a></li>
             </ul>
           </div>
         </div>

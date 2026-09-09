@@ -5,8 +5,6 @@ import { base44 } from "@/api/base44Client";
 import Logo from "@/components/exmortis/Logo";
 import ProductCard from "@/components/exmortis/ProductCard";
 import Testimonials from "@/components/exmortis/Testimonials";
-import MusicSection from "@/components/exmortis/MusicSection";
-import PodcastSection from "@/components/exmortis/PodcastSection";
 import ContactSection from "@/components/exmortis/ContactSection";
 import ForWhom from "@/components/exmortis/ForWhom";
 import PowrotTeaser from "@/components/exmortis/PowrotTeaser";
@@ -70,9 +68,6 @@ export default function Home() {
           <div className="absolute inset-0 bg-gradient-to-b from-[#0A0A0B] via-[#0A0A0B]/60 to-[#0A0A0B]" />
         </div>
 
-        {/* Vertical spine */}
-        <div className="absolute left-1/2 top-0 bottom-0 w-px -translate-x-1/2 spine opacity-40" />
-
         <div className="relative z-10 flex flex-col items-center text-center px-6 max-w-4xl">
           <div className="flicker">
             <Logo className="h-32 w-32 md:h-44 md:w-44 mb-8" />
@@ -90,7 +85,7 @@ export default function Home() {
           </p>
           <div className="mt-12 flex flex-col sm:flex-row gap-4">
             <Link to="/sklep" className="btn-relic">
-              WEJDŹ DO SKLEPU <ArrowRight className="h-4 w-4" />
+              POZNAJ SKARBIEC <ArrowRight className="h-4 w-4" />
             </Link>
             <Link to="/o-mnie" className="btn-ghost">
               KIM JEST EXMORTIS
@@ -214,12 +209,6 @@ export default function Home() {
 
       {/* ===== ŚWIADECTWA ===== */}
       <Testimonials />
-
-      {/* ===== MUZYKA ===== */}
-      <MusicSection />
-
-      {/* ===== PODCAST ===== */}
-      <PodcastSection />
 
       {/* ===== KONTAKT ===== */}
       <ContactSection />

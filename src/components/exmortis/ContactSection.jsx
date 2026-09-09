@@ -4,9 +4,9 @@ import { base44 } from "@/api/base44Client";
 
 // Wklej tu linki do swoich profili
 const SOCIAL_LINKS = [
-  { label: "Instagram", url: "https://instagram.com", icon: Instagram },
-  { label: "Facebook", url: "https://facebook.com", icon: Facebook },
-  { label: "YouTube", url: "https://youtube.com", icon: Youtube },
+  { label: "Instagram", url: "https://www.instagram.com/e.x.m.o.r.t.i.s/", icon: Instagram },
+  { label: "Facebook", url: "https://www.facebook.com/dawidkowalczyk.exmortis", icon: Facebook },
+  { label: "YouTube", url: "https://www.youtube.com/@e.x.m.o.r.t.i.s", icon: Youtube },
 ];
 
 export default function ContactSection() {
@@ -36,7 +36,7 @@ export default function ContactSection() {
       <div className="mx-auto max-w-[1400px] grid md:grid-cols-2 gap-12 md:gap-20">
         {/* Lewa kolumna — kanały kontaktu */}
         <div>
-          <p className="technical text-[11px] gold-text mb-4">KONTAKT · 10</p>
+          <p className="technical text-[11px] gold-text mb-4">KONTAKT · 08</p>
           <h2 className="relic-heading text-4xl md:text-6xl mb-6 leading-[0.95]">
             Napisz.<br /><span className="gold-text">Odpowiadam sam.</span>
           </h2>

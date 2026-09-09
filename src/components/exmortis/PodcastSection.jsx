@@ -1,9 +1,14 @@
 import React from "react";
 import { Podcast, Youtube, ExternalLink } from "lucide-react";
 
-// Wklej linki do swojego podcastu
+// Osadzona playlista podcastu — wklej link, a pojawi się na stronie:
+// Spotify  → https://open.spotify.com/embed/show/<ID>
+// YouTube  → https://www.youtube.com/embed/videoseries?list=<ID>
+const SPOTIFY_EMBED_URL = "";
+const YOUTUBE_EMBED_URL = "";
+
 const PODCAST_SPOTIFY_URL = "https://open.spotify.com/search/exmortis%20podcast";
-const PODCAST_YOUTUBE_URL = "https://www.youtube.com/results?search_query=exmortis+podcast";
+const PODCAST_YOUTUBE_URL = "https://www.youtube.com/@e.x.m.o.r.t.i.s";
 
 // Dodawaj tu odcinki: { title, desc, spotify, youtube }
 const EPISODES = [];
@@ -14,10 +19,12 @@ const CHANNELS = [
 ];
 
 export default function PodcastSection() {
+  const hasEmbed = Boolean(SPOTIFY_EMBED_URL || YOUTUBE_EMBED_URL);
+
   return (
-    <section className="py-32 px-5 md:px-10">
+    <section className="py-32 px-5 md:px-10 border-t hairline">
       <div className="mx-auto max-w-[1400px]">
-        <p className="technical text-[11px] gold-text mb-4">GŁOS · 09</p>
+        <p className="technical text-[11px] gold-text mb-4">PODCAST · 03</p>
         <h2 className="relic-heading text-4xl md:text-6xl mb-6 leading-[0.95]">
           Podcast<br /><span className="gold-text">exmortis</span>
         </h2>
@@ -38,6 +45,32 @@ export default function PodcastSection() {
             </a>
           ))}
         </div>
+
+        {hasEmbed && (
+          <div className="grid md:grid-cols-2 gap-6 mb-14">
+            {SPOTIFY_EMBED_URL && (
+              <iframe
+                src={SPOTIFY_EMBED_URL}
+                title="Playlista podcastu — Spotify"
+                height="352"
+                allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture"
+                loading="lazy"
+                className="w-full border hairline bg-[#070708]"
+              />
+            )}
+            {YOUTUBE_EMBED_URL && (
+              <iframe
+                src={YOUTUBE_EMBED_URL}
+                title="Playlista podcastu — YouTube"
+                height="352"
+                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                allowFullScreen
+                loading="lazy"
+                className="w-full border hairline bg-[#070708]"
+              />
+            )}
+          </div>
+        )}
 
         {EPISODES.length > 0 ? (
           <ul className="divide-y hairline border-y hairline">

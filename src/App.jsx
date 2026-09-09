@@ -14,6 +14,7 @@ import Shop from '@/pages/Shop';
 import ProductDetail from '@/pages/ProductDetail';
 import Checkout from '@/pages/Checkout';
 import Powrot from '@/pages/Powrot';
+import Glos from '@/pages/Glos';
 // Add page imports here
 
 const AuthenticatedApp = () => {
@@ -50,6 +51,7 @@ const AuthenticatedApp = () => {
           <Route path="/produkt/:slug" element={<ProductDetail />} />
           <Route path="/kasa" element={<Checkout />} />
           <Route path="/powrot" element={<Powrot />} />
+          <Route path="/glos" element={<Glos />} />
         </Route>
         <Route path="*" element={<PageNotFound />} />
       </Routes>

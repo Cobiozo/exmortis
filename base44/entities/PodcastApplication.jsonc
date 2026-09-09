@@ -1,0 +1,27 @@
+{
+  "name": "PodcastApplication",
+  "type": "object",
+  "properties": {
+    "full_name": {
+      "type": "string"
+    },
+    "phone": {
+      "type": "string"
+    },
+    "email": {
+      "type": "string",
+      "format": "email"
+    },
+    "motivation": {
+      "type": "string"
+    },
+    "story": {
+      "type": "string"
+    }
+  },
+  "required": [
+    "full_name",
+    "phone",
+    "email"
+  ]
+}

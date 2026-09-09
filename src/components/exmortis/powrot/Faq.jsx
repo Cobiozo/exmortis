@@ -1,4 +1,5 @@
-import React from "react";
+import React, { useState } from "react";
+import { ChevronDown } from "lucide-react";
 import Section from "./Section";
 
 const FAQ = [
@@ -33,6 +34,8 @@ const FAQ = [
 ];
 
 export default function Faq() {
+  const [open, setOpen] = useState(null);
+
   return (
     <Section dark label="FAQ">
       <h2 className="relic-heading text-4xl md:text-6xl leading-[0.95] mb-12">
@@ -40,9 +43,27 @@ export default function Faq() {
       </h2>
       <div className="max-w-3xl">
         {FAQ.map((f, i) => (
-          <div key={i} className="py-8 border-b hairline first:pt-0">
-            <p className="relic-heading text-xl md:text-2xl gold-text mb-4">{f.q}</p>
-            <p className="text-foreground/60 leading-relaxed">{f.a}</p>
+          <div key={i} className="border-b hairline">
+            <button
+              onClick={() => setOpen(open === i ? null : i)}
+              className="w-full flex items-center justify-between gap-6 py-8 text-left group"
+            >
+              <span
+                className={`relic-heading text-xl md:text-2xl transition-colors ${
+                  open === i ? "gold-text" : "text-foreground/80 group-hover:gold-text"
+                }`}
+              >
+                {f.q}
+              </span>
+              <ChevronDown
+                className={`h-5 w-5 flex-shrink-0 transition-transform duration-300 ${
+                  open === i ? "gold-text rotate-180" : "text-foreground/40"
+                }`}
+              />
+            </button>
+            {open === i && (
+              <p className="pb-8 text-foreground/60 leading-relaxed">{f.a}</p>
+            )}
           </div>
         ))}
       </div>

@@ -24,7 +24,7 @@ export default function MusicSection() {
   return (
     <section className="py-32 px-5 md:px-10 border-y hairline bg-[#070708]">
       <div className="mx-auto max-w-[1400px]">
-        <p className="technical text-[11px] gold-text mb-4">DŹWIĘK · 08</p>
+        <p className="technical text-[11px] gold-text mb-4">MUZYKA · 02</p>
         <h2 className="relic-heading text-4xl md:text-6xl mb-6 leading-[0.95]">
           Muzyka<br /><span className="gold-text">powrotu</span>
         </h2>
