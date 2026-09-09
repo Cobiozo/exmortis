@@ -1,0 +1,21 @@
+{
+  "name": "PowrotApplication",
+  "type": "object",
+  "properties": {
+    "full_name": {
+      "type": "string"
+    },
+    "phone": {
+      "type": "string"
+    },
+    "email": {
+      "type": "string",
+      "format": "email"
+    }
+  },
+  "required": [
+    "full_name",
+    "phone",
+    "email"
+  ]
+}

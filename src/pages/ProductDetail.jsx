@@ -140,6 +140,12 @@ export default function ProductDetail() {
               </ul>
             )}
 
+            {product.category === "mentoring" && (
+              <Link to="/powrot" className="btn-ghost w-full">
+                POZNAJ PROGRAM POWRÓT <ArrowRight className="h-4 w-4" />
+              </Link>
+            )}
+
             {/* Add to cart */}
             <div className="mt-auto space-y-4">
               <div className="flex items-center gap-4">

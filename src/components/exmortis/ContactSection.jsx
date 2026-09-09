@@ -36,7 +36,7 @@ export default function ContactSection() {
       <div className="mx-auto max-w-[1400px] grid md:grid-cols-2 gap-12 md:gap-20">
         {/* Lewa kolumna — kanały kontaktu */}
         <div>
-          <p className="technical text-[11px] gold-text mb-4">KONTAKT · 09</p>
+          <p className="technical text-[11px] gold-text mb-4">KONTAKT · 10</p>
           <h2 className="relic-heading text-4xl md:text-6xl mb-6 leading-[0.95]">
             Napisz.<br /><span className="gold-text">Odpowiadam sam.</span>
           </h2>

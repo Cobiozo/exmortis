@@ -13,6 +13,7 @@ import About from '@/pages/About';
 import Shop from '@/pages/Shop';
 import ProductDetail from '@/pages/ProductDetail';
 import Checkout from '@/pages/Checkout';
+import Powrot from '@/pages/Powrot';
 // Add page imports here
 
 const AuthenticatedApp = () => {
@@ -48,6 +49,7 @@ const AuthenticatedApp = () => {
           <Route path="/sklep" element={<Shop />} />
           <Route path="/produkt/:slug" element={<ProductDetail />} />
           <Route path="/kasa" element={<Checkout />} />
+          <Route path="/powrot" element={<Powrot />} />
         </Route>
         <Route path="*" element={<PageNotFound />} />
       </Routes>
