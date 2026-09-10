@@ -58,3 +58,12 @@ export function emailField(body, key = "email") {
   if (!EMAIL_RE.test(v)) throw new Error("Niepoprawny adres e-mail");
   return v;
 }
+
+// Wymaga zalogowanego administratora; rzuca FORBIDDEN, gdy brak dostępu.
+export async function requireAdmin(base44) {
+  const user = await base44.auth.me().catch(() => null);
+  if (!user || user.role !== "admin") {
+    throw new Error("FORBIDDEN");
+  }
+  return user;
+}

@@ -100,11 +100,17 @@ export default function ProductDetail() {
 
             <p className="text-foreground/70 leading-relaxed text-lg mb-8">{product.description}</p>
 
-            {product.long_description && (
-              <p className="text-foreground/60 leading-relaxed mb-8 whitespace-pre-line">
-                {product.long_description}
-              </p>
-            )}
+            {product.long_description &&
+              (product.long_description.includes("<") ? (
+                <div
+                  className="rich-content text-foreground/60 leading-relaxed mb-8"
+                  dangerouslySetInnerHTML={{ __html: product.long_description }}
+                />
+              ) : (
+                <p className="text-foreground/60 leading-relaxed mb-8 whitespace-pre-line">
+                  {product.long_description}
+                </p>
+              ))}
 
             {/* Meta */}
             <div className="grid grid-cols-2 gap-px bg-[#3D3D3F]/40 mb-8">

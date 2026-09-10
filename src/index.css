@@ -158,6 +158,36 @@
   100% { transform: translateY(100vh); }
 }
 
+/* ==== ADMIN — Quill w ciemnej skórce ==== */
+.rich-admin .ql-toolbar.ql-snow { border: 1px solid #3D3D3F; border-bottom: none; background: #0F0F10; border-radius: 2px 2px 0 0; }
+.rich-admin .ql-toolbar.ql-snow .ql-stroke { stroke: #8A8A8C; }
+.rich-admin .ql-toolbar.ql-snow .ql-fill { fill: #8A8A8C; }
+.rich-admin .ql-toolbar.ql-snow .ql-picker-label { color: #8A8A8C; }
+.rich-admin .ql-toolbar.ql-snow .ql-picker-options { background: #0F0F10; border: 1px solid #3D3D3F; color: #E2E2E2; }
+.rich-admin .ql-toolbar.ql-snow .ql-picker.ql-expanded .ql-picker-label { border-color: #3D3D3F; }
+.rich-admin .ql-snow .ql-active .ql-stroke, .rich-admin .ql-snow .ql-active .ql-fill { stroke: #C9A24A; fill: #C9A24A; }
+.rich-admin .ql-snow .ql-active { color: #C9A24A; }
+.rich-admin .ql-container.ql-snow { border: 1px solid #3D3D3F; border-top: none; border-radius: 0 0 2px 2px; }
+.rich-admin .ql-editor { min-height: 240px; color: #E2E2E2; font-family: var(--font-body); }
+.rich-admin .ql-editor.ql-blank::before { color: rgba(226, 226, 226, 0.35); font-style: normal; }
+.rich-admin .ql-snow .ql-tooltip { background: #0F0F10; border: 1px solid #3D3D3F; color: #E2E2E2; }
+
+/* ==== Treść z edytora wyświetlana na stronie ==== */
+.rich-content p { margin-bottom: 1rem; line-height: 1.75; }
+.rich-content h1, .rich-content h2, .rich-content h3 { font-family: var(--font-heading); text-transform: uppercase; letter-spacing: 0.04em; margin: 1.5rem 0 0.75rem; line-height: 1.1; }
+.rich-content h1 { font-size: 1.75rem; }
+.rich-content h2 { font-size: 1.4rem; }
+.rich-content h3 { font-size: 1.15rem; }
+.rich-content ul, .rich-content ol { margin: 0 0 1rem 1.5rem; }
+.rich-content ul { list-style: disc; }
+.rich-content ol { list-style: decimal; }
+.rich-content li { margin-bottom: 0.4rem; }
+.rich-content a { color: #C9A24A; text-decoration: underline; }
+.rich-content blockquote { border-left: 2px solid #C9A24A; padding-left: 1rem; color: rgba(226, 226, 226, 0.65); margin: 0 0 1rem 0; }
+.rich-content img { max-width: 100%; margin: 1rem 0; }
+.rich-content strong { color: #E2E2E2; }
+.rich-content pre { background: #0F0F10; border: 1px solid #3D3D3F; padding: 1rem; margin-bottom: 1rem; overflow-x: auto; }
+
 ::-webkit-scrollbar { width: 8px; height: 8px; }
 ::-webkit-scrollbar-track { background: #0A0A0B; }
 ::-webkit-scrollbar-thumb { background: #3D3D3F; }

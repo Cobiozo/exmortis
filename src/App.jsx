@@ -15,6 +15,13 @@ import ProductDetail from '@/pages/ProductDetail';
 import Checkout from '@/pages/Checkout';
 import Powrot from '@/pages/Powrot';
 import Glos from '@/pages/Glos';
+import Login from '@/pages/Login';
+import Register from '@/pages/Register';
+import ForgotPassword from '@/pages/ForgotPassword';
+import ResetPassword from '@/pages/ResetPassword';
+import Admin from '@/pages/admin/Admin';
+import ProtectedRoute from '@/components/ProtectedRoute';
+import { Navigate } from 'react-router-dom';
 // Add page imports here
 
 const AuthenticatedApp = () => {
@@ -44,6 +51,13 @@ const AuthenticatedApp = () => {
   return (
     <CartProvider>
       <Routes>
+        <Route path="/login" element={<Login />} />
+        <Route path="/register" element={<Register />} />
+        <Route path="/forgot-password" element={<ForgotPassword />} />
+        <Route path="/reset-password" element={<ResetPassword />} />
+        <Route element={<ProtectedRoute unauthenticatedElement={<Navigate to="/login" replace />} />}>
+          <Route path="/admin" element={<Admin />} />
+        </Route>
         <Route element={<Layout />}>
           <Route path="/" element={<Home />} />
           <Route path="/o-mnie" element={<About />} />
