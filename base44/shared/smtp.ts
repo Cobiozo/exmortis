@@ -41,3 +41,16 @@ export function orderEmailHtml(buyerName, items, total) {
     <p style="color:#5C5C5E;font-size:12px;letter-spacing:2px;">WRACAM Z SIEBIE · UCZĘ WRACAĆ</p>
   </div>`;
 }
+
+// Treść kampanii newslettera opakowana w ciemną oprawę marki.
+export function campaignEmailHtml(content, name) {
+  const greeting = name ? `<p style="color:#8A8A8C;">${name},</p>` : "";
+  return `
+  <div style="background:#0A0A0B;padding:32px;font-family:Georgia,serif;color:#E2E2E2;">
+    <p style="letter-spacing:4px;color:#C9A24A;font-size:13px;">EXMORTIS</p>
+    ${greeting}
+    <div style="line-height:1.7;color:#E2E2E2;">${content}</div>
+    <p style="color:#5C5C5E;font-size:12px;letter-spacing:2px;margin-top:32px;">WRACAM Z SIEBIE · UCZĘ WRACAĆ</p>
+    <p style="color:#3D3D3F;font-size:11px;">Nie chcesz więcej dostawać? Odpowiedz na ten list z jednym słowem: STOP.</p>
+  </div>`;
+}

@@ -12,7 +12,7 @@ export default async function (req) {
     if (body.action === "list") {
       const subscribers = await runSql(
         base44,
-        `SELECT id, email, name, status, created_date, updated_date
+        `SELECT id, email, name, status, groups, created_date, updated_date
          FROM public.subscribers
          ORDER BY created_date DESC
          LIMIT 1000`,
@@ -27,18 +27,24 @@ export default async function (req) {
         ? "NULL"
         : escStr(String(body.name).trim().slice(0, 200));
       const status = STATUSES.includes(body.status) ? body.status : "active";
+      const groupsJson = JSON.stringify(
+        Array.isArray(body.groups)
+          ? body.groups.filter((g) => typeof g === "string").slice(0, 20).map((g) => g.slice(0, 100))
+          : []
+      );
+      const groups = `${escStr(groupsJson)}::jsonb`;
 
       if (body.id) {
         await runSql(
           base44,
-          `UPDATE public.subscribers SET email = ${escStr(email)}, name = ${name}, status = ${escStr(status)}, updated_date = now()
+          `UPDATE public.subscribers SET email = ${escStr(email)}, name = ${name}, status = ${escStr(status)}, groups = ${groups}, updated_date = now()
            WHERE id = ${escStr(String(body.id))}`
         );
       } else {
         await runSql(
           base44,
-          `INSERT INTO public.subscribers (id, email, name, status)
-           VALUES (gen_random_uuid()::text, ${escStr(email)}, ${name}, ${escStr(status)})
+          `INSERT INTO public.subscribers (id, email, name, status, groups)
+           VALUES (gen_random_uuid()::text, ${escStr(email)}, ${name}, ${escStr(status)}, ${groups})
            ON CONFLICT (email) DO NOTHING`
         );
       }
