@@ -47,6 +47,14 @@ const THREE_TRUTHS = [
 export default function Home() {
   const [products, setProducts] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [heroCue, setHeroCue] = useState(true);
+
+  useEffect(() => {
+    const onScroll = () => setHeroCue(window.scrollY < 80);
+    onScroll();
+    window.addEventListener("scroll", onScroll, { passive: true });
+    return () => window.removeEventListener("scroll", onScroll);
+  }, []);
 
   useEffect(() => {
     base44.functions
@@ -59,7 +67,10 @@ export default function Home() {
   return (
     <div className="bg-[#0A0A0B]">
       {/* ===== HERO — VANGUARD ===== */}
-      <section className="relative min-h-screen flex items-center justify-center overflow-hidden grain">
+      <section
+        className="relative min-h-screen flex items-center justify-center overflow-hidden grain"
+        style={{ minHeight: "100svh" }}
+      >
         <div className="absolute inset-0">
           <img
             src={HERO_IMG}
@@ -73,7 +84,7 @@ export default function Home() {
           <div className="flicker">
             <Logo className="h-32 w-32 md:h-44 md:w-44 mb-8" />
           </div>
-          <h1 className="relic-heading text-5xl md:text-8xl lg:text-9xl leading-[0.9]">
+          <h1 className="relic-heading text-4xl sm:text-5xl md:text-8xl lg:text-9xl leading-[0.9]">
             <span className="block">EXMORTIS</span>
           </h1>
           <p className="mt-8 text-lg md:text-xl text-foreground/70 max-w-2xl font-light leading-relaxed">
@@ -91,10 +102,18 @@ export default function Home() {
           </div>
         </div>
 
-        <div className="absolute bottom-8 left-1/2 -translate-x-1/2 flex flex-col items-center gap-2 text-foreground/40">
+        <button
+          onClick={() =>
+            document.getElementById("manifest")?.scrollIntoView({ behavior: "smooth" })
+          }
+          aria-label="Przewiń w dół"
+          className={`absolute bottom-8 left-1/2 -translate-x-1/2 flex flex-col items-center gap-2 text-foreground/40 transition-opacity duration-500 ${
+            heroCue ? "opacity-100" : "opacity-0 pointer-events-none"
+          }`}
+        >
           <span className="technical text-[9px]">PRZEWIŃ</span>
           <ArrowDown className="h-4 w-4 animate-bounce" />
-        </div>
+        </button>
       </section>
 
       {/* ===== MANIFEST ===== */}
@@ -126,7 +145,7 @@ export default function Home() {
           <div className="grid md:grid-cols-12 gap-10 mb-20">
             <div className="md:col-span-4">
               <p className="technical text-[11px] gold-text mb-4">DIAGNOZA · 02</p>
-              <h2 className="relic-heading text-4xl md:text-6xl leading-[0.95]">
+              <h2 className="relic-heading text-4xl md:text-5xl lg:text-6xl leading-[0.95]">
                 Trzy<br />śmierci
               </h2>
             </div>
@@ -180,7 +199,7 @@ export default function Home() {
           <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 mb-16">
             <div>
               <p className="technical text-[11px] gold-text mb-4">SKARBIEC · 06</p>
-              <h2 className="relic-heading text-4xl md:text-6xl leading-[0.95]">
+              <h2 className="relic-heading text-4xl md:text-5xl lg:text-6xl leading-[0.95]">
                 Droga<br />powrotu
               </h2>
             </div>

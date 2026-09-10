@@ -16,7 +16,7 @@ export default function ForWhom() {
       <div className="mx-auto max-w-[1400px] grid md:grid-cols-12 gap-12">
         <div className="md:col-span-5">
           <p className="technical text-[11px] gold-text mb-4">DLA KOGO · 04</p>
-          <h2 className="relic-heading text-4xl md:text-6xl leading-[0.95] mb-8">
+          <h2 className="relic-heading text-4xl md:text-5xl lg:text-6xl leading-[0.95] mb-8">
             To dla Ciebie,<br /><span className="gold-text">jeśli:</span>
           </h2>
           <p className="relic-heading text-2xl md:text-3xl gold-text leading-tight">
