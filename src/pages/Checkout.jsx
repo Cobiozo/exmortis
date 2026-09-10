@@ -2,18 +2,54 @@ import React, { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { ArrowRight, Check } from "lucide-react";
 import { useCart } from "@/components/exmortis/CartContext";
+import { base44 } from "@/api/base44Client";
 
 export default function Checkout() {
   const { items, total, clear } = useCart();
   const navigate = useNavigate();
+  const [payuDone, setPayuDone] = useState(
+    () => new URLSearchParams(window.location.search).get("payu") === "done"
+  );
   const [done, setDone] = useState(false);
+  const [submitting, setSubmitting] = useState(false);
   const [form, setForm] = useState({ name: "", email: "", note: "" });
 
-  const submit = (e) => {
+  const submit = async (e) => {
     e.preventDefault();
-    setDone(true);
-    clear();
+    if (submitting) return;
+    setSubmitting(true);
+    try {
+      const res = await base44.functions.invoke("payuCreateOrder", {
+        name: form.name,
+        email: form.email,
+        note: form.note,
+        items: items.map((it) => ({ id: it.id, qty: it.qty })),
+      });
+      clear();
+      window.location.href = res.data.redirectUri;
+    } catch {
+      // PayU nieaktywne — potwierdzenie trybu ręcznego
+      clear();
+      setDone(true);
+    } finally {
+      setSubmitting(false);
+    }
   };
+
+  if (payuDone) {
+    return (
+      <div className="min-h-screen flex flex-col items-center justify-center bg-[#0A0A0B] pt-20 px-6 text-center gap-8">
+        <div className="w-16 h-16 border-2 border-[#C9A24A] rounded-full flex items-center justify-center">
+          <Check className="h-8 w-8 gold-text" />
+        </div>
+        <h1 className="relic-heading text-4xl md:text-6xl gold-text">Próg przekroczony</h1>
+        <p className="text-foreground/60 text-lg max-w-md leading-relaxed">
+          Płatność dotarła. Dostęp i szczegóły wyślę na Twój mail — pierwszy ruch jest już za Tobą.
+        </p>
+        <Link to="/" className="btn-ghost">WRÓĆ NA POCZĄTEK</Link>
+      </div>
+    );
+  }
 
   if (done) {
     return (
@@ -81,11 +117,12 @@ export default function Checkout() {
               />
             </div>
 
-            <button type="submit" className="btn-relic w-full">
-              POTWIERDŹ POWRÓT <ArrowRight className="h-4 w-4" />
+            <button type="submit" disabled={submitting} className="btn-relic w-full disabled:opacity-60">
+              {submitting ? "PRZYGOTOWUJĘ PŁATNOŚĆ..." : "ZAPŁAĆ I PRZEJDŹ PRÓG"}{" "}
+              {!submitting && <ArrowRight className="h-4 w-4" />}
             </button>
             <p className="technical text-[10px] text-foreground/40">
-              Płatność uruchamiana ręcznie — wkrótce po zapisie otrzymasz link do uregulowania.
+              Bezpieczna płatność online przez PayU. Potwierdzenie otrzymasz na maila.
             </p>
           </form>
 

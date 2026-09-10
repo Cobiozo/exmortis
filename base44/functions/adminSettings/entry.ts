@@ -1,0 +1,82 @@
+import { createClientFromRequest } from "npm:@base44/sdk@0.8.44";
+import { requireAdmin } from "../../shared/supabase.ts";
+import { getSetting, saveSetting, deleteSetting } from "../../shared/settings.ts";
+
+const MASK = "********";
+
+const PAYU_KEYS = ["posId", "clientId", "clientSecret", "secondKey", "env"];
+const SMTP_KEYS = ["host", "port", "user", "password", "from"];
+
+function maskSecrets(obj, keys) {
+  const out = { ...(obj || {}) };
+  for (const k of keys) if (out[k]) out[k] = MASK;
+  return out;
+}
+
+export default async function (req) {
+  try {
+    const base44 = createClientFromRequest(req);
+    await requireAdmin(base44);
+    const body = await req.json().catch(() => ({}));
+
+    if (body.action === "get") {
+      const payu = await getSetting(base44, "payu");
+      const smtp = await getSetting(base44, "smtp");
+      return Response.json({
+        payu: payu ? maskSecrets(payu, ["clientSecret", "secondKey"]) : {},
+        smtp: smtp ? maskSecrets(smtp, ["password"]) : {},
+      });
+    }
+
+    if (body.action === "save") {
+      const target = body.target;
+      if (target !== "payu" && target !== "smtp") {
+        throw new Error("Nieznana integracja");
+      }
+      const keys = target === "payu" ? PAYU_KEYS : SMTP_KEYS;
+      const prev = (await getSetting(base44, target)) || {};
+      const data = body.data && typeof body.data === "object" ? body.data : {};
+      const next = {};
+      for (const k of keys) {
+        const raw = data[k];
+        const v = raw === undefined || raw === null ? "" : String(raw).trim();
+        if (v === "" || v === MASK) {
+          // puste pole lub maska → utrzymaj wcześniej zapisany sekret
+          if (prev[k] !== undefined && prev[k] !== "") next[k] = prev[k];
+        } else {
+          next[k] = v.slice(0, 300);
+        }
+      }
+      if (target === "payu") {
+        if (!next.posId) throw new Error("Podaj POS ID");
+        if (!next.clientId) throw new Error("Podaj Client ID");
+        if (!next.clientSecret) throw new Error("Podaj Client Secret");
+        if (!next.secondKey) throw new Error("Podaj drugi klucz");
+        next.env = next.env === "sandbox" ? "sandbox" : "secure";
+      } else {
+        if (!next.host) throw new Error("Podaj adres serwera SMTP");
+        if (!next.user) throw new Error("Podaj login SMTP");
+        if (!next.password) throw new Error("Podaj hasło SMTP");
+        if (!next.port) next.port = "587";
+      }
+      await saveSetting(base44, target, next);
+      return Response.json({ ok: true });
+    }
+
+    if (body.action === "delete") {
+      const target = body.target;
+      if (target !== "payu" && target !== "smtp") {
+        throw new Error("Nieznana integracja");
+      }
+      await deleteSetting(base44, target);
+      return Response.json({ ok: true });
+    }
+
+    return Response.json({ error: "Nieznana akcja" }, { status: 400 });
+  } catch (error) {
+    if (error && error.message === "FORBIDDEN") {
+      return Response.json({ error: "Brak dostępu" }, { status: 403 });
+    }
+    return Response.json({ error: error.message }, { status: 500 });
+  }
+}

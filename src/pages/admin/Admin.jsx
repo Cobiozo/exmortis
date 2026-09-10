@@ -5,7 +5,8 @@ import Logo from "@/components/exmortis/Logo";
 import ProductsManager from "@/components/admin/ProductsManager";
 import NewsletterManager from "@/components/admin/NewsletterManager";
 import ContentManager from "@/components/admin/ContentManager";
-import { ShieldAlert, Package, Mail, LogOut, LayoutList } from "lucide-react";
+import IntegrationsManager from "@/components/admin/IntegrationsManager";
+import { ShieldAlert, Package, Mail, LogOut, LayoutList, Plug } from "lucide-react";
 
 const tabBtn = (active) =>
   `inline-flex items-center gap-2 px-6 py-3 technical text-[10px] border transition-colors ${
@@ -79,12 +80,17 @@ export default function Admin() {
           <button onClick={() => setTab("tresci")} className={tabBtn(tab === "tresci")}>
             <LayoutList className="h-4 w-4" /> TREŚCI STRON
           </button>
+          <button onClick={() => setTab("integracje")} className={tabBtn(tab === "integracje")}>
+            <Plug className="h-4 w-4" /> INTEGRACJE
+          </button>
         </nav>
 
         {tab === "produkty" ? (
           <ProductsManager />
         ) : tab === "newsletter" ? (
           <NewsletterManager />
+        ) : tab === "integracje" ? (
+          <IntegrationsManager />
         ) : (
           <ContentManager />
         )}
