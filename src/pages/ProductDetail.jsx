@@ -16,9 +16,9 @@ export default function ProductDetail() {
 
   useEffect(() => {
     setLoading(true);
-    base44.entities.Product
-      .filter({ slug, active: true })
-      .then((res) => setProduct(res[0] || null))
+    base44.functions
+      .invoke("shopProducts", { slug })
+      .then((res) => setProduct(res.data.products[0] || null))
       .catch(() => setProduct(null))
       .finally(() => setLoading(false));
   }, [slug]);

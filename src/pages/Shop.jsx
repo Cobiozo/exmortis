@@ -18,9 +18,9 @@ export default function Shop() {
   const [active, setActive] = useState("all");
 
   useEffect(() => {
-    base44.entities.Product
-      .filter({ active: true }, "price")
-      .then(setProducts)
+    base44.functions
+      .invoke("shopProducts", {})
+      .then((res) => setProducts(res.data.products))
       .catch(() => setProducts([]))
       .finally(() => setLoading(false));
   }, []);

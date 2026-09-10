@@ -49,8 +49,9 @@ export default function Home() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    base44.entities.Product.filter({ active: true }, "price", 6)
-      .then((res) => setProducts(res))
+    base44.functions
+      .invoke("shopProducts", {})
+      .then((res) => setProducts(res.data.products))
       .catch(() => setProducts([]))
       .finally(() => setLoading(false));
   }, []);

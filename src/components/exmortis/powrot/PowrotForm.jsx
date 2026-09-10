@@ -16,7 +16,7 @@ export default function PowrotForm() {
     setSending(true);
     setError("");
     try {
-      await base44.entities.PowrotApplication.create(form);
+      await base44.functions.invoke("createPowrotApplication", form);
       setSent(true);
     } catch {
       setError("Nie udało się wysłać zgłoszenia. Spróbuj ponownie.");

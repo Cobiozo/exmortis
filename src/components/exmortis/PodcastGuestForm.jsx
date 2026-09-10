@@ -17,7 +17,7 @@ export default function PodcastGuestForm() {
     setSending(true);
     setError("");
     try {
-      await base44.entities.PodcastApplication.create(form);
+      await base44.functions.invoke("createPodcastApplication", form);
       setSent(true);
     } catch {
       setError("Nie udało się wysłać zgłoszenia. Spróbuj ponownie.");

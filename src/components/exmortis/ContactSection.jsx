@@ -21,7 +21,7 @@ export default function ContactSection() {
     setSending(true);
     setError("");
     try {
-      await base44.entities.ContactMessage.create(form);
+      await base44.functions.invoke("createContactMessage", form);
       setSent(true);
       setForm({ name: "", email: "", message: "" });
     } catch {
