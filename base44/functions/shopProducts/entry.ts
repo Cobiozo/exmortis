@@ -20,7 +20,7 @@ export default async function (req) {
 
     const products = await runSql(
       base44,
-      `SELECT id, name, slug, subtitle, description, long_description, price, old_price,
+      `SELECT id, name, slug, subtitle, description, long_description, price::float8 AS price, old_price::float8 AS old_price,
               category, image_url, gallery, featured, active, details, format, duration, spots,
               created_date, updated_date
        FROM public.products
