@@ -21,6 +21,7 @@ import ForgotPassword from '@/pages/ForgotPassword';
 import ResetPassword from '@/pages/ResetPassword';
 import Admin from '@/pages/admin/Admin';
 import ProtectedRoute from '@/components/ProtectedRoute';
+import { SiteContentProvider } from '@/components/exmortis/SiteContentProvider';
 import { Navigate } from 'react-router-dom';
 // Add page imports here
 
@@ -50,6 +51,7 @@ const AuthenticatedApp = () => {
   // Render the main app
   return (
     <CartProvider>
+      <SiteContentProvider>
       <Routes>
         <Route path="/login" element={<Login />} />
         <Route path="/register" element={<Register />} />
@@ -69,6 +71,7 @@ const AuthenticatedApp = () => {
         </Route>
         <Route path="*" element={<PageNotFound />} />
       </Routes>
+      </SiteContentProvider>
     </CartProvider>
   );
 };

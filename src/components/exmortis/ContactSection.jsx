@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import { ArrowRight, Check, Mail, Instagram, Facebook, Youtube, PenLine } from "lucide-react";
 import { base44 } from "@/api/base44Client";
+import { useSiteContent } from "@/components/exmortis/SiteContentProvider";
 
 // Wklej tu linki do swoich profili
 const SOCIAL_LINKS = [
@@ -10,6 +11,9 @@ const SOCIAL_LINKS = [
 ];
 
 export default function ContactSection() {
+  const { rich } = useSiteContent();
+  const heading = rich("contact", "heading", 'Napisz.<br /><span class="gold-text">Odpowiadam sam.</span>');
+  const intro = rich("contact", "intro", "Nie ma botów i asystentów. Jeśli jesteś na progu — napisz pierwszy ruch, choćby jednym zdaniem.");
   const [showForm, setShowForm] = useState(false);
   const [form, setForm] = useState({ name: "", email: "", message: "" });
   const [sending, setSending] = useState(false);
@@ -37,13 +41,8 @@ export default function ContactSection() {
         {/* Lewa kolumna — kanały kontaktu */}
         <div>
           <p className="technical text-[11px] gold-text mb-4">KONTAKT · 08</p>
-          <h2 className="relic-heading text-4xl md:text-5xl lg:text-6xl mb-6 leading-[0.95]">
-            Napisz.<br /><span className="gold-text">Odpowiadam sam.</span>
-          </h2>
-          <p className="text-foreground/60 text-lg leading-relaxed max-w-md mb-12">
-            Nie ma botów i asystentów. Jeśli jesteś na progu — napisz pierwszy ruch,
-            choćby jednym zdaniem.
-          </p>
+          <h2 className="relic-heading text-4xl md:text-5xl lg:text-6xl mb-6 leading-[0.95]" dangerouslySetInnerHTML={{ __html: heading }} />
+          <div className="rich-content text-foreground/60 text-lg leading-relaxed max-w-md mb-12" dangerouslySetInnerHTML={{ __html: intro }} />
 
           <div className="space-y-6">
             <a

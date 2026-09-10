@@ -1,5 +1,6 @@
 import React from "react";
 import { Quote } from "lucide-react";
+import { useSiteContent } from "@/components/exmortis/SiteContentProvider";
 
 // Podmień na prawdziwe opinie klientów — imię + produkt + zdanie
 const TESTIMONIALS = [
@@ -21,19 +22,19 @@ const TESTIMONIALS = [
 ];
 
 export default function Testimonials() {
+  const { cards, rich } = useSiteContent();
+  const testimonials = cards("home", "testimonials", TESTIMONIALS);
+  const title = rich("home", "testimonialsTitle", 'Oni też<br /><span class="gold-text">wracali</span>');
+  const intro = rich("home", "testimonialsIntro", "Nie planuj powrotu na podstawie obietnic. Słuchaj tych, którzy już przeszli.");
   return (
     <section className="py-32 px-5 md:px-10 border-t hairline">
       <div className="mx-auto max-w-[1400px]">
         <p className="technical text-[11px] gold-text mb-4">Świadectwa · 07</p>
-        <h2 className="relic-heading text-4xl md:text-6xl mb-6 leading-[0.95]">
-          Oni też<br /><span className="gold-text">wracali</span>
-        </h2>
-        <p className="text-foreground/60 text-lg max-w-xl mb-16 leading-relaxed">
-          Nie planuj powrotu na podstawie obietnic. Słuchaj tych, którzy już przeszli.
-        </p>
+        <h2 className="relic-heading text-4xl md:text-6xl mb-6 leading-[0.95]" dangerouslySetInnerHTML={{ __html: title }} />
+        <div className="rich-content text-foreground/60 text-lg max-w-xl mb-16 leading-relaxed" dangerouslySetInnerHTML={{ __html: intro }} />
 
         <div className="grid md:grid-cols-3 gap-px bg-[#3D3D3F]/40">
-          {TESTIMONIALS.map((t, i) => (
+          {testimonials.map((t, i) => (
             <figure key={i} className="bg-[#0A0A0B] p-10 flex flex-col">
               <Quote className="h-8 w-8 gold-text mb-8" />
               <blockquote className="text-foreground/75 leading-relaxed flex-1">

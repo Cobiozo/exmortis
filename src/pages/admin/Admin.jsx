@@ -4,7 +4,8 @@ import { base44 } from "@/api/base44Client";
 import Logo from "@/components/exmortis/Logo";
 import ProductsManager from "@/components/admin/ProductsManager";
 import NewsletterManager from "@/components/admin/NewsletterManager";
-import { ShieldAlert, Package, Mail, LogOut } from "lucide-react";
+import ContentManager from "@/components/admin/ContentManager";
+import { ShieldAlert, Package, Mail, LogOut, LayoutList } from "lucide-react";
 
 const tabBtn = (active) =>
   `inline-flex items-center gap-2 px-6 py-3 technical text-[10px] border transition-colors ${
@@ -75,9 +76,18 @@ export default function Admin() {
           <button onClick={() => setTab("newsletter")} className={tabBtn(tab === "newsletter")}>
             <Mail className="h-4 w-4" /> NEWSLETTER I SUBSKRYBENCI
           </button>
+          <button onClick={() => setTab("tresci")} className={tabBtn(tab === "tresci")}>
+            <LayoutList className="h-4 w-4" /> TREŚCI STRON
+          </button>
         </nav>
 
-        {tab === "produkty" ? <ProductsManager /> : <NewsletterManager />}
+        {tab === "produkty" ? (
+          <ProductsManager />
+        ) : tab === "newsletter" ? (
+          <NewsletterManager />
+        ) : (
+          <ContentManager />
+        )}
       </div>
     </div>
   );

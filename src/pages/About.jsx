@@ -2,6 +2,7 @@ import React from "react";
 import { Link } from "react-router-dom";
 import { ArrowRight } from "lucide-react";
 import Logo from "@/components/exmortis/Logo";
+import { useSiteContent } from "@/components/exmortis/SiteContentProvider";
 
 const PORTRAIT = "https://media.base44.com/images/public/6aa08bc6318b0f886cc3b9a3/6c0d93c9a_generated_052e1863.jpg";
 
@@ -19,6 +20,14 @@ const PRINCIPLES = [
 ];
 
 export default function About() {
+  const { cards, rich } = useSiteContent();
+  const heroTitle = rich("about", "heroTitle", 'Byłem tam.<br /><span class="gold-text">I wróciłem.</span><br />Inny.');
+  const heroIntro = rich("about", "heroIntro", "exmortis to nie «mentor dla liderów». To głos powrotu. Moja przewaga nie leży w tym, że uczę sprzedaży — to potrafi wielu. Moja przewaga to droga tam i z powrotem.");
+  const manifesto = rich("about", "manifesto", "<p>Są dni, kiedy człowiek żyje, ale w środku już umarł. Chodzi, pracuje, uśmiecha się — a nie czuje nic.</p><p>Ja tam byłem. W miejscu, z którego wydawało się, że nie ma powrotu. Wróciłem. Nie do tego, kim byłem — jako ktoś nowy.</p><p class=\"gold-text\">To sprzedaje się dziś najmocniej, bo jest nie do podrobienia. Droga tam i z powrotem.</p>");
+  const timeline = cards("about", "timeline", TIMELINE);
+  const principles = cards("about", "principles", PRINCIPLES);
+  const ctaTitle = rich("about", "ctaTitle", 'Jeśli coś w Tobie<br /><span class="gold-text">już wie</span>');
+  const ctaText = rich("about", "ctaText", "Że chodzisz i pracujesz, a w środku jest cisza — to znaczy, że już wracasz. Zrób pierwszy ruch.");
   return (
     <div className="bg-[#0A0A0B] pt-20">
       {/* Hero */}
@@ -27,15 +36,8 @@ export default function About() {
         <div className="mx-auto max-w-[1400px]">
           <p className="technical text-[11px] gold-text mb-6">KRONIKARZ · O MNIE</p>
           <div className="grid md:grid-cols-12 gap-10 items-end">
-            <h1 className="md:col-span-8 relic-heading text-5xl md:text-8xl leading-[0.9]">
-              Byłem tam.<br />
-              <span className="gold-text">I wróciłem.</span><br />
-              Inny.
-            </h1>
-            <p className="md:col-span-4 text-foreground/60 text-lg leading-relaxed">
-              exmortis to nie «mentor dla liderów». To głos powrotu. Moja przewaga nie leży w tym,
-              że uczę sprzedaży — to potrafi wielu. Moja przewaga to droga tam i z powrotem.
-            </p>
+            <h1 className="md:col-span-8 relic-heading text-5xl md:text-8xl leading-[0.9]" dangerouslySetInnerHTML={{ __html: heroTitle }} />
+            <div className="rich-content md:col-span-4 text-foreground/60 text-lg leading-relaxed" dangerouslySetInnerHTML={{ __html: heroIntro }} />
           </div>
         </div>
       </section>
@@ -55,19 +57,7 @@ export default function About() {
         </div>
         <div className="p-10 md:p-16 lg:p-24 flex flex-col justify-center order-1 md:order-2">
           <p className="technical text-[11px] gold-text mb-8">MANIFEST OSOBISTY</p>
-          <div className="space-y-6 text-lg leading-relaxed text-foreground/75">
-            <p>
-              Są dni, kiedy człowiek żyje, ale w środku już umarł. Chodzi, pracuje, uśmiecha się —
-              a nie czuje nic.
-            </p>
-            <p>
-              Ja tam byłem. W miejscu, z którego wydawało się, że nie ma powrotu. Wróciłem.
-              Nie do tego, kim byłem — jako ktoś nowy.
-            </p>
-            <p className="gold-text">
-              To sprzedaje się dziś najmocniej, bo jest nie do podrobienia. Droga tam i z powrotem.
-            </p>
-          </div>
+          <div className="rich-content space-y-6 text-lg leading-relaxed text-foreground/75" dangerouslySetInnerHTML={{ __html: manifesto }} />
         </div>
       </section>
 
@@ -82,7 +72,7 @@ export default function About() {
           <div className="relative">
             <div className="absolute left-0 top-0 bottom-0 w-px spine opacity-50 hidden md:block" />
             <div className="space-y-16">
-              {TIMELINE.map((t, i) => (
+              {timeline.map((t, i) => (
                 <div key={i} className="md:pl-16 relative">
                   <div className="absolute left-0 top-2 w-3 h-3 border border-[#C9A24A] bg-[#0A0A0B] hidden md:block" />
                   <p className="font-mono text-sm gold-text mb-3">0{i + 1} · ETAP</p>
@@ -103,7 +93,7 @@ export default function About() {
             Jak<br /><span className="gold-text">prowadzę</span>
           </h2>
           <div className="grid md:grid-cols-3 gap-px bg-[#3D3D3F]/40">
-            {PRINCIPLES.map((p, i) => (
+            {principles.map((p, i) => (
               <div key={i} className="bg-[#0A0A0B] p-10">
                 <p className="font-mono text-4xl text-foreground/15 mb-6">0{i + 1}</p>
                 <h3 className="relic-heading text-xl gold-text mb-4">{p.title}</h3>
@@ -117,13 +107,8 @@ export default function About() {
       {/* CTA */}
       <section className="py-40 px-5 md:px-10 text-center">
         <Logo className="h-20 w-20 mx-auto mb-10" />
-        <h2 className="relic-heading text-4xl md:text-6xl mb-8 leading-[0.95]">
-          Jeśli coś w Tobie<br /><span className="gold-text">już wie</span>
-        </h2>
-        <p className="text-foreground/60 text-lg max-w-xl mx-auto mb-12 leading-relaxed">
-          Że chodzisz i pracujesz, a w środku jest cisza — to znaczy, że już wracasz.
-          Zrób pierwszy ruch.
-        </p>
+        <h2 className="relic-heading text-4xl md:text-6xl mb-8 leading-[0.95]" dangerouslySetInnerHTML={{ __html: ctaTitle }} />
+        <div className="rich-content text-foreground/60 text-lg max-w-xl mx-auto mb-12 leading-relaxed" dangerouslySetInnerHTML={{ __html: ctaText }} />
         <Link to="/sklep" className="btn-relic">
           ZOBACZ DROGĘ POWROTU <ArrowRight className="h-4 w-4" />
         </Link>

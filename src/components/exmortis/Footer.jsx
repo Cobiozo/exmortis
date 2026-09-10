@@ -2,9 +2,14 @@ import React, { useState } from "react";
 import { Link } from "react-router-dom";
 import { ArrowRight } from "lucide-react";
 import { base44 } from "@/api/base44Client";
+import { useSiteContent } from "@/components/exmortis/SiteContentProvider";
 import Logo from "./Logo";
 
 export default function Footer() {
+  const { rich } = useSiteContent();
+  const newsletterTitle = rich("footer", "newsletterTitle", 'Zapisz się.<br /><span class="blood-text">Wracaj</span> co tydzień.');
+  const newsletterDesc = rich("footer", "newsletterDesc", "Jeden list tygodniowo. Jeden temat powrotu. Jedno narzędzie. Prosto na Twój mail — z prezentem powitalnym: mini-PDF „3 pierwsze ruchy powrotu”.");
+  const aboutText = rich("footer", "about", "Wracam z siebie. Uczę wracać. Głos powrotu ze śmierci mentalnej, duchowej i życiowej. Nie musisz być silny, żeby wrócić. Musisz zrobić pierwszy ruch.");
   const [email, setEmail] = useState("");
   const [sent, setSent] = useState(false);
   const [sending, setSending] = useState(false);
@@ -37,14 +42,8 @@ export default function Footer() {
         <div className="grid md:grid-cols-2 gap-12 md:gap-20 pb-20 border-b hairline">
           <div>
             <p className="technical text-[11px] gold-text mb-4">LISTY POWROTU · NEWSLETTER</p>
-            <h2 className="relic-heading text-3xl md:text-5xl leading-[0.95]">
-              Zapisz się.<br />
-              <span className="blood-text">Wracaj</span> co tydzień.
-            </h2>
-            <p className="mt-6 text-foreground/60 max-w-md leading-relaxed">
-              Jeden list tygodniowo. Jeden temat powrotu. Jedno narzędzie. Prosto na Twój mail —
-              z prezentem powitalnym: mini-PDF „3 pierwsze ruchy powrotu".
-            </p>
+            <h2 className="relic-heading text-3xl md:text-5xl leading-[0.95]" dangerouslySetInnerHTML={{ __html: newsletterTitle }} />
+            <div className="rich-content mt-6 text-foreground/60 max-w-md leading-relaxed" dangerouslySetInnerHTML={{ __html: newsletterDesc }} />
           </div>
           <div className="flex flex-col justify-center">
             <form onSubmit={submit} className="space-y-4">
@@ -81,10 +80,7 @@ export default function Footer() {
               <Logo className="h-12 w-12" glow={false} />
               <span className="relic-heading text-2xl gold-text tracking-[0.3em]">EXMORTIS</span>
             </div>
-            <p className="text-foreground/50 max-w-sm leading-relaxed text-sm">
-              Wracam z siebie. Uczę wracać. Głos powrotu ze śmierci mentalnej, duchowej
-              i życiowej. Nie musisz być silny, żeby wrócić. Musisz zrobić pierwszy ruch.
-            </p>
+            <div className="rich-content text-foreground/50 max-w-sm leading-relaxed text-sm" dangerouslySetInnerHTML={{ __html: aboutText }} />
           </div>
 
           <div>

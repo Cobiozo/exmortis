@@ -1,8 +1,12 @@
 import React from "react";
 import { Link } from "react-router-dom";
 import { ArrowRight } from "lucide-react";
+import { useSiteContent } from "@/components/exmortis/SiteContentProvider";
 
 export default function PowrotTeaser() {
+  const { rich } = useSiteContent();
+  const quote = rich("home", "powrotTeaserQuote", "„Nowa wersja Ciebie nie powstaje z tej samej gliny, co poprzednia.<br />Trzeba ją wypalić.”");
+  const desc = rich("home", "powrotTeaserDesc", "Autorski program mentorski exmortis — dla tych, którzy wychodzą ze śmierci mentalnej, duchowej albo życiowej. Sześć miesięcy, cztery etapy, osiem sesji jeden na jeden. Prowadzę maksymalnie cztery osoby jednocześnie.");
   return (
     <section className="relative py-32 px-5 md:px-10 border-t hairline bg-[#070708] overflow-hidden">
       <div className="absolute left-0 top-0 bottom-0 w-px spine opacity-30" />
@@ -14,15 +18,8 @@ export default function PowrotTeaser() {
           </h2>
         </div>
         <div className="md:col-span-7">
-          <p className="relic-heading text-2xl md:text-3xl leading-tight text-foreground/85 mb-8">
-            „Nowa wersja Ciebie nie powstaje z tej samej gliny, co poprzednia.
-            Trzeba ją wypalić.”
-          </p>
-          <p className="text-foreground/60 leading-relaxed max-w-xl mb-10">
-            Autorski program mentorski exmortis — dla tych, którzy wychodzą ze śmierci
-            mentalnej, duchowej albo życiowej. Sześć miesięcy, cztery etapy, osiem sesji
-            jeden na jeden. Prowadzę maksymalnie cztery osoby jednocześnie.
-          </p>
+          <p className="relic-heading text-2xl md:text-3xl leading-tight text-foreground/85 mb-8" dangerouslySetInnerHTML={{ __html: quote }} />
+          <div className="rich-content text-foreground/60 leading-relaxed max-w-xl mb-10" dangerouslySetInnerHTML={{ __html: desc }} />
           <Link to="/powrot" className="btn-relic">
             POZNAJ POWRÓT <ArrowRight className="h-4 w-4" />
           </Link>
