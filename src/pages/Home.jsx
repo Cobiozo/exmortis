@@ -72,9 +72,6 @@ export default function Home() {
           <div className="flicker">
             <Logo className="h-32 w-32 md:h-44 md:w-44 mb-8" />
           </div>
-          <p className="technical text-[11px] md:text-xs gold-text mb-6 tracking-[0.4em]">
-            GŁOS POWROTU
-          </p>
           <h1 className="relic-heading text-5xl md:text-8xl lg:text-9xl leading-[0.9]">
             <span className="block">EXMORTIS</span>
           </h1>

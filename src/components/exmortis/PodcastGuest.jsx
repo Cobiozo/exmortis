@@ -14,13 +14,13 @@ export default function PodcastGuest() {
         <div className="grid md:grid-cols-2 gap-12 md:gap-20">
           <div className="space-y-6 text-foreground/60 leading-relaxed">
             <p>
-              Czy masz za sobą trudną drogę i chcesz opowiedzieć o swoim powrocie? Wierzymy,
+              Czy masz za sobą trudną drogę i chcesz opowiedzieć o swoim powrocie? Wierzę,
               że każda historia transformacji, pokonywania przeciwności i odnajdywania
               własnej ścieżki ma ogromną moc.
             </p>
             <p>
               Jeśli czujesz gotowość, by zainspirować innych swoim doświadczeniem,
-              serdecznie zapraszamy do udziału w naszym podcaście.
+              serdecznie zapraszam do udziału w podcaście.
             </p>
             <div className="border-l hairline pl-6 pt-4 mt-10">
               <p className="technical text-[10px] text-foreground/40 mb-4">
