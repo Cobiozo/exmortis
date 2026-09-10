@@ -80,7 +80,7 @@ export default function Home() {
           <div className="absolute inset-0 bg-gradient-to-b from-[#0A0A0B] via-[#0A0A0B]/60 to-[#0A0A0B]" />
         </div>
 
-        <div className="relative z-10 flex flex-col items-center text-center px-6 max-w-4xl">
+        <div className="relative z-10 flex flex-col items-center text-center px-6 pb-32 max-w-4xl">
           <div className="flicker">
             <Logo className="h-32 w-32 md:h-44 md:w-44 mb-8" />
           </div>
