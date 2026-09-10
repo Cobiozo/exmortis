@@ -34,8 +34,9 @@ export default function Navbar() {
     setMobile(false);
     if (to.includes("#")) {
       const [path, hash] = to.split("#");
-      if (location.pathname !== path && path !== "/") {
-        navigate(path);
+      const targetPath = path || "/";
+      if (location.pathname !== targetPath) {
+        navigate(targetPath);
         setTimeout(() => {
           document.getElementById(hash)?.scrollIntoView({ behavior: "smooth" });
         }, 400);

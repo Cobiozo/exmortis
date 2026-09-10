@@ -24,7 +24,7 @@ export default function Footer() {
         {/* Newsletter — Survival Registration */}
         <div className="grid md:grid-cols-2 gap-12 md:gap-20 pb-20 border-b hairline">
           <div>
-            <p className="technical text-[11px] gold-text mb-4">DŁOŃ LIDERA · NEWSLETTER</p>
+            <p className="technical text-[11px] gold-text mb-4">LISTY POWROTU · NEWSLETTER</p>
             <h2 className="relic-heading text-3xl md:text-5xl leading-[0.95]">
               Zapisz się.<br />
               <span className="blood-text">Wracaj</span> co tydzień.
