@@ -53,6 +53,7 @@ export default function Home() {
   const truths = list("home", "truths", THREE_TRUTHS);
   const ctaTitle = rich("home", "ctaTitle", 'Zrób<br /><span class="gold-text">jeden ruch</span>');
   const ctaText = rich("home", "ctaText", "Powrót nie zaczyna się od siły. Zaczyna się od jednego ruchu — małego, wykonalnego dziś.");
+  const skarbiecText = rich("home", "skarbiecText", "<p>Powrót ma cztery etapy: <strong>Śmierć · Próg · Powrót · Inny</strong>.</p><p>Na każdym z nich potrzeba innych narzędzi. Innych słów. Innej głębokości pracy.</p><p>W Skarbcu znajdziesz to, co pasuje do miejsca, w którym stoisz dzisiaj — od bezpłatnego listu tygodniowego po pracę jeden na jeden przez sześć miesięcy.</p>");
   const [products, setProducts] = useState([]);
   const [loading, setLoading] = useState(true);
   const [heroCue, setHeroCue] = useState(true);
@@ -200,16 +201,19 @@ export default function Home() {
       {/* ===== SKLEP PREVIEW ===== */}
       <section className="relative py-32 px-5 md:px-10 border-t hairline bg-[#070708]">
         <div className="mx-auto max-w-[1400px]">
-          <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 mb-16">
-            <div>
+          <div className="grid md:grid-cols-12 gap-10 mb-16">
+            <div className="md:col-span-4">
               <p className="technical text-[11px] gold-text mb-4">SKARBIEC · 06</p>
               <h2 className="relic-heading text-4xl md:text-5xl lg:text-6xl leading-[0.95]">
                 Droga<br />powrotu
               </h2>
             </div>
-            <Link to="/sklep" className="btn-ghost self-start md:self-auto">
-              CAŁY SKLEP <ArrowRight className="h-4 w-4" />
-            </Link>
+            <div className="md:col-span-8">
+              <div className="rich-content text-foreground/60 text-lg leading-relaxed max-w-xl" dangerouslySetInnerHTML={{ __html: skarbiecText }} />
+              <Link to="/sklep" className="btn-ghost mt-8">
+                CAŁY SKARBIEC <ArrowRight className="h-4 w-4" />
+              </Link>
+            </div>
           </div>
 
           {loading ? (

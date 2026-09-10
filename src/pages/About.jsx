@@ -2,9 +2,15 @@ import React from "react";
 import { Link } from "react-router-dom";
 import { ArrowRight } from "lucide-react";
 import Logo from "@/components/exmortis/Logo";
+import { Image } from "@/components/ui/image";
 import { useSiteContent } from "@/components/exmortis/SiteContentProvider";
+import ShortStory from "@/components/exmortis/about/ShortStory";
+import Origin from "@/components/exmortis/about/Origin";
+import WhoIAmNot from "@/components/exmortis/about/WhoIAmNot";
+import WhatITeach from "@/components/exmortis/about/WhatITeach";
 
-const PORTRAIT = "https://media.base44.com/images/public/6aa08bc6318b0f886cc3b9a3/6c0d93c9a_generated_052e1863.jpg";
+const PORTRAIT =
+  "https://media.base44.com/images/public/6aa08bc6318b0f886cc3b9a3/74c8971f2_572398635_17869620246460401_6357932160691507676_n.jpg";
 
 const TIMELINE = [
   { phase: "Śmierć", text: "Chodziłem, pracowałem, uśmiechałem się — a w środku była cisza, której nie umiałem nazwać. Żyłem na autopilocie." },
@@ -14,16 +20,24 @@ const TIMELINE = [
 ];
 
 const PRINCIPLES = [
-  { title: "Przewodnik, nie terapeuta", text: "Prowadzę przez powrót, nie leczę zaburzeń. Przy objawach klinicznych kieruję do specjalisty. To buduje zaufanie." },
-  { title: "Pytania zamiast rad", text: "Nie mówię «zrób tak», tylko pytam: co się w Tobie dzieje, kiedy to mówisz? Więcej słucham niż mówię." },
+  { title: "Przewodnik, nie terapeuta", text: "Prowadzę przez powrót, nie leczę zaburzeń. Przy objawach klinicznych kieruję do specjalisty." },
+  { title: "Pytania zamiast rad", text: "Nie mówię «zrób tak» — to Twoje życie, więc ostateczne decyzje podejmujesz Ty. Moim zadaniem jest poprzez zadawanie pytań pokazać różne perspektywy. Więcej słucham niż mówię." },
   { title: "Jeden ruch na sesję", text: "Każde spotkanie kończy się jednym konkretnym ruchem do wykonania. Bo powrót to ruchy, nie plany na rok." },
 ];
 
 export default function About() {
   const { cards, rich } = useSiteContent();
   const heroTitle = rich("about", "heroTitle", 'Byłem tam.<br /><span class="gold-text">I wróciłem.</span><br />Inny.');
-  const heroIntro = rich("about", "heroIntro", "exmortis to nie «mentor dla liderów». To głos powrotu. Moja przewaga nie leży w tym, że uczę sprzedaży — to potrafi wielu. Moja przewaga to droga tam i z powrotem.");
-  const manifesto = rich("about", "manifesto", "<p>Są dni, kiedy człowiek żyje, ale w środku już umarł. Chodzi, pracuje, uśmiecha się — a nie czuje nic.</p><p>Ja tam byłem. W miejscu, z którego wydawało się, że nie ma powrotu. Wróciłem. Nie do tego, kim byłem — jako ktoś nowy.</p><p class=\"gold-text\">To sprzedaje się dziś najmocniej, bo jest nie do podrobienia. Droga tam i z powrotem.</p>");
+  const heroIntro = rich(
+    "about",
+    "heroIntro",
+    "Ex ksiądz może jeszcze coś powiedzieć? Exmortis to przestrzeń dla osób, które chcą przebić przez swoje „dno”, zamienić swoje „grzebanie” w moment „sadzenia” i doświadczyć wzrostu."
+  );
+  const manifesto = rich(
+    "about",
+    "manifesto",
+    "<p>Są dni, kiedy człowiek żyje, ale w środku już umarł. Chodzi, pracuje, uśmiecha się — a nie czuje nic.</p><p>Ja tam byłem. W miejscu, z którego wydawało się, że nie ma powrotu. Wróciłem. Nie do tego, kim byłem — jako ktoś nowy.</p>"
+  );
   const timeline = cards("about", "timeline", TIMELINE);
   const principles = cards("about", "principles", PRINCIPLES);
   const ctaTitle = rich("about", "ctaTitle", 'Jeśli coś w Tobie<br /><span class="gold-text">już wie</span>');
@@ -45,10 +59,11 @@ export default function About() {
       {/* Split portrait + manifesto */}
       <section className="grid md:grid-cols-2 border-y hairline min-h-[80vh]">
         <div className="relative bg-[#070708] overflow-hidden order-2 md:order-1">
-          <img
+          <Image
             src={PORTRAIT}
             alt="exmortis"
-            className="w-full h-full object-cover grayscale contrast-125 min-h-[60vh]"
+            fittingType="fill"
+            className="absolute inset-0 w-full h-full"
           />
           <div className="absolute inset-0 bg-gradient-to-t from-[#0A0A0B] via-transparent to-transparent" />
           <div className="absolute bottom-8 left-8">
@@ -61,10 +76,22 @@ export default function About() {
         </div>
       </section>
 
+      {/* Krótka historia */}
+      <ShortStory />
+
+      {/* Skąd wzięło się exmortis */}
+      <Origin />
+
+      {/* Kim NIE jestem */}
+      <WhoIAmNot />
+
+      {/* Czego uczę */}
+      <WhatITeach />
+
       {/* Timeline — Śmierć / Próg / Powrót / Inny */}
-      <section className="py-32 px-5 md:px-10">
+      <section className="py-32 px-5 md:px-10 border-t hairline">
         <div className="mx-auto max-w-[1400px]">
-          <p className="technical text-[11px] gold-text mb-4">DROGA · 02</p>
+          <p className="technical text-[11px] gold-text mb-4">DROGA · 06</p>
           <h2 className="relic-heading text-4xl md:text-6xl mb-20 leading-[0.95]">
             Śmierć → Próg →<br /><span className="gold-text">Powrót → Inny</span>
           </h2>
@@ -88,7 +115,7 @@ export default function About() {
       {/* Principles */}
       <section className="py-32 px-5 md:px-10 border-y hairline bg-[#070708]">
         <div className="mx-auto max-w-[1400px]">
-          <p className="technical text-[11px] gold-text mb-4">POSTAWA · 03</p>
+          <p className="technical text-[11px] gold-text mb-4">POSTAWA · 07</p>
           <h2 className="relic-heading text-4xl md:text-6xl mb-16 leading-[0.95]">
             Jak<br /><span className="gold-text">prowadzę</span>
           </h2>
