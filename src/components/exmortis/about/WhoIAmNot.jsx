@@ -32,24 +32,13 @@ export default function WhoIAmNot() {
   return (
     <section className="py-32 px-5 md:px-10 border-y hairline bg-[#070708]">
       <div className="mx-auto max-w-[1400px]">
-        <div className="grid md:grid-cols-12 gap-10 items-end mb-16">
-          <div className="md:col-span-7">
-            <p className="technical text-[11px] gold-text mb-4">GRANICE · 04</p>
-            <h2 className="relic-heading text-4xl md:text-6xl leading-[0.95]">
-              Kim <span className="blood-text">NIE</span>
-              <br />
-              jestem?
-            </h2>
-          </div>
-          <div className="md:col-span-5 relative overflow-hidden grayscale contrast-125 order-first md:order-last">
-            <Image
-              src={PORTRAIT}
-              alt="Dawid — exmortis"
-              fittingType="fill"
-              className="w-full aspect-[4/3]"
-            />
-            <div className="absolute inset-0 bg-gradient-to-t from-[#070708] via-transparent to-transparent" />
-          </div>
+        <div className="mb-16">
+          <p className="technical text-[11px] gold-text mb-4">GRANICE · 04</p>
+          <h2 className="relic-heading text-4xl md:text-6xl leading-[0.95]">
+            Kim <span className="blood-text">NIE</span>
+            <br />
+            jestem?
+          </h2>
         </div>
         <div className="grid md:grid-cols-3 gap-px bg-[#3D3D3F]/40">
           {nots.map((n, i) => (
@@ -60,11 +49,25 @@ export default function WhoIAmNot() {
             </div>
           ))}
         </div>
-        <div className="bg-[#0A0A0B] border-t hairline p-10 md:p-16 text-center">
-          <div
-            className="rich-content text-lg leading-relaxed text-foreground/75 max-w-2xl mx-auto"
-            dangerouslySetInnerHTML={{ __html: mentor }}
-          />
+        <div className="bg-[#0A0A0B] border-t hairline grid md:grid-cols-2">
+          <div className="relative overflow-hidden grayscale contrast-125 min-h-[50vh]">
+            <Image
+              src={PORTRAIT}
+              alt="Dawid — exmortis"
+              fittingType="fill"
+              className="absolute inset-0 w-full h-full"
+            />
+            <div className="absolute inset-0 bg-gradient-to-t from-[#0A0A0B] via-transparent to-transparent" />
+            <div className="absolute bottom-8 left-8">
+              <p className="technical text-[10px] gold-text">MENTOR · KOMPAS</p>
+            </div>
+          </div>
+          <div className="p-10 md:p-16 lg:p-20 flex flex-col justify-center">
+            <div
+              className="rich-content text-lg leading-relaxed text-foreground/75"
+              dangerouslySetInnerHTML={{ __html: mentor }}
+            />
+          </div>
         </div>
       </div>
     </section>
