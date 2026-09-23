@@ -15,6 +15,7 @@ import ProductDetail from '@/pages/ProductDetail';
 import Checkout from '@/pages/Checkout';
 import Powrot from '@/pages/Powrot';
 import Glos from '@/pages/Glos';
+import Test from '@/pages/Test';
 import Login from '@/pages/Login';
 import Register from '@/pages/Register';
 import ForgotPassword from '@/pages/ForgotPassword';
@@ -68,6 +69,7 @@ const AuthenticatedApp = () => {
           <Route path="/kasa" element={<Checkout />} />
           <Route path="/powrot" element={<Powrot />} />
           <Route path="/glos" element={<Glos />} />
+          <Route path="/test" element={<Test />} />
         </Route>
         <Route path="*" element={<PageNotFound />} />
       </Routes>

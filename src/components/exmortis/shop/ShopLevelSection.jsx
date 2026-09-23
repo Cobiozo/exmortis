@@ -1,0 +1,36 @@
+import React from "react";
+import ShopProductCard from "./ShopProductCard";
+import ShopFeaturedCard from "./ShopFeaturedCard";
+
+// Sekcja poziomu drabiny: Brama, Pierwszy krok, Praktyka, Krąg, Głębia.
+export default function ShopLevelSection({ section, products, onWaitlist }) {
+  if (!products || products.length === 0) return null;
+  const featured = products.filter((p) => p.is_featured);
+  const rest = products.filter((p) => !p.is_featured);
+
+  return (
+    <section id={`poziom-${section.level}`} className="py-20 md:py-28 px-5 md:px-10 border-t hairline">
+      <div className="mx-auto max-w-[1400px]">
+        <div className="mb-12 md:mb-16 max-w-2xl">
+          <p className="technical text-[11px] gold-text mb-4">
+            {section.label} · {String(section.level).padStart(2, "0")}
+          </p>
+          <h2 className="shop-heading text-3xl md:text-5xl text-[#F5EFE1] mb-4">{section.title}</h2>
+          <p className="text-foreground/50">{section.line}</p>
+        </div>
+
+        {featured.map((p) => (
+          <ShopFeaturedCard key={p.id} product={p} onWaitlist={onWaitlist} className="mb-6 md:mb-8" />
+        ))}
+
+        {rest.length > 0 && (
+          <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
+            {rest.map((p) => (
+              <ShopProductCard key={p.id} product={p} onWaitlist={onWaitlist} />
+            ))}
+          </div>
+        )}
+      </div>
+    </section>
+  );
+}

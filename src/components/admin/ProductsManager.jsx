@@ -4,6 +4,15 @@ import { Image } from "@/components/ui/image";
 import { Plus, Pencil, Trash2, Eye, EyeOff } from "lucide-react";
 import ProductEditor from "./ProductEditor";
 
+const LEVEL_NAMES = {
+  0: "BRAMA",
+  1: "PIERWSZY KROK",
+  2: "PRAKTYKA",
+  3: "KRĄG",
+  4: "GŁĘBIA",
+  5: "SPECJALNE",
+};
+
 export default function ProductsManager() {
   const [products, setProducts] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -88,7 +97,15 @@ export default function ProductsManager() {
               <div className="flex-1 min-w-0">
                 <p className="text-sm truncate">{p.name}</p>
                 <p className="technical text-[9px] text-foreground/40 mt-1">
-                  {p.category.toUpperCase()} · {p.price === 0 ? "DARMOWE" : `${p.price} zł`}
+                  {LEVEL_NAMES[p.level] || "BEZ POZIOMU"} · {(p.status || "dostępny").toUpperCase()} ·{" "}
+                  {p.is_free
+                    ? "BEZPŁATNE"
+                    : p.price_regular != null
+                    ? `${p.price_regular} ZŁ`
+                    : p.price === 0
+                    ? "BEZPŁATNE"
+                    : `${p.price} ZŁ`}
+                  {p.waitlist_count > 0 ? ` · LISTA OCZEKUJĄCYCH: ${p.waitlist_count}` : ""}
                 </p>
               </div>
               <button
