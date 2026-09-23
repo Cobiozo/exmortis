@@ -10,8 +10,8 @@ export default function TrustFooter() {
           Gwarancja 14 dni na produkty cyfrowe — jeśli uznasz, że nic Ci nie dały, napisz, zwrócę
           pieniądze. Materiały exmortis nie zastępują terapii ani pomocy medycznej. Jeśli jesteś w
           kryzysie, zadzwoń pod bezpłatny numer{" "}
-          <a href="tel:800702222" className="gold-text hover:underline">
-            800 70 22 22
+          <a href="tel:116123" className="gold-text hover:underline">
+            116 123
           </a>{" "}
           lub{" "}
           <a href="tel:112" className="gold-text hover:underline">

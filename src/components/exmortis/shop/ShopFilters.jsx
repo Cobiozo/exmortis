@@ -5,11 +5,23 @@ const STAGES = ["Śmierć", "Próg", "Powrót", "Inny"];
 const FORMS = ["Czytam", "Słucham", "Oglądam", "Uczestniczę", "Idę głęboko"];
 const AUDIENCES = ["Mężczyzna", "Kobieta", "Ojciec", "Matka", "Mąż", "Żona", "Lider"];
 
-function Group({ label, options, value, onToggle }) {
+function Group({ label, options, value, onToggle, allowAll = false }) {
   return (
     <div className="flex items-start gap-3 flex-wrap">
       <span className="technical text-[9px] text-foreground/30 pt-2 w-[72px] flex-shrink-0">{label}</span>
       <div className="flex flex-wrap gap-1.5">
+        {allowAll && (
+          <button
+            onClick={() => onToggle(null)}
+            className={`technical text-[9px] px-3 py-1.5 border transition-all duration-200 ${
+              !value
+                ? "border-[#C9A24A] gold-text bg-[#C9A24A]/10"
+                : "hairline text-foreground/40 hover:text-foreground/70"
+            }`}
+          >
+            WSZYSTKIE
+          </button>
+        )}
         {options.map((o) => (
           <button
             key={o}
@@ -37,7 +49,7 @@ export default function ShopFilters({ filters, setFilters }) {
 
   const panel = (
     <div className="space-y-3 py-5">
-      <Group label="ETAP" options={STAGES} value={filters.stage} onToggle={toggle("stage")} />
+      <Group label="ETAP" options={STAGES} value={filters.stage} onToggle={toggle("stage")} allowAll />
       <Group label="FORMA" options={FORMS} value={filters.form} onToggle={toggle("form")} />
       <Group label="DLA KOGO" options={AUDIENCES} value={filters.audience} onToggle={toggle("audience")} />
       {hasAny && (
