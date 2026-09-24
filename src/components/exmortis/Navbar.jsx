@@ -5,14 +5,13 @@ import { useCart } from "./CartContext";
 import Logo from "./Logo";
 
 const NAV = [
+  { label: "O mnie", to: "/o-mnie" },
   { label: "Powrót", to: "/powrot" },
   { label: "Głos", to: "/glos" },
-  { label: "O mnie", to: "/o-mnie" },
   { label: "Sklep", to: "/sklep" },
-  { label: "Cisza", to: "/cisza?src=nav" },
-  { label: "Spotkania", to: "/spotkania?src=nav" },
-  { label: "Kontakt", to: "/#kontakt" },
   { label: "Test", to: "/test?src=nav", gold: true },
+  { label: "Cisza", to: "/cisza?src=nav" },
+  { label: "Kontakt", to: "/#kontakt" },
 ];
 
 export default function Navbar() {

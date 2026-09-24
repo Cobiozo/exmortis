@@ -6,7 +6,6 @@ import Logo from "@/components/exmortis/Logo";
 import ProductCard from "@/components/exmortis/ProductCard";
 import Testimonials from "@/components/exmortis/Testimonials";
 import ContactSection from "@/components/exmortis/ContactSection";
-import NewsletterSection from "@/components/exmortis/NewsletterSection";
 import ForWhom from "@/components/exmortis/ForWhom";
 import PowrotTeaser from "@/components/exmortis/PowrotTeaser";
 import CiszaTeaser from "@/components/exmortis/CiszaTeaser";
@@ -113,7 +112,7 @@ export default function Home() {
               </span>
             </Link>
             <Link to="/o-mnie" className="btn-ghost">
-              KIM JEST EXMORTIS
+              KIM JEST EXMORTIS?
             </Link>
           </div>
         </div>
@@ -188,26 +187,6 @@ export default function Home() {
         </div>
       </section>
 
-      {/* ===== TEST — KTÓRA Z NICH JEST TWOJA ===== */}
-      <section className="relative border-y border-[#C9A24A]/30 bg-[#070708] py-20 md:py-28 px-5 md:px-10">
-        <div className="mx-auto max-w-3xl text-center">
-          <h2 className="shop-heading text-3xl md:text-5xl text-[#F5EFE1] mb-6">
-            Która z nich jest Twoja?
-          </h2>
-          <p className="text-foreground/60 text-lg leading-relaxed mb-10 max-w-2xl mx-auto">
-            Mentalna, duchowa, życiowa. Większość z nas niesie jedną z nich — albo kilka naraz.
-            Dwanaście stwierdzeń pomoże Ci zobaczyć, z której śmierci dziś wracasz i od czego
-            warto zacząć.
-          </p>
-          <Link to="/test?src=home-section" className="btn-relic">
-            ZRÓB TEST <ArrowRight className="h-4 w-4" />
-          </Link>
-          <p className="technical text-[9px] text-foreground/40 mt-4">
-            BEZPŁATNIE · WYNIK DOSTANIESZ OD RAZU I NA E-MAIL
-          </p>
-        </div>
-      </section>
-
       {/* ===== THREE TRUTHS ===== */}
       <section className="relative py-32 md:py-48 px-5 md:px-10">
         <div className="absolute right-0 top-0 bottom-0 w-px spine opacity-30" />
@@ -272,9 +251,6 @@ export default function Home() {
       {/* ===== ŚWIADECTWA ===== */}
       <Testimonials />
 
-      {/* ===== LISTY POWROTU · NEWSLETTER ===== */}
-      <NewsletterSection />
-
       {/* ===== KONTAKT ===== */}
       <ContactSection />
 
@@ -289,10 +265,27 @@ export default function Home() {
             <Link to="/sklep" className="btn-relic">
               ZACZNIJ POWRÓT <ArrowRight className="h-4 w-4" />
             </Link>
-            <a href="#listy-powrotu" className="btn-ghost">
-              ZAPISZ SIĘ NA NEWSLETTER
-            </a>
           </div>
+        </div>
+      </section>
+
+      {/* ===== TEST — KTÓRA Z NICH JEST TWOJA ===== */}
+      <section className="relative border-t border-[#C9A24A]/30 bg-[#070708] py-20 md:py-28 px-5 md:px-10">
+        <div className="mx-auto max-w-3xl text-center">
+          <h2 className="shop-heading text-3xl md:text-5xl text-[#F5EFE1] mb-6">
+            Która z nich jest Twoja?
+          </h2>
+          <p className="text-foreground/60 text-lg leading-relaxed mb-10 max-w-2xl mx-auto">
+            Mentalna, duchowa, życiowa. Większość z nas niesie jedną z nich — albo kilka naraz.
+            Dwanaście stwierdzeń pomoże Ci zobaczyć, z której śmierci dziś wracasz i od czego
+            warto zacząć.
+          </p>
+          <Link to="/test?src=home-section" className="btn-relic">
+            ZRÓB TEST <ArrowRight className="h-4 w-4" />
+          </Link>
+          <p className="technical text-[9px] text-foreground/40 mt-4">
+            BEZPŁATNIE · WYNIK DOSTANIESZ OD RAZU I NA E-MAIL
+          </p>
         </div>
       </section>
     </div>
