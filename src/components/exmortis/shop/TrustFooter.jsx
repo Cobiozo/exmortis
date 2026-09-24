@@ -4,7 +4,7 @@ import { Link } from "react-router-dom";
 // Stopka zaufania Skarbca: gwarancja, kryzys, linki prawne.
 export default function TrustFooter() {
   return (
-    <section className="py-16 px-5 md:px-10 border-t hairline">
+    <section className="py-20 md:py-24 px-5 md:px-10 border-t hairline">
       <div className="mx-auto max-w-[900px] text-center space-y-6">
         <p className="text-sm text-foreground/45 leading-relaxed max-w-2xl mx-auto">
           Gwarancja 14 dni na produkty cyfrowe — jeśli uznasz, że nic Ci nie dały, napisz, zwrócę

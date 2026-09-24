@@ -8,13 +8,15 @@ export default function ShopProductCard({ product: p, onWaitlist }) {
   const cover = p.cover_image || p.image_url;
   return (
     <article
-      className={`flex flex-col border hairline bg-[#0D0D0E] transition-all duration-300 hover:border-[#C9A24A]/40 ${
+      className={`group flex flex-col border hairline bg-[#0D0D0E] transition-all duration-500 hover:border-[#C9A24A]/40 ${
         soon ? "opacity-60 hover:opacity-100" : ""
       }`}
     >
       <div className="relative aspect-[4/3] overflow-hidden bg-[#0F0F10]">
         {cover ? (
-          <Image src={cover} alt={p.name} className="w-full h-full" fittingType="fill" />
+          <div className="absolute inset-0 transition-transform duration-700 ease-out group-hover:scale-[1.03]">
+            <Image src={cover} alt={p.name} className="w-full h-full" fittingType="fill" />
+          </div>
         ) : (
           <div className="w-full h-full flex items-center justify-center p-6 text-center">
             <span className="shop-heading text-xl text-[#C9A24A]/70 leading-snug">{p.name}</span>
@@ -25,7 +27,7 @@ export default function ShopProductCard({ product: p, onWaitlist }) {
         </div>
       </div>
 
-      <div className="flex flex-col flex-1 p-6 gap-3">
+      <div className="flex flex-col flex-1 p-7 gap-3">
         <h3 className="shop-heading text-xl text-[#F5EFE1] leading-snug">{p.name}</h3>
         {p.promise && <p className="italic text-foreground/70 text-sm leading-relaxed">{p.promise}</p>}
         {p.for_whom && <p className="text-xs text-foreground/40">{p.for_whom}</p>}
@@ -35,7 +37,7 @@ export default function ShopProductCard({ product: p, onWaitlist }) {
           </p>
         )}
 
-        <div className="mt-auto pt-4 border-t hairline space-y-3">
+        <div className="mt-auto pt-5 border-t hairline space-y-3">
           <div className="text-base text-[#F5EFE1] min-h-[24px]">
             <PriceBlock p={p} />
           </div>

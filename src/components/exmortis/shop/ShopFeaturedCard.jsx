@@ -9,11 +9,13 @@ export default function ShopFeaturedCard({ product: p, onWaitlist, className = "
   const soon = p.status === "wkrótce";
   return (
     <article
-      className={`grid md:grid-cols-2 border border-[#C9A24A]/30 bg-[#0D0D0E] overflow-hidden ${className}`}
+      className={`group grid md:grid-cols-2 border border-[#C9A24A]/30 bg-[#0D0D0E] overflow-hidden ${className}`}
     >
       <div className="relative min-h-[280px] bg-[#0F0F10]">
         {cover ? (
-          <Image src={cover} alt={p.name} className="absolute inset-0 w-full h-full" fittingType="fill" />
+          <div className="absolute inset-0 transition-transform duration-700 ease-out group-hover:scale-[1.03]">
+            <Image src={cover} alt={p.name} className="w-full h-full" fittingType="fill" />
+          </div>
         ) : (
           <div className="absolute inset-0 flex items-center justify-center p-10 text-center bg-gradient-to-br from-[#141416] to-[#0A0A0B]">
             <span className="shop-heading text-3xl text-[#C9A24A]/80 leading-snug">{p.name}</span>
@@ -24,7 +26,7 @@ export default function ShopFeaturedCard({ product: p, onWaitlist, className = "
         </div>
       </div>
 
-      <div className="p-8 md:p-12 flex flex-col gap-4">
+      <div className="p-8 md:p-14 flex flex-col gap-5">
         <p className="technical text-[9px] text-foreground/40">POLECANE</p>
         <h3 className="shop-heading text-2xl md:text-4xl text-[#F5EFE1] leading-snug">{p.name}</h3>
         {p.promise && (

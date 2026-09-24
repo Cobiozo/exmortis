@@ -6,7 +6,7 @@ import ShopProductCard from "./ShopProductCard";
 export default function MusicSection({ products, onWaitlist }) {
   const soundtrack = (products || []).find((p) => p.slug === "soundtrack-powrotu");
   return (
-    <section className="py-20 md:py-28 px-5 md:px-10 border-t hairline bg-[#070708]">
+    <section className="py-24 md:py-32 px-5 md:px-10 border-t hairline bg-[#070708]">
       <div className="mx-auto max-w-[1400px]">
         <div className="grid md:grid-cols-12 gap-10 items-end mb-12">
           <div className="md:col-span-7">

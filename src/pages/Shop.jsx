@@ -69,7 +69,7 @@ export default function Shop() {
             którym stoisz dzisiaj — od bezpłatnego listu po pracę jeden na jeden.
           </p>
 
-          <div className="mt-14 flex flex-wrap gap-x-10 gap-y-4 items-baseline">
+          <div className="mt-16 flex flex-wrap gap-x-10 gap-y-4 items-baseline">
             {STAGE_WORDS.map((s) => (
               <button
                 key={s}

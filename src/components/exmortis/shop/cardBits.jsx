@@ -61,7 +61,7 @@ export function ProductButton({ p, onWaitlist }) {
     return (
       <button
         onClick={() => onWaitlist && onWaitlist(p)}
-        className={`${base} border border-[#7A3B3D] text-[#E0B9B9] hover:bg-[#5C1A1B]/30 hover:border-[#5C1A1B]`}
+        className={`${base} border border-[#5C1A1B] text-[#E0B9B9] hover:bg-[#5C1A1B]/25`}
       >
         Zapisz się na listę oczekujących
       </button>
