@@ -18,6 +18,11 @@ export function whenText(iso) {
   return `${fmt({ weekday: "long", day: "numeric", month: "long" }).format(new Date(iso))} · ${timeText(iso)}`;
 }
 
+// Pełna data z godziną, np. „czwartek, 3 grudnia · 20:00”.
+export function plWhen(iso) {
+  return whenText(iso);
+}
+
 export function durationText(minutes) {
   const m = Number(minutes) || 60;
   if (m % 60 === 0) return `${m / 60} godz.`;

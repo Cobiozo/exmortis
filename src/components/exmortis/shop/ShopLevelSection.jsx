@@ -1,12 +1,15 @@
 import React from "react";
 import ShopProductCard from "./ShopProductCard";
 import ShopFeaturedCard from "./ShopFeaturedCard";
+import ShopEventCard from "@/components/exmortis/events/ShopEventCard";
 
 // Sekcja poziomu drabiny: Brama, Pierwszy krok, Praktyka, Krąg, Głębia.
-export default function ShopLevelSection({ section, products, onWaitlist }) {
-  if (!products || products.length === 0) return null;
-  const featured = products.filter((p) => p.is_featured);
-  const rest = products.filter((p) => !p.is_featured);
+export default function ShopLevelSection({ section, products, events, onWaitlist }) {
+  const list = products || [];
+  const eventList = events || [];
+  if (list.length === 0 && eventList.length === 0) return null;
+  const featured = list.filter((p) => p.is_featured);
+  const rest = list.filter((p) => !p.is_featured);
 
   return (
     <section id={`poziom-${section.level}`} className="py-24 md:py-32 px-5 md:px-10 border-t hairline">
@@ -35,6 +38,14 @@ export default function ShopLevelSection({ section, products, onWaitlist }) {
           <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
             {rest.map((p) => (
               <ShopProductCard key={p.id} product={p} onWaitlist={onWaitlist} />
+            ))}
+          </div>
+        )}
+
+        {eventList.length > 0 && (
+          <div className={`grid sm:grid-cols-2 lg:grid-cols-3 gap-6 ${featured.length > 0 || rest.length > 0 ? "mt-6" : ""}`}>
+            {eventList.map((ev) => (
+              <ShopEventCard key={ev.id} event={ev} />
             ))}
           </div>
         )}

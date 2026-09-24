@@ -23,6 +23,7 @@ export default function Shop() {
   const [loading, setLoading] = useState(true);
   const [filters, setFilters] = useState({ stage: null, form: null, audience: null });
   const [waitlistProduct, setWaitlistProduct] = useState(null);
+  const [events, setEvents] = useState([]);
 
   useEffect(() => {
     base44.functions
@@ -30,6 +31,22 @@ export default function Shop() {
       .then((res) => setProducts(res.data.products || []))
       .catch(() => setProducts([]))
       .finally(() => setLoading(false));
+  }, []);
+
+  useEffect(() => {
+    base44.functions
+      .invoke("eventsPublic", { action: "list" })
+      .then((res) => {
+        setEvents(
+          (res.data.upcoming || []).filter(
+            (e) =>
+              e.status === "Opublikowane" &&
+              Number(e.price) > 0 &&
+              ["Warsztat", "Krąg", "Retreat"].includes(e.event_type)
+          )
+        );
+      })
+      .catch(() => setEvents([]));
   }, []);
 
   const filtered = useMemo(() => {
@@ -134,6 +151,14 @@ export default function Shop() {
             key={section.level}
             section={section}
             products={filtered.filter((p) => (p.level ?? 1) === section.level)}
+            events={events.filter((e) =>
+              (section.level === 2
+                ? ["Warsztat", "Retreat"]
+                : section.level === 3
+                  ? ["Krąg", "Retreat"]
+                  : []
+              ).includes(e.event_type)
+            )}
             onWaitlist={setWaitlistProduct}
           />
         ))

@@ -91,6 +91,7 @@ export default function Footer() {
               <li><Link to="/sklep" className="text-foreground/70 hover:gold-text transition-colors">Sklep</Link></li>
               <li><Link to="/test?src=footer" className="text-foreground/70 hover:gold-text transition-colors">Test: która śmierć jest Twoja?</Link></li>
               <li><Link to="/cisza?src=footer" className="text-foreground/70 hover:gold-text transition-colors">Chwila ciszy</Link></li>
+              <li><Link to="/spotkania?src=footer" className="text-foreground/70 hover:gold-text transition-colors">Spotkania</Link></li>
               <li><a href="#manifest" className="text-foreground/70 hover:gold-text transition-colors">Manifest</a></li>
             </ul>
           </div>

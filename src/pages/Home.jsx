@@ -10,6 +10,7 @@ import NewsletterSection from "@/components/exmortis/NewsletterSection";
 import ForWhom from "@/components/exmortis/ForWhom";
 import PowrotTeaser from "@/components/exmortis/PowrotTeaser";
 import CiszaTeaser from "@/components/exmortis/CiszaTeaser";
+import EventsTeaser from "@/components/exmortis/events/EventsTeaser";
 import { Image } from "@/components/ui/image";
 import { useSiteContent } from "@/components/exmortis/SiteContentProvider";
 
@@ -230,6 +231,9 @@ export default function Home() {
 
       {/* ===== POWRÓT — TEASER ===== */}
       <PowrotTeaser />
+
+      {/* ===== NAJBLIŻSZE SPOTKANIA ===== */}
+      <EventsTeaser />
 
       {/* ===== SKLEP PREVIEW ===== */}
       <section className="relative py-32 px-5 md:px-10 border-t hairline bg-[#070708]">
