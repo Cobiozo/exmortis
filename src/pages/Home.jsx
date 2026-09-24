@@ -9,6 +9,7 @@ import ContactSection from "@/components/exmortis/ContactSection";
 import NewsletterSection from "@/components/exmortis/NewsletterSection";
 import ForWhom from "@/components/exmortis/ForWhom";
 import PowrotTeaser from "@/components/exmortis/PowrotTeaser";
+import CiszaTeaser from "@/components/exmortis/CiszaTeaser";
 import { Image } from "@/components/ui/image";
 import { useSiteContent } from "@/components/exmortis/SiteContentProvider";
 
@@ -152,6 +153,9 @@ export default function Home() {
           </p>
         </div>
       </section>
+
+      {/* ===== CHWILA CISZY ===== */}
+      <CiszaTeaser />
 
       {/* ===== THREE DEATHS ===== */}
       <section className="relative py-32 px-5 md:px-10 border-y hairline bg-[#070708]">
