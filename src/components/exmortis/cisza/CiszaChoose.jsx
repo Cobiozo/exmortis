@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 
-const BUTTON_MIN = [3, 5, 10, 15];
+const BUTTON_MIN = [3, 5, 10, 15, 30, 60];
 
 // Ekran 1 — wybór czasu i dźwięku.
 export default function CiszaChoose({ minutes, setMinutes, sound, setSound, settings, onStart, reduced }) {

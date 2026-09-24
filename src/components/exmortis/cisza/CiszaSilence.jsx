@@ -1,5 +1,8 @@
 import React, { useEffect, useRef, useState } from "react";
+import { Image } from "@/components/ui/image";
 import { playBowlSound, formatRemaining } from "./motion";
+
+const LOGO_URL = "https://media.base44.com/images/public/6aa08bc6318b0f886cc3b9a3/6636f6358_logo.png";
 
 const SENTENCES = [
   "Nie musisz nic robić. Wystarczy, że jesteś.",
@@ -213,6 +216,15 @@ export default function CiszaSilence({ minutes, sound, source, backgroundUrl, ou
       className="fixed inset-0 bg-black flex items-center justify-center overflow-hidden"
       onClick={showControls}
     >
+      <div className="absolute top-6 md:top-8 left-0 right-0 flex justify-center">
+        <Image
+          src={LOGO_URL}
+          alt="Exmortis"
+          className="w-12 h-12 md:w-14 md:h-14 opacity-60"
+          fittingType="fit"
+        />
+      </div>
+
       <div className="h-px bg-[#C9A24A]" style={{ width: `${ratio * 40}%` }} />
 
       <p
