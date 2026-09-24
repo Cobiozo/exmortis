@@ -281,7 +281,7 @@ export default function Home() {
             <Link to="/sklep" className="btn-relic">
               ZACZNIJ POWRÓT <ArrowRight className="h-4 w-4" />
             </Link>
-            <a href="#kontakt" className="btn-ghost">
+            <a href="#listy-powrotu" className="btn-ghost">
               ZAPISZ SIĘ NA NEWSLETTER
             </a>
           </div>

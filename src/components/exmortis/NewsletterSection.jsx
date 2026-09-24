@@ -31,7 +31,7 @@ export default function NewsletterSection() {
   };
 
   return (
-    <section className="py-32 px-5 md:px-10 border-t hairline bg-[#070708]">
+    <section id="listy-powrotu" className="py-32 px-5 md:px-10 border-t hairline bg-[#070708]">
       <div className="mx-auto max-w-[1400px] grid md:grid-cols-2 gap-12 md:gap-20 items-center">
         <div>
           <p className="technical text-[11px] gold-text mb-4">LISTY POWROTU · 08</p>
