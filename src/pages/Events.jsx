@@ -1,6 +1,6 @@
 import React, { useEffect, useMemo, useState } from "react";
 import { base44 } from "@/api/base44Client";
-import EventCard from "@/components/exmortis/events/EventCard";
+import EventTile from "@/components/exmortis/events/EventTile";
 import PastEvents from "@/components/exmortis/events/PastEvents";
 import NoEvents from "@/components/exmortis/events/NoEvents";
 
@@ -25,6 +25,7 @@ export default function Events() {
   }, []);
 
   const upcoming = data?.upcoming || [];
+  const publishedCount = upcoming.filter((e) => e.status === "Opublikowane").length;
   const filtered = useMemo(() => {
     return upcoming.filter((ev) => {
       if (tab === "free") return Number(ev.price) === 0;
@@ -42,26 +43,25 @@ export default function Events() {
           <p className="technical text-[11px] gold-text mb-6">SPOTKANIA</p>
           <h1 className="shop-heading text-4xl md:text-7xl text-[#F5EFE1] leading-tight">Spotkania</h1>
           <p className="mt-8 text-foreground/60 text-lg leading-relaxed max-w-2xl">
-            Czasem trzeba po prostu posiedzieć razem. Tu znajdziesz spotkania otwarte, warsztaty i kręgi —
-            online i w Rzeszowie.
+            Czasem trzeba po prostu posiedzieć razem. Tu znajdziesz spotkania otwarte, warsztaty i kręgi.
           </p>
         </div>
       </section>
 
       {!data ? (
-        <div className="px-5 md:px-10 pb-24 space-y-4 max-w-[900px] mx-auto">
+        <div className="px-5 md:px-10 pb-24 space-y-4 max-w-[900px]">
           {[...Array(2)].map((_, i) => (
-            <div key={i} className="h-40 border hairline bg-[#0D0D0E] animate-pulse" />
+            <div key={i} className="h-40 border border-[#2A2A2A] bg-[#121212] animate-pulse" />
           ))}
         </div>
-      ) : upcoming.length === 0 ? (
-        <div className="px-5 pb-32 md:pb-40">
+      ) : publishedCount === 0 ? (
+        <div className="px-5 md:px-10 pb-32 md:pb-40 max-w-[900px]">
           <NoEvents />
         </div>
       ) : (
         <>
-          <div className="px-5 md:px-10 pb-12">
-            <div className="mx-auto max-w-[900px] flex flex-wrap gap-3">
+          <div className="px-5 md:px-10 pb-10">
+            <div className="max-w-[900px] flex flex-wrap gap-3">
               {TABS.map((t) => (
                 <button
                   key={t.key}
@@ -69,7 +69,7 @@ export default function Events() {
                   className={`technical text-[10px] px-5 py-2.5 border transition-colors duration-300 ${
                     tab === t.key
                       ? "border-[#C9A24A] gold-text"
-                      : "hairline text-foreground/40 hover:text-foreground/70"
+                      : "border-[#2A2A2A] text-foreground/40 hover:text-foreground/70"
                   }`}
                 >
                   {t.label.toUpperCase()}
@@ -78,14 +78,12 @@ export default function Events() {
             </div>
           </div>
 
-          <div className="px-5 md:px-10 pb-20 md:pb-24 space-y-6 max-w-[900px] mx-auto">
+          <div className="px-5 md:px-10 pb-20 md:pb-24 space-y-4 max-w-[900px]">
             {filtered.map((ev) => (
-              <EventCard key={ev.id} event={ev} />
+              <EventTile key={ev.id} event={ev} />
             ))}
             {filtered.length === 0 && (
-              <p className="text-center text-foreground/40 py-16">
-                W tym filtrze nie ma teraz żadnych spotkań.
-              </p>
+              <p className="text-foreground/40 py-16">W tym filtrze nie ma teraz żadnych spotkań.</p>
             )}
           </div>
         </>

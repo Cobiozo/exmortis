@@ -26,7 +26,7 @@ export default function NoEvents() {
   };
 
   return (
-    <div className="max-w-xl mx-auto text-center">
+    <div className="max-w-xl text-left">
       <p className="shop-heading text-2xl md:text-3xl text-[#F5EFE1] leading-snug">
         Najbliższe spotkanie ogłoszę w Listach powrotu.
       </p>

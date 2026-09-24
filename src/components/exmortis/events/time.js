@@ -10,6 +10,34 @@ export function dateParts(iso) {
   return { day: parts.day, month: parts.month, weekday: parts.weekday };
 }
 
+const MONTH_ABBR = ["STY", "LUT", "MAR", "KWI", "MAJ", "CZE", "LIP", "SIE", "WRZ", "PAŹ", "LIS", "GRU"];
+const WEEKDAY_SHORT = {
+  poniedziałek: "pon.",
+  wtorek: "wt.",
+  środa: "śr.",
+  czwartek: "czw.",
+  piątek: "pt.",
+  sobota: "sob.",
+  niedziela: "niedz.",
+};
+
+// Dane kwadratu daty kafelka: skrót miesiąca, dzień, skrót dnia tygodnia.
+export function dateTile(iso) {
+  const d = new Date(iso);
+  const monthIdx = Number(fmt({ month: "numeric" }).format(d)) - 1;
+  const weekday = fmt({ weekday: "long" }).format(d);
+  return {
+    day: fmt({ day: "numeric" }).format(d),
+    month: MONTH_ABBR[monthIdx] || "",
+    weekday: WEEKDAY_SHORT[weekday] || "",
+  };
+}
+
+// Forma spotkania na kartach: tylko „Online” albo „Na żywo”.
+export function formatText(format) {
+  return format === "Online" ? "Online" : "Na żywo";
+}
+
 export function timeText(iso) {
   return fmt({ hour: "2-digit", minute: "2-digit", hour12: false }).format(new Date(iso));
 }

@@ -2,9 +2,9 @@ import React, { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { ArrowRight } from "lucide-react";
 import { base44 } from "@/api/base44Client";
-import EventCardCompact from "./EventCardCompact";
+import EventTile from "./EventTile";
 
-// Strona główna: „Najbliższe spotkania" — do 3 nadchodzących wydarzeń.
+// Strona główna: „Najbliższe spotkania" — do 3 opublikowanych wydarzeń.
 // Cała sekcja znika, gdy nie ma żadnego opublikowanego wydarzenia.
 export default function EventsTeaser() {
   const [events, setEvents] = useState(null);
@@ -27,13 +27,13 @@ export default function EventsTeaser() {
       <div className="absolute right-0 top-0 bottom-0 w-px spine opacity-30" />
       <div className="mx-auto max-w-[1400px]">
         <p className="technical text-[11px] gold-text mb-4">SPOTKANIA</p>
-        <h2 className="relic-heading text-4xl md:text-5xl lg:text-6xl leading-[0.95] mb-16">
+        <h2 className="relic-heading text-4xl md:text-5xl lg:text-6xl leading-[0.95] mb-14">
           Najbliższe<br />spotkania
         </h2>
 
-        <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
+        <div className="max-w-[900px] space-y-4">
           {events.map((ev) => (
-            <EventCardCompact key={ev.id} event={ev} />
+            <EventTile key={ev.id} event={ev} compact />
           ))}
         </div>
 

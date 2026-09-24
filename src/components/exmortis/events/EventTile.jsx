@@ -1,0 +1,164 @@
+import React, { useState } from "react";
+import { Link, useNavigate } from "react-router-dom";
+import { dateTile, timeText, formatText, whenText } from "./time";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
+import RegistrationForm from "./RegistrationForm";
+
+const OUTLINE_GOLD =
+  "inline-flex items-center justify-center gap-2 px-6 py-3 technical text-xs border border-[#C9A24A]/70 text-[#C9A24A] hover:bg-[#C9A24A]/10 hover:border-[#C9A24A] transition-all duration-300 w-full md:w-auto whitespace-nowrap";
+
+// Kafelek wydarzenia: kwadrat daty, znaczkи, tytuł, przycisk akcji.
+// Warianty: compact (strona główna), past (minione z nagraniem).
+export default function EventTile({ event: ev, compact = false, past = false }) {
+  const navigate = useNavigate();
+  const [open, setOpen] = useState(false);
+  const d = dateTile(ev.start_datetime);
+  const cancelled = ev.status === "Odwołane";
+  const dimmed = cancelled || past;
+  const free = !(Number(ev.price) > 0);
+  const capacity = ev.capacity ? Number(ev.capacity) : 0;
+  const registered = ev.registered || 0;
+  const spotsLeft = capacity > 0 ? capacity - registered : null;
+  const full = capacity > 0 && spotsLeft <= 0;
+  const external = ev.registration_type === "Link zewnętrzny" && ev.external_url;
+  const onSite = ev.registration_type === "Zapis na stronie";
+  const minutes = Number(ev.duration_minutes) || 60;
+
+  const stop = (e) => e.stopPropagation();
+  const openModal = (e) => {
+    stop(e);
+    setOpen(true);
+  };
+
+  const action = () => {
+    if (cancelled) {
+      return <span className="technical text-[10px] text-foreground/50 py-3 block text-center md:text-right">Odwołane</span>;
+    }
+    if (past) {
+      return (
+        <a href={ev.recording_url} target="_blank" rel="noreferrer" onClick={stop} className={OUTLINE_GOLD}>
+          OBEJRZYJ NAGRANIE
+        </a>
+      );
+    }
+    if (external) {
+      return (
+        <a href={ev.external_url} target="_blank" rel="noreferrer" onClick={stop} className={OUTLINE_GOLD}>
+          DOŁĄCZ
+        </a>
+      );
+    }
+    if (onSite && !free && !full) {
+      return (
+        <Link to={`/spotkania/${ev.slug}#zapis`} onClick={stop} className={OUTLINE_GOLD}>
+          ZAPISZ SIĘ
+        </Link>
+      );
+    }
+    if (onSite) {
+      return (
+        <button
+          type="button"
+          onClick={openModal}
+          className={
+            free
+              ? "btn-relic !px-6 !py-3 w-full md:w-auto whitespace-nowrap"
+              : OUTLINE_GOLD
+          }
+        >
+          {full ? "LISTA REZERWOWA" : "ZAPISZ SIĘ"}
+        </button>
+      );
+    }
+    return null;
+  };
+
+  const spotsNote =
+    !cancelled && !past && spotsLeft !== null && spotsLeft > 0 && spotsLeft < capacity * 0.3;
+
+  const badges = (
+    <div className="flex flex-wrap gap-2">
+      <span className="technical text-[8px] text-foreground/60 border border-[#2A2A2A] px-2 py-1">
+        {ev.event_type.toUpperCase()}
+      </span>
+      {free ? (
+        <span className="technical text-[8px] gold-text border border-[#C9A24A]/50 px-2 py-1">BEZPŁATNE</span>
+      ) : (
+        <span className="technical text-[8px] blood-text border border-[#BC1E22]/50 px-2 py-1">
+          PŁATNE · {Number(ev.price)} ZŁ
+        </span>
+      )}
+    </div>
+  );
+
+  const titleCls = `shop-heading ${compact ? "text-lg md:text-xl" : "text-xl md:text-2xl"} text-[#F5EFE1] leading-snug`;
+  const infoLine = `${timeText(ev.start_datetime)} · ${minutes} min · ${formatText(ev.format)}`.toUpperCase();
+
+  return (
+    <>
+      <article
+        onClick={() => navigate(`/spotkania/${ev.slug}`)}
+        className={`group cursor-pointer border border-[#2A2A2A] bg-[#121212] transition-colors duration-300 hover:border-[#C9A24A] ${
+          dimmed ? "opacity-50" : ""
+        } ${compact ? "p-4 md:p-5" : "p-5 md:p-7"}`}
+      >
+        <div className="flex flex-col gap-4 md:grid md:grid-cols-[auto_1fr_auto] md:items-center md:gap-8">
+          <div className="flex gap-4 items-start md:contents">
+            {/* kwadrat daty */}
+            <div
+              className={`flex-shrink-0 border border-[#C9A24A] flex flex-col items-center justify-between py-1.5 ${
+                compact ? "w-[72px] h-[72px]" : "w-[72px] h-[72px] md:w-24 md:h-24"
+              }`}
+            >
+              <span className="technical text-[8px] text-foreground/60">{d.month}</span>
+              <span className={`font-heading gold-text leading-none ${compact ? "text-2xl" : "text-2xl md:text-3xl"}`}>
+                {d.day}
+              </span>
+              <span className="text-[10px] text-foreground/50">{d.weekday}</span>
+            </div>
+
+            {/* znaczkи + nazwa */}
+            <div className="min-w-0">
+              {badges}
+              <h3 className={`${titleCls} mt-2`}>{ev.title}</h3>
+              {ev.subtitle && (
+                <p className="italic text-foreground/50 text-sm mt-1.5 leading-relaxed hidden md:block">
+                  {ev.subtitle}
+                </p>
+              )}
+              <p className="technical text-[9px] text-foreground/40 mt-2 hidden md:block">{infoLine}</p>
+            </div>
+          </div>
+
+          {/* mobile: zdanie i linia informacji na pełną szerokość */}
+          <div className="md:hidden">
+            {ev.subtitle && <p className="italic text-foreground/50 text-sm leading-relaxed">{ev.subtitle}</p>}
+            <p className="technical text-[9px] text-foreground/40 mt-2">{infoLine}</p>
+          </div>
+
+          {/* prawa strona: przycisk */}
+          <div className="w-full md:w-auto flex flex-col md:items-end gap-2">
+            {action()}
+            {spotsNote && (
+              <p className="technical text-[9px] blood-text text-center md:text-right">
+                zostało {spotsLeft} miejsc
+              </p>
+            )}
+          </div>
+        </div>
+      </article>
+
+      <Dialog open={open} onOpenChange={setOpen}>
+        <DialogContent className="bg-[#121212] border-[#2A2A2A] max-w-md">
+          <DialogHeader>
+            <DialogTitle className="shop-heading text-xl text-[#F5EFE1]">{ev.title}</DialogTitle>
+            <DialogDescription className="text-foreground/50">
+              {whenText(ev.start_datetime)} · {formatText(ev.format)}
+            </DialogDescription>
+          </DialogHeader>
+          <RegistrationForm event={ev} />
+        </DialogContent>
+      </Dialog>
+    </>
+  );
+}
