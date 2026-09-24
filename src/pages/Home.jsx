@@ -6,6 +6,7 @@ import Logo from "@/components/exmortis/Logo";
 import ProductCard from "@/components/exmortis/ProductCard";
 import Testimonials from "@/components/exmortis/Testimonials";
 import ContactSection from "@/components/exmortis/ContactSection";
+import NewsletterSection from "@/components/exmortis/NewsletterSection";
 import ForWhom from "@/components/exmortis/ForWhom";
 import PowrotTeaser from "@/components/exmortis/PowrotTeaser";
 import { Image } from "@/components/ui/image";
@@ -262,6 +263,9 @@ export default function Home() {
 
       {/* ===== ŚWIADECTWA ===== */}
       <Testimonials />
+
+      {/* ===== LISTY POWROTU · NEWSLETTER ===== */}
+      <NewsletterSection />
 
       {/* ===== KONTAKT ===== */}
       <ContactSection />
