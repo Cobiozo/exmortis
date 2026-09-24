@@ -155,9 +155,6 @@ export default function Home() {
         </div>
       </section>
 
-      {/* ===== CHWILA CISZY ===== */}
-      <CiszaTeaser />
-
       {/* ===== THREE DEATHS ===== */}
       <section className="relative py-32 px-5 md:px-10 border-y hairline bg-[#070708]">
         <div className="mx-auto max-w-[1400px]">
@@ -292,6 +289,9 @@ export default function Home() {
           </p>
         </div>
       </section>
+
+      {/* ===== CHWILA CISZY ===== */}
+      <CiszaTeaser />
     </div>
   );
 }

@@ -11,6 +11,7 @@ const NAV = [
   { label: "Sklep", to: "/sklep" },
   { label: "Test", to: "/test?src=nav", gold: true },
   { label: "Cisza", to: "/cisza?src=nav" },
+  { label: "Spotkania", to: "/spotkania?src=nav" },
   { label: "Kontakt", to: "/#kontakt" },
 ];
 
