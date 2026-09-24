@@ -1,4 +1,5 @@
 import React, { useState } from "react";
+import { Link } from "react-router-dom";
 import { ArrowRight, Check } from "lucide-react";
 import { base44 } from "@/api/base44Client";
 import Section from "./Section";
@@ -41,6 +42,12 @@ export default function PowrotForm() {
           </p>
         </div>
         <div>
+          <p className="text-foreground/50 text-sm mb-8">
+            Nie wiesz, czy to dla Ciebie? Zacznij od{" "}
+            <Link to="/test?src=powrot" className="gold-text hover:underline">
+              testu «Która śmierć jest Twoja?»
+            </Link>
+          </p>
           {sent ? (
             <div className="border border-[#C9A24A]/40 p-10 flex flex-col items-center justify-center text-center gap-6 h-full">
               <div className="w-14 h-14 border-2 border-[#C9A24A] rounded-full flex items-center justify-center">

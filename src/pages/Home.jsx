@@ -101,6 +101,14 @@ export default function Home() {
             <Link to="/sklep" className="btn-relic">
               POZNAJ SKARBIEC <ArrowRight className="h-4 w-4" />
             </Link>
+            <Link to="/test?src=home-hero" className="text-center">
+              <span className="inline-flex items-center justify-center w-full px-8 py-4 technical text-xs border border-[#C9A24A]/60 text-[#C9A24A] hover:bg-[#C9A24A]/10 hover:border-[#C9A24A] transition-all duration-300">
+                Która śmierć jest Twoja?
+              </span>
+              <span className="block technical text-[9px] text-foreground/40 mt-2">
+                test · 3 minuty
+              </span>
+            </Link>
             <Link to="/o-mnie" className="btn-ghost">
               KIM JEST EXMORTIS
             </Link>
@@ -171,6 +179,26 @@ export default function Home() {
               </div>
             ))}
           </div>
+        </div>
+      </section>
+
+      {/* ===== TEST — KTÓRA Z NICH JEST TWOJA ===== */}
+      <section className="relative border-y border-[#C9A24A]/30 bg-[#070708] py-20 md:py-28 px-5 md:px-10">
+        <div className="mx-auto max-w-3xl text-center">
+          <h2 className="shop-heading text-3xl md:text-5xl text-[#F5EFE1] mb-6">
+            Która z nich jest Twoja?
+          </h2>
+          <p className="text-foreground/60 text-lg leading-relaxed mb-10 max-w-2xl mx-auto">
+            Mentalna, duchowa, życiowa. Większość z nas niesie jedną z nich — albo kilka naraz.
+            Dwanaście stwierdzeń pomoże Ci zobaczyć, z której śmierci dziś wracasz i od czego
+            warto zacząć.
+          </p>
+          <Link to="/test?src=home-section" className="btn-relic">
+            ZRÓB TEST <ArrowRight className="h-4 w-4" />
+          </Link>
+          <p className="technical text-[9px] text-foreground/40 mt-4">
+            BEZPŁATNIE · WYNIK DOSTANIESZ OD RAZU I NA E-MAIL
+          </p>
         </div>
       </section>
 

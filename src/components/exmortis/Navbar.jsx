@@ -10,6 +10,7 @@ const NAV = [
   { label: "O mnie", to: "/o-mnie" },
   { label: "Sklep", to: "/sklep" },
   { label: "Kontakt", to: "/#kontakt" },
+  { label: "Test", to: "/test?src=nav", gold: true },
 ];
 
 export default function Navbar() {
@@ -71,7 +72,11 @@ export default function Navbar() {
                 <button
                   key={n.to}
                   onClick={() => handleNav(n.to)}
-                  className="technical text-[11px] text-foreground/70 hover:gold-text transition-colors duration-300"
+                  className={`technical text-[11px] transition-colors duration-300 ${
+                    n.gold
+                      ? "gold-text hover:text-[#E2C170]"
+                      : "text-foreground/70 hover:gold-text"
+                  }`}
                 >
                   {n.label}
                 </button>
