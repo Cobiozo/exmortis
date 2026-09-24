@@ -1,0 +1,85 @@
+// Formatowanie dat w strefie Europe/Warsaw + linki kalendarzowe (Google, .ics).
+const TZ = "Europe/Warsaw";
+const fmt = (opts) => new Intl.DateTimeFormat("pl-PL", { timeZone: TZ, ...opts });
+
+export function dateParts(iso) {
+  const parts = {};
+  for (const p of fmt({ weekday: "long", day: "numeric", month: "long" }).formatToParts(new Date(iso))) {
+    parts[p.type] = p.value;
+  }
+  return { day: parts.day, month: parts.month, weekday: parts.weekday };
+}
+
+export function timeText(iso) {
+  return fmt({ hour: "2-digit", minute: "2-digit", hour12: false }).format(new Date(iso));
+}
+
+export function whenText(iso) {
+  return `${fmt({ weekday: "long", day: "numeric", month: "long" }).format(new Date(iso))} · ${timeText(iso)}`;
+}
+
+export function durationText(minutes) {
+  const m = Number(minutes) || 60;
+  if (m % 60 === 0) return `${m / 60} godz.`;
+  const h = Math.floor(m / 60);
+  return h > 0 ? `${h} godz. ${m % 60} min` : `${m} min`;
+}
+
+export function priceText(price) {
+  return Number(price) > 0 ? `${Number(price)} zł` : "bezpłatnie";
+}
+
+export function toLocalInput(iso) {
+  if (!iso) return "";
+  const d = new Date(iso);
+  const pad = (n) => String(n).padStart(2, "0");
+  return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
+}
+
+function icsStamp(d) {
+  return new Date(d).toISOString().replace(/[-:]/g, "").replace(/\.\d{3}/, "");
+}
+
+function icsEsc(s) {
+  return String(s || "").replace(/\\/g, "\\\\").replace(/;/g, "\\;").replace(/,/g, "\\,").replace(/\r?\n/g, "\\n");
+}
+
+export function googleCalendarUrl(ev) {
+  const start = new Date(ev.start_datetime);
+  const end = new Date(start.getTime() + (Number(ev.duration_minutes) || 60) * 60000);
+  const params = new URLSearchParams({
+    action: "TEMPLATE",
+    text: ev.title,
+    dates: `${icsStamp(start)}/${icsStamp(end)}`,
+    details: ev.subtitle || "",
+    location: ev.location || "",
+  });
+  return `https://calendar.google.com/calendar/render?${params.toString()}`;
+}
+
+export function downloadIcs(ev) {
+  const start = new Date(ev.start_datetime);
+  const end = new Date(start.getTime() + (Number(ev.duration_minutes) || 60) * 60000);
+  const ics = [
+    "BEGIN:VCALENDAR",
+    "VERSION:2.0",
+    "PRODID:-//EXMORTIS//Spotkania//PL",
+    "CALSCALE:GREGORIAN",
+    "BEGIN:VEVENT",
+    `UID:${ev.id}@exmortis`,
+    `DTSTAMP:${icsStamp(new Date())}`,
+    `DTSTART:${icsStamp(start)}`,
+    `DTEND:${icsStamp(end)}`,
+    `SUMMARY:${icsEsc(ev.title)}`,
+    `DESCRIPTION:${icsEsc(ev.subtitle || "")}`,
+    `LOCATION:${icsEsc(ev.location || "")}`,
+    "END:VEVENT",
+    "END:VCALENDAR",
+  ].join("\r\n");
+  const url = URL.createObjectURL(new Blob([ics], { type: "text/calendar;charset=utf-8" }));
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = "exmortis-spotkanie.ics";
+  a.click();
+  setTimeout(() => URL.revokeObjectURL(url), 2000);
+}

@@ -2,7 +2,7 @@ import nodemailer from "npm:nodemailer@6.9.13";
 
 // Wysyłka maila SMTP z ustawień zapisanych w panelu (app_settings → smtp).
 
-export async function sendMail(smtp, { to, subject, html }) {
+export async function sendMail(smtp, { to, subject, html, attachments }) {
   if (!smtp || !smtp.host || !smtp.user || !smtp.password) {
     throw new Error("SMTP nie jest skonfigurowany");
   }
@@ -18,6 +18,7 @@ export async function sendMail(smtp, { to, subject, html }) {
     to,
     subject,
     html,
+    ...(Array.isArray(attachments) && attachments.length > 0 ? { attachments } : {}),
   });
 }
 

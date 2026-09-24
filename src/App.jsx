@@ -17,6 +17,8 @@ import Powrot from '@/pages/Powrot';
 import Glos from '@/pages/Glos';
 import Test from '@/pages/Test';
 import Cisza from '@/pages/Cisza';
+import Events from '@/pages/Events';
+import EventDetail from '@/pages/EventDetail';
 import Login from '@/pages/Login';
 import Register from '@/pages/Register';
 import ForgotPassword from '@/pages/ForgotPassword';
@@ -72,6 +74,8 @@ const AuthenticatedApp = () => {
           <Route path="/powrot" element={<Powrot />} />
           <Route path="/glos" element={<Glos />} />
           <Route path="/test" element={<Test />} />
+          <Route path="/spotkania" element={<Events />} />
+          <Route path="/spotkania/:slug" element={<EventDetail />} />
         </Route>
         <Route path="*" element={<PageNotFound />} />
       </Routes>
