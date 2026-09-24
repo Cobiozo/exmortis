@@ -7,7 +7,9 @@ import NewsletterManager from "@/components/admin/NewsletterManager";
 import ContentManager from "@/components/admin/ContentManager";
 import IntegrationsManager from "@/components/admin/IntegrationsManager";
 import QuizStatsPanel from "@/components/admin/QuizStatsPanel";
-import { ShieldAlert, Package, Mail, LogOut, LayoutList, Plug, ClipboardList } from "lucide-react";
+import SilenceManager from "@/components/admin/SilenceManager";
+import SilenceStatsPanel from "@/components/admin/SilenceStatsPanel";
+import { ShieldAlert, Package, Mail, LogOut, LayoutList, Plug, ClipboardList, Moon } from "lucide-react";
 
 const tabBtn = (active) =>
   `inline-flex items-center gap-2 px-6 py-3 technical text-[10px] border transition-colors ${
@@ -87,6 +89,9 @@ export default function Admin() {
           <button onClick={() => setTab("integracje")} className={tabBtn(tab === "integracje")}>
             <Plug className="h-4 w-4" /> INTEGRACJE
           </button>
+          <button onClick={() => setTab("cisza")} className={tabBtn(tab === "cisza")}>
+            <Moon className="h-4 w-4" /> MINUTNIK CISZY
+          </button>
         </nav>
 
         {tab === "produkty" ? (
@@ -97,6 +102,11 @@ export default function Admin() {
           <QuizStatsPanel />
         ) : tab === "integracje" ? (
           <IntegrationsManager />
+        ) : tab === "cisza" ? (
+          <div className="space-y-16">
+            <SilenceManager />
+            <SilenceStatsPanel />
+          </div>
         ) : (
           <ContentManager />
         )}

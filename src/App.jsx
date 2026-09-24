@@ -16,6 +16,7 @@ import Checkout from '@/pages/Checkout';
 import Powrot from '@/pages/Powrot';
 import Glos from '@/pages/Glos';
 import Test from '@/pages/Test';
+import Cisza from '@/pages/Cisza';
 import Login from '@/pages/Login';
 import Register from '@/pages/Register';
 import ForgotPassword from '@/pages/ForgotPassword';
@@ -61,6 +62,7 @@ const AuthenticatedApp = () => {
         <Route element={<ProtectedRoute unauthenticatedElement={<Navigate to="/login" replace />} />}>
           <Route path="/admin" element={<Admin />} />
         </Route>
+        <Route path="/cisza" element={<Cisza />} />
         <Route element={<Layout />}>
           <Route path="/" element={<Home />} />
           <Route path="/o-mnie" element={<About />} />
