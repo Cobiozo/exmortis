@@ -1,23 +1,25 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
-import { ArrowLeft } from "lucide-react";
+import { ArrowLeft, Share2, Check } from "lucide-react";
 import { base44 } from "@/api/base44Client";
 import ShopProductCard from "@/components/exmortis/shop/ShopProductCard";
-import WaitlistDialog from "@/components/exmortis/shop/WaitlistDialog";
 
+const SHARE_URL = "https://exmortis-return-path.base44.app/test?src=polecenie";
+
+// Stwierdzenia w przemieszanej kolejności; f = forma kobieca (brak = ta sama).
 const QUESTIONS = [
-  "W niedzielę wieczorem czuję już poniedziałek.",
-  "Robię swoją pracę dobrze, ale nie mam do niej serca.",
-  "Po spotkaniach z ludźmi wracam wyczerpany, jakbym przebiegł maraton.",
-  "Marzę o urlopie, ale wiem, że po nim wszystko wróci.",
-  "Mam wszystko, co „powinno” dawać sens, a sensu nie czuję.",
-  "Miejsca i praktyki, które kiedyś mnie karmiły, dziś zostawiają mnie pustym.",
-  "Coraz częściej pytam siebie, po co właściwie jestem — i nie mam odpowiedzi.",
-  "Trudno mi się w cokolwiek naprawdę zaangażować.",
-  "Jest w moim życiu wydarzenie, po którym nic nie jest takie jak przedtem.",
-  "Udaję przed innymi, że już mi przeszło.",
-  "Nie wiem, kim jestem bez roli, którą straciłem.",
-  "Świat oczekuje, że się już „poukładałem” — a ja wciąż jestem w środku.",
+  { m: "W niedzielę wieczorem czuję już poniedziałek." },
+  { m: "Mam wszystko, co „powinno” dawać sens — a sensu nie czuję." },
+  { m: "Jest w moim życiu wydarzenie, po którym nic nie jest takie jak przedtem." },
+  { m: "Robię swoją pracę dobrze, ale nie mam do niej serca." },
+  { m: "Miejsca i praktyki, które kiedyś mnie karmiły, dziś zostawiają mnie pustym.", f: "Miejsca i praktyki, które kiedyś mnie karmiły, dziś zostawiają mnie pustą." },
+  { m: "Udaję przed innymi, że już mi przeszło." },
+  { m: "Po spotkaniach z ludźmi wracam wyczerpany, jakbym przebiegł maraton.", f: "Po spotkaniach z ludźmi wracam wyczerpana, jakbym przebiegła maraton." },
+  { m: "Coraz częściej pytam siebie, po co właściwie jestem — i nie znajduję odpowiedzi." },
+  { m: "Nie wiem, kim jestem bez roli, którą straciłem.", f: "Nie wiem, kim jestem bez roli, którą straciłam." },
+  { m: "Marzę o urlopie, ale wiem, że po nim wszystko wróci." },
+  { m: "Trudno mi się w cokolwiek naprawdę zaangażować — w pracę, w rozmowę, w człowieka." },
+  { m: "Świat oczekuje, że już się poukładałem — a ja wciąż jestem w środku.", f: "Świat oczekuje, że już się poukładałam — a ja wciąż jestem w środku." },
 ];
 
 const SCALE = [
@@ -27,52 +29,73 @@ const SCALE = [
   { value: 3, label: "Prawie zawsze" },
 ];
 
-const RESULT_TITLES = {
-  Mentalna: "Śmierć mentalna",
-  Duchowa: "Śmierć duchowa",
-  Życiowa: "Śmierć życiowa",
-  Mieszana: "Więcej niż jedna",
+const STAGE_OPTIONS = [
+  { stage: "Śmierć", m: "Wiem, że coś jest nie tak, ale jeszcze tego nie nazwałem.", f: "Wiem, że coś jest nie tak, ale jeszcze tego nie nazwałam." },
+  { stage: "Próg", m: "Wiem, co umarło. Stoję przed decyzją, którą odkładam." },
+  { stage: "Powrót", m: "Decyzja zapadła. Buduję coś nowego, ale łatwo mi się cofnąć." },
+  { stage: "Inny", m: "Wróciłem. Chcę utrzymać to, co się we mnie zmieniło.", f: "Wróciłam. Chcę utrzymać to, co się we mnie zmieniło." },
+];
+
+const LOW_TEXT =
+  "Twoje wyniki są niskie. To może znaczyć, że jesteś w dobrym miejscu — albo że jeszcze nie pozwalasz sobie tego zobaczyć. Wróć do tego testu za miesiąc.";
+
+const resultText = (dominant, isF) => {
+  if (dominant === "Mentalna")
+    return "Praca, która kiedyś Cię budowała, dziś zabiera Ci siebie po cichu. To nie lenistwo i nie „gorszy okres”. Największa pułapka tego miejsca brzmi: „muszę się bardziej postarać”. Nie musisz bardziej. Musisz się zatrzymać i zapytać, po co to wszystko robisz.";
+  if (dominant === "Duchowa")
+    return isF
+      ? "Sens, na którym stałaś, przestał wystarczać. Twoja pustka nie jest niewdzięcznością — jest sygnałem, że jesteś gotowa na sens głębszy niż ten, który miałaś. Sensu się nie znajduje. Sens się buduje."
+      : "Sens, na którym stałeś, przestał wystarczać. Twoja pustka nie jest niewdzięcznością — jest sygnałem, że jesteś gotowy na sens głębszy niż ten, który miałeś. Sensu się nie znajduje. Sens się buduje.";
+  if (dominant === "Życiowa")
+    return isF
+      ? "Jedno wydarzenie rozebrało to, co znałaś. Nie masz opóźnienia — świat ma zbyt krótką pamięć. Nie chodzi o powrót do siebie sprzed. Chodzi o zbudowanie nowego domu w miejscu, w którym ten pierwszy się spalił."
+      : "Jedno wydarzenie rozebrało to, co znałeś. Nie masz opóźnienia — świat ma zbyt krótką pamięć. Nie chodzi o powrót do siebie sprzed. Chodzi o zbudowanie nowego domu w miejscu, w którym ten pierwszy się spalił.";
+  return "Tak jest u większości ludzi, którzy do mnie przychodzą. Jedna śmierć uruchamia drugą, druga maskuje trzecią. Dlatego warto zacząć od mapy całej drogi, a nie od jednego fragmentu.";
 };
 
-const RESULT_TEXTS = {
-  Mentalna:
-    "Twoja śmierć jest mentalna. Praca, która kiedyś Cię budowała, dziś zabiera Ci siebie po cichu. To nie lenistwo i nie gorszy okres — to coś, co ma nazwę i drogę wyjścia.",
-  Duchowa:
-    "Twoja śmierć jest duchowa. Sens, na którym stałeś, przestał wystarczać. Twoja pustka nie jest niewdzięcznością — jest sygnałem, że jesteś gotowy na sens głębszy.",
-  Życiowa:
-    "Twoja śmierć jest życiowa. Jedno wydarzenie rozebrało to, co znałeś. Nie chodzi o powrót do siebie sprzed — chodzi o zbudowanie domu w miejscu, w którym ten pierwszy się spalił.",
-  Mieszana:
-    "Niesiesz więcej niż jedną śmierć naraz. Tak jest u większości ludzi, którzy do mnie przychodzą — i dlatego warto zacząć od mapy całej drogi.",
-};
-
-const RESULT_SLUGS = {
-  Mentalna: ["wracam-inny", "mini-ebook-trzy-smierci", "pusty-szczyt"],
-  Duchowa: ["wracam-inny", "mini-ebook-trzy-smierci", "cisza-ktora-prowadzi"],
-  Życiowa: ["wracam-inny", "mini-ebook-trzy-smierci", "3-pierwsze-ruchy"],
-  Mieszana: ["wracam-inny", "mini-ebook-trzy-smierci", "3-pierwsze-ruchy"],
+const stageText = (stage, isF) => {
+  if (stage === "Śmierć") return "Jesteś na początku drogi. Tu nie trzeba jeszcze nic zmieniać — trzeba zobaczyć i nazwać.";
+  if (stage === "Próg") return "Wiesz już, co umarło. Teraz liczy się jedna rzecz: decyzja, nie deklaracja.";
+  if (stage === "Powrót") return "Budujesz coś nowego. To najdłuższy etap — i ten, w którym najłatwiej wrócić do starego.";
+  return isF ? "Wróciłaś. Teraz zadanie na całe życie: nie wrócić do śmierci." : "Wróciłeś. Teraz zadanie na całe życie: nie wrócić do śmierci.";
 };
 
 const inputCls =
   "w-full bg-transparent border hairline px-4 py-4 focus:border-[#C9A24A] focus:outline-none transition-colors";
 
+// Kroki: 0 wstęp · 1–12 stwierdzenia · 13 etap · 14 zdanie · 15 formularz · 16 wynik
 export default function Test() {
-  const [step, setStep] = useState(0); // 0–11 pytania, 12 formularz, 13 wynik
+  const [step, setStep] = useState(0);
+  const [formOfAddress, setFormOfAddress] = useState(null);
   const [answers, setAnswers] = useState(Array(12).fill(null));
-  const [form, setForm] = useState({ first_name: "", email: "", optin: true });
+  const [stage, setStage] = useState(null);
+  const [openAnswer, setOpenAnswer] = useState("");
+  const [lead, setLead] = useState({ first_name: "", email: "", consent: false, newsletter: false });
   const [sending, setSending] = useState(false);
   const [error, setError] = useState("");
   const [result, setResult] = useState(null);
   const [products, setProducts] = useState(null);
-  const [waitlistProduct, setWaitlistProduct] = useState(null);
+  const [copied, setCopied] = useState(false);
+  const [source, setSource] = useState("");
+
+  const isF = formOfAddress === "Kobieta";
+
+  useEffect(() => {
+    setSource(new URLSearchParams(window.location.search).get("src") || "");
+    base44.functions
+      .invoke("shopProducts", {})
+      .then((r) => setProducts(r.data.products || []))
+      .catch(() => setProducts([]));
+  }, []);
 
   const answer = (value) => {
-    if (answers[step] !== null) return;
+    if (answers[step - 1] !== null) return;
     setAnswers((a) => {
       const n = [...a];
-      n[step] = value;
+      n[step - 1] = value;
       return n;
     });
-    setTimeout(() => setStep((s) => Math.min(s + 1, 12)), 280);
+    setTimeout(() => setStep((s) => Math.min(s + 1, 13)), 280);
   };
 
   const submit = async (e) => {
@@ -81,17 +104,17 @@ export default function Test() {
     setSending(true);
     try {
       const res = await base44.functions.invoke("shopQuizSubmit", {
-        first_name: form.first_name,
-        email: form.email,
+        first_name: lead.first_name,
+        email: lead.email,
+        form_of_address: formOfAddress,
         answers: answers.map((a) => Number(a)),
-        newsletter_optin: form.optin,
+        stage,
+        open_answer: openAnswer || null,
+        newsletter_consent: lead.newsletter,
+        source: source || null,
       });
       setResult(res.data);
-      setStep(13);
-      base44.functions
-        .invoke("shopProducts", {})
-        .then((r) => setProducts(r.data.products || []))
-        .catch(() => setProducts([]));
+      setStep(16);
     } catch {
       setError("Nie udało się zapisać wyniku. Spróbuj ponownie.");
     } finally {
@@ -99,37 +122,74 @@ export default function Test() {
     }
   };
 
+  const share = async () => {
+    try {
+      await navigator.clipboard.writeText(SHARE_URL);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2500);
+    } catch {
+      window.prompt("Skopiuj link do testu:", SHARE_URL);
+    }
+  };
+
+  const q = step >= 1 && step <= 12 ? QUESTIONS[step - 1] : null;
+  const qText = q ? (isF && q.f ? q.f : q.m) : "";
+  const progress = Math.min(step, 15) / 15;
+  const lowIntensity =
+    result && result.scores.mentalna < 4 && result.scores.duchowa < 4 && result.scores.zyciowa < 4;
+
   const matched =
     result && products
-      ? RESULT_SLUGS[result.dominant]
-          .map((slug) => products.find((p) => p.slug === slug))
-          .filter(Boolean)
-          .slice(0, 3)
+      ? result.recommended.map((r) => products.find((p) => p.slug === r.slug)).filter(Boolean)
       : [];
-
-  const progress = Math.min(step, 12) / 12;
 
   return (
     <div className="min-h-screen bg-[#0A0A0B] pt-28 md:pt-32 pb-24 px-5">
       <div className="mx-auto max-w-3xl">
-        <p className="technical text-[9px] gold-text mb-2 text-center">
+        <p className="technical text-[9px] gold-text mb-10 text-center">
           TEST · KTÓRA ŚMIERĆ JEST TWOJA?
         </p>
 
-        {step < 12 && (
-          <div key={step} className="fade-up">
-            <div className="h-px bg-[#3D3D3F] mt-8 mb-12">
-              <div
-                className="h-px bg-[#C9A24A] transition-all duration-500"
-                style={{ width: `${progress * 100}%` }}
-              />
-            </div>
+        {step > 0 && step < 16 && (
+          <div className="h-px bg-[#3D3D3F] mb-12">
+            <div
+              className="h-px bg-[#C9A24A] transition-all duration-500"
+              style={{ width: `${progress * 100}%` }}
+            />
+          </div>
+        )}
 
-            <p className="technical text-[9px] text-foreground/30 mb-6">
-              {String(step + 1).padStart(2, "0")} / 12
+        {/* ===== 0 · WSTĘP ===== */}
+        {step === 0 && (
+          <div className="fade-up text-center">
+            <h1 className="shop-heading text-4xl md:text-6xl text-[#F5EFE1] leading-tight mb-8">
+              Która śmierć jest Twoja?
+            </h1>
+            <p className="text-foreground/60 text-lg leading-relaxed max-w-xl mx-auto mb-16">
+              Każdy z nas ma za sobą przynajmniej jedną śmierć — mentalną, duchową albo życiową.
+              Ten test nie jest diagnozą. Jest lustrem. Dwanaście stwierdzeń, trzy minuty,
+              odpowiadaj pierwszą myślą.
+            </p>
+            <p className="shop-heading text-xl text-[#F5EFE1] mb-8">Jak mam się do Ciebie zwracać?</p>
+            <div className="flex flex-col sm:flex-row gap-4 justify-center">
+              <button onClick={() => { setFormOfAddress("Mężczyzna"); setStep(1); }} className="btn-ghost">
+                JAK DO MĘŻCZYNY
+              </button>
+              <button onClick={() => { setFormOfAddress("Kobieta"); setStep(1); }} className="btn-ghost">
+                JAK DO KOBIETY
+              </button>
+            </div>
+          </div>
+        )}
+
+        {/* ===== 1–12 · STWIERDZENIA ===== */}
+        {q && (
+          <div key={step} className="fade-up">
+            <p className="technical text-[9px] text-foreground/30 mb-8">
+              {String(step).padStart(2, "0")} Z 12
             </p>
             <h2 className="shop-heading text-2xl md:text-4xl text-[#F5EFE1] leading-snug mb-12">
-              {QUESTIONS[step]}
+              {qText}
             </h2>
 
             <div className="space-y-3">
@@ -137,40 +197,99 @@ export default function Test() {
                 <button
                   key={s.value}
                   onClick={() => answer(s.value)}
-                  className={`w-full text-left px-5 py-4 border transition-all duration-200 flex items-center justify-between ${
-                    answers[step] === s.value
+                  className={`w-full text-left px-5 py-5 md:py-4 border transition-all duration-200 flex items-center justify-between ${
+                    answers[step - 1] === s.value
                       ? "border-[#C9A24A] bg-[#C9A24A]/10 text-[#F5EFE1]"
                       : "hairline text-foreground/60 hover:border-[#C9A24A]/50 hover:text-[#F5EFE1]"
                   }`}
                 >
-                  <span className="text-sm md:text-base">{s.label}</span>
+                  <span className="text-base md:text-base">{s.label}</span>
                   <span className="technical text-[9px] text-foreground/30">{s.value}</span>
                 </button>
               ))}
             </div>
 
-            {step > 0 && (
-              <button
-                onClick={() => setStep(step - 1)}
-                className="technical text-[9px] text-foreground/30 hover:text-foreground/60 mt-10 flex items-center gap-2 transition-colors"
-              >
-                <ArrowLeft className="h-3 w-3" /> POPRZEDNIE PYTANIE
-              </button>
-            )}
+            <button
+              onClick={() => setStep(step - 1)}
+              className="technical text-[9px] text-foreground/30 hover:text-foreground/60 mt-10 flex items-center gap-2 transition-colors"
+            >
+              <ArrowLeft className="h-3 w-3" /> WSTECZ
+            </button>
           </div>
         )}
 
-        {step === 12 && (
-          <form onSubmit={submit} className="fade-up space-y-6 mt-12">
+        {/* ===== 13 · ETAP ===== */}
+        {step === 13 && (
+          <div className="fade-up">
+            <h2 className="shop-heading text-2xl md:text-4xl text-[#F5EFE1] leading-snug mb-12">
+              Jeszcze jedno. Który opis jest Ci dziś najbliższy?
+            </h2>
+            <div className="space-y-3">
+              {STAGE_OPTIONS.map((o) => (
+                <button
+                  key={o.stage}
+                  onClick={() => { setStage(o.stage); setStep(14); }}
+                  className={`w-full text-left px-5 py-5 border transition-all duration-200 ${
+                    stage === o.stage
+                      ? "border-[#C9A24A] bg-[#C9A24A]/10 text-[#F5EFE1]"
+                      : "hairline text-foreground/60 hover:border-[#C9A24A]/50 hover:text-[#F5EFE1]"
+                  }`}
+                >
+                  <span className="text-base leading-relaxed">{isF && o.f ? o.f : o.m}</span>
+                </button>
+              ))}
+            </div>
+            <button
+              onClick={() => setStep(12)}
+              className="technical text-[9px] text-foreground/30 hover:text-foreground/60 mt-10 flex items-center gap-2 transition-colors"
+            >
+              <ArrowLeft className="h-3 w-3" /> WSTECZ
+            </button>
+          </div>
+        )}
+
+        {/* ===== 14 · JEDNO ZDANIE ===== */}
+        {step === 14 && (
+          <div className="fade-up">
+            <h2 className="shop-heading text-2xl md:text-3xl text-[#F5EFE1] leading-snug mb-6">
+              Jeśli chcesz — dokończ jednym zdaniem:
+            </h2>
+            <p className="italic text-foreground/50 text-lg mb-6">«Ostatnio umarło we mnie…»</p>
+            <textarea
+              value={openAnswer}
+              onChange={(e) => setOpenAnswer(e.target.value)}
+              rows={4}
+              maxLength={2000}
+              className={inputCls}
+              placeholder="…"
+            />
+            <div className="flex flex-col sm:flex-row gap-4 mt-10">
+              <button onClick={() => setStep(15)} className="btn-relic">DALEJ</button>
+              <button onClick={() => { setOpenAnswer(""); setStep(15); }} className="btn-ghost">
+                POMIŃ
+              </button>
+            </div>
+            <button
+              onClick={() => setStep(13)}
+              className="technical text-[9px] text-foreground/30 hover:text-foreground/60 mt-10 flex items-center gap-2 transition-colors"
+            >
+              <ArrowLeft className="h-3 w-3" /> WSTECZ
+            </button>
+          </div>
+        )}
+
+        {/* ===== 15 · GDZIE WYSŁAĆ WYNIK ===== */}
+        {step === 15 && (
+          <form onSubmit={submit} className="fade-up space-y-6">
             <h2 className="shop-heading text-3xl md:text-5xl text-[#F5EFE1]">
-              Gdzie wysłać Twój wynik?
+              Twój wynik jest gotowy. Gdzie mam go wysłać?
             </h2>
             <div>
               <label className="technical text-[10px] text-foreground/50 block mb-3">IMIĘ</label>
               <input
                 required
-                value={form.first_name}
-                onChange={(e) => setForm({ ...form, first_name: e.target.value })}
+                value={lead.first_name}
+                onChange={(e) => setLead({ ...lead, first_name: e.target.value })}
                 className={inputCls}
               />
             </div>
@@ -179,42 +298,84 @@ export default function Test() {
               <input
                 required
                 type="email"
-                value={form.email}
-                onChange={(e) => setForm({ ...form, email: e.target.value })}
+                value={lead.email}
+                onChange={(e) => setLead({ ...lead, email: e.target.value })}
                 className={inputCls}
               />
             </div>
             <label className="flex items-start gap-3 cursor-pointer">
               <input
                 type="checkbox"
-                checked={form.optin}
-                onChange={(e) => setForm({ ...form, optin: e.target.checked })}
+                required
+                checked={lead.consent}
+                onChange={(e) => setLead({ ...lead, consent: e.target.checked })}
                 className="accent-[#C9A24A] w-4 h-4 mt-0.5"
               />
               <span className="text-sm text-foreground/50 leading-relaxed">
-                Zapisz mnie na Listy powrotu — jeden list w każdy poniedziałek.
+                Zgadzam się na przetwarzanie danych w celu przesłania wyniku.
+              </span>
+            </label>
+            <label className="flex items-start gap-3 cursor-pointer">
+              <input
+                type="checkbox"
+                checked={lead.newsletter}
+                onChange={(e) => setLead({ ...lead, newsletter: e.target.checked })}
+                className="accent-[#C9A24A] w-4 h-4 mt-0.5"
+              />
+              <span className="text-sm text-foreground/50 leading-relaxed">
+                Chcę też dostawać „Listy powrotu” — jeden list w każdy poniedziałek.
               </span>
             </label>
             {error && <p className="text-sm blood-text">{error}</p>}
             <button type="submit" disabled={sending} className="btn-relic w-full disabled:opacity-60">
               {sending ? "ZAPISUJĘ..." : "POKAŻ MÓJ WYNIK"}
             </button>
+            <p className="text-xs text-foreground/30 text-center">
+              Nie wysyłam spamu. Wypiszesz się jednym kliknięciem.
+            </p>
           </form>
         )}
 
-        {step === 13 && result && (
-          <div className="fade-up mt-12">
-            <p className="technical text-[9px] text-foreground/40 mb-6">TWÓJ WYNIK</p>
-            <h2 className="shop-heading text-4xl md:text-6xl gold-text mb-8 leading-tight">
-              {RESULT_TITLES[result.dominant]}
+        {/* ===== 16 · WYNIK ===== */}
+        {step === 16 && result && (
+          <div className="fade-up">
+            <div className="space-y-5 mb-16">
+              {[
+                { label: "MENTALNA", v: result.scores.mentalna },
+                { label: "DUCHOWA", v: result.scores.duchowa },
+                { label: "ŻYCIOWA", v: result.scores.zyciowa },
+              ].map((s) => (
+                <div key={s.label}>
+                  <p className="technical text-[9px] text-foreground/40 mb-2">{s.label}</p>
+                  <div className="h-1 bg-[#1F1F21]">
+                    <div
+                      className="h-1 bg-[#C9A24A] transition-all duration-700"
+                      style={{ width: `${(s.v / 12) * 100}%` }}
+                    />
+                  </div>
+                </div>
+              ))}
+            </div>
+
+            <h2 className="shop-heading text-3xl md:text-5xl text-[#F5EFE1] leading-tight mb-8">
+              {result.dominant === "Mieszana"
+                ? `${lead.first_name}, niesiesz więcej niż jedną śmierć.`
+                : `${lead.first_name}, Twoja śmierć jest ${result.dominant.toLowerCase()}.`}
             </h2>
             <p className="text-foreground/70 text-lg leading-relaxed mb-6">
-              {RESULT_TEXTS[result.dominant]}
+              {resultText(result.dominant, isF)}
             </p>
-            <p className="technical text-[9px] text-foreground/30 mb-16">
-              MENTALNA {result.scores.mentalna} · DUCHOWA {result.scores.duchowa} · ŻYCIOWA{" "}
-              {result.scores.zyciowa}
-            </p>
+            {lowIntensity && (
+              <p className="text-foreground/50 text-base leading-relaxed border-l-2 border-[#C9A24A] pl-4 mb-6">
+                {LOW_TEXT}
+              </p>
+            )}
+
+            <div className="border border-[#5C1A1B]/50 bg-[#0D0D0E] p-8 md:p-10 mb-16">
+              <p className="technical text-[9px] text-foreground/40 mb-3">TWÓJ ETAP</p>
+              <p className="shop-heading text-2xl text-[#C9A24A] mb-4">{stage}</p>
+              <p className="text-foreground/60 leading-relaxed">{stageText(stage, isF)}</p>
+            </div>
 
             <h3 className="shop-heading text-2xl text-[#F5EFE1] mb-8">Od czego zacząć</h3>
             {products === null ? (
@@ -226,34 +387,44 @@ export default function Test() {
             ) : (
               <div className="grid sm:grid-cols-3 gap-4 mb-16">
                 {matched.map((p) => (
-                  <ShopProductCard key={p.id} product={p} onWaitlist={setWaitlistProduct} />
+                  <ShopProductCard key={p.id} product={p} />
                 ))}
               </div>
             )}
 
-            <div className="border border-[#5C1A1B]/50 bg-[#0D0D0E] p-8 md:p-12 text-center space-y-6">
-              <p className="text-foreground/70 text-lg">
-                Jeśli czujesz, że to Twój moment — porozmawiajmy.
+            <div className="border border-[#5C1A1B]/50 bg-[#0D0D0E] p-8 md:p-12 text-center space-y-6 mb-10">
+              <p className="text-foreground/70 text-lg leading-relaxed">
+                Jeśli czujesz, że to Twój moment — porozmawiajmy. Trzydzieści minut, bezpłatnie,
+                bez zobowiązań.
               </p>
               <Link to="/powrot" className="btn-relic">
                 UMÓW ROZMOWĘ KWALIFIKACYJNĄ
               </Link>
             </div>
 
-            <p className="text-xs text-foreground/30 text-center mt-8 leading-relaxed">
-              Ten test nie jest diagnozą. Jeśli jesteś w kryzysie, zadzwoń pod{" "}
-              <a href="tel:116123" className="gold-text hover:underline">
-                116 123
-              </a>
-              .
+            <p className="text-xs text-foreground/30 text-center leading-relaxed mb-10">
+              Ten test nie jest diagnozą i nie zastępuje pomocy specjalisty. Jeśli jesteś w
+              kryzysie, zadzwoń pod bezpłatny numer{" "}
+              <a href="tel:116123" className="gold-text hover:underline">116 123</a> albo{" "}
+              <a href="tel:112" className="gold-text hover:underline">112</a>.
             </p>
+
+            <div className="text-center">
+              <button onClick={share} className="btn-ghost !px-5 !py-3 text-[10px]">
+                {copied ? (
+                  <span className="flex items-center gap-2">
+                    <Check className="h-3.5 w-3.5" /> SKOPIOWANO LINK
+                  </span>
+                ) : (
+                  <span className="flex items-center gap-2">
+                    <Share2 className="h-3.5 w-3.5" /> WYŚLIJ TEST KOMUŚ BLIISKIEMU
+                  </span>
+                )}
+              </button>
+            </div>
           </div>
         )}
       </div>
-
-      {waitlistProduct && (
-        <WaitlistDialog product={waitlistProduct} onClose={() => setWaitlistProduct(null)} />
-      )}
     </div>
   );
 }
