@@ -91,12 +91,12 @@ export default function Home() {
         </div>
 
         <div className="relative z-10 flex flex-col items-center text-center px-6 pb-32 max-w-4xl">
-          <div className="flicker">
-            <Logo className="h-28 w-28 md:h-40 md:w-40 mb-8" />
+          <div className="flicker mt-14 md:mt-20">
+            <Logo className="h-[8.75rem] w-[8.75rem] md:h-[12.5rem] md:w-[12.5rem] mb-8" />
           </div>
           <h1 className="font-heading text-5xl sm:text-6xl md:text-8xl lg:text-9xl leading-[0.95]">
             <span className="block tracking-[0.06em]">EXMORTIS</span>
-            <span className="block gold-text mt-3">ze śmierci</span>
+            <span className="block gold-text mt-3 text-2xl sm:text-3xl md:text-4xl lg:text-[4rem]">ze śmierci</span>
           </h1>
           <p className="mt-8 text-lg md:text-2xl text-foreground/75 font-light">
             Wracam z siebie. Uczę wracać.
