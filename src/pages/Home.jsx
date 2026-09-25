@@ -11,6 +11,7 @@ import PowrotTeaser from "@/components/exmortis/PowrotTeaser";
 import EventsTeaser from "@/components/exmortis/events/EventsTeaser";
 import ShortHistory from "@/components/exmortis/home/ShortHistory";
 import ReturnPath from "@/components/exmortis/home/ReturnPath";
+import InstagramFeed from "@/components/exmortis/home/InstagramFeed";
 import { useSiteContent } from "@/components/exmortis/SiteContentProvider";
 
 const HERO_IMG = "https://media.base44.com/images/public/6aa08bc6318b0f886cc3b9a3/b1f31269c_generated_f9afed1e.jpg";
@@ -225,6 +226,9 @@ export default function Home() {
 
       {/* ===== KONTAKT · 10 ===== */}
       <ContactSection />
+
+      {/* ===== INSTAGRAM ===== */}
+      <InstagramFeed />
     </div>
   );
 }
