@@ -2,8 +2,8 @@ import React, { useState } from "react";
 import { SlidersHorizontal, X } from "lucide-react";
 
 const STAGES = ["Śmierć", "Próg", "Powrót", "Inny"];
-const FORMS = ["Czytam", "Słucham", "Oglądam", "Uczestniczę", "Idę głęboko"];
-const AUDIENCES = ["Mężczyzna", "Kobieta", "Ojciec", "Matka", "Mąż", "Żona", "Lider"];
+export const FORM_OPTIONS = ["Czytam", "Słucham", "Oglądam", "Uczestniczę", "Idę głęboko"];
+export const AUDIENCE_OPTIONS = ["Mężczyzna", "Kobieta", "Ojciec", "Matka", "Mąż", "Żona", "Lider"];
 
 function Group({ label, options, value, onToggle, allowAll = false }) {
   return (
@@ -40,18 +40,19 @@ function Group({ label, options, value, onToggle, allowAll = false }) {
   );
 }
 
-// Pasek filtrów Skarbca: na desktopie zawsze widoczny i przyklejony, na telefonie zwijany.
-export default function ShopFilters({ filters, setFilters }) {
+// Pasek filtrów Skarbca. Przyciski bez produktów są ukryte.
+export default function ShopFilters({ filters, setFilters, available }) {
   const [open, setOpen] = useState(false);
+  const a = available || { stages: STAGES, forms: FORM_OPTIONS, audiences: AUDIENCE_OPTIONS };
   const hasAny = filters.stage || filters.form || filters.audience;
   const toggle = (key) => (v) => setFilters((f) => ({ ...f, [key]: f[key] === v ? null : v }));
   const clear = () => setFilters({ stage: null, form: null, audience: null });
 
   const panel = (
     <div className="space-y-3 py-5">
-      <Group label="ETAP" options={STAGES} value={filters.stage} onToggle={toggle("stage")} allowAll />
-      <Group label="FORMA" options={FORMS} value={filters.form} onToggle={toggle("form")} />
-      <Group label="DLA KOGO" options={AUDIENCES} value={filters.audience} onToggle={toggle("audience")} />
+      <Group label="ETAP" options={a.stages} value={filters.stage} onToggle={toggle("stage")} allowAll />
+      <Group label="FORMA" options={a.forms} value={filters.form} onToggle={toggle("form")} />
+      <Group label="DLA KOGO" options={a.audiences} value={filters.audience} onToggle={toggle("audience")} />
       {hasAny && (
         <button
           onClick={clear}

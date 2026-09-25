@@ -1,14 +1,19 @@
 import React from "react";
+import { Link } from "react-router-dom";
 import { Image } from "@/components/ui/image";
-import { StageBadge, PriceBlock, ProductButton } from "./cardBits";
+import { CardTopBadge, PriceBlock, ProductButton, isListenProduct } from "./cardBits";
 
-// Karta produktu w Skarbcu: okładka, znaczek etapu, obietnica, cena, przycisk drogi.
-export default function ShopProductCard({ product: p, onWaitlist }) {
+// Karta produktu w Skarbcu: okładka, znaczek, obietnica, cena, przycisk.
+// Karty podcastów i muzyki są klikalne w całości i otwierają nagranie.
+export default function ShopProductCard({ product: p, onWaitlist, index }) {
   const soon = p.status === "wkrótce";
   const cover = p.cover_image || p.image_url;
+  const listen = isListenProduct(p);
+  const listenHref = listen ? (p.checkout_url || "").trim() || "/glos" : null;
+
   return (
     <article
-      className={`group flex flex-col border hairline bg-[#0D0D0E] transition-all duration-500 hover:border-[#C9A24A]/40 ${
+      className={`group relative flex flex-col h-full border hairline bg-[#0D0D0E] transition-all duration-500 hover:border-[#C9A24A]/40 ${
         soon ? "opacity-60 hover:opacity-100" : ""
       }`}
     >
@@ -23,7 +28,7 @@ export default function ShopProductCard({ product: p, onWaitlist }) {
           </div>
         )}
         <div className="absolute top-3 left-3">
-          <StageBadge stage={p.stage} />
+          <CardTopBadge p={p} index={index} />
         </div>
       </div>
 
@@ -48,6 +53,13 @@ export default function ShopProductCard({ product: p, onWaitlist }) {
           )}
         </div>
       </div>
+
+      {listen &&
+        (listenHref.startsWith("/") ? (
+          <Link to={listenHref} className="absolute inset-0 z-10" aria-label={p.name} />
+        ) : (
+          <a href={listenHref} target="_blank" rel="noreferrer" className="absolute inset-0 z-10" aria-label={p.name} />
+        ))}
     </article>
   );
 }

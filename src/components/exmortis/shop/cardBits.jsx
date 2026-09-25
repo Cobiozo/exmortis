@@ -1,7 +1,21 @@
 import React from "react";
 import { Link } from "react-router-dom";
+import { ArrowRight } from "lucide-react";
+import { useCart } from "../CartContext";
 
-// Wspólne elementy kart Skarbca: znaczek etapu, cena, przycisk.
+// Wspólne elementy kart Skarbca: znaczki, cena, przycisk.
+
+// Produkty wyłączone z katalogu Skarbca (mają własne podstrony).
+export const EXCLUDED_SLUGS = ["listy-powrotu", "test-ktorej-smierci", "minutnik-ciszy"];
+
+// Podcasty i muzyka — bez koszyka; karta otwiera nagranie.
+export function isListenProduct(p) {
+  return (
+    p.form === "Słucham" &&
+    (p.is_free || p.slug === "soundtrack-powrotu") &&
+    p.slug !== "kanal-whatsapp"
+  );
+}
 
 const STAGE_BADGE_CLS = {
   "Śmierć": "bg-[#4A3320] text-[#F5EFE1]",
@@ -19,6 +33,18 @@ export function StageBadge({ stage }) {
   );
 }
 
+// Górny znaczek karty: darmowe produkty dostają „NN · DARMOWE”.
+export function CardTopBadge({ p, index }) {
+  if (p.is_free && index != null) {
+    return (
+      <span className="technical text-[9px] px-2.5 py-1 bg-[#C9A24A] text-[#0A0A0B]">
+        {String(index).padStart(2, "0")} · DARMOWE
+      </span>
+    );
+  }
+  return <StageBadge stage={p.stage} />;
+}
+
 export function isPromoActive(p) {
   return !!(p.promo_end_date && new Date(`${p.promo_end_date}T23:59:59`) > new Date());
 }
@@ -28,7 +54,7 @@ export function PriceBlock({ p }) {
     return <span className="technical text-[10px] text-foreground/40">WKRÓTCE</span>;
   }
   if (p.is_free) {
-    return <span className="text-[#C9A24A]">bezpłatnie</span>;
+    return <span>0 zł</span>;
   }
   if (isPromoActive(p) && p.price_start != null) {
     const until = new Date(`${p.promo_end_date}T12:00:00`).toLocaleDateString("pl-PL", {
@@ -55,8 +81,11 @@ export function productHref(p) {
 }
 
 export function ProductButton({ p, onWaitlist }) {
+  const { addItem } = useCart();
   const base =
     "inline-flex items-center justify-center gap-2 px-6 py-3 technical text-[10px] w-full transition-all duration-300";
+  const cls = `${base} border border-[#C9A24A]/70 text-[#C9A24A] hover:bg-[#C9A24A]/10 hover:border-[#C9A24A]`;
+
   if (p.status === "wkrótce") {
     return (
       <button
@@ -67,15 +96,41 @@ export function ProductButton({ p, onWaitlist }) {
       </button>
     );
   }
-  const href = productHref(p);
-  const cls = `${base} border border-[#C9A24A]/70 text-[#C9A24A] hover:bg-[#C9A24A]/10 hover:border-[#C9A24A]`;
-  return href.startsWith("/") ? (
-    <Link to={href} className={cls}>
-      {p.button_label || "Zobacz"}
-    </Link>
-  ) : (
-    <a href={href} target="_blank" rel="noreferrer" className={cls}>
-      {p.button_label || "Zobacz"}
-    </a>
+
+  // Podcasty i muzyka: cała karta jest klikalna — przycisk tylko sygnalizuje akcję.
+  if (isListenProduct(p)) {
+    return (
+      <span className={`${base} border border-[#C9A24A]/70 text-[#C9A24A]`}>
+        Posłuchaj <ArrowRight className="h-3.5 w-3.5" />
+      </span>
+    );
+  }
+
+  const url = (p.checkout_url || "").trim();
+  if (url) {
+    const label = p.button_label || "Zobacz";
+    return url.startsWith("/") ? (
+      <Link to={url} className={cls}>
+        {label}
+      </Link>
+    ) : (
+      <a href={url} target="_blank" rel="noreferrer" className={cls}>
+        {label}
+      </a>
+    );
+  }
+
+  if (p.is_free) {
+    return (
+      <Link to={`/produkt/${p.slug}`} className={cls}>
+        Pobierz <ArrowRight className="h-3.5 w-3.5" />
+      </Link>
+    );
+  }
+
+  return (
+    <button onClick={() => addItem(p)} className={cls}>
+      Do koszyka <ArrowRight className="h-3.5 w-3.5" />
+    </button>
   );
 }

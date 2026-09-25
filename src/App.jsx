@@ -27,6 +27,7 @@ import Admin from '@/pages/admin/Admin';
 import ProtectedRoute from '@/components/ProtectedRoute';
 import { SiteContentProvider } from '@/components/exmortis/SiteContentProvider';
 import { Navigate } from 'react-router-dom';
+import PrivacyPolicy from '@/pages/PrivacyPolicy';
 // Add page imports here
 
 const AuthenticatedApp = () => {
@@ -76,6 +77,7 @@ const AuthenticatedApp = () => {
           <Route path="/test" element={<Test />} />
           <Route path="/spotkania" element={<Events />} />
           <Route path="/spotkania/:slug" element={<EventDetail />} />
+          <Route path="/polityka-prywatnosci" element={<PrivacyPolicy />} />
         </Route>
         <Route path="*" element={<PageNotFound />} />
       </Routes>

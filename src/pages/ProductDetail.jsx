@@ -4,6 +4,7 @@ import { ArrowRight, ArrowLeft, Check, Minus, Plus } from "lucide-react";
 import { base44 } from "@/api/base44Client";
 import { useCart } from "@/components/exmortis/CartContext";
 import { Image } from "@/components/ui/image";
+import FreeOrderForm from "@/components/exmortis/shop/FreeOrderForm";
 
 export default function ProductDetail() {
   const { slug } = useParams();
@@ -89,7 +90,7 @@ export default function ProductDetail() {
 
             <div className="flex items-baseline gap-4 mb-8">
               <span className="font-mono text-4xl gold-text">
-                {product.price === 0 ? "DARMOWE" : `${product.price} zł`}
+                {product.price === 0 ? "0 zł" : `${product.price} zł`}
               </span>
               {product.old_price && (
                 <span className="font-mono text-xl text-foreground/30 line-through">
@@ -152,26 +153,32 @@ export default function ProductDetail() {
               </Link>
             )}
 
-            {/* Add to cart */}
-            <div className="mt-auto space-y-4">
-              <div className="flex items-center gap-4">
-                <div className="flex items-center border hairline">
-                  <button onClick={() => setQty((q) => Math.max(1, q - 1))} className="p-3 text-foreground/60 hover:gold-text">
-                    <Minus className="h-4 w-4" />
-                  </button>
-                  <span className="px-5 font-mono">{qty}</span>
-                  <button onClick={() => setQty((q) => q + 1)} className="p-3 text-foreground/60 hover:gold-text">
-                    <Plus className="h-4 w-4" />
+            {/* Darmowe: formularz zamówienia. Płatne: koszyk. */}
+            {product.is_free && !(product.checkout_url || "").trim() && product.status !== "wkrótce" ? (
+              <div className="mt-auto">
+                <FreeOrderForm product={product} />
+              </div>
+            ) : (
+              <div className="mt-auto space-y-4">
+                <div className="flex items-center gap-4">
+                  <div className="flex items-center border hairline">
+                    <button onClick={() => setQty((q) => Math.max(1, q - 1))} className="p-3 text-foreground/60 hover:gold-text">
+                      <Minus className="h-4 w-4" />
+                    </button>
+                    <span className="px-5 font-mono">{qty}</span>
+                    <button onClick={() => setQty((q) => q + 1)} className="p-3 text-foreground/60 hover:gold-text">
+                      <Plus className="h-4 w-4" />
+                    </button>
+                  </div>
+                  <button onClick={handleAdd} className="btn-relic flex-1">
+                    {added ? "DODANO ✓" : "DOŁĄCZ DO POWROTU"} {!added && <ArrowRight className="h-4 w-4" />}
                   </button>
                 </div>
-                <button onClick={handleAdd} className="btn-relic flex-1">
-                  {added ? "DODANO ✓" : "DOŁĄCZ DO POWROTU"} {!added && <ArrowRight className="h-4 w-4" />}
-                </button>
+                <p className="technical text-[10px] text-foreground/40">
+                  Sprzedaję z dojrzałości, nie z presji. Decyzję zostawiam Tobie.
+                </p>
               </div>
-              <p className="technical text-[10px] text-foreground/40">
-                Sprzedaję z dojrzałości, nie z presji. Decyzję zostawiam Tobie.
-              </p>
-            </div>
+            )}
           </div>
         </div>
       </section>

@@ -2,6 +2,7 @@ import { createClientFromRequest } from "npm:@base44/sdk@0.8.44";
 import { runSql, escStr, textField, emailField } from "../../shared/supabase.ts";
 import { getSetting } from "../../shared/settings.ts";
 import { insertOrder } from "../../shared/orders.ts";
+import { addSubscriber } from "../../shared/newsletter.ts";
 
 const BASE_URLS = {
   secure: "https://secure.payu.com",
@@ -16,6 +17,7 @@ export default async function (req) {
     const buyerName = textField(body, "name", { max: 100 });
     const buyerEmail = emailField(body);
     const note = textField(body, "note", { max: 2000, required: false }) || "";
+    const newsletterConsent = body.newsletter_consent === true;
     const items = Array.isArray(body.items) ? body.items.slice(0, 20) : [];
     if (items.length === 0) throw new Error("Koszyk jest pusty");
 
@@ -103,7 +105,12 @@ export default async function (req) {
       items: products,
       total: totalGrosze / 100,
       status: "PENDING",
+      newsletterConsent,
     });
+
+    if (newsletterConsent) {
+      await addSubscriber(base44, { email: buyerEmail, name: buyerName, consentGiven: true });
+    }
 
     return Response.json({ redirectUri: data.redirectUri, orderId: extOrderId });
   } catch (error) {

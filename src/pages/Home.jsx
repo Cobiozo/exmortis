@@ -12,6 +12,7 @@ import EventsTeaser from "@/components/exmortis/events/EventsTeaser";
 import ShortHistory from "@/components/exmortis/home/ShortHistory";
 import ReturnPath from "@/components/exmortis/home/ReturnPath";
 import InstagramFeed from "@/components/exmortis/home/InstagramFeed";
+import { EXCLUDED_SLUGS } from "@/components/exmortis/shop/cardBits";
 import { useSiteContent } from "@/components/exmortis/SiteContentProvider";
 
 const HERO_IMG = "https://media.base44.com/images/public/6aa08bc6318b0f886cc3b9a3/b1f31269c_generated_f9afed1e.jpg";
@@ -66,6 +67,12 @@ export default function Home() {
 
   const scrollTo = (id) =>
     document.getElementById(id)?.scrollIntoView({ behavior: "smooth" });
+
+  // Trzy produkty z katalogu Skarbca (bez Listów, Testu i Ciszy) — wyróżnione najpierw.
+  const skarbiecProducts = [...products]
+    .filter((p) => !EXCLUDED_SLUGS.includes(p.slug))
+    .sort((a, b) => (b.is_featured ? 1 : 0) - (a.is_featured ? 1 : 0))
+    .slice(0, 3);
 
   return (
     <div className="bg-[#0A0A0B]">
@@ -199,9 +206,6 @@ export default function Home() {
             </div>
             <div className="md:col-span-8">
               <div className="rich-content text-foreground/60 text-lg leading-relaxed max-w-xl" dangerouslySetInnerHTML={{ __html: skarbiecText }} />
-              <Link to="/sklep" className="btn-ghost mt-8">
-                CAŁY SKARBIEC <ArrowRight className="h-4 w-4" />
-              </Link>
             </div>
           </div>
 
@@ -212,12 +216,17 @@ export default function Home() {
               ))}
             </div>
           ) : (
-            <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
-              {products.slice(0, 3).map((p, i) => (
+            <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6 items-stretch">
+              {skarbiecProducts.map((p, i) => (
                 <ProductCard key={p.id} product={p} index={i} />
               ))}
             </div>
           )}
+          <div className="mt-12">
+            <Link to="/sklep" className="btn-ghost">
+              Cały Skarbiec <ArrowRight className="h-4 w-4" />
+            </Link>
+          </div>
         </div>
       </section>
 

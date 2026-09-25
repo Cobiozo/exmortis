@@ -4,12 +4,14 @@ import ShopFeaturedCard from "./ShopFeaturedCard";
 import ShopEventCard from "@/components/exmortis/events/ShopEventCard";
 
 // Sekcja poziomu drabiny: Brama, Pierwszy krok, Praktyka, Krąg, Głębia.
+// Karty numerowane po kolei — darmowe pokazują numer z napisem „DARMOWE" u góry.
 export default function ShopLevelSection({ section, products, events, onWaitlist }) {
   const list = products || [];
   const eventList = events || [];
   if (list.length === 0 && eventList.length === 0) return null;
   const featured = list.filter((p) => p.is_featured);
   const rest = list.filter((p) => !p.is_featured);
+  let n = 0;
 
   return (
     <section id={`poziom-${section.level}`} className="py-24 md:py-32 px-5 md:px-10 border-t hairline">
@@ -31,13 +33,19 @@ export default function ShopLevelSection({ section, products, events, onWaitlist
         </div>
 
         {featured.map((p) => (
-          <ShopFeaturedCard key={p.id} product={p} onWaitlist={onWaitlist} className="mb-6 md:mb-8" />
+          <ShopFeaturedCard
+            key={p.id}
+            product={p}
+            onWaitlist={onWaitlist}
+            index={++n}
+            className="mb-6 md:mb-8"
+          />
         ))}
 
         {rest.length > 0 && (
-          <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
+          <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6 items-stretch">
             {rest.map((p) => (
-              <ShopProductCard key={p.id} product={p} onWaitlist={onWaitlist} />
+              <ShopProductCard key={p.id} product={p} onWaitlist={onWaitlist} index={++n} />
             ))}
           </div>
         )}

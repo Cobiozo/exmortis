@@ -3,6 +3,7 @@ import { Link, useNavigate } from "react-router-dom";
 import { ArrowRight, Check } from "lucide-react";
 import { useCart } from "@/components/exmortis/CartContext";
 import { base44 } from "@/api/base44Client";
+import NewsletterConsent from "@/components/exmortis/shop/NewsletterConsent";
 
 export default function Checkout() {
   const { items, total, clear } = useCart();
@@ -13,6 +14,7 @@ export default function Checkout() {
   const [done, setDone] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [form, setForm] = useState({ name: "", email: "", note: "" });
+  const [newsletterConsent, setNewsletterConsent] = useState(false);
 
   const submit = async (e) => {
     e.preventDefault();
@@ -23,6 +25,7 @@ export default function Checkout() {
         name: form.name,
         email: form.email,
         note: form.note,
+        newsletter_consent: newsletterConsent,
         items: items.map((it) => ({ id: it.id, qty: it.qty })),
       });
       clear();
@@ -106,6 +109,9 @@ export default function Checkout() {
                 onChange={(e) => setForm({ ...form, email: e.target.value })}
                 className="w-full bg-transparent border hairline px-5 py-4 focus:border-[#C9A24A] focus:outline-none transition-colors"
               />
+              <div className="mt-3">
+                <NewsletterConsent checked={newsletterConsent} onChange={setNewsletterConsent} />
+              </div>
             </div>
             <div>
               <label className="technical text-[10px] text-foreground/50 block mb-3">NOTATKA (opcjonalnie)</label>

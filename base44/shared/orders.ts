@@ -18,6 +18,13 @@ export async function ensureOrdersTable(base44) {
       updated_date timestamptz DEFAULT now()
     )`
   );
+  await runSql(
+    base44,
+    `ALTER TABLE public.orders
+       ADD COLUMN IF NOT EXISTS buyer_phone text,
+       ADD COLUMN IF NOT EXISTS phone_consent_date timestamptz,
+       ADD COLUMN IF NOT EXISTS newsletter_consent_date timestamptz`
+  );
 }
 
 export async function insertOrder(base44, order) {
@@ -25,10 +32,16 @@ export async function insertOrder(base44, order) {
   const itemsJson = JSON.stringify(order.items);
   await runSql(
     base44,
-    `INSERT INTO public.orders (id, payu_order_id, buyer_name, buyer_email, note, items, total, status)
+    `INSERT INTO public.orders
+       (id, payu_order_id, buyer_name, buyer_email, buyer_phone, note, items, total, status,
+        phone_consent_date, newsletter_consent_date)
      VALUES (${escStr(order.id)}, ${escStr(order.payuOrderId || "")}, ${escStr(order.buyerName || "")},
-             ${escStr(order.buyerEmail || "")}, ${escStr(order.note || "")},
-             ${escStr(itemsJson)}::jsonb, ${esc(order.total)}, ${escStr(order.status)})`
+             ${escStr(order.buyerEmail || "")},
+             ${order.buyerPhone ? escStr(order.buyerPhone) : "NULL"},
+             ${escStr(order.note || "")},
+             ${escStr(itemsJson)}::jsonb, ${esc(order.total)}, ${escStr(order.status)},
+             ${order.phoneConsent ? "now()" : "NULL"},
+             ${order.newsletterConsent ? "now()" : "NULL"})`
   );
 }
 

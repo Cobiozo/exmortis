@@ -43,6 +43,7 @@ export default function ProductEditor({ product, onSaved, onCancel }) {
     is_featured: !!product?.is_featured,
     sort_order: product?.sort_order != null ? String(product.sort_order) : "",
     cover_image: product?.cover_image || "",
+    file_url: product?.file_url || "",
     // Ceny
     price_start: product?.price_start != null ? String(product.price_start) : "",
     price_regular: product?.price_regular != null ? String(product.price_regular) : "",
@@ -390,6 +391,35 @@ export default function ProductEditor({ product, onSaved, onCancel }) {
             )}
           </div>
         </div>
+      </div>
+
+      {/* ===== PLIK DO POBRANIA ===== */}
+      <p className="technical text-[10px] gold-text mb-6">PLIK DO POBRANIA (BEZPŁATNE MATERIAŁY)</p>
+      <div className="mb-10 space-y-3">
+        <label className="btn-ghost cursor-pointer !px-4 !py-2 text-[10px]">
+          <Upload className="h-3.5 w-3.5" /> {uploading ? "WGRAWAM..." : "WGRAW PLIK"}
+          <input
+            type="file"
+            className="hidden"
+            accept=".pdf,.epub,.mobi,.zip"
+            onChange={(e) => upload(e, "file_url")}
+          />
+        </label>
+        {form.file_url && (
+          <div className="flex items-center gap-4 flex-wrap">
+            <span className="font-mono text-xs text-foreground/50 break-all">{form.file_url}</span>
+            <button
+              onClick={() => set("file_url", "")}
+              className="technical text-[10px] text-foreground/40 hover:blood-text transition-colors"
+            >
+              USUŃ PLIK
+            </button>
+          </div>
+        )}
+        <p className="text-xs text-foreground/40 leading-relaxed max-w-xl">
+          Plik nie jest dostępny do pobrania na stronie — po złożeniu zamówienia bezpłatnego
+          materiału trafia do e-maila z linkiem do pobrania.
+        </p>
       </div>
 
       {/* ===== STRONA PRODUKTU (POLA KLASYCZNE) ===== */}

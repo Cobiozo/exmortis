@@ -1,9 +1,9 @@
 import React from "react";
 import { Image } from "@/components/ui/image";
-import { StageBadge, PriceBlock, ProductButton } from "./cardBits";
+import { CardTopBadge, PriceBlock, ProductButton } from "./cardBits";
 
 // Wyróżniona karta na całą szerokość sekcji (np. „Wracam inny", POWRÓT 1:1).
-export default function ShopFeaturedCard({ product: p, onWaitlist, className = "" }) {
+export default function ShopFeaturedCard({ product: p, onWaitlist, index, className = "" }) {
   const cover = p.cover_image || p.image_url;
   const mentoring = p.slug === "powrot-mentoring";
   const soon = p.status === "wkrótce";
@@ -22,7 +22,7 @@ export default function ShopFeaturedCard({ product: p, onWaitlist, className = "
           </div>
         )}
         <div className="absolute top-4 left-4">
-          <StageBadge stage={p.stage} />
+          <CardTopBadge p={p} index={index} />
         </div>
       </div>
 
@@ -35,7 +35,8 @@ export default function ShopFeaturedCard({ product: p, onWaitlist, className = "
         {p.for_whom && <p className="text-sm text-foreground/40">{p.for_whom}</p>}
         {(p.form || p.format_details) && (
           <p className="technical text-[9px] text-foreground/35">
-            {[p.form, p.format_details].filter(Boolean).join(" · ").toUpperCase()}
+            {[p.form, p.format_details].filter(Boolean).join(" · ").toUpperCase()
+            }
           </p>
         )}
 

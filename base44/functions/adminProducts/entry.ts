@@ -82,6 +82,7 @@ function buildValues(p, name, slug, price, oldPrice, category) {
     is_featured: p.is_featured ? "TRUE" : "FALSE",
     sort_order: intVal(p.sort_order, 0, 9999),
     cover_image: textVal(p.cover_image, 1000),
+    file_url: textVal(p.file_url, 1000),
   };
 }
 
@@ -89,7 +90,7 @@ const SHOP_COLUMNS = `name, slug, subtitle, description, long_description, price
   gallery, featured, active, details, format, duration, spots,
   level, stage, form, audience_tags, promise, for_whom, format_details,
   price_start, price_regular, is_free, status, promo_end_date,
-  button_label, checkout_url, next_step, is_featured, sort_order, cover_image`;
+  button_label, checkout_url, next_step, is_featured, sort_order, cover_image, file_url`;
 
 const SHOP_SELECT = `id, name, slug, subtitle, description, long_description,
   price::float8 AS price, old_price::float8 AS old_price, category, image_url, gallery,
@@ -115,7 +116,7 @@ export default async function (req) {
                 p.level, p.stage, p.form, p.audience_tags, p.promise, p.for_whom, p.format_details,
                 p.price_start::float8 AS price_start, p.price_regular::float8 AS price_regular,
                 p.is_free, p.status, p.promo_end_date::text AS promo_end_date,
-                p.button_label, p.checkout_url, p.next_step, p.is_featured, p.sort_order, p.cover_image,
+                p.button_label, p.checkout_url, p.next_step, p.is_featured, p.sort_order, p.cover_image, p.file_url,
                 p.created_date, p.updated_date,
                 (SELECT COUNT(*)::int FROM public.waitlist w WHERE w.product_id = p.id) AS waitlist_count
          FROM public.products p
@@ -143,6 +144,11 @@ export default async function (req) {
 
       const v = buildValues(p, name, slug, price, oldPrice, category);
 
+      await runSql(
+        base44,
+        `ALTER TABLE public.products ADD COLUMN IF NOT EXISTS file_url text`
+      );
+
       if (p.id) {
         await runSql(
           base44,
@@ -158,6 +164,7 @@ export default async function (req) {
              status = ${v.status}, promo_end_date = ${v.promo_end_date},
              button_label = ${v.button_label}, checkout_url = ${v.checkout_url}, next_step = ${v.next_step},
              is_featured = ${v.is_featured}, sort_order = ${v.sort_order}, cover_image = ${v.cover_image},
+             file_url = ${v.file_url},
              updated_date = now()
            WHERE id = ${escStr(String(p.id))}`
         );
@@ -172,7 +179,7 @@ export default async function (req) {
                    ${v.level}, ${v.stage}, ${v.form}, ${v.audience_tags}, ${v.promise}, ${v.for_whom}, ${v.format_details},
                    ${v.price_start}, ${v.price_regular}, ${v.is_free}, ${v.status}, ${v.promo_end_date},
                    ${v.button_label}, ${v.checkout_url}, ${v.next_step}, ${v.is_featured}, ${v.sort_order}, ${v.cover_image},
-                   ${escStr(user.id)})`
+                   ${v.file_url}, ${escStr(user.id)})`
         );
       }
       return Response.json({ ok: true });

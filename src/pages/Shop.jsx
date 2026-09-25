@@ -2,11 +2,12 @@ import React, { useEffect, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
 import { ArrowRight } from "lucide-react";
 import { base44 } from "@/api/base44Client";
-import ShopFilters from "@/components/exmortis/shop/ShopFilters";
+import ShopFilters, { FORM_OPTIONS, AUDIENCE_OPTIONS } from "@/components/exmortis/shop/ShopFilters";
 import ShopLevelSection from "@/components/exmortis/shop/ShopLevelSection";
 import MusicSection from "@/components/exmortis/shop/MusicSection";
 import TrustFooter from "@/components/exmortis/shop/TrustFooter";
 import WaitlistDialog from "@/components/exmortis/shop/WaitlistDialog";
+import { EXCLUDED_SLUGS } from "@/components/exmortis/shop/cardBits";
 
 const LEVELS = [
   { level: 0, label: "BRAMA", title: "Za darmo — zacznij tutaj", line: "Tu zaczyna większość ludzi." },
@@ -49,8 +50,26 @@ export default function Shop() {
       .catch(() => setEvents([]));
   }, []);
 
+  // Katalog bez Listów powrotu, Testu i Minutnika ciszy — one mają własne podstrony.
+  const visible = useMemo(
+    () => products.filter((p) => !EXCLUDED_SLUGS.includes(p.slug)),
+    [products]
+  );
+
+  // Filtry bez pustych opcji.
+  const available = useMemo(
+    () => ({
+      stages: STAGE_WORDS.filter((s) => visible.some((p) => p.stage === s)),
+      forms: FORM_OPTIONS.filter((f) => visible.some((p) => p.form === f)),
+      audiences: AUDIENCE_OPTIONS.filter((a) =>
+        visible.some((p) => Array.isArray(p.audience_tags) && p.audience_tags.includes(a))
+      ),
+    }),
+    [visible]
+  );
+
   const filtered = useMemo(() => {
-    return products.filter((p) => {
+    return visible.filter((p) => {
       if (filters.stage && p.stage !== "Wszystkie" && p.stage !== filters.stage) return false;
       if (filters.form && p.form !== filters.form) return false;
       if (filters.audience) {
@@ -59,7 +78,7 @@ export default function Shop() {
       }
       return true;
     });
-  }, [products, filters]);
+  }, [visible, filters]);
 
   const scrollToSections = () => {
     setTimeout(
@@ -68,7 +87,7 @@ export default function Shop() {
     );
   };
 
-  const emptyState = !loading && products.length > 0 && filtered.length === 0;
+  const emptyState = !loading && visible.length > 0 && filtered.length === 0;
 
   return (
     <div className="bg-[#0A0A0B] pt-20">
@@ -83,11 +102,11 @@ export default function Shop() {
           <p className="mt-8 text-foreground/60 text-lg leading-relaxed max-w-2xl">
             Powrót ma cztery etapy: <span className="gold-text">Śmierć · Próg · Powrót · Inny</span>.
             Na każdym z nich potrzeba innych narzędzi. Znajdziesz tu to, co pasuje do miejsca, w
-            którym stoisz dzisiaj — od bezpłatnego listu po pracę jeden na jeden.
+            którym stoisz dzisiaj — od pierwszego, darmowego kroku po pracę jeden na jeden.
           </p>
 
           <div className="mt-16 flex flex-wrap gap-x-10 gap-y-4 items-baseline">
-            {STAGE_WORDS.map((s) => (
+            {available.stages.map((s) => (
               <button
                 key={s}
                 onClick={() => {
@@ -124,7 +143,7 @@ export default function Shop() {
       </section>
 
       {/* ===== FILTRY ===== */}
-      <ShopFilters filters={filters} setFilters={setFilters} />
+      <ShopFilters filters={filters} setFilters={setFilters} available={available} />
 
       {/* ===== SEKCJE DRABINY ===== */}
       {loading ? (
@@ -139,7 +158,7 @@ export default function Shop() {
         <div className="py-32 text-center px-5">
           <p className="shop-heading text-2xl text-[#F5EFE1]/60">Nic tu jeszcze nie pasuje.</p>
           <p className="text-foreground/40 mt-4 mb-8">
-            Spróbuj innych filtrów — albo zacznij od Listów powrotu.
+            Spróbuj innych filtrów albo wyczyść wybór.
           </p>
           <button onClick={() => setFilters({ stage: null, form: null, audience: null })} className="btn-ghost">
             WYCZYŚĆ FILTRY
@@ -165,7 +184,7 @@ export default function Shop() {
       )}
 
       {/* ===== MUZYKA ===== */}
-      <MusicSection products={products} onWaitlist={setWaitlistProduct} />
+      <MusicSection products={visible} onWaitlist={setWaitlistProduct} />
 
       {/* ===== STOPKA ZAUFANIA ===== */}
       <TrustFooter />
