@@ -47,13 +47,21 @@ export default function Footer() {
           </div>
         </div>
 
-        <div className="mt-16 pt-8 border-t hairline flex flex-col sm:flex-row justify-between gap-4">
-          <p className="technical text-[10px] text-foreground/30">
-            © {new Date().getFullYear()} EXMORTIS · WSZELKIE PRAWA ZASTRZEŻONE
+        <div className="mt-16 pt-8 border-t hairline">
+          <p className="text-xs text-foreground/40 leading-relaxed max-w-2xl mb-6">
+            Jeśli jesteś w kryzysie i myślisz o odebraniu sobie życia — zadzwoń:{" "}
+            <span className="gold-text">800 70 2222</span> (całą dobę) lub{" "}
+            <span className="gold-text">116 123</span>. W zagrożeniu życia:{" "}
+            <span className="gold-text">112</span>.
           </p>
-          <p className="technical text-[10px] text-foreground/30">
-            WRACAM Z SIEBIE · UCZĘ WRACAĆ
-          </p>
+          <div className="flex flex-col sm:flex-row justify-between gap-4">
+            <p className="technical text-[10px] text-foreground/30">
+              © {new Date().getFullYear()} EXMORTIS · WSZELKIE PRAWA ZASTRZEŻONE
+            </p>
+            <p className="technical text-[10px] text-foreground/30">
+              WRACAM Z SIEBIE · UCZĘ WRACAĆ
+            </p>
+          </div>
         </div>
       </div>
     </footer>

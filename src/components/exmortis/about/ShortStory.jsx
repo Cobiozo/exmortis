@@ -14,7 +14,8 @@ export default function ShortStory() {
 <p>A potem sam znalazłem się w miejscu, którego nie było na mapie. W odrzuceniu, w „trędowatości”, w braku perspektyw.</p>
 <p>Nie zaczynałem od dna. Do dna jeszcze pukałem od spodu.</p>
 <p><strong class="gold-text">Byłem niżej.</strong></p>
-<p>W piosence „exmortis” zapisałem zdanie, które długo w sobie nosiłem: „Byłem pewien, że grzebią mnie żywcem… a Ty, w tej ciemności, po prostu mnie zasadziłeś”.</p>
+<p>W piosence „exmortis” zapisałem zdanie, które długo w sobie nosiłem:</p>
+<blockquote class="about-quote"><p>„Byłem pewien, że grzebią mnie żywcem… a Ty, w tej ciemności, po prostu mnie zasadziłeś.”</p></blockquote>
 <p>To cała moja historia w jednym zdaniu. Reszta to konsekwencje.</p>
 <p>Dziś rosnę — jako szczęśliwy mąż i ojciec. I tę iskrę chcę dawać dalej: zamieniając „grzebanie” w „sadzenie”.</p>`
   );
@@ -22,7 +23,7 @@ export default function ShortStory() {
   return (
     <section className="grid md:grid-cols-2 border-y hairline">
       <div className="p-10 md:p-16 lg:p-24 flex flex-col justify-center order-1">
-        <p className="technical text-[11px] gold-text mb-8">KRÓTKA HISTORIA · 02</p>
+        <p className="technical text-[11px] gold-text mb-8">KRÓTKA HISTORIA · 01</p>
         <div
           className="rich-content text-lg leading-relaxed text-foreground/75"
           dangerouslySetInnerHTML={{ __html: story }}

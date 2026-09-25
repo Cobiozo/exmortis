@@ -1,16 +1,13 @@
 import React from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { ArrowRight } from "lucide-react";
 import Logo from "@/components/exmortis/Logo";
-import { Image } from "@/components/ui/image";
 import { useSiteContent } from "@/components/exmortis/SiteContentProvider";
 import ShortStory from "@/components/exmortis/about/ShortStory";
+import SongBlock from "@/components/exmortis/about/SongBlock";
 import Origin from "@/components/exmortis/about/Origin";
 import WhoIAmNot from "@/components/exmortis/about/WhoIAmNot";
 import WhatITeach from "@/components/exmortis/about/WhatITeach";
-
-const PORTRAIT =
-  "https://media.base44.com/images/public/6aa08bc6318b0f886cc3b9a3/74c8971f2_572398635_17869620246460401_6357932160691507676_n.jpg";
 
 const TIMELINE = [
   { phase: "Śmierć", text: "Chodziłem, pracowałem, uśmiechałem się — a w środku była cisza, której nie umiałem nazwać. Żyłem na autopilocie." },
@@ -20,24 +17,26 @@ const TIMELINE = [
 ];
 
 const PRINCIPLES = [
-  { title: "Przewodnik, nie terapeuta", text: "Prowadzę przez powrót, nie leczę zaburzeń. Przy objawach klinicznych kieruję do specjalisty." },
   { title: "Pytania zamiast rad", text: "Nie mówię «zrób tak» — to Twoje życie, więc ostateczne decyzje podejmujesz Ty. Moim zadaniem jest poprzez zadawanie pytań pokazać różne perspektywy. Więcej słucham niż mówię." },
   { title: "Jeden ruch na sesję", text: "Każde spotkanie kończy się jednym konkretnym ruchem do wykonania. Bo powrót to ruchy, nie plany na rok." },
 ];
 
 export default function About() {
+  const navigate = useNavigate();
   const { cards, rich } = useSiteContent();
   const heroTitle = rich("about", "heroTitle", 'Byłem tam.<br /><span class="gold-text">I wróciłem.</span><br />Inny.');
   const heroIntro = rich(
     "about",
     "heroIntro",
-    "Ex ksiądz może jeszcze coś powiedzieć? Exmortis to przestrzeń dla osób, które chcą przebić przez swoje „dno”, zamienić swoje „grzebanie” w moment „sadzenia” i doświadczyć wzrostu."
+    "Były ksiądz. Dziś mąż, ojciec i mentor powrotu. exmortis to przestrzeń dla ludzi, którzy chcą przebić się przez swoje dno — i zamiast pogrzebu przeżyć zasadzenie."
   );
-  const manifesto = rich(
-    "about",
-    "manifesto",
-    "<p>Są dni, kiedy człowiek żyje, ale w środku już umarł. Chodzi, pracuje, uśmiecha się — a nie czuje nic.</p><p>Ja tam byłem. W miejscu, z którego wydawało się, że nie ma powrotu. Wróciłem. Nie do tego, kim byłem — jako ktoś nowy.</p>"
-  );
+
+  const goToContact = () => {
+    navigate("/");
+    setTimeout(() => {
+      document.getElementById("kontakt")?.scrollIntoView({ behavior: "smooth" });
+    }, 400);
+  };
   const timeline = cards("about", "timeline", TIMELINE);
   const principles = cards("about", "principles", PRINCIPLES);
   const ctaTitle = rich("about", "ctaTitle", 'Jeśli coś w Tobie<br /><span class="gold-text">już wie</span>');
@@ -48,7 +47,7 @@ export default function About() {
       <section className="relative py-32 md:py-48 px-5 md:px-10 overflow-hidden">
         <div className="absolute left-0 top-0 bottom-0 w-px spine opacity-40" />
         <div className="mx-auto max-w-[1400px]">
-          <p className="technical text-[11px] gold-text mb-6">KRONIKARZ · O MNIE</p>
+          <p className="technical text-[11px] gold-text mb-6">O MNIE</p>
           <div className="grid md:grid-cols-12 gap-10 items-end">
             <h1 className="md:col-span-8 relic-heading text-5xl md:text-8xl leading-[0.9]" dangerouslySetInnerHTML={{ __html: heroTitle }} />
             <div className="rich-content md:col-span-4 text-foreground/60 text-lg leading-relaxed" dangerouslySetInnerHTML={{ __html: heroIntro }} />
@@ -56,28 +55,11 @@ export default function About() {
         </div>
       </section>
 
-      {/* Split portrait + manifesto */}
-      <section className="grid md:grid-cols-2 border-y hairline min-h-[80vh]">
-        <div className="relative bg-[#070708] overflow-hidden order-2 md:order-1">
-          <Image
-            src={PORTRAIT}
-            alt="exmortis"
-            fittingType="fill"
-            className="absolute inset-0 w-full h-full"
-          />
-          <div className="absolute inset-0 bg-gradient-to-t from-[#0A0A0B] via-transparent to-transparent" />
-          <div className="absolute bottom-8 left-8">
-            <p className="technical text-[10px] gold-text">DAWID · EXMORTIS</p>
-          </div>
-        </div>
-        <div className="p-10 md:p-16 lg:p-24 flex flex-col justify-center order-1 md:order-2">
-          <p className="technical text-[11px] gold-text mb-8">MANIFEST OSOBISTY</p>
-          <div className="rich-content space-y-6 text-lg leading-relaxed text-foreground/75" dangerouslySetInnerHTML={{ __html: manifesto }} />
-        </div>
-      </section>
-
       {/* Krótka historia */}
       <ShortStory />
+
+      {/* Piosenka */}
+      <SongBlock />
 
       {/* Skąd wzięło się exmortis */}
       <Origin />
@@ -91,7 +73,7 @@ export default function About() {
       {/* Timeline — Śmierć / Próg / Powrót / Inny */}
       <section className="py-32 px-5 md:px-10 border-t hairline">
         <div className="mx-auto max-w-[1400px]">
-          <p className="technical text-[11px] gold-text mb-4">DROGA · 06</p>
+          <p className="technical text-[11px] gold-text mb-4">DROGA · 05</p>
           <h2 className="relic-heading text-4xl md:text-6xl mb-20 leading-[0.95]">
             Śmierć → Próg →<br /><span className="gold-text">Powrót → Inny</span>
           </h2>
@@ -115,7 +97,7 @@ export default function About() {
       {/* Principles */}
       <section className="py-32 px-5 md:px-10 border-y hairline bg-[#070708]">
         <div className="mx-auto max-w-[1400px]">
-          <p className="technical text-[11px] gold-text mb-4">POSTAWA · 07</p>
+          <p className="technical text-[11px] gold-text mb-4">POSTAWA · 06</p>
           <h2 className="relic-heading text-4xl md:text-6xl mb-16 leading-[0.95]">
             Jak<br /><span className="gold-text">prowadzę</span>
           </h2>
@@ -136,9 +118,14 @@ export default function About() {
         <Logo className="h-20 w-20 mx-auto mb-10" />
         <h2 className="relic-heading text-4xl md:text-6xl mb-8 leading-[0.95]" dangerouslySetInnerHTML={{ __html: ctaTitle }} />
         <div className="rich-content text-foreground/60 text-lg max-w-xl mx-auto mb-12 leading-relaxed" dangerouslySetInnerHTML={{ __html: ctaText }} />
-        <Link to="/sklep" className="btn-relic">
-          ZOBACZ DROGĘ POWROTU <ArrowRight className="h-4 w-4" />
-        </Link>
+        <div className="flex flex-col sm:flex-row gap-4 justify-center">
+          <Link to="/sklep" className="btn-relic">
+            ZOBACZ DROGĘ POWROTU <ArrowRight className="h-4 w-4" />
+          </Link>
+          <button onClick={goToContact} className="btn-ghost">
+            NAPISZ DO MNIE <ArrowRight className="h-4 w-4" />
+          </button>
+        </div>
       </section>
     </div>
   );

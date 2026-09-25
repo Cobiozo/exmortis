@@ -33,7 +33,7 @@ export default function WhoIAmNot() {
     <section className="py-32 px-5 md:px-10 border-y hairline bg-[#070708]">
       <div className="mx-auto max-w-[1400px]">
         <div className="mb-16">
-          <p className="technical text-[11px] gold-text mb-4">GRANICE · 04</p>
+          <p className="technical text-[11px] gold-text mb-4">GRANICE · 03</p>
           <h2 className="relic-heading text-4xl md:text-6xl leading-[0.95]">
             Kim <span className="blood-text">NIE</span>
             <br />

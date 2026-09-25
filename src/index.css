@@ -196,6 +196,8 @@
 .rich-content img { max-width: 100%; margin: 1rem 0; }
 .rich-content strong { color: #E2E2E2; }
 .rich-content pre { background: #0F0F10; border: 1px solid #3D3D3F; padding: 1rem; margin-bottom: 1rem; overflow-x: auto; }
+.rich-content blockquote.about-quote { border-left: 1px solid #C9A24A; margin: 2rem 0 2.5rem 0; padding-left: 1.5rem; }
+.rich-content blockquote.about-quote p { font-family: "EB Garamond", ui-serif, Georgia, serif; font-size: 1.55rem; line-height: 1.35; color: #C9A24A; margin-bottom: 0; }
 
 ::-webkit-scrollbar { width: 8px; height: 8px; }
 ::-webkit-scrollbar-track { background: #0A0A0B; }

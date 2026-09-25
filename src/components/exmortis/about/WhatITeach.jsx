@@ -23,7 +23,7 @@ export default function WhatITeach() {
     <section className="relative py-32 md:py-40 px-5 md:px-10">
       <div className="absolute left-0 top-0 bottom-0 w-px spine opacity-30" />
       <div className="mx-auto max-w-4xl">
-        <p className="technical text-[11px] gold-text mb-4">CZEGO UCZĘ · 05</p>
+        <p className="technical text-[11px] gold-text mb-4">CZEGO UCZĘ · 04</p>
         <h2 className="relic-heading text-4xl md:text-6xl mb-10 leading-[0.95]">Czego uczę?</h2>
         <div
           className="rich-content text-lg text-foreground/60 mb-16"
@@ -33,7 +33,7 @@ export default function WhatITeach() {
           {teachings.map((t, i) => (
             <div key={i} className="flex gap-6 md:gap-10 items-start">
               <span className="font-mono text-xl gold-text mt-2 flex-shrink-0">0{i + 1}</span>
-              <p className="relic-heading text-xl md:text-3xl leading-tight text-foreground/85">{t}</p>
+              <p className="font-heading text-xl md:text-3xl leading-tight text-foreground/85">{t}</p>
             </div>
           ))}
         </div>
