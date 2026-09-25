@@ -11,6 +11,7 @@ const NAV = [
   { label: "Spotkania", to: "/spotkania?src=nav" },
   { label: "Skarbiec", to: "/sklep" },
   { label: "Kontakt", to: "/#kontakt" },
+  { label: "Cisza", to: "/cisza" },
 ];
 
 export default function Navbar() {
