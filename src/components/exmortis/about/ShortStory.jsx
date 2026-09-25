@@ -12,11 +12,11 @@ export default function ShortStory() {
     "shortStory",
     `<p>Byłem księdzem. Prowadziłem ludzi.</p>
 <p>A potem sam znalazłem się w miejscu, którego nie było na mapie. W odrzuceniu, w „trędowatości”, w braku perspektyw.</p>
-<p>Nie zaczynałem życia od dna. Do dna to jeszcze pukałem do góry.</p>
+<p>Nie zaczynałem od dna. Do dna jeszcze pukałem od spodu.</p>
 <p><strong class="gold-text">Byłem niżej.</strong></p>
-<p>W piosence „exmortis” opisuję tę historię i zapisałem to zdanie, które długo nosiłem: „Byłem pewien, że grzebią mnie żywcem… a Ty, w tej ciemności, po prostu mnie zasadziłeś”.</p>
-<p>Dziś rosnę. Jako szczęśliwy mąż, ojciec — chcę przekazywać wszystkim iskrę nadziei, zmieniając „grzebanie” w „sadzenie”.</p>
-<p class="gold-text">To jest cała moja historia w jednym zdaniu. Reszta to konsekwencje.</p>`
+<p>W piosence „exmortis” zapisałem zdanie, które długo w sobie nosiłem: „Byłem pewien, że grzebią mnie żywcem… a Ty, w tej ciemności, po prostu mnie zasadziłeś”.</p>
+<p>To cała moja historia w jednym zdaniu. Reszta to konsekwencje.</p>
+<p>Dziś rosnę — jako szczęśliwy mąż i ojciec. I tę iskrę chcę dawać dalej: zamieniając „grzebanie” w „sadzenie”.</p>`
   );
 
   return (

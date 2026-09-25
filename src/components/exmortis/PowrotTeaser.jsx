@@ -12,7 +12,7 @@ export default function PowrotTeaser() {
       <div className="absolute left-0 top-0 bottom-0 w-px spine opacity-30" />
       <div className="mx-auto max-w-[1400px] grid md:grid-cols-12 gap-12 items-center">
         <div className="md:col-span-5">
-          <p className="technical text-[11px] gold-text mb-4">POWRÓT · 05</p>
+          <p className="technical text-[11px] gold-text mb-4">POWRÓT · 06</p>
           <h2 className="relic-heading text-5xl md:text-6xl lg:text-7xl xl:text-8xl gold-text leading-[0.9]">
             POWRÓT
           </h2>

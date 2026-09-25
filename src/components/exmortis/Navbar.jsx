@@ -7,11 +7,9 @@ import Logo from "./Logo";
 const NAV = [
   { label: "O mnie", to: "/o-mnie" },
   { label: "Powrót", to: "/powrot" },
-  { label: "Głos", to: "/glos" },
-  { label: "Sklep", to: "/sklep" },
   { label: "Test", to: "/test?src=nav", gold: true },
-  { label: "Cisza", to: "/cisza?src=nav" },
   { label: "Spotkania", to: "/spotkania?src=nav" },
+  { label: "Skarbiec", to: "/sklep" },
   { label: "Kontakt", to: "/#kontakt" },
 ];
 

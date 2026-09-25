@@ -34,7 +34,7 @@ export default function NewsletterSection() {
     <section id="listy-powrotu" className="py-32 px-5 md:px-10 border-t hairline bg-[#070708]">
       <div className="mx-auto max-w-[1400px] grid md:grid-cols-2 gap-12 md:gap-20 items-center">
         <div>
-          <p className="technical text-[11px] gold-text mb-4">LISTY POWROTU · 08</p>
+          <p className="technical text-[11px] gold-text mb-4">LISTY POWROTU · 09</p>
           <h2 className="relic-heading text-4xl md:text-5xl lg:text-6xl leading-[0.95] mb-6" dangerouslySetInnerHTML={{ __html: title }} />
           <div className="rich-content text-foreground/60 text-lg max-w-md leading-relaxed" dangerouslySetInnerHTML={{ __html: desc }} />
         </div>

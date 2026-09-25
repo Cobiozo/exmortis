@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { ArrowRight, Check, Mail, Instagram, Facebook, Youtube, PenLine } from "lucide-react";
+import { ArrowRight, Check, Mail, Instagram, Facebook, Youtube } from "lucide-react";
 import { base44 } from "@/api/base44Client";
 import { useSiteContent } from "@/components/exmortis/SiteContentProvider";
 
@@ -14,7 +14,6 @@ export default function ContactSection() {
   const { rich } = useSiteContent();
   const heading = rich("contact", "heading", 'Napisz.<br /><span class="gold-text">Odpowiadam sam.</span>');
   const intro = rich("contact", "intro", "Nie ma botów i asystentów. Jeśli jesteś na progu — napisz pierwszy ruch, choćby jednym zdaniem.");
-  const [showForm, setShowForm] = useState(false);
   const [form, setForm] = useState({ name: "", email: "", message: "" });
   const [sending, setSending] = useState(false);
   const [sent, setSent] = useState(false);
@@ -40,7 +39,7 @@ export default function ContactSection() {
       <div className="mx-auto max-w-[1400px] grid md:grid-cols-2 gap-12 md:gap-20">
         {/* Lewa kolumna — kanały kontaktu */}
         <div>
-          <p className="technical text-[11px] gold-text mb-4">KONTAKT · 09</p>
+          <p className="technical text-[11px] gold-text mb-4">KONTAKT · 10</p>
           <h2 className="relic-heading text-4xl md:text-5xl lg:text-6xl mb-6 leading-[0.95]" dangerouslySetInnerHTML={{ __html: heading }} />
           <div className="rich-content text-foreground/60 text-lg leading-relaxed max-w-md mb-12" dangerouslySetInnerHTML={{ __html: intro }} />
 
@@ -92,25 +91,10 @@ export default function ContactSection() {
                 Odpowiadam osobiście, zwykle w ciągu 48 godzin. Do zobaczenia na drodze.
               </p>
               <button
-                onClick={() => { setSent(false); setShowForm(true); }}
+                onClick={() => setSent(false)}
                 className="btn-ghost"
               >
                 NAPISZ KOLEJNĄ
-              </button>
-            </div>
-          ) : !showForm ? (
-            <div className="border hairline p-10 md:p-14 flex flex-col items-center justify-center text-center gap-8 h-full">
-              <span className="w-14 h-14 border border-[#C9A24A]/40 flex items-center justify-center">
-                <PenLine className="h-6 w-6 gold-text" />
-              </span>
-              <p className="relic-heading text-2xl md:text-3xl leading-tight">
-                Formularz czeka<br /><span className="gold-text">za jednym kliknięciem</span>
-              </p>
-              <p className="text-foreground/50 text-sm leading-relaxed max-w-sm">
-                Trzy pola. Jedna wiadomość. Zero zobowiązań — dopóki sam nie zdecydujesz.
-              </p>
-              <button onClick={() => setShowForm(true)} className="btn-relic">
-                NAPISZ DO MNIE <ArrowRight className="h-4 w-4" />
               </button>
             </div>
           ) : (

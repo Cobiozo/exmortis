@@ -3,40 +3,48 @@ import { Link } from "react-router-dom";
 import { ArrowRight } from "lucide-react";
 import { Image } from "@/components/ui/image";
 
+// Karta produktu na stronie głównej (Skarbiec).
 export default function ProductCard({ product, index = 0 }) {
+  const sameAsSubtitle =
+    product.subtitle &&
+    (product.description || "").trim() === product.subtitle.trim();
+
   return (
     <div className="group relative bg-card border hairline overflow-hidden transition-all duration-500 hover:border-[#C9A24A]/60">
       <Link to={`/produkt/${product.slug}`} className="block">
-        <div className="relative aspect-square overflow-hidden bg-[#0A0A0B]">
-          {product.image_url ? (
+        {product.image_url ? (
+          <div className="relative aspect-square overflow-hidden bg-[#0A0A0B]">
             <Image
               src={product.image_url}
               alt={product.name}
               className="w-full h-full transition-transform duration-700 group-hover:scale-105"
               fittingType="fill"
             />
-          ) : (
-            <div className="w-full h-full flex items-center justify-center text-foreground/20">
-              <span className="technical text-[10px]">BRAK WIZJI</span>
+            <div className="absolute top-4 left-4">
+              <span className="technical text-[9px] text-foreground/50 bg-[#0A0A0B]/70 px-2 py-1 border hairline">
+                {String(index + 1).padStart(2, "0")} · {product.category}
+              </span>
             </div>
-          )}
-          <div className="absolute top-4 left-4">
-            <span className="technical text-[9px] text-foreground/50 bg-[#0A0A0B]/70 px-2 py-1 border hairline">
-              {String(index + 1).padStart(2, "0")} · {product.category}
-            </span>
           </div>
-        </div>
+        ) : null}
 
         <div className="p-6 space-y-4">
+          {!product.image_url && (
+            <span className="technical text-[9px] text-foreground/40 block">
+              {String(index + 1).padStart(2, "0")} · {product.category}
+            </span>
+          )}
           <div>
             <h3 className="relic-heading text-lg gold-text">{product.name}</h3>
             {product.subtitle && (
               <p className="text-sm text-foreground/50 mt-1">{product.subtitle}</p>
             )}
           </div>
-          <p className="text-sm text-foreground/60 line-clamp-2 leading-relaxed">
-            {product.description}
-          </p>
+          {product.description && !sameAsSubtitle && (
+            <p className="text-sm text-foreground/60 line-clamp-2 leading-relaxed">
+              {product.description}
+            </p>
+          )}
           <div className="flex items-center justify-between pt-4 border-t hairline">
             <span className="font-mono text-lg text-foreground">
               {product.price === 0 ? "DARMOWE" : `${product.price} zł`}

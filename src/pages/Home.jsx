@@ -4,14 +4,13 @@ import { ArrowRight, ArrowDown } from "lucide-react";
 import { base44 } from "@/api/base44Client";
 import Logo from "@/components/exmortis/Logo";
 import ProductCard from "@/components/exmortis/ProductCard";
-import Testimonials from "@/components/exmortis/Testimonials";
 import ContactSection from "@/components/exmortis/ContactSection";
 import NewsletterSection from "@/components/exmortis/NewsletterSection";
 import ForWhom from "@/components/exmortis/ForWhom";
 import PowrotTeaser from "@/components/exmortis/PowrotTeaser";
-import CiszaTeaser from "@/components/exmortis/CiszaTeaser";
 import EventsTeaser from "@/components/exmortis/events/EventsTeaser";
-import { Image } from "@/components/ui/image";
+import ShortHistory from "@/components/exmortis/home/ShortHistory";
+import ReturnPath from "@/components/exmortis/home/ReturnPath";
 import { useSiteContent } from "@/components/exmortis/SiteContentProvider";
 
 const HERO_IMG = "https://media.base44.com/images/public/6aa08bc6318b0f886cc3b9a3/b1f31269c_generated_f9afed1e.jpg";
@@ -19,12 +18,10 @@ const HERO_IMG = "https://media.base44.com/images/public/6aa08bc6318b0f886cc3b9a
 const MANIFEST = [
   "Są dni, kiedy człowiek żyje, ale w środku już umarł.",
   "Chodzi, pracuje, uśmiecha się — a nie czuje nic.",
-  "To nie słabość. To śmierć mentalna. Duchowa. Życiowa.",
+  "To nie słabość. To śmierć: mentalna, duchowa, życiowa.",
   "I nikt o niej głośno nie mówi.",
-  "Ja tam byłem. I wróciłem. Inny.",
   "exmortis to nie motywacja. To droga powrotu.",
   "Nie musisz być gotowy. Musisz zrobić pierwszy ruch.",
-  "Reszty nauczę Cię po drodze.",
 ];
 
 const THREE_DEATHS = [
@@ -42,20 +39,10 @@ const THREE_DEATHS = [
   },
 ];
 
-const THREE_TRUTHS = [
-  "Nie musisz być silny, żeby wrócić. Musisz zrobić pierwszy ruch.",
-  "Śmierć mentalna, duchowa i życiowa nie są końcem — są progiem.",
-  "Wracasz nie do tego, kim byłeś. Wracasz jako ktoś nowy.",
-];
-
 export default function Home() {
   const { list, cards, rich } = useSiteContent();
-  const heroSubtitle = rich("home", "heroSubtitle", "Wracam z siebie. Uczę wracać.<br />Droga powrotu ze śmierci mentalną, duchową i życiową.");
   const manifest = list("home", "manifest", MANIFEST);
   const deaths = cards("home", "deaths", THREE_DEATHS);
-  const truths = list("home", "truths", THREE_TRUTHS);
-  const ctaTitle = rich("home", "ctaTitle", 'Zrób<br /><span class="gold-text">jeden ruch</span>');
-  const ctaText = rich("home", "ctaText", "Powrót nie zaczyna się od siły. Zaczyna się od jednego ruchu — małego, wykonalnego dziś.");
   const skarbiecText = rich("home", "skarbiecText", "<p>Powrót ma cztery etapy: <strong>Śmierć · Próg · Powrót · Inny</strong>.</p><p>Na każdym z nich potrzeba innych narzędzi. Innych słów. Innej głębokości pracy.</p><p>W Skarbcu znajdziesz to, co pasuje do miejsca, w którym stoisz dzisiaj — od bezpłatnego listu tygodniowego po pracę jeden na jeden przez sześć miesięcy.</p>");
   const [products, setProducts] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -76,9 +63,12 @@ export default function Home() {
       .finally(() => setLoading(false));
   }, []);
 
+  const scrollTo = (id) =>
+    document.getElementById(id)?.scrollIntoView({ behavior: "smooth" });
+
   return (
     <div className="bg-[#0A0A0B]">
-      {/* ===== HERO — VANGUARD ===== */}
+      {/* ===== 01 HERO ===== */}
       <section
         className="relative min-h-screen flex items-center justify-center overflow-hidden grain"
         style={{ minHeight: "100svh" }}
@@ -94,34 +84,33 @@ export default function Home() {
 
         <div className="relative z-10 flex flex-col items-center text-center px-6 pb-32 max-w-4xl">
           <div className="flicker">
-            <Logo className="h-32 w-32 md:h-44 md:w-44 mb-8" />
+            <Logo className="h-28 w-28 md:h-40 md:w-40 mb-8" />
           </div>
-          <h1 className="relic-heading text-4xl sm:text-5xl md:text-8xl lg:text-9xl leading-[0.9]">
-            <span className="block">EXMORTIS</span>
+          <h1 className="font-heading text-5xl sm:text-6xl md:text-8xl lg:text-9xl leading-[0.95]">
+            <span className="block tracking-[0.06em]">EXMORTIS</span>
+            <span className="block gold-text mt-3">ze śmierci</span>
           </h1>
-          <div className="rich-content mt-8 text-lg md:text-xl text-foreground/70 max-w-2xl font-light leading-relaxed" dangerouslySetInnerHTML={{ __html: heroSubtitle }} />
-          <div className="mt-12 flex flex-col sm:flex-row gap-4">
-            <Link to="/sklep" className="btn-relic">
-              POZNAJ SKARBIEC <ArrowRight className="h-4 w-4" />
+          <p className="mt-8 text-lg md:text-2xl text-foreground/75 font-light">
+            Wracam z siebie. Uczę wracać.
+          </p>
+          <p className="mt-2 text-sm md:text-base text-foreground/50 font-light">
+            Droga powrotu ze śmierci mentalnej, duchowej i życiowej.
+          </p>
+          <div className="mt-12 flex flex-col sm:flex-row gap-4 justify-center">
+            <Link to="/test?src=home-hero" className="btn-relic">
+              Która śmierć jest Twoja? <ArrowRight className="h-4 w-4" />
             </Link>
-            <Link to="/test?src=home-hero" className="text-center">
-              <span className="inline-flex items-center justify-center w-full px-8 py-4 technical text-xs border border-[#C9A24A]/60 text-[#C9A24A] hover:bg-[#C9A24A]/10 hover:border-[#C9A24A] transition-all duration-300">
-                Która śmierć jest Twoja?
-              </span>
-              <span className="block technical text-[9px] text-foreground/40 mt-2">
-                test · 3 minuty
-              </span>
-            </Link>
-            <Link to="/o-mnie" className="btn-ghost">
+            <button onClick={() => scrollTo("historia")} className="btn-ghost">
               KIM JEST EXMORTIS?
-            </Link>
+            </button>
           </div>
+          <p className="technical text-[9px] text-foreground/40 mt-3">
+            TEST · 3 MINUTY · BEZPŁATNIE
+          </p>
         </div>
 
         <button
-          onClick={() =>
-            document.getElementById("manifest")?.scrollIntoView({ behavior: "smooth" })
-          }
+          onClick={() => scrollTo("manifest")}
           aria-label="Przewiń w dół"
           className={`absolute bottom-8 left-1/2 -translate-x-1/2 flex flex-col items-center gap-2 text-foreground/40 transition-opacity duration-500 ${
             heroCue ? "opacity-100" : "opacity-0 pointer-events-none"
@@ -132,35 +121,32 @@ export default function Home() {
         </button>
       </section>
 
-      {/* ===== MANIFEST ===== */}
-      <section id="manifest" className="relative py-32 md:py-48 px-5 md:px-10 overflow-hidden">
+      {/* ===== MANIFEST · 01 ===== */}
+      <section id="manifest" className="relative py-24 md:py-40 px-5 md:px-10 overflow-hidden">
         <div className="absolute left-0 top-0 bottom-0 w-px spine opacity-30" />
         <div className="mx-auto max-w-4xl">
-          <p className="technical text-[11px] gold-text mb-16 text-center">MANIFEST · 01</p>
-          <div className="space-y-8">
+          <p className="technical text-[11px] gold-text mb-14 text-center">MANIFEST · 01</p>
+          <div className="space-y-6">
             {manifest.map((line, i) => (
               <p
                 key={i}
-                className={`relic-heading leading-tight transition-all duration-700 ${
-                  i === 5 ? "text-2xl md:text-4xl blood-text" : "text-2xl md:text-4xl text-foreground/85"
+                className={`font-heading text-xl md:text-3xl leading-snug ${
+                  i === 4 ? "blood-text" : "text-foreground/85"
                 }`}
               >
                 {line}
               </p>
             ))}
           </div>
-          <p className="relic-heading text-2xl md:text-3xl gold-text mt-12">
-            Wracam z siebie. Uczę wracać.
-          </p>
         </div>
       </section>
 
-      {/* ===== THREE DEATHS ===== */}
+      {/* ===== TRZY ŚMIERCI · 02 ===== */}
       <section className="relative py-32 px-5 md:px-10 border-y hairline bg-[#070708]">
         <div className="mx-auto max-w-[1400px]">
           <div className="grid md:grid-cols-12 gap-10 mb-20">
             <div className="md:col-span-4">
-              <p className="technical text-[11px] gold-text mb-4">DIAGNOZA · 02</p>
+              <p className="technical text-[11px] gold-text mb-4">TRZY ŚMIERCI · 02</p>
               <h2 className="relic-heading text-4xl md:text-5xl lg:text-6xl leading-[0.95]">
                 Trzy<br />śmierci
               </h2>
@@ -185,41 +171,29 @@ export default function Home() {
         </div>
       </section>
 
-      {/* ===== THREE TRUTHS ===== */}
-      <section className="relative py-32 md:py-48 px-5 md:px-10">
-        <div className="absolute right-0 top-0 bottom-0 w-px spine opacity-30" />
-        <div className="mx-auto max-w-5xl">
-          <p className="technical text-[11px] gold-text mb-16 text-center">TRZY ZDANIA · 03</p>
-          <div className="space-y-16">
-            {truths.map((t, i) => (
-              <div key={i} className="flex gap-6 md:gap-10 items-start">
-                <span className="font-mono text-xl gold-text mt-2 flex-shrink-0">0{i + 1}</span>
-                <p className="relic-heading text-2xl md:text-4xl leading-tight text-foreground/85">
-                  {t}
-                </p>
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* ===== DLA KOGO ===== */}
+      {/* ===== DLA KOGO · 03 ===== */}
       <ForWhom />
 
-      {/* ===== POWRÓT — TEASER ===== */}
+      {/* ===== KRÓTKA HISTORIA · 04 ===== */}
+      <ShortHistory />
+
+      {/* ===== DROGA POWROTU · 05 ===== */}
+      <ReturnPath />
+
+      {/* ===== POWRÓT · 06 ===== */}
       <PowrotTeaser />
 
-      {/* ===== NAJBLIŻSZE SPOTKANIA ===== */}
+      {/* ===== SPOTKANIA · 07 ===== */}
       <EventsTeaser />
 
-      {/* ===== SKLEP PREVIEW ===== */}
+      {/* ===== SKARBIEC · 08 ===== */}
       <section className="relative py-32 px-5 md:px-10 border-t hairline bg-[#070708]">
         <div className="mx-auto max-w-[1400px]">
           <div className="grid md:grid-cols-12 gap-10 mb-16">
             <div className="md:col-span-4">
-              <p className="technical text-[11px] gold-text mb-4">SKARBIEC · 06</p>
+              <p className="technical text-[11px] gold-text mb-4">SKARBIEC · 08</p>
               <h2 className="relic-heading text-4xl md:text-5xl lg:text-6xl leading-[0.95]">
-                Droga<br />powrotu
+                Skarbiec
               </h2>
             </div>
             <div className="md:col-span-8">
@@ -246,52 +220,11 @@ export default function Home() {
         </div>
       </section>
 
-      {/* ===== ŚWIADECTWA ===== */}
-      <Testimonials />
-
-      {/* ===== LISTY POWROTU ===== */}
+      {/* ===== LISTY POWROTU · 09 ===== */}
       <NewsletterSection />
 
-      {/* ===== KONTAKT ===== */}
+      {/* ===== KONTAKT · 10 ===== */}
       <ContactSection />
-
-      {/* ===== CTA — POWRÓT ===== */}
-      <section className="relative py-40 px-5 md:px-10 overflow-hidden">
-        <div className="absolute inset-0 bg-gradient-to-b from-transparent via-[#5C1A1B]/10 to-transparent" />
-        <div className="relative mx-auto max-w-3xl text-center">
-          <Logo className="h-20 w-20 mx-auto mb-10" />
-          <h2 className="relic-heading text-4xl md:text-6xl leading-[0.95] mb-8" dangerouslySetInnerHTML={{ __html: ctaTitle }} />
-          <div className="rich-content text-foreground/60 text-lg leading-relaxed mb-12 max-w-xl mx-auto" dangerouslySetInnerHTML={{ __html: ctaText }} />
-          <div className="flex flex-col sm:flex-row gap-4 justify-center">
-            <Link to="/sklep" className="btn-relic">
-              ZACZNIJ POWRÓT <ArrowRight className="h-4 w-4" />
-            </Link>
-          </div>
-        </div>
-      </section>
-
-      {/* ===== TEST — KTÓRA Z NICH JEST TWOJA ===== */}
-      <section className="relative border-t border-[#C9A24A]/30 bg-[#070708] py-20 md:py-28 px-5 md:px-10">
-        <div className="mx-auto max-w-3xl text-center">
-          <h2 className="shop-heading text-3xl md:text-5xl text-[#F5EFE1] mb-6">
-            Która z nich jest Twoja?
-          </h2>
-          <p className="text-foreground/60 text-lg leading-relaxed mb-10 max-w-2xl mx-auto">
-            Mentalna, duchowa, życiowa. Większość z nas niesie jedną z nich — albo kilka naraz.
-            Dwanaście stwierdzeń pomoże Ci zobaczyć, z której śmierci dziś wracasz i od czego
-            warto zacząć.
-          </p>
-          <Link to="/test?src=home-section" className="btn-relic">
-            ZRÓB TEST <ArrowRight className="h-4 w-4" />
-          </Link>
-          <p className="technical text-[9px] text-foreground/40 mt-4">
-            BEZPŁATNIE · WYNIK DOSTANIESZ OD RAZU I NA E-MAIL
-          </p>
-        </div>
-      </section>
-
-      {/* ===== CHWILA CISZY ===== */}
-      <CiszaTeaser />
     </div>
   );
 }
