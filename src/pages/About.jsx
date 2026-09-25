@@ -5,7 +5,6 @@ import { Image } from "@/components/ui/image";
 import { useSiteContent } from "@/components/exmortis/SiteContentProvider";
 import ShortStory from "@/components/exmortis/about/ShortStory";
 import SongBlock from "@/components/exmortis/about/SongBlock";
-import ServicePhoto from "@/components/exmortis/about/ServicePhoto";
 import HowIReturned from "@/components/exmortis/about/HowIReturned";
 import Origin from "@/components/exmortis/about/Origin";
 import WhoIAmNot from "@/components/exmortis/about/WhoIAmNot";
@@ -65,9 +64,6 @@ export default function About() {
 
       {/* Piosenka */}
       <SongBlock />
-
-      {/* Zdjęcie z posługi */}
-      <ServicePhoto />
 
       {/* Jak wróciłem */}
       <HowIReturned />
