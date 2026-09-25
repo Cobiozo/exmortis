@@ -15,7 +15,7 @@ export default function Origin() {
     <section className="relative py-32 md:py-40 px-5 md:px-10">
       <div className="absolute right-0 top-0 bottom-0 w-px spine opacity-30" />
       <div className="mx-auto max-w-4xl">
-        <p className="technical text-[11px] gold-text mb-4">POWSTANIE · 02</p>
+        <p className="technical text-[11px] gold-text mb-4">POWSTANIE · 03</p>
         <h2 className="relic-heading text-4xl md:text-6xl mb-16 leading-[0.95]">
           Skąd wzięło się<br />
           <span className="gold-text">„exmortis”?</span>

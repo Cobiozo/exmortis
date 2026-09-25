@@ -1,10 +1,12 @@
 import React from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { ArrowRight } from "lucide-react";
-import Logo from "@/components/exmortis/Logo";
+import { Image } from "@/components/ui/image";
 import { useSiteContent } from "@/components/exmortis/SiteContentProvider";
 import ShortStory from "@/components/exmortis/about/ShortStory";
 import SongBlock from "@/components/exmortis/about/SongBlock";
+import ServicePhoto from "@/components/exmortis/about/ServicePhoto";
+import HowIReturned from "@/components/exmortis/about/HowIReturned";
 import Origin from "@/components/exmortis/about/Origin";
 import WhoIAmNot from "@/components/exmortis/about/WhoIAmNot";
 import WhatITeach from "@/components/exmortis/about/WhatITeach";
@@ -15,6 +17,9 @@ const TIMELINE = [
   { phase: "Powrót", text: "Powrót nie zaczyna się od siły. Zaczyna się od jednego ruchu. Małego. Wykonalnego. Powtórzonego jutro." },
   { phase: "Inny", text: "Wracam nie do tego, kim byłem. Wracam jako ktoś nowy. I uczę wracać innych." },
 ];
+
+const CTA_PORTRAIT =
+  "https://media.base44.com/images/public/6aa08bc6318b0f886cc3b9a3/480c7c335_702144182_17895011880460401_728690723499574380_n.jpg";
 
 const PRINCIPLES = [
   { title: "Pytania zamiast rad", text: "Nie mówię «zrób tak» — to Twoje życie, więc ostateczne decyzje podejmujesz Ty. Moim zadaniem jest poprzez zadawanie pytań pokazać różne perspektywy. Więcej słucham niż mówię." },
@@ -61,6 +66,12 @@ export default function About() {
       {/* Piosenka */}
       <SongBlock />
 
+      {/* Zdjęcie z posługi */}
+      <ServicePhoto />
+
+      {/* Jak wróciłem */}
+      <HowIReturned />
+
       {/* Skąd wzięło się exmortis */}
       <Origin />
 
@@ -73,7 +84,7 @@ export default function About() {
       {/* Timeline — Śmierć / Próg / Powrót / Inny */}
       <section className="py-32 px-5 md:px-10 border-t hairline">
         <div className="mx-auto max-w-[1400px]">
-          <p className="technical text-[11px] gold-text mb-4">DROGA · 05</p>
+          <p className="technical text-[11px] gold-text mb-4">DROGA · 06</p>
           <h2 className="relic-heading text-4xl md:text-6xl mb-20 leading-[0.95]">
             Śmierć → Próg →<br /><span className="gold-text">Powrót → Inny</span>
           </h2>
@@ -97,7 +108,7 @@ export default function About() {
       {/* Principles */}
       <section className="py-32 px-5 md:px-10 border-y hairline bg-[#070708]">
         <div className="mx-auto max-w-[1400px]">
-          <p className="technical text-[11px] gold-text mb-4">POSTAWA · 06</p>
+          <p className="technical text-[11px] gold-text mb-4">POSTAWA · 07</p>
           <h2 className="relic-heading text-4xl md:text-6xl mb-16 leading-[0.95]">
             Jak<br /><span className="gold-text">prowadzę</span>
           </h2>
@@ -115,7 +126,14 @@ export default function About() {
 
       {/* CTA */}
       <section className="py-40 px-5 md:px-10 text-center">
-        <Logo className="h-20 w-20 mx-auto mb-10" />
+        <div className="w-40 h-40 rounded-full border border-[#C9A24A]/60 overflow-hidden mx-auto mb-10">
+          <Image
+            src={CTA_PORTRAIT}
+            alt="Dawid — exmortis"
+            fittingType="fill"
+            className="w-full h-full"
+          />
+        </div>
         <h2 className="relic-heading text-4xl md:text-6xl mb-8 leading-[0.95]" dangerouslySetInnerHTML={{ __html: ctaTitle }} />
         <div className="rich-content text-foreground/60 text-lg max-w-xl mx-auto mb-12 leading-relaxed" dangerouslySetInnerHTML={{ __html: ctaText }} />
         <div className="flex flex-col sm:flex-row gap-4 justify-center">
