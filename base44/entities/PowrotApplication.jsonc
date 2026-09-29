@@ -11,11 +11,73 @@
     "email": {
       "type": "string",
       "format": "email"
+    },
+    "age": {
+      "type": "string"
+    },
+    "return_from": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "return_from_other": {
+      "type": "string"
+    },
+    "situation": {
+      "type": "string"
+    },
+    "duration": {
+      "type": "string"
+    },
+    "affected_areas": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "tried_before": {
+      "type": "string"
+    },
+    "therapy_support": {
+      "type": "string"
+    },
+    "goal": {
+      "type": "string"
+    },
+    "obstacle": {
+      "type": "string"
+    },
+    "readiness": {
+      "type": "number"
+    },
+    "weekly_time": {
+      "type": "string"
+    },
+    "work_form": {
+      "type": "string"
+    },
+    "investment": {
+      "type": "string"
+    },
+    "anything_else": {
+      "type": "string"
+    },
+    "source": {
+      "type": "string"
+    },
+    "contact_pref": {
+      "type": "string"
+    },
+    "consent_rodo": {
+      "type": "boolean"
+    },
+    "consent_paid": {
+      "type": "boolean"
     }
   },
   "required": [
     "full_name",
-    "phone",
     "email"
   ]
 }

@@ -10,6 +10,7 @@ const NAV = [
   { label: "Test", to: "/test?src=nav", gold: true },
   { label: "Spotkania", to: "/spotkania?src=nav" },
   { label: "Skarbiec", to: "/sklep" },
+  { label: "Głos", to: "/glos" },
   { label: "Kontakt", to: "/#kontakt" },
   { label: "Cisza", to: "/cisza" },
 ];
