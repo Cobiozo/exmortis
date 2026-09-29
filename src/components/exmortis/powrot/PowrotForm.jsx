@@ -116,6 +116,7 @@ export default function PowrotForm() {
     e.preventDefault();
     const errs = {};
     if (!form.full_name.trim()) errs.full_name = "Podaj imię.";
+    if (!form.phone.trim()) errs.phone = "Podaj numer telefonu.";
     if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.email.trim()))
       errs.email = "Podaj poprawny adres e-mail.";
     if (form.return_from.length === 0) errs.return_from = "Wybierz co najmniej jedną odpowiedź.";
@@ -189,7 +190,7 @@ export default function PowrotForm() {
                 <SectionHead>O Tobie</SectionHead>
                 <TextInput label="Imię i nazwisko" required {...field("full_name")} />
                 <TextInput label="E-mail" required {...field("email")} />
-                <TextInput label="Telefon (opcjonalnie)" {...field("phone")} />
+                <TextInput label="Telefon" required {...field("phone")} />
                 <SingleChoice label="Wiek" options={AGE_OPTIONS} {...choice("age")} />
               </div>
 

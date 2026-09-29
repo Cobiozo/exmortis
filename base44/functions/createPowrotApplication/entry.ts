@@ -39,7 +39,7 @@ export default async function (req) {
     const body = await req.json().catch(() => ({}));
 
     const fullName = textField(body, "full_name", { max: 200 });
-    const phone = textField(body, "phone", { max: 50, required: false });
+    const phone = textField(body, "phone", { max: 50 });
     const email = emailField(body);
 
     const age = textField(body, "age", { max: 20, required: false });
