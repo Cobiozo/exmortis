@@ -1,0 +1,30 @@
+{
+  "name": "Utwor",
+  "type": "object",
+  "properties": {
+    "tytul": {
+      "type": "string"
+    },
+    "youtube_url": {
+      "type": "string"
+    },
+    "opis": {
+      "type": "string"
+    },
+    "kolejnosc": {
+      "type": "number"
+    },
+    "widoczny": {
+      "type": "boolean",
+      "default": true
+    },
+    "data_dodania": {
+      "type": "string",
+      "format": "date-time"
+    }
+  },
+  "required": [
+    "tytul",
+    "youtube_url"
+  ]
+}

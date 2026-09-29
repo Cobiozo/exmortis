@@ -1,5 +1,7 @@
-import React from "react";
+import React, { useState } from "react";
 import { Music, ExternalLink } from "lucide-react";
+import YouTubePlaylist from "@/components/exmortis/glos/YouTubePlaylist";
+import PlaylistManager from "@/components/exmortis/glos/PlaylistManager";
 
 // Wklej tu swoje prawdziwe linki artysty
 const SPOTIFY_URL = "https://open.spotify.com/search/exmortis";
@@ -21,6 +23,8 @@ const PLATFORMS = [
 ];
 
 export default function MusicSection() {
+  const [playlistVer, setPlaylistVer] = useState(0);
+
   return (
     <section className="py-32 px-5 md:px-10 border-y hairline bg-[#070708]">
       <div className="mx-auto max-w-[1400px]">
@@ -32,6 +36,9 @@ export default function MusicSection() {
           Są słowa, których nie da się powiedzieć — tylko zagrać. Słuchaj tam, gdzie jesteś.
         </p>
 
+        <YouTubePlaylist key={playlistVer} />
+
+        <p className="technical text-[11px] gold-text mb-6">SŁUCHAJ TĘŻ NA:</p>
         <div className="grid md:grid-cols-2 gap-6">
           {PLATFORMS.map((p) => (
             <a
@@ -53,6 +60,8 @@ export default function MusicSection() {
             </a>
           ))}
         </div>
+
+        <PlaylistManager onMutate={() => setPlaylistVer((v) => v + 1)} />
       </div>
     </section>
   );
