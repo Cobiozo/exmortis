@@ -1,0 +1,47 @@
+{
+  "trigger": {
+    "condition": null,
+    "config": {
+      "trigger_type": "scheduled",
+      "events": [],
+      "schedule_mode": "interval",
+      "cron_expression": null,
+      "one_time_date": null,
+      "timezone": "UTC",
+      "interval_value": 15,
+      "interval_unit": "minutes",
+      "interval_anchor": null,
+      "ends_type": "never",
+      "ends_on_date": null,
+      "ends_after_count": null
+    }
+  },
+  "definition": {
+    "document": {
+      "dsl": "1.0.0",
+      "name": "spotkania_tick",
+      "version": "1.0",
+      "namespace": "base44"
+    },
+    "do": [
+      {
+        "tick": {
+          "call": "invoke_backend_function",
+          "with": {
+            "function_name": "eventsPublic",
+            "args": {
+              "action": "tick"
+            }
+          },
+          "then": "end",
+          "x-base44": {
+            "title": "Tick spotka\u0144",
+            "description": "Przypomnienia, nagrania, higiena danych"
+          }
+        }
+      }
+    ]
+  },
+  "description": "Co 15 minut: przypomnienia 24 h / 1 h przed spotkaniami, podzi\u0119kowania z nagraniem 12 h po oraz usuwanie zapis\u00f3w 90 dni po wydarzeniu (tick w eventsPublic).",
+  "name": "Spotkania \u2014 przypomnienia i higiena danych"
+}

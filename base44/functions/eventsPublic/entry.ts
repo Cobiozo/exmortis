@@ -199,7 +199,8 @@ export default async function (req) {
       return Response.json({ ok: true });
     }
 
-    // --- Higiena danych: zapisy znikają 90 dni po spotkaniu ---
+    // --- Tick: higiena danych (zapisy 90 dni po spotkaniu) + przypomnienia
+    //     24 h / 1 h przed oraz podziękowania z nagraniem ---
     if (body.action === "tick") {
       const removed = await runSql(
         base44,
@@ -209,11 +210,6 @@ export default async function (req) {
            AND e.start_datetime + (COALESCE(e.duration_minutes,60) * interval '1 minute') + interval '90 days' < now()
          RETURNING r.id`
       );
-      return Response.json({ ok: true, removed: (removed || []).length });
-    }
-
-    // --- Przetwarzanie przypomnień 24 h / 1 h przed oraz podziękowań z nagraniem ---
-    if (body.action === "tick") {
       const evCols = `e.id, e.title, e.slug, e.subtitle, e.event_type, e.format,
         e.start_datetime, e.duration_minutes, e.location, e.join_link, e.external_url, e.recording_url`;
       const [due24, due1, dueRec] = await Promise.all([
@@ -288,7 +284,11 @@ export default async function (req) {
           }
         })()
       );
-      return Response.json({ ok: true, due: { r24: due24.length, r1: due1.length, rec: dueRec.length } });
+      return Response.json({
+        ok: true,
+        removed: (removed || []).length,
+        due: { r24: due24.length, r1: due1.length, rec: dueRec.length },
+      });
     }
 
     return Response.json({ error: "Nieznana akcja" }, { status: 400 });
