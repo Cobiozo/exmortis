@@ -28,6 +28,7 @@ import ProtectedRoute from '@/components/ProtectedRoute';
 import { SiteContentProvider } from '@/components/exmortis/SiteContentProvider';
 import { Navigate } from 'react-router-dom';
 import PrivacyPolicy from '@/pages/PrivacyPolicy';
+import Webinar1Listopada from '@/pages/Webinar1Listopada';
 // Add page imports here
 
 const AuthenticatedApp = () => {
@@ -78,6 +79,7 @@ const AuthenticatedApp = () => {
           <Route path="/spotkania" element={<Events />} />
           <Route path="/spotkania/:slug" element={<EventDetail />} />
           <Route path="/polityka-prywatnosci" element={<PrivacyPolicy />} />
+          <Route path="/1-listopada" element={<Webinar1Listopada />} />
         </Route>
         <Route path="*" element={<PageNotFound />} />
       </Routes>
