@@ -1,6 +1,6 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import { base44 } from "@/api/base44Client";
-import { Plus, Pencil, Copy, Trash2, Users } from "lucide-react";
+import { Plus, Pencil, Copy, Trash2, Users, Ban, Link2, Repeat } from "lucide-react";
 import EventEditor from "@/components/admin/events/EventEditor";
 import ParticipantsPanel from "@/components/admin/events/ParticipantsPanel";
 import { whenText } from "@/components/exmortis/events/time";
@@ -11,12 +11,24 @@ const STATUS_STYLE = {
   Odwołane: "blood-text",
 };
 
-// Zakładka SPOTKANIA: lista wydarzeń z licznikami, edycja, uczestnicy, duplikacja.
+const TABS = [
+  { key: "nadchodzace", label: "Nadchodzące" },
+  { key: "szkice", label: "Szkice" },
+  { key: "zakonczone", label: "Zakończone" },
+  { key: "odwolane", label: "Odwołane" },
+];
+
+// Zakładka SPOTKANIA: lista wydarzeń w zakładkach, edycja, uczestnicy,
+// duplikacja, odwołanie, kopiowanie linku i powtarzanie Wieczorów powrotu.
 export default function EventsManager() {
   const [events, setEvents] = useState(null);
+  const [tab, setTab] = useState("nadchodzace");
+  const [query, setQuery] = useState("");
+  const [typeFilter, setTypeFilter] = useState("wszystkie");
   const [editor, setEditor] = useState(null); // null | {} (nowe) | event
   const [participants, setParticipants] = useState(null); // event | null
   const [busy, setBusy] = useState(false);
+  const [info, setInfo] = useState("");
 
   const load = () =>
     base44.functions
@@ -28,28 +40,99 @@ export default function EventsManager() {
     load();
   }, []);
 
-  const duplicate = async (id) => {
+  const ended = (ev) => {
+    if (!ev.start_datetime) return false;
+    const end = new Date(new Date(ev.start_datetime).getTime() + (Number(ev.duration_minutes) || 60) * 60000);
+    return end < new Date();
+  };
+
+  const inTab = (ev) => {
+    if (tab === "odwolane") return ev.status === "Odwołane";
+    if (ev.status === "Odwołane") return false;
+    if (tab === "szkice") return ev.status === "Szkic";
+    if (tab === "zakonczone") return ev.status === "Opublikowane" && ended(ev);
+    return ev.status === "Opublikowane" && !ended(ev); // nadchodzące
+  };
+
+  const types = useMemo(() => [...new Set((events || []).map((e) => e.event_type))], [events]);
+
+  const filtered = useMemo(() => {
+    return (events || [])
+      .filter(inTab)
+      .filter((ev) => typeFilter === "wszystkie" || ev.event_type === typeFilter)
+      .filter(
+        (ev) =>
+          !query ||
+          ev.title.toLowerCase().includes(query.toLowerCase()) ||
+          (ev.slug || "").toLowerCase().includes(query.toLowerCase())
+      );
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [events, tab, query, typeFilter]);
+
+  const run = async (fn) => {
     if (busy) return;
     setBusy(true);
     try {
-      await base44.functions.invoke("eventsAdmin", { action: "duplicate", id });
-      await load();
+      await fn();
     } finally {
       setBusy(false);
     }
   };
 
-  const remove = async (id) => {
-    if (busy) return;
-    if (!window.confirm("Usunąć wydarzenie razem ze zapisami? Tej operacji nie da się cofnąć.")) return;
-    setBusy(true);
-    try {
-      await base44.functions.invoke("eventsAdmin", { action: "delete", id });
+  const duplicate = (id) =>
+    run(async () => {
+      await base44.functions.invoke("eventsAdmin", { action: "duplicate", id });
       await load();
-    } finally {
-      setBusy(false);
-    }
-  };
+    });
+
+  const remove = (id) =>
+    run(async () => {
+      if (!window.confirm("Usunąć szkic wydarzenia? Tej operacji nie da się cofnąć.")) return;
+      try {
+        await base44.functions.invoke("eventsAdmin", { action: "delete", id });
+      } catch (err) {
+        setInfo(err?.response?.data?.error || "Nie udało się usunąć.");
+        return;
+      }
+      await load();
+    });
+
+  const cancelEvent = (ev) =>
+    run(async () => {
+      const reason = window.prompt(`Odwołać «${ev.title}»? Podaj powód, który dostaną zapisani:`);
+      if (reason === null) return;
+      const res = await base44.functions.invoke("eventsAdmin", {
+        action: "cancel",
+        id: ev.id,
+        reason,
+      });
+      setInfo(
+        res.data.notified > 0
+          ? `Wydarzenie odwołane. Wiadomość poszła do ${res.data.notified} zapisanych.`
+          : "Wydarzenie odwołane."
+      );
+      await load();
+    });
+
+  const copyLink = (ev) =>
+    run(async () => {
+      const url = `https://exmortis-return-path.base44.app/spotkania/${ev.slug}`;
+      try {
+        await navigator.clipboard.writeText(url);
+        setInfo(`Skopiowano link: ${url}`);
+      } catch {
+        setInfo(url);
+      }
+    });
+
+  const repeat = (ev) =>
+    run(async () => {
+      const months = Number(window.prompt("Ile miesięcy naprzód utworzyć szkice? (pierwszy czwartek miesiąca, 20:00)", "6") || 0);
+      if (!months || months < 1) return;
+      const res = await base44.functions.invoke("eventsAdmin", { action: "repeat", id: ev.id, months });
+      setInfo(`Utworzono ${res.data.created.length} szkiców na kolejne miesiące.`);
+      await load();
+    });
 
   return (
     <div>
@@ -63,19 +146,51 @@ export default function EventsManager() {
         </button>
       </div>
 
+      <div className="flex flex-wrap items-center gap-3 mb-6">
+        {TABS.map((t) => (
+          <button
+            key={t.key}
+            onClick={() => setTab(t.key)}
+            className={`technical text-[10px] px-4 py-2 border transition-colors ${
+              tab === t.key ? "border-[#C9A24A] gold-text" : "hairline text-foreground/40 hover:text-foreground"
+            }`}
+          >
+            {t.label.toUpperCase()}
+          </button>
+        ))}
+        <input
+          value={query}
+          onChange={(e) => setQuery(e.target.value)}
+          placeholder="Szukaj po tytule lub slugu…"
+          className="bg-transparent border hairline px-4 py-2 text-foreground text-sm placeholder:text-foreground/30 focus:border-[#C9A24A] focus:outline-none min-w-[220px]"
+        />
+        <select
+          value={typeFilter}
+          onChange={(e) => setTypeFilter(e.target.value)}
+          className="bg-[#0D0D0E] border hairline px-3 py-2 text-foreground/70 text-sm focus:border-[#C9A24A] focus:outline-none"
+        >
+          <option value="wszystkie">Wszystkie typy</option>
+          {types.map((t) => (
+            <option key={t} value={t}>{t}</option>
+          ))}
+        </select>
+      </div>
+
+      {info && <p className="technical text-[10px] gold-text mb-4">{info}</p>}
+
       {!events ? (
         <div className="space-y-3">
           {[...Array(3)].map((_, i) => (
             <div key={i} className="h-16 border hairline bg-[#0D0D0E] animate-pulse" />
           ))}
         </div>
-      ) : events.length === 0 ? (
+      ) : filtered.length === 0 ? (
         <p className="text-foreground/50 border hairline p-8 text-center">
-          Brak wydarzeń. Kliknij „Nowe wydarzenie”, żeby dodać pierwsze.
+          Brak wydarzeń w tej zakładce.
         </p>
       ) : (
         <div className="border hairline divide-y hairline">
-          {events.map((ev) => (
+          {filtered.map((ev) => (
             <div key={ev.id} className="flex flex-col lg:flex-row lg:items-center gap-4 p-5">
               <div className="flex-1 min-w-0">
                 <div className="flex flex-wrap items-center gap-3">
@@ -114,13 +229,42 @@ export default function EventsManager() {
                   <Copy className="h-3.5 w-3.5" />
                 </button>
                 <button
-                  onClick={() => remove(ev.id)}
-                  disabled={busy}
+                  onClick={() => cancelEvent(ev)}
+                  disabled={busy || ev.status === "Odwołane"}
                   className="btn-ghost !px-3 !py-2 disabled:opacity-50 hover:!border-[#BC1E22] hover:!text-[#BC1E22]"
-                  title="Usuń"
+                  title="Odwołaj (z powodem i e-mailem do zapisanych)"
                 >
-                  <Trash2 className="h-3.5 w-3.5" />
+                  <Ban className="h-3.5 w-3.5" />
                 </button>
+                {ev.event_type === "Wieczór powrotu" && (
+                  <button
+                    onClick={() => repeat(ev)}
+                    disabled={busy}
+                    className="btn-ghost !px-3 !py-2 disabled:opacity-50"
+                    title="Powtarzaj: pierwszy czwartek miesiąca, 20:00"
+                  >
+                    <Repeat className="h-3.5 w-3.5" />
+                  </button>
+                )}
+                {ev.slug && (
+                  <button
+                    onClick={() => copyLink(ev)}
+                    className="btn-ghost !px-3 !py-2"
+                    title="Kopiuj link do strony spotkania"
+                  >
+                    <Link2 className="h-3.5 w-3.5" />
+                  </button>
+                )}
+                {ev.status === "Szkic" && (
+                  <button
+                    onClick={() => remove(ev.id)}
+                    disabled={busy}
+                    className="btn-ghost !px-3 !py-2 disabled:opacity-50 hover:!border-[#BC1E22] hover:!text-[#BC1E22]"
+                    title="Usuń (tylko szkice)"
+                  >
+                    <Trash2 className="h-3.5 w-3.5" />
+                  </button>
+                )}
               </div>
             </div>
           ))}

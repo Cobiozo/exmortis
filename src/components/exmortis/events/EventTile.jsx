@@ -44,7 +44,7 @@ export default function EventTile({ event: ev, compact = false, past = false }) 
     if (external) {
       return (
         <a href={ev.external_url} target="_blank" rel="noreferrer" onClick={stop} className={OUTLINE_GOLD}>
-          DOŁĄCZ
+          DOŁĄCZ DO TRANSMISJI
         </a>
       );
     }
@@ -140,8 +140,8 @@ export default function EventTile({ event: ev, compact = false, past = false }) 
           <div className="w-full md:w-auto flex flex-col md:items-end gap-2">
             {action()}
             {spotsNote && (
-              <p className="technical text-[9px] blood-text text-center md:text-right">
-                zostało {spotsLeft} miejsc
+              <p className="technical text-[9px] text-foreground/50 text-center md:text-right">
+                zostało {spotsLeft} {spotsLeft === 1 ? "miejsce" : spotsLeft < 5 ? "miejsca" : "miejsc"}
               </p>
             )}
           </div>

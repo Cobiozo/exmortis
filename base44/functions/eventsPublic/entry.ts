@@ -8,10 +8,11 @@ import { sendConfirmationMail, sendReminderMail, sendRecordingMail, plWhen, APP_
 // zapisy (z listą rezerwową) oraz przetwarzanie zaległych przypomnień („tick").
 // join_link nigdy nie opuszcza serwera — trafia wyłącznie do e-maili zapisanym.
 
+// Bez e.location, join_link i join_password — to dane prywatne (adres tylko dla zapisanych).
 const PUB_COLS = `e.id, e.title, e.slug, e.subtitle, e.event_type, e.format, e.start_datetime,
-  e.duration_minutes, e.location, e.description, e.for_whom, e.price, e.checkout_url,
-  e.capacity, e.registration_type, e.external_url, e.recording_url, e.stage,
-  e.cover_image, e.status`;
+  e.duration_minutes, e.description, e.for_whom, e.price, e.checkout_url,
+  e.capacity, e.registration_type, e.external_url, e.recording_url, e.recording_until, e.stage,
+  e.cover_image, e.status, e.cancel_reason, e.registration_deadline, e.what_registered`;
 const REG_COUNT = `(SELECT COUNT(*) FROM public.registrations r
   WHERE r.event_id = e.id AND r.status IN ('Zapisany','Obecny'))::int AS registered`;
 
@@ -45,6 +46,7 @@ export default async function (req) {
              AND e.recording_url IS NOT NULL
              AND e.start_datetime IS NOT NULL
              AND e.start_datetime + (COALESCE(e.duration_minutes,60) * interval '1 minute') < now()
+           AND (e.recording_until IS NULL OR e.recording_until > now())
            ORDER BY e.start_datetime DESC
            LIMIT 20`,
           true
@@ -75,6 +77,7 @@ export default async function (req) {
       const firstName = textField(body, "first_name", { max: 120 });
       const email = emailField(body);
       const question = textField(body, "question", { required: false, max: 2000 });
+      const listy = body.listy === true;
       if (body.consent !== true) {
         return Response.json({ error: "Wymagana jest zgoda na przetwarzanie danych." }, { status: 400 });
       }
@@ -84,7 +87,7 @@ export default async function (req) {
 
       const evRows = await runSql(
         base44,
-        `SELECT ${PUB_COLS}, ${REG_COUNT} FROM public.events e WHERE e.slug = ${escStr(slug)}`,
+        `SELECT e.*, ${REG_COUNT} FROM public.events e WHERE e.slug = ${escStr(slug)}`,
         true
       );
       const ev = evRows && evRows[0];
@@ -94,6 +97,15 @@ export default async function (req) {
       }
       if (ev.registration_type !== "Zapis na stronie") {
         return Response.json({ error: "To wydarzenie nie przyjmuje zapisów na stronie." }, { status: 400 });
+      }
+      // Zapisy otwarte do registration_deadline (domyślnie 15 min przed startem).
+      const deadline = ev.registration_deadline
+        ? new Date(ev.registration_deadline)
+        : ev.start_datetime
+          ? new Date(new Date(ev.start_datetime).getTime() - 15 * 60000)
+          : null;
+      if (deadline && new Date() > deadline) {
+        return Response.json({ error: "Zapisy zamknięte.", closed: true }, { status: 400 });
       }
 
       const existing = await runSql(
@@ -134,6 +146,14 @@ export default async function (req) {
         );
       }
       const regRow = reg && reg[0];
+      // Zgoda na Listy powrotu → zapis w liście newslettera (z datą zgody).
+      if (listy) {
+        waitUntil(
+          import("../../shared/newsletter.ts")
+            .then((m) => m.addSubscriber(base44, { email, name: firstName, consentGiven: true }))
+            .catch(() => {})
+        );
+      }
       waitUntil(
         smtpConfig(base44)
           .then((smtp) => smtp && sendConfirmationMail(smtp, ev, regRow))
@@ -144,6 +164,8 @@ export default async function (req) {
         status: regRow.status,
         first_name: regRow.first_name,
         checkout_url: Number(ev.price) > 0 ? ev.checkout_url : null,
+        join_link: regRow.status === "Zapisany" ? ev.join_link || null : null,
+        join_password: regRow.status === "Zapisany" ? ev.join_password || null : null,
       });
     }
 
@@ -175,6 +197,19 @@ export default async function (req) {
          ON CONFLICT (event_id, email) DO NOTHING`
       );
       return Response.json({ ok: true });
+    }
+
+    // --- Higiena danych: zapisy znikają 90 dni po spotkaniu ---
+    if (body.action === "tick") {
+      const removed = await runSql(
+        base44,
+        `DELETE FROM public.registrations r USING public.events e
+         WHERE r.event_id = e.id
+           AND e.start_datetime IS NOT NULL
+           AND e.start_datetime + (COALESCE(e.duration_minutes,60) * interval '1 minute') + interval '90 days' < now()
+         RETURNING r.id`
+      );
+      return Response.json({ ok: true, removed: (removed || []).length });
     }
 
     // --- Przetwarzanie przypomnień 24 h / 1 h przed oraz podziękowań z nagraniem ---

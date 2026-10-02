@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { X, Download, Send } from "lucide-react";
+import { X, Download, Send, Bell, Video, ArrowUpCircle, UserMinus } from "lucide-react";
 import { base44 } from "@/api/base44Client";
 
 const STATUS_STYLE = {
@@ -15,6 +15,7 @@ export default function ParticipantsPanel({ event, onClose }) {
   const [subject, setSubject] = useState("");
   const [text, setText] = useState("");
   const [sending, setSending] = useState(false);
+  const [busy, setBusy] = useState(false);
   const [sentInfo, setSentInfo] = useState(null);
   const [error, setError] = useState("");
 
@@ -35,6 +36,33 @@ export default function ParticipantsPanel({ event, onClose }) {
       id,
       status: status === "Obecny" ? "Zapisany" : "Obecny",
     });
+    load();
+  };
+
+  const runAction = async (action, label) => {
+    if (busy) return;
+    setBusy(true);
+    setError("");
+    try {
+      const res = await base44.functions.invoke("eventsAdmin", { action, id: event.id });
+      if (action === "promote") {
+        setSentInfo(res.data.promoted ? `Na miejsce awansował/a: ${res.data.promoted}.` : "Lista rezerwowa jest pusta.");
+      } else if (action === "remindNow") {
+        setSentInfo(`Przypomnienie wysłane do ${res.data.sent} z ${res.data.total} osób.`);
+      } else if (action === "sendRecording") {
+        setSentInfo(`Nagranie wysłane do ${res.data.sent} z ${res.data.total} osób.`);
+      }
+      load();
+    } catch (err) {
+      setError(err?.response?.data?.error || `Nie udało się: ${label}`);
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  const removeParticipant = async (id) => {
+    if (!window.confirm("Usunąć dane tego uczestnika (imię, e-mail, pytanie)?")) return;
+    await base44.functions.invoke("eventsAdmin", { action: "deleteParticipant", id });
     load();
   };
 
@@ -99,11 +127,33 @@ export default function ParticipantsPanel({ event, onClose }) {
           <p className="text-foreground/50 border hairline p-6 text-center">Nikt jeszcze się nie zapisał.</p>
         ) : (
           <>
-            <div className="flex justify-end mb-4">
-              <button onClick={exportCsv} className="btn-ghost !px-4 !py-2">
+            <div className="flex flex-wrap items-center gap-3 mb-5">
+              <p className="technical text-[10px] text-foreground/50">
+                ZAPISANI <span className="gold-text">{parts.filter((p) => p.status !== "Wypisany" && p.status !== "Lista rezerwowa").length}</span>
+                {parts.some((p) => p.status === "Lista rezerwowa") && (
+                  <> · REZERWA <span className="gold-text">{parts.filter((p) => p.status === "Lista rezerwowa").length}</span></>
+                )}
+              </p>
+              {parts.some((p) => p.status === "Lista rezerwowa") && (
+                <button
+                  onClick={() => runAction("promote", "awans z listy rezerwowej")}
+                  disabled={busy}
+                  className="btn-ghost !px-3 !py-2 disabled:opacity-50"
+                >
+                  <ArrowUpCircle className="h-3.5 w-3.5" /> PRZENIEŚ Z LISTY REZERWOWEJ
+                </button>
+              )}
+              <button onClick={() => runAction("remindNow", "przypomnienie")} disabled={busy} className="btn-ghost !px-3 !py-2 disabled:opacity-50">
+                <Bell className="h-3.5 w-3.5" /> WYŚLIJ PRZYPOMNIENIE TERAZ
+              </button>
+              <button onClick={() => runAction("sendRecording", "wysyłka nagrania")} disabled={busy} className="btn-ghost !px-3 !py-2 disabled:opacity-50">
+                <Video className="h-3.5 w-3.5" /> WYŚLIJ NAGRANIE ZAPISANYM
+              </button>
+              <button onClick={exportCsv} className="btn-ghost !px-4 !py-2 ml-auto">
                 <Download className="h-3.5 w-3.5" /> EKSPORT CSV
               </button>
             </div>
+            {sentInfo && <p className="technical text-[10px] gold-text mb-4">{sentInfo}</p>}
             <ul className="border hairline divide-y hairline">
               {parts.map((p) => (
                 <li key={p.id} className="p-5 flex flex-col md:flex-row md:items-start gap-4">
@@ -122,14 +172,23 @@ export default function ParticipantsPanel({ event, onClose }) {
                     )}
                     {p.source && <p className="technical text-[8px] text-foreground/30 mt-2">SRC: {p.source.toUpperCase()}</p>}
                   </div>
-                  <button
-                    onClick={() => markPresent(p.id, p.status)}
-                    className={`btn-ghost !px-3 !py-1.5 flex-shrink-0 ${
-                      p.status === "Obecny" ? "!border-[#8FBF7F]/50 !text-[#8FBF7F]" : ""
-                    }`}
-                  >
-                    {p.status === "Obecny" ? "OBECNY ✓" : "OZNACZ OBECNY"}
-                  </button>
+                  <div className="flex flex-wrap gap-2 flex-shrink-0">
+                    <button
+                      onClick={() => markPresent(p.id, p.status)}
+                      className={`btn-ghost !px-3 !py-1.5 ${
+                        p.status === "Obecny" ? "!border-[#8FBF7F]/50 !text-[#8FBF7F]" : ""
+                      }`}
+                    >
+                      {p.status === "Obecny" ? "OBECNY ✓" : "OZNACZ OBECNY"}
+                    </button>
+                    <button
+                      onClick={() => removeParticipant(p.id)}
+                      className="btn-ghost !px-3 !py-1.5 hover:!border-[#BC1E22] hover:!text-[#BC1E22]"
+                      title="Usuń dane uczestnika"
+                    >
+                      <UserMinus className="h-3.5 w-3.5" />
+                    </button>
+                  </div>
                 </li>
               ))}
             </ul>

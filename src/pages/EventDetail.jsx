@@ -45,6 +45,9 @@ export default function EventDetail() {
   }
 
   const cancelled = event.status === "Odwołane";
+  const ended =
+    event.start_datetime &&
+    new Date(new Date(event.start_datetime).getTime() + (Number(event.duration_minutes) || 60) * 60000) < new Date();
 
   return (
     <div className="bg-[#0A0A0B] pt-20">
@@ -86,7 +89,8 @@ export default function EventDetail() {
             <p className="technical text-[9px] text-foreground/35 mb-2">GDZIE</p>
             <p className="text-[#F5EFE1]">{event.format}</p>
             <p className="text-foreground/40 text-sm mt-1">
-              <MapPin className="h-3.5 w-3.5 inline mr-1 -mt-0.5" /> {event.location || "—"}
+              <MapPin className="h-3.5 w-3.5 inline mr-1 -mt-0.5" />{" "}
+              {event.format === "Stacjonarnie" ? "Adres otrzymasz po zapisaniu" : event.location || "Online"}
             </p>
           </div>
           <div>
@@ -106,12 +110,35 @@ export default function EventDetail() {
           />
         )}
 
+        {cancelled && (
+          <div className="mt-10 border border-[#BC1E22]/40 p-8 text-center">
+            <p className="shop-heading text-2xl blood-text">To spotkanie zostało odwołane.</p>
+            {event.cancel_reason && (
+              <p className="text-foreground/60 mt-3 leading-relaxed">{event.cancel_reason}</p>
+            )}
+          </div>
+        )}
+
+        {(() => {
+          if (!event.start_datetime || cancelled) return null;
+          const end = new Date(new Date(event.start_datetime).getTime() + (Number(event.duration_minutes) || 60) * 60000);
+          if (end >= new Date()) return null;
+          return (
+            <div className="mt-10 border hairline p-8 text-center">
+              <p className="shop-heading text-2xl text-[#F5EFE1]/80">To spotkanie już się odbyło.</p>
+              <Link to="/spotkania" className="btn-ghost mt-6">
+                ZOBACZ KOLEJNE TERMINY
+              </Link>
+            </div>
+          );
+        })()}
+
         <div className="mt-12">
           <p className="technical text-[10px] text-foreground/40 mb-5">DODAJ DO KALENDARZA</p>
           <CalendarButtons event={event} />
         </div>
 
-        {!cancelled && event.registration_type !== "Bez zapisu" && (
+        {!cancelled && !ended && event.registration_type !== "Bez zapisu" && (
           <div className="mt-16">
             <p className="technical text-[10px] gold-text mb-6">
               {event.registration_type === "Zapis na stronie" ? "ZAPIS" : "DOŁĄCZ"}
@@ -119,7 +146,7 @@ export default function EventDetail() {
             <RegistrationBlock event={event} />
           </div>
         )}
-        {!cancelled && event.registration_type === "Bez zapisu" && (
+        {!cancelled && !ended && event.registration_type === "Bez zapisu" && (
           <div className="mt-16">
             <RegistrationBlock event={event} />
           </div>

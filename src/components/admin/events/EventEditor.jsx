@@ -50,7 +50,13 @@ export default function EventEditor({ event, onClose, onSaved }) {
           registration_type: "Zapis na stronie",
           external_url: "",
           join_link: "",
+          join_password: "",
           recording_url: "",
+          recording_until: "",
+          registration_deadline: "",
+          what_registered: "",
+          mailing_group: "",
+          cancel_reason: "",
           stage: "Wszystkie",
           cover_image: "",
           status: "Szkic",
@@ -64,9 +70,22 @@ export default function EventEditor({ event, onClose, onSaved }) {
   const submit = async (e) => {
     e.preventDefault();
     if (saving) return;
+    if (form.status === "Opublikowane") {
+      if (!form.start_datetime) return setError("Ustaw datę, zanim opublikujesz wydarzenie.");
+      if (new Date(form.start_datetime) < new Date() && !event?.id) {
+        return setError("Data nie może być w przeszłości.");
+      }
+      if (form.format === "Online" && !form.join_link && !form.external_url) {
+        return setError("Wydarzenie online wymaga linku Zoom albo linku transmisji.");
+      }
+      if (Number(form.price) > 0 && !form.checkout_url) {
+        return setError("Wydarzenie płatne wymaga ceny i linku płatności.");
+      }
+    }
     setSaving(true);
     setError("");
     try {
+      const toIso = (v) => (v ? new Date(v).toISOString() : null);
       const payload = {
         ...form,
         id: event?.id || null,
@@ -74,6 +93,8 @@ export default function EventEditor({ event, onClose, onSaved }) {
         duration_minutes: Number(form.duration_minutes) || 60,
         price: Number(form.price) || 0,
         capacity: form.capacity === "" || form.capacity === null ? null : Number(form.capacity),
+        registration_deadline: toIso(form.registration_deadline),
+        recording_until: toIso(form.recording_until),
       };
       await base44.functions.invoke("eventsAdmin", { action: "save", event: payload });
       onSaved();
@@ -177,14 +198,68 @@ export default function EventEditor({ event, onClose, onSaved }) {
 
           <div className="grid md:grid-cols-2 gap-5">
             <div>
-              <label className={labelCls}>LINK DO ZOOMA (WYSYŁANY TYLKO ZAPISANYM)</label>
+              <label className={labelCls}>LINK DO ZOOMA (WIDOCZNY TYLKO DLA ZAPISANYCH)</label>
               <input value={form.join_link || ""} onChange={set("join_link")} className={inputCls} />
             </div>
+            <div>
+              <label className={labelCls}>HASŁO DO ZOOMA (OPCJONALNIE, TYLKO DLA ZAPISANYCH)</label>
+              <input value={form.join_password || ""} onChange={set("join_password")} className={inputCls} />
+            </div>
+          </div>
+
+          <div className="grid md:grid-cols-2 gap-5">
             <div>
               <label className={labelCls}>LINK DO NAGRANIA (PO WYDARZENIU)</label>
               <input value={form.recording_url || ""} onChange={set("recording_url")} className={inputCls} />
             </div>
+            <div>
+              <label className={labelCls}>NAGRANIE DOSTĘPNE DO (PUSTO = BEZ TERMINU)</label>
+              <input
+                type="datetime-local"
+                value={form.recording_until || ""}
+                onChange={set("recording_until")}
+                className={inputCls}
+              />
+            </div>
           </div>
+
+          <div className="grid md:grid-cols-2 gap-5">
+            <div>
+              <label className={labelCls}>ZAPISY DO (PUSTO = 15 MIN PRZED STARTEM)</label>
+              <input
+                type="datetime-local"
+                value={form.registration_deadline || ""}
+                onChange={set("registration_deadline")}
+                className={inputCls}
+              />
+            </div>
+            <div>
+              <label className={labelCls}>GRUPA MAILINGOWA DLA ZAPISANYCH</label>
+              <input
+                value={form.mailing_group || ""}
+                onChange={set("mailing_group")}
+                placeholder="np. Webinar 1.11"
+                className={inputCls}
+              />
+            </div>
+          </div>
+
+          <div>
+            <label className={labelCls}>CO DOSTAJĄ ZAPISANI</label>
+            <input
+              value={form.what_registered || ""}
+              onChange={set("what_registered")}
+              placeholder="np. link do Zoom, część z pytaniami, nagranie na 7 dni"
+              className={inputCls}
+            />
+          </div>
+
+          {form.status === "Odwołane" && (
+            <div>
+              <label className={labelCls}>POWÓD ODWOŁANIA (DOSTANĄ GO ZAPISANI)</label>
+              <input value={form.cancel_reason || ""} onChange={set("cancel_reason")} className={inputCls} />
+            </div>
+          )}
 
           <div className="grid md:grid-cols-3 gap-5">
             <div>

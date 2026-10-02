@@ -49,10 +49,9 @@ export default function Footer() {
 
         <div className="mt-16 pt-8 border-t hairline">
           <p className="text-xs text-foreground/40 leading-relaxed max-w-2xl mb-6">
-            Jeśli jesteś w kryzysie i myślisz o odebraniu sobie życia — zadzwoń:{" "}
-            <span className="gold-text">800 70 2222</span> (całą dobę) lub{" "}
-            <span className="gold-text">116 123</span>. W zagrożeniu życia:{" "}
-            <span className="gold-text">112</span>.
+            exmortis to mentoring, nie terapia. Jeśli jest Ci bardzo ciężko:{" "}
+            <span className="gold-text">116 123</span> · <span className="gold-text">800 70 2222</span> (całą dobę,
+            bezpłatnie) · w zagrożeniu życia <span className="gold-text">112</span>.
           </p>
           <div className="flex flex-col sm:flex-row justify-between gap-4">
             <p className="technical text-[10px] text-foreground/30">

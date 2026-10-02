@@ -1,12 +1,32 @@
 import { createClientFromRequest } from "npm:@base44/sdk@0.8.44";
+import { waitUntil } from "base44:runtime";
 import { runSql, escStr, textField, requireAdmin } from "../../shared/supabase.ts";
 import { getSetting } from "../../shared/settings.ts";
-import { sendBroadcastMail } from "../../shared/events.ts";
+import {
+  sendBroadcastMail,
+  sendCancelledMail,
+  sendSpotFreedMail,
+  sendReminderMail,
+  sendRecordingMail,
+} from "../../shared/events.ts";
 
 // Administracja wydarzeniami: lista, szczegóły z uczestnikami, zapis/edycja,
-// duplikacja, usuwanie, oznaczanie obecności i wysyłka wiadomości do zapisanych.
+// duplikacja, powtarzanie (Wieczory powrotu), odwołanie, usuwanie, obecność,
+// awans z listy rezerwowej, przypomnienie „teraz", wysyłka nagrania,
+// usuwanie danych uczestnika i wiadomości do zapisanych.
 
-const EVENT_TYPES = ["Spotkanie otwarte", "Live", "Webinar", "Warsztat", "Krąg", "Retreat"];
+const EVENT_TYPES = [
+  "Spotkanie otwarte",
+  "Wieczór powrotu",
+  "Live",
+  "Webinar",
+  "Warsztat",
+  "Warsztat online",
+  "Krąg",
+  "Retreat",
+  "Spotkanie stacjonarne",
+  "Inne",
+];
 const FORMATS = ["Online", "Stacjonarnie"];
 const REG_TYPES = ["Zapis na stronie", "Link zewnętrzny", "Bez zapisu"];
 const STATUSES = ["Opublikowane", "Szkic", "Odwołane"];
@@ -31,6 +51,61 @@ function numOrNull(v) {
   return Number.isFinite(n) ? n : null;
 }
 
+function dtOrNull(v) {
+  if (!v) return null;
+  const d = new Date(v);
+  return isNaN(d.getTime()) ? null : d.toISOString();
+}
+
+function escDt(v) {
+  const iso = dtOrNull(v);
+  return iso ? `${escStr(iso)}::timestamptz` : "NULL";
+}
+
+// Dodatkowe kolumny modułu spotkań (idempotentnie).
+export async function ensureEventColumns(base44) {
+  await runSql(
+    base44,
+    `ALTER TABLE public.events
+       ADD COLUMN IF NOT EXISTS cancel_reason text,
+       ADD COLUMN IF NOT EXISTS registration_deadline timestamptz,
+       ADD COLUMN IF NOT EXISTS recording_until timestamptz,
+       ADD COLUMN IF NOT EXISTS mailing_group text,
+       ADD COLUMN IF NOT EXISTS what_registered text,
+       ADD COLUMN IF NOT EXISTS join_password text`
+  );
+}
+
+// Godzina 20:00 w Europe/Warsaw dla danego dnia → ISO.
+function warsawEvening(y, m, day) {
+  for (const off of [2, 1]) {
+    const d = new Date(
+      `${y}-${String(m).padStart(2, "0")}-${String(day).padStart(2, "0")}T20:00:00+0${off}:00`
+    );
+    const parts = {};
+    for (const p of new Intl.DateTimeFormat("pl-PL", {
+      timeZone: "Europe/Warsaw",
+      year: "numeric",
+      month: "2-digit",
+      day: "2-digit",
+      hour: "2-digit",
+      minute: "2-digit",
+      hour12: false,
+    }).formatToParts(d)) {
+      parts[p.type] = p.value;
+    }
+    if (
+      Number(parts.year) === y &&
+      Number(parts.month) === m &&
+      Number(parts.day) === day &&
+      `${parts.hour}:${parts.minute}` === "20:00"
+    ) {
+      return d.toISOString();
+    }
+  }
+  return new Date(`${y}-${String(m).padStart(2, "0")}-${String(day).padStart(2, "0")}T19:00:00Z`).toISOString();
+}
+
 export default async function (req) {
   try {
     const base44 = createClientFromRequest(req);
@@ -39,6 +114,7 @@ export default async function (req) {
 
     // --- Lista wydarzeń z licznikami zapisów ---
     if (body.action === "list") {
+      await ensureEventColumns(base44);
       const rows = await runSql(
         base44,
         `SELECT e.*,
@@ -69,6 +145,7 @@ export default async function (req) {
 
     // --- Zapis nowego lub istniejącego wydarzenia ---
     if (body.action === "save") {
+      await ensureEventColumns(base44);
       const ev = body.event;
       if (!ev || typeof ev !== "object") {
         return Response.json({ error: "Brak danych wydarzenia" }, { status: 400 });
@@ -88,7 +165,11 @@ export default async function (req) {
       const registration_type = pick(REG_TYPES, ev.registration_type, "Zapis na stronie");
       const external_url = textField(ev, "external_url", { required: false, max: 1000 });
       const join_link = textField(ev, "join_link", { required: false, max: 1000 });
+      const join_password = textField(ev, "join_password", { required: false, max: 100 });
       const recording_url = textField(ev, "recording_url", { required: false, max: 1000 });
+      const what_registered = textField(ev, "what_registered", { required: false, max: 500 });
+      const mailing_group = textField(ev, "mailing_group", { required: false, max: 200 });
+      const cancel_reason = textField(ev, "cancel_reason", { required: false, max: 1000 });
       const stage = pick(STAGES, ev.stage, "Wszystkie");
       const cover_image = textField(ev, "cover_image", { required: false, max: 1000 });
       const status = pick(STATUSES, ev.status, "Szkic");
@@ -100,17 +181,35 @@ export default async function (req) {
         startSql = `${escStr(d.toISOString())}::timestamptz`;
       }
 
+      // Walidacja przy publikacji.
+      if (status === "Opublikowane") {
+        if (!ev.start_datetime) throw new Error("Ustaw datę, zanim opublikujesz wydarzenie.");
+        if (new Date(ev.start_datetime) < new Date()) throw new Error("Data nie może być w przeszłości.");
+        if (format === "Online" && !join_link && !external_url) {
+          throw new Error("Wydarzenie online wymaga linku Zoom albo linku transmisji.");
+        }
+        if (price > 0 && !checkout_url) {
+          throw new Error("Wydarzenie płatne wymaga ceny i linku płatności.");
+        }
+      }
+
       const cols = `title, slug, subtitle, event_type, format, start_datetime, duration_minutes,
         location, description, for_whom, price, checkout_url, capacity, registration_type,
-        external_url, join_link, recording_url, stage, cover_image, status`;
+        external_url, join_link, join_password, recording_url, recording_until,
+        registration_deadline, what_registered, mailing_group, stage, cover_image,
+        cancel_reason, status`;
       const vals = `${escStr(title)}, ${escStr(slug)}, ${subtitle ? escStr(subtitle) : "NULL"},
         ${escStr(event_type)}, ${escStr(format)}, ${startSql}, ${duration},
         ${location ? escStr(location) : "NULL"}, ${description ? escStr(description) : "NULL"},
         ${for_whom ? escStr(for_whom) : "NULL"}, ${price}, ${checkout_url ? escStr(checkout_url) : "NULL"},
         ${capacity === null ? "NULL" : String(capacity)}, ${escStr(registration_type)},
         ${external_url ? escStr(external_url) : "NULL"}, ${join_link ? escStr(join_link) : "NULL"},
-        ${recording_url ? escStr(recording_url) : "NULL"}, ${escStr(stage)},
-        ${cover_image ? escStr(cover_image) : "NULL"}, ${escStr(status)}`;
+        ${join_password ? escStr(join_password) : "NULL"}, ${recording_url ? escStr(recording_url) : "NULL"},
+        ${escDt(ev.recording_until)}, ${escDt(ev.registration_deadline)},
+        ${what_registered ? escStr(what_registered) : "NULL"},
+        ${mailing_group ? escStr(mailing_group) : "NULL"}, ${escStr(stage)},
+        ${cover_image ? escStr(cover_image) : "NULL"},
+        ${cancel_reason ? escStr(cancel_reason) : "NULL"}, ${escStr(status)}`;
 
       let rows;
       if (ev.id) {
@@ -129,27 +228,211 @@ export default async function (req) {
 
     // --- Duplikacja (spotkania cykliczne): wszystko poza datą i zapisami ---
     if (body.action === "duplicate") {
+      await ensureEventColumns(base44);
       const id = String(body.id || "");
       const rows = await runSql(
         base44,
         `INSERT INTO public.events
            (id, title, slug, subtitle, event_type, format, start_datetime, duration_minutes,
             location, description, for_whom, price, checkout_url, capacity, registration_type,
-            external_url, join_link, recording_url, stage, cover_image, status, created_at)
+            external_url, join_password, recording_url, recording_until, registration_deadline,
+            what_registered, mailing_group, stage, cover_image, status, created_at)
          SELECT gen_random_uuid()::text, title,
             slug || '-kopia-' || substr(md5(random()::text), 1, 6),
             subtitle, event_type, format, NULL, duration_minutes,
             location, description, for_whom, price, checkout_url, capacity, registration_type,
-            external_url, join_link, NULL, stage, cover_image, 'Szkic', now()
+            external_url, NULL, NULL, NULL, NULL,
+            what_registered, mailing_group, stage, cover_image, 'Szkic', now()
          FROM public.events WHERE id = ${escStr(id)}
          RETURNING id, slug, title`
       );
       return Response.json({ ok: true, event: rows && rows[0] });
     }
 
-    // --- Usunięcie wydarzenia (razem ze zapisami) ---
+    // --- Powtarzaj: szkicy Wieczorów powrotu — pierwszy czwartek miesiąca, 20:00 ---
+    if (body.action === "repeat") {
+      await ensureEventColumns(base44);
+      const id = String(body.id || "");
+      const months = Math.min(24, Math.max(1, Math.round(Number(body.months) || 6)));
+      const src = await runSql(base44, `SELECT * FROM public.events WHERE id = ${escStr(id)}`, true);
+      const ev = src && src[0];
+      if (!ev) throw new Error("Nie znaleziono wydarzenia");
+      const now = new Date();
+      let m = now.getUTCMonth() + 1;
+      let y = now.getUTCFullYear();
+      const created = [];
+      for (let i = 0; i < months; i++) {
+        m += 1;
+        if (m > 12) { m = 1; y += 1; }
+        let day = null;
+        for (let d = 1; d <= 7; d++) {
+          if (new Date(Date.UTC(y, m - 1, d)).getUTCDay() === 4) { day = d; break; }
+        }
+        const iso = warsawEvening(y, m, day);
+        const ins = await runSql(
+          base44,
+          `INSERT INTO public.events
+             (id, title, slug, subtitle, event_type, format, start_datetime, duration_minutes,
+              location, description, for_whom, price, checkout_url, capacity, registration_type,
+              external_url, join_password, recording_url, recording_until, registration_deadline,
+              what_registered, mailing_group, stage, cover_image, status, created_at)
+           SELECT gen_random_uuid()::text, title,
+              ${escStr((ev.slug || slugify(ev.title) || "wieczor") + "-" + y + "-" + String(m).padStart(2, "0"))},
+              subtitle, event_type, format, ${escStr(iso)}::timestamptz, duration_minutes,
+              location, description, for_whom, price, checkout_url, capacity, registration_type,
+              external_url, NULL, NULL, NULL, NULL,
+              what_registered, mailing_group, stage, cover_image, 'Szkic', now()
+           FROM public.events WHERE id = ${escStr(id)}
+           RETURNING id, slug, title`
+        );
+        if (ins && ins[0]) created.push(ins[0]);
+      }
+      return Response.json({ ok: true, created });
+    }
+
+    // --- Odwołanie: status + powód + e-mail do zapisanych ---
+    if (body.action === "cancel") {
+      const id = String(body.id || "");
+      const reason = textField(body, "reason", { required: false, max: 1000 });
+      const evRows = await runSql(
+        base44,
+        `SELECT id, title, subtitle, event_type, format, start_datetime, duration_minutes, location
+         FROM public.events WHERE id = ${escStr(id)}`,
+        true
+      );
+      const ev = evRows && evRows[0];
+      if (!ev) throw new Error("Nie znaleziono wydarzenia");
+      await runSql(
+        base44,
+        `UPDATE public.events SET status = 'Odwołane', cancel_reason = ${
+          reason ? escStr(reason) : "NULL"
+        } WHERE id = ${escStr(id)}`
+      );
+      const recs = await runSql(
+        base44,
+        `SELECT id, first_name, email, cancel_token FROM public.registrations
+         WHERE event_id = ${escStr(id)} AND status IN ('Zapisany','Obecny')`,
+        true
+      );
+      waitUntil(
+        (async () => {
+          const smtp = await getSetting(base44, "smtp").catch(() => null);
+          if (!smtp) return;
+          for (const r of recs) {
+            try {
+              await sendCancelledMail(smtp, ev, r, reason);
+            } catch {}
+          }
+        })()
+      );
+      return Response.json({ ok: true, notified: recs.length });
+    }
+
+    // --- Awans pierwszej osoby z listy rezerwowej ---
+    if (body.action === "promote") {
+      const id = String(body.id || "");
+      const evRows = await runSql(
+        base44,
+        `SELECT id, title, subtitle, format, start_datetime, duration_minutes, location, join_link, external_url
+         FROM public.events WHERE id = ${escStr(id)}`,
+        true
+      );
+      const ev = evRows && evRows[0];
+      if (!ev) throw new Error("Nie znaleziono wydarzenia");
+      const promoted = await runSql(
+        base44,
+        `UPDATE public.registrations SET status = 'Zapisany'
+         WHERE id = (
+           SELECT id FROM public.registrations
+           WHERE event_id = ${escStr(id)} AND status = 'Lista rezerwowa'
+           ORDER BY created_at ASC LIMIT 1
+         )
+         RETURNING id, first_name, email, cancel_token`
+      );
+      if (promoted && promoted.length > 0) {
+        waitUntil(
+          getSetting(base44, "smtp")
+            .then((smtp) => smtp && sendSpotFreedMail(smtp, ev, promoted[0]))
+            .catch(() => {})
+        );
+        return Response.json({ ok: true, promoted: promoted[0].first_name });
+      }
+      return Response.json({ ok: true, promoted: null });
+    }
+
+    // --- Przypomnienie wysłane ręcznie z panelu ---
+    if (body.action === "remindNow") {
+      const id = String(body.id || "");
+      const evRows = await runSql(
+        base44,
+        `SELECT id, title, slug, subtitle, event_type, format, start_datetime, duration_minutes,
+           location, join_link, external_url
+         FROM public.events WHERE id = ${escStr(id)}`,
+        true
+      );
+      const ev = evRows && evRows[0];
+      if (!ev) throw new Error("Nie znaleziono wydarzenia");
+      const recs = await runSql(
+        base44,
+        `SELECT id, first_name, email, cancel_token FROM public.registrations
+         WHERE event_id = ${escStr(id)} AND status IN ('Zapisany','Obecny')`,
+        true
+      );
+      const smtp = await getSetting(base44, "smtp").catch(() => null);
+      if (!smtp) throw new Error("SMTP nie jest skonfigurowany (Integracje)");
+      let sent = 0;
+      for (const r of recs) {
+        try {
+          await sendReminderMail(smtp, ev, r, "now");
+          sent += 1;
+        } catch {}
+      }
+      return Response.json({ ok: true, sent, total: recs.length });
+    }
+
+    // --- Wysyłka nagrania do zapisanych ---
+    if (body.action === "sendRecording") {
+      const id = String(body.id || "");
+      const evRows = await runSql(base44, `SELECT * FROM public.events WHERE id = ${escStr(id)}`, true);
+      const ev = evRows && evRows[0];
+      if (!ev) throw new Error("Nie znaleziono wydarzenia");
+      if (!ev.recording_url) throw new Error("Najpierw wpisz link do nagrania.");
+      const recs = await runSql(
+        base44,
+        `SELECT id, first_name, email, cancel_token FROM public.registrations
+         WHERE event_id = ${escStr(id)} AND status IN ('Zapisany','Obecny') AND recording_sent = FALSE`,
+        true
+      );
+      const smtp = await getSetting(base44, "smtp").catch(() => null);
+      if (!smtp) throw new Error("SMTP nie jest skonfigurowany (Integracje)");
+      let sent = 0;
+      for (const r of recs) {
+        try {
+          await sendRecordingMail(smtp, ev, r, "");
+          await runSql(base44, `UPDATE public.registrations SET recording_sent = TRUE WHERE id = ${escStr(r.id)}`);
+          sent += 1;
+        } catch {}
+      }
+      return Response.json({ ok: true, sent, total: recs.length });
+    }
+
+    // --- Usunięcie danych uczestnika (na żądanie) ---
+    if (body.action === "deleteParticipant") {
+      await runSql(
+        base44,
+        `DELETE FROM public.registrations WHERE id = ${escStr(String(body.id || ""))}`
+      );
+      return Response.json({ ok: true });
+    }
+
+    // --- Usunięcie wydarzenia (tylko szkice) ---
     if (body.action === "delete") {
-      await runSql(base44, `DELETE FROM public.events WHERE id = ${escStr(String(body.id || ""))}`);
+      const id = String(body.id || "");
+      const st = await runSql(base44, `SELECT status FROM public.events WHERE id = ${escStr(id)}`, true);
+      if (!st || st.length === 0) throw new Error("Nie znaleziono wydarzenia");
+      if (st[0].status !== "Szkic") throw new Error("Usunąć można tylko szkic — inne wydarzenia odwołaj lub zostaw jako archiwum.");
+      await runSql(base44, `DELETE FROM public.registrations WHERE event_id = ${escStr(id)}`);
+      await runSql(base44, `DELETE FROM public.events WHERE id = ${escStr(id)}`);
       return Response.json({ ok: true });
     }
 
@@ -173,7 +456,7 @@ export default async function (req) {
       const ev = evRows && evRows[0];
       const recipients = await runSql(
         base44,
-        `SELECT email, first_name FROM public.registrations
+        `SELECT email, first_name, cancel_token FROM public.registrations
          WHERE event_id = ${escStr(id)} AND status IN ('Zapisany','Obecny','Lista rezerwowa')`,
         true
       );

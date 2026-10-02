@@ -7,7 +7,7 @@ export default function NoEvents() {
   return (
     <div className="max-w-xl">
       <p className="shop-heading text-2xl md:text-3xl text-[#F5EFE1] leading-snug">
-        Kolejne spotkania — już wkrótce.
+        Kolejne terminy wkrótce. Zajrzyj do Skarbca.
       </p>
       <p className="mt-5 text-foreground/50 leading-relaxed">
         W międzyczasie zajrzyj do Skarbca — znajdziesz tam drogi powrotu, od których możesz zacząć od razu.

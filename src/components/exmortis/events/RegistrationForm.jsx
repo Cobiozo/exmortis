@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from "react";
+import { Link } from "react-router-dom";
 import { base44 } from "@/api/base44Client";
 
 // Formularz zapisu na wydarzenie (strona wydarzenia): imię, e-mail, pytanie, zgoda.
@@ -7,6 +8,7 @@ export default function RegistrationForm({ event: ev }) {
   const [email, setEmail] = useState("");
   const [question, setQuestion] = useState("");
   const [consent, setConsent] = useState(false);
+  const [listy, setListy] = useState(false);
   const [sending, setSending] = useState(false);
   const [error, setError] = useState("");
   const [result, setResult] = useState(null);
@@ -30,7 +32,8 @@ export default function RegistrationForm({ event: ev }) {
     setSending(true);
     setError("");
     try {
-      const src = new URLSearchParams(window.location.search).get("src") || "";
+      const params = new URLSearchParams(window.location.search);
+      const src = params.get("src") || params.get("utm_source") || "";
       const res = await base44.functions.invoke("eventsPublic", {
         action: "register",
         slug: ev.slug,
@@ -38,6 +41,7 @@ export default function RegistrationForm({ event: ev }) {
         email,
         question,
         consent: true,
+        listy,
         source: src,
       });
       setResult(res.data);
@@ -68,9 +72,43 @@ export default function RegistrationForm({ event: ev }) {
         <p className="shop-heading text-xl text-[#F5EFE1]">
           Dziękuję, {result.first_name || firstName}. Jesteś zapisany/a.
         </p>
-        <p className="text-foreground/60 mt-3 leading-relaxed">Link do spotkania wyślę Ci e-mailem.</p>
+        {ev.what_registered && (
+          <p className="text-foreground/60 text-sm mt-3 leading-relaxed">Co dostają zapisani: {ev.what_registered}</p>
+        )}
+        {result.join_link ? (
+          <p className="text-foreground/70 mt-4 leading-relaxed break-all">
+            Link do spotkania:{" "}
+            <a href={result.join_link} target="_blank" rel="noreferrer" className="gold-text underline">
+              {result.join_link}
+            </a>
+          </p>
+        ) : (
+          <p className="text-foreground/60 mt-4 leading-relaxed">Link do spotkania wyślę Ci e-mailem.</p>
+        )}
+        {result.join_password && (
+          <p className="text-foreground/50 text-sm mt-1">Hasło do spotkania: {result.join_password}</p>
+        )}
         {result.checkout_url && (
           <p className="technical text-[10px] gold-text mt-5">ZA CHWILĘ PROWADZĘ CIĘ DO PŁATNOŚCI…</p>
+        )}
+      </div>
+    );
+  }
+
+  // Zapisy zamknięte — po terminie zapisów (domyślnie 15 min przed startem).
+  const deadline = ev.registration_deadline
+    ? new Date(ev.registration_deadline)
+    : ev.start_datetime
+      ? new Date(new Date(ev.start_datetime).getTime() - 15 * 60000)
+      : null;
+  if (deadline && new Date() > deadline) {
+    return (
+      <div className="border hairline p-8 text-center">
+        <p className="shop-heading text-xl text-[#F5EFE1]">Zapisy zamknięte.</p>
+        {ev.external_url && (
+          <a href={ev.external_url} target="_blank" rel="noreferrer" className="btn-relic mt-6">
+            DOŁĄCZ DO TRANSMISJI
+          </a>
         )}
       </div>
     );
@@ -111,7 +149,22 @@ export default function RegistrationForm({ event: ev }) {
           className="mt-1 accent-[#C9A24A]"
         />
         <span className="text-xs text-foreground/50 leading-relaxed group-hover:text-foreground/70 transition-colors">
-          Zgadzam się na przetwarzanie danych w celu udziału w spotkaniu.
+          Zapisuję się na to spotkanie i akceptuję{" "}
+          <Link to="/polityka-prywatnosci" className="gold-text underline">
+            politykę prywatności
+          </Link>
+          .
+        </span>
+      </label>
+      <label className="flex items-start gap-3 cursor-pointer group">
+        <input
+          type="checkbox"
+          checked={listy}
+          onChange={(e) => setListy(e.target.checked)}
+          className="mt-1 accent-[#C9A24A]"
+        />
+        <span className="text-xs text-foreground/50 leading-relaxed group-hover:text-foreground/70 transition-colors">
+          Chcę też dostawać Listy powrotu — jeden list w każdy poniedziałek.
         </span>
       </label>
       {error && <p className="technical text-[10px] blood-text">{error}</p>}
