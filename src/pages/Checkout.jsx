@@ -7,6 +7,7 @@ import { useCart } from "@/components/exmortis/CartContext";
 import { base44 } from "@/api/base44Client";
 import NewsletterConsent from "@/components/exmortis/shop/NewsletterConsent";
 import DiscountField from "@/components/exmortis/shop/DiscountField";
+import OrderSummaryInfo from "@/components/exmortis/shop/OrderSummaryInfo";
 
 export default function Checkout() {
   const { items, total, clear } = useCart();
@@ -19,6 +20,7 @@ export default function Checkout() {
   const [form, setForm] = useState({ name: "", email: "", note: "" });
   const [newsletterConsent, setNewsletterConsent] = useState(false);
   const [digitalConsent, setDigitalConsent] = useState(false);
+  const [termsConsent, setTermsConsent] = useState(false);
   const [payError, setPayError] = useState("");
   const [discount, setDiscount] = useState(null);
   const { user } = useAuth();
@@ -37,6 +39,7 @@ export default function Checkout() {
         note: form.note,
         newsletter_consent: newsletterConsent,
         digital_consent: digitalConsent,
+        terms_consent: termsConsent,
         items: items.map((it) => ({ id: it.id, qty: it.qty })),
         code: discount?.code || "",
       });
@@ -140,10 +143,15 @@ export default function Checkout() {
               />
             </div>
 
+            <OrderSummaryInfo items={items} total={discount ? (total - discount.discount).toFixed(2) : total} />
+            <label className="flex gap-3 text-sm text-foreground/65 leading-relaxed">
+              <input type="checkbox" required className="mt-1 accent-[#C9A24A]" checked={termsConsent} onChange={(e) => setTermsConsent(e.target.checked)} />
+              <span>Akceptuję <Link to="/regulamin" className="underline">Regulamin</Link>. Znam <Link to="/polityka-prywatnosci" className="underline">Politykę prywatności</Link>.</span>
+            </label>
             <DigitalConsent items={items} checked={digitalConsent} onChange={setDigitalConsent} />
             {payError && <p className="text-sm text-[#E8C547]">{payError}</p>}
             <button type="submit" disabled={submitting} className="btn-relic w-full disabled:opacity-60">
-              {submitting ? "PRZYGOTOWUJĘ PŁATNOŚĆ..." : "ZAPŁAĆ I PRZEJDŹ PRÓG"}{" "}
+              {submitting ? "PRZYGOTOWUJĘ PŁATNOŚĆ..." : "Zamawiam z obowiązkiem zapłaty"}{" "}
               {!submitting && <ArrowRight className="h-4 w-4" />}
             </button>
             <p className="technical text-[10px] text-foreground/40">

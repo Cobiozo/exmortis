@@ -32,6 +32,11 @@ import { AdminModeProvider } from '@/components/admin/AdminModeContext';
 import AdminBar from '@/components/admin/AdminBar';
 import Account from '@/pages/Account';
 import CoursePlayer from '@/pages/CoursePlayer';
+import Regulamin from '@/pages/Regulamin';
+import PolitykaCookies from '@/pages/PolitykaCookies';
+import Odstapienie from '@/pages/Odstapienie';
+import Kontakt from '@/pages/Kontakt';
+import CookieBanner from '@/components/legal/CookieBanner';
 // Add page imports here
 
 const AuthenticatedApp = () => {
@@ -89,10 +94,15 @@ const AuthenticatedApp = () => {
           <Route path="/spotkania" element={<Events />} />
           <Route path="/spotkania/:slug" element={<EventDetail />} />
           <Route path="/polityka-prywatnosci" element={<PrivacyPolicy />} />
+          <Route path="/regulamin" element={<Regulamin />} />
+          <Route path="/polityka-cookies" element={<PolitykaCookies />} />
+          <Route path="/odstapienie" element={<Odstapienie />} />
+          <Route path="/kontakt" element={<Kontakt />} />
           <Route path="/1-listopada" element={<Navigate to="/spotkania/1-listopada" replace />} />
         </Route>
         <Route path="*" element={<PageNotFound />} />
       </Routes>
+      <CookieBanner />
       </SiteContentProvider>
       </AdminModeProvider>
     </CartProvider>

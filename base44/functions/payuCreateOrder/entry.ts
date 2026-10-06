@@ -23,6 +23,7 @@ export default async function (req) {
     const buyerEmail = emailField(body);
     const note = textField(body, "note", { max: 2000, required: false }) || "";
     const newsletterConsent = body.newsletter_consent === true;
+    if (body.terms_consent !== true) throw new Error("Zaakceptuj Regulamin");
     const items = Array.isArray(body.items) ? body.items.slice(0, 20) : [];
     if (items.length === 0) throw new Error("Koszyk jest pusty");
 
@@ -128,6 +129,14 @@ export default async function (req) {
       newsletterConsent,
       digitalConsent: hasDigital ? DIGITAL_CONSENT : null,
     });
+
+    // Każda zgoda zapisana osobno, z wersją dokumentu.
+    const ip = (req.headers.get("x-forwarded-for") || "").split(",")[0].trim();
+    const cBase = { email: buyerEmail, source: "kasa", order_id: extOrderId, doc_version: "regulamin 1.0", ip, status: "udzielona" };
+    const consents = [{ ...cBase, kind: "regulamin", text: "Akceptuję Regulamin. Znam Politykę prywatności." }];
+    if (hasDigital) consents.push({ ...cBase, kind: "tresci_cyfrowe", text: DIGITAL_CONSENT });
+    if (newsletterConsent) consents.push({ ...cBase, kind: "newsletter", text: "Chcę otrzymywać Listy powrotu — newsletter exmortis z treściami oraz informacjami o produktach i wydarzeniach — na podany adres e-mail. Zgodę mogę wycofać w każdej chwili." });
+    await base44.asServiceRole.entities.Consent.bulkCreate(consents);
 
     if (disc) {
       await base44.asServiceRole.entities.DiscountCode.update(disc.record.id, { uses: (disc.record.uses || 0) + 1 });

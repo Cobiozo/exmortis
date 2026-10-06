@@ -1,0 +1,67 @@
+{
+  "name": "Withdrawal",
+  "type": "object",
+  "properties": {
+    "name": {
+      "type": "string"
+    },
+    "email": {
+      "type": "string"
+    },
+    "order_id": {
+      "type": "string"
+    },
+    "product": {
+      "type": "string"
+    },
+    "order_date": {
+      "type": "string"
+    },
+    "reason": {
+      "type": "string"
+    },
+    "received_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "odst\u0105pienie zg\u0142oszone",
+        "zwr\u00f3cone",
+        "odrzucone"
+      ],
+      "default": "odst\u0105pienie zg\u0142oszone"
+    },
+    "ip": {
+      "type": "string"
+    }
+  },
+  "required": [
+    "name",
+    "email",
+    "order_id"
+  ],
+  "rls": {
+    "read": {
+      "user_condition": {
+        "role": "admin"
+      }
+    },
+    "create": {
+      "user_condition": {
+        "role": "admin"
+      }
+    },
+    "update": {
+      "user_condition": {
+        "role": "admin"
+      }
+    },
+    "delete": {
+      "user_condition": {
+        "role": "admin"
+      }
+    }
+  }
+}

@@ -1,0 +1,77 @@
+{
+  "name": "Consent",
+  "type": "object",
+  "properties": {
+    "email": {
+      "type": "string"
+    },
+    "kind": {
+      "type": "string",
+      "enum": [
+        "regulamin",
+        "pelnoletnosc",
+        "newsletter",
+        "tresci_cyfrowe",
+        "usluga_przed_14_dniami",
+        "test_art9",
+        "powrot_art9",
+        "pdf_wysylka",
+        "wydarzenie"
+      ]
+    },
+    "text": {
+      "type": "string"
+    },
+    "doc_version": {
+      "type": "string"
+    },
+    "source": {
+      "type": "string"
+    },
+    "order_id": {
+      "type": "string"
+    },
+    "ip": {
+      "type": "string"
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "udzielona",
+        "wycofana"
+      ],
+      "default": "udzielona"
+    },
+    "withdrawn_at": {
+      "type": "string",
+      "format": "date-time"
+    }
+  },
+  "required": [
+    "email",
+    "kind",
+    "text"
+  ],
+  "rls": {
+    "read": {
+      "user_condition": {
+        "role": "admin"
+      }
+    },
+    "create": {
+      "user_condition": {
+        "role": "admin"
+      }
+    },
+    "update": {
+      "user_condition": {
+        "role": "admin"
+      }
+    },
+    "delete": {
+      "user_condition": {
+        "role": "admin"
+      }
+    }
+  }
+}

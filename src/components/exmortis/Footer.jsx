@@ -2,6 +2,8 @@ import React from "react";
 import { Link } from "react-router-dom";
 import { useSiteContent } from "@/components/exmortis/SiteContentProvider";
 import Logo from "./Logo";
+import { SELLER } from "@/content/legal/seller";
+import { openCookieSettings } from "@/components/legal/cookieStore";
 
 export default function Footer() {
   const { rich } = useSiteContent();
@@ -53,6 +55,15 @@ export default function Footer() {
             <span className="gold-text">116 123</span> · <span className="gold-text">800 70 2222</span> (całą dobę,
             bezpłatnie) · w zagrożeniu życia <span className="gold-text">112</span>.
           </p>
+          <nav aria-label="Dokumenty" className="flex flex-wrap gap-x-5 gap-y-2 text-xs mb-4">
+            <Link to="/regulamin" className="text-foreground/60 hover:gold-text">Regulamin</Link>
+            <Link to="/polityka-prywatnosci" className="text-foreground/60 hover:gold-text">Polityka prywatności</Link>
+            <Link to="/polityka-cookies" className="text-foreground/60 hover:gold-text">Polityka cookies</Link>
+            <Link to="/odstapienie" className="text-foreground/60 hover:gold-text">Odstąp od umowy tutaj</Link>
+            <button onClick={openCookieSettings} className="text-foreground/60 hover:gold-text">Ustawienia cookies</button>
+            <Link to="/kontakt" className="text-foreground/60 hover:gold-text">Kontakt</Link>
+          </nav>
+          <p className="text-[11px] text-foreground/35 mb-6">{SELLER.company}, {SELLER.address}, NIP {SELLER.nip}</p>
           <div className="flex flex-col sm:flex-row justify-between gap-4">
             <p className="technical text-[10px] text-foreground/30">
               © {new Date().getFullYear()} EXMORTIS · WSZELKIE PRAWA ZASTRZEŻONE
