@@ -5,6 +5,7 @@ const CATEGORIES = ["ebook", "warsztat", "mentoring", "mastermind", "retreat", "
 const STAGES = ["Śmierć", "Próg", "Powrót", "Inny", "Wszystkie"];
 const FORMS = ["Czytam", "Słucham", "Oglądam", "Uczestniczę", "Idę głęboko"];
 const STATUSES = ["dostępny", "wkrótce", "ukryty"];
+const TYPES = ["pdf", "audio", "wideo", "kurs", "usluga"];
 const AUDIENCES = ["Mężczyzna", "Kobieta", "Ojciec", "Matka", "Mąż", "Żona", "Lider"];
 
 // Tekst opcjonalny → NULL; obcięty do max.
@@ -83,6 +84,10 @@ function buildValues(p, name, slug, price, oldPrice, category) {
     sort_order: intVal(p.sort_order, 0, 9999),
     cover_image: textVal(p.cover_image, 1000),
     file_url: textVal(p.file_url, 1000),
+    product_type: pickVal(p.product_type, TYPES) === "NULL" ? "'usluga'" : pickVal(p.product_type, TYPES),
+    access_months: intVal(p.access_months, 1, 120),
+    private_file_uri: textVal(p.private_file_uri, 1000),
+    private_file_name: textVal(p.private_file_name, 300),
   };
 }
 
@@ -90,7 +95,8 @@ const SHOP_COLUMNS = `name, slug, subtitle, description, long_description, price
   gallery, featured, active, details, format, duration, spots,
   level, stage, form, audience_tags, promise, for_whom, format_details,
   price_start, price_regular, is_free, status, promo_end_date,
-  button_label, checkout_url, next_step, is_featured, sort_order, cover_image, file_url`;
+  button_label, checkout_url, next_step, is_featured, sort_order, cover_image, file_url,
+  product_type, access_months, private_file_uri, private_file_name`;
 
 const SHOP_SELECT = `id, name, slug, subtitle, description, long_description,
   price::float8 AS price, old_price::float8 AS old_price, category, image_url, gallery,
@@ -117,6 +123,7 @@ export default async function (req) {
                 p.price_start::float8 AS price_start, p.price_regular::float8 AS price_regular,
                 p.is_free, p.status, p.promo_end_date::text AS promo_end_date,
                 p.button_label, p.checkout_url, p.next_step, p.is_featured, p.sort_order, p.cover_image, p.file_url,
+                p.product_type, p.access_months, p.private_file_uri, p.private_file_name,
                 p.created_date, p.updated_date,
                 (SELECT COUNT(*)::int FROM public.waitlist w WHERE w.product_id = p.id) AS waitlist_count
          FROM public.products p
@@ -165,6 +172,8 @@ export default async function (req) {
              button_label = ${v.button_label}, checkout_url = ${v.checkout_url}, next_step = ${v.next_step},
              is_featured = ${v.is_featured}, sort_order = ${v.sort_order}, cover_image = ${v.cover_image},
              file_url = ${v.file_url},
+             product_type = ${v.product_type}, access_months = ${v.access_months},
+             private_file_uri = ${v.private_file_uri}, private_file_name = ${v.private_file_name},
              updated_date = now()
            WHERE id = ${escStr(String(p.id))}`
         );
@@ -179,7 +188,8 @@ export default async function (req) {
                    ${v.level}, ${v.stage}, ${v.form}, ${v.audience_tags}, ${v.promise}, ${v.for_whom}, ${v.format_details},
                    ${v.price_start}, ${v.price_regular}, ${v.is_free}, ${v.status}, ${v.promo_end_date},
                    ${v.button_label}, ${v.checkout_url}, ${v.next_step}, ${v.is_featured}, ${v.sort_order}, ${v.cover_image},
-                   ${v.file_url}, ${escStr(user.id)})`
+                   ${v.file_url}, ${v.product_type}, ${v.access_months}, ${v.private_file_uri}, ${v.private_file_name},
+                   ${escStr(user.id)})`
         );
       }
       return Response.json({ ok: true });

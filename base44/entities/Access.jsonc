@@ -1,0 +1,88 @@
+{
+  "name": "Access",
+  "type": "object",
+  "properties": {
+    "user_email": {
+      "type": "string"
+    },
+    "product_id": {
+      "type": "string"
+    },
+    "product_name": {
+      "type": "string"
+    },
+    "product_type": {
+      "type": "string",
+      "enum": [
+        "pdf",
+        "audio",
+        "wideo",
+        "kurs",
+        "usluga"
+      ]
+    },
+    "valid_from": {
+      "type": "string",
+      "format": "date"
+    },
+    "valid_until": {
+      "type": "string",
+      "format": "date"
+    },
+    "source": {
+      "type": "string",
+      "enum": [
+        "zakup",
+        "przedluzenie",
+        "reczny",
+        "darmowy"
+      ]
+    },
+    "order_id": {
+      "type": "string"
+    },
+    "revoked": {
+      "type": "boolean",
+      "default": false
+    },
+    "history": {
+      "type": "array",
+      "items": {
+        "type": "object"
+      }
+    }
+  },
+  "required": [
+    "user_email",
+    "product_id"
+  ],
+  "rls": {
+    "read": {
+      "$or": [
+        {
+          "data.user_email": "{{user.email}}"
+        },
+        {
+          "user_condition": {
+            "role": "admin"
+          }
+        }
+      ]
+    },
+    "create": {
+      "user_condition": {
+        "role": "admin"
+      }
+    },
+    "update": {
+      "user_condition": {
+        "role": "admin"
+      }
+    },
+    "delete": {
+      "user_condition": {
+        "role": "admin"
+      }
+    }
+  }
+}

@@ -39,6 +39,8 @@ export function CartProvider({ children }) {
           price: product.price,
           image_url: product.image_url,
           slug: product.slug,
+          product_type: product.product_type,
+          access_months: product.access_months,
           qty,
         },
       ];

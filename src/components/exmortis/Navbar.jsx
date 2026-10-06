@@ -3,6 +3,7 @@ import { Link, useLocation, useNavigate } from "react-router-dom";
 import { Menu, X, ShoppingBag } from "lucide-react";
 import { useCart } from "./CartContext";
 import Logo from "./Logo";
+import AccountLinks from "./AccountLinks";
 import { useAdminMode } from "@/components/admin/AdminModeContext";
 
 const NAV = [
@@ -88,6 +89,9 @@ export default function Navbar() {
             </nav>
 
             <div className="flex items-center gap-4">
+              <span className="hidden md:flex items-center gap-6">
+                <AccountLinks className="technical text-[11px] text-foreground/70 hover:gold-text transition-colors" />
+              </span>
               <button
                 onClick={() => setOpen(true)}
                 className="relative p-2 text-foreground/80 hover:gold-text transition-colors"
@@ -134,6 +138,9 @@ export default function Navbar() {
               {n.label}
             </button>
           ))}
+          <div className="flex gap-8 mt-4">
+            <AccountLinks className="technical text-xs text-foreground/70" />
+          </div>
         </div>
       </div>
     </>

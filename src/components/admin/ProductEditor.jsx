@@ -3,6 +3,7 @@ import { base44 } from "@/api/base44Client";
 import { Image } from "@/components/ui/image";
 import { ArrowLeft, Plus, Trash2, Upload } from "lucide-react";
 import RichTextEditor from "./RichTextEditor";
+import ProductAccessFields from "./ProductAccessFields";
 
 const CATEGORIES = ["ebook", "warsztat", "mentoring", "mastermind", "retreat", "darmowe"];
 const LEVELS = [
@@ -44,6 +45,10 @@ export default function ProductEditor({ product, onSaved, onCancel }) {
     sort_order: product?.sort_order != null ? String(product.sort_order) : "",
     cover_image: product?.cover_image || "",
     file_url: product?.file_url || "",
+    product_type: product?.product_type || "pdf",
+    access_months: product?.access_months != null ? String(product.access_months) : "",
+    private_file_uri: product?.private_file_uri || "",
+    private_file_name: product?.private_file_name || "",
     // Ceny
     price_start: product?.price_start != null ? String(product.price_start) : "",
     price_regular: product?.price_regular != null ? String(product.price_regular) : "",
@@ -392,6 +397,8 @@ export default function ProductEditor({ product, onSaved, onCancel }) {
           </div>
         </div>
       </div>
+
+      <ProductAccessFields form={form} set={set} />
 
       {/* ===== PLIK DO POBRANIA ===== */}
       <p className="technical text-[10px] gold-text mb-6">PLIK DO POBRANIA (BEZPŁATNE MATERIAŁY)</p>

@@ -23,7 +23,9 @@ export async function ensureOrdersTable(base44) {
     `ALTER TABLE public.orders
        ADD COLUMN IF NOT EXISTS buyer_phone text,
        ADD COLUMN IF NOT EXISTS phone_consent_date timestamptz,
-       ADD COLUMN IF NOT EXISTS newsletter_consent_date timestamptz`
+       ADD COLUMN IF NOT EXISTS newsletter_consent_date timestamptz,
+       ADD COLUMN IF NOT EXISTS digital_consent_text text,
+       ADD COLUMN IF NOT EXISTS digital_consent_date timestamptz`
   );
 }
 
@@ -34,14 +36,16 @@ export async function insertOrder(base44, order) {
     base44,
     `INSERT INTO public.orders
        (id, payu_order_id, buyer_name, buyer_email, buyer_phone, note, items, total, status,
-        phone_consent_date, newsletter_consent_date)
+        phone_consent_date, newsletter_consent_date, digital_consent_text, digital_consent_date)
      VALUES (${escStr(order.id)}, ${escStr(order.payuOrderId || "")}, ${escStr(order.buyerName || "")},
              ${escStr(order.buyerEmail || "")},
              ${order.buyerPhone ? escStr(order.buyerPhone) : "NULL"},
              ${escStr(order.note || "")},
              ${escStr(itemsJson)}::jsonb, ${esc(order.total)}, ${escStr(order.status)},
              ${order.phoneConsent ? "now()" : "NULL"},
-             ${order.newsletterConsent ? "now()" : "NULL"})`
+             ${order.newsletterConsent ? "now()" : "NULL"},
+             ${order.digitalConsent ? escStr(order.digitalConsent) : "NULL"},
+             ${order.digitalConsent ? "now()" : "NULL"})`
   );
 }
 

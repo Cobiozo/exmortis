@@ -3,6 +3,10 @@ import { runSql, escStr, textField, emailField } from "../../shared/supabase.ts"
 import { getSetting } from "../../shared/settings.ts";
 import { insertOrder } from "../../shared/orders.ts";
 import { addSubscriber } from "../../shared/newsletter.ts";
+import { DIGITAL } from "../../shared/access.ts";
+
+const DIGITAL_CONSENT =
+  "Żądam dostarczenia treści cyfrowych przed upływem 14 dni od zawarcia umowy i przyjmuję do wiadomości, że z chwilą rozpoczęcia ich dostarczania tracę prawo odstąpienia od umowy.";
 
 const BASE_URLS = {
   secure: "https://secure.payu.com",
@@ -27,13 +31,18 @@ export default async function (req) {
     const idList = ids.map((id) => escStr(id)).join(",");
     const rows = await runSql(
       base44,
-      `SELECT id, name, price::float8 AS price, active
+      `SELECT id, name, price::float8 AS price, active, product_type
        FROM public.products WHERE id IN (${idList})`,
       true
     );
     const byId = new Map(rows.map((r) => [String(r.id), r]));
+    const hasDigital = rows.some((r) => DIGITAL.includes(r.product_type));
+    if (hasDigital && body.digital_consent !== true) {
+      throw new Error("Zaznacz zgodę na dostarczenie treści cyfrowych");
+    }
 
     const products = [];
+    const stored = [];
     let totalGrosze = 0;
     for (const it of items) {
       const p = byId.get(String((it || {}).id));
@@ -43,6 +52,7 @@ export default async function (req) {
       if (!Number.isFinite(unit) || unit <= 0) throw new Error("Niepoprawna cena produktu");
       totalGrosze += unit * qty;
       products.push({ name: String(p.name).slice(0, 150), unitPrice: String(unit), quantity: qty });
+      stored.push({ product_id: String(p.id), name: String(p.name).slice(0, 150), unitPrice: String(unit), quantity: qty });
     }
     if (totalGrosze < 100) throw new Error("Kwota zamówienia jest zbyt niska dla PayU");
 
@@ -102,10 +112,11 @@ export default async function (req) {
       buyerName,
       buyerEmail,
       note,
-      items: products,
+      items: stored,
       total: totalGrosze / 100,
       status: "PENDING",
       newsletterConsent,
+      digitalConsent: hasDigital ? DIGITAL_CONSENT : null,
     });
 
     if (newsletterConsent) {

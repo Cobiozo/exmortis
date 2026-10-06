@@ -4,6 +4,7 @@ import { insertOrder } from "../../shared/orders.ts";
 import { addSubscriber } from "../../shared/newsletter.ts";
 import { getSetting } from "../../shared/settings.ts";
 import { sendMail } from "../../shared/smtp.ts";
+import { grantAccess } from "../../shared/access.ts";
 
 function escapeHtml(s) {
   return String(s)
@@ -35,7 +36,7 @@ export default async function (req) {
     );
     const rows = await runSql(
       base44,
-      `SELECT id, name, is_free, active, COALESCE(status, 'dostępny') AS status, file_url
+      `SELECT id, name, is_free, active, COALESCE(status, 'dostępny') AS status, file_url, product_type
        FROM public.products WHERE slug = ${escStr(slug)} LIMIT 1`,
       true
     );
@@ -65,6 +66,16 @@ export default async function (req) {
 
     if (newsletterConsent) {
       await addSubscriber(base44, { email, name, consentGiven: true });
+    }
+
+    // Jeśli istnieje konto na ten e-mail — materiał trafia też do „Moich produktów”.
+    const hasAccount = (await base44.asServiceRole.entities.User.filter({ email: email.toLowerCase() })).length > 0;
+    if (hasAccount && ["pdf", "audio", "wideo", "kurs"].includes(product.product_type)) {
+      await grantAccess(base44, {
+        email,
+        product: { id: product.id, name: product.name, product_type: product.product_type || "pdf", access_months: null },
+        source: "darmowy",
+      });
     }
 
     const fileUrl = String(product.file_url || "").trim();

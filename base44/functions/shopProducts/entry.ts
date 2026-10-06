@@ -20,6 +20,7 @@ export default async function (req) {
               price_start::float8 AS price_start, price_regular::float8 AS price_regular,
               is_free, status, promo_end_date::text AS promo_end_date,
               button_label, checkout_url, next_step, is_featured, sort_order, cover_image,
+              product_type, access_months,
               created_date, updated_date
        FROM public.products
        WHERE ${where}

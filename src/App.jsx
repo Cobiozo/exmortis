@@ -30,6 +30,7 @@ import { Navigate } from 'react-router-dom';
 import PrivacyPolicy from '@/pages/PrivacyPolicy';
 import { AdminModeProvider } from '@/components/admin/AdminModeContext';
 import AdminBar from '@/components/admin/AdminBar';
+import Account from '@/pages/Account';
 // Add page imports here
 
 const AuthenticatedApp = () => {
@@ -69,6 +70,9 @@ const AuthenticatedApp = () => {
         <Route element={<ProtectedRoute unauthenticatedElement={<Navigate to="/login" replace />} />}>
           <Route path="/admin" element={<Admin />} />
           <Route path="/admin/:section" element={<Admin />} />
+          <Route element={<Layout />}>
+            <Route path="/konto" element={<Account />} />
+          </Route>
         </Route>
         <Route path="/cisza" element={<Cisza />} />
         <Route element={<Layout />}>

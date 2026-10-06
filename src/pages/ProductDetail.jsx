@@ -1,3 +1,4 @@
+import { accessLabel, isDigital } from "@/components/account/accountUtils";
 import React, { useEffect, useState } from "react";
 import { useParams, Link, useNavigate } from "react-router-dom";
 import { ArrowRight, ArrowLeft, Check, Minus, Plus } from "lucide-react";
@@ -174,6 +175,7 @@ export default function ProductDetail() {
                     {added ? "DODANO ✓" : "DOŁĄCZ DO POWROTU"} {!added && <ArrowRight className="h-4 w-4" />}
                   </button>
                 </div>
+                {isDigital(product) && <p className="text-sm text-foreground/60">{accessLabel(product)}</p>}
                 <p className="technical text-[10px] text-foreground/40">
                   Sprzedaję z dojrzałości, nie z presji. Decyzję zostawiam Tobie.
                 </p>

@@ -1,4 +1,6 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
+import { useAuth } from "@/lib/AuthContext";
+import DigitalConsent from "@/components/exmortis/shop/DigitalConsent";
 import { Link, useNavigate } from "react-router-dom";
 import { ArrowRight, Check } from "lucide-react";
 import { useCart } from "@/components/exmortis/CartContext";
@@ -15,6 +17,12 @@ export default function Checkout() {
   const [submitting, setSubmitting] = useState(false);
   const [form, setForm] = useState({ name: "", email: "", note: "" });
   const [newsletterConsent, setNewsletterConsent] = useState(false);
+  const [digitalConsent, setDigitalConsent] = useState(false);
+  const [payError, setPayError] = useState("");
+  const { user } = useAuth();
+  useEffect(() => {
+    if (user) setForm((f) => ({ ...f, name: f.name || user.imie || user.full_name || "", email: f.email || user.email }));
+  }, [user]);
 
   const submit = async (e) => {
     e.preventDefault();
@@ -26,14 +34,20 @@ export default function Checkout() {
         email: form.email,
         note: form.note,
         newsletter_consent: newsletterConsent,
+        digital_consent: digitalConsent,
         items: items.map((it) => ({ id: it.id, qty: it.qty })),
       });
       clear();
       window.location.href = res.data.redirectUri;
-    } catch {
-      // PayU nieaktywne — potwierdzenie trybu ręcznego
-      clear();
-      setDone(true);
+    } catch (err) {
+      const msg = err?.response?.data?.error || "";
+      if (msg === "PAYU_NOT_CONFIGURED") {
+        // PayU nieaktywne — potwierdzenie trybu ręcznego
+        clear();
+        setDone(true);
+      } else {
+        setPayError("Płatność się nie udała. Nic nie zostało pobrane — spróbuj jeszcze raz.");
+      }
     } finally {
       setSubmitting(false);
     }
@@ -123,6 +137,8 @@ export default function Checkout() {
               />
             </div>
 
+            <DigitalConsent items={items} checked={digitalConsent} onChange={setDigitalConsent} />
+            {payError && <p className="text-sm text-[#E8C547]">{payError}</p>}
             <button type="submit" disabled={submitting} className="btn-relic w-full disabled:opacity-60">
               {submitting ? "PRZYGOTOWUJĘ PŁATNOŚĆ..." : "ZAPŁAĆ I PRZEJDŹ PRÓG"}{" "}
               {!submitting && <ArrowRight className="h-4 w-4" />}
