@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useParams } from "react-router-dom";
 import { base44 } from "@/api/base44Client";
 import Logo from "@/components/exmortis/Logo";
 import ProductsManager from "@/components/admin/ProductsManager";
@@ -10,22 +10,30 @@ import QuizStatsPanel from "@/components/admin/QuizStatsPanel";
 import SilenceManager from "@/components/admin/SilenceManager";
 import SilenceStatsPanel from "@/components/admin/SilenceStatsPanel";
 import EventsManager from "@/components/admin/EventsManager";
-import { ShieldAlert, Package, Mail, LogOut, LayoutList, Plug, ClipboardList, Moon, CalendarDays } from "lucide-react";
+import AdminDashboard from "@/components/admin/AdminDashboard";
+import ContactsPanel from "@/components/admin/ContactsPanel";
+import PlaylistManager from "@/components/exmortis/glos/PlaylistManager";
+import { ShieldAlert, LogOut, ArrowLeft } from "lucide-react";
 
-const tabBtn = (active) =>
-  `inline-flex items-center gap-2 px-6 py-3 technical text-[10px] border transition-colors ${
-    active ? "border-[#C9A24A] gold-text bg-[#C9A24A]/5" : "hairline text-foreground/50 hover:text-foreground"
-  }`;
+const SECTIONS = {
+  spotkania: ["Spotkania", () => <EventsManager />],
+  cisza: ["Minutnik ciszy", () => <div className="space-y-16"><SilenceManager /><SilenceStatsPanel /></div>],
+  skarbiec: ["Skarbiec", () => <ProductsManager />],
+  statystyki: ["Statystyki", () => <div className="space-y-16"><SilenceStatsPanel /><QuizStatsPanel /></div>],
+  glos: ["Głos", () => <PlaylistManager onMutate={() => {}} />],
+  kontakty: ["Baza kontaktów", () => <ContactsPanel />],
+  newsletter: ["Newsletter i subskrybenci", () => <NewsletterManager />],
+  tresci: ["Treści stron", () => <ContentManager />],
+  integracje: ["Integracje", () => <IntegrationsManager />],
+  testy: ["Wyniki testu", () => <QuizStatsPanel />],
+};
 
 export default function Admin() {
+  const { section } = useParams();
   const [me, setMe] = useState(undefined);
-  const [tab, setTab] = useState("produkty");
 
   useEffect(() => {
-    base44.auth
-      .me()
-      .then((u) => setMe(u))
-      .catch(() => setMe(null));
+    base44.auth.me().then(setMe).catch(() => setMe(null));
   }, []);
 
   if (me === undefined) {
@@ -38,84 +46,45 @@ export default function Admin() {
 
   if (!me || me.role !== "admin") {
     return (
-      <div className="min-h-screen flex flex-col items-center justify-center pt-20 gap-6 px-5 text-center">
+      <div className="min-h-screen flex flex-col items-center justify-center gap-6 px-5 text-center">
         <ShieldAlert className="h-12 w-12 blood-text" />
-        <p className="relic-heading text-3xl">Strefa administratora</p>
-        <p className="text-foreground/50 max-w-sm">
-          {me
-            ? "To konto nie ma uprawnień administratora."
-            : "Zaloguj się kontem administratora, by wejść do zaplecza."}
-        </p>
-        {!me && (
-          <Link to="/login?returnTo=%2Fadmin" className="btn-relic">
-            ZALOGUJ SIĘ
-          </Link>
-        )}
+        <p className="relic-heading text-3xl">Nie masz dostępu</p>
+        <p className="text-foreground/50 max-w-sm">Ta część strony jest dostępna tylko dla administratora.</p>
+        <Link to="/" className="btn-relic">STRONA GŁÓWNA</Link>
       </div>
     );
   }
 
+  const current = section ? SECTIONS[section] : null;
+
   return (
-    <div className="min-h-screen bg-[#0A0A0B] pt-24 pb-20 px-5 md:px-10">
+    <div className="min-h-screen bg-[#0A0A0B] pt-16 pb-20 px-5 md:px-10">
       <div className="mx-auto max-w-[1400px]">
         <header className="flex flex-col md:flex-row md:items-center justify-between gap-6 pb-10 border-b hairline">
           <div className="flex items-center gap-4">
             <Logo className="h-14 w-14" glow={false} />
             <div>
               <p className="technical text-[10px] gold-text mb-1">ZAPLECZE</p>
-              <h1 className="relic-heading text-3xl">Administrator</h1>
+              <h1 className="relic-heading text-3xl">{current ? current[0] : "Pulpit"}</h1>
             </div>
           </div>
           <div className="flex items-center gap-4">
             <span className="technical text-[10px] text-foreground/40">{me.email}</span>
-            <button onClick={() => base44.auth.logout()} className="btn-ghost !px-4 !py-2">
+            <button onClick={() => base44.auth.logout("/")} className="btn-ghost !px-4 !py-2">
               <LogOut className="h-4 w-4" /> WYLOGUJ
             </button>
           </div>
         </header>
 
-        <nav className="flex flex-wrap gap-2 mt-8 mb-10">
-          <button onClick={() => setTab("produkty")} className={tabBtn(tab === "produkty")}>
-            <Package className="h-4 w-4" /> PRODUKTY
-          </button>
-          <button onClick={() => setTab("newsletter")} className={tabBtn(tab === "newsletter")}>
-            <Mail className="h-4 w-4" /> NEWSLETTER I SUBSKRYBENCI
-          </button>
-          <button onClick={() => setTab("testy")} className={tabBtn(tab === "testy")}>
-            <ClipboardList className="h-4 w-4" /> WYNIKI TESTU
-          </button>
-          <button onClick={() => setTab("tresci")} className={tabBtn(tab === "tresci")}>
-            <LayoutList className="h-4 w-4" /> TREŚCI STRON
-          </button>
-          <button onClick={() => setTab("integracje")} className={tabBtn(tab === "integracje")}>
-            <Plug className="h-4 w-4" /> INTEGRACJE
-          </button>
-          <button onClick={() => setTab("cisza")} className={tabBtn(tab === "cisza")}>
-            <Moon className="h-4 w-4" /> MINUTNIK CISZY
-          </button>
-          <button onClick={() => setTab("spotkania")} className={tabBtn(tab === "spotkania")}>
-            <CalendarDays className="h-4 w-4" /> SPOTKANIA
-          </button>
-        </nav>
-
-        {tab === "produkty" ? (
-          <ProductsManager />
-        ) : tab === "newsletter" ? (
-          <NewsletterManager />
-        ) : tab === "testy" ? (
-          <QuizStatsPanel />
-        ) : tab === "integracje" ? (
-          <IntegrationsManager />
-        ) : tab === "cisza" ? (
-          <div className="space-y-16">
-            <SilenceManager />
-            <SilenceStatsPanel />
-          </div>
-        ) : tab === "spotkania" ? (
-          <EventsManager />
-        ) : (
-          <ContentManager />
+        {section && (
+          <Link to="/admin" className="inline-flex items-center gap-2 technical text-[10px] text-foreground/50 hover:gold-text mt-8">
+            <ArrowLeft className="h-4 w-4" /> PULPIT
+          </Link>
         )}
+
+        <div className="mt-10">
+          {!section ? <AdminDashboard /> : current ? current[1]() : <p className="text-foreground/50">Nie ma takiej sekcji.</p>}
+        </div>
       </div>
     </div>
   );

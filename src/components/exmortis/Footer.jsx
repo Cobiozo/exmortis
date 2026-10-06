@@ -59,6 +59,7 @@ export default function Footer() {
             </p>
             <p className="technical text-[10px] text-foreground/30">
               WRACAM Z SIEBIE · UCZĘ WRACAĆ
+              <Link to="/login?returnTo=%2Fadmin" className="ml-4 text-foreground/25 hover:text-foreground/50">ZALOGUJ</Link>
             </p>
           </div>
         </div>

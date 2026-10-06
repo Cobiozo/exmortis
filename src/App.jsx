@@ -28,6 +28,8 @@ import ProtectedRoute from '@/components/ProtectedRoute';
 import { SiteContentProvider } from '@/components/exmortis/SiteContentProvider';
 import { Navigate } from 'react-router-dom';
 import PrivacyPolicy from '@/pages/PrivacyPolicy';
+import { AdminModeProvider } from '@/components/admin/AdminModeContext';
+import AdminBar from '@/components/admin/AdminBar';
 // Add page imports here
 
 const AuthenticatedApp = () => {
@@ -56,6 +58,8 @@ const AuthenticatedApp = () => {
   // Render the main app
   return (
     <CartProvider>
+      <AdminModeProvider>
+      <AdminBar />
       <SiteContentProvider>
       <Routes>
         <Route path="/login" element={<Login />} />
@@ -64,6 +68,7 @@ const AuthenticatedApp = () => {
         <Route path="/reset-password" element={<ResetPassword />} />
         <Route element={<ProtectedRoute unauthenticatedElement={<Navigate to="/login" replace />} />}>
           <Route path="/admin" element={<Admin />} />
+          <Route path="/admin/:section" element={<Admin />} />
         </Route>
         <Route path="/cisza" element={<Cisza />} />
         <Route element={<Layout />}>
@@ -83,6 +88,7 @@ const AuthenticatedApp = () => {
         <Route path="*" element={<PageNotFound />} />
       </Routes>
       </SiteContentProvider>
+      </AdminModeProvider>
     </CartProvider>
   );
 };

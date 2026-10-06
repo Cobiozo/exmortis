@@ -3,6 +3,7 @@ import { Link, useLocation, useNavigate } from "react-router-dom";
 import { Menu, X, ShoppingBag } from "lucide-react";
 import { useCart } from "./CartContext";
 import Logo from "./Logo";
+import { useAdminMode } from "@/components/admin/AdminModeContext";
 
 const NAV = [
   { label: "O mnie", to: "/o-mnie" },
@@ -19,6 +20,7 @@ export default function Navbar() {
   const [scrolled, setScrolled] = useState(false);
   const [mobile, setMobile] = useState(false);
   const { count, setOpen } = useCart();
+  const { adminView } = useAdminMode();
   const location = useLocation();
   const navigate = useNavigate();
 
@@ -54,7 +56,7 @@ export default function Navbar() {
   return (
     <>
       <header
-        className={`fixed top-0 inset-x-0 z-50 transition-all duration-500 ${
+        className={`fixed ${adminView ? "top-8" : "top-0"} inset-x-0 z-50 transition-all duration-500 ${
           scrolled
             ? "bg-[#0A0A0B]/90 backdrop-blur-md border-b hairline"
             : "bg-transparent"
