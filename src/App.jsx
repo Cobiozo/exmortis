@@ -31,6 +31,7 @@ import PrivacyPolicy from '@/pages/PrivacyPolicy';
 import { AdminModeProvider } from '@/components/admin/AdminModeContext';
 import AdminBar from '@/components/admin/AdminBar';
 import Account from '@/pages/Account';
+import CoursePlayer from '@/pages/CoursePlayer';
 // Add page imports here
 
 const AuthenticatedApp = () => {
@@ -72,6 +73,7 @@ const AuthenticatedApp = () => {
           <Route path="/admin/:section" element={<Admin />} />
           <Route element={<Layout />}>
             <Route path="/konto" element={<Account />} />
+            <Route path="/konto/kurs/:accessId" element={<CoursePlayer />} />
           </Route>
         </Route>
         <Route path="/cisza" element={<Cisza />} />

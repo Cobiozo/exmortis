@@ -4,6 +4,7 @@ import { Image } from "@/components/ui/image";
 import { ArrowLeft, Plus, Trash2, Upload } from "lucide-react";
 import RichTextEditor from "./RichTextEditor";
 import ProductAccessFields from "./ProductAccessFields";
+import LessonsManager from "./course/LessonsManager";
 
 const CATEGORIES = ["ebook", "warsztat", "mentoring", "mastermind", "retreat", "darmowe"];
 const LEVELS = [
@@ -399,6 +400,11 @@ export default function ProductEditor({ product, onSaved, onCancel }) {
       </div>
 
       <ProductAccessFields form={form} set={set} />
+      {(form.product_type === "wideo" || form.product_type === "kurs") && (
+        product?.id ? <LessonsManager productId={product.id} /> : (
+          <p className="mb-10 text-sm text-foreground/50">Zapisz produkt, a potem dodasz lekcje i wideo.</p>
+        )
+      )}
 
       {/* ===== PLIK DO POBRANIA ===== */}
       <p className="technical text-[10px] gold-text mb-6">PLIK DO POBRANIA (BEZPŁATNE MATERIAŁY)</p>
