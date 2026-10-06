@@ -6,6 +6,7 @@ import { ArrowRight, Check } from "lucide-react";
 import { useCart } from "@/components/exmortis/CartContext";
 import { base44 } from "@/api/base44Client";
 import NewsletterConsent from "@/components/exmortis/shop/NewsletterConsent";
+import DiscountField from "@/components/exmortis/shop/DiscountField";
 
 export default function Checkout() {
   const { items, total, clear } = useCart();
@@ -19,6 +20,7 @@ export default function Checkout() {
   const [newsletterConsent, setNewsletterConsent] = useState(false);
   const [digitalConsent, setDigitalConsent] = useState(false);
   const [payError, setPayError] = useState("");
+  const [discount, setDiscount] = useState(null);
   const { user } = useAuth();
   useEffect(() => {
     if (user) setForm((f) => ({ ...f, name: f.name || user.imie || user.full_name || "", email: f.email || user.email }));
@@ -36,6 +38,7 @@ export default function Checkout() {
         newsletter_consent: newsletterConsent,
         digital_consent: digitalConsent,
         items: items.map((it) => ({ id: it.id, qty: it.qty })),
+        code: discount?.code || "",
       });
       clear();
       window.location.href = res.data.redirectUri;
@@ -163,9 +166,12 @@ export default function Checkout() {
                   </div>
                 </div>
               ))}
+              <div className="pt-4 border-t hairline">
+                <DiscountField items={items} applied={discount} onApply={setDiscount} />
+              </div>
               <div className="pt-4 border-t hairline flex justify-between items-center">
                 <span className="technical text-[11px] text-foreground/60">RAZEM</span>
-                <span className="font-mono text-2xl gold-text">{total} zł</span>
+                <span className="font-mono text-2xl gold-text">{discount ? (total - discount.discount).toFixed(2) : total} zł</span>
               </div>
             </div>
           </div>

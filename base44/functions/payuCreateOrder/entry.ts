@@ -1,4 +1,5 @@
 import { createClientFromRequest } from "npm:@base44/sdk@0.8.44";
+import { applyDiscount } from "../../shared/discounts.ts";
 import { runSql, escStr, textField, emailField } from "../../shared/supabase.ts";
 import { getSetting } from "../../shared/settings.ts";
 import { insertOrder } from "../../shared/orders.ts";
@@ -53,6 +54,15 @@ export default async function (req) {
       totalGrosze += unit * qty;
       products.push({ name: String(p.name).slice(0, 150), unitPrice: String(unit), quantity: qty });
       stored.push({ product_id: String(p.id), name: String(p.name).slice(0, 150), unitPrice: String(unit), quantity: qty });
+    }
+    const disc = await applyDiscount(base44, body.code, stored.map((s) => ({
+      product_id: s.product_id, unit: Number(s.unitPrice), qty: s.quantity,
+    })));
+    if (disc) {
+      totalGrosze -= disc.discount;
+      // PayU wymaga zgodności sumy pozycji z kwotą — jedna pozycja zbiorcza.
+      products.length = 0;
+      products.push({ name: `EXMORTIS — zamówienie (kod ${disc.code})`, unitPrice: String(totalGrosze), quantity: 1 });
     }
     if (totalGrosze < 100) throw new Error("Kwota zamówienia jest zbyt niska dla PayU");
 
@@ -111,13 +121,17 @@ export default async function (req) {
       payuOrderId: String(data.orderId || ""),
       buyerName,
       buyerEmail,
-      note,
+      note: disc ? `${note}${note ? "\n" : ""}Kod rabatowy: ${disc.code} (−${(disc.discount / 100).toFixed(2)} zł)` : note,
       items: stored,
       total: totalGrosze / 100,
       status: "PENDING",
       newsletterConsent,
       digitalConsent: hasDigital ? DIGITAL_CONSENT : null,
     });
+
+    if (disc) {
+      await base44.asServiceRole.entities.DiscountCode.update(disc.record.id, { uses: (disc.record.uses || 0) + 1 });
+    }
 
     if (newsletterConsent) {
       await addSubscriber(base44, { email: buyerEmail, name: buyerName, consentGiven: true });

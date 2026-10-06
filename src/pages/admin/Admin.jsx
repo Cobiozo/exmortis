@@ -13,6 +13,7 @@ import EventsManager from "@/components/admin/EventsManager";
 import AdminDashboard from "@/components/admin/AdminDashboard";
 import ContactsPanel from "@/components/admin/ContactsPanel";
 import ClientsPanel from "@/components/admin/clients/ClientsPanel";
+import DiscountsPanel from "@/components/admin/DiscountsPanel";
 import PlaylistManager from "@/components/exmortis/glos/PlaylistManager";
 import { ShieldAlert, LogOut, ArrowLeft } from "lucide-react";
 
@@ -24,6 +25,7 @@ const SECTIONS = {
   glos: ["Głos", () => <PlaylistManager onMutate={() => {}} />],
   kontakty: ["Baza kontaktów", () => <ContactsPanel />],
   klienci: ["Klienci i dostępy", () => <ClientsPanel />],
+  rabaty: ["Kody rabatowe", () => <DiscountsPanel />],
   newsletter: ["Newsletter i subskrybenci", () => <NewsletterManager />],
   tresci: ["Treści stron", () => <ContentManager />],
   integracje: ["Integracje", () => <IntegrationsManager />],

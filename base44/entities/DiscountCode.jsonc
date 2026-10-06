@@ -1,0 +1,68 @@
+{
+  "name": "DiscountCode",
+  "type": "object",
+  "properties": {
+    "code": {
+      "type": "string"
+    },
+    "kind": {
+      "type": "string",
+      "enum": [
+        "procent",
+        "kwota"
+      ],
+      "default": "procent"
+    },
+    "value": {
+      "type": "number"
+    },
+    "valid_until": {
+      "type": "string",
+      "format": "date"
+    },
+    "max_uses": {
+      "type": "number"
+    },
+    "uses": {
+      "type": "number",
+      "default": 0
+    },
+    "product_ids": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "active": {
+      "type": "boolean",
+      "default": true
+    }
+  },
+  "required": [
+    "code",
+    "kind",
+    "value"
+  ],
+  "rls": {
+    "read": {
+      "user_condition": {
+        "role": "admin"
+      }
+    },
+    "create": {
+      "user_condition": {
+        "role": "admin"
+      }
+    },
+    "update": {
+      "user_condition": {
+        "role": "admin"
+      }
+    },
+    "delete": {
+      "user_condition": {
+        "role": "admin"
+      }
+    }
+  }
+}
