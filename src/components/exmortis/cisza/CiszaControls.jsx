@@ -1,0 +1,72 @@
+import React, { useState } from "react";
+import { Volume2, VolumeX, Music, Pause, Play, X, Sun } from "lucide-react";
+import BgList from "./BgList";
+import { isIOS } from "./audioEngine";
+
+const ico = "h-5 w-5";
+const btn = "p-3 text-[#C9A24A] hover:text-[#E2C170] disabled:opacity-30 disabled:cursor-not-allowed";
+
+// Dyskretny pasek sterowania na dole ekranu.
+export default function CiszaControls({
+  visible, reduced, hasSound, muted, onMute, volume, onVolume, tracks, bgId, onBg,
+  paused, onPause, onEnd, canPause, wake, onWake,
+}) {
+  const [panel, setPanel] = useState(null);
+  const ios = isIOS();
+  const coarse = typeof window !== "undefined" && window.matchMedia("(pointer: coarse)").matches;
+  const toggle = (p) => setPanel((c) => (c === p ? null : p));
+
+  const slider = ios ? (
+    <span className="text-xs text-foreground/45">Głośność ustawisz przyciskami telefonu</span>
+  ) : (
+    <input
+      type="range" min="0" max="100" value={volume} aria-label="Głośność"
+      onChange={(e) => onVolume(Number(e.target.value))}
+      className="w-32 accent-[#C9A24A]"
+    />
+  );
+
+  return (
+    <div
+      className="fixed bottom-0 inset-x-0 pb-6 px-4 flex flex-col items-center gap-3 transition-opacity"
+      style={{ opacity: visible ? 1 : 0, pointerEvents: visible ? "auto" : "none", transitionDuration: reduced ? "0ms" : "700ms" }}
+    >
+      {panel === "bg" && <BgList tracks={tracks} value={bgId} onChange={(id) => { onBg(id); setPanel(null); }} />}
+      {panel === "vol" && (
+        <div className="flex items-center gap-3 border border-[#C9A24A]/30 bg-[#0A0A0B] px-4 py-3">
+          <button onClick={onMute} className={btn} aria-label={muted ? "Włącz dźwięk" : "Wycisz dźwięk"}>
+            {muted ? <VolumeX className={ico} strokeWidth={1.25} /> : <Volume2 className={ico} strokeWidth={1.25} />}
+          </button>
+          {slider}
+        </div>
+      )}
+      <div className="flex items-center gap-1 border border-[#C9A24A]/20 bg-[#0A0A0B]/80 px-2">
+        <button
+          disabled={!hasSound}
+          title={hasSound ? undefined : "Dla tego czasu nie ma jeszcze dźwięku"}
+          onClick={() => (coarse ? toggle("vol") : onMute())}
+          className={btn}
+          aria-label={!hasSound ? "Dla tego czasu nie ma jeszcze dźwięku" : muted ? "Włącz dźwięk" : "Wycisz dźwięk"}
+        >
+          {muted || !hasSound ? <VolumeX className={ico} strokeWidth={1.25} /> : <Volume2 className={ico} strokeWidth={1.25} />}
+        </button>
+        {hasSound && !coarse && <span className="hidden md:inline-flex pr-2">{slider}</span>}
+        <button disabled={!hasSound} onClick={() => toggle("bg")} className={btn} aria-label="Zmień tło dźwiękowe">
+          <Music className={ico} strokeWidth={1.25} />
+        </button>
+        <button disabled={!canPause} onClick={onPause} className={btn} aria-label={paused ? "Wznów" : "Pauza"}>
+          {paused ? <Play className={ico} strokeWidth={1.25} /> : <Pause className={ico} strokeWidth={1.25} />}
+        </button>
+        {"wakeLock" in navigator && (
+          <button onClick={onWake} className={`${btn} ${wake ? "" : "opacity-40"}`} aria-pressed={wake} aria-label="Nie wygaszaj ekranu">
+            <Sun className={ico} strokeWidth={1.25} />
+          </button>
+        )}
+        <button onClick={onEnd} className={btn} aria-label="Zakończ">
+          <X className={ico} strokeWidth={1.25} />
+        </button>
+      </div>
+      {!hasSound && <p className="text-xs text-foreground/35">Dla tego czasu nie ma jeszcze dźwięku</p>}
+    </div>
+  );
+}

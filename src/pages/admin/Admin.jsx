@@ -7,7 +7,7 @@ import NewsletterManager from "@/components/admin/NewsletterManager";
 import ContentManager from "@/components/admin/ContentManager";
 import IntegrationsManager from "@/components/admin/IntegrationsManager";
 import QuizStatsPanel from "@/components/admin/QuizStatsPanel";
-import SilenceManager from "@/components/admin/SilenceManager";
+import SilencePanel from "@/components/admin/silence/SilencePanel";
 import SilenceStatsPanel from "@/components/admin/SilenceStatsPanel";
 import EventsManager from "@/components/admin/EventsManager";
 import AdminDashboard from "@/components/admin/AdminDashboard";
@@ -17,7 +17,7 @@ import { ShieldAlert, LogOut, ArrowLeft } from "lucide-react";
 
 const SECTIONS = {
   spotkania: ["Spotkania", () => <EventsManager />],
-  cisza: ["Minutnik ciszy", () => <div className="space-y-16"><SilenceManager /><SilenceStatsPanel /></div>],
+  cisza: ["Cisza", () => <SilencePanel />],
   skarbiec: ["Skarbiec", () => <ProductsManager />],
   statystyki: ["Statystyki", () => <div className="space-y-16"><SilenceStatsPanel /><QuizStatsPanel /></div>],
   glos: ["Głos", () => <PlaylistManager onMutate={() => {}} />],

@@ -41,6 +41,28 @@ export default async function (req) {
       return Response.json({ ok: true });
     }
 
+    if (body.action === "stats30") {
+      const [rows, silent] = await Promise.all([
+        runSql(
+          base44,
+          `SELECT duration_minutes, COALESCE(soundtrack, '(bez muzyki)') AS soundtrack,
+                  COUNT(*)::int AS started,
+                  SUM(CASE WHEN completed THEN 1 ELSE 0 END)::int AS completed
+           FROM public.silence_sessions
+           WHERE created_at >= now() - interval '30 days'
+           GROUP BY 1, 2 ORDER BY 1, 3 DESC`,
+          true
+        ),
+        runSql(
+          base44,
+          `SELECT COUNT(*)::int AS n FROM public.silence_sessions
+           WHERE created_at >= now() - interval '30 days' AND COALESCE(with_sound, false) = false`,
+          true
+        ),
+      ]);
+      return Response.json({ rows, silent: silent?.[0]?.n || 0 });
+    }
+
     if (body.action === "stats") {
       const [totals, durations, days, weeks, sources] = await Promise.all([
         runSql(

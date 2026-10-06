@@ -2,6 +2,7 @@ import React, { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { base44 } from "@/api/base44Client";
 import { useAdminMode } from "@/components/admin/AdminModeContext";
+import { countWarnings } from "@/components/admin/silence/silenceUtils";
 
 function Tile({ to, label, title, lines, onClick }) {
   const Inner = (
@@ -26,13 +27,15 @@ export default function AdminDashboard() {
   }, []);
 
   const v = (k) => (s ? s[k] ?? 0 : "…");
-  const sil = s?.silence || {};
-  const tracks = ["intro_uri", "outro_uri", "background_uri"].filter((k) => sil[k]).length;
+  const [sound, setSound] = useState(null);
+  useEffect(() => {
+    base44.entities.SilenceSoundtrack.filter({}, { limit: 200 }).then((p) => setSound(p.items));
+  }, []);
 
   return (
     <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
       <Tile to="/admin/spotkania" label="01" title="Spotkania" lines={[`Nadchodzące: ${v("upcoming_events")}`, `Zapisani: ${v("upcoming_registrations")}`, `Szkice: ${v("draft_events")}`]} />
-      <Tile to="/admin/cisza" label="02" title="Cisza" lines={[`Podkłady: ${s ? tracks : "…"} / 3`, `Ostrzeżenia: ${s ? 3 - tracks : "…"}`]} />
+      <Tile to="/admin/cisza" label="02" title="Cisza" lines={[`Podkłady: ${sound ? sound.length : "…"}`, `Ostrzeżenia: ${sound ? countWarnings(sound) : "…"}`, `Rozpoczęcia (30 dni): ${v("silence_30")}`]} />
       <Tile to="/admin/skarbiec" label="03" title="Skarbiec" lines={[`Dostępne: ${v("products_available")}`, `Wkrótce: ${v("products_soon")}`, `Ukryte: ${v("products_hidden")}`]} />
       <Tile to="/admin/statystyki" label="04" title="Statystyki" lines={["Ostatnie 30 dni:", `Zapisy: ${v("reg_30")}`, `Pobrania: ${v("downloads_30")}`, `Rozpoczęcia ciszy: ${v("silence_30")}`]} />
       <Tile to="/admin/glos" label="05" title="Głos" lines={["Utwory i podcasty"]} />

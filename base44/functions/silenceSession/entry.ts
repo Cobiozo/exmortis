@@ -1,10 +1,9 @@
 import { createClientFromRequest } from "npm:@base44/sdk@0.8.44";
 import { runSql, escStr, esc } from "../../shared/supabase.ts";
 
-const MINUTES = [3, 5, 10, 15, 30, 60];
-const SOUND_OPTIONS = ["cisza", "glos", "muzyka"];
+const MINUTES = [5, 10, 15, 30, 45, 60];
 
-// Publiczny, anonimowy zapis jednej sesji ciszy (bez danych osobowych).
+// Publiczny, anonimowy zapis zdarzenia ciszy: cisza_start / cisza_ukonczona (bez danych osobowych).
 export default async function (req) {
   try {
     const base44 = createClientFromRequest(req);
@@ -14,18 +13,26 @@ export default async function (req) {
     if (!MINUTES.includes(minutes)) {
       return Response.json({ error: "Niepoprawny czas" }, { status: 400 });
     }
-    const sound = SOUND_OPTIONS.includes(body.sound_option) ? body.sound_option : "cisza";
-    const source =
-      typeof body.source === "string" && body.source.trim() !== ""
-        ? escStr(body.source.trim().slice(0, 100))
-        : "NULL";
+    const withSound = !!body.with_sound;
+    const str = (v) =>
+      typeof v === "string" && v.trim() !== "" ? escStr(v.trim().slice(0, 100)) : "NULL";
 
-    await runSql(
+    if (body.event === "cisza_ukonczona" && typeof body.session_id === "string") {
+      await runSql(
+        base44,
+        `UPDATE public.silence_sessions SET completed = true
+         WHERE id::text = ${escStr(body.session_id.slice(0, 64))}`
+      );
+      return Response.json({ ok: true });
+    }
+
+    const rows = await runSql(
       base44,
-      `INSERT INTO public.silence_sessions (duration_minutes, completed, sound_option, source)
-       VALUES (${minutes}, ${esc(!!body.completed)}, ${escStr(sound)}, ${source})`
+      `INSERT INTO public.silence_sessions (duration_minutes, completed, sound_option, source, soundtrack, with_sound)
+       VALUES (${minutes}, false, ${escStr(withSound ? "muzyka" : "cisza")}, ${str(body.source)}, ${str(body.soundtrack)}, ${esc(withSound)})
+       RETURNING id`
     );
-    return Response.json({ ok: true });
+    return Response.json({ ok: true, session_id: rows?.[0]?.id ? String(rows[0].id) : null });
   } catch (error) {
     return Response.json({ error: error.message }, { status: 500 });
   }

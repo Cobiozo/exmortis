@@ -1,0 +1,44 @@
+{
+  "name": "SilenceSettings",
+  "type": "object",
+  "properties": {
+    "glosnosc_domyslna": {
+      "type": "number",
+      "default": 60
+    },
+    "dzwiek_domyslnie": {
+      "type": "string",
+      "enum": [
+        "wlaczony",
+        "wyciszony"
+      ],
+      "default": "wlaczony"
+    },
+    "wyciszanie_melodii_s": {
+      "type": "number",
+      "default": 3
+    },
+    "tekst_na_koniec": {
+      "type": "string",
+      "default": "Ta cisza by\u0142a Twoja."
+    }
+  },
+  "rls": {
+    "read": {},
+    "create": {
+      "user_condition": {
+        "role": "admin"
+      }
+    },
+    "update": {
+      "user_condition": {
+        "role": "admin"
+      }
+    },
+    "delete": {
+      "user_condition": {
+        "role": "admin"
+      }
+    }
+  }
+}

@@ -1,0 +1,96 @@
+{
+  "name": "SilenceSoundtrack",
+  "type": "object",
+  "properties": {
+    "nazwa": {
+      "type": "string"
+    },
+    "czas_min": {
+      "type": "number",
+      "enum": [
+        5,
+        10,
+        15,
+        30,
+        45,
+        60
+      ]
+    },
+    "plik_wstep": {
+      "type": "string"
+    },
+    "plik_wstep_nazwa": {
+      "type": "string"
+    },
+    "plik_melodia": {
+      "type": "string"
+    },
+    "plik_melodia_nazwa": {
+      "type": "string"
+    },
+    "plik_zakonczenie": {
+      "type": "string"
+    },
+    "plik_zakonczenie_nazwa": {
+      "type": "string"
+    },
+    "zapetlaj_melodie": {
+      "type": "boolean",
+      "default": true
+    },
+    "domyslny": {
+      "type": "boolean",
+      "default": false
+    },
+    "aktywny": {
+      "type": "boolean",
+      "default": true
+    },
+    "kolejnosc": {
+      "type": "number",
+      "default": 0
+    },
+    "dlugosc_wstep_s": {
+      "type": "number"
+    },
+    "dlugosc_melodia_s": {
+      "type": "number"
+    },
+    "dlugosc_zakonczenie_s": {
+      "type": "number"
+    }
+  },
+  "required": [
+    "nazwa",
+    "czas_min"
+  ],
+  "rls": {
+    "read": {
+      "$or": [
+        {
+          "data.aktywny": true
+        },
+        {
+          "user_condition": {
+            "role": "admin"
+          }
+        }
+      ]
+    },
+    "create": {
+      "user_condition": {
+        "role": "admin"
+      }
+    },
+    "update": {
+      "user_condition": {
+        "role": "admin"
+      }
+    },
+    "delete": {
+      "user_condition": {
+        "role": "admin"
+      }
+    }
+  }
+}
