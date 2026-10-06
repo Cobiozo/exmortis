@@ -1,26 +1,69 @@
 import React, { useEffect, useRef, useState } from "react";
-import { Loader2, Check } from "lucide-react";
+import { Loader2, Check, Maximize, Minimize } from "lucide-react";
 import { base44 } from "@/api/base44Client";
 import { useAuth } from "@/lib/AuthContext";
+import Watermark from "./Watermark";
+import { watermarkOk } from "./watermarkGuard";
 
-// Odtwarzacz lekcji: podpisany link, bez pobierania, znak wodny z e-mailem, zapis postępu.
+const SESSION = crypto.randomUUID();
+
+// Odtwarzacz lekcji: link 60 min (odświeżany), znak wodny z kontrolą integralności, jedno odtwarzanie naraz.
 export default function LessonPlayer({ accessId, lesson, onDone }) {
   const { user } = useAuth();
   const ref = useRef(null);
+  const box = useRef(null);
   const lastSave = useRef(0);
-  const [url, setUrl] = useState(null);
+  const resumeAt = useRef(null);
+  const [src, setSrc] = useState(null);
   const [err, setErr] = useState("");
   const [done, setDone] = useState(lesson.completed);
+  const [full, setFull] = useState(false);
+  const [stamp] = useState(() => new Date().toLocaleString("pl-PL"));
+
+  const call = (action, extra = {}) =>
+    base44.functions.invoke("course", { action, access_id: accessId, lesson_id: lesson.id, session_id: SESSION, ...extra });
+
+  const loadUrl = () => call("play").then((r) => setSrc(r.data))
+    .catch((e) => setErr(e?.response?.data?.error || "Wideo nie chce się wczytać. Spróbuj za chwilę."));
+
+  useEffect(() => { if (lesson.has_video) loadUrl(); }, [lesson.id]);
+
+  // Link wygasa po 60 min — odświeżamy co 50 min, zachowując pozycję.
+  useEffect(() => {
+    if (!src) return;
+    const t = setTimeout(() => { resumeAt.current = ref.current?.currentTime || 0; loadUrl(); }, 50 * 60000);
+    return () => clearTimeout(t);
+  }, [src]);
+
+  // Kontrola znaku wodnego co 3 s.
+  useEffect(() => {
+    if (!src) return;
+    const t = setInterval(() => {
+      if (!watermarkOk(box.current) && ref.current && !ref.current.paused) {
+        ref.current.pause();
+        setErr("Odtwarzanie wstrzymane. Odśwież stronę.");
+        call("violation");
+      }
+    }, 3000);
+    return () => clearInterval(t);
+  }, [src]);
 
   useEffect(() => {
-    if (!lesson.has_video) return;
-    base44.functions.invoke("course", { action: "play", access_id: accessId, lesson_id: lesson.id })
-      .then((r) => setUrl(r.data.url))
-      .catch((e) => setErr(e?.response?.data?.error || "Wideo nie chce się wczytać. Spróbuj za chwilę."));
-  }, [lesson.id]);
+    const h = () => setFull(document.fullscreenElement === box.current);
+    document.addEventListener("fullscreenchange", h);
+    return () => document.removeEventListener("fullscreenchange", h);
+  }, []);
+
+  const toggleFull = () => {
+    if (box.current.requestFullscreen && !navigator.userAgent.match(/iPhone/)) {
+      document.fullscreenElement ? document.exitFullscreen() : box.current.requestFullscreen();
+    } else setFull((f) => !f);
+  };
 
   const send = (extra = {}) =>
-    base44.functions.invoke("course", { action: "progress", access_id: accessId, lesson_id: lesson.id, position_s: ref.current?.currentTime || 0, ...extra });
+    call("progress", { position_s: ref.current?.currentTime || 0, ...extra }).then((r) => {
+      if (r.data?.stopped) { ref.current?.pause(); setSrc(null); setErr("Oglądasz teraz na innym urządzeniu."); }
+    });
 
   const onTime = () => {
     const v = ref.current;
@@ -28,21 +71,32 @@ export default function LessonPlayer({ accessId, lesson, onDone }) {
     if (!done && v.duration && v.currentTime / v.duration > 0.9) { setDone(true); onDone(lesson.id); send({ completed: true }); }
   };
 
+  const fakeFull = full && !document.fullscreenElement;
+
   return (
     <div>
-      <div className="relative aspect-video bg-black border hairline" onContextMenu={(e) => e.preventDefault()}>
+      <div ref={box} className={`relative bg-black border hairline overflow-hidden ${fakeFull ? "fixed inset-0 z-[100]" : full ? "" : "aspect-video"}`} onContextMenu={(e) => e.preventDefault()}>
         {!lesson.has_video ? (
           <p className="absolute inset-0 flex items-center justify-center text-sm text-foreground/50">Wideo jest przygotowywane.</p>
         ) : err ? (
           <p className="absolute inset-0 flex items-center justify-center text-sm text-[#E8C547] px-6 text-center">{err}</p>
-        ) : !url ? (
+        ) : !src ? (
           <Loader2 className="absolute inset-0 m-auto h-6 w-6 animate-spin gold-text" />
         ) : (
-          <video ref={ref} src={url} controls controlsList="nodownload noplaybackrate" disablePictureInPicture playsInline className="w-full h-full"
-            onLoadedMetadata={(e) => { if (lesson.position_s && !lesson.completed) e.currentTarget.currentTime = lesson.position_s; }}
+          <video ref={ref} src={src.url} controls controlsList="nodownload nofullscreen noremoteplayback noplaybackrate" disablePictureInPicture disableRemotePlayback playsInline className="w-full h-full"
+            onLoadedMetadata={(e) => {
+              const at = resumeAt.current ?? (!lesson.completed ? lesson.position_s : 0);
+              if (at) e.currentTarget.currentTime = at;
+              if (resumeAt.current != null) { resumeAt.current = null; e.currentTarget.play().catch(() => {}); }
+            }}
             onTimeUpdate={onTime} onPause={() => send()} />
         )}
-        {url && user?.email && <span className="pointer-events-none absolute top-3 right-4 text-[10px] text-white/25 select-none">{user.email}</span>}
+        {src && !err && <Watermark text={`${user?.email || ""} · ${src.license} · ${stamp}`} />}
+        {src && !err && (
+          <button onClick={toggleFull} aria-label={full ? "Zamknij pełny ekran" : "Pełny ekran"} className="absolute top-3 right-3 z-30 p-2 bg-black/50 text-white/80 hover:text-white">
+            {full ? <Minimize className="h-4 w-4" /> : <Maximize className="h-4 w-4" />}
+          </button>
+        )}
       </div>
       <div className="mt-6 flex items-start justify-between gap-6">
         <h2 className="shop-heading text-2xl text-[#F5EFE1]">{lesson.title}</h2>

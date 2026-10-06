@@ -1,0 +1,41 @@
+import { getSetting } from "./settings.ts";
+import { sendMail } from "./smtp.ts";
+
+const MAX_PER_HOUR = 60;
+const MAX_IPS_24H = 3;
+export const BLOCK_MSG = "Wstrzymaliśmy odtwarzanie na tym koncie. Jeśli to pomyłka — napisz do nas.";
+
+// Zwraca komunikat błędu, jeśli odtwarzanie ma być zablokowane; inaczej null.
+export async function checkVideoAbuse(base44, email: string, ip: string) {
+  const sr = base44.asServiceRole.entities;
+  const now = new Date();
+  const block = await sr.SecurityLog.filter({ type: "blokada", user_email: email, resolved: false, until: { $gt: now.toISOString() } }, "-created_date", 1);
+  if (block.length) return BLOCK_MSG;
+
+  const hourAgo = new Date(now.getTime() - 3600000).toISOString();
+  const lastHour = await sr.PlaybackLog.filter({ user_email: email, created_date: { $gte: hourAgo } }, "-created_date", MAX_PER_HOUR + 1);
+  if (lastHour.length >= MAX_PER_HOUR) {
+    await sr.SecurityLog.create({ type: "wideo_limit", user_email: email, ip, details: `>${MAX_PER_HOUR} żądań/h` });
+    return "Zbyt wiele żądań. Spróbuj ponownie za godzinę.";
+  }
+
+  const dayAgo = new Date(now.getTime() - 86400000).toISOString();
+  const day = await sr.PlaybackLog.filter({ user_email: email, created_date: { $gte: dayAgo } }, "-created_date", 300);
+  const ips = new Set(day.map((r) => r.ip).filter(Boolean));
+  if (ip) ips.add(ip);
+  if (ips.size > MAX_IPS_24H) {
+    const until = new Date(now.getTime() + 86400000).toISOString();
+    const details = `${ips.size} różne sieci w 24 h: ${[...ips].join(", ")}`;
+    await sr.SecurityLog.create({ type: "blokada", user_email: email, ip, until, details, resolved: false });
+    const smtp = await getSetting(base44, "smtp").catch(() => null);
+    if (smtp?.adminEmail || smtp?.from) {
+      await sendMail(smtp, {
+        to: smtp.adminEmail || smtp.from,
+        subject: `exmortis: blokada wideo dla ${email}`,
+        html: `<p>Konto <b>${email}</b> zostało czasowo zablokowane (24 h).</p><p>${details}</p><p>Decyzja: panel admina → Bezpieczeństwo.</p>`,
+      }).catch(() => {});
+    }
+    return BLOCK_MSG;
+  }
+  return null;
+}

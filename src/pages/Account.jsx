@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { base44 } from "@/api/base44Client";
+import { useNoIndex } from "@/lib/useNoIndex";
 import MyProducts from "@/components/account/MyProducts";
 import MyOrders from "@/components/account/MyOrders";
 import AccountSettings from "@/components/account/AccountSettings";
@@ -8,6 +9,7 @@ const TABS = [["produkty", "Moje produkty"], ["zakupy", "Zakupy"], ["ustawienia"
 
 // /konto — tylko dla zalogowanych (ProtectedRoute).
 export default function Account() {
+  useNoIndex();
   const [tab, setTab] = useState("produkty");
   const [me, setMe] = useState(null);
   useEffect(() => { base44.auth.me().then(setMe); }, []);

@@ -1,0 +1,59 @@
+{
+  "name": "SecurityLog",
+  "type": "object",
+  "properties": {
+    "type": {
+      "type": "string",
+      "enum": [
+        "pdf",
+        "wideo_limit",
+        "blokada",
+        "znak_wodny",
+        "rabat",
+        "drugie_urzadzenie"
+      ]
+    },
+    "user_email": {
+      "type": "string"
+    },
+    "ip": {
+      "type": "string"
+    },
+    "details": {
+      "type": "string"
+    },
+    "until": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "resolved": {
+      "type": "boolean",
+      "default": false
+    }
+  },
+  "required": [
+    "type"
+  ],
+  "rls": {
+    "read": {
+      "user_condition": {
+        "role": "admin"
+      }
+    },
+    "create": {
+      "user_condition": {
+        "role": "admin"
+      }
+    },
+    "update": {
+      "user_condition": {
+        "role": "admin"
+      }
+    },
+    "delete": {
+      "user_condition": {
+        "role": "admin"
+      }
+    }
+  }
+}

@@ -7,6 +7,12 @@ export default async function (req) {
   try {
     const base44 = createClientFromRequest(req);
     const body = await req.json().catch(() => ({}));
+    // Limit: 10 prób na godzinę na IP.
+    const ip = (req.headers.get("x-forwarded-for") || "").split(",")[0].trim();
+    const L = base44.asServiceRole.entities.SecurityLog;
+    const tries = await L.filter({ type: "rabat", ip, created_date: { $gte: new Date(Date.now() - 3600000).toISOString() } }, "-created_date", 11);
+    if (tries.length >= 10) throw new Error("Zbyt wiele prób. Spróbuj za godzinę.");
+    await L.create({ type: "rabat", ip, details: String(body.code || "").slice(0, 40) });
     const items = Array.isArray(body.items) ? body.items.slice(0, 20) : [];
     const ids = [...new Set(items.map((i) => String(i?.id || "")).filter(Boolean))];
     if (!ids.length) throw new Error("Koszyk jest pusty");

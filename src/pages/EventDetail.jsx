@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from "react";
+import { sanitizeHtml } from "@/lib/sanitizeHtml";
 import { Link, useParams } from "react-router-dom";
 import { ArrowLeft, Clock, MapPin } from "lucide-react";
 import { base44 } from "@/api/base44Client";
@@ -106,7 +107,7 @@ export default function EventDetail() {
         {event.description && (
           <div
             className="rich-content mt-8 text-foreground/70"
-            dangerouslySetInnerHTML={{ __html: event.description }}
+            dangerouslySetInnerHTML={{ __html: sanitizeHtml(event.description) }}
           />
         )}
 

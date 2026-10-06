@@ -1,0 +1,61 @@
+{
+  "name": "License",
+  "type": "object",
+  "properties": {
+    "license_id": {
+      "type": "string"
+    },
+    "access_id": {
+      "type": "string"
+    },
+    "user_email": {
+      "type": "string"
+    },
+    "product_id": {
+      "type": "string"
+    },
+    "product_name": {
+      "type": "string"
+    },
+    "order_id": {
+      "type": "string"
+    },
+    "file_uri": {
+      "type": "string"
+    },
+    "source_uri": {
+      "type": "string"
+    },
+    "downloads": {
+      "type": "number",
+      "default": 0
+    }
+  },
+  "required": [
+    "license_id",
+    "access_id",
+    "user_email"
+  ],
+  "rls": {
+    "read": {
+      "user_condition": {
+        "role": "admin"
+      }
+    },
+    "create": {
+      "user_condition": {
+        "role": "admin"
+      }
+    },
+    "update": {
+      "user_condition": {
+        "role": "admin"
+      }
+    },
+    "delete": {
+      "user_condition": {
+        "role": "admin"
+      }
+    }
+  }
+}

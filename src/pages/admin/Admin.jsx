@@ -13,6 +13,8 @@ import EventsManager from "@/components/admin/EventsManager";
 import AdminDashboard from "@/components/admin/AdminDashboard";
 import ContactsPanel from "@/components/admin/ContactsPanel";
 import ClientsPanel from "@/components/admin/clients/ClientsPanel";
+import SecurityPanel from "@/components/admin/security/SecurityPanel";
+import { useNoIndex } from "@/lib/useNoIndex";
 import DiscountsPanel from "@/components/admin/DiscountsPanel";
 import PlaylistManager from "@/components/exmortis/glos/PlaylistManager";
 import { ShieldAlert, LogOut, ArrowLeft } from "lucide-react";
@@ -26,6 +28,7 @@ const SECTIONS = {
   kontakty: ["Baza kontaktów", () => <ContactsPanel />],
   klienci: ["Klienci i dostępy", () => <ClientsPanel />],
   rabaty: ["Kody rabatowe", () => <DiscountsPanel />],
+  bezpieczenstwo: ["Bezpieczeństwo", () => <SecurityPanel />],
   newsletter: ["Newsletter i subskrybenci", () => <NewsletterManager />],
   tresci: ["Treści stron", () => <ContentManager />],
   integracje: ["Integracje", () => <IntegrationsManager />],
@@ -33,6 +36,7 @@ const SECTIONS = {
 };
 
 export default function Admin() {
+  useNoIndex();
   const { section } = useParams();
   const [me, setMe] = useState(undefined);
 

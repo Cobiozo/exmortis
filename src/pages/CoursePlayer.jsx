@@ -4,12 +4,19 @@ import { ArrowLeft, Loader2 } from "lucide-react";
 import { base44 } from "@/api/base44Client";
 import LessonList from "@/components/account/course/LessonList";
 import LessonPlayer from "@/components/account/course/LessonPlayer";
+import LicenseConsent from "@/components/account/course/LicenseConsent";
+import { useAuth } from "@/lib/AuthContext";
+import { useNoIndex } from "@/lib/useNoIndex";
 
 export default function CoursePlayer() {
   const { accessId } = useParams();
   const [data, setData] = useState(null);
   const [err, setErr] = useState("");
   const [current, setCurrent] = useState(null);
+  const { user } = useAuth();
+  const [consented, setConsented] = useState(false);
+  useEffect(() => { if (user?.license_consent_at) setConsented(true); }, [user]);
+  useNoIndex();
 
   const load = () =>
     base44.functions.invoke("course", { action: "outline", access_id: accessId })
@@ -37,7 +44,7 @@ export default function CoursePlayer() {
         <p className="mt-10 text-foreground/50">Lekcje są przygotowywane. Dam znać mailem, kiedy będą gotowe.</p>
       ) : (
         <div className="mt-10 grid lg:grid-cols-[1fr_340px] gap-10">
-          {lesson && <LessonPlayer key={lesson.id} accessId={accessId} lesson={lesson} onDone={markDone} />}
+          {lesson && (consented ? <LessonPlayer key={lesson.id} accessId={accessId} lesson={lesson} onDone={markDone} /> : <LicenseConsent onAccept={() => setConsented(true)} />)}
           <LessonList lessons={data.lessons} current={current} onPick={setCurrent} />
         </div>
       )}

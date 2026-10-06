@@ -1,6 +1,7 @@
 import { createClientFromRequest } from "npm:@base44/sdk@0.8.44";
 import { runSql, escStr } from "../../shared/supabase.ts";
 import { isActive } from "../../shared/access.ts";
+import { personalizePdf, newLicenseId } from "../../shared/pdfLicense.ts";
 
 // Konto klienta: moje produkty, zakupy, podpisany link do pliku (po sprawdzeniu dostępu).
 export default async function (req) {
@@ -59,10 +60,36 @@ export default async function (req) {
       }
       const rows = await runSql(
         base44,
-        `SELECT private_file_uri, private_file_name, file_url FROM public.products WHERE id::text = ${escStr(a.product_id)} LIMIT 1`,
+        `SELECT name, price::float8 AS price, product_type, private_file_uri, private_file_name, file_url FROM public.products WHERE id::text = ${escStr(a.product_id)} LIMIT 1`,
         true
       );
       const p = rows[0];
+      const paidPdf = p?.private_file_uri && p.product_type === "pdf" && a.source !== "darmowy" && Number(p.price) > 0;
+      if (paidPdf) {
+        const sr = base44.asServiceRole;
+        const orderNo = a.order_id ? String(a.order_id).slice(0, 8).toUpperCase() : "R-" + a.id.slice(-6).toUpperCase();
+        let lic = (await sr.entities.License.filter({ access_id: a.id }))[0];
+        if (!lic || lic.source_uri !== p.private_file_uri || !lic.file_uri) {
+          const { signed_url } = await sr.integrations.Core.CreateFileSignedUrl({ file_uri: p.private_file_uri, expires_in: 120 });
+          const orig = new Uint8Array(await (await fetch(signed_url)).arrayBuffer());
+          const licenseId = lic?.license_id || newLicenseId();
+          const out = await personalizePdf(orig, {
+            email: a.user_email, orderNo, licenseId, title: p.name,
+            date: (a.valid_from || a.created_date || "").slice(0, 10),
+          });
+          const { file_uri } = await sr.integrations.Core.UploadPrivateFile({
+            file: new File([out], `${crypto.randomUUID()}.pdf`, { type: "application/pdf" }),
+          });
+          const data = { license_id: licenseId, access_id: a.id, user_email: a.user_email, product_id: a.product_id, product_name: p.name, order_id: a.order_id || "", file_uri, source_uri: p.private_file_uri };
+          if (lic) { await sr.entities.License.update(lic.id, data); lic = { ...lic, ...data }; }
+          else lic = await sr.entities.License.create({ ...data, downloads: 0 });
+        }
+        await sr.entities.License.update(lic.id, { downloads: (lic.downloads || 0) + 1 });
+        await sr.entities.SecurityLog.create({ type: "pdf", user_email: email, ip: (req.headers.get("x-forwarded-for") || "").split(",")[0].trim(), details: `${p.name} · ${lic.license_id}` });
+        const { signed_url } = await sr.integrations.Core.CreateFileSignedUrl({ file_uri: lic.file_uri, expires_in: 600 });
+        const safe = String(p.name).normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/ł/g, "l").replace(/[^A-Za-z0-9]+/g, "_").replace(/^_|_$/g, "");
+        return Response.json({ url: signed_url, name: `${safe}_exmortis_${orderNo}.pdf` });
+      }
       if (p?.private_file_uri) {
         const { signed_url } = await base44.asServiceRole.integrations.Core.CreateFileSignedUrl({
           file_uri: p.private_file_uri,
@@ -76,6 +103,7 @@ export default async function (req) {
 
     return Response.json({ error: "Nieznana akcja" }, { status: 400 });
   } catch (error) {
-    return Response.json({ error: error.message }, { status: 500 });
+    console.error(error);
+    return Response.json({ error: "Coś poszło nie tak. Spróbuj za chwilę." }, { status: 500 });
   }
 }

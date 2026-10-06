@@ -1,7 +1,6 @@
 import { createClientFromRequest } from "npm:@base44/sdk@0.8.44";
 import { isActive } from "../../shared/access.ts";
-
-const MAX_IPS_24H = 4;
+import { checkVideoAbuse } from "../../shared/videoGuard.ts";
 
 // Kurs klienta: spis lekcji, podpisany link do wideo (po sprawdzeniu dostępu), postęp.
 export default async function (req) {
@@ -42,23 +41,33 @@ export default async function (req) {
     if (body.action === "play") {
       if (!lesson.video_uri) return Response.json({ error: "Wideo jest przygotowywane" }, { status: 404 });
       const ip = (req.headers.get("x-forwarded-for") || "").split(",")[0].trim();
-      const since = new Date(Date.now() - 86400000).toISOString();
-      const recent = await sr.PlaybackLog.filter({ user_email: email, created_date: { $gte: since } }, "-created_date", 200);
-      const ips = new Set(recent.map((r) => r.ip).filter(Boolean));
-      if (ip && !ips.has(ip) && ips.size >= MAX_IPS_24H) {
-        return Response.json({ error: "Konto jest używane w zbyt wielu miejscach naraz. Spróbuj jutro albo napisz do mnie." }, { status: 429 });
-      }
+      const blocked = await checkVideoAbuse(base44, email, ip);
+      if (blocked) return Response.json({ error: blocked }, { status: 429 });
+      // Jedno odtwarzanie naraz: nowa sesja przejmuje konto.
+      const sid = String(body.session_id || "").slice(0, 64);
+      const st = (await sr.ActiveStream.filter({ user_email: email }))[0];
+      if (st) await sr.ActiveStream.update(st.id, { session_id: sid, lesson_id: lesson.id });
+      else await sr.ActiveStream.create({ user_email: email, session_id: sid, lesson_id: lesson.id });
       await sr.PlaybackLog.create({
         user_email: email, product_id: pid, lesson_id: lesson.id, lesson_title: lesson.title,
         ip, user_agent: (req.headers.get("user-agent") || "").slice(0, 300),
       });
       const { signed_url } = await base44.asServiceRole.integrations.Core.CreateFileSignedUrl({
-        file_uri: lesson.video_uri, expires_in: 3 * 3600,
+        file_uri: lesson.video_uri, expires_in: 3600,
       });
-      return Response.json({ url: signed_url });
+      return Response.json({ url: signed_url, license: a.id.slice(-8).toUpperCase() });
+    }
+
+    if (body.action === "violation") {
+      await sr.SecurityLog.create({ type: "znak_wodny", user_email: email, ip: (req.headers.get("x-forwarded-for") || "").split(",")[0].trim(), details: `Lekcja: ${lesson.title}` });
+      return Response.json({ ok: true });
     }
 
     if (body.action === "progress") {
+      const st = (await sr.ActiveStream.filter({ user_email: email }))[0];
+      if (st && body.session_id && st.session_id !== body.session_id) {
+        return Response.json({ stopped: true });
+      }
       const data = {
         position_s: Math.max(0, Math.round(Number(body.position_s) || 0)),
         ...(body.completed ? { completed: true } : {}),

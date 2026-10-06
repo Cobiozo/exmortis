@@ -1,5 +1,6 @@
 import { accessLabel, isDigital } from "@/components/account/accountUtils";
 import React, { useEffect, useState } from "react";
+import { sanitizeHtml } from "@/lib/sanitizeHtml";
 import { useParams, Link, useNavigate } from "react-router-dom";
 import { ArrowRight, ArrowLeft, Check, Minus, Plus } from "lucide-react";
 import { base44 } from "@/api/base44Client";
@@ -106,7 +107,7 @@ export default function ProductDetail() {
               (product.long_description.includes("<") ? (
                 <div
                   className="rich-content text-foreground/60 leading-relaxed mb-8"
-                  dangerouslySetInnerHTML={{ __html: product.long_description }}
+                  dangerouslySetInnerHTML={{ __html: sanitizeHtml(product.long_description) }}
                 />
               ) : (
                 <p className="text-foreground/60 leading-relaxed mb-8 whitespace-pre-line">
@@ -161,6 +162,9 @@ export default function ProductDetail() {
               </div>
             ) : (
               <div className="mt-auto space-y-4">
+                {product.product_type === "pdf" && (
+                  <p className="text-xs text-foreground/50">Plik jest osobisty — oznaczony Twoim adresem e-mail i numerem zamówienia.</p>
+                )}
                 <div className="flex items-center gap-4">
                   <div className="flex items-center border hairline">
                     <button onClick={() => setQty((q) => Math.max(1, q - 1))} className="p-3 text-foreground/60 hover:gold-text">

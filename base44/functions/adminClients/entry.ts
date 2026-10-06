@@ -34,6 +34,39 @@ export default async function (req) {
       });
     }
 
+    if (body.action === "security") {
+      const alerts = await sr.SecurityLog.filter({ type: { $in: ["blokada", "znak_wodny", "wideo_limit", "rabat"] } }, "-created_date", 100);
+      return Response.json({ alerts });
+    }
+
+    if (body.action === "unblock") {
+      await sr.SecurityLog.update(String(body.log_id), { resolved: true });
+      return Response.json({ ok: true });
+    }
+
+    if (body.action === "find") {
+      const q = String(body.q || "").trim();
+      const qu = q.toUpperCase();
+      let lic = await sr.License.filter({ license_id: qu });
+      if (!lic.length) lic = await sr.License.filter({ order_id: { $regex: `^${qu.replace(/[^A-Z0-9-]/g, "")}`, $options: "i" } });
+      if (!lic.length && q.includes("@")) lic = await sr.License.filter({ user_email: q.toLowerCase() });
+      // Wideo: identyfikator = ostatnie 8 znaków id dostępu
+      let acc = [];
+      if (!lic.length && /^[A-Z0-9]{8}$/.test(qu)) acc = (await sr.Access.filter({ id: { $regex: `${qu.toLowerCase()}$` } }).catch(() => []));
+      const emails = [...new Set([...lic.map((l) => l.user_email), ...acc.map((a) => a.user_email), ...(q.includes("@") ? [q.toLowerCase()] : [])])].slice(0, 5);
+      const people = [];
+      for (const em of emails) {
+        people.push({
+          email: em,
+          licenses: lic.filter((l) => l.user_email === em),
+          access: await sr.Access.filter({ user_email: em }, "-created_date", 50),
+          plays: await sr.PlaybackLog.filter({ user_email: em }, "-created_date", 20),
+          pdfs: await sr.SecurityLog.filter({ user_email: em, type: "pdf" }, "-created_date", 20),
+        });
+      }
+      return Response.json({ people });
+    }
+
     if (body.action === "grant") {
       if (!email.includes("@")) return Response.json({ error: "Podaj e-mail" }, { status: 400 });
       const rows = await runSql(base44, `SELECT id, name, product_type, access_months FROM public.products WHERE id::text = ${escStr(String(body.product_id))} LIMIT 1`, true);

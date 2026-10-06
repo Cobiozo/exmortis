@@ -4,6 +4,9 @@ import { base44 } from "@/api/base44Client";
 import ClientDetail from "./ClientDetail";
 import GrantForm from "./GrantForm";
 
+// Ochrona przed formułami w Excelu: = + - @ poprzedzone apostrofem.
+const csvCell = (v) => { const s = String(v ?? ""); const x = /^[=+\-@\t\r]/.test(s) ? "'" + s : s; return /[",\n]/.test(x) ? `"${x.replace(/"/g, '""')}"` : x; };
+
 const call = (p) => base44.functions.invoke("adminClients", p).then((r) => r.data);
 
 export default function ClientsPanel() {
@@ -15,7 +18,7 @@ export default function ClientsPanel() {
 
   const shown = (clients || []).filter((c) => c.email.includes(q.toLowerCase()));
   const exportCsv = () => {
-    const csv = "email,liczba_dostepow\n" + clients.map((c) => `${c.email},${c.count}`).join("\n");
+    const csv = "email,liczba_dostepow\n" + clients.map((c) => `${csvCell(c.email)},${c.count}`).join("\n");
     const a = document.createElement("a");
     a.href = URL.createObjectURL(new Blob([csv], { type: "text/csv" }));
     a.download = "klienci-exmortis.csv";
