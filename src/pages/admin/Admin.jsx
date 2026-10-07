@@ -18,7 +18,8 @@ import SecurityPanel from "@/components/admin/security/SecurityPanel";
 import { useNoIndex } from "@/lib/useNoIndex";
 import DiscountsPanel from "@/components/admin/DiscountsPanel";
 import PlaylistManager from "@/components/exmortis/glos/PlaylistManager";
-import { ShieldAlert, LogOut, ArrowLeft } from "lucide-react";
+import { ShieldAlert, ArrowLeft } from "lucide-react";
+import PanelHeaderActions from "@/components/admin/PanelHeaderActions";
 
 const SECTIONS = {
   spotkania: ["Spotkania", () => <EventsManager />],
@@ -72,17 +73,15 @@ export default function Admin() {
       <div className="mx-auto max-w-[1400px]">
         <header className="flex flex-col md:flex-row md:items-center justify-between gap-6 pb-10 border-b hairline">
           <div className="flex items-center gap-4">
-            <Logo className="h-14 w-14" glow={false} />
+            <Link to="/admin" aria-label="Pulpit"><Logo className="h-14 w-14" glow={false} /></Link>
             <div>
               <p className="technical text-[10px] gold-text mb-1">ZAPLECZE</p>
               <h1 className="relic-heading text-3xl">{current ? current[0] : "Pulpit"}</h1>
             </div>
           </div>
-          <div className="flex items-center gap-4">
+          <div className="flex flex-col items-start md:items-end gap-2">
+            <PanelHeaderActions />
             <span className="technical text-[10px] text-foreground/40">{me.email}</span>
-            <button onClick={() => base44.auth.logout("/")} className="btn-ghost !px-4 !py-2">
-              <LogOut className="h-4 w-4" /> WYLOGUJ
-            </button>
           </div>
         </header>
 

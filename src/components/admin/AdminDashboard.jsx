@@ -51,7 +51,7 @@ export default function AdminDashboard() {
       <Tile to="/admin/klienci" label="11" title="Klienci i dostępy" lines={["Nadawanie, przedłużenia, dziennik odtworzeń"]} />
       <Tile to="/admin/rabaty" label="12" title="Kody rabatowe" lines={["Procent lub kwota, limity, terminy"]} />
       <Tile to="/admin/bezpieczenstwo" label="13" title="Bezpieczeństwo" lines={["Alerty, blokady, znajdź właściciela kopii"]} />
-      <Tile to="/" onClick={() => { setMode("admin"); window.location.href = "/"; }} label="14" title="Podgląd strony" lines={["Otwórz stronę z paskiem admina"]} />
+      <Tile to="/" onClick={() => setMode("admin")} label="14" title="Podgląd strony" lines={["Otwórz stronę z paskiem admina"]} />
     </div>
   );
 }

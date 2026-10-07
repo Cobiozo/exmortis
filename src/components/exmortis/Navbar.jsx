@@ -13,7 +13,7 @@ export default function Navbar() {
   const [mobile, setMobile] = useState(false);
   const [collapsed, setCollapsed] = useState(true);
   const { count, setOpen } = useCart();
-  const { adminView } = useAdminMode();
+  const { isAdmin } = useAdminMode();
   const location = useLocation();
   const rowRef = useRef(null), logoRef = useRef(null), rightRef = useRef(null), measureRef = useRef(null), burgerRef = useRef(null);
 
@@ -41,7 +41,7 @@ export default function Navbar() {
   useEffect(() => { setMobile(false); }, [location.pathname]);
   useEffect(() => { if (!collapsed) setMobile(false); }, [collapsed]);
 
-  const top = adminView ? "top-8" : "top-0";
+  const top = isAdmin ? "top-10" : "top-0";
   return (
     <>
       <header className={`fixed ${top} inset-x-0 z-50 transition-colors duration-300 ${scrolled || mobile ? "bg-[#0A0A0B]/95 backdrop-blur-md border-b hairline" : "bg-transparent"}`}>
@@ -74,7 +74,7 @@ export default function Navbar() {
           </div>
         </div>
       </header>
-      <MobileMenu open={mobile && collapsed} onClose={close} top={adminView ? 92 : 60} />
+      <MobileMenu open={mobile && collapsed} onClose={close} top={isAdmin ? 100 : 60} />
     </>
   );
 }
