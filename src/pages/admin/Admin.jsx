@@ -11,7 +11,8 @@ import SilencePanel from "@/components/admin/silence/SilencePanel";
 import SilenceStatsPanel from "@/components/admin/SilenceStatsPanel";
 import EventsManager from "@/components/admin/EventsManager";
 import AdminDashboard from "@/components/admin/AdminDashboard";
-import ContactsPanel from "@/components/admin/ContactsPanel";
+import ContactsTabs from "@/components/admin/ContactsTabs";
+import PodcastAdmin from "@/components/admin/podcast/PodcastAdmin";
 import ClientsPanel from "@/components/admin/clients/ClientsPanel";
 import SecurityPanel from "@/components/admin/security/SecurityPanel";
 import { useNoIndex } from "@/lib/useNoIndex";
@@ -25,7 +26,8 @@ const SECTIONS = {
   skarbiec: ["Skarbiec", () => <ProductsManager />],
   statystyki: ["Statystyki", () => <div className="space-y-16"><SilenceStatsPanel /><QuizStatsPanel /></div>],
   glos: ["Głos", () => <PlaylistManager onMutate={() => {}} />],
-  kontakty: ["Baza kontaktów", () => <ContactsPanel />],
+  kontakty: ["Baza kontaktów", () => <ContactsTabs />],
+  podcast: ["Podcast", () => <PodcastAdmin />],
   klienci: ["Klienci i dostępy", () => <ClientsPanel />],
   rabaty: ["Kody rabatowe", () => <DiscountsPanel />],
   bezpieczenstwo: ["Bezpieczeństwo", () => <SecurityPanel />],

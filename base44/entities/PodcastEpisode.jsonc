@@ -1,0 +1,148 @@
+{
+  "name": "PodcastEpisode",
+  "type": "object",
+  "properties": {
+    "numer": {
+      "type": "number"
+    },
+    "tytul": {
+      "type": "string"
+    },
+    "slug": {
+      "type": "string"
+    },
+    "opis_krotki": {
+      "type": "string"
+    },
+    "notatki": {
+      "type": "string"
+    },
+    "publikacja": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "szkic",
+        "zaplanowany",
+        "opublikowany",
+        "ukryty"
+      ],
+      "default": "szkic"
+    },
+    "audio": {
+      "type": "string"
+    },
+    "spotify": {
+      "type": "string"
+    },
+    "youtube": {
+      "type": "string"
+    },
+    "dlugosc_s": {
+      "type": "number"
+    },
+    "okladka": {
+      "type": "string"
+    },
+    "goscie": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "gosc_nazwa": {
+      "type": "string"
+    },
+    "gosc_bio": {
+      "type": "string"
+    },
+    "tematy": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "rozdzialy": {
+      "type": "string"
+    },
+    "transkrypcja": {
+      "type": "string"
+    },
+    "cytaty": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "materialy": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "nazwa": {
+            "type": "string"
+          },
+          "url": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "cta_etykieta": {
+      "type": "string"
+    },
+    "cta_link": {
+      "type": "string"
+    },
+    "ostrzezenia": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "odtworzenia": {
+      "type": "number",
+      "default": 0
+    }
+  },
+  "required": [
+    "tytul",
+    "slug"
+  ],
+  "rls": {
+    "read": {
+      "$or": [
+        {
+          "data.status": {
+            "$in": [
+              "opublikowany",
+              "zaplanowany"
+            ]
+          }
+        },
+        {
+          "user_condition": {
+            "role": "admin"
+          }
+        }
+      ]
+    },
+    "create": {
+      "user_condition": {
+        "role": "admin"
+      }
+    },
+    "update": {
+      "user_condition": {
+        "role": "admin"
+      }
+    },
+    "delete": {
+      "user_condition": {
+        "role": "admin"
+      }
+    }
+  }
+}

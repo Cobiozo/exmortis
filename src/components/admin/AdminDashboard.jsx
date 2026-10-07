@@ -29,6 +29,8 @@ export default function AdminDashboard() {
 
   const v = (k) => (s ? s[k] ?? 0 : "…");
   const [sound, setSound] = useState(null);
+  const [newApps, setNewApps] = useState(null);
+  useEffect(() => { base44.entities.PodcastApplication.count({ status: "nowe" }).then(setNewApps).catch(() => setNewApps(0)); }, []);
   useEffect(() => {
     base44.entities.SilenceTrack.filter({}, { limit: 200 }).then((p) => setSound(p.items));
   }, []);
@@ -40,7 +42,8 @@ export default function AdminDashboard() {
       <Tile to="/admin/skarbiec" label="03" title="Skarbiec" lines={[`Dostępne: ${v("products_available")}`, `Wkrótce: ${v("products_soon")}`, `Ukryte: ${v("products_hidden")}`]} />
       <Tile to="/admin/statystyki" label="04" title="Statystyki" lines={["Ostatnie 30 dni:", `Zapisy: ${v("reg_30")}`, `Pobrania: ${v("downloads_30")}`, `Rozpoczęcia ciszy: ${v("silence_30")}`]} />
       <Tile to="/admin/glos" label="05" title="Głos" lines={["Utwory i podcasty"]} />
-      <Tile to="/admin/kontakty" label="06" title="Baza kontaktów" lines={["Wszystkie formularze w jednym miejscu"]} />
+      <Tile to="/admin/kontakty" label="06" title="Baza kontaktów" lines={["Wszystkie formularze w jednym miejscu", `Nowe zgłoszenia do podcastu: ${newApps ?? "…"}`]} />
+      <Tile to="/admin/podcast" label="15" title="Podcast" lines={["Odcinki, playlisty, goście, ustawienia"]} />
       <Tile to="/admin/newsletter" label="07" title="Newsletter" lines={["Subskrybenci, grupy, kampanie"]} />
       <Tile to="/admin/tresci" label="08" title="Treści stron" lines={["Edycja tekstów"]} />
       <Tile to="/admin/integracje" label="09" title="Integracje" lines={["SMTP, płatności"]} />

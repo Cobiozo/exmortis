@@ -37,6 +37,8 @@ import PolitykaCookies from '@/pages/PolitykaCookies';
 import Odstapienie from '@/pages/Odstapienie';
 import Kontakt from '@/pages/Kontakt';
 import CookieBanner from '@/components/legal/CookieBanner';
+import PodcastEpisode from '@/pages/PodcastEpisode';
+import { PodcastPlayerProvider } from '@/components/exmortis/podcast/PlayerContext';
 // Add page imports here
 
 const AuthenticatedApp = () => {
@@ -68,6 +70,7 @@ const AuthenticatedApp = () => {
       <AdminModeProvider>
       <AdminBar />
       <SiteContentProvider>
+      <PodcastPlayerProvider>
       <Routes>
         <Route path="/login" element={<Login />} />
         <Route path="/register" element={<Register />} />
@@ -90,6 +93,7 @@ const AuthenticatedApp = () => {
           <Route path="/kasa" element={<Checkout />} />
           <Route path="/powrot" element={<Powrot />} />
           <Route path="/glos" element={<Glos />} />
+          <Route path="/glos/:slug" element={<PodcastEpisode />} />
           <Route path="/test" element={<Test />} />
           <Route path="/spotkania" element={<Events />} />
           <Route path="/spotkania/:slug" element={<EventDetail />} />
@@ -102,6 +106,7 @@ const AuthenticatedApp = () => {
         </Route>
         <Route path="*" element={<PageNotFound />} />
       </Routes>
+      </PodcastPlayerProvider>
       <CookieBanner />
       </SiteContentProvider>
       </AdminModeProvider>

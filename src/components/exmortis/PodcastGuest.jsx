@@ -1,41 +1,36 @@
 import React from "react";
 import PodcastGuestForm from "./PodcastGuestForm";
 
+const Box = ({ title, children }) => (
+  <div className="border-l border-[#C9A24A]/40 pl-6">
+    <p className="technical text-[10px] gold-text mb-3">{title}</p>
+    <p className="text-sm leading-relaxed text-foreground/65">{children}</p>
+  </div>
+);
+
 export default function PodcastGuest() {
   return (
-    <section id="gosc-podcastu" className="py-32 px-5 md:px-10 border-t hairline bg-[#070708]">
+    <section id="gosc-podcastu" className="py-32 px-5 md:px-10 border-t hairline bg-[#070708] overflow-hidden">
       <div className="mx-auto max-w-[1400px]">
         <p className="technical text-[11px] gold-text mb-4">GOŚĆ PODCASTU · 04</p>
-        <h2 className="relic-heading text-4xl md:text-6xl leading-[0.95] mb-12">
-          Podziel się swoją drogą —<br />
-          <span className="gold-text">zostań gościem naszego podcastu</span>
+        <h2 className="relic-heading max-w-[18ch] mb-12 break-words" style={{ fontSize: "clamp(2rem, 6vw, 4.5rem)", textWrap: "balance" }}>
+          <span className="text-[#F5EFE1]">Twoja droga</span><br />
+          <span className="gold-text">może komuś pomóc wrócić</span>
         </h2>
 
         <div className="grid md:grid-cols-2 gap-12 md:gap-20">
-          <div className="space-y-6 text-foreground/60 leading-relaxed">
-            <p>
-              Czy masz za sobą trudną drogę i chcesz opowiedzieć o swoim powrocie? Wierzę,
-              że każda historia transformacji, pokonywania przeciwności i odnajdywania
-              własnej ścieżki ma ogromną moc.
-            </p>
-            <p>
-              Jeśli czujesz gotowość, by zainspirować innych swoim doświadczeniem,
-              serdecznie zapraszam do udziału w podcaście.
-            </p>
-            <div className="border-l hairline pl-6 pt-4 mt-10">
-              <p className="technical text-[10px] text-foreground/40 mb-4">
-                CO WYDARZY SIĘ DALEJ?
-              </p>
-              <p className="text-sm leading-relaxed">
-                <span className="text-foreground/80">Poufność i kontakt:</span> gwarantuję
-                pełną poufność wszystkich przekazanych informacji. Uważnie czytam każdą
-                historię, jednak ze względów logistycznych zastrzegam, że skontaktuję się
-                z wybranymi osobami w celu umówienia terminu nagrania.
-              </p>
-              <p className="text-sm gold-text pt-4 leading-relaxed">
-                Dziękuję za odwagę i zaufanie. Czekam na Twoją historię!
-              </p>
+          <div className="space-y-10 text-foreground/65 leading-relaxed max-w-xl">
+            <div className="space-y-5">
+              <p>Szukam ludzi, którzy przeszli przez wypalenie, utratę sensu albo stratę — i wrócili inni. Nie potrzebuję historii z happy endem. Potrzebuję prawdziwej.</p>
+              <p>Rozmawiamy online, ok. 60 minut. Możesz wystąpić pod imieniem, pseudonimem albo anonimowo.</p>
             </div>
+            <Box title="ZANIM SIĘ ZGŁOSISZ">
+              Ten podcast jest dla historii, które mają już za sobą najostrzejszy moment. Jeśli jesteś teraz w kryzysie — najpierw zadbaj o siebie:{" "}
+              <span className="text-[#F5EFE1]">116 123 · 800 70 2222</span> (całą dobę, bezpłatnie) · <span className="text-[#F5EFE1]">112</span>. Twoja historia poczeka.
+            </Box>
+            <Box title="CO WYDARZY SIĘ DALEJ">
+              Każde zgłoszenie czytam sam. Odpowiadam w ciągu 14 dni — także wtedy, gdy rozmowa nie dojdzie do skutku. Przed nagraniem jest krótka rozmowa wstępna (ok. 15 minut). Nic nie trafi do sieci bez Twojej pisemnej zgody, a przed publikacją możesz poprosić o wycięcie fragmentu, który okazał się zbyt osobisty.
+            </Box>
           </div>
           <PodcastGuestForm />
         </div>

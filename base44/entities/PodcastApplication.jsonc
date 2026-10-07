@@ -2,31 +2,105 @@
   "name": "PodcastApplication",
   "type": "object",
   "properties": {
-    "full_name": {
+    "name": {
+      "type": "string"
+    },
+    "email": {
       "type": "string"
     },
     "phone": {
       "type": "string"
     },
-    "email": {
+    "smierc": {
       "type": "string",
-      "format": "email"
-    },
-    "motivation": {
-      "type": "string"
+      "enum": [
+        "mentalna",
+        "duchowa",
+        "zyciowa",
+        "trudno"
+      ]
     },
     "story": {
+      "type": "string"
+    },
+    "today": {
+      "type": "string"
+    },
+    "forma": {
+      "type": "string",
+      "enum": [
+        "pelne",
+        "imie",
+        "pseudonim",
+        "anonimowo"
+      ]
+    },
+    "social": {
+      "type": "string"
+    },
+    "consent_adult": {
+      "type": "boolean"
+    },
+    "consent_art9": {
+      "type": "boolean"
+    },
+    "consent_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "nowe",
+        "przeczytane",
+        "wstepna",
+        "zaproszony",
+        "nagrane",
+        "opublikowane",
+        "odrzucone",
+        "wstrzymane"
+      ],
+      "default": "nowe"
+    },
+    "pilne": {
+      "type": "boolean",
+      "default": false
+    },
+    "notatki": {
+      "type": "string"
+    },
+    "historia": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "status": {
+            "type": "string"
+          },
+          "at": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "guest_id": {
+      "type": "string"
+    },
+    "episode_id": {
       "type": "string"
     }
   },
   "required": [
-    "full_name",
-    "phone",
+    "name",
     "email"
   ],
   "rls": {
-    "create": {},
     "read": {
+      "user_condition": {
+        "role": "admin"
+      }
+    },
+    "create": {
       "user_condition": {
         "role": "admin"
       }

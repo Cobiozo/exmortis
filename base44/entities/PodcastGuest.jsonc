@@ -1,0 +1,78 @@
+{
+  "name": "PodcastGuest",
+  "type": "object",
+  "properties": {
+    "nazwa": {
+      "type": "string"
+    },
+    "forma": {
+      "type": "string",
+      "enum": [
+        "pelne",
+        "imie",
+        "pseudonim",
+        "anonimowo"
+      ],
+      "default": "imie"
+    },
+    "bio": {
+      "type": "string"
+    },
+    "zdjecie": {
+      "type": "string"
+    },
+    "linki": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "zgoda_status": {
+      "type": "string",
+      "enum": [
+        "brak",
+        "wyslana",
+        "podpisana"
+      ],
+      "default": "brak"
+    },
+    "zgoda_data": {
+      "type": "string",
+      "format": "date"
+    },
+    "zgoda_plik": {
+      "type": "string"
+    },
+    "zgloszenie_id": {
+      "type": "string"
+    },
+    "email": {
+      "type": "string"
+    }
+  },
+  "required": [
+    "nazwa"
+  ],
+  "rls": {
+    "read": {
+      "user_condition": {
+        "role": "admin"
+      }
+    },
+    "create": {
+      "user_condition": {
+        "role": "admin"
+      }
+    },
+    "update": {
+      "user_condition": {
+        "role": "admin"
+      }
+    },
+    "delete": {
+      "user_condition": {
+        "role": "admin"
+      }
+    }
+  }
+}

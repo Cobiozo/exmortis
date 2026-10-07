@@ -1,0 +1,70 @@
+{
+  "name": "PodcastPlaylist",
+  "type": "object",
+  "properties": {
+    "nazwa": {
+      "type": "string"
+    },
+    "opis": {
+      "type": "string"
+    },
+    "okladka": {
+      "type": "string"
+    },
+    "typ": {
+      "type": "string",
+      "enum": [
+        "sezon",
+        "seria",
+        "wybor"
+      ],
+      "default": "sezon"
+    },
+    "odcinki": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "widoczna": {
+      "type": "boolean",
+      "default": true
+    },
+    "kolejnosc": {
+      "type": "number",
+      "default": 0
+    }
+  },
+  "required": [
+    "nazwa"
+  ],
+  "rls": {
+    "read": {
+      "$or": [
+        {
+          "data.widoczna": true
+        },
+        {
+          "user_condition": {
+            "role": "admin"
+          }
+        }
+      ]
+    },
+    "create": {
+      "user_condition": {
+        "role": "admin"
+      }
+    },
+    "update": {
+      "user_condition": {
+        "role": "admin"
+      }
+    },
+    "delete": {
+      "user_condition": {
+        "role": "admin"
+      }
+    }
+  }
+}

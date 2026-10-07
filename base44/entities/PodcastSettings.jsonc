@@ -1,0 +1,58 @@
+{
+  "name": "PodcastSettings",
+  "type": "object",
+  "properties": {
+    "nazwa": {
+      "type": "string",
+      "default": "Podcast exmortis"
+    },
+    "opis": {
+      "type": "string"
+    },
+    "okladka": {
+      "type": "string"
+    },
+    "spotify": {
+      "type": "string"
+    },
+    "youtube": {
+      "type": "string"
+    },
+    "apple": {
+      "type": "string"
+    },
+    "rss": {
+      "type": "string"
+    },
+    "rss_import": {
+      "type": "string"
+    },
+    "zwiastun_tekst": {
+      "type": "string",
+      "default": "Zwiastun \u2014 28 pa\u017adziernika. Pierwsza rozmowa \u2014 4 listopada."
+    },
+    "dni_odpowiedzi": {
+      "type": "number",
+      "default": 14
+    }
+  },
+  "required": [],
+  "rls": {
+    "read": {},
+    "create": {
+      "user_condition": {
+        "role": "admin"
+      }
+    },
+    "update": {
+      "user_condition": {
+        "role": "admin"
+      }
+    },
+    "delete": {
+      "user_condition": {
+        "role": "admin"
+      }
+    }
+  }
+}
