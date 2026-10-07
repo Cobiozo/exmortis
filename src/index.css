@@ -175,8 +175,17 @@
 @keyframes xfade-out { from { opacity: 1; } to { opacity: 0; } }
 .xfade-in { animation: xfade-in 600ms ease both; }
 .xfade-out { animation: xfade-out 600ms ease both; }
-@keyframes bar-end { 0%, 35% { filter: brightness(1.45); opacity: 1; } 100% { filter: none; opacity: 0.6; } }
+@keyframes bar-end { 0%, 40% { filter: brightness(1.5); opacity: 1; } 100% { filter: none; opacity: 0.7; } }
 .bar-end { animation: bar-end 5s ease-out forwards; }
+.cisza-root { --logo-h: clamp(48px, 5.6vw, 72px); --cisza-digits: clamp(72px, 16vw, 180px); }
+.cisza-top { padding-top: calc(20px + env(safe-area-inset-top)); }
+.cisza-bottom { min-height: calc(72px + env(safe-area-inset-bottom)); padding-bottom: env(safe-area-inset-bottom); }
+@media (min-width: 640px) { .cisza-top { padding-top: calc(32px + env(safe-area-inset-top)); } }
+@media (max-height: 500px) and (orientation: landscape) {
+  .cisza-root { --logo-h: 40px; --cisza-digits: clamp(48px, 20dvh, 96px); }
+  .cisza-top { padding-top: calc(10px + env(safe-area-inset-top)); }
+  .cisza-bottom { min-height: calc(52px + env(safe-area-inset-bottom)); }
+}
 @keyframes portal-crack { 0% { opacity: 0; } 15% { opacity: 1; } 45% { opacity: 1; } 100% { opacity: 0; } }
 .portal-crack { animation: portal-crack 7s ease-in-out forwards; }
 @keyframes glass-turn { from { transform: rotate(0); } to { transform: rotate(180deg); } }

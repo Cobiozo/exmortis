@@ -1,17 +1,11 @@
-import DigitsView from "./DigitsView";
-import ClockView from "./ClockView";
-import BarView from "./BarView";
-import HourglassView from "./HourglassView";
-import PortalView from "./PortalView";
-
+// Jeden widok czasu w trzech odmianach.
 export const VIEWS = [
-  { id: "cyfry", label: "Cyfry", C: DigitsView },
-  { id: "zegar", label: "Zegar", C: ClockView },
-  { id: "pasek", label: "Pasek", C: BarView },
-  { id: "klepsydra", label: "Klepsydra", C: HourglassView },
-  { id: "portal", label: "Portal", C: PortalView },
+  { id: "cyfry_pasek", label: "Cyfry i pasek" },
+  { id: "cyfry", label: "Same cyfry" },
+  { id: "pasek", label: "Sam pasek" },
 ];
 
-export const DEFAULT_VIEW = "portal";
-export const getView = (id) => VIEWS.find((v) => v.id === id) || VIEWS.find((v) => v.id === DEFAULT_VIEW);
+export const DEFAULT_VIEW = "cyfry_pasek";
+export const isView = (id) => VIEWS.some((v) => v.id === id);
+export const getView = (id) => VIEWS.find((v) => v.id === id) || VIEWS[0];
 export const nextView = (id) => VIEWS[(VIEWS.findIndex((v) => v.id === id) + 1) % VIEWS.length].id;

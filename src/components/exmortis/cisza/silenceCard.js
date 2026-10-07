@@ -41,7 +41,7 @@ const loadImg = (src) =>
     i.src = src;
   });
 
-export async function makeSilenceCard(stageEl, view, minutes, bg) {
+export async function makeSilenceCard(view, minutes, bg) {
   const c = document.createElement("canvas");
   c.width = 1080;
   c.height = 1920;
@@ -57,30 +57,24 @@ export async function makeSilenceCard(stageEl, view, minutes, bg) {
     x.fillRect(0, 0, 1080, 1920);
   }
 
-  const B = { x: 190, y: 470, s: 700 };
-  const canvas = stageEl.querySelector("canvas");
-  const svg = stageEl.querySelector("svg");
   await document.fonts?.load('80px "EB Garamond"').catch(() => {});
-  if (view === "klepsydra" && canvas) {
-    x.drawImage(canvas, B.x, B.y, B.s, B.s);
-  } else if (svg) {
-    const clone = svg.cloneNode(true);
-    clone.setAttribute("width", B.s);
-    clone.setAttribute("height", B.s);
-    clone.querySelectorAll("[vector-effect]").forEach((n) => { n.removeAttribute("vector-effect"); n.setAttribute("stroke-width", "0.3"); });
-    const img = await loadImg("data:image/svg+xml;charset=utf-8," + encodeURIComponent(new XMLSerializer().serializeToString(clone)));
-    x.drawImage(img, B.x, B.y, B.s, B.s);
-  } else if (view === "pasek") {
-    x.fillStyle = "#C9A24A";
-    x.fillRect(B.x, B.y + B.s / 2, B.s, 4);
-  } else {
+  // Cyfry „00:00” + pełny złoty pasek (wg wybranego widoku).
+  x.textAlign = "center";
+  if (view !== "pasek") {
+    x.font = '230px "EB Garamond", Georgia, serif';
     x.fillStyle = "#F5EFE1";
-    x.font = '200px "EB Garamond", Georgia, serif';
-    x.textAlign = "center";
-    x.fillText("00", 400, B.y + B.s / 2 + 60);
-    x.fillText("00", 680, B.y + B.s / 2 + 60);
+    x.fillText("00", 365, 900);
+    x.fillText("00", 715, 900);
     x.fillStyle = "#C9A24A";
-    x.fillText(":", 540, B.y + B.s / 2 + 50);
+    x.fillText(":", 540, 885);
+  }
+  if (view !== "cyfry") {
+    const y = view === "pasek" ? 830 : 980;
+    x.fillStyle = "#C9A24A";
+    x.shadowColor = "rgba(201,162,74,0.6)";
+    x.shadowBlur = 16;
+    x.fillRect(240, y, 600, 6);
+    x.shadowBlur = 0;
   }
 
   x.textAlign = "center";

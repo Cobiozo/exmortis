@@ -21,6 +21,19 @@
     "tekst_na_koniec": {
       "type": "string",
       "default": "Ta cisza by\u0142a Twoja."
+    },
+    "muzyka_wlaczona": {
+      "type": "boolean",
+      "default": false
+    },
+    "widok_domyslny": {
+      "type": "string",
+      "enum": [
+        "cyfry_pasek",
+        "cyfry",
+        "pasek"
+      ],
+      "default": "cyfry_pasek"
     }
   },
   "required": [],

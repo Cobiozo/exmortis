@@ -3,7 +3,7 @@ import { base44 } from "@/api/base44Client";
 import { makeSilenceCard } from "./silenceCard";
 
 // Cichy link „Zapisz kartę ciszy” → podgląd, Pobierz, Udostępnij (telefon).
-export default function SilenceCardPanel({ stageRef, view, minutes, backdrop }) {
+export default function SilenceCardPanel({ view, minutes, backdrop }) {
   const [card, setCard] = useState(null);
   const [busy, setBusy] = useState(false);
   const [err, setErr] = useState(false);
@@ -11,7 +11,7 @@ export default function SilenceCardPanel({ stageRef, view, minutes, backdrop }) 
   const make = async () => {
     setBusy(true);
     setErr(false);
-    const blob = await makeSilenceCard(stageRef.current, view, minutes, backdrop).catch(() => null);
+    const blob = await makeSilenceCard(view, minutes, backdrop).catch(() => null);
     setBusy(false);
     if (!blob) { setErr(true); return; }
     const file = new File([blob], `cisza-${minutes}-min.png`, { type: "image/png" });
