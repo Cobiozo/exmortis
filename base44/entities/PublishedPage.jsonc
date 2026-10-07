@@ -1,0 +1,55 @@
+{
+  "name": "PublishedPage",
+  "type": "object",
+  "properties": {
+    "slug": {
+      "type": "string"
+    },
+    "tytul": {
+      "type": "string"
+    },
+    "seo_title": {
+      "type": "string"
+    },
+    "seo_description": {
+      "type": "string"
+    },
+    "seo_image": {
+      "type": "string"
+    },
+    "noindex": {
+      "type": "boolean",
+      "default": false
+    },
+    "bloki": {
+      "type": "array",
+      "items": {
+        "type": "object"
+      }
+    },
+    "wersja": {
+      "type": "number"
+    }
+  },
+  "required": [
+    "slug"
+  ],
+  "rls": {
+    "read": {},
+    "create": {
+      "user_condition": {
+        "role": "admin"
+      }
+    },
+    "update": {
+      "user_condition": {
+        "role": "admin"
+      }
+    },
+    "delete": {
+      "user_condition": {
+        "role": "admin"
+      }
+    }
+  }
+}

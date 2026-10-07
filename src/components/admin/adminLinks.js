@@ -6,7 +6,9 @@ export function panelFor(path) {
   if (path.startsWith("/glos/")) return "/admin/podcast";
   if (path.startsWith("/glos")) return "/admin/glos";
   if (path.startsWith("/test")) return "/admin/testy";
-  if (["/", "/o-mnie", "/powrot", "/kontakt"].includes(path)) return "/admin/tresci";
+  if (path === "/") return "/admin/tresci?slug=home";
+  if (path.startsWith("/strona/")) return `/admin/tresci?slug=${path.slice(8)}`;
+  if (["/o-mnie", "/powrot", "/kontakt"].includes(path)) return "/admin/tresci?tab=teksty";
   return "/admin";
 }
 

@@ -39,6 +39,8 @@ import Kontakt from '@/pages/Kontakt';
 import CookieBanner from '@/components/legal/CookieBanner';
 import PodcastEpisode from '@/pages/PodcastEpisode';
 import { PodcastPlayerProvider } from '@/components/exmortis/podcast/PlayerContext';
+import CmsPage from '@/pages/CmsPage';
+import CmsPreview from '@/pages/CmsPreview';
 // Add page imports here
 
 const AuthenticatedApp = () => {
@@ -77,6 +79,7 @@ const AuthenticatedApp = () => {
         <Route path="/forgot-password" element={<ForgotPassword />} />
         <Route path="/reset-password" element={<ResetPassword />} />
         <Route element={<ProtectedRoute unauthenticatedElement={<Navigate to="/login" replace />} />}>
+          <Route path="/admin/podglad-strony" element={<CmsPreview />} />
           <Route path="/admin" element={<Admin />} />
           <Route path="/admin/:section" element={<Admin />} />
           <Route element={<Layout />}>
@@ -102,6 +105,7 @@ const AuthenticatedApp = () => {
           <Route path="/polityka-cookies" element={<PolitykaCookies />} />
           <Route path="/odstapienie" element={<Odstapienie />} />
           <Route path="/kontakt" element={<Kontakt />} />
+          <Route path="/strona/:slug" element={<CmsPage />} />
           <Route path="/1-listopada" element={<Navigate to="/spotkania/1-listopada" replace />} />
         </Route>
         <Route path="*" element={<PageNotFound />} />

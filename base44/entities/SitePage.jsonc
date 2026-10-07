@@ -1,0 +1,82 @@
+{
+  "name": "SitePage",
+  "type": "object",
+  "properties": {
+    "tytul": {
+      "type": "string"
+    },
+    "slug": {
+      "type": "string"
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "szkic",
+        "opublikowana",
+        "zaplanowana"
+      ],
+      "default": "szkic"
+    },
+    "publikacja": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "seo_title": {
+      "type": "string"
+    },
+    "seo_description": {
+      "type": "string"
+    },
+    "seo_image": {
+      "type": "string"
+    },
+    "noindex": {
+      "type": "boolean",
+      "default": false
+    },
+    "bloki": {
+      "type": "array",
+      "items": {
+        "type": "object"
+      }
+    },
+    "wersja": {
+      "type": "number",
+      "default": 0
+    },
+    "zmiany_niezapisane": {
+      "type": "boolean",
+      "default": false
+    },
+    "opublikowano_at": {
+      "type": "string",
+      "format": "date-time"
+    }
+  },
+  "required": [
+    "tytul",
+    "slug"
+  ],
+  "rls": {
+    "read": {
+      "user_condition": {
+        "role": "admin"
+      }
+    },
+    "create": {
+      "user_condition": {
+        "role": "admin"
+      }
+    },
+    "update": {
+      "user_condition": {
+        "role": "admin"
+      }
+    },
+    "delete": {
+      "user_condition": {
+        "role": "admin"
+      }
+    }
+  }
+}

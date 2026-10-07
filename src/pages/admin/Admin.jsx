@@ -4,7 +4,7 @@ import { base44 } from "@/api/base44Client";
 import Logo from "@/components/exmortis/Logo";
 import ProductsManager from "@/components/admin/ProductsManager";
 import NewsletterManager from "@/components/admin/NewsletterManager";
-import ContentManager from "@/components/admin/ContentManager";
+import ContentHub from "@/components/admin/cms/ContentHub";
 import IntegrationsManager from "@/components/admin/IntegrationsManager";
 import QuizStatsPanel from "@/components/admin/QuizStatsPanel";
 import SilencePanel from "@/components/admin/silence/SilencePanel";
@@ -33,7 +33,7 @@ const SECTIONS = {
   rabaty: ["Kody rabatowe", () => <DiscountsPanel />],
   bezpieczenstwo: ["Bezpieczeństwo", () => <SecurityPanel />],
   newsletter: ["Newsletter i subskrybenci", () => <NewsletterManager />],
-  tresci: ["Treści stron", () => <ContentManager />],
+  tresci: ["Treści stron", () => <ContentHub />],
   integracje: ["Integracje", () => <IntegrationsManager />],
   testy: ["Wyniki testu", () => <QuizStatsPanel />],
 };

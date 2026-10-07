@@ -1,0 +1,4 @@
+export const inputCls = "w-full min-h-[48px] bg-transparent border hairline px-4 py-2.5 text-base focus:border-[#C9A24A] focus:outline-none transition-colors";
+export const labelCls = "technical text-[10px] text-foreground/50 block mb-2";
+export const smallBtn = "min-h-[40px] px-3 technical text-[10px] border hairline hover:border-[#C9A24A] hover:text-[#C9A24A] transition-colors inline-flex items-center gap-2";
+export const tabBtn = (on) => `px-5 py-2.5 technical text-[10px] border transition-colors ${on ? "border-[#C9A24A] gold-text bg-[#C9A24A]/5" : "hairline text-foreground/50 hover:text-foreground"}`;
