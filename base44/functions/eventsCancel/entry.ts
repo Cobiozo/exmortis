@@ -1,7 +1,7 @@
 import { createClientFromRequest } from "npm:@base44/sdk@0.8.44";
 import { waitUntil } from "base44:runtime";
 import { runSql, escStr } from "../../shared/supabase.ts";
-import { getSetting } from "../../shared/settings.ts";
+import { getSetting, loadAppUrl } from "../../shared/settings.ts";
 import { sendSpotFreedMail } from "../../shared/events.ts";
 
 // Link „Nie mogę przyjść — zwalniam miejsce" z e-maili: oznacza zapis jako
@@ -34,6 +34,7 @@ export default async function (req) {
     }
 
     const base44 = createClientFromRequest(req);
+    await loadAppUrl(base44);
     const freed = await runSql(
       base44,
       `UPDATE public.registrations SET status = 'Wypisany'

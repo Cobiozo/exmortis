@@ -1,6 +1,6 @@
 import { createHash } from "node:crypto";
 import { createClientFromRequest } from "npm:@base44/sdk@0.8.44";
-import { getSetting } from "../../shared/settings.ts";
+import { getSetting, loadAppUrl, APP_URL } from "../../shared/settings.ts";
 import { getOrderByPayuId, updateOrderStatus } from "../../shared/orders.ts";
 import { sendMail, orderEmailHtml } from "../../shared/smtp.ts";
 import { runSql, escStr } from "../../shared/supabase.ts";
@@ -16,7 +16,7 @@ function accessEmailHtml(granted, consent) {
     .join("");
   return `<div style="background:#0A0A0B;padding:0 32px 32px;font-family:Georgia,serif;">
     ${rows}
-    <p style="margin:20px 0;"><a href="https://exmortis-return-path.base44.app/konto" style="color:#C9A24A;">Otwórz w Moich produktach</a></p>
+    <p style="margin:20px 0;"><a href="${APP_URL}/konto" style="color:#C9A24A;">Otwórz w Moich produktach</a></p>
     ${consent ? `<p style="color:#8A8A8C;font-size:13px;line-height:1.6;">Potwierdzam Twoje żądanie dostarczenia treści cyfrowych przed upływem 14 dni od zawarcia umowy oraz przyjęcie do wiadomości utraty prawa odstąpienia od umowy z chwilą rozpoczęcia dostarczania.</p>` : ""}
     <p style="color:#5C5C5E;font-size:12px;line-height:1.6;">exmortis to mentoring, nie terapia. Jeśli jest Ci bardzo ciężko: 116 123 · 800 70 2222 · w zagrożeniu życia 112.</p>
   </div>`;
@@ -29,6 +29,7 @@ export default async function (req) {
   try {
     const raw = await req.text();
     const base44 = createClientFromRequest(req);
+    await loadAppUrl(base44);
 
     const payu = await getSetting(base44, "payu");
     if (!payu || !payu.secondKey) {

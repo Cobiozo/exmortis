@@ -1,12 +1,11 @@
 import { createClientFromRequest } from "npm:@base44/sdk@0.8.52";
 import { waitUntil } from "base44:runtime";
-import { getSetting } from "../../shared/settings.ts";
+import { getSetting, loadAppUrl, APP_URL as APP } from "../../shared/settings.ts";
 import { sendMail } from "../../shared/smtp.ts";
 
 const CRISIS = [/nie chc[eę] (już )?żyć/i, /skończyć ze sobą/i, /samob[oó]j/i, /zabić si[eę]/i, /samookalecz/i, /odebrać sobie życie/i];
 const HELP = `<p style="font-size:18px;color:#C9A24A;line-height:1.7"><b>116 123</b> · <b>800 70 2222</b> (całą dobę, bezpłatnie) · <b>112</b></p>`;
 const wrap = (body) => `<div style="background:#0A0A0B;color:#E2E2E2;font-family:Georgia,serif;padding:32px;max-width:560px">${body}<hr style="border:none;border-top:1px solid #3D3D3F;margin:28px 0"><p style="font-size:12px;color:#8A8A8C">W kryzysie: 116 123 · 800 70 2222 · 112</p></div>`;
-const APP = "https://exmortis-return-path.base44.app";
 
 const str = (v, max, req) => {
   const s = String(v ?? "").trim();
@@ -18,6 +17,7 @@ const str = (v, max, req) => {
 export default async function (req) {
   try {
     const base44 = createClientFromRequest(req);
+    await loadAppUrl(base44);
     const b = await req.json().catch(() => ({}));
     const email = str(b.email, 200, true).toLowerCase();
     if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) throw new Error("Nieprawidłowy adres e-mail.");

@@ -1,6 +1,7 @@
 import { createClientFromRequest } from "npm:@base44/sdk@0.8.44";
 import { runSql, escStr } from "../../shared/supabase.ts";
 import { plWhen, APP_URL } from "../../shared/events.ts";
+import { loadAppUrl } from "../../shared/settings.ts";
 
 // Link do udostępniania spotkania: HTML z og:image/og:title/og:description
 // renderowany na serwerze (roboty Facebooka nie uruchamiają JS),
@@ -10,6 +11,7 @@ const esc = (s) => String(s ?? "").replace(/&/g, "&amp;").replace(/"/g, "&quot;"
 export default async function (req) {
   const slug = (new URL(req.url).searchParams.get("slug") || "").slice(0, 200);
   const base44 = createClientFromRequest(req);
+  await loadAppUrl(base44);
   const rows = slug
     ? await runSql(base44, `SELECT title, subtitle, start_datetime, cover, cover_image FROM public.events
         WHERE slug = ${escStr(slug)} AND status IN ('Opublikowane','Odwołane')`, true).catch(() => [])

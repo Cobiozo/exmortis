@@ -3,8 +3,9 @@ import { sendMail } from "./smtp.ts";
 // Wspólne narzędzia modułu Spotkań: daty w strefie Europe/Warsaw, pliki .ics
 // i szablony e-maili (potwierdzenia, przypomnienia, nagrania, lista rezerwowa).
 
-export const APP_URL = "https://exmortis-return-path.base44.app";
-const CANCEL_URL = `${APP_URL}/functions/eventsCancel`;
+import { APP_URL } from "./settings.ts";
+export { APP_URL };
+// APP_URL wczytuje loadAppUrl(base44) na początku każdej funkcji.
 
 const warsawFmt = (opts) => new Intl.DateTimeFormat("pl-PL", { timeZone: "Europe/Warsaw", ...opts });
 
@@ -79,7 +80,7 @@ function shell(ev, content) {
 }
 
 function cancelLink(token) {
-  return `<p style="margin-top:28px;font-size:12px;"><a href="${CANCEL_URL}?token=${token}" style="color:#8A8A8C;">Nie mogę przyjść — zwalniam miejsce</a></p>`;
+  return `<p style="margin-top:28px;font-size:12px;"><a href="${APP_URL}/functions/eventsCancel?token=${token}" style="color:#8A8A8C;">Nie mogę przyjść — zwalniam miejsce</a></p>`;
 }
 
 function meetingLine(ev) {

@@ -1,7 +1,7 @@
 import { createClientFromRequest } from "npm:@base44/sdk@0.8.44";
 import { waitUntil } from "base44:runtime";
 import { runSql, escStr, textField, requireAdmin } from "../../shared/supabase.ts";
-import { getSetting } from "../../shared/settings.ts";
+import { getSetting, loadAppUrl } from "../../shared/settings.ts";
 import {
   sendBroadcastMail,
   sendCancelledMail,
@@ -124,6 +124,7 @@ function warsawEvening(y, m, day) {
 export default async function (req) {
   try {
     const base44 = createClientFromRequest(req);
+    await loadAppUrl(base44);
     await requireAdmin(base44);
     const body = await req.json().catch(() => ({}));
 

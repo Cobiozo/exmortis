@@ -1,7 +1,7 @@
 import { createClientFromRequest } from "npm:@base44/sdk@0.8.44";
 import { applyDiscount } from "../../shared/discounts.ts";
 import { runSql, escStr, textField, emailField } from "../../shared/supabase.ts";
-import { getSetting } from "../../shared/settings.ts";
+import { getSetting, loadAppUrl, APP_URL } from "../../shared/settings.ts";
 import { insertOrder } from "../../shared/orders.ts";
 import { addSubscriber } from "../../shared/newsletter.ts";
 import { DIGITAL } from "../../shared/access.ts";
@@ -17,6 +17,7 @@ const BASE_URLS = {
 export default async function (req) {
   try {
     const base44 = createClientFromRequest(req);
+    await loadAppUrl(base44);
     const body = await req.json().catch(() => ({}));
 
     const buyerName = textField(body, "name", { max: 100 });
@@ -98,8 +99,8 @@ export default async function (req) {
         Authorization: `Bearer ${token.access_token}`,
       },
       body: JSON.stringify({
-        notifyUrl: "https://exmortis-return-path.base44.app/functions/payuNotification",
-        continueUrl: "https://exmortis-return-path.base44.app/kasa?payu=done",
+        notifyUrl: `${APP_URL}/functions/payuNotification`,
+        continueUrl: `${APP_URL}/kasa?payu=done`,
         customerIp,
         merchantPosId: String(payu.posId),
         description: "EXMORTIS — skarbiec",

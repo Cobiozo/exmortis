@@ -1,7 +1,7 @@
 import { createClientFromRequest } from "npm:@base44/sdk@0.8.44";
 import { waitUntil } from "base44:runtime";
 import { runSql, escStr, textField, emailField } from "../../shared/supabase.ts";
-import { getSetting } from "../../shared/settings.ts";
+import { getSetting, loadAppUrl } from "../../shared/settings.ts";
 import { sendConfirmationMail, sendReminderMail, sendRecordingMail, plWhen, APP_URL } from "../../shared/events.ts";
 
 // Publiczny moduł Spotkań: lista nadchodzących/minionych wydarzeń, szczegóły,
@@ -23,6 +23,7 @@ async function smtpConfig(base44) {
 export default async function (req) {
   try {
     const base44 = createClientFromRequest(req);
+    await loadAppUrl(base44);
     const body = await req.json().catch(() => ({}));
 
     // --- Lista nadchodzących (Opublikowane + Odwołane) i minionych z nagraniami ---

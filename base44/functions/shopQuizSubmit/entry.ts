@@ -1,12 +1,11 @@
 import { createClientFromRequest } from "npm:@base44/sdk@0.8.44";
 import { runSql, escStr, emailField, textField } from "../../shared/supabase.ts";
-import { getSetting } from "../../shared/settings.ts";
+import { getSetting, loadAppUrl, APP_URL as SITE_URL } from "../../shared/settings.ts";
 import { sendMail } from "../../shared/smtp.ts";
 
 // Publiczne przesłanie testu "Która śmierć jest Twoja?": zapis pełnego wyniku,
 // opcjonalny zapis na Listy powrotu, e-mail z wynikiem (SMTP z panelu admina).
 
-const SITE_URL = "https://exmortis-return-path.base44.app";
 const STAGES = ["Śmierć", "Próg", "Powrót", "Inny"];
 
 // Kolejność stwierdzeń przemieszana — indeksy każdej kategorii w tablicy odpowiedzi.
@@ -88,6 +87,7 @@ function resultEmailHtml({ name, dominantText, stage, sText, recommended }) {
 export default async function (req) {
   try {
     const base44 = createClientFromRequest(req);
+    await loadAppUrl(base44);
     const body = await req.json().catch(() => ({}));
 
     const email = emailField(body);

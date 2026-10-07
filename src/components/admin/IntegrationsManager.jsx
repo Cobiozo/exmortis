@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { base44 } from "@/api/base44Client";
 import { Save, Send, Trash2, CreditCard, Mail } from "lucide-react";
+import AppUrlSettings from "./AppUrlSettings";
 
 const inputCls =
   "w-full bg-transparent border hairline px-4 py-2.5 focus:border-[#C9A24A] focus:outline-none transition-colors text-sm";
@@ -33,6 +34,7 @@ export default function IntegrationsManager() {
   const [payu, setPayu] = useState(EMPTY_PAYU);
   const [smtp, setSmtp] = useState(EMPTY_SMTP);
   const [loading, setLoading] = useState(true);
+  const [appUrl, setAppUrl] = useState("");
   const [payuBusy, setPayuBusy] = useState(false);
   const [smtpBusy, setSmtpBusy] = useState(false);
   const [payuMsg, setPayuMsg] = useState(null);
@@ -47,6 +49,7 @@ export default function IntegrationsManager() {
       .then((res) => {
         setPayu({ ...EMPTY_PAYU, ...(res.data.payu || {}) });
         setSmtp({ ...EMPTY_SMTP, ...(res.data.smtp || {}) });
+        setAppUrl(res.data.app?.url || "");
       })
       .catch(() => {})
       .finally(() => setLoading(false));
@@ -106,6 +109,7 @@ export default function IntegrationsManager() {
 
   return (
     <div className="grid lg:grid-cols-2 gap-8 items-start">
+      <AppUrlSettings initial={appUrl} />
       {/* ===== PAYU ===== */}
       <section className="border hairline p-6 md:p-8">
         <div className="flex items-center gap-3 mb-2">
