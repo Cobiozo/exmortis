@@ -5,6 +5,7 @@ export const NAV = [
   { label: "Spotkania", to: "/spotkania?src=nav" },
   { label: "Cisza", to: "/cisza" },
   { label: "Głos", to: "/glos" },
+  { label: "Kontakt", to: "/#kontakt" },
 ];
 export const TEST = { label: "Test", to: "/test?src=nav" };
 
