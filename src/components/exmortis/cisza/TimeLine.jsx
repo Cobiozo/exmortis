@@ -11,7 +11,7 @@ export default function TimeLine({ clock, visible }) {
     <p
       ref={el}
       aria-hidden="true"
-      className="absolute top-full mt-6 shop-heading text-lg text-[#F5EFE1] digits transition-opacity duration-700"
+      className="absolute top-full mt-4 h-7 leading-7 shop-heading text-lg text-[#F5EFE1] digits transition-opacity duration-700"
       style={{ opacity: visible ? 0.6 : 0 }}
     />
   );

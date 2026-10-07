@@ -6,6 +6,12 @@ import Stage from "./Stage";
 import useWakeLock from "./useWakeLock";
 import { nextView } from "./views";
 import useScreenReaderMinutes from "./useScreenReaderMinutes";
+import { useNavigate } from "react-router-dom";
+import CiszaLogo from "./CiszaLogo";
+import LeaveConfirm from "./LeaveConfirm";
+import useStageSize from "./useStageSize";
+
+const TIME_RESERVE = 64;
 
 // Przebieg: wstęp → odliczanie z melodią → zakończenie. Jedno źródło czasu z Date.now().
 export default function CiszaSession({
@@ -26,6 +32,10 @@ export default function CiszaSession({
   const [full, setFull] = useState(false);
   const [peek, setPeek] = useState(false);
   const [lit, setLit] = useState(false);
+  const [ask, setAsk] = useState(false);
+  const navigate = useNavigate();
+  // Rezerwa pod sceną na czas: 16 px odstępu + 28 px napisu + 20 px do paska.
+  const [midRef, stageSize] = useStageSize(TIME_RESERVE + 32);
   useWakeLock(wake);
 
   const eng = useRef(null);
@@ -149,23 +159,42 @@ export default function CiszaSession({
   useEffect(() => { onDimmed?.(dimmed); }, [dimmed]); // eslint-disable-line react-hooks/exhaustive-deps
   useEffect(() => () => onDimmed?.(false), []); // eslint-disable-line react-hooks/exhaustive-deps
 
+  const bare = full || dimmed;
   return (
     <section
       onPointerDown={wakeUp}
-      className="fixed inset-0 flex items-center justify-center transition-[filter] duration-1000"
-      style={{ filter: dimmed ? "brightness(0.35)" : "none" }}
+      className="fixed inset-0 grid transition-[filter] duration-1000"
+      style={{
+        filter: dimmed ? "brightness(0.35)" : "none",
+        gridTemplateRows: bare ? "8px 1fr 24px" : "calc(56px + env(safe-area-inset-top)) 1fr calc(76px + env(safe-area-inset-bottom))",
+        height: "100dvh",
+      }}
     >
-      <p className="absolute top-[calc(50%-35vmin-3rem)] h-6 text-sm text-foreground/45 transition-opacity duration-700" style={{ opacity: full ? 0 : 1 }}>
-        {stage === "intro" ? "Za chwilę…" : paused ? "Pauza" : ""}
-      </p>
-      <div className={stage === "intro" && !reduced ? "fade-up" : ""}>
-        <Stage
-          view={view} clock={clock} slow={slow} ending={stage === "outro"} minutesOnly={minutesOnly}
-          showTime={view !== "cyfry" && (showTime || peek)} onTap={tapStage} label={srText}
-        />
+      {/* GÓRA: logo */}
+      <div className="relative flex justify-center items-end pt-[env(safe-area-inset-top)]">
+        <div className="relative">
+          <CiszaLogo hidden={bare} opacity={visible ? 0.6 : 0.25} slow={!visible} onClick={() => setAsk(true)} />
+          {ask && <LeaveConfirm onStay={() => setAsk(false)} onLeave={() => { eng.current.stopAll(800); navigate("/"); }} />}
+        </div>
+      </div>
+      {/* ŚRODEK: scena + czas pod nią */}
+      <div ref={midRef} className="relative min-h-0 flex flex-col items-center justify-center">
+        <p className="h-6 mb-2 text-sm text-foreground/45 transition-opacity duration-700" style={{ opacity: full ? 0 : 1 }}>
+          {stage === "intro" ? "Za chwilę…" : paused ? "Pauza" : ""}
+        </p>
+        <div className={stage === "intro" && !reduced ? "fade-up" : ""} style={{ paddingBottom: TIME_RESERVE }}>
+          {stageSize > 0 && (
+            <Stage
+              view={view} clock={clock} slow={slow} ending={stage === "outro"} minutesOnly={minutesOnly} size={stageSize}
+              showTime={view !== "cyfry" && (showTime || peek)} onTap={tapStage} label={srText}
+            />
+          )}
+        </div>
       </div>
       <span className="sr-only" aria-live="polite">{srText}</span>
-      {audioErr && !full && <p className="absolute bottom-28 text-xs text-foreground/40">Nie udało się wczytać dźwięku — minutnik działa w ciszy</p>}
+      {/* DÓŁ: zarezerwowana strefa paska sterowania */}
+      <div className="relative">
+      {audioErr && !full && <p className="absolute -top-5 inset-x-0 text-center text-xs text-foreground/40">Nie udało się wczytać dźwięku — minutnik działa w ciszy</p>}
       <CiszaControls
         visible={visible} reduced={reduced} hasSound={tracks.length > 0} muted={muted} onMute={() => onMuted(!muted)}
         volume={volume} onVolume={onVolume} tracks={tracks} bgId={bgId} onBg={changeBg}
@@ -174,6 +203,7 @@ export default function CiszaSession({
         dim={dim} onDim={() => onDim(!dim)} full={full} onFull={() => setFull((f) => !f)}
         backdrops={backdrops} backdropId={backdropId} onBackdrop={onBackdrop} match={match} onMatch={() => match && changeBg(match.id)}
       />
+      </div>
     </section>
   );
 }

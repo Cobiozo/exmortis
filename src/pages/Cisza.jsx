@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
+import CiszaLogo from "@/components/exmortis/cisza/CiszaLogo";
 import { base44 } from "@/api/base44Client";
 import CiszaChoose from "@/components/exmortis/cisza/CiszaChoose";
 import CiszaSession from "@/components/exmortis/cisza/CiszaSession";
@@ -14,6 +15,7 @@ import { BLACK, orderBackdrops, resolveBackdrop, matchTrack } from "@/components
 // Minutnik ciszy — osobna strona bez logowania.
 export default function Cisza() {
   const reduced = useReducedMotion();
+  const navigate = useNavigate();
   const { adminView, isAdmin } = useAdminMode();
   const [phase, setPhase] = useState("choose");
   const [prefs, setPrefs] = useState(loadPrefs);
@@ -67,6 +69,11 @@ export default function Cisza() {
         bg={backdrop} reduced={reduced} fadeMs={phase === "session" ? 1500 : 800}
         dim={phase === "session" && dimmed} zoomMs={phase === "session" ? (minutes * 60000) / speed : 0}
       />
+      {phase !== "session" && (
+        <div className="fixed inset-x-0 top-[max(20px,env(safe-area-inset-top))] sm:top-[30px] z-40 flex justify-center pointer-events-none">
+          <div className="pointer-events-auto"><CiszaLogo onClick={() => navigate("/")} /></div>
+        </div>
+      )}
       {adminView && phase === "choose" && (
         <Link to="/admin/cisza" className="fixed top-12 right-4 z-50 technical text-[10px] gold-text hover:text-[#E2C170]">
           Zarządzaj dźwiękami

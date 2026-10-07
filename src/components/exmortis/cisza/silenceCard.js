@@ -1,5 +1,5 @@
 // „Karta ciszy” 1080×1920: czarne tło, ostatnia klatka widoku, napis, logo, adres.
-const LOGO = "https://media.base44.com/images/public/6aa08bc6318b0f886cc3b9a3/f5aebd2a8_logogrupaeq26.png";
+const LOGO = "https://media.base44.com/images/public/6aa08bc6318b0f886cc3b9a3/58566649a_logogrupaeq31.png";
 
 // Wybrane tło w wersji pionowej (kadr wg punktu skupienia) + przyciemnienie.
 async function drawBackdrop(x, bg) {
@@ -88,7 +88,7 @@ export async function makeSilenceCard(stageEl, view, minutes, bg) {
   x.font = '76px "EB Garamond", Georgia, serif';
   x.fillText(`${minutes} minut ciszy`, 540, 1340);
   const logo = await loadImg(LOGO).catch(() => null);
-  if (logo) x.drawImage(logo, 470, 1460, 140, 140);
+  if (logo) x.drawImage(logo, 420, 1420, 240, 240);
   x.fillStyle = "#C9A24A";
   x.font = '34px "EB Garamond", Georgia, serif';
   x.fillText("exmortis.pl", 540, 1680);

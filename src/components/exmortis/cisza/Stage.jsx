@@ -3,7 +3,7 @@ import { getView } from "./views";
 import TimeLine from "./TimeLine";
 
 // Scena: zawsze ten sam rozmiar i miejsce (70% krótszego boku), przenikanie 600 ms przy zmianie widoku.
-export default function Stage({ view, clock, slow, ending, minutesOnly, showTime, onTap, stageRef, label }) {
+export default function Stage({ view, clock, slow, ending, minutesOnly, showTime, onTap, stageRef, label, size }) {
   const [prev, setPrev] = useState(null);
   const cur = useRef(view);
   useEffect(() => {
@@ -31,7 +31,8 @@ export default function Stage({ view, clock, slow, ending, minutesOnly, showTime
         role="timer"
         aria-label={label}
         onClick={onTap}
-        className="relative w-[70vmin] h-[70vmin] cursor-default select-none"
+        className={`relative cursor-default select-none ${size ? "" : "w-[70vmin] h-[70vmin]"}`}
+        style={size ? { width: size, height: size } : undefined}
       >
         {prev && layer(prev, "xfade-out")}
         {layer(view, prev ? "xfade-in" : "")}

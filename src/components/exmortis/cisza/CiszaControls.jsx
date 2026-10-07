@@ -32,7 +32,7 @@ export default function CiszaControls({
 
   return (
     <div
-      className="fixed bottom-0 inset-x-0 pb-6 px-4 flex flex-col items-center gap-3 transition-opacity"
+      className="absolute bottom-0 inset-x-0 pb-[max(1rem,env(safe-area-inset-bottom))] px-4 flex flex-col items-center gap-3 transition-opacity"
       style={{ opacity: visible ? 1 : 0, pointerEvents: visible ? "auto" : "none", transitionDuration: reduced ? "0ms" : "700ms" }}
     >
       {full ? (
