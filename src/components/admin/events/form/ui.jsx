@@ -10,7 +10,7 @@ export function Field({ id, label, error, hint, children }) {
       <label htmlFor={id} className="technical text-[10px] text-foreground/55 block mb-2">{label}</label>
       {children}
       {hint && !error && <p className="text-xs text-foreground/45 mt-1.5">{hint}</p>}
-      {error && <p role="alert" className="text-sm text-[#E5484D] mt-1.5">{error}</p>}
+      {error && <p role="alert" className="text-sm text-[#E5484D] mt-1.5 w-full">{error}</p>}
     </div>
   );
 }
@@ -35,10 +35,10 @@ export function Toggle({ id, label, checked, onChange, hint }) {
 
 export function Group({ title, children }) {
   return (
-    <fieldset className="space-y-5 border-t hairline pt-6 first:border-t-0 first:pt-0">
-      <legend className="shop-heading text-xl text-[#F5EFE1] mb-4 float-left w-full">{title}</legend>
+    <section role="group" aria-label={title} className="space-y-5 border-t hairline pt-6 first:border-t-0 first:pt-0">
+      <h3 className="shop-heading text-xl text-[#F5EFE1] w-full">{title}</h3>
       {children}
-    </fieldset>
+    </section>
   );
 }
 

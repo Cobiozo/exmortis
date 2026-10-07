@@ -13,7 +13,8 @@ const OUTLINE_GOLD =
 export default function EventTile({ event: ev, compact = false, past = false }) {
   const navigate = useNavigate();
   const [open, setOpen] = useState(false);
-  const d = dateTile(ev.start_datetime);
+  const tbd = !ev.start_datetime;
+  const d = tbd ? { month: "", day: "—", weekday: "" } : dateTile(ev.start_datetime);
   const cancelled = ev.status === "Odwołane";
   const dimmed = cancelled || past;
   const free = !(Number(ev.price) > 0);
@@ -93,7 +94,7 @@ export default function EventTile({ event: ev, compact = false, past = false }) 
   );
 
   const titleCls = `shop-heading ${compact ? "text-lg md:text-xl" : "text-xl md:text-2xl"} text-[#F5EFE1] leading-snug [text-wrap:balance] break-words`;
-  const infoLine = `${timeText(ev.start_datetime)} · ${minutes} min · ${formatText(ev.format)}`.toUpperCase();
+  const infoLine = (tbd ? "Termin do ustalenia" : `${timeText(ev.start_datetime)} · ${minutes} min · ${formatText(ev.format)}`).toUpperCase();
 
   return (
     <>
@@ -146,7 +147,7 @@ export default function EventTile({ event: ev, compact = false, past = false }) 
           <DialogHeader>
             <DialogTitle className="shop-heading text-xl text-[#F5EFE1]">{ev.title}</DialogTitle>
             <DialogDescription className="text-foreground/50">
-              {whenText(ev.start_datetime)} · {formatText(ev.format)}
+              {tbd ? "Termin do ustalenia" : whenText(ev.start_datetime)} · {formatText(ev.format)}
             </DialogDescription>
           </DialogHeader>
           <RegistrationForm event={ev} />

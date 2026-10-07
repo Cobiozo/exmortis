@@ -209,6 +209,11 @@
 .rich-admin .ql-editor.ql-blank::before { color: rgba(226, 226, 226, 0.35); font-style: normal; }
 .rich-admin .ql-snow .ql-tooltip { background: #0F0F10; border: 1px solid #3D3D3F; color: #E2E2E2; }
 
+/* Pola daty i godziny: ciemny systemowy wybierak, własna ikona (Safari/Firefox też) */
+.dt-input { color-scheme: dark; -webkit-appearance: none; appearance: none; }
+.dt-input::-webkit-calendar-picker-indicator { opacity: 0; position: absolute; right: 0; top: 0; width: 48px; height: 100%; cursor: pointer; }
+.dt-input::-webkit-date-and-time-value { text-align: left; }
+
 /* Edytor opisu spotkania: pasek zawija się i jest przyklejony nad tekstem */
 .rich-mobile .ql-toolbar.ql-snow { display: flex; flex-wrap: wrap; gap: 2px; position: sticky; top: 7.5rem; z-index: 10; }
 .rich-mobile .ql-toolbar.ql-snow .ql-formats { margin-right: 6px; }

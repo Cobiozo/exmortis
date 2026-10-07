@@ -40,7 +40,9 @@ export default function StepAccess(p) {
             <Toggle id="limit" label="Limit miejsc" checked={f.capacity !== "" && f.capacity !== null} onChange={(v) => set({ capacity: v ? 30 : "" })} />
             {f.capacity !== "" && f.capacity !== null && <Input id="capacity" type="number" min="1" inputMode="numeric" label="Liczba miejsc" {...p} />}
             <div className="grid md:grid-cols-2 gap-5">
-              <Input id="registration_deadline" type="datetime-local" label="Zapisy do" hint="Puste = 15 minut przed startem" {...p} />
+              <Input id="registration_deadline" type="datetime-local" label="Zapisy do" {...p}
+                hint={p.form.deadline_manual ? "Ustawione ręcznie" : "Automatycznie 15 minut przed startem"}
+                onChange={(e) => p.set({ registration_deadline: e.target.value, deadline_manual: true })} />
               <Input id="mailing_group" label="Grupa mailingowa dla zapisanych" placeholder="np. Webinar 1.11" {...p} />
             </div>
             <Input id="what_registered" label="Co dostają zapisani" placeholder="np. link do Zooma, nagranie na 7 dni" {...p} />

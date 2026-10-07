@@ -100,7 +100,7 @@ export default function EventEditor({ event, onClose, onSaved }) {
         </div>
       </div>
 
-      <div className="mx-auto max-w-[1440px] px-4 sm:px-8 pt-6 pb-[calc(120px+env(safe-area-inset-bottom))] lg:grid lg:grid-cols-[minmax(0,3fr)_minmax(0,2fr)] lg:gap-10">
+      <div className="mx-auto max-w-[1440px] px-4 sm:px-8 pt-6 pb-[calc(120px+env(safe-area-inset-bottom))] min-[1025px]:grid min-[1025px]:grid-cols-[minmax(0,3fr)_minmax(0,2fr)] min-[1025px]:gap-10">
         <div className="min-w-0">
           {restored && step === 0 && savedAt && <p className="text-sm gold-text border border-[#C9A24A]/40 p-3 mb-6">Przywrócono szkic z {hhmm(savedAt)}.</p>}
           {step === 0 && <StepBasics {...p} />}
@@ -109,7 +109,7 @@ export default function EventEditor({ event, onClose, onSaved }) {
           {step === 3 && <StepPublish {...p} goStep={go} />}
           {error && <p role="alert" className="text-sm text-[#E5484D] mt-6">{error}</p>}
         </div>
-        <aside className="hidden lg:block min-w-0"><div className="sticky top-40"><EventPreview form={form} /></div></aside>
+        <aside className="hidden min-[1025px]:block min-w-0"><div className="sticky top-40"><EventPreview form={form} /></div></aside>
       </div>
 
       <div className="fixed inset-x-0 bottom-0 z-30 bg-[#0D0D0E] border-t hairline px-4 sm:px-8 pt-3 pb-[max(12px,env(safe-area-inset-bottom))]">

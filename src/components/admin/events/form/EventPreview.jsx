@@ -9,7 +9,7 @@ import { toPayload } from "./eventForm";
 export default function EventPreview({ form }) {
   const [mode, setMode] = useState("phone");
   const ev = { ...toPayload(form, form.status), id: form.id || "podglad", slug: form.slug || "podglad", registered: 0 };
-  if (!ev.start_datetime) ev.start_datetime = new Date(Date.now() + 864e5).toISOString();
+
   const phone = mode === "phone";
   const btn = (m, Icon, l) => (
     <button type="button" onClick={() => setMode(m)} aria-pressed={mode === m}

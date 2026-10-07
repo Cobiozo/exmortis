@@ -3,13 +3,9 @@ import RichTextEditor from "@/components/admin/RichTextEditor";
 import { Field, Input, Group, Chips, inputCls } from "./ui";
 import { EVENT_TYPES, STAGES } from "./eventForm";
 
+import TermFields from "./TermFields";
+
 const DUR = [45, 60, 90, 120];
-const summary = (f) => {
-  if (!f.date || !f.time) return "";
-  const d = new Date(`${f.date}T${f.time}`);
-  if (isNaN(d)) return "";
-  return `${new Intl.DateTimeFormat("pl-PL", { timeZone: "Europe/Warsaw", weekday: "long", day: "numeric", month: "long", year: "numeric" }).format(d)}, ${new Intl.DateTimeFormat("pl-PL", { timeZone: "Europe/Warsaw", hour: "2-digit", minute: "2-digit" }).format(d)} (czas polski)`;
-};
 
 export default function StepBasics(p) {
   const { form: f, set, touch, errors } = p;
@@ -37,11 +33,7 @@ export default function StepBasics(p) {
         </Field>
       </Group>
       <Group title="Termin">
-        <div className="grid sm:grid-cols-2 gap-5">
-          <Input id="date" type="date" label="Data *" {...p} />
-          <Input id="time" type="time" label="Godzina *" {...p} />
-        </div>
-        {summary(f) && <p className="gold-text text-sm -mt-2">{summary(f)}</p>}
+        <TermFields {...p} />
         <Field id="duration_minutes" label="Czas trwania" error={errors.duration_minutes}>
           <Chips label="Czas trwania" value={other ? "inny" : Number(f.duration_minutes)}
             options={[...DUR.map((m) => [m, `${m} min`]), ["inny", "inny"]]}
