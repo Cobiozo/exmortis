@@ -69,4 +69,4 @@ export default function BackgroundEditor({ initial, trackNames, onSave, onCancel
 }
 
 export const loadTrackNames = () =>
-  base44.entities.SilenceSoundtrack.list({ distinct: "nazwa" }).then((p) => (p.items || []).filter(Boolean));
+  base44.entities.SilenceTrack.list({ distinct: "nazwa" }).then((p) => (p.items || []).filter(Boolean));

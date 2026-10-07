@@ -16,13 +16,14 @@
     },
     "wyciszanie_melodii_s": {
       "type": "number",
-      "default": 3
+      "default": 8
     },
     "tekst_na_koniec": {
       "type": "string",
       "default": "Ta cisza by\u0142a Twoja."
     }
   },
+  "required": [],
   "rls": {
     "read": {},
     "create": {

@@ -1,26 +1,23 @@
 import React, { useEffect, useState } from "react";
-import { ChevronDown, Music } from "lucide-react";
 import BackdropPicker from "./backdrop/BackdropPicker";
 import { TIMES } from "./prefs";
-import BgList from "./BgList";
+import TrackTiles from "./TrackTiles";
+import { offsetFor } from "./library";
 import ViewPicker from "./ViewPicker";
 
 // Ekran 1 — wybór czasu, tła i widoku.
 export default function CiszaChoose({
   minutes, setMinutes, tracks, bgId, onBg, onStart, reduced,
   view, onView, showTime, onShowTime, minutesOnly, onMinutesOnly,
-  backdrops, backdropId, onBackdrop, match,
+  backdrops, backdropId, onBackdrop, match, introUrl, outros = [], outroId, onOutro,
 }) {
   const [shown, setShown] = useState(false);
-  const [open, setOpen] = useState(false);
   useEffect(() => {
     const t = setTimeout(() => setShown(true), 80);
     return () => clearTimeout(t);
   }, []);
 
-  const list = tracks ? tracks.filter((t) => t.czas_min === minutes) : [];
-  const current = list.find((t) => t.id === bgId);
-  const intro = (current || list.find((t) => t.domyslny) || list[0])?.plik_wstep;
+  const current = (tracks || []).find((t) => t.id === bgId);
 
   return (
     <section
@@ -38,7 +35,7 @@ export default function CiszaChoose({
           {TIMES.map((m) => (
             <button
               key={m}
-              onClick={() => { setMinutes(m); setOpen(false); }}
+              onClick={() => setMinutes(m)}
               aria-pressed={minutes === m}
               className={`sm:w-28 py-5 shop-heading text-2xl border transition-colors duration-700 ${
                 minutes === m
@@ -51,22 +48,18 @@ export default function CiszaChoose({
           ))}
         </div>
 
-        <div className="mt-8 flex flex-col items-center gap-3 min-h-[24px]">
-          {tracks && list.length > 0 && (
-            <button
-              onClick={() => setOpen((v) => !v)}
-              aria-expanded={open}
-              aria-label="Zmień dźwięk"
-              className="inline-flex items-center gap-2 text-sm text-foreground/50 hover:text-[#F5EFE1]"
-            >
-              <Music className="h-4 w-4" strokeWidth={1.25} /> Dźwięk: <span className="text-[#C9A24A]">{current ? current.nazwa : "Bez muzyki"}</span>
-              <ChevronDown className="h-4 w-4" strokeWidth={1.25} />
-            </button>
+        <div className="mt-10">
+          <p className="technical text-[10px] text-foreground/40 mb-4">Dźwięk</p>
+          {tracks && <TrackTiles tracks={tracks} value={bgId} onChange={onBg} />}
+          {outros.length > 1 && (
+            <label className="mt-4 inline-flex items-center gap-2 text-xs text-foreground/50">
+              Dźwięk końca:
+              <select value={outroId || ""} onChange={(e) => onOutro(e.target.value)} className="bg-[#0A0A0B] border border-[#C9A24A]/30 px-2 py-1 text-[#F5EFE1]/80">
+                {outros.map((s) => <option key={s.id} value={s.id}>{s.nazwa}</option>)}
+              </select>
+            </label>
           )}
-          {tracks && list.length === 0 && (
-            <p className="text-sm text-foreground/35">Dla tego czasu nie ma jeszcze dźwięku</p>
-          )}
-          {open && <BgList tracks={list} value={bgId} onChange={(id) => { onBg(id); setOpen(false); }} />}
+          {current?.plik && <audio key={current.id} src={`${current.plik}#t=${Math.floor(offsetFor(current, 0))}`} preload="auto" className="hidden" />}
         </div>
 
         <div className="mt-10">
@@ -96,7 +89,7 @@ export default function CiszaChoose({
         <p className="mt-8 text-xs text-foreground/35 max-w-md mx-auto leading-relaxed">
           Najlepiej usiądź, połóż telefon obok — dźwięk na końcu da Ci znać, że czas minął.
         </p>
-        {intro && <audio src={intro} preload="auto" className="hidden" />}
+        {introUrl && <audio src={introUrl} preload="auto" className="hidden" />}
       </div>
     </section>
   );

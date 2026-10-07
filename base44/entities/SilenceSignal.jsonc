@@ -1,0 +1,70 @@
+{
+  "name": "SilenceSignal",
+  "type": "object",
+  "properties": {
+    "typ": {
+      "type": "string",
+      "enum": [
+        "wstep",
+        "zakonczenie"
+      ]
+    },
+    "nazwa": {
+      "type": "string"
+    },
+    "plik": {
+      "type": "string"
+    },
+    "plik_nazwa": {
+      "type": "string"
+    },
+    "dlugosc_s": {
+      "type": "number"
+    },
+    "korekta_db": {
+      "type": "number",
+      "default": 0
+    },
+    "domyslny": {
+      "type": "boolean",
+      "default": false
+    },
+    "aktywny": {
+      "type": "boolean",
+      "default": true
+    }
+  },
+  "required": [
+    "typ",
+    "nazwa"
+  ],
+  "rls": {
+    "read": {
+      "$or": [
+        {
+          "data.aktywny": true
+        },
+        {
+          "user_condition": {
+            "role": "admin"
+          }
+        }
+      ]
+    },
+    "create": {
+      "user_condition": {
+        "role": "admin"
+      }
+    },
+    "update": {
+      "user_condition": {
+        "role": "admin"
+      }
+    },
+    "delete": {
+      "user_condition": {
+        "role": "admin"
+      }
+    }
+  }
+}

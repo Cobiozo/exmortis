@@ -18,7 +18,7 @@ export default function SilenceSettingsForm({ settings, onSaved }) {
     const data = {
       glosnosc_domyslna: Math.max(0, Math.min(100, Number(v.glosnosc_domyslna) || 0)),
       dzwiek_domyslnie: v.dzwiek_domyslnie,
-      wyciszanie_melodii_s: Math.max(0, Number(v.wyciszanie_melodii_s) || 0),
+      wyciszanie_melodii_s: Math.max(4, Math.min(15, Number(v.wyciszanie_melodii_s) || 8)),
       tekst_na_koniec: v.tekst_na_koniec,
     };
     const rec = v.id ? await E.update(v.id, data) : await E.create(data);
@@ -40,8 +40,8 @@ export default function SilenceSettingsForm({ settings, onSaved }) {
           <option value="wyciszony">Wyciszony</option>
         </select>
       </label>
-      <label className="text-xs text-foreground/60 space-y-2">Wyciszanie melodii (s)
-        <input type="number" min="0" max="30" value={v.wyciszanie_melodii_s} onChange={(e) => set("wyciszanie_melodii_s", e.target.value)} className={field} />
+      <label className="text-xs text-foreground/60 space-y-2">Wyciszanie utworu przed końcem (4–15 s)
+        <input type="number" min="4" max="15" value={v.wyciszanie_melodii_s} onChange={(e) => set("wyciszanie_melodii_s", e.target.value)} className={field} />
       </label>
       <label className="text-xs text-foreground/60 space-y-2">Tekst na koniec
         <input value={v.tekst_na_koniec} onChange={(e) => set("tekst_na_koniec", e.target.value)} className={field} />

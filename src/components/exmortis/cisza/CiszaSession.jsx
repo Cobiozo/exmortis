@@ -7,7 +7,8 @@ import useWakeLock from "./useWakeLock";
 import { nextView } from "./views";
 import useScreenReaderMinutes from "./useScreenReaderMinutes";
 import { useNavigate } from "react-router-dom";
-import CiszaLogo from "./CiszaLogo";
+import CiszaLogo, { CISZA_LOGO } from "./CiszaLogo";
+import { toPlay, offsetFor, dbGain } from "./library";
 import LeaveConfirm from "./LeaveConfirm";
 import useStageSize from "./useStageSize";
 
@@ -17,12 +18,13 @@ const TIME_RESERVE = 64;
 export default function CiszaSession({
   minutes, tracks, bgId, onBg, volume, onVolume, muted, onMuted, settings, source, reduced, onDone, onExit,
   view, onView, showTime, onShowTime, dim, onDim, minutesOnly, speed = 1,
-  backdrops, backdropId, onBackdrop, match, onDimmed, backdropName,
+  backdrops, backdropId, onBackdrop, match, onDimmed, backdropName, intro, outro,
 }) {
   const dur = (minutes * 60000) / speed;
   const fadeMs = Math.max(0, Number(settings.wyciszanie_melodii_s ?? 3) * 1000);
   const findT = (id) => tracks.find((t) => t.id === id) || null;
-  const base = useRef(findT(bgId) || tracks.find((t) => t.domyslny) || tracks[0] || null).current;
+  const play = (t) => toPlay(t, tracks);
+  const [note, setNote] = useState("");
 
   const [stage, setStage] = useState("intro");
   const [paused, setPaused] = useState(false);
@@ -57,18 +59,21 @@ export default function CiszaSession({
   const finish = (late) => {
     go("outro");
     if (muted || !tracks.length) navigator.vibrate?.(200);
-    const outro = st.current.bg?.plik_zakonczenie || base?.plik_zakonczenie;
+    eng.current.stopMelody(300);
     const done = () => {
       if (st.current.sid) base44.functions.invoke("silenceSession", { event: "cisza_ukonczona", duration_minutes: minutes, session_id: st.current.sid }).catch(() => {});
       eng.current.stopAll(0);
       onDone();
     };
-    if (outro && !late) eng.current.playOnce(outro).then(done);
+    if (outro?.plik && !late) eng.current.playOnce(outro.plik, dbGain(outro.korekta_db)).then(done);
     else setTimeout(done, late ? 0 : 4000);
   };
 
   useEffect(() => {
-    const e = new SilenceAudio({ volume: volume / 100, muted, onError: () => setAudioErr(true) });
+    const e = new SilenceAudio({
+      volume: volume / 100, muted, onError: () => setAudioErr(true),
+      onInterrupt: () => { if (!st.current.paused) { api.current.toggle(); setNote("Słuchawki rozłączone — wznów, kiedy zechcesz"); } },
+    });
     eng.current = e;
     base44.functions
       .invoke("silenceSession", { event: "cisza_start", duration_minutes: minutes, soundtrack: st.current.bg?.nazwa || null, with_sound: tracks.length > 0 && !muted, source, background: backdropName })
@@ -79,9 +84,9 @@ export default function CiszaSession({
       st.current.endAt = Date.now() + dur;
       go("run");
       const b = st.current.bg;
-      if (b?.plik_melodia) e.startMelody(b.plik_melodia, b.zapetlaj_melodie !== false, 0, fadeMs);
+      if (b?.plik) e.startMelody(play(b), offsetFor(b, 0), 3000);
     };
-    if (base?.plik_wstep) e.playOnce(base.plik_wstep).then(run); else run();
+    if (intro?.plik) e.playOnce(intro.plik, dbGain(intro.korekta_db)).then(run); else run();
 
     const id = setInterval(() => {
       const s = st.current;
@@ -104,8 +109,24 @@ export default function CiszaSession({
     const s = st.current;
     if (s.stage !== "run") return;
     if (!s.paused) { s.paused = true; s.pausedAt = Date.now(); eng.current.pauseAll(); setPaused(true); }
-    else { s.endAt += Date.now() - s.pausedAt; s.paused = false; eng.current.resumeAll(); setPaused(false); }
+    else { s.endAt += Date.now() - s.pausedAt; s.paused = false; eng.current.resumeAll(); setPaused(false); setNote(""); }
   };
+  const api = useRef({});
+  api.current.toggle = togglePause;
+
+  // Ekran blokady / centrum sterowania: tytuł, logo, pauza razem z zegarem.
+  useEffect(() => {
+    const ms = navigator.mediaSession;
+    if (!ms || !window.MediaMetadata) return;
+    ms.metadata = new window.MediaMetadata({
+      title: `Cisza · ${minutes} min`, artist: "exmortis",
+      artwork: [{ src: CISZA_LOGO, sizes: "1024x1024", type: "image/png" }],
+    });
+    const h = (want) => () => { if (st.current.paused !== want) api.current.toggle(); };
+    ms.setActionHandler("pause", h(true));
+    ms.setActionHandler("play", h(false));
+    return () => { ms.setActionHandler("pause", null); ms.setActionHandler("play", null); ms.metadata = null; };
+  }, [minutes]);
 
   const changeBg = (id) => {
     onBg(id);
@@ -113,9 +134,10 @@ export default function CiszaSession({
     st.current.bg = t;
     const s = st.current;
     if (s.stage !== "run" || s.faded) return;
-    const elapsed = ((dur - (s.paused ? s.endAt - s.pausedAt : s.endAt - Date.now())) * speed) / 1000;
-    if (t?.plik_melodia) eng.current.switchMelody(t.plik_melodia, t.zapetlaj_melodie !== false, elapsed, 2000);
-    else eng.current.stopMelody(2000);
+    const left = s.paused ? s.endAt - s.pausedAt : s.endAt - Date.now();
+    const elapsed = ((dur - left) * speed) / 1000;
+    if (t?.plik && left * speed > 15000) eng.current.switchMelody(play(t), offsetFor(t, elapsed), 3000);
+    else eng.current.stopMelody(3000);
   };
 
   const end = () => { eng.current.stopAll(2000); onExit(); };
@@ -180,7 +202,7 @@ export default function CiszaSession({
       {/* ŚRODEK: scena + czas pod nią */}
       <div ref={midRef} className="relative min-h-0 flex flex-col items-center justify-center">
         <p className="h-6 mb-2 text-sm text-foreground/45 transition-opacity duration-700" style={{ opacity: full ? 0 : 1 }}>
-          {stage === "intro" ? "Za chwilę…" : paused ? "Pauza" : ""}
+          {stage === "intro" ? "Za chwilę…" : paused ? note || "Pauza" : ""}
         </p>
         <div className={stage === "intro" && !reduced ? "fade-up" : ""} style={{ paddingBottom: TIME_RESERVE }}>
           {stageSize > 0 && (
@@ -194,7 +216,7 @@ export default function CiszaSession({
       <span className="sr-only" aria-live="polite">{srText}</span>
       {/* DÓŁ: zarezerwowana strefa paska sterowania */}
       <div className="relative">
-      {audioErr && !full && <p className="absolute -top-5 inset-x-0 text-center text-xs text-foreground/40">Nie udało się wczytać dźwięku — minutnik działa w ciszy</p>}
+      {audioErr && !full && <p className="absolute -top-5 inset-x-0 text-center text-xs text-foreground/40">Ten dźwięk nie chce się wczytać — gramy ciszę</p>}
       <CiszaControls
         visible={visible} reduced={reduced} hasSound={tracks.length > 0} muted={muted} onMute={() => onMuted(!muted)}
         volume={volume} onVolume={onVolume} tracks={tracks} bgId={bgId} onBg={changeBg}

@@ -1,0 +1,118 @@
+{
+  "name": "SilenceTrack",
+  "type": "object",
+  "properties": {
+    "nazwa": {
+      "type": "string"
+    },
+    "opis": {
+      "type": "string"
+    },
+    "kategoria": {
+      "type": "string",
+      "enum": [
+        "muzyka",
+        "natura",
+        "dzwieki"
+      ],
+      "default": "muzyka"
+    },
+    "plik": {
+      "type": "string"
+    },
+    "plik_nazwa": {
+      "type": "string"
+    },
+    "dlugosc_s": {
+      "type": "number"
+    },
+    "korekta_db": {
+      "type": "number",
+      "default": 0
+    },
+    "start_tryb": {
+      "type": "string",
+      "enum": [
+        "poczatek",
+        "losowe",
+        "minuta"
+      ],
+      "default": "poczatek"
+    },
+    "start_minuta": {
+      "type": "number",
+      "default": 0
+    },
+    "zapetlaj": {
+      "type": "boolean",
+      "default": true
+    },
+    "przenikanie_s": {
+      "type": "number",
+      "default": 4
+    },
+    "nastepny_id": {
+      "type": "string"
+    },
+    "czasy": {
+      "type": "array",
+      "items": {
+        "type": "number"
+      }
+    },
+    "kolor": {
+      "type": "string",
+      "default": "#1A1712"
+    },
+    "miniatura": {
+      "type": "string"
+    },
+    "tlo_id": {
+      "type": "string"
+    },
+    "aktywny": {
+      "type": "boolean",
+      "default": true
+    },
+    "kolejnosc": {
+      "type": "number",
+      "default": 0
+    },
+    "domyslny": {
+      "type": "boolean",
+      "default": false
+    }
+  },
+  "required": [
+    "nazwa"
+  ],
+  "rls": {
+    "read": {
+      "$or": [
+        {
+          "data.aktywny": true
+        },
+        {
+          "user_condition": {
+            "role": "admin"
+          }
+        }
+      ]
+    },
+    "create": {
+      "user_condition": {
+        "role": "admin"
+      }
+    },
+    "update": {
+      "user_condition": {
+        "role": "admin"
+      }
+    },
+    "delete": {
+      "user_condition": {
+        "role": "admin"
+      }
+    }
+  }
+}

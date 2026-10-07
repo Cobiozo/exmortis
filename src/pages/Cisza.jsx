@@ -8,6 +8,7 @@ import CiszaEnd from "@/components/exmortis/cisza/CiszaEnd";
 import { useReducedMotion } from "@/components/exmortis/cisza/motion";
 import { TIMES, SETTINGS_DEFAULTS, loadPrefs, savePrefs, resolveBg } from "@/components/exmortis/cisza/prefs";
 import { useAdminMode } from "@/components/admin/AdminModeContext";
+import { available, pickSignal } from "@/components/exmortis/cisza/library";
 import { getView } from "@/components/exmortis/cisza/views";
 import Backdrop from "@/components/exmortis/cisza/backdrop/Backdrop";
 import { BLACK, orderBackdrops, resolveBackdrop, matchTrack } from "@/components/exmortis/cisza/backdrop/backdrops";
@@ -24,6 +25,7 @@ export default function Cisza() {
   const [source, setSource] = useState("");
   const [backdrops, setBackdrops] = useState([BLACK]);
   const [dimmed, setDimmed] = useState(false);
+  const [signals, setSignals] = useState([]);
 
   const update = (patch) => setPrefs((p) => { const n = { ...p, ...patch }; savePrefs(n); return n; });
 
@@ -32,9 +34,12 @@ export default function Cisza() {
     const min = Number(params.get("min"));
     if (TIMES.includes(min)) update({ min });
     setSource((params.get("src") || "").slice(0, 100));
-    base44.entities.SilenceSoundtrack.filter({ aktywny: true }, { sort: "kolejnosc", limit: 200 })
+    base44.entities.SilenceTrack.filter({ aktywny: true }, { sort: "kolejnosc", limit: 200 })
       .then((p) => setTracks(p.items))
       .catch(() => setTracks([]));
+    base44.entities.SilenceSignal.filter({ aktywny: true }, { limit: 100 })
+      .then((p) => setSignals(p.items))
+      .catch(() => {});
     base44.entities.SilenceBackground.filter({ aktywne: true }, { sort: "kolejnosc", limit: 100 })
       .then((p) => setBackdrops(orderBackdrops(p.items)))
       .catch(() => {});
@@ -45,9 +50,12 @@ export default function Cisza() {
   }, []);
 
   const minutes = TIMES.includes(prefs.min) ? prefs.min : 10;
-  const list = (tracks || []).filter((t) => t.czas_min === minutes);
-  const bgId = resolveBg(list, prefs.bg?.[minutes]);
-  const setBg = (id) => update({ bg: { ...(prefs.bg || {}), [minutes]: id } });
+  const list = available(tracks || [], minutes);
+  const bgId = resolveBg(list, prefs.track);
+  const setBg = (id) => update({ track: id });
+  const intro = pickSignal(signals, "wstep");
+  const outro = pickSignal(signals, "zakonczenie", prefs.outro);
+  const outros = signals.filter((s) => s.typ === "zakonczenie" && s.plik);
   const volume = typeof prefs.vol === "number" ? prefs.vol : settings.glosnosc_domyslna;
   const muted = typeof prefs.muted === "boolean" ? prefs.muted : settings.dzwiek_domyslnie === "wyciszony";
   const view = getView(prefs.view).id;
@@ -81,7 +89,8 @@ export default function Cisza() {
       )}
       {phase === "choose" && (
         <CiszaChoose
-          minutes={minutes} setMinutes={(m) => update({ min: m })} tracks={tracks}
+          minutes={minutes} setMinutes={(m) => update({ min: m })} tracks={tracks ? list : null}
+          introUrl={intro?.plik} outros={outros} outroId={outro?.id} onOutro={(id) => update({ outro: id })}
           bgId={bgId} onBg={setBg} onStart={() => setPhase("session")} reduced={reduced} {...viewProps}
         />
       )}
@@ -92,7 +101,7 @@ export default function Cisza() {
           settings={settings} source={source} reduced={reduced}
           onDone={() => setPhase("end")} onExit={() => setPhase("choose")}
           {...viewProps} dim={!!prefs.dim} onDim={(v) => update({ dim: v })} speed={speed}
-          onDimmed={setDimmed} backdropName={backdrop.nazwa}
+          onDimmed={setDimmed} backdropName={backdrop.nazwa} intro={intro} outro={outro}
         />
       )}
       {phase === "end" && <CiszaEnd text={settings.tekst_na_koniec} onAgain={() => setPhase("choose")} reduced={reduced} view={view} minutes={minutes} backdrop={backdrop} />}

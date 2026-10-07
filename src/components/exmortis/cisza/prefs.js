@@ -6,7 +6,7 @@ export const TIMES = [5, 10, 15, 30, 45, 60];
 export const SETTINGS_DEFAULTS = {
   glosnosc_domyslna: 60,
   dzwiek_domyslnie: "wlaczony",
-  wyciszanie_melodii_s: 3,
+  wyciszanie_melodii_s: 8,
   tekst_na_koniec: "Ta cisza była Twoja.",
 };
 

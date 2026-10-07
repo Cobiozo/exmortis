@@ -4,7 +4,7 @@ import { Check } from "lucide-react";
 // Lista teł dźwiękowych dla wybranego czasu + "Bez muzyki".
 export default function BgList({ tracks, value, onChange }) {
   const options = [
-    ...tracks.map((t) => ({ id: t.id, label: t.nazwa })),
+    ...tracks.map((t) => ({ id: t.id, label: t.opis ? `${t.nazwa} · ${t.opis}` : t.nazwa })),
     { id: "none", label: "Bez muzyki (tylko wstęp i zakończenie)" },
   ];
   return (
