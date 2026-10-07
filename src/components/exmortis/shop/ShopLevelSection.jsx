@@ -51,7 +51,7 @@ export default function ShopLevelSection({ section, products, events, onWaitlist
         )}
 
         {eventList.length > 0 && (
-          <div className={`grid sm:grid-cols-2 lg:grid-cols-3 gap-6 ${featured.length > 0 || rest.length > 0 ? "mt-6" : ""}`}>
+          <div className={`flex overflow-x-auto snap-x snap-mandatory -mx-5 px-5 pb-2 sm:mx-0 sm:px-0 sm:pb-0 sm:overflow-visible sm:grid sm:grid-cols-2 lg:grid-cols-3 gap-6 ${featured.length > 0 || rest.length > 0 ? "mt-6" : ""}`}>
             {eventList.map((ev) => (
               <ShopEventCard key={ev.id} event={ev} />
             ))}

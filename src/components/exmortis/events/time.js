@@ -51,6 +51,12 @@ export function plWhen(iso) {
   return whenText(iso);
 }
 
+// „czwartek · 3 grudnia · 20:00” (sep) — data z dniem tygodnia, bez roku.
+export function plWhenFull(iso, sep = ", ") {
+  const d = new Date(iso);
+  return `${fmt({ weekday: "long" }).format(d)}${sep}${fmt({ day: "numeric", month: "long" }).format(d)}${sep}${timeText(iso)}`;
+}
+
 export function durationText(minutes) {
   const m = Number(minutes) || 60;
   if (m % 60 === 0) return `${m / 60} godz.`;

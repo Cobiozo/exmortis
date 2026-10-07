@@ -200,6 +200,11 @@
 .rich-admin .ql-editor.ql-blank::before { color: rgba(226, 226, 226, 0.35); font-style: normal; }
 .rich-admin .ql-snow .ql-tooltip { background: #0F0F10; border: 1px solid #3D3D3F; color: #E2E2E2; }
 
+/* Edytor opisu spotkania: pasek zawija się i jest przyklejony nad tekstem */
+.rich-mobile .ql-toolbar.ql-snow { display: flex; flex-wrap: wrap; gap: 2px; position: sticky; top: 7.5rem; z-index: 10; }
+.rich-mobile .ql-toolbar.ql-snow .ql-formats { margin-right: 6px; }
+.rich-mobile .ql-editor { font-size: 16px; min-height: 200px; }
+
 /* ==== Treść z edytora wyświetlana na stronie ==== */
 .rich-content p { margin-bottom: 1rem; line-height: 1.75; }
 .rich-content h1, .rich-content h2, .rich-content h3 { font-family: var(--font-heading); text-transform: uppercase; letter-spacing: 0.04em; margin: 1.5rem 0 0.75rem; line-height: 1.1; }

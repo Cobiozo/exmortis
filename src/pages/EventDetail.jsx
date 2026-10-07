@@ -3,7 +3,9 @@ import { sanitizeHtml } from "@/lib/sanitizeHtml";
 import { Link, useParams } from "react-router-dom";
 import { ArrowLeft, Clock, MapPin } from "lucide-react";
 import { base44 } from "@/api/base44Client";
-import { Image } from "@/components/ui/image";
+import { CoverHero, coverOf } from "@/components/exmortis/events/cover";
+import HeroContent from "@/components/exmortis/events/HeroContent";
+import StickySignup from "@/components/exmortis/events/StickySignup";
 import CalendarButtons from "@/components/exmortis/events/CalendarButtons";
 import RegistrationBlock from "@/components/exmortis/events/RegistrationBlock";
 import { whenText, durationText, priceText } from "@/components/exmortis/events/time";
@@ -46,22 +48,23 @@ export default function EventDetail() {
   }
 
   const cancelled = event.status === "Odwołane";
+  const cover = coverOf(event);
   const ended =
     event.start_datetime &&
     new Date(new Date(event.start_datetime).getTime() + (Number(event.duration_minutes) || 60) * 60000) < new Date();
 
   return (
-    <div className="bg-[#0A0A0B] pt-20">
-      <div className="mx-auto max-w-[900px] px-5 md:px-10 pt-24 md:pt-28 pb-24">
+    <div className="bg-[#0A0A0B] pt-20 overflow-x-hidden">
+      {cover && (
+        <CoverHero ev={event}>
+          <HeroContent ev={event} />
+        </CoverHero>
+      )}
+      <div className="mx-auto max-w-[1200px] px-5 md:px-10 pt-10 md:pt-14 pb-24 lg:grid lg:grid-cols-[minmax(0,1fr)_380px] lg:gap-14">
+       <div className="min-w-0">
         <Link to="/spotkania" className="technical text-[10px] text-foreground/40 hover:gold-text transition-colors">
           <ArrowLeft className="h-3.5 w-3.5 inline mr-2 -mt-0.5" /> SPOTKANIA
         </Link>
-
-        {event.cover_image && (
-          <div className="mt-8 border hairline">
-            <Image src={event.cover_image} alt={event.title} className="w-full aspect-[16/8]" fittingType="fill" />
-          </div>
-        )}
 
         <div className="mt-8 flex flex-wrap items-center gap-3">
           <span className="technical text-[9px] text-[#C9A24A] border border-[#C9A24A]/40 px-2 py-1">
@@ -75,7 +78,9 @@ export default function EventDetail() {
           )}
         </div>
 
-        <h1 className="shop-heading text-3xl md:text-5xl text-[#F5EFE1] leading-tight mt-6">{event.title}</h1>
+        {!cover && (
+          <h1 className="shop-heading text-[#F5EFE1] leading-tight mt-6 break-words [text-wrap:balance]" style={{ fontSize: "clamp(2rem, 6vw, 3.5rem)" }}>{event.title}</h1>
+        )}
         {event.subtitle && <p className="italic text-foreground/60 text-lg mt-5">{event.subtitle}</p>}
 
         <div className="mt-10 grid sm:grid-cols-3 gap-6 border-y hairline py-8">
@@ -138,9 +143,11 @@ export default function EventDetail() {
           <p className="technical text-[10px] text-foreground/40 mb-5">DODAJ DO KALENDARZA</p>
           <CalendarButtons event={event} />
         </div>
+       </div>
 
+       <aside className="min-w-0 lg:sticky lg:top-28 lg:self-start">
         {!cancelled && !ended && event.registration_type !== "Bez zapisu" && (
-          <div className="mt-16">
+          <div id="zapis" className="mt-16 lg:mt-0 border hairline bg-[#0D0D0E] p-5 sm:p-7 scroll-mt-28">
             <p className="technical text-[10px] gold-text mb-6">
               {event.registration_type === "Zapis na stronie" ? "ZAPIS" : "DOŁĄCZ"}
             </p>
@@ -148,11 +155,13 @@ export default function EventDetail() {
           </div>
         )}
         {!cancelled && !ended && event.registration_type === "Bez zapisu" && (
-          <div className="mt-16">
+          <div className="mt-16 lg:mt-0">
             <RegistrationBlock event={event} />
           </div>
         )}
+       </aside>
       </div>
+      {!cancelled && !ended && event.registration_type === "Zapis na stronie" && <StickySignup />}
     </div>
   );
 }

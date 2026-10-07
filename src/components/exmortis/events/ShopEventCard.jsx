@@ -1,6 +1,7 @@
 import React from "react";
 import { Link } from "react-router-dom";
 import { ArrowRight } from "lucide-react";
+import { CoverTile } from "./cover";
 import { dateParts, timeText, durationText, priceText } from "./time";
 
 // Karta płatnego wydarzenia w sekcjach Skarbca (Praktyka, Krąg) — z datą,
@@ -10,8 +11,9 @@ export default function ShopEventCard({ event: ev }) {
   return (
     <Link
       to={`/spotkania/${ev.slug}?src=sklep`}
-      className="group flex flex-col border hairline bg-[#0D0D0E] p-7 transition-all duration-500 hover:border-[#C9A24A]/40"
+      className="group flex flex-col border hairline bg-[#0D0D0E] p-7 transition-all duration-500 hover:border-[#C9A24A]/40 snap-start shrink-0 w-[82%] sm:w-auto"
     >
+      <CoverTile ev={ev} className="aspect-[3/2] -mx-7 -mt-7 mb-6" />
       <div className="flex items-start justify-between mb-6">
         <div>
           <p className="shop-heading text-4xl gold-text leading-none">
@@ -26,7 +28,7 @@ export default function ShopEventCard({ event: ev }) {
         </span>
       </div>
 
-      <h3 className="shop-heading text-xl text-[#F5EFE1] leading-snug">{ev.title}</h3>
+      <h3 className="shop-heading text-xl text-[#F5EFE1] leading-snug [text-wrap:balance] break-words">{ev.title}</h3>
       {ev.subtitle && (
         <p className="italic text-foreground/70 text-sm mt-2 leading-relaxed">{ev.subtitle}</p>
       )}

@@ -7,7 +7,7 @@ import { googleCalendarUrl, downloadIcs } from "./time";
 export default function CalendarButtons({ event }) {
   if (!event.start_datetime) return null;
   return (
-    <div className="flex flex-wrap gap-3">
+    <div className="flex flex-col sm:flex-row sm:flex-wrap gap-3 [&>*]:w-full sm:[&>*]:w-auto">
       <a
         href={googleCalendarUrl(event)}
         target="_blank"

@@ -12,7 +12,7 @@ import { sendConfirmationMail, sendReminderMail, sendRecordingMail, plWhen, APP_
 const PUB_COLS = `e.id, e.title, e.slug, e.subtitle, e.event_type, e.format, e.start_datetime,
   e.duration_minutes, e.description, e.for_whom, e.price, e.checkout_url,
   e.capacity, e.registration_type, e.external_url, e.recording_url, e.recording_until, e.stage,
-  e.cover_image, e.status, e.cancel_reason, e.registration_deadline, e.what_registered`;
+  e.cover_image, e.cover, e.status, e.cancel_reason, e.registration_deadline, e.what_registered`;
 const REG_COUNT = `(SELECT COUNT(*) FROM public.registrations r
   WHERE r.event_id = e.id AND r.status IN ('Zapisany','Obecny'))::int AS registered`;
 

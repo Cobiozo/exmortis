@@ -3,6 +3,7 @@ import { Link, useNavigate } from "react-router-dom";
 import { dateTile, timeText, formatText, whenText } from "./time";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import RegistrationForm from "./RegistrationForm";
+import { CoverTile } from "./cover";
 
 const OUTLINE_GOLD =
   "inline-flex items-center justify-center gap-2 px-6 py-3 technical text-xs border border-[#C9A24A]/70 text-[#C9A24A] hover:bg-[#C9A24A]/10 hover:border-[#C9A24A] transition-all duration-300 w-full md:w-auto whitespace-nowrap";
@@ -91,27 +92,26 @@ export default function EventTile({ event: ev, compact = false, past = false }) 
     </div>
   );
 
-  const titleCls = `shop-heading ${compact ? "text-lg md:text-xl" : "text-xl md:text-2xl"} text-[#F5EFE1] leading-snug`;
+  const titleCls = `shop-heading ${compact ? "text-lg md:text-xl" : "text-xl md:text-2xl"} text-[#F5EFE1] leading-snug [text-wrap:balance] break-words`;
   const infoLine = `${timeText(ev.start_datetime)} · ${minutes} min · ${formatText(ev.format)}`.toUpperCase();
 
   return (
     <>
       <article
         onClick={() => navigate(`/spotkania/${ev.slug}`)}
-        className={`group cursor-pointer border border-[#2A2A2A] bg-[#121212] transition-colors duration-300 hover:border-[#C9A24A] ${
-          dimmed ? "opacity-50" : ""
-        } ${compact ? "p-4 md:p-5" : "p-5 md:p-7"}`}
+        className={`group cursor-pointer border border-[#2A2A2A] bg-[#121212] transition-colors duration-300 hover:border-[#C9A24A] flex flex-col h-full min-w-0 ${
+          past ? "opacity-50" : ""
+        }`}
       >
-        <div className="flex flex-col gap-4 md:grid md:grid-cols-[auto_1fr_auto] md:items-center md:gap-8">
-          <div className="flex gap-4 items-start md:contents">
+        <CoverTile ev={ev} />
+        <div className={`flex flex-col gap-4 flex-1 ${cancelled ? "opacity-60" : ""} ${compact ? "p-4 md:p-5" : "p-5 md:p-6"}`}>
+          <div className="flex gap-4 items-start">
             {/* kwadrat daty */}
             <div
-              className={`flex-shrink-0 border border-[#C9A24A] flex flex-col items-center justify-between py-1.5 ${
-                compact ? "w-[72px] h-[72px]" : "w-[72px] h-[72px] md:w-24 md:h-24"
-              }`}
+              className="flex-shrink-0 border border-[#C9A24A] flex flex-col items-center justify-between py-1.5 w-[72px] h-[72px]"
             >
               <span className="technical text-[8px] text-foreground/60">{d.month}</span>
-              <span className={`font-heading gold-text leading-none ${compact ? "text-2xl" : "text-2xl md:text-3xl"}`}>
+              <span className="font-heading gold-text leading-none text-2xl">
                 {d.day}
               </span>
               <span className="text-[10px] text-foreground/50">{d.weekday}</span>
@@ -121,23 +121,16 @@ export default function EventTile({ event: ev, compact = false, past = false }) 
             <div className="min-w-0">
               {badges}
               <h3 className={`${titleCls} mt-2`}>{ev.title}</h3>
-              {ev.subtitle && (
-                <p className="italic text-foreground/50 text-sm mt-1.5 leading-relaxed hidden md:block">
-                  {ev.subtitle}
-                </p>
-              )}
-              <p className="technical text-[9px] text-foreground/40 mt-2 hidden md:block">{infoLine}</p>
             </div>
           </div>
 
-          {/* mobile: zdanie i linia informacji na pełną szerokość */}
-          <div className="md:hidden">
+          <div>
             {ev.subtitle && <p className="italic text-foreground/50 text-sm leading-relaxed">{ev.subtitle}</p>}
             <p className="technical text-[9px] text-foreground/40 mt-2">{infoLine}</p>
           </div>
 
-          {/* prawa strona: przycisk */}
-          <div className="w-full md:w-auto flex flex-col md:items-end gap-2">
+          {/* przycisk zawsze na dole karty */}
+          <div className="mt-auto w-full flex flex-col gap-2 [&>a]:w-full [&>button]:w-full">
             {action()}
             {spotsNote && (
               <p className="technical text-[9px] text-foreground/50 text-center md:text-right">

@@ -123,7 +123,7 @@ export default function RegistrationForm({ event: ev }) {
           value={firstName}
           onChange={(e) => setFirstName(e.target.value)}
           placeholder="Imię"
-          className="bg-transparent border hairline px-5 py-4 text-foreground placeholder:text-foreground/30 font-mono text-sm focus:border-[#C9A24A] focus:outline-none transition-colors"
+          className="bg-transparent border hairline px-5 py-4 text-foreground placeholder:text-foreground/30 font-mono text-base min-h-[48px] w-full focus:border-[#C9A24A] focus:outline-none transition-colors"
         />
         <input
           type="email"
@@ -131,7 +131,7 @@ export default function RegistrationForm({ event: ev }) {
           value={email}
           onChange={(e) => setEmail(e.target.value)}
           placeholder="E-mail"
-          className="bg-transparent border hairline px-5 py-4 text-foreground placeholder:text-foreground/30 font-mono text-sm focus:border-[#C9A24A] focus:outline-none transition-colors"
+          className="bg-transparent border hairline px-5 py-4 text-foreground placeholder:text-foreground/30 font-mono text-base min-h-[48px] w-full focus:border-[#C9A24A] focus:outline-none transition-colors"
         />
       </div>
       <textarea
@@ -139,14 +139,14 @@ export default function RegistrationForm({ event: ev }) {
         onChange={(e) => setQuestion(e.target.value)}
         rows={3}
         placeholder="Czy jest pytanie, które chcesz mi zadać? (opcjonalnie)"
-        className="w-full bg-transparent border hairline px-5 py-4 text-foreground placeholder:text-foreground/30 font-mono text-sm focus:border-[#C9A24A] focus:outline-none transition-colors resize-none"
+        className="w-full bg-transparent border hairline px-5 py-4 text-foreground placeholder:text-foreground/30 font-mono text-base min-h-[48px] w-full focus:border-[#C9A24A] focus:outline-none transition-colors resize-none"
       />
-      <label className="flex items-start gap-3 cursor-pointer group">
+      <label className="flex items-start gap-3 cursor-pointer group py-2 min-h-[44px]">
         <input
           type="checkbox"
           checked={consent}
           onChange={(e) => setConsent(e.target.checked)}
-          className="mt-1 accent-[#C9A24A]"
+          className="mt-0.5 h-5 w-5 shrink-0 accent-[#C9A24A]"
         />
         <span className="text-xs text-foreground/50 leading-relaxed group-hover:text-foreground/70 transition-colors">
           Zapisuję się na to spotkanie i akceptuję{" "}
@@ -156,12 +156,12 @@ export default function RegistrationForm({ event: ev }) {
           .
         </span>
       </label>
-      <label className="flex items-start gap-3 cursor-pointer group">
+      <label className="flex items-start gap-3 cursor-pointer group py-2 min-h-[44px]">
         <input
           type="checkbox"
           checked={listy}
           onChange={(e) => setListy(e.target.checked)}
-          className="mt-1 accent-[#C9A24A]"
+          className="mt-0.5 h-5 w-5 shrink-0 accent-[#C9A24A]"
         />
         <span className="text-xs text-foreground/50 leading-relaxed group-hover:text-foreground/70 transition-colors">
           Chcę też dostawać Listy powrotu — jeden list w każdy poniedziałek.

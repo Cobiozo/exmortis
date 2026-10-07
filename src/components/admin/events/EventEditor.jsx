@@ -1,293 +1,136 @@
-import React, { useState } from "react";
-import { X } from "lucide-react";
+import React, { useCallback, useEffect, useRef, useState } from "react";
+import { X, Eye, Loader2 } from "lucide-react";
 import { base44 } from "@/api/base44Client";
-import { toLocalInput } from "@/components/exmortis/events/time";
+import Stepper from "./form/Stepper";
+import StepBasics from "./form/StepBasics";
+import StepCover from "./form/StepCover";
+import StepAccess from "./form/StepAccess";
+import StepPublish from "./form/StepPublish";
+import EventPreview from "./form/EventPreview";
+import LeaveDialog from "./form/LeaveDialog";
+import { makeCrops } from "./cover/coverKit";
+import { STEPS, initForm, stepErrors, allErrors, toPayload, loadDraft, saveDraft, clearDraft } from "./form/eventForm";
 
-const EVENT_TYPES = ["Spotkanie otwarte", "Live", "Webinar", "Warsztat", "Krąg", "Retreat"];
-const FORMATS = ["Online", "Stacjonarnie"];
-const REG_TYPES = ["Zapis na stronie", "Link zewnętrzny", "Bez zapisu"];
-const STATUSES = ["Opublikowane", "Szkic", "Odwołane"];
-const STAGES = ["Śmierć", "Próg", "Powrót", "Inny", "Wszystkie"];
+const hhmm = (iso) => new Date(iso).toLocaleTimeString("pl-PL", { hour: "2-digit", minute: "2-digit" });
 
-const inputCls =
-  "w-full bg-transparent border hairline px-4 py-3 text-foreground text-sm focus:border-[#C9A24A] focus:outline-none transition-colors";
-const labelCls = "technical text-[9px] text-foreground/40 block mb-2";
-
-function Select({ value, onChange, options }) {
-  return (
-    <select value={value} onChange={(e) => onChange(e.target.value)} className={inputCls}>
-      {options.map((o) => (
-        <option key={o} value={o} className="bg-[#0D0D0E] text-[#E2E2E2]">
-          {o}
-        </option>
-      ))}
-    </select>
-  );
-}
-
-// Tworzenie / edycja wydarzenia — wszystkie pola encji Event.
+// Tworzenie / edycja spotkania w 4 krokach, z podglądem, autozapisem szkicu i paskiem akcji.
 export default function EventEditor({ event, onClose, onSaved }) {
-  const [form, setForm] = useState(
-    event
-      ? {
-          ...event,
-          start_datetime: toLocalInput(event.start_datetime),
-        }
-      : {
-          title: "",
-          slug: "",
-          subtitle: "",
-          event_type: "Spotkanie otwarte",
-          format: "Online",
-          start_datetime: "",
-          duration_minutes: 60,
-          location: "",
-          description: "",
-          for_whom: "",
-          price: 0,
-          checkout_url: "",
-          capacity: "",
-          registration_type: "Zapis na stronie",
-          external_url: "",
-          join_link: "",
-          join_password: "",
-          recording_url: "",
-          recording_until: "",
-          registration_deadline: "",
-          what_registered: "",
-          mailing_group: "",
-          cancel_reason: "",
-          stage: "Wszystkie",
-          cover_image: "",
-          status: "Szkic",
-        }
-  );
-  const [saving, setSaving] = useState(false);
+  const draft = useRef(loadDraft(event?.id)).current;
+  const [form, setForm] = useState(() => draft?.form || initForm(event));
+  const [step, setStep] = useState(0);
+  const [touched, setTouched] = useState({});
+  const [dirty, setDirty] = useState(false);
+  const [savedAt, setSavedAt] = useState(draft?.at || null);
+  const [restored] = useState(!!draft);
+  const [img, setImg] = useState(null);
+  const [saving, setSaving] = useState("");
   const [error, setError] = useState("");
+  const [leave, setLeave] = useState(false);
+  const top = useRef(null);
+  const formRef = useRef(form); formRef.current = form;
 
-  const set = (key) => (e) => setForm((f) => ({ ...f, [key]: e.target.value }));
+  const [changed, setChanged] = useState(!!draft);
+  const set = (p) => { setForm((f) => ({ ...f, ...p })); setDirty(true); setChanged(true); };
+  const touch = (k) => setTouched((t) => ({ ...t, [k]: true }));
+  const errs = stepErrors(form, step);
+  const errors = Object.fromEntries(Object.entries(errs).filter(([k]) => touched[k]));
+  const done = STEPS.map((_, i) => i < 3 && Object.keys(stepErrors(form, i)).length === 0);
 
-  const submit = async (e) => {
-    e.preventDefault();
-    if (saving) return;
-    if (form.status === "Opublikowane") {
-      if (!form.start_datetime) return setError("Ustaw datę, zanim opublikujesz wydarzenie.");
-      if (new Date(form.start_datetime) < new Date() && !event?.id) {
-        return setError("Data nie może być w przeszłości.");
-      }
-      if (form.format === "Online" && !form.join_link && !form.external_url) {
-        return setError("Wydarzenie online wymaga linku Zoom albo linku transmisji.");
-      }
-      if (Number(form.price) > 0 && !form.checkout_url) {
-        return setError("Wydarzenie płatne wymaga ceny i linku płatności.");
-      }
-    }
-    setSaving(true);
-    setError("");
-    try {
-      const toIso = (v) => (v ? new Date(v).toISOString() : null);
-      const payload = {
-        ...form,
-        id: event?.id || null,
-        start_datetime: form.start_datetime ? new Date(form.start_datetime).toISOString() : null,
-        duration_minutes: Number(form.duration_minutes) || 60,
-        price: Number(form.price) || 0,
-        capacity: form.capacity === "" || form.capacity === null ? null : Number(form.capacity),
-        registration_deadline: toIso(form.registration_deadline),
-        recording_until: toIso(form.recording_until),
-      };
-      await base44.functions.invoke("eventsAdmin", { action: "save", event: payload });
-      onSaved();
-    } catch (err) {
-      setError(err?.response?.data?.error || "Nie udało się zapisać wydarzenia.");
-    } finally {
-      setSaving(false);
-    }
+  const autosave = useCallback(() => { setSavedAt(saveDraft(event?.id, formRef.current)); setDirty(false); }, [event?.id]);
+  useEffect(() => { if (!dirty) return; const t = setTimeout(autosave, 10000); return () => clearTimeout(t); }, [dirty, form, autosave]);
+
+  const focusField = (k) => setTimeout(() => {
+    const el = document.getElementById(`f-${k}`);
+    el?.scrollIntoView({ behavior: "smooth", block: "center" });
+    el?.querySelector("input,select,textarea,[contenteditable],button")?.focus({ preventScroll: true });
+  }, 50);
+  const go = (i, field) => {
+    if (dirty) autosave();
+    setStep(i); top.current?.scrollIntoView({ block: "start" });
+    if (field) { touch(field); focusField(field); }
+  };
+  const next = () => {
+    const keys = Object.keys(errs);
+    if (keys.length) { setTouched((t) => ({ ...t, ...Object.fromEntries(keys.map((k) => [k, true])) })); return focusField(keys[0]); }
+    go(step + 1);
   };
 
+  const save = async (status) => {
+    if (saving) return;
+    setError("");
+    const publish = status === "Opublikowane";
+    const all = allErrors(form, publish);
+    const first = Object.keys(all)[0];
+    if (publish && first) { const s = ["title", "date", "time", "duration_minutes"].includes(first) ? 0 : first === "cover_alt" ? 1 : 2; return go(s, first); }
+    if (!form.title.trim()) return go(0, "title");
+    setSaving(status);
+    try {
+      let f = form;
+      if (f.cover?.src && (f.cover.stale || !f.cover.crops?.wide) && img) {
+        f = { ...f, cover: { ...f.cover, crops: await makeCrops(img, f.cover.fx, f.cover.fy), stale: false } };
+        setForm(f);
+      }
+      const res = await base44.functions.invoke("eventsAdmin", { action: "save", event: toPayload(f, status) });
+      clearDraft(event?.id);
+      if (!event?.id && res.data?.event?.id) clearDraft(res.data.event.id);
+      setDirty(false);
+      onSaved();
+    } catch (e) {
+      setError(e?.response?.data?.error || e.message || "Nie udało się zapisać spotkania.");
+    }
+    setSaving("");
+  };
+  const keepStatus = event?.status && event.status !== "Szkic" ? event.status : "Szkic";
+  const close = () => (changed ? setLeave(true) : onClose());
+  const leaveNoSave = () => { clearDraft(event?.id); onClose(); };
+  const p = { form, set, touch, errors };
+
   return (
-    <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-start md:items-center justify-center p-4 overflow-y-auto">
-      <div className="relative w-full max-w-3xl bg-[#0D0D0E] border hairline p-6 md:p-10 my-8">
-        <button onClick={onClose} className="absolute top-5 right-5 text-foreground/50 hover:text-foreground transition-colors" aria-label="Zamknij">
-          <X className="h-5 w-5" />
-        </button>
-
-        <p className="technical text-[10px] gold-text mb-2">{event ? "EDYCJA WYDARZENIA" : "NOWE WYDARZENIE"}</p>
-        <h3 className="shop-heading text-2xl text-[#F5EFE1] mb-8">{event ? event.title : "Spotkanie"}</h3>
-
-        <form onSubmit={submit} className="space-y-5">
-          <div className="grid md:grid-cols-2 gap-5">
-            <div>
-              <label className={labelCls}>TYTUŁ *</label>
-              <input required value={form.title} onChange={set("title")} className={inputCls} />
+    <div className="fixed inset-0 z-50 bg-[#0A0A0B] overflow-y-auto overflow-x-hidden" role="dialog" aria-modal="true" aria-labelledby="ev-ed-title">
+      <div ref={top} className="sticky top-0 z-20 bg-[#0A0A0B]/95 border-b hairline px-4 sm:px-8 py-4">
+        <div className="mx-auto max-w-[1440px] flex items-start gap-4">
+          <div className="flex-1 min-w-0 space-y-3">
+            <div className="flex items-baseline gap-3 flex-wrap">
+              <h2 id="ev-ed-title" className="shop-heading text-xl sm:text-2xl text-[#F5EFE1] truncate max-w-full">{event ? "Edycja spotkania" : "Nowe spotkanie"}</h2>
+              {savedAt && <span className="text-xs text-foreground/45" aria-live="polite">Szkic zapisany · {hhmm(savedAt)}</span>}
             </div>
-            <div>
-              <label className={labelCls}>SLUG (URL)</label>
-              <input value={form.slug} onChange={set("slug")} placeholder="auto z tytułu" className={inputCls} />
-            </div>
+            <Stepper step={step} done={done} onGo={go} />
           </div>
-
-          <div>
-            <label className={labelCls}>SUBTITLE (JEDNO ZDANIE)</label>
-            <input value={form.subtitle} onChange={set("subtitle")} className={inputCls} />
-          </div>
-
-          <div className="grid md:grid-cols-2 gap-5">
-            <div>
-              <label className={labelCls}>TYP WYDARZENIA</label>
-              <Select value={form.event_type} onChange={(v) => setForm((f) => ({ ...f, event_type: v }))} options={EVENT_TYPES} />
-            </div>
-            <div>
-              <label className={labelCls}>FORMA</label>
-              <Select value={form.format} onChange={(v) => setForm((f) => ({ ...f, format: v }))} options={FORMATS} />
-            </div>
-          </div>
-
-          <div className="grid md:grid-cols-3 gap-5">
-            <div>
-              <label className={labelCls}>DATA I GODZINA</label>
-              <input type="datetime-local" value={form.start_datetime} onChange={set("start_datetime")} className={inputCls} />
-            </div>
-            <div>
-              <label className={labelCls}>CZAS TRWANIA (MIN)</label>
-              <input type="number" min="5" value={form.duration_minutes} onChange={set("duration_minutes")} className={inputCls} />
-            </div>
-            <div>
-              <label className={labelCls}>CENA (ZŁ, 0 = BEZPŁATNE)</label>
-              <input type="number" min="0" step="0.01" value={form.price} onChange={set("price")} className={inputCls} />
-            </div>
-          </div>
-
-          <div className="grid md:grid-cols-2 gap-5">
-            <div>
-              <label className={labelCls}>MIEJSCE (ADRES / „ONLINE, ZOOM”)</label>
-              <input value={form.location} onChange={set("location")} className={inputCls} />
-            </div>
-            <div>
-              <label className={labelCls}>DLA KOGO („DLA…”)</label>
-              <input value={form.for_whom} onChange={set("for_whom")} className={inputCls} />
-            </div>
-          </div>
-
-          <div>
-            <label className={labelCls}>OPIS (CO SIĘ WYDARZY, JAK SIĘ PRZYGOTOWAĆ)</label>
-            <textarea value={form.description} onChange={set("description")} rows={6} className={inputCls + " resize-y"} />
-          </div>
-
-          <div className="grid md:grid-cols-2 gap-5">
-            <div>
-              <label className={labelCls}>TYP ZAPISU</label>
-              <Select value={form.registration_type} onChange={(v) => setForm((f) => ({ ...f, registration_type: v }))} options={REG_TYPES} />
-            </div>
-            <div>
-              <label className={labelCls}>LIMIT MIEJSC (PUSTO = BEZ LIMITU)</label>
-              <input type="number" min="0" value={form.capacity ?? ""} onChange={set("capacity")} className={inputCls} />
-            </div>
-          </div>
-
-          <div className="grid md:grid-cols-2 gap-5">
-            <div>
-              <label className={labelCls}>CHECKOUT_URL (TYLKO PŁATNE)</label>
-              <input value={form.checkout_url || ""} onChange={set("checkout_url")} className={inputCls} />
-            </div>
-            <div>
-              <label className={labelCls}>LINK ZEWNĘTRZNY (LIVE NA FB/IG/YT)</label>
-              <input value={form.external_url || ""} onChange={set("external_url")} className={inputCls} />
-            </div>
-          </div>
-
-          <div className="grid md:grid-cols-2 gap-5">
-            <div>
-              <label className={labelCls}>LINK DO ZOOMA (WIDOCZNY TYLKO DLA ZAPISANYCH)</label>
-              <input value={form.join_link || ""} onChange={set("join_link")} className={inputCls} />
-            </div>
-            <div>
-              <label className={labelCls}>HASŁO DO ZOOMA (OPCJONALNIE, TYLKO DLA ZAPISANYCH)</label>
-              <input value={form.join_password || ""} onChange={set("join_password")} className={inputCls} />
-            </div>
-          </div>
-
-          <div className="grid md:grid-cols-2 gap-5">
-            <div>
-              <label className={labelCls}>LINK DO NAGRANIA (PO WYDARZENIU)</label>
-              <input value={form.recording_url || ""} onChange={set("recording_url")} className={inputCls} />
-            </div>
-            <div>
-              <label className={labelCls}>NAGRANIE DOSTĘPNE DO (PUSTO = BEZ TERMINU)</label>
-              <input
-                type="datetime-local"
-                value={form.recording_until || ""}
-                onChange={set("recording_until")}
-                className={inputCls}
-              />
-            </div>
-          </div>
-
-          <div className="grid md:grid-cols-2 gap-5">
-            <div>
-              <label className={labelCls}>ZAPISY DO (PUSTO = 15 MIN PRZED STARTEM)</label>
-              <input
-                type="datetime-local"
-                value={form.registration_deadline || ""}
-                onChange={set("registration_deadline")}
-                className={inputCls}
-              />
-            </div>
-            <div>
-              <label className={labelCls}>GRUPA MAILINGOWA DLA ZAPISANYCH</label>
-              <input
-                value={form.mailing_group || ""}
-                onChange={set("mailing_group")}
-                placeholder="np. Webinar 1.11"
-                className={inputCls}
-              />
-            </div>
-          </div>
-
-          <div>
-            <label className={labelCls}>CO DOSTAJĄ ZAPISANI</label>
-            <input
-              value={form.what_registered || ""}
-              onChange={set("what_registered")}
-              placeholder="np. link do Zoom, część z pytaniami, nagranie na 7 dni"
-              className={inputCls}
-            />
-          </div>
-
-          {form.status === "Odwołane" && (
-            <div>
-              <label className={labelCls}>POWÓD ODWOŁANIA (DOSTANĄ GO ZAPISANI)</label>
-              <input value={form.cancel_reason || ""} onChange={set("cancel_reason")} className={inputCls} />
-            </div>
-          )}
-
-          <div className="grid md:grid-cols-3 gap-5">
-            <div>
-              <label className={labelCls}>ETAP DROGI</label>
-              <Select value={form.stage} onChange={(v) => setForm((f) => ({ ...f, stage: v }))} options={STAGES} />
-            </div>
-            <div>
-              <label className={labelCls}>STATUS</label>
-              <Select value={form.status} onChange={(v) => setForm((f) => ({ ...f, status: v }))} options={STATUSES} />
-            </div>
-            <div>
-              <label className={labelCls}>OKŁADKA (URL, OPCJONALNIE)</label>
-              <input value={form.cover_image || ""} onChange={set("cover_image")} className={inputCls} />
-            </div>
-          </div>
-
-          {error && <p className="technical text-[10px] blood-text">{error}</p>}
-
-          <div className="flex gap-3 pt-2">
-            <button type="submit" disabled={saving} className="btn-relic !px-6 !py-3 disabled:opacity-60">
-              {saving ? "ZAPISUJĘ..." : "ZAPISZ WYDARZENIE"}
-            </button>
-            <button type="button" onClick={onClose} className="btn-ghost !px-6 !py-3">
-              ANULUJ
-            </button>
-          </div>
-        </form>
+          <button type="button" onClick={close} className="h-11 w-11 flex items-center justify-center text-foreground/60 hover:text-foreground" aria-label="Zamknij"><X className="h-5 w-5" /></button>
+        </div>
       </div>
+
+      <div className="mx-auto max-w-[1440px] px-4 sm:px-8 pt-6 pb-[calc(120px+env(safe-area-inset-bottom))] lg:grid lg:grid-cols-[minmax(0,3fr)_minmax(0,2fr)] lg:gap-10">
+        <div className="min-w-0">
+          {restored && step === 0 && savedAt && <p className="text-sm gold-text border border-[#C9A24A]/40 p-3 mb-6">Przywrócono szkic z {hhmm(savedAt)}.</p>}
+          {step === 0 && <StepBasics {...p} />}
+          {step === 1 && <StepCover {...p} img={img} setImg={setImg} />}
+          {step === 2 && <StepAccess {...p} />}
+          {step === 3 && <StepPublish {...p} goStep={go} />}
+          {error && <p role="alert" className="text-sm text-[#E5484D] mt-6">{error}</p>}
+        </div>
+        <aside className="hidden lg:block min-w-0"><div className="sticky top-40"><EventPreview form={form} /></div></aside>
+      </div>
+
+      <div className="fixed inset-x-0 bottom-0 z-30 bg-[#0D0D0E] border-t hairline px-4 sm:px-8 pt-3 pb-[max(12px,env(safe-area-inset-bottom))]">
+        <div className="mx-auto max-w-[1440px] flex items-center gap-2">
+          <button type="button" onClick={() => go(step - 1)} disabled={step === 0} className="btn-ghost !px-4 !py-3 disabled:opacity-30">WSTECZ</button>
+          <button type="button" onClick={() => save(keepStatus)} disabled={!!saving} className="btn-ghost !px-4 !py-3 disabled:opacity-50">
+            {saving && saving !== "Opublikowane" && <Loader2 className="h-4 w-4 animate-spin" />}{keepStatus === "Szkic" ? <>ZAPISZ<span className="hidden sm:inline">&nbsp;SZKIC</span></> : "ZAPISZ"}
+          </button>
+          {step < 3 && <button type="button" onClick={() => go(3)} className="lg:hidden btn-ghost !px-3 !py-3" aria-label="Podgląd"><Eye className="h-4 w-4" /></button>}
+          <span className="flex-1" />
+          {step < 3 ? (
+            <button type="button" onClick={next} className="btn-relic !px-6 !py-3">DALEJ</button>
+          ) : (
+            <button type="button" onClick={() => save("Opublikowane")} disabled={!!saving} className="btn-relic !px-6 !py-3 disabled:opacity-60">
+              {saving === "Opublikowane" && <Loader2 className="h-4 w-4 animate-spin" />}{event?.status === "Opublikowane" ? "ZAPISZ I PUBLIKUJ" : "OPUBLIKUJ"}
+            </button>
+          )}
+        </div>
+      </div>
+
+      {leave && <LeaveDialog onStay={() => setLeave(false)} onLeave={leaveNoSave} onSave={() => { setLeave(false); save(keepStatus); }} />}
     </div>
   );
 }

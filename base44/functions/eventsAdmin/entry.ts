@@ -63,6 +63,20 @@ function escDt(v) {
 }
 
 // Dodatkowe kolumny modułu spotkań (idempotentnie).
+// Okładka: źródło + kadry (adresy https), opis, punkt skupienia, przyciemnienie.
+function cleanCover(c) {
+  if (!c || typeof c !== "object" || !c.src) return null;
+  const url = (u) => (typeof u === "string" && /^https:\/\//.test(u) ? u.slice(0, 1000) : null);
+  const num = (v, min, max, d) => Math.min(max, Math.max(min, Number.isFinite(Number(v)) ? Number(v) : d));
+  const crops = {};
+  for (const k of ["wide", "tall", "tile", "og", "mail"]) if (url(c.crops?.[k])) crops[k] = url(c.crops[k]);
+  return {
+    src: url(c.src), alt: String(c.alt || "").trim().slice(0, 300),
+    fx: num(c.fx, 0, 1, 0.5), fy: num(c.fy, 0, 1, 0.5), dim: num(c.dim, 0, 80, 45),
+    source: c.source === "szablon" ? "szablon" : "wgrana", variant: num(c.variant, 0, 2, 0), crops,
+  };
+}
+
 export async function ensureEventColumns(base44) {
   await runSql(
     base44,
@@ -72,7 +86,8 @@ export async function ensureEventColumns(base44) {
        ADD COLUMN IF NOT EXISTS recording_until timestamptz,
        ADD COLUMN IF NOT EXISTS mailing_group text,
        ADD COLUMN IF NOT EXISTS what_registered text,
-       ADD COLUMN IF NOT EXISTS join_password text`
+       ADD COLUMN IF NOT EXISTS join_password text,
+       ADD COLUMN IF NOT EXISTS cover jsonb`
   );
 }
 
@@ -171,7 +186,9 @@ export default async function (req) {
       const mailing_group = textField(ev, "mailing_group", { required: false, max: 200 });
       const cancel_reason = textField(ev, "cancel_reason", { required: false, max: 1000 });
       const stage = pick(STAGES, ev.stage, "Wszystkie");
-      const cover_image = textField(ev, "cover_image", { required: false, max: 1000 });
+      const cover = cleanCover(ev.cover);
+      const cover_image = cover?.crops?.wide || textField(ev, "cover_image", { required: false, max: 1000 });
+      if (cover && !cover.alt) throw new Error("Dodaj opis okładki (tekst alternatywny).");
       const status = pick(STATUSES, ev.status, "Szkic");
 
       let startSql = "NULL";
@@ -197,7 +214,7 @@ export default async function (req) {
         location, description, for_whom, price, checkout_url, capacity, registration_type,
         external_url, join_link, join_password, recording_url, recording_until,
         registration_deadline, what_registered, mailing_group, stage, cover_image,
-        cancel_reason, status`;
+        cancel_reason, status, cover`;
       const vals = `${escStr(title)}, ${escStr(slug)}, ${subtitle ? escStr(subtitle) : "NULL"},
         ${escStr(event_type)}, ${escStr(format)}, ${startSql}, ${duration},
         ${location ? escStr(location) : "NULL"}, ${description ? escStr(description) : "NULL"},
@@ -209,7 +226,8 @@ export default async function (req) {
         ${what_registered ? escStr(what_registered) : "NULL"},
         ${mailing_group ? escStr(mailing_group) : "NULL"}, ${escStr(stage)},
         ${cover_image ? escStr(cover_image) : "NULL"},
-        ${cancel_reason ? escStr(cancel_reason) : "NULL"}, ${escStr(status)}`;
+        ${cancel_reason ? escStr(cancel_reason) : "NULL"}, ${escStr(status)},
+        ${cover ? `${escStr(JSON.stringify(cover))}::jsonb` : "NULL"}`;
 
       let rows;
       if (ev.id) {
@@ -236,13 +254,13 @@ export default async function (req) {
            (id, title, slug, subtitle, event_type, format, start_datetime, duration_minutes,
             location, description, for_whom, price, checkout_url, capacity, registration_type,
             external_url, join_password, recording_url, recording_until, registration_deadline,
-            what_registered, mailing_group, stage, cover_image, status, created_at)
+            what_registered, mailing_group, stage, cover_image, cover, status, created_at)
          SELECT gen_random_uuid()::text, title,
             slug || '-kopia-' || substr(md5(random()::text), 1, 6),
             subtitle, event_type, format, NULL, duration_minutes,
             location, description, for_whom, price, checkout_url, capacity, registration_type,
             external_url, NULL, NULL, NULL, NULL,
-            what_registered, mailing_group, stage, cover_image, 'Szkic', now()
+            what_registered, mailing_group, stage, cover_image, cover, 'Szkic', now()
          FROM public.events WHERE id = ${escStr(id)}
          RETURNING id, slug, title`
       );
@@ -275,13 +293,13 @@ export default async function (req) {
              (id, title, slug, subtitle, event_type, format, start_datetime, duration_minutes,
               location, description, for_whom, price, checkout_url, capacity, registration_type,
               external_url, join_password, recording_url, recording_until, registration_deadline,
-              what_registered, mailing_group, stage, cover_image, status, created_at)
+              what_registered, mailing_group, stage, cover_image, cover, status, created_at)
            SELECT gen_random_uuid()::text, title,
               ${escStr((ev.slug || slugify(ev.title) || "wieczor") + "-" + y + "-" + String(m).padStart(2, "0"))},
               subtitle, event_type, format, ${escStr(iso)}::timestamptz, duration_minutes,
               location, description, for_whom, price, checkout_url, capacity, registration_type,
               external_url, NULL, NULL, NULL, NULL,
-              what_registered, mailing_group, stage, cover_image, 'Szkic', now()
+              what_registered, mailing_group, stage, cover_image, cover, 'Szkic', now()
            FROM public.events WHERE id = ${escStr(id)}
            RETURNING id, slug, title`
         );
