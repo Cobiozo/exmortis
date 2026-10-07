@@ -2,9 +2,13 @@ import React, { useEffect, useState } from "react";
 import { ChevronDown } from "lucide-react";
 import { TIMES } from "./prefs";
 import BgList from "./BgList";
+import ViewPicker from "./ViewPicker";
 
-// Ekran 1 — wybór czasu i tła.
-export default function CiszaChoose({ minutes, setMinutes, tracks, bgId, onBg, onStart, reduced }) {
+// Ekran 1 — wybór czasu, tła i widoku.
+export default function CiszaChoose({
+  minutes, setMinutes, tracks, bgId, onBg, onStart, reduced,
+  view, onView, showTime, onShowTime, minutesOnly, onMinutesOnly,
+}) {
   const [shown, setShown] = useState(false);
   const [open, setOpen] = useState(false);
   useEffect(() => {
@@ -61,6 +65,23 @@ export default function CiszaChoose({ minutes, setMinutes, tracks, bgId, onBg, o
             <p className="text-sm text-foreground/35">Dla tego czasu nie ma jeszcze dźwięku</p>
           )}
           {open && <BgList tracks={list} value={bgId} onChange={(id) => { onBg(id); setOpen(false); }} />}
+        </div>
+
+        <div className="mt-10">
+          <p className="technical text-[10px] text-foreground/40 mb-4">Widok</p>
+          <ViewPicker value={view} onChange={onView} reduced={reduced} />
+          {view === "cyfry" && (
+            <label className="mt-4 inline-flex items-center gap-2 text-xs text-foreground/50 cursor-pointer">
+              <input type="checkbox" checked={minutesOnly} onChange={(e) => onMinutesOnly(e.target.checked)} className="accent-[#C9A24A]" />
+              Same minuty
+            </label>
+          )}
+          {view !== "cyfry" && (
+            <label className="mt-4 inline-flex items-center gap-2 text-xs text-foreground/50 cursor-pointer">
+              <input type="checkbox" checked={showTime} onChange={(e) => onShowTime(e.target.checked)} className="accent-[#C9A24A]" />
+              Pokaż czas
+            </label>
+          )}
         </div>
 
         <button onClick={onStart} className="btn-relic mt-10">Zacznij</button>

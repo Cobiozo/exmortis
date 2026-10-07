@@ -7,11 +7,12 @@ import CiszaEnd from "@/components/exmortis/cisza/CiszaEnd";
 import { useReducedMotion } from "@/components/exmortis/cisza/motion";
 import { TIMES, SETTINGS_DEFAULTS, loadPrefs, savePrefs, resolveBg } from "@/components/exmortis/cisza/prefs";
 import { useAdminMode } from "@/components/admin/AdminModeContext";
+import { getView } from "@/components/exmortis/cisza/views";
 
 // Minutnik ciszy — osobna strona bez logowania.
 export default function Cisza() {
   const reduced = useReducedMotion();
-  const { adminView } = useAdminMode();
+  const { adminView, isAdmin } = useAdminMode();
   const [phase, setPhase] = useState("choose");
   const [prefs, setPrefs] = useState(loadPrefs);
   const [tracks, setTracks] = useState(null);
@@ -40,6 +41,15 @@ export default function Cisza() {
   const setBg = (id) => update({ bg: { ...(prefs.bg || {}), [minutes]: id } });
   const volume = typeof prefs.vol === "number" ? prefs.vol : settings.glosnosc_domyslna;
   const muted = typeof prefs.muted === "boolean" ? prefs.muted : settings.dzwiek_domyslnie === "wyciszony";
+  const view = getView(prefs.view).id;
+  const viewProps = {
+    view, onView: (v) => update({ view: v }),
+    showTime: !!prefs.showTime, onShowTime: (v) => update({ showTime: v }),
+    minutesOnly: !!prefs.minutesOnly, onMinutesOnly: (v) => update({ minutesOnly: v }),
+  };
+  // Tryb testowy ?speed=60 — działa tylko dla administratora.
+  const speedParam = Number(new URLSearchParams(window.location.search).get("speed"));
+  const speed = isAdmin && speedParam > 1 ? Math.min(600, speedParam) : 1;
 
   return (
     <div className="min-h-screen bg-[#0A0A0B]">
@@ -51,7 +61,7 @@ export default function Cisza() {
       {phase === "choose" && (
         <CiszaChoose
           minutes={minutes} setMinutes={(m) => update({ min: m })} tracks={tracks}
-          bgId={bgId} onBg={setBg} onStart={() => setPhase("session")} reduced={reduced}
+          bgId={bgId} onBg={setBg} onStart={() => setPhase("session")} reduced={reduced} {...viewProps}
         />
       )}
       {phase === "session" && (
@@ -60,9 +70,10 @@ export default function Cisza() {
           volume={volume} onVolume={(v) => update({ vol: v })} muted={muted} onMuted={(m) => update({ muted: m })}
           settings={settings} source={source} reduced={reduced}
           onDone={() => setPhase("end")} onExit={() => setPhase("choose")}
+          {...viewProps} dim={!!prefs.dim} onDim={(v) => update({ dim: v })} speed={speed}
         />
       )}
-      {phase === "end" && <CiszaEnd text={settings.tekst_na_koniec} onAgain={() => setPhase("choose")} reduced={reduced} />}
+      {phase === "end" && <CiszaEnd text={settings.tekst_na_koniec} onAgain={() => setPhase("choose")} reduced={reduced} view={view} minutes={minutes} />}
     </div>
   );
 }

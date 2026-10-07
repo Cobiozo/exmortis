@@ -1,34 +1,50 @@
-import React, { useEffect, useRef, useState } from "react";
+import React, { useEffect, useMemo, useRef, useState } from "react";
 import { base44 } from "@/api/base44Client";
 import { SilenceAudio } from "./audioEngine";
-import { clock } from "./prefs";
 import CiszaControls from "./CiszaControls";
+import Stage from "./Stage";
 import useWakeLock from "./useWakeLock";
+import { nextView } from "./views";
+import useScreenReaderMinutes from "./useScreenReaderMinutes";
 
-// Przebieg: wstęp → odliczanie z melodią → zakończenie. Zegar liczony z Date.now().
+// Przebieg: wstęp → odliczanie z melodią → zakończenie. Jedno źródło czasu z Date.now().
 export default function CiszaSession({
   minutes, tracks, bgId, onBg, volume, onVolume, muted, onMuted, settings, source, reduced, onDone, onExit,
+  view, onView, showTime, onShowTime, dim, onDim, minutesOnly, speed = 1,
 }) {
-  const dur = minutes * 60000;
+  const dur = (minutes * 60000) / speed;
   const fadeMs = Math.max(0, Number(settings.wyciszanie_melodii_s ?? 3) * 1000);
   const findT = (id) => tracks.find((t) => t.id === id) || null;
   const base = useRef(findT(bgId) || tracks.find((t) => t.domyslny) || tracks[0] || null).current;
 
   const [stage, setStage] = useState("intro");
-  const [rem, setRem] = useState(dur);
   const [paused, setPaused] = useState(false);
   const [audioErr, setAudioErr] = useState(false);
   const [visible, setVisible] = useState(true);
   const [wake, setWake] = useState(true);
+  const [full, setFull] = useState(false);
+  const [peek, setPeek] = useState(false);
+  const [lit, setLit] = useState(false);
   useWakeLock(wake);
 
   const eng = useRef(null);
   const st = useRef({ stage: "intro", endAt: 0, pausedAt: 0, paused: false, faded: false, bg: findT(bgId), sid: null });
   const go = (s) => { st.current.stage = s; setStage(s); };
 
+  // Wspólny zegar dla wszystkich widoków.
+  const clock = useMemo(() => ({
+    get: () => {
+      const s = st.current;
+      if (s.stage === "intro") return { p: 0, rem: minutes * 60000, paused: false };
+      if (s.stage !== "run") return { p: 1, rem: 0, paused: false };
+      const left = Math.max(0, s.paused ? s.endAt - s.pausedAt : s.endAt - Date.now());
+      return { p: 1 - left / dur, rem: left * speed, paused: s.paused };
+    },
+  }), [dur, minutes, speed]);
+  const srText = useScreenReaderMinutes(clock);
+
   const finish = (late) => {
     go("outro");
-    setRem(0);
     if (muted || !tracks.length) navigator.vibrate?.(200);
     const outro = st.current.bg?.plik_zakonczenie || base?.plik_zakonczenie;
     const done = () => {
@@ -36,7 +52,8 @@ export default function CiszaSession({
       eng.current.stopAll(0);
       onDone();
     };
-    if (outro && !late) eng.current.playOnce(outro).then(done); else done();
+    if (outro && !late) eng.current.playOnce(outro).then(done);
+    else setTimeout(done, late ? 0 : 4000);
   };
 
   useEffect(() => {
@@ -59,13 +76,12 @@ export default function CiszaSession({
       const s = st.current;
       if (s.stage !== "run" || s.paused) return;
       const r = s.endAt - Date.now();
-      setRem(Math.max(0, r));
       if (!s.faded && r <= fadeMs) {
         s.faded = true;
         e.stopMelody(Math.max(0, Math.min(fadeMs, r)));
       }
       if (r <= 0) finish(r < -20000);
-    }, 250);
+    }, 100);
     return () => { clearInterval(id); e.stopAll(0); };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
@@ -86,20 +102,37 @@ export default function CiszaSession({
     st.current.bg = t;
     const s = st.current;
     if (s.stage !== "run" || s.faded) return;
-    const elapsed = (dur - (s.paused ? s.endAt - s.pausedAt : s.endAt - Date.now())) / 1000;
+    const elapsed = ((dur - (s.paused ? s.endAt - s.pausedAt : s.endAt - Date.now())) * speed) / 1000;
     if (t?.plik_melodia) eng.current.switchMelody(t.plik_melodia, t.zapetlaj_melodie !== false, elapsed, 2000);
     else eng.current.stopMelody(2000);
   };
 
   const end = () => { eng.current.stopAll(2000); onExit(); };
 
-  // Pasek chowa się po 4 s; klawisze: spacja = pauza, M = wycisz.
+  // Dotknięcie sceny: pokaż czas na 3 s; przy przygaszeniu — pełna jasność na 5 s.
+  const timers = useRef({});
+  const tapStage = () => {
+    if (!showTime) { setPeek(true); clearTimeout(timers.current.p); timers.current.p = setTimeout(() => setPeek(false), 3000); }
+  };
+  const wakeUp = () => {
+    if (!dim) return;
+    setLit(true); clearTimeout(timers.current.l); timers.current.l = setTimeout(() => setLit(false), 5000);
+  };
+
+  // Pasek chowa się po 4 s; klawisze: spacja, M, V, T, D, F.
+  const keys = useRef();
+  keys.current = { muted, view, showTime, dim };
   useEffect(() => {
     let t;
     const show = () => { setVisible(true); clearTimeout(t); t = setTimeout(() => setVisible(false), 4000); };
     const key = (e) => {
+      const k = keys.current;
       if (e.code === "Space") { e.preventDefault(); togglePause(); }
-      else if (e.key === "m" || e.key === "M") onMuted(!muted);
+      else if (e.key === "m" || e.key === "M") onMuted(!k.muted);
+      else if (e.key === "v" || e.key === "V") onView(nextView(k.view));
+      else if (e.key === "t" || e.key === "T") onShowTime(!k.showTime);
+      else if (e.key === "d" || e.key === "D") onDim(!k.dim);
+      else if (e.key === "f" || e.key === "F") setFull((f) => !f);
       show();
     };
     show();
@@ -108,17 +141,34 @@ export default function CiszaSession({
     window.addEventListener("keydown", key);
     return () => { clearTimeout(t); window.removeEventListener("mousemove", show); window.removeEventListener("touchstart", show); window.removeEventListener("keydown", key); };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [muted]);
+  }, []);
+
+  const dimmed = dim && !lit;
+  const slow = reduced ? true : dimmed ? 1000 : 0;
 
   return (
-    <section className="fixed inset-0 bg-[#0A0A0B] flex flex-col items-center justify-center px-6">
-      <p className="h-6 text-sm text-foreground/45">{stage === "intro" ? "Za chwilę…" : paused ? "Pauza" : ""}</p>
-      <p className="shop-heading text-7xl md:text-9xl text-[#F5EFE1] tabular-nums mt-4" aria-live="off">{clock(rem)}</p>
-      {audioErr && <p className="mt-8 text-xs text-foreground/40">Nie udało się wczytać dźwięku — minutnik działa w ciszy</p>}
+    <section
+      onPointerDown={wakeUp}
+      className="fixed inset-0 cisza-vignette flex items-center justify-center transition-[filter] duration-1000"
+      style={{ filter: dimmed ? "brightness(0.35)" : "none" }}
+    >
+      <p className="absolute top-[calc(50%-35vmin-3rem)] h-6 text-sm text-foreground/45 transition-opacity duration-700" style={{ opacity: full ? 0 : 1 }}>
+        {stage === "intro" ? "Za chwilę…" : paused ? "Pauza" : ""}
+      </p>
+      <div className={stage === "intro" && !reduced ? "fade-up" : ""}>
+        <Stage
+          view={view} clock={clock} slow={slow} ending={stage === "outro"} minutesOnly={minutesOnly}
+          showTime={view !== "cyfry" && (showTime || peek)} onTap={tapStage} label={srText}
+        />
+      </div>
+      <span className="sr-only" aria-live="polite">{srText}</span>
+      {audioErr && !full && <p className="absolute bottom-28 text-xs text-foreground/40">Nie udało się wczytać dźwięku — minutnik działa w ciszy</p>}
       <CiszaControls
         visible={visible} reduced={reduced} hasSound={tracks.length > 0} muted={muted} onMute={() => onMuted(!muted)}
         volume={volume} onVolume={onVolume} tracks={tracks} bgId={bgId} onBg={changeBg}
         paused={paused} onPause={togglePause} canPause={stage === "run"} onEnd={end} wake={wake} onWake={() => setWake((w) => !w)}
+        view={view} onView={onView} showTime={showTime} onShowTime={() => onShowTime(!showTime)}
+        dim={dim} onDim={() => onDim(!dim)} full={full} onFull={() => setFull((f) => !f)}
       />
     </section>
   );

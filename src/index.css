@@ -167,6 +167,25 @@
   100% { transform: translateY(100vh); }
 }
 
+/* ==== CISZA — widoki odliczania ==== */
+.digits { font-variant-numeric: tabular-nums lining-nums; }
+@keyframes breathe { 0%, 100% { opacity: 1; } 50% { opacity: 0.55; } }
+.breathe { animation: breathe 4s ease-in-out infinite; }
+@keyframes xfade-in { from { opacity: 0; } to { opacity: 1; } }
+@keyframes xfade-out { from { opacity: 1; } to { opacity: 0; } }
+.xfade-in { animation: xfade-in 600ms ease both; }
+.xfade-out { animation: xfade-out 600ms ease both; }
+@keyframes bar-end { 0%, 35% { filter: brightness(1.45); opacity: 1; } 100% { filter: none; opacity: 0.6; } }
+.bar-end { animation: bar-end 5s ease-out forwards; }
+@keyframes portal-crack { 0% { opacity: 0; } 15% { opacity: 1; } 45% { opacity: 1; } 100% { opacity: 0; } }
+.portal-crack { animation: portal-crack 7s ease-in-out forwards; }
+@keyframes glass-turn { from { transform: rotate(0); } to { transform: rotate(180deg); } }
+.glass-turn { animation: glass-turn 1.2s ease-in-out forwards; }
+.cisza-vignette { background: radial-gradient(ellipse at center, #121110 0%, #0A0A0A 65%); }
+@media (prefers-reduced-motion: reduce) {
+  .breathe, .xfade-in, .xfade-out, .bar-end, .portal-crack, .glass-turn { animation-duration: 1ms; }
+}
+
 /* ==== ADMIN — Quill w ciemnej skórce ==== */
 .rich-admin .ql-toolbar.ql-snow { border: 1px solid #3D3D3F; border-bottom: none; background: #0F0F10; border-radius: 2px 2px 0 0; }
 .rich-admin .ql-toolbar.ql-snow .ql-stroke { stroke: #8A8A8C; }
