@@ -60,7 +60,17 @@ export default async function (req) {
           true
         ),
       ]);
-      return Response.json({ rows, silent: silent?.[0]?.n || 0 });
+      await runSql(base44, `ALTER TABLE public.silence_sessions ADD COLUMN IF NOT EXISTS background text`);
+      const backgrounds = await runSql(
+        base44,
+        `SELECT COALESCE(background, 'Czerń') AS background, COUNT(*)::int AS started,
+                SUM(CASE WHEN completed THEN 1 ELSE 0 END)::int AS completed
+         FROM public.silence_sessions
+         WHERE created_at >= now() - interval '30 days'
+         GROUP BY 1 ORDER BY 2 DESC`,
+        true
+      );
+      return Response.json({ rows, silent: silent?.[0]?.n || 0, backgrounds: backgrounds || [] });
     }
 
     if (body.action === "stats") {

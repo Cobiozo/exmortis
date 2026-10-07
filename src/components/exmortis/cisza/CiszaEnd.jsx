@@ -5,7 +5,7 @@ import { fixedClock } from "./views/useFrame";
 import SilenceCardPanel from "./SilenceCardPanel";
 
 // Ekran końcowy — w tle ostatnia klatka wybranego widoku (przygaszona).
-export default function CiszaEnd({ text, onAgain, reduced, view, minutes }) {
+export default function CiszaEnd({ text, onAgain, reduced, view, minutes, backdrop }) {
   const clock = useMemo(() => fixedClock(1), []);
   const stageRef = useRef(null);
   const [turn, setTurn] = useState(false);
@@ -16,7 +16,7 @@ export default function CiszaEnd({ text, onAgain, reduced, view, minutes }) {
   };
 
   return (
-    <section className="fixed inset-0 cisza-vignette flex items-center justify-center">
+    <section className="fixed inset-0 flex items-center justify-center">
       <div className={`absolute inset-0 flex items-center justify-center opacity-25 ${turn ? "glass-turn !opacity-60" : ""}`} aria-hidden="true">
         <Stage view={view} clock={clock} slow={1000} stageRef={stageRef} />
       </div>
@@ -26,7 +26,7 @@ export default function CiszaEnd({ text, onAgain, reduced, view, minutes }) {
           <button onClick={again} className="text-foreground/55 hover:text-[#C9A24A] transition-colors">Jeszcze raz</button>
           <Link to="/sklep" className="text-foreground/55 hover:text-[#C9A24A] transition-colors">Wróć do Skarbca</Link>
         </div>
-        <SilenceCardPanel stageRef={stageRef} view={view} minutes={minutes} />
+        <SilenceCardPanel stageRef={stageRef} view={view} minutes={minutes} backdrop={backdrop} />
       </div>
     </section>
   );

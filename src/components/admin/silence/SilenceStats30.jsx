@@ -35,6 +35,22 @@ export default function SilenceStats30() {
               </tbody>
             </table>
           )}
+          {d.backgrounds?.length > 0 && (
+            <table className="w-full text-sm mt-8">
+              <thead className="technical text-[9px] text-foreground/40 text-left">
+                <tr><th className="py-2">TŁO</th><th>WYBRANE</th><th>UKOŃCZONE</th></tr>
+              </thead>
+              <tbody>
+                {d.backgrounds.map((r) => (
+                  <tr key={r.background} className="border-t hairline">
+                    <td className="py-2 text-foreground/70">{r.background}</td>
+                    <td>{r.started}</td>
+                    <td className="gold-text">{r.completed}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          )}
         </>
       )}
     </div>

@@ -1,5 +1,6 @@
 import React, { useState } from "react";
-import { Volume2, VolumeX, Music, Pause, Play, X, Sun, Circle, Timer, Moon, Maximize2, Minimize2 } from "lucide-react";
+import { Volume2, VolumeX, Music, Pause, Play, X, Sun, Circle, Timer, Moon, Maximize2, Minimize2, Image as ImageIcon } from "lucide-react";
+import BackdropPicker from "./backdrop/BackdropPicker";
 import BgList from "./BgList";
 import ViewPicker from "./ViewPicker";
 import { isIOS } from "./audioEngine";
@@ -12,6 +13,7 @@ export default function CiszaControls({
   visible, reduced, hasSound, muted, onMute, volume, onVolume, tracks, bgId, onBg,
   paused, onPause, onEnd, canPause, wake, onWake,
   view, onView, showTime, onShowTime, dim, onDim, full, onFull,
+  backdrops, backdropId, onBackdrop, match, onMatch,
 }) {
   const [panel, setPanel] = useState(null);
   const ios = isIOS();
@@ -43,6 +45,11 @@ export default function CiszaControls({
           <ViewPicker value={view} onChange={(v) => { onView(v); setPanel(null); }} reduced={reduced} />
         </div>
       )}
+      {panel === "img" && (
+        <div className="border border-[#C9A24A]/30 bg-[#0A0A0B] px-4 py-3">
+          <BackdropPicker items={backdrops} value={backdropId} onChange={onBackdrop} match={match} onMatch={onMatch} />
+        </div>
+      )}
       {panel === "bg" && <BgList tracks={tracks} value={bgId} onChange={(id) => { onBg(id); setPanel(null); }} />}
       {panel === "vol" && (
         <div className="flex items-center gap-3 border border-[#C9A24A]/30 bg-[#0A0A0B] px-4 py-3">
@@ -63,8 +70,11 @@ export default function CiszaControls({
           {muted || !hasSound ? <VolumeX className={ico} strokeWidth={1.25} /> : <Volume2 className={ico} strokeWidth={1.25} />}
         </button>
         {hasSound && !coarse && <span className="hidden md:inline-flex pr-2">{slider}</span>}
-        <button disabled={!hasSound} onClick={() => toggle("bg")} className={btn} aria-label="Zmień tło dźwiękowe">
+        <button disabled={!hasSound} onClick={() => toggle("bg")} className={btn} aria-label="Zmień dźwięk">
           <Music className={ico} strokeWidth={1.25} />
+        </button>
+        <button onClick={() => toggle("img")} className={btn} aria-label="Zmień tło" aria-expanded={panel === "img"}>
+          <ImageIcon className={ico} strokeWidth={1.25} />
         </button>
         <button onClick={() => toggle("view")} className={btn} aria-label="Zmień widok odliczania" aria-expanded={panel === "view"}>
           <Circle className={ico} strokeWidth={1.25} />
@@ -78,14 +88,14 @@ export default function CiszaControls({
         <button onClick={onFull} className={btn} aria-label="Pełny ekran">
           <Maximize2 className={ico} strokeWidth={1.25} />
         </button>
-        <button disabled={!canPause} onClick={onPause} className={btn} aria-label={paused ? "Wznów" : "Pauza"}>
-          {paused ? <Play className={ico} strokeWidth={1.25} /> : <Pause className={ico} strokeWidth={1.25} />}
-        </button>
         {"wakeLock" in navigator && (
           <button onClick={onWake} className={`${btn} ${wake ? "" : "opacity-40"}`} aria-pressed={wake} aria-label="Nie wygaszaj ekranu">
             <Sun className={ico} strokeWidth={1.25} />
           </button>
         )}
+        <button disabled={!canPause} onClick={onPause} className={btn} aria-label={paused ? "Wznów" : "Pauza"}>
+          {paused ? <Play className={ico} strokeWidth={1.25} /> : <Pause className={ico} strokeWidth={1.25} />}
+        </button>
         <button onClick={onEnd} className={btn} aria-label="Zakończ">
           <X className={ico} strokeWidth={1.25} />
         </button>

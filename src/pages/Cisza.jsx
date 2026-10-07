@@ -8,6 +8,8 @@ import { useReducedMotion } from "@/components/exmortis/cisza/motion";
 import { TIMES, SETTINGS_DEFAULTS, loadPrefs, savePrefs, resolveBg } from "@/components/exmortis/cisza/prefs";
 import { useAdminMode } from "@/components/admin/AdminModeContext";
 import { getView } from "@/components/exmortis/cisza/views";
+import Backdrop from "@/components/exmortis/cisza/backdrop/Backdrop";
+import { BLACK, orderBackdrops, resolveBackdrop, matchTrack } from "@/components/exmortis/cisza/backdrop/backdrops";
 
 // Minutnik ciszy — osobna strona bez logowania.
 export default function Cisza() {
@@ -18,6 +20,8 @@ export default function Cisza() {
   const [tracks, setTracks] = useState(null);
   const [settings, setSettings] = useState(SETTINGS_DEFAULTS);
   const [source, setSource] = useState("");
+  const [backdrops, setBackdrops] = useState([BLACK]);
+  const [dimmed, setDimmed] = useState(false);
 
   const update = (patch) => setPrefs((p) => { const n = { ...p, ...patch }; savePrefs(n); return n; });
 
@@ -29,6 +33,9 @@ export default function Cisza() {
     base44.entities.SilenceSoundtrack.filter({ aktywny: true }, { sort: "kolejnosc", limit: 200 })
       .then((p) => setTracks(p.items))
       .catch(() => setTracks([]));
+    base44.entities.SilenceBackground.filter({ aktywne: true }, { sort: "kolejnosc", limit: 100 })
+      .then((p) => setBackdrops(orderBackdrops(p.items)))
+      .catch(() => {});
     base44.entities.SilenceSettings.filter({}, { limit: 1 })
       .then((p) => p.items[0] && setSettings({ ...SETTINGS_DEFAULTS, ...p.items[0] }))
       .catch(() => {});
@@ -42,7 +49,10 @@ export default function Cisza() {
   const volume = typeof prefs.vol === "number" ? prefs.vol : settings.glosnosc_domyslna;
   const muted = typeof prefs.muted === "boolean" ? prefs.muted : settings.dzwiek_domyslnie === "wyciszony";
   const view = getView(prefs.view).id;
+  const backdrop = resolveBackdrop(backdrops, prefs.backdrop);
+  const match = matchTrack(backdrop, list, bgId);
   const viewProps = {
+    backdrops, backdropId: backdrop.id, onBackdrop: (id) => update({ backdrop: id }), match,
     view, onView: (v) => update({ view: v }),
     showTime: !!prefs.showTime, onShowTime: (v) => update({ showTime: v }),
     minutesOnly: !!prefs.minutesOnly, onMinutesOnly: (v) => update({ minutesOnly: v }),
@@ -53,6 +63,10 @@ export default function Cisza() {
 
   return (
     <div className="min-h-screen bg-[#0A0A0B]">
+      <Backdrop
+        bg={backdrop} reduced={reduced} fadeMs={phase === "session" ? 1500 : 800}
+        dim={phase === "session" && dimmed} zoomMs={phase === "session" ? (minutes * 60000) / speed : 0}
+      />
       {adminView && phase === "choose" && (
         <Link to="/admin/cisza" className="fixed top-12 right-4 z-50 technical text-[10px] gold-text hover:text-[#E2C170]">
           Zarządzaj dźwiękami
@@ -71,9 +85,10 @@ export default function Cisza() {
           settings={settings} source={source} reduced={reduced}
           onDone={() => setPhase("end")} onExit={() => setPhase("choose")}
           {...viewProps} dim={!!prefs.dim} onDim={(v) => update({ dim: v })} speed={speed}
+          onDimmed={setDimmed} backdropName={backdrop.nazwa}
         />
       )}
-      {phase === "end" && <CiszaEnd text={settings.tekst_na_koniec} onAgain={() => setPhase("choose")} reduced={reduced} view={view} minutes={minutes} />}
+      {phase === "end" && <CiszaEnd text={settings.tekst_na_koniec} onAgain={() => setPhase("choose")} reduced={reduced} view={view} minutes={minutes} backdrop={backdrop} />}
     </div>
   );
 }

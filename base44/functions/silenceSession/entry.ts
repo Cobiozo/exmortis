@@ -28,8 +28,8 @@ export default async function (req) {
 
     const rows = await runSql(
       base44,
-      `INSERT INTO public.silence_sessions (duration_minutes, completed, sound_option, source, soundtrack, with_sound)
-       VALUES (${minutes}, false, ${escStr(withSound ? "muzyka" : "cisza")}, ${str(body.source)}, ${str(body.soundtrack)}, ${esc(withSound)})
+      `INSERT INTO public.silence_sessions (duration_minutes, completed, sound_option, source, soundtrack, with_sound, background)
+       VALUES (${minutes}, false, ${escStr(withSound ? "muzyka" : "cisza")}, ${str(body.source)}, ${str(body.soundtrack)}, ${esc(withSound)}, ${str(body.background)})
        RETURNING id`
     );
     return Response.json({ ok: true, session_id: rows?.[0]?.id ? String(rows[0].id) : null });

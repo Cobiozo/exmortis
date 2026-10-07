@@ -4,6 +4,7 @@ import TimeCard from "./TimeCard";
 import CopyIntroOutro from "./CopyIntroOutro";
 import SilenceSettingsForm from "./SilenceSettingsForm";
 import SilenceStats30 from "./SilenceStats30";
+import BackgroundsSection from "./backgrounds/BackgroundsSection";
 import { ST, TIMES, MAX_MB } from "./silenceUtils";
 import { SETTINGS_DEFAULTS } from "@/components/exmortis/cisza/prefs";
 
@@ -31,6 +32,7 @@ export default function SilencePanel() {
       </div>
       <CopyIntroOutro tracks={tracks} reload={load} />
       <SilenceSettingsForm settings={settings} onSaved={(s) => setSettings({ ...settings, ...s })} />
+      <BackgroundsSection />
       <SilenceStats30 />
     </div>
   );

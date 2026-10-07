@@ -1,0 +1,133 @@
+{
+  "name": "SilenceBackground",
+  "type": "object",
+  "properties": {
+    "nazwa": {
+      "type": "string"
+    },
+    "typ": {
+      "type": "string",
+      "enum": [
+        "kolor",
+        "gradient",
+        "zdjecie",
+        "wideo"
+      ],
+      "default": "kolor"
+    },
+    "kolor": {
+      "type": "string"
+    },
+    "kolory": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "kierunek": {
+      "type": "number",
+      "default": 180
+    },
+    "zdjecie_szerokie": {
+      "type": "string"
+    },
+    "zdjecie_pionowe": {
+      "type": "string"
+    },
+    "fokus_x": {
+      "type": "number",
+      "default": 50
+    },
+    "fokus_y": {
+      "type": "number",
+      "default": 50
+    },
+    "wideo_mp4": {
+      "type": "string"
+    },
+    "wideo_webm": {
+      "type": "string"
+    },
+    "wideo_mobile": {
+      "type": "string"
+    },
+    "poster": {
+      "type": "string"
+    },
+    "dlugosc_s": {
+      "type": "number"
+    },
+    "ma_dzwiek": {
+      "type": "boolean",
+      "default": false
+    },
+    "przyciemnienie": {
+      "type": "number",
+      "default": 55
+    },
+    "min_przyciemnienie": {
+      "type": "number",
+      "default": 0
+    },
+    "rozmycie": {
+      "type": "number",
+      "default": 0
+    },
+    "ruch": {
+      "type": "boolean",
+      "default": false
+    },
+    "dzwiek_nazwa": {
+      "type": "string"
+    },
+    "aktywne": {
+      "type": "boolean",
+      "default": true
+    },
+    "kolejnosc": {
+      "type": "number",
+      "default": 0
+    },
+    "domyslne": {
+      "type": "boolean",
+      "default": false
+    },
+    "systemowe": {
+      "type": "boolean",
+      "default": false
+    }
+  },
+  "required": [
+    "nazwa",
+    "typ"
+  ],
+  "rls": {
+    "read": {
+      "$or": [
+        {
+          "data.aktywne": true
+        },
+        {
+          "user_condition": {
+            "role": "admin"
+          }
+        }
+      ]
+    },
+    "create": {
+      "user_condition": {
+        "role": "admin"
+      }
+    },
+    "update": {
+      "user_condition": {
+        "role": "admin"
+      }
+    },
+    "delete": {
+      "user_condition": {
+        "role": "admin"
+      }
+    }
+  }
+}

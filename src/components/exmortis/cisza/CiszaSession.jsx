@@ -11,6 +11,7 @@ import useScreenReaderMinutes from "./useScreenReaderMinutes";
 export default function CiszaSession({
   minutes, tracks, bgId, onBg, volume, onVolume, muted, onMuted, settings, source, reduced, onDone, onExit,
   view, onView, showTime, onShowTime, dim, onDim, minutesOnly, speed = 1,
+  backdrops, backdropId, onBackdrop, match, onDimmed, backdropName,
 }) {
   const dur = (minutes * 60000) / speed;
   const fadeMs = Math.max(0, Number(settings.wyciszanie_melodii_s ?? 3) * 1000);
@@ -60,7 +61,7 @@ export default function CiszaSession({
     const e = new SilenceAudio({ volume: volume / 100, muted, onError: () => setAudioErr(true) });
     eng.current = e;
     base44.functions
-      .invoke("silenceSession", { event: "cisza_start", duration_minutes: minutes, soundtrack: st.current.bg?.nazwa || null, with_sound: tracks.length > 0 && !muted, source })
+      .invoke("silenceSession", { event: "cisza_start", duration_minutes: minutes, soundtrack: st.current.bg?.nazwa || null, with_sound: tracks.length > 0 && !muted, source, background: backdropName })
       .then((r) => (st.current.sid = r.data.session_id))
       .catch(() => {});
     const run = () => {
@@ -145,11 +146,13 @@ export default function CiszaSession({
 
   const dimmed = dim && !lit;
   const slow = reduced ? true : dimmed ? 1000 : 0;
+  useEffect(() => { onDimmed?.(dimmed); }, [dimmed]); // eslint-disable-line react-hooks/exhaustive-deps
+  useEffect(() => () => onDimmed?.(false), []); // eslint-disable-line react-hooks/exhaustive-deps
 
   return (
     <section
       onPointerDown={wakeUp}
-      className="fixed inset-0 cisza-vignette flex items-center justify-center transition-[filter] duration-1000"
+      className="fixed inset-0 flex items-center justify-center transition-[filter] duration-1000"
       style={{ filter: dimmed ? "brightness(0.35)" : "none" }}
     >
       <p className="absolute top-[calc(50%-35vmin-3rem)] h-6 text-sm text-foreground/45 transition-opacity duration-700" style={{ opacity: full ? 0 : 1 }}>
@@ -169,6 +172,7 @@ export default function CiszaSession({
         paused={paused} onPause={togglePause} canPause={stage === "run"} onEnd={end} wake={wake} onWake={() => setWake((w) => !w)}
         view={view} onView={onView} showTime={showTime} onShowTime={() => onShowTime(!showTime)}
         dim={dim} onDim={() => onDim(!dim)} full={full} onFull={() => setFull((f) => !f)}
+        backdrops={backdrops} backdropId={backdropId} onBackdrop={onBackdrop} match={match} onMatch={() => match && changeBg(match.id)}
       />
     </section>
   );
