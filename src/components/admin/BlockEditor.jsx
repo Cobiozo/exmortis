@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { Plus, RotateCcw, Save, Trash2 } from "lucide-react";
-import RichTextEditor from "./RichTextEditor";
+import RichTextEditor from "./cms/CmsRichText";
 
 const inputCls = "w-full bg-transparent border hairline px-4 py-2.5 focus:border-[#C9A24A] focus:outline-none transition-colors text-sm";
 

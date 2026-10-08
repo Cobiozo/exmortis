@@ -1,6 +1,6 @@
 // Czyszczenie HTML z dozwoloną listą znaczników i atrybutów.
 const TAGS = new Set(["P", "BR", "STRONG", "B", "EM", "I", "U", "S", "H1", "H2", "H3", "H4", "UL", "OL", "LI", "A", "BLOCKQUOTE", "PRE", "CODE", "SPAN", "IMG", "HR", "DIV"]);
-const ATTRS = { A: ["href"], IMG: ["src", "alt"], BLOCKQUOTE: ["class"], SPAN: ["class"], P: ["class"], DIV: ["class"] };
+const ATTRS = { A: ["href"], IMG: ["src", "alt"], BLOCKQUOTE: ["class"], SPAN: ["class"], P: ["class"], DIV: ["class"], H1: ["class"], H2: ["class"], H3: ["class"], LI: ["class"], STRONG: ["class"], EM: ["class"] };
 
 export function sanitizeHtml(html) {
   if (!html) return "";

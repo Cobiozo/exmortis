@@ -237,6 +237,28 @@
 .rich-content blockquote.about-quote { border-left: 1px solid #C9A24A; margin: 2rem 0 2.5rem 0; padding-left: 1.5rem; }
 .rich-content blockquote.about-quote p { font-family: "EB Garamond", ui-serif, Georgia, serif; font-size: 1.55rem; line-height: 1.35; color: #C9A24A; margin-bottom: 0; }
 
+/* ==== Style marki w edytorze treści ==== */
+.rich-content .exm-styl-lead, .rich-admin .exm-styl-lead { font-size: 1.25rem; line-height: 1.6; color: rgba(226,226,226,0.85); font-weight: 300; }
+.rich-content .exm-styl-etykieta, .rich-admin .exm-styl-etykieta { font-family: var(--font-mono); text-transform: uppercase; letter-spacing: 0.18em; font-size: 0.7rem; color: #C9A24A; }
+.rich-content .exm-styl-maly, .rich-admin .exm-styl-maly { font-size: 0.85rem; color: rgba(226,226,226,0.5); }
+.rich-content .exm-akcent-zloty, .rich-admin .exm-akcent-zloty { color: #C9A24A; }
+.rich-content .exm-akcent-bordo, .rich-admin .exm-akcent-bordo { color: #BC1E22; }
+.rich-admin .ql-editor h1, .rich-admin .ql-editor h2, .rich-admin .ql-editor h3 { font-family: var(--font-heading); text-transform: uppercase; letter-spacing: 0.04em; }
+.rich-brand .ql-picker.ql-styl { width: 108px; }
+.rich-brand .ql-picker.ql-akcent { width: 92px; }
+.rich-brand .ql-picker.ql-styl .ql-picker-label::before, .rich-brand .ql-picker.ql-styl .ql-picker-item::before { content: "Akapit"; }
+.rich-brand .ql-picker.ql-styl [data-value="lead"]::before { content: "Lead"; }
+.rich-brand .ql-picker.ql-styl [data-value="etykieta"]::before { content: "Etykieta"; }
+.rich-brand .ql-picker.ql-styl [data-value="maly"]::before { content: "Mały tekst"; }
+.rich-brand .ql-picker.ql-akcent .ql-picker-label::before, .rich-brand .ql-picker.ql-akcent .ql-picker-item::before { content: "Akcent"; }
+.rich-brand .ql-picker.ql-akcent [data-value="zloty"]::before { content: "Złoty"; color: #C9A24A; }
+.rich-brand .ql-picker.ql-akcent [data-value="bordo"]::before { content: "Bordowy"; color: #BC1E22; }
+.rich-brand .ql-picker.ql-header .ql-picker-label::before, .rich-brand .ql-picker.ql-header .ql-picker-item::before { content: "Tekst"; }
+.rich-brand .ql-picker.ql-header [data-value="1"]::before { content: "Nagłówek 1"; }
+.rich-brand .ql-picker.ql-header [data-value="2"]::before { content: "Nagłówek 2"; }
+.rich-brand .ql-picker.ql-header [data-value="3"]::before { content: "Nagłówek 3"; }
+.rich-brand .ql-picker.ql-header { width: 112px; }
+
 /* ==== RESPONSYWNOŚĆ — fundamenty globalne ==== */
 @layer base {
   html, body { overflow-x: clip; }
