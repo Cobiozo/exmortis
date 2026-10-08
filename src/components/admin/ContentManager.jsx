@@ -1,6 +1,9 @@
 import React, { useEffect, useState } from "react";
 import { base44 } from "@/api/base44Client";
-import { CONTENT_PAGES } from "@/content/registry";
+import { CONTENT_PAGES as ALL } from "@/content/registry";
+
+// O mnie i Głos są już w edytorze stron.
+const CONTENT_PAGES = ALL.filter((p) => !["about", "glos"].includes(p.key));
 import BlockEditor from "./BlockEditor";
 
 export default function ContentManager() {
