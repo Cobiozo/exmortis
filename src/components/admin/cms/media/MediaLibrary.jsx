@@ -1,9 +1,9 @@
 import React, { useEffect, useState } from "react";
 import { Upload, Trash2, Loader2 } from "lucide-react";
 import { base44 } from "@/api/base44Client";
-import { Image } from "@/components/ui/image";
+import SafeImg from "@/components/cms/SafeImg";
 import { inputCls, smallBtn } from "../ui";
-import { uploadMedia } from "./uploadMedia";
+import { uploadMedia, rebuildMedia } from "./uploadMedia";
 
 // Biblioteka mediów: wyszukiwanie, wgrywanie (WebP), usuwanie. onPick — tryb wyboru.
 export default function MediaLibrary({ onPick }) {
@@ -21,6 +21,13 @@ export default function MediaLibrary({ onPick }) {
     for (const f of [...files].filter((f) => f.type.startsWith("image/") && f.size <= 15 * 1024 * 1024)) await uploadMedia(f);
     setBusy(false);
     load(false);
+  };
+  const [wm, setWm] = useState(null);
+  const mark = async (m) => {
+    setWm(m.id);
+    const u = await rebuildMedia(m, !m.znak_wodny);
+    setItems((x) => x.map((i) => (i.id === m.id ? { ...i, ...u } : i)));
+    setWm(null);
   };
   const remove = async (m) => {
     if (!window.confirm(`Usunąć „${m.nazwa}” z biblioteki? Strony, które go używają, zachowają obraz.`)) return;
@@ -40,10 +47,16 @@ export default function MediaLibrary({ onPick }) {
           {items.map((m) => (
             <div key={m.id} className="group border hairline">
               <button type="button" onClick={() => onPick?.(m)} className={`block w-full aspect-square ${onPick ? "hover:opacity-80" : "cursor-default"}`}>
-                <Image src={m.url} alt={m.alt || ""} className="w-full h-full" />
+                <SafeImg img={{ url: m.url, alt: m.alt }} sizes="200px" className="w-full h-full" />
               </button>
               <div className="flex items-center justify-between gap-2 px-2 py-1.5">
                 <span className="text-[11px] text-foreground/60 truncate">{m.nazwa}{m.rozmiar_kb ? ` · ${m.rozmiar_kb} KB` : ""}</span>
+                {!onPick && m.oryginal_uri && (
+                  <button onClick={() => mark(m)} disabled={wm === m.id} title="Znak wodny exmortis.pl w rogu"
+                    className={`technical text-[8px] px-1.5 py-0.5 border shrink-0 ${m.znak_wodny ? "border-[#C9A24A] gold-text" : "hairline text-foreground/40"}`}>
+                    {wm === m.id ? "…" : "ZNAK"}
+                  </button>
+                )}
                 {!onPick && <button onClick={() => remove(m)} aria-label="Usuń" className="text-foreground/40 hover:text-[#BC1E22]"><Trash2 className="h-3.5 w-3.5" /></button>}
               </div>
             </div>

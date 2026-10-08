@@ -2,13 +2,13 @@ import React, { useEffect, useRef, useState } from "react";
 import { ArrowDown } from "lucide-react";
 import Logo from "@/components/exmortis/Logo";
 import { Buttons } from "../parts";
+import SafeImg from "../SafeImg";
 
 function Bg({ d }) {
   if (!d.tlo?.url) return null;
   return (
     <div className="absolute inset-0">
-      <img src={d.tlo.url} alt="" fetchpriority="high" className="w-full h-full object-cover"
-        style={{ opacity: 1 - (d.przyciemnienie ?? 60) / 100, objectPosition: `${d.tlo.fx ?? 50}% ${d.tlo.fy ?? 50}%` }} />
+      <SafeImg img={{ ...d.tlo, alt: "" }} eager className="w-full h-full" style={{ opacity: 1 - (d.przyciemnienie ?? 60) / 100 }} />
       <div className="absolute inset-0 bg-gradient-to-b from-[#0A0A0B] via-[#0A0A0B]/60 to-[#0A0A0B]" />
     </div>
   );

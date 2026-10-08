@@ -1,13 +1,13 @@
 import React from "react";
 import { Buttons, Rich, SectionHead } from "../parts";
+import SafeImg from "../SafeImg";
 
 export const RATIO = { "1:1": "aspect-square", "4:5": "aspect-[4/5]", "3:2": "aspect-[3/2]", "16:9": "aspect-video" };
 
 export function Img({ img, ratio, className = "" }) {
   if (!img?.url) return <div className={`${RATIO[ratio] || "aspect-video"} bg-[#0F0F10] border hairline ${className}`} />;
   return (
-    <img src={img.url} alt={img.alt || ""} loading="lazy" className={`w-full object-cover ${RATIO[ratio] || "aspect-video"} ${className}`}
-      style={{ objectPosition: `${img.fx ?? 50}% ${img.fy ?? 50}%` }} />
+    <SafeImg img={img} sizes="(min-width: 768px) 50vw, 100vw" className={`w-full ${RATIO[ratio] || "aspect-video"} ${className}`} />
   );
 }
 

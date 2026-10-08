@@ -1,5 +1,5 @@
 import React from "react";
-import { Image } from "@/components/ui/image";
+import SafeImg from "../SafeImg";
 
 const RATIO = { "16:9": "aspect-video", "4:3": "aspect-[4/3]", "1:1": "aspect-square", "9:16": "aspect-[9/16] max-w-sm mx-auto" };
 const COLS = { "2": "sm:grid-cols-2", "3": "sm:grid-cols-2 lg:grid-cols-3", "4": "grid-cols-2 lg:grid-cols-4" };
@@ -22,7 +22,7 @@ export function GalleryBlock({ d, label }) {
       <div className={`grid gap-3 md:gap-4 ${COLS[d.kolumny] || COLS["3"]}`}>
         {zd.map((z, i) => (
           <figure key={i}>
-            <Image src={z.obraz.url} alt={z.obraz.alt || ""} focalPointX={(z.obraz.fx ?? 50) / 100} focalPointY={(z.obraz.fy ?? 50) / 100} className="w-full aspect-[4/5]" />
+            <SafeImg img={z.obraz} sizes="(min-width: 1024px) 33vw, 50vw" className="w-full aspect-[4/5]" />
             {z.podpis && <figcaption className="technical text-[9px] text-foreground/50 mt-2">{z.podpis}</figcaption>}
           </figure>
         ))}

@@ -2,8 +2,17 @@
   "name": "MediaAsset",
   "type": "object",
   "properties": {
+    "pub_id": {
+      "type": "string"
+    },
     "url": {
       "type": "string"
+    },
+    "oryginal_uri": {
+      "type": "string"
+    },
+    "warianty": {
+      "type": "object"
     },
     "nazwa": {
       "type": "string"
@@ -19,10 +28,18 @@
     },
     "rozmiar_kb": {
       "type": "number"
+    },
+    "znak_wodny": {
+      "type": "boolean",
+      "default": false
+    },
+    "usuniety_at": {
+      "type": "string",
+      "format": "date-time"
     }
   },
   "required": [
-    "url"
+    "pub_id"
   ],
   "rls": {
     "read": {
