@@ -8,7 +8,7 @@ import { PAGE_DEFAULTS } from "@/components/cms/defaults/otherDefaults";
 import PageRow from "./PageRow";
 import { inputCls, tabBtn } from "./ui";
 
-const slugify = (s) => s.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/ł/g, "l").replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "").slice(0, 60);
+import { slugify, duplicatePage, renamePage } from "./pageActions";
 
 export default function PagesList({ onOpen }) {
   const [pages, setPages] = useState(null);
@@ -51,6 +51,9 @@ export default function PagesList({ onOpen }) {
     const p = await base44.entities.SitePage.create({ tytul: row.tytul, slug: row.slug, status: "opublikowana", bloki: PAGE_DEFAULTS[row.slug], wersja: 0 });
     onOpen(p.id);
   };
+  const taken = rows.map((r) => r.slug);
+  const duplicate = async (p) => { const c = await duplicatePage(p, taken); if (c) load(); };
+  const rename = async (p) => { if (await renamePage(p, taken)) load(); };
   const remove = async (p) => {
     if (!window.confirm(`Usunąć szkic „${p.tytul}”? Tej operacji nie można cofnąć.`)) return;
     await base44.entities.SitePage.delete(p.id);
@@ -70,7 +73,8 @@ export default function PagesList({ onOpen }) {
         </div>
       </div>
       <div className="border hairline divide-y divide-[#3D3D3F]/60">
-        {shown.map((p) => <PageRow key={p.slug} p={p} log={logs[p.slug]} onOpen={openRow} onRemove={remove} />)}
+        {shown.map((p) => <PageRow key={p.slug} p={p} log={logs[p.slug]} onOpen={openRow} onRemove={remove} onDuplicate={duplicate}
+          onRename={!SITE_MAP.some((s) => s.slug === p.slug) ? rename : null} />)}
         {!shown.length && <p className="px-5 py-8 text-foreground/50">Brak stron w tym widoku.</p>}
       </div>
       <div className="border hairline p-5">

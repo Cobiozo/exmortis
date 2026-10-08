@@ -1,6 +1,6 @@
 import React, { useEffect, useRef, useState } from "react";
 import { base44 } from "@/api/base44Client";
-import { newBlock } from "@/components/cms/blockTypes";
+import { newBlock, blockName } from "@/components/cms/blockTypes";
 import { validatePage } from "@/components/cms/validate";
 import useHistory from "./useHistory";
 import { publishPage } from "./publish";
@@ -45,6 +45,10 @@ export default function Editor({ page, setPage, extra, onBack }) {
   const action = (a, i) => {
     if (a === "wyzej") move(i, i - 1);
     if (a === "nizej") move(i, i + 1);
+    if (a === "sekcja") {
+      const nazwa = window.prompt("Nazwa własnej sekcji:", blockName(blocks[i]));
+      if (nazwa?.trim()) base44.entities.CmsSection.create({ nazwa: nazwa.trim(), blok: blocks[i] });
+    }
     if (a === "duplikuj") setBlocks((bs) => { const c = structuredClone(bs[i]); c.id = crypto.randomUUID(); const n = [...bs]; n.splice(i + 1, 0, c); return n; });
     if (a === "usun") {
       const b = blocks[i];
@@ -85,7 +89,7 @@ export default function Editor({ page, setPage, extra, onBack }) {
     window.addEventListener("keydown", on);
     return () => window.removeEventListener("keydown", on);
   });
-  const add = (typ) => { const b = newBlock(typ); setBlocks((bs) => { const n = [...bs]; n.splice(addAt, 0, b); return n; }); setAddAt(null); select(b.id); };
+  const add = (typ) => { const b = typeof typ === "string" ? newBlock(typ) : { ...structuredClone(typ), id: crypto.randomUUID() }; setBlocks((bs) => { const n = [...bs]; n.splice(addAt, 0, b); return n; }); setAddAt(null); select(b.id); };
 
   const publish = async () => {
     const r = validatePage(blocks, extra.map(([p]) => p));

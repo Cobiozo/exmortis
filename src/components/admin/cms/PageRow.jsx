@@ -1,6 +1,6 @@
 import React from "react";
 import { Link } from "react-router-dom";
-import { Trash2, ExternalLink, FileText } from "lucide-react";
+import { Trash2, ExternalLink, FileText, Copy } from "lucide-react";
 import SafeImg from "@/components/cms/SafeImg";
 import { STATUS_LABEL } from "./siteMap";
 import { smallBtn } from "./ui";
@@ -8,7 +8,7 @@ import { smallBtn } from "./ui";
 const when = (d) => (d ? new Date(d).toLocaleString("pl-PL", { timeZone: "Europe/Warsaw", dateStyle: "short", timeStyle: "short" }) : "—");
 
 // Jeden wiersz listy stron: miniatura, nazwa, adres, status, menu, ostatnia zmiana i akcje.
-export default function PageRow({ p, log, onOpen, onRemove }) {
+export default function PageRow({ p, log, onOpen, onRemove, onDuplicate, onRename }) {
   const thumb = p.cms?.bloki?.find((b) => b.dane?.tlo?.url || b.dane?.zdjecie?.url)?.dane;
   const img = thumb?.tlo || thumb?.zdjecie;
   const gold = p.status === "opublikowana";
@@ -30,6 +30,8 @@ export default function PageRow({ p, log, onOpen, onRemove }) {
       </span>
       <div className="flex flex-wrap gap-2">
         {editable && <button onClick={() => onOpen(p)} className={smallBtn}>Edytuj</button>}
+        {p.cms && p.status !== "szablon" && <button onClick={() => onDuplicate(p.cms)} className={smallBtn} aria-label="Duplikuj stronę"><Copy className="h-4 w-4" /></button>}
+        {p.cms && onRename && <button onClick={() => onRename(p.cms)} className={smallBtn}>Zmień adres</button>}
         {p.modul && <Link to={p.modul} className={smallBtn}>Edytuj w module</Link>}
         {!p.path.includes("…") && <a href={p.path} target="_blank" rel="noreferrer" className={smallBtn} aria-label="Zobacz na stronie"><ExternalLink className="h-4 w-4" /></a>}
         {p.cms && p.status === "szkic" && !p.cms.wersja && <button onClick={() => onRemove(p.cms)} className={smallBtn} aria-label="Usuń"><Trash2 className="h-4 w-4" /></button>}

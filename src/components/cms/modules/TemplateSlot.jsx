@@ -2,6 +2,7 @@ import React from "react";
 import { useParams } from "react-router-dom";
 import EventDetail from "@/pages/EventDetail";
 import ProductDetail from "@/pages/ProductDetail";
+import PodcastEpisode from "@/pages/PodcastEpisode";
 
 // Miejsce na treść z modułu w szablonie. W podglądzie edytora (bez adresu) pokazuje zaślepkę.
 function slot(Component, text) {
@@ -20,4 +21,5 @@ function slot(Component, text) {
 }
 
 export const EventSlot = slot(EventDetail, "Tu pojawi się strona wybranego spotkania: okładka, opis, termin i zapis. Edytujesz je w zakładce Spotkania.");
+export const EpisodeSlot = slot(PodcastEpisode, "Tu pojawi się wybrany odcinek podcastu: odtwarzacz, opis, gość i transkrypcja. Edytujesz je w zakładce Podcast.");
 export const ProductSlot = slot(ProductDetail, "Tu pojawi się karta wybranego produktu: zdjęcie, opis, cena i zakup. Edytujesz je w zakładce Skarbiec.");

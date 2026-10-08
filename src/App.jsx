@@ -35,7 +35,6 @@ import PolitykaCookies from '@/pages/PolitykaCookies';
 import Odstapienie from '@/pages/Odstapienie';
 import Kontakt from '@/pages/Kontakt';
 import CookieBanner from '@/components/legal/CookieBanner';
-import PodcastEpisode from '@/pages/PodcastEpisode';
 import { PodcastPlayerProvider } from '@/components/exmortis/podcast/PlayerContext';
 import CmsPage from '@/pages/CmsPage';
 import CmsPreview from '@/pages/CmsPreview';
@@ -95,7 +94,7 @@ const AuthenticatedApp = () => {
           <Route path="/kasa" element={<Checkout />} />
           <Route path="/powrot" element={<Powrot />} />
           <Route path="/glos" element={<Glos />} />
-          <Route path="/glos/:slug" element={<PodcastEpisode />} />
+          <Route path="/glos/:slug" element={<CmsRoutePage slug="_odcinek" />} />
           <Route path="/test" element={<TestPage />} />
           <Route path="/spotkania" element={<Events />} />
           <Route path="/spotkania/:slug" element={<CmsRoutePage slug="_spotkanie" />} />

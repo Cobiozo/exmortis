@@ -13,7 +13,7 @@ export const SITE_MAP = [
   { slug: "1-listopada", tytul: "1 listopada", path: "/1-listopada", status: "ukryta", menu: false, zrodlo: "Moduł Spotkania (przekierowanie na kartę spotkania)", procent: 100, etap: 4, modul: "/admin/spotkania" },
   { slug: "_spotkanie", tytul: "Szablon: pojedyncze spotkanie", path: "/spotkania/…", status: "szablon", menu: false, zrodlo: "Edytor stron + moduł Spotkania", modul: "/admin/spotkania" },
   { slug: "_produkt", tytul: "Szablon: produkt", path: "/produkt/…", status: "szablon", menu: false, zrodlo: "Edytor stron + moduł Skarbiec", modul: "/admin/skarbiec" },
-  { slug: "_odcinek", tytul: "Szablon: odcinek podcastu", path: "/glos/…", status: "szablon", menu: false, zrodlo: "Moduł Podcast + kod", procent: 0, etap: 4, modul: "/admin/podcast" },
+  { slug: "_odcinek", tytul: "Szablon: odcinek podcastu", path: "/glos/…", status: "szablon", menu: false, zrodlo: "Edytor stron + moduł Podcast", modul: "/admin/podcast" },
   { slug: "_kasa", tytul: "Kasa", path: "/kasa", status: "systemowa", menu: false, zrodlo: "Kod", procent: 0, etap: 4 },
   { slug: "_login", tytul: "Logowanie i rejestracja", path: "/login", status: "systemowa", menu: false, zrodlo: "Kod", procent: 0, etap: 4 },
   { slug: "_konto", tytul: "Moje konto", path: "/konto", status: "systemowa", menu: false, zrodlo: "Kod + moduł Klienci", procent: 0, etap: 4, modul: "/admin/klienci" },

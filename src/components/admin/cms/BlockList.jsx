@@ -38,6 +38,7 @@ export default function BlockList({ blocks, selectedId, onSelect, onReorder, onT
                           <DropdownMenuTrigger className="p-2 text-foreground/50 hover:text-[#C9A24A]" aria-label="Więcej"><MoreHorizontal className="h-4 w-4" /></DropdownMenuTrigger>
                           <DropdownMenuContent align="end" className="bg-[#0F0F10] border hairline rounded-none">
                             <DropdownMenuItem onClick={() => onAction("duplikuj", i)}>Duplikuj</DropdownMenuItem>
+                            <DropdownMenuItem onClick={() => onAction("sekcja", i)}>Zapisz jako własną sekcję</DropdownMenuItem>
                             <DropdownMenuItem disabled={!i} onClick={() => onAction("wyzej", i)}>Przenieś wyżej</DropdownMenuItem>
                             <DropdownMenuItem disabled={i === blocks.length - 1} onClick={() => onAction("nizej", i)}>Przenieś niżej</DropdownMenuItem>
                             <DropdownMenuItem className="text-[#BC1E22]" onClick={() => onAction("usun", i)}>Usuń</DropdownMenuItem>

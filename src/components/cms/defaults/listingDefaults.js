@@ -11,6 +11,7 @@ export const SPOTKANIA_BLOCKS = [
 
 // Szablony pojedynczych stron: treść z modułu, nad i pod nią dowolne bloki.
 export const SPOTKANIE_TPL = [b("tpl-spotkanie", "modul", { modul: "spotkanie_tresc" })];
+export const ODCINEK_TPL = [b("tpl-odcinek", "modul", { modul: "odcinek_tresc" })];
 export const PRODUKT_TPL = [b("tpl-produkt", "modul", { modul: "produkt_tresc" })];
 
 export const SKLEP_BLOCKS = [
