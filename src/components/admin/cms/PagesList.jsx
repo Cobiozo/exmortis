@@ -4,6 +4,7 @@ import { base44 } from "@/api/base44Client";
 import { pagePath } from "@/components/cms/links";
 import { newBlock } from "@/components/cms/blockTypes";
 import { SITE_MAP, FILTERS } from "./siteMap";
+import { PAGE_DEFAULTS } from "@/components/cms/defaults/otherDefaults";
 import PageRow from "./PageRow";
 import { inputCls, tabBtn } from "./ui";
 
@@ -27,7 +28,7 @@ export default function PagesList({ onOpen }) {
   const rows = useMemo(() => {
     if (!pages) return [];
     const bySlug = Object.fromEntries(pages.map((p) => [p.slug, p]));
-    const known = SITE_MAP.map((s) => (bySlug[s.slug] ? { ...s, cms: bySlug[s.slug], status: bySlug[s.slug].status === "opublikowana" ? s.status : bySlug[s.slug].status } : s));
+    const known = SITE_MAP.map((s) => (bySlug[s.slug] ? { ...s, cms: bySlug[s.slug], status: bySlug[s.slug].status === "opublikowana" ? s.status : bySlug[s.slug].status } : { ...s, gotowa: !!PAGE_DEFAULTS[s.slug] }));
     const extra = pages.filter((p) => !SITE_MAP.some((s) => s.slug === p.slug))
       .map((p) => ({ slug: p.slug, tytul: p.tytul, path: pagePath(p.slug), status: p.noindex && p.status === "opublikowana" ? "ukryta" : p.status, menu: false, cms: p }));
     return [...known, ...extra];
@@ -42,6 +43,12 @@ export default function PagesList({ onOpen }) {
     const hero = newBlock("hero");
     hero.dane.linia1 = name.trim();
     const p = await base44.entities.SitePage.create({ tytul: name.trim(), slug, status: "szkic", bloki: [hero], wersja: 0 });
+    onOpen(p.id);
+  };
+  // Strona przeniesiona z kodu: pierwszy „Edytuj” zakłada jej zapis w edytorze z obecną treścią.
+  const openRow = async (row) => {
+    if (row.cms) return onOpen(row.cms.id);
+    const p = await base44.entities.SitePage.create({ tytul: row.tytul, slug: row.slug, status: "opublikowana", bloki: PAGE_DEFAULTS[row.slug], wersja: 0 });
     onOpen(p.id);
   };
   const remove = async (p) => {
@@ -63,7 +70,7 @@ export default function PagesList({ onOpen }) {
         </div>
       </div>
       <div className="border hairline divide-y divide-[#3D3D3F]/60">
-        {shown.map((p) => <PageRow key={p.slug} p={p} log={logs[p.slug]} onOpen={onOpen} onRemove={remove} />)}
+        {shown.map((p) => <PageRow key={p.slug} p={p} log={logs[p.slug]} onOpen={openRow} onRemove={remove} />)}
         {!shown.length && <p className="px-5 py-8 text-foreground/50">Brak stron w tym widoku.</p>}
       </div>
       <div className="border hairline p-5">

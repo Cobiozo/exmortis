@@ -2,9 +2,9 @@
 // status: opublikowana | ukryta | systemowa | szablon; menu: czy jest w górnym menu.
 export const SITE_MAP = [
   { slug: "home", tytul: "Strona główna", path: "/", status: "opublikowana", menu: true, zrodlo: "Edytor stron" },
-  { slug: "o-mnie", tytul: "O mnie", path: "/o-mnie", status: "opublikowana", menu: true, zrodlo: "Teksty sekcji + kod", procent: 45, etap: 2 },
-  { slug: "kontakt", tytul: "Kontakt", path: "/kontakt", status: "opublikowana", menu: true, zrodlo: "Teksty sekcji + kod", procent: 30, etap: 2 },
-  { slug: "glos", tytul: "Głos", path: "/glos", status: "opublikowana", menu: true, zrodlo: "Teksty sekcji + moduł Podcast", procent: 15, etap: 2, modul: "/admin/podcast" },
+  { slug: "o-mnie", tytul: "O mnie", path: "/o-mnie", status: "opublikowana", menu: true, zrodlo: "Edytor stron" },
+  { slug: "kontakt", tytul: "Kontakt", path: "/kontakt", status: "opublikowana", menu: true, zrodlo: "Edytor stron" },
+  { slug: "glos", tytul: "Głos", path: "/glos", status: "opublikowana", menu: true, zrodlo: "Edytor stron + moduł Podcast", modul: "/admin/podcast" },
   { slug: "powrot", tytul: "POWRÓT", path: "/powrot", status: "opublikowana", menu: true, zrodlo: "Kod", procent: 0, etap: 3 },
   { slug: "test", tytul: "Test (wstęp, pytania, wyniki)", path: "/test", status: "opublikowana", menu: true, zrodlo: "Kod", procent: 0, etap: 3 },
   { slug: "spotkania", tytul: "Spotkania", path: "/spotkania", status: "opublikowana", menu: true, zrodlo: "Kod + moduł Spotkania", procent: 10, etap: 4, modul: "/admin/spotkania" },

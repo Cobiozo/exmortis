@@ -7,5 +7,5 @@ import { PAGE_DEFAULTS } from "@/components/cms/defaults/otherDefaults";
 export default function CmsRoutePage({ slug }) {
   const page = usePublishedPage(slug);
   if (page === undefined) return <div className="min-h-[100svh] bg-[#0A0A0B]" />;
-  return <div className="bg-[#0A0A0B] pt-20"><BlockRenderer blocks={page?.bloki || PAGE_DEFAULTS[slug]} /></div>;
+  return <BlockRenderer blocks={page?.bloki || PAGE_DEFAULTS[slug]} />;
 }
