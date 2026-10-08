@@ -54,6 +54,37 @@ export default function Editor({ page, setPage, extra, onBack }) {
       setTimeout(() => setRemoved((r) => (r?.b.id === b.id ? null : r)), 10000);
     }
   };
+  const byId = (a, id) => {
+    const i = blocks.findIndex((b) => b.id === id);
+    if (i < 0) return;
+    if (a === "ukryj") return setBlocks((bs) => bs.map((b) => (b.id === id ? { ...b, widoczny: false } : b)));
+    if ((a === "wyzej" && i === 0) || (a === "nizej" && i === blocks.length - 1)) return;
+    action(a, i);
+  };
+  const editText = (id, key, value) => setBlocks((bs) => bs.map((b) => (b.id === id ? { ...b, dane: { ...b.dane, [key]: value } } : b)));
+  const onKey = (k) => {
+    if (k.ctrl && k.key.toLowerCase() === "s") return persist();
+    if (k.ctrl && k.key.toLowerCase() === "z") return k.shift ? redo() : undo();
+    if (k.ctrl && k.key.toLowerCase() === "y") return redo();
+    if (k.key === "Escape") return setSel(null);
+    if (!sel) return;
+    if (k.ctrl && k.key.toLowerCase() === "d") return byId("duplikuj", sel);
+    if (k.alt && k.key === "ArrowUp") return byId("wyzej", sel);
+    if (k.alt && k.key === "ArrowDown") return byId("nizej", sel);
+    if (k.key === "Delete" || k.key === "Backspace") return byId("usun", sel);
+  };
+  useEffect(() => {
+    const on = (e) => {
+      if (e.target.isContentEditable || /INPUT|TEXTAREA|SELECT/.test(e.target.tagName)) return;
+      const ctrl = e.ctrlKey || e.metaKey;
+      if ((ctrl && /^[sd]$/i.test(e.key)) || e.key === "Escape" || (sel && (e.key === "Delete" || (e.altKey && e.key.startsWith("Arrow"))))) {
+        e.preventDefault();
+        onKey({ key: e.key, ctrl, alt: e.altKey, shift: e.shiftKey });
+      }
+    };
+    window.addEventListener("keydown", on);
+    return () => window.removeEventListener("keydown", on);
+  });
   const add = (typ) => { const b = newBlock(typ); setBlocks((bs) => { const n = [...bs]; n.splice(addAt, 0, b); return n; }); setAddAt(null); select(b.id); };
 
   const publish = async () => {
@@ -84,14 +115,14 @@ export default function Editor({ page, setPage, extra, onBack }) {
       <div className="flex gap-2 mb-4 lg:hidden">
         {[["lista", "BLOKI"], ["blok", "EDYCJA"], ["podglad", "PODGLĄD"]].map(([k, l]) => <button key={k} className={tabBtn(pane === k)} onClick={() => setPane(k)}>{l}</button>)}
       </div>
-      <div className="lg:grid lg:grid-cols-[280px_380px_minmax(0,1fr)] gap-6 items-start">
+      <div className="lg:grid lg:grid-cols-[240px_minmax(0,1fr)_360px] gap-5 items-start">
         <div className={`${pane === "lista" ? "" : "hidden"} lg:block lg:sticky lg:top-4 lg:max-h-[85vh] lg:overflow-y-auto`}>{list}</div>
-        <div className={`${pane === "blok" ? "" : "hidden"} lg:block lg:sticky lg:top-4 lg:max-h-[85vh] lg:overflow-y-auto border hairline p-5`}>
+        <div className={`${pane === "podglad" ? "" : "hidden"} lg:block lg:order-2`}>
+          <PreviewFrame blocks={blocks} selectedId={sel} onSelect={select} scrollTo={scrollTo} onAction={byId} onEdit={editText} onKey={onKey} />
+        </div>
+        <div className={`${pane === "blok" ? "" : "hidden"} lg:block lg:order-3 lg:sticky lg:top-4 lg:max-h-[85vh] lg:overflow-y-auto border hairline p-5`}>
           {selected ? <BlockForm key={selected.id} block={selected} onChange={update} onClose={() => { setSel(null); setPane("lista"); }} extra={extra} />
             : <p className="text-sm text-foreground/50">Wybierz blok z listy albo kliknij sekcję w podglądzie.</p>}
-        </div>
-        <div className={`${pane === "podglad" ? "" : "hidden"} lg:block`}>
-          <PreviewFrame blocks={blocks} selectedId={sel} onSelect={select} scrollTo={scrollTo} />
         </div>
       </div>
       <AddBlockDialog open={addAt !== null} onOpenChange={(o) => !o && setAddAt(null)} onPick={add} />

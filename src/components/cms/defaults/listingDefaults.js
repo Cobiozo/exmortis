@@ -9,6 +9,10 @@ export const SPOTKANIA_BLOCKS = [
   b("spotkania-lista", "modul", { modul: "spotkania_lista" }),
 ];
 
+// Szablony pojedynczych stron: treść z modułu, nad i pod nią dowolne bloki.
+export const SPOTKANIE_TPL = [b("tpl-spotkanie", "modul", { modul: "spotkanie_tresc" })];
+export const PRODUKT_TPL = [b("tpl-produkt", "modul", { modul: "produkt_tresc" })];
+
 export const SKLEP_BLOCKS = [
   b("sklep-hero", "hero", { wariant: "standard", etykieta: "SKARBIEC", linia1: "Skarbiec —", linia2: "droga powrotu",
     lead: "Powrót ma cztery etapy: Śmierć · Próg · Powrót · Inny.",

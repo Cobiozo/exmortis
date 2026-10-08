@@ -17,6 +17,7 @@ import PowrotEventLine from "./modules/PowrotEventLine";
 import TestQuiz from "@/pages/Test";
 import ShopCatalog from "@/pages/Shop";
 import EventsListing from "./modules/EventsListing";
+import { EventSlot, ProductSlot } from "./modules/TemplateSlot";
 
 // Moduły dynamiczne — ich treść pochodzi z własnych zakładek panelu.
 export const MODULES = {
@@ -39,6 +40,8 @@ export const MODULES = {
   test: ["Test „Która śmierć jest Twoja?”", TestQuiz],
   spotkania_lista: ["Lista spotkań (nadchodzące i minione)", EventsListing],
   skarbiec_katalog: ["Katalog Skarbca (etapy, filtry, produkty)", ShopCatalog],
+  spotkanie_tresc: ["Szablon: treść spotkania", EventSlot],
+  produkt_tresc: ["Szablon: karta produktu", ProductSlot],
 };
 
 export function ModuleBlock({ d, label }) {

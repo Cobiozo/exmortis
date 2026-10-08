@@ -11,14 +11,12 @@ import Layout from '@/components/exmortis/Layout';
 import Home from '@/pages/Home';
 import About from '@/pages/About';
 import ShopPage from '@/pages/ShopPage';
-import ProductDetail from '@/pages/ProductDetail';
 import Checkout from '@/pages/Checkout';
 import Powrot from '@/pages/Powrot';
 import Glos from '@/pages/Glos';
 import TestPage from '@/pages/TestPage';
 import Cisza from '@/pages/Cisza';
 import Events from '@/pages/Events';
-import EventDetail from '@/pages/EventDetail';
 import Login from '@/pages/Login';
 import Register from '@/pages/Register';
 import ForgotPassword from '@/pages/ForgotPassword';
@@ -41,6 +39,7 @@ import PodcastEpisode from '@/pages/PodcastEpisode';
 import { PodcastPlayerProvider } from '@/components/exmortis/podcast/PlayerContext';
 import CmsPage from '@/pages/CmsPage';
 import CmsPreview from '@/pages/CmsPreview';
+import CmsRoutePage from '@/components/cms/CmsRoutePage';
 // Add page imports here
 
 const AuthenticatedApp = () => {
@@ -92,14 +91,14 @@ const AuthenticatedApp = () => {
           <Route path="/" element={<Home />} />
           <Route path="/o-mnie" element={<About />} />
           <Route path="/sklep" element={<ShopPage />} />
-          <Route path="/produkt/:slug" element={<ProductDetail />} />
+          <Route path="/produkt/:slug" element={<CmsRoutePage slug="_produkt" />} />
           <Route path="/kasa" element={<Checkout />} />
           <Route path="/powrot" element={<Powrot />} />
           <Route path="/glos" element={<Glos />} />
           <Route path="/glos/:slug" element={<PodcastEpisode />} />
           <Route path="/test" element={<TestPage />} />
           <Route path="/spotkania" element={<Events />} />
-          <Route path="/spotkania/:slug" element={<EventDetail />} />
+          <Route path="/spotkania/:slug" element={<CmsRoutePage slug="_spotkanie" />} />
           <Route path="/polityka-prywatnosci" element={<PrivacyPolicy />} />
           <Route path="/regulamin" element={<Regulamin />} />
           <Route path="/polityka-cookies" element={<PolitykaCookies />} />
