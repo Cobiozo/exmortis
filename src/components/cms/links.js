@@ -8,7 +8,8 @@ export const ROUTES = [
 ];
 const DYNAMIC = ["/spotkania/", "/produkt/", "/glos/"];
 
-export const pagePath = (slug) => (slug === "home" ? "/" : `/strona/${slug}`);
+const FIXED = { home: "/", "o-mnie": "/o-mnie", glos: "/glos", kontakt: "/kontakt" };
+export const pagePath = (slug) => FIXED[slug] || `/strona/${slug}`;
 
 // Czy link prowadzi do istniejącego miejsca. extraPaths — adresy stron z edytora.
 export function linkError(link, extraPaths = []) {

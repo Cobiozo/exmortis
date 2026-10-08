@@ -36,6 +36,7 @@ export function VideoBlock({ d, label }) {
   return (
     <figure>
       {label && <p className="technical text-[10px] gold-text mb-4">{label}</p>}
+      {d.tytul && <h2 className="relic-heading text-4xl md:text-6xl mb-12 leading-[0.95] whitespace-pre-line">{d.tytul}</h2>}
       <div className={`${RATIO[d.proporcja] || RATIO["16:9"]} w-full bg-black border hairline`}>
         {e?.src && <iframe src={e.src} title={d.podpis || "Wideo"} className="w-full h-full" loading="lazy" allow="autoplay; fullscreen; picture-in-picture" allowFullScreen />}
         {e?.file && <video src={e.file} controls playsInline preload="metadata" className="w-full h-full object-contain" />}

@@ -8,6 +8,10 @@ import ContactSection from "@/components/exmortis/ContactSection";
 import InstagramFeed from "@/components/exmortis/home/InstagramFeed";
 import Testimonials from "@/components/exmortis/Testimonials";
 import HomeSkarbiec from "./modules/HomeSkarbiec";
+import ContactPageForm from "./modules/ContactPageForm";
+import MusicSection from "@/components/exmortis/MusicSection";
+import PodcastSection from "@/components/exmortis/PodcastSection";
+import PodcastGuest from "@/components/exmortis/PodcastGuest";
 
 // Moduły dynamiczne — ich treść pochodzi z własnych zakładek panelu.
 export const MODULES = {
@@ -21,6 +25,10 @@ export const MODULES = {
   zajawka_powrot: ["Zajawka POWRÓT", PowrotTeaser],
   swiadectwa: ["Świadectwa", Testimonials],
   instagram: ["Instagram", InstagramFeed],
+  kontakt_strona: ["Kontakt: dane i formularz", ContactPageForm],
+  muzyka: ["Muzyka (utwory)", MusicSection],
+  podcast: ["Podcast (odcinki)", PodcastSection],
+  podcast_gosc: ["Zostań gościem podcastu", PodcastGuest],
 };
 
 export function ModuleBlock({ d, label }) {
