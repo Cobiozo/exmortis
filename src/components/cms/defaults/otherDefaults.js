@@ -1,6 +1,7 @@
 import { LAYOUT_DEFAULT as L } from "../blockTypes";
 import { HOME_BLOCKS } from "../homeDefault";
 import { ABOUT_BLOCKS } from "./aboutDefault";
+import { POWROT_BLOCKS, TEST_BLOCKS } from "./powrotDefault";
 
 const bare = { ...L, numer: "brak" };
 const mod = (id, modul) => ({ id, typ: "modul", widoczny: true, dane: { modul }, uklad: { ...bare } });
@@ -18,4 +19,4 @@ export const KONTAKT_BLOCKS = [
 ];
 
 // Treść wyjściowa stron przenoszonych do edytora (zanim admin coś opublikuje).
-export const PAGE_DEFAULTS = { home: HOME_BLOCKS, "o-mnie": ABOUT_BLOCKS, glos: GLOS_BLOCKS, kontakt: KONTAKT_BLOCKS };
+export const PAGE_DEFAULTS = { home: HOME_BLOCKS, "o-mnie": ABOUT_BLOCKS, glos: GLOS_BLOCKS, kontakt: KONTAKT_BLOCKS, powrot: POWROT_BLOCKS, test: TEST_BLOCKS };

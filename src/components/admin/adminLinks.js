@@ -8,6 +8,8 @@ export function panelFor(path) {
   if (path === "/o-mnie") return "/admin/tresci?slug=o-mnie";
   if (path === "/kontakt") return "/admin/tresci?slug=kontakt";
   if (path.startsWith("/glos")) return "/admin/glos";
+  if (path === "/test") return "/admin/tresci?slug=test";
+  if (path === "/powrot") return "/admin/tresci?slug=powrot";
   if (path.startsWith("/test")) return "/admin/testy";
   if (path === "/") return "/admin/tresci?slug=home";
   if (path.startsWith("/strona/")) return `/admin/tresci?slug=${path.slice(8)}`;

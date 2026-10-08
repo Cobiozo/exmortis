@@ -71,7 +71,7 @@ export const TYPES = {
     fields: [{ k: "wariant", label: "Wariant", typ: "select", opcje: [["kreska", "Złota kreska"], ["odstep", "Odstęp"]] }], defaults: { wariant: "kreska" } },
   modul: { label: "Moduł dynamiczny", icon: Puzzle, opis: "Spotkania, Skarbiec, newsletter, kontakt i inne moduły.", bare: true,
     fields: [{ k: "modul", label: "Moduł", typ: "module" }, { k: "etykieta", label: "Etykieta (Skarbiec)", typ: "text", max: 30 },
-      { k: "tytul", label: "Nagłówek (Skarbiec)", typ: "text", max: 40 }, { k: "tekst", label: "Wstęp (Skarbiec)", typ: "rich" }],
+      { k: "tytul", label: "Nagłówek (Skarbiec, Test)", typ: "text", max: 40 }, { k: "tekst", label: "Wstęp (Skarbiec, Test)", typ: "rich" }],
     defaults: { modul: "spotkania" } },
 };
 

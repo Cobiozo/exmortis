@@ -2,6 +2,7 @@ import React, { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { ArrowLeft, Share2, Check } from "lucide-react";
 import { base44 } from "@/api/base44Client";
+import { sanitizeHtml } from "@/lib/sanitizeHtml";
 import ShopProductCard from "@/components/exmortis/shop/ShopProductCard";
 
 const SHARE_URL = "https://exmortis-return-path.base44.app/test?src=polecenie";
@@ -64,7 +65,8 @@ const inputCls =
   "w-full bg-transparent border hairline px-4 py-4 focus:border-[#C9A24A] focus:outline-none transition-colors";
 
 // Kroki: 0 wstęp · 1–12 stwierdzenia · 13 etap · 14 zdanie · 15 formularz · 16 wynik
-export default function Test() {
+// Moduł testu; d.tytul i d.tekst (wstęp) pochodzą z edytora stron.
+export default function Test({ d = {} }) {
   const [step, setStep] = useState(0);
   const [formOfAddress, setFormOfAddress] = useState(null);
   const [answers, setAnswers] = useState(Array(12).fill(null));
@@ -163,13 +165,17 @@ export default function Test() {
         {step === 0 && (
           <div className="fade-up text-center">
             <h1 className="shop-heading text-4xl md:text-6xl text-[#F5EFE1] leading-tight mb-8">
-              Która śmierć jest Twoja?
+              {d.tytul || "Która śmierć jest Twoja?"}
             </h1>
-            <p className="text-foreground/60 text-lg leading-relaxed max-w-xl mx-auto mb-16">
-              Każdy z nas ma za sobą przynajmniej jedną śmierć — mentalną, duchową albo życiową.
-              Ten test nie jest diagnozą. Jest lustrem. Dwanaście stwierdzeń, trzy minuty,
-              odpowiadaj pierwszą myślą.
-            </p>
+            {d.tekst ? (
+              <div className="rich-content text-foreground/60 text-lg leading-relaxed max-w-xl mx-auto mb-16" dangerouslySetInnerHTML={{ __html: sanitizeHtml(d.tekst) }} />
+            ) : (
+              <p className="text-foreground/60 text-lg leading-relaxed max-w-xl mx-auto mb-16">
+                Każdy z nas ma za sobą przynajmniej jedną śmierć — mentalną, duchową albo życiową.
+                Ten test nie jest diagnozą. Jest lustrem. Dwanaście stwierdzeń, trzy minuty,
+                odpowiadaj pierwszą myślą.
+              </p>
+            )}
             <p className="shop-heading text-xl text-[#F5EFE1] mb-8">Jak mam się do Ciebie zwracać?</p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
               <button onClick={() => { setFormOfAddress("Mężczyzna"); setStep(1); }} className="btn-ghost">

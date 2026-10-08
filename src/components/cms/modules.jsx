@@ -12,6 +12,9 @@ import ContactPageForm from "./modules/ContactPageForm";
 import MusicSection from "@/components/exmortis/MusicSection";
 import PodcastSection from "@/components/exmortis/PodcastSection";
 import PodcastGuest from "@/components/exmortis/PodcastGuest";
+import PowrotForm from "@/components/exmortis/powrot/PowrotForm";
+import PowrotEventLine from "./modules/PowrotEventLine";
+import TestQuiz from "@/pages/Test";
 
 // Moduły dynamiczne — ich treść pochodzi z własnych zakładek panelu.
 export const MODULES = {
@@ -29,6 +32,9 @@ export const MODULES = {
   muzyka: ["Muzyka (utwory)", MusicSection],
   podcast: ["Podcast (odcinki)", PodcastSection],
   podcast_gosc: ["Zostań gościem podcastu", PodcastGuest],
+  powrot_formularz: ["POWRÓT: formularz zgłoszeniowy", PowrotForm],
+  powrot_spotkanie: ["POWRÓT: najbliższe spotkanie", PowrotEventLine],
+  test: ["Test „Która śmierć jest Twoja?”", TestQuiz],
 };
 
 export function ModuleBlock({ d, label }) {

@@ -15,7 +15,7 @@ import ProductDetail from '@/pages/ProductDetail';
 import Checkout from '@/pages/Checkout';
 import Powrot from '@/pages/Powrot';
 import Glos from '@/pages/Glos';
-import Test from '@/pages/Test';
+import TestPage from '@/pages/TestPage';
 import Cisza from '@/pages/Cisza';
 import Events from '@/pages/Events';
 import EventDetail from '@/pages/EventDetail';
@@ -97,7 +97,7 @@ const AuthenticatedApp = () => {
           <Route path="/powrot" element={<Powrot />} />
           <Route path="/glos" element={<Glos />} />
           <Route path="/glos/:slug" element={<PodcastEpisode />} />
-          <Route path="/test" element={<Test />} />
+          <Route path="/test" element={<TestPage />} />
           <Route path="/spotkania" element={<Events />} />
           <Route path="/spotkania/:slug" element={<EventDetail />} />
           <Route path="/polityka-prywatnosci" element={<PrivacyPolicy />} />
