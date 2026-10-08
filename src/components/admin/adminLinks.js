@@ -1,5 +1,7 @@
 // Mapowanie strona publiczna ↔ ekran panelu.
 export function panelFor(path) {
+  if (path === "/spotkania") return "/admin/tresci?slug=spotkania";
+  if (path === "/sklep") return "/admin/tresci?slug=sklep";
   if (path.startsWith("/spotkania")) return "/admin/spotkania";
   if (path.startsWith("/sklep") || path.startsWith("/produkt")) return "/admin/skarbiec";
   if (path.startsWith("/cisza")) return "/admin/cisza";

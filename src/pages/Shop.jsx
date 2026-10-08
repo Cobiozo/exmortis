@@ -1,6 +1,4 @@
 import React, { useEffect, useMemo, useState } from "react";
-import { Link } from "react-router-dom";
-import { ArrowRight } from "lucide-react";
 import { base44 } from "@/api/base44Client";
 import ShopFilters, { FORM_OPTIONS, AUDIENCE_OPTIONS } from "@/components/exmortis/shop/ShopFilters";
 import ShopLevelSection from "@/components/exmortis/shop/ShopLevelSection";
@@ -19,6 +17,7 @@ const LEVELS = [
 
 const STAGE_WORDS = ["Śmierć", "Próg", "Powrót", "Inny"];
 
+// Moduł katalogu Skarbca; nagłówek i zachęta do testu są blokami w edytorze stron.
 export default function Shop() {
   const [products, setProducts] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -90,22 +89,10 @@ export default function Shop() {
   const emptyState = !loading && visible.length > 0 && filtered.length === 0;
 
   return (
-    <div className="bg-[#0A0A0B] pt-20">
-      {/* ===== NAGŁÓWEK ===== */}
-      <section className="relative pt-24 md:pt-32 pb-16 md:pb-20 px-5 md:px-10">
-        <div className="absolute left-0 top-0 bottom-0 w-px spine opacity-30" />
+    <div className="bg-[#0A0A0B]">
+      <section className="px-5 md:px-10 pb-12">
         <div className="mx-auto max-w-[1400px]">
-          <p className="technical text-[11px] gold-text mb-6">SKARBIEC</p>
-          <h1 className="shop-heading text-4xl md:text-7xl text-[#F5EFE1] leading-tight">
-            Skarbiec — droga powrotu
-          </h1>
-          <p className="mt-8 text-foreground/60 text-lg leading-relaxed max-w-2xl">
-            Powrót ma cztery etapy: <span className="gold-text">Śmierć · Próg · Powrót · Inny</span>.
-            Na każdym z nich potrzeba innych narzędzi. Znajdziesz tu to, co pasuje do miejsca, w
-            którym stoisz dzisiaj — od pierwszego, darmowego kroku po pracę jeden na jeden.
-          </p>
-
-          <div className="mt-16 flex flex-wrap gap-x-10 gap-y-4 items-baseline">
+          <div className="flex flex-wrap gap-x-10 gap-y-4 items-baseline">
             {available.stages.map((s) => (
               <button
                 key={s}
@@ -123,22 +110,6 @@ export default function Shop() {
               </button>
             ))}
           </div>
-        </div>
-      </section>
-
-      {/* ===== NIE WIESZ, OD CZEGO ZACZĄĆ? ===== */}
-      <section className="px-5 md:px-10 pb-14 md:pb-16">
-        <div className="mx-auto max-w-[1400px] border border-[#5C1A1B]/60 bg-[#0D0D0E] p-8 md:p-12 flex flex-col md:flex-row md:items-center gap-8 justify-between">
-          <div className="max-w-xl">
-            <p className="technical text-[9px] text-foreground/40 mb-3">NIE WIESZ, OD CZEGO ZACZĄĆ?</p>
-            <p className="text-foreground/70 text-lg leading-relaxed">
-              Dwanaście pytań. Trzy minuty. Zobaczysz, z której śmierci dziś wracasz — i od czego
-              warto zacząć.
-            </p>
-          </div>
-          <Link to="/test" className="btn-relic flex-shrink-0">
-            ZRÓB TEST <ArrowRight className="h-4 w-4" />
-          </Link>
         </div>
       </section>
 

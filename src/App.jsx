@@ -10,7 +10,7 @@ import { CartProvider } from '@/components/exmortis/CartContext';
 import Layout from '@/components/exmortis/Layout';
 import Home from '@/pages/Home';
 import About from '@/pages/About';
-import Shop from '@/pages/Shop';
+import ShopPage from '@/pages/ShopPage';
 import ProductDetail from '@/pages/ProductDetail';
 import Checkout from '@/pages/Checkout';
 import Powrot from '@/pages/Powrot';
@@ -91,7 +91,7 @@ const AuthenticatedApp = () => {
         <Route element={<Layout />}>
           <Route path="/" element={<Home />} />
           <Route path="/o-mnie" element={<About />} />
-          <Route path="/sklep" element={<Shop />} />
+          <Route path="/sklep" element={<ShopPage />} />
           <Route path="/produkt/:slug" element={<ProductDetail />} />
           <Route path="/kasa" element={<Checkout />} />
           <Route path="/powrot" element={<Powrot />} />

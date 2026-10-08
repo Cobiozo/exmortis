@@ -5,7 +5,7 @@ import ViewSwitch from "./ViewSwitch";
 import CiszaFrame from "./CiszaFrame";
 
 // Ekran przed startem — mieści się na jednym ekranie telefonu.
-export default function CiszaChoose({ minutes, setMinutes, onStart, onLogo, view, onView, minutesOnly, onMinutesOnly, backdrops, backdropId, onBackdrop, introUrl }) {
+export default function CiszaChoose({ minutes, setMinutes, onStart, onLogo, view, onView, minutesOnly, onMinutesOnly, backdrops, backdropId, onBackdrop, introUrl, text }) {
   return (
     <CiszaFrame onLogo={onLogo}>
       <div className="w-full max-w-xl flex flex-col items-center text-center gap-4 sm:gap-6 fade-up">
@@ -17,7 +17,7 @@ export default function CiszaChoose({ minutes, setMinutes, onStart, onLogo, view
             </button>
           ))}
         </div>
-        <p className="text-sm text-[#F5EFE1]/80">Bez muzyki. Bez powiadomień. Tylko Ty i czas.</p>
+        <p className="text-sm text-[#F5EFE1]/80">{text || "Bez muzyki. Bez powiadomień. Tylko Ty i czas."}</p>
         <div className="flex flex-col items-center gap-2">
           <ViewSwitch value={view} onChange={onView} />
           {view !== "pasek" && (

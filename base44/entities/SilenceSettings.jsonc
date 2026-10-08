@@ -18,6 +18,10 @@
       "type": "number",
       "default": 8
     },
+    "tekst_wstep": {
+      "type": "string",
+      "default": "Bez muzyki. Bez powiadomie\u0144. Tylko Ty i czas."
+    },
     "tekst_na_koniec": {
       "type": "string",
       "default": "Ta cisza by\u0142a Twoja."

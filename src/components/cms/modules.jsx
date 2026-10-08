@@ -15,6 +15,8 @@ import PodcastGuest from "@/components/exmortis/PodcastGuest";
 import PowrotForm from "@/components/exmortis/powrot/PowrotForm";
 import PowrotEventLine from "./modules/PowrotEventLine";
 import TestQuiz from "@/pages/Test";
+import ShopCatalog from "@/pages/Shop";
+import EventsListing from "./modules/EventsListing";
 
 // Moduły dynamiczne — ich treść pochodzi z własnych zakładek panelu.
 export const MODULES = {
@@ -35,6 +37,8 @@ export const MODULES = {
   powrot_formularz: ["POWRÓT: formularz zgłoszeniowy", PowrotForm],
   powrot_spotkanie: ["POWRÓT: najbliższe spotkanie", PowrotEventLine],
   test: ["Test „Która śmierć jest Twoja?”", TestQuiz],
+  spotkania_lista: ["Lista spotkań (nadchodzące i minione)", EventsListing],
+  skarbiec_katalog: ["Katalog Skarbca (etapy, filtry, produkty)", ShopCatalog],
 };
 
 export function ModuleBlock({ d, label }) {

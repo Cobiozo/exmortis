@@ -8,6 +8,7 @@ export const SETTINGS_DEFAULTS = {
   dzwiek_domyslnie: "wlaczony",
   wyciszanie_melodii_s: 8,
   tekst_na_koniec: "Ta cisza była Twoja.",
+  tekst_wstep: "Bez muzyki. Bez powiadomień. Tylko Ty i czas.",
 };
 
 export function loadPrefs() {
