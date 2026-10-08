@@ -10,6 +10,7 @@ import AddBlockDialog from "./AddBlockDialog";
 import PreviewFrame from "./PreviewFrame";
 import EditorTopBar from "./EditorTopBar";
 import PublishReport from "./PublishReport";
+import VersionHistory from "./VersionHistory";
 import { tabBtn } from "./ui";
 
 export default function Editor({ page, setPage, extra, onBack }) {
@@ -20,6 +21,7 @@ export default function Editor({ page, setPage, extra, onBack }) {
   const [save, setSave] = useState("zapisano");
   const [report, setReport] = useState(null);
   const [busy, setBusy] = useState(false);
+  const [history, setHistory] = useState(false);
   const [pane, setPane] = useState("lista");
   const [scrollTo, setScrollTo] = useState(null);
   const first = useRef(true);
@@ -103,13 +105,23 @@ export default function Editor({ page, setPage, extra, onBack }) {
     setBusy(false);
   };
 
+  const loadVersion = (v) => { setBlocks(structuredClone(v.bloki || [])); setSel(null); setReport({ errors: [], warnings: [], ok: `Wczytano wersję ${v.wersja} do szkicu. Strona publiczna się nie zmieniła — opublikuj, gdy będzie gotowa.` }); };
+  const republish = async (v) => {
+    const res = await publishPage(page, v.bloki || [], `przywrócono wersję ${v.wersja}`);
+    setBlocks(structuredClone(v.bloki || []));
+    setPage({ ...page, ...res, bloki: v.bloki, status: "opublikowana" });
+    setSave("zapisano");
+    setReport({ errors: [], warnings: [], ok: `Przywrócono wersję ${v.wersja} jako wersję ${res.wersja}.` });
+  };
+
   const list = (
     <BlockList blocks={blocks} selectedId={sel} onSelect={select} onReorder={move} onAction={action} onAdd={setAddAt}
       onToggle={(id) => setBlocks((bs) => bs.map((b) => (b.id === id ? { ...b, widoczny: b.widoczny === false } : b)))} />
   );
   return (
     <div>
-      <EditorTopBar page={page} save={save} busy={busy} onBack={onBack} onSave={persist} onPublish={publish} onUndo={undo} onRedo={redo} />
+      <EditorTopBar page={page} save={save} busy={busy} onBack={onBack} onSave={persist} onPublish={publish} onUndo={undo} onRedo={redo} onHistory={() => setHistory(true)} />
+      <VersionHistory open={history} onOpenChange={setHistory} page={page} onLoad={loadVersion} onRepublish={republish} />
       <PublishReport report={report} onClose={() => setReport(null)} />
       {removed && (
         <div className="mb-4 flex items-center justify-between gap-4 border border-[#C9A24A]/50 px-4 py-3 text-sm">

@@ -1,0 +1,53 @@
+{
+  "name": "PageVersion",
+  "type": "object",
+  "properties": {
+    "slug": {
+      "type": "string"
+    },
+    "wersja": {
+      "type": "number"
+    },
+    "tytul": {
+      "type": "string"
+    },
+    "bloki": {
+      "type": "array",
+      "items": {
+        "type": "object"
+      }
+    },
+    "kto": {
+      "type": "string"
+    },
+    "opis": {
+      "type": "string"
+    }
+  },
+  "required": [
+    "slug",
+    "wersja"
+  ],
+  "rls": {
+    "read": {
+      "user_condition": {
+        "role": "admin"
+      }
+    },
+    "create": {
+      "user_condition": {
+        "role": "admin"
+      }
+    },
+    "update": {
+      "user_condition": {
+        "role": "admin"
+      }
+    },
+    "delete": {
+      "user_condition": {
+        "role": "admin"
+      }
+    }
+  }
+}
