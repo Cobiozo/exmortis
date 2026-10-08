@@ -1,22 +1,30 @@
 import React, { useState } from "react";
-import { Upload, Trash2, Loader2 } from "lucide-react";
-import { base44 } from "@/api/base44Client";
+import { Upload, Trash2, Loader2, FolderOpen } from "lucide-react";
+import { uploadMedia } from "./media/uploadMedia";
+import MediaPickerDialog from "./media/MediaPickerDialog";
 import { inputCls, labelCls, smallBtn } from "./ui";
 
 // Wgranie zdjęcia (przeciągnij/upuść, na telefonie aparat/galeria), punkt skupienia i opis alt.
 export default function ImageField({ value, onChange, noAlt }) {
   const [busy, setBusy] = useState(false);
   const [err, setErr] = useState("");
+  const [pick, setPick] = useState(false);
   const v = value || {};
   const upload = async (file) => {
     if (!file) return;
     if (!file.type.startsWith("image/")) return setErr("To nie jest obraz.");
     if (file.size > 10 * 1024 * 1024) return setErr("Maksymalnie 10 MB.");
     setErr(""); setBusy(true);
-    const { file_url } = await base44.integrations.Core.UploadPublicFile({ file });
-    onChange({ ...v, url: file_url, fx: 50, fy: 50 });
+    const m = await uploadMedia(file);
+    onChange({ ...v, url: m.url, fx: 50, fy: 50 });
     setBusy(false);
   };
+  const lib = (
+    <>
+      <button type="button" onClick={() => setPick(true)} className={smallBtn}><FolderOpen className="h-4 w-4" /> Z biblioteki</button>
+      <MediaPickerDialog open={pick} onOpenChange={setPick} onPick={(m) => onChange({ ...v, url: m.url, alt: v.alt || m.alt || "", fx: 50, fy: 50 })} />
+    </>
+  );
   const focus = (e) => {
     const r = e.currentTarget.getBoundingClientRect();
     onChange({ ...v, fx: Math.round(((e.clientX - r.left) / r.width) * 100), fy: Math.round(((e.clientY - r.top) / r.height) * 100) });
@@ -37,10 +45,12 @@ export default function ImageField({ value, onChange, noAlt }) {
           <input type="file" accept="image/*" className="hidden" onChange={(e) => upload(e.target.files[0])} />
         </label>
       )}
+      {!v.url && lib}
       {v.url && (
         <div className="flex flex-wrap gap-2">
           <label className={`${smallBtn} cursor-pointer`}>{busy ? <Loader2 className="h-4 w-4 animate-spin" /> : <Upload className="h-4 w-4" />} Podmień
             <input type="file" accept="image/*" className="hidden" onChange={(e) => upload(e.target.files[0])} /></label>
+          {lib}
           <button type="button" onClick={() => onChange(null)} className={smallBtn}><Trash2 className="h-4 w-4" /> Usuń</button>
         </div>
       )}

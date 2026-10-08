@@ -1,4 +1,4 @@
-import { Crown, AlignLeft, Columns2, Image as ImageIcon, MousePointerClick, Quote, ListOrdered, LayoutGrid, HelpCircle, Minus, Puzzle, Rows3 } from "lucide-react";
+import { Crown, AlignLeft, Columns2, Image as ImageIcon, MousePointerClick, Quote, ListOrdered, LayoutGrid, HelpCircle, Minus, Puzzle, Rows3, Images, Video } from "lucide-react";
 
 const IMG_RATIOS = [["1:1", "1:1"], ["4:5", "4:5"], ["3:2", "3:2"], ["16:9", "16:9"]];
 const HEAD = [
@@ -59,6 +59,14 @@ export const TYPES = {
   faq: { label: "Pytania i odpowiedzi", icon: HelpCircle, opis: "Rozwijane odpowiedzi (akordeon).",
     fields: [...HEAD, { k: "pytania", label: "Pytania", typ: "items", maxItems: 20, sub: [{ k: "pytanie", label: "Pytanie", typ: "text" }, { k: "odpowiedz", label: "Odpowiedź", typ: "textarea" }] }],
     defaults: { tytul: "Pytania", pytania: [{ pytanie: "Pytanie?", odpowiedz: "Odpowiedź." }] } },
+  galeria: { label: "Galeria", icon: Images, opis: "2–12 zdjęć w siatce z podpisami.",
+    fields: [...HEAD, { k: "kolumny", label: "Kolumny", typ: "select", opcje: [["3", "3"], ["2", "2"], ["4", "4"]] },
+      { k: "zdjecia", label: "Zdjęcia", typ: "items", maxItems: 12, sub: [{ k: "obraz", label: "Zdjęcie", typ: "image" }, { k: "podpis", label: "Podpis", typ: "text" }] }],
+    defaults: { tytul: "", kolumny: "3", zdjecia: [] } },
+  wideo: { label: "Wideo", icon: Video, opis: "YouTube, Vimeo albo plik MP4.",
+    fields: [{ k: "etykieta", label: "Etykieta", typ: "text", max: 30 }, { k: "url", label: "Link do wideo", typ: "text" },
+      { k: "proporcja", label: "Proporcja", typ: "select", opcje: [["16:9", "16:9"], ["4:3", "4:3"], ["1:1", "1:1"], ["9:16", "9:16 (pionowe)"]] }, { k: "podpis", label: "Podpis", typ: "text" }],
+    defaults: { url: "", proporcja: "16:9" } },
   separator: { label: "Separator", icon: Minus, opis: "Złota kreska albo pusty odstęp.",
     fields: [{ k: "wariant", label: "Wariant", typ: "select", opcje: [["kreska", "Złota kreska"], ["odstep", "Odstęp"]] }], defaults: { wariant: "kreska" } },
   modul: { label: "Moduł dynamiczny", icon: Puzzle, opis: "Spotkania, Skarbiec, newsletter, kontakt i inne moduły.", bare: true,

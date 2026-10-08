@@ -2,6 +2,7 @@ import React, { useEffect, useState } from "react";
 import { base44 } from "@/api/base44Client";
 import ContentManager from "@/components/admin/ContentManager";
 import PagesList from "./PagesList";
+import MediaLibrary from "./media/MediaLibrary";
 import PageEditor from "./PageEditor";
 import { tabBtn } from "./ui";
 
@@ -26,10 +27,11 @@ export default function ContentHub() {
       {!pageId && (
         <div className="flex gap-2 mb-8">
           <button className={tabBtn(tab === "strony")} onClick={() => setTab("strony")}>STRONY</button>
+          <button className={tabBtn(tab === "media")} onClick={() => setTab("media")}>MEDIA</button>
           <button className={tabBtn(tab === "teksty")} onClick={() => setTab("teksty")}>TEKSTY SEKCJI MODUŁÓW</button>
         </div>
       )}
-      {tab === "teksty" && !pageId ? <ContentManager /> : pageId ? <PageEditor pageId={pageId} onBack={() => open(null)} /> : <PagesList onOpen={open} />}
+      {tab === "media" && !pageId ? <MediaLibrary /> : tab === "teksty" && !pageId ? <ContentManager /> : pageId ? <PageEditor pageId={pageId} onBack={() => open(null)} /> : <PagesList onOpen={open} />}
     </div>
   );
 }

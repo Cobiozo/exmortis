@@ -1,0 +1,49 @@
+{
+  "name": "MediaAsset",
+  "type": "object",
+  "properties": {
+    "url": {
+      "type": "string"
+    },
+    "nazwa": {
+      "type": "string"
+    },
+    "alt": {
+      "type": "string"
+    },
+    "szer": {
+      "type": "number"
+    },
+    "wys": {
+      "type": "number"
+    },
+    "rozmiar_kb": {
+      "type": "number"
+    }
+  },
+  "required": [
+    "url"
+  ],
+  "rls": {
+    "read": {
+      "user_condition": {
+        "role": "admin"
+      }
+    },
+    "create": {
+      "user_condition": {
+        "role": "admin"
+      }
+    },
+    "update": {
+      "user_condition": {
+        "role": "admin"
+      }
+    },
+    "delete": {
+      "user_condition": {
+        "role": "admin"
+      }
+    }
+  }
+}
