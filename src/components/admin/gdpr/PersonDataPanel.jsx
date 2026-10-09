@@ -2,6 +2,7 @@ import React, { useState } from "react";
 import { base44 } from "@/api/base44Client";
 import { Loader2, Search, Download, Trash2 } from "lucide-react";
 import PersonDeleteBox from "./PersonDeleteBox";
+import EmailAliases from "./EmailAliases";
 import PowrotCoop from "./PowrotCoop";
 import AccessLogList from "./AccessLogList";
 
@@ -52,6 +53,7 @@ export default function PersonDataPanel() {
           <div className="flex flex-wrap gap-3">
             <button onClick={exportData} disabled={!!busy} className="btn-ghost !py-3">{busy === "export" ? <Loader2 className="h-4 w-4 animate-spin" /> : <Download className="h-4 w-4" />} EKSPORTUJ (JSON)</button>
           </div>
+          <EmailAliases email={email.trim()} onPick={(e) => { setEmail(e); setFound(null); }} />
           <PowrotCoop rows={found.powrot} call={call} onDone={find} />
           {found.summary.length > 0 && <PersonDeleteBox email={email.trim()} busy={busy === "delete"} onDelete={(confirm) => call("delete", { confirm })} onDone={find} icon={Trash2} />}
         </div>

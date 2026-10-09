@@ -4,6 +4,7 @@ import { Loader2, Download } from "lucide-react";
 import { base44 } from "@/api/base44Client";
 import ClientDetail from "./ClientDetail";
 import GrantForm from "./GrantForm";
+import EmailChangeLog from "./EmailChangeLog";
 
 // Ochrona przed formułami w Excelu: = + - @ poprzedzone apostrofem.
 const csvCell = (v) => { const s = String(v ?? ""); const x = /^[=+\-@\t\r]/.test(s) ? "'" + s : s; return /[",\n]/.test(x) ? `"${x.replace(/"/g, '""')}"` : x; };
@@ -47,7 +48,7 @@ export default function ClientsPanel() {
           </div>
         )}
       </div>
-      {sel ? <ClientDetail key={sel} email={sel} onChange={load} /> : <p className="text-foreground/40 text-sm">Wybierz klienta z listy.</p>}
+      {sel ? <ClientDetail key={sel} email={sel} onChange={load} /> : <EmailChangeLog onPick={setSel} />}
     </div>
   );
 }

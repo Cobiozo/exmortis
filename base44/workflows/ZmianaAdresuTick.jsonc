@@ -1,0 +1,47 @@
+{
+  "trigger": {
+    "condition": null,
+    "config": {
+      "trigger_type": "scheduled",
+      "events": [],
+      "schedule_mode": "recurring",
+      "cron_expression": "*/15 * * * *",
+      "one_time_date": null,
+      "timezone": "Europe/Warsaw",
+      "interval_value": null,
+      "interval_unit": null,
+      "interval_anchor": null,
+      "ends_type": "never",
+      "ends_on_date": null,
+      "ends_after_count": null
+    }
+  },
+  "description": "Co 15 minut: wykrywa przyj\u0119te zaproszenia, ponawia nieudane przeniesienia, oznacza wygas\u0142e linki.",
+  "definition": {
+    "document": {
+      "dsl": "1.0.0",
+      "name": "zmiana_adresu_tick",
+      "version": "1.0",
+      "namespace": "base44"
+    },
+    "do": [
+      {
+        "tick": {
+          "call": "invoke_backend_function",
+          "with": {
+            "function_name": "emailChange",
+            "args": {
+              "action": "tick"
+            }
+          },
+          "then": "end",
+          "x-base44": {
+            "title": "Pon\u00f3w zmiany adresu",
+            "description": "Przyj\u0119cia, ponowienia, wygas\u0142e"
+          }
+        }
+      }
+    ]
+  },
+  "name": "Zmiana adresu e-mail \u2014 ponawianie"
+}

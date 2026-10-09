@@ -1,0 +1,102 @@
+{
+  "name": "EmailChange",
+  "type": "object",
+  "properties": {
+    "old_email": {
+      "type": "string"
+    },
+    "new_email": {
+      "type": "string"
+    },
+    "token_hash": {
+      "type": "string"
+    },
+    "expires_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "wyslano",
+        "podano",
+        "przyjeto",
+        "przenoszenie",
+        "blad",
+        "przeniesiono",
+        "przywrocono",
+        "wygaslo"
+      ],
+      "default": "wyslano"
+    },
+    "kto": {
+      "type": "string"
+    },
+    "plan": {
+      "type": "array",
+      "items": {
+        "type": "object"
+      }
+    },
+    "kopia": {
+      "type": "object"
+    },
+    "kopia_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "proby": {
+      "type": "number",
+      "default": 0
+    },
+    "blad": {
+      "type": "string"
+    },
+    "podano_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "zaproszono_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "przeniesiono_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "przywrocono_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "test": {
+      "type": "boolean",
+      "default": false
+    }
+  },
+  "required": [
+    "old_email",
+    "status"
+  ],
+  "rls": {
+    "read": {
+      "user_condition": {
+        "role": "admin"
+      }
+    },
+    "create": {
+      "user_condition": {
+        "role": "admin"
+      }
+    },
+    "update": {
+      "user_condition": {
+        "role": "admin"
+      }
+    },
+    "delete": {
+      "user_condition": {
+        "role": "admin"
+      }
+    }
+  }
+}

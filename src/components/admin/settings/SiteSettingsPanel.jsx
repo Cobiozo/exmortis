@@ -4,6 +4,7 @@ import CompanySettings from "./CompanySettings";
 import CompanyWarning from "./CompanyWarning";
 import PrelaunchSettings from "./PrelaunchSettings";
 import MailSettings from "@/components/admin/mail/MailSettings";
+import EmailChangeToggle from "./EmailChangeToggle";
 
 // Ustawienia strony: dane firmy i tryb przedpremierowy.
 export default function SiteSettingsPanel() {
@@ -16,6 +17,7 @@ export default function SiteSettingsPanel() {
       <PrelaunchSettings initial={s.premiera} />
       <CompanySettings initial={s.firma} />
       <MailSettings />
+      <EmailChangeToggle />
     </div>
   );
 }

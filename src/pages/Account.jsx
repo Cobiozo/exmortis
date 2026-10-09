@@ -15,6 +15,14 @@ export default function Account() {
   const [tab, setTab] = useState("produkty");
   const [me, setMe] = useState(null);
   useEffect(() => { base44.auth.me().then(setMe); }, []);
+  if (me?.role === "zablokowane") {
+    return (
+      <div className="bg-[#0A0A0B] pt-28 pb-24 min-h-screen px-5 text-center space-y-6">
+        <p className="relic-heading text-3xl">Konto nieaktywne</p>
+        <button onClick={() => base44.auth.logout("/")} className="btn-ghost">WYLOGUJ</button>
+      </div>
+    );
+  }
 
   return (
     <div className="bg-[#0A0A0B] pt-28 pb-24 min-h-screen">

@@ -6,7 +6,8 @@
       "enum": [
         "admin",
         "user",
-        "techniczna"
+        "techniczna",
+        "zablokowane"
       ]
     }
   },

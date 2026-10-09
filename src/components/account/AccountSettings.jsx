@@ -25,7 +25,10 @@ export default function AccountSettings({ me }) {
     <div className="max-w-lg space-y-10">
       <form onSubmit={save} className="space-y-5">
         <AuthField id="imie" label="IMIĘ" value={name} onChange={(e) => setName(e.target.value)} />
-        <AuthField id="mail" label="E-MAIL" value={me.email} disabled readOnly />
+        <div>
+          <p className="technical text-[10px] text-foreground/50 mb-2">E-MAIL</p>
+          <p className="text-sm">{me.email}</p>
+        </div>
         <button disabled={busy} className="btn-relic !py-3">{busy && <Loader2 className="h-4 w-4 animate-spin" />} ZAPISZ</button>
       </form>
       <div className="space-y-4 border-t hairline pt-8">

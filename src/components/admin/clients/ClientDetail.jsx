@@ -3,6 +3,7 @@ import { Loader2 } from "lucide-react";
 import { base44 } from "@/api/base44Client";
 import { plDate, TYPE_LABEL } from "@/components/account/accountUtils";
 import AccessActions from "./AccessActions";
+import EmailChangeBox from "./EmailChangeBox";
 
 export default function ClientDetail({ email, onChange }) {
   const [d, setD] = useState(null);
@@ -16,6 +17,7 @@ export default function ClientDetail({ email, onChange }) {
         <h2 className="shop-heading text-2xl text-[#F5EFE1]">{d.user?.full_name || email}</h2>
         <p className="text-sm text-foreground/50 mt-1">{email} · {d.user ? `konto od ${plDate(d.user.created_date)}` : "bez konta (zaproszenie wysłane)"} · ukończone lekcje: {d.completed}</p>
       </div>
+      {d.user && <EmailChangeBox email={email} />}
       <section>
         <p className="technical text-[10px] gold-text mb-3">DOSTĘPY</p>
         <div className="border hairline divide-y divide-[#3D3D3F]/60">
