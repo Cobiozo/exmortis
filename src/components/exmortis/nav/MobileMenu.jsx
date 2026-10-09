@@ -6,14 +6,14 @@ import { isActive } from "./navItems";
 import { useSiteNav } from "./useSiteNav";
 
 // Pełnoekranowa warstwa menu; Esc zamyka, blokada przewijania, fokus na pierwszej pozycji.
-export default function MobileMenu({ open, onClose, top }) {
+export default function MobileMenu({ open, onClose, top, preview }) {
   const { user } = useViewer();
   const { pathname } = useLocation();
   const ref = useRef(null);
   const { menu: NAV, test: TEST } = useSiteNav();
 
   useEffect(() => {
-    if (!open) return;
+    if (!open || preview) return;
     document.body.style.overflow = "hidden";
     ref.current?.querySelector("a,button")?.focus();
     const onKey = (e) => e.key === "Escape" && onClose();
@@ -26,7 +26,7 @@ export default function MobileMenu({ open, onClose, top }) {
   const small = "technical text-xs text-foreground/70 hover:gold-text";
 
   return (
-    <div id="mobile-menu" ref={ref} style={{ top }} className="fixed inset-x-0 bottom-0 z-40 bg-[#0A0A0B] overflow-y-auto animate-in fade-in duration-200 motion-reduce:animate-none">
+    <div id="mobile-menu" ref={ref} style={preview ? undefined : { top }} className={`${preview ? "relative h-full" : "fixed inset-x-0 bottom-0 z-40"} bg-[#0A0A0B] overflow-y-auto animate-in fade-in duration-200 motion-reduce:animate-none`}>
       <nav aria-label="Menu główne" className="min-h-full flex flex-col items-center justify-center gap-7 py-10">
         {[...NAV, TEST].map((n) => <Link key={n.to} to={n.to} onClick={onClose} className={item(n.to)}>{n.label}</Link>)}
         <div className="flex flex-wrap justify-center gap-6 mt-6 pt-6 border-t hairline">
