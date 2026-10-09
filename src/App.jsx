@@ -16,14 +16,17 @@ import Checkout from '@/pages/Checkout';
 import Powrot from '@/pages/Powrot';
 import Glos from '@/pages/Glos';
 import TestPage from '@/pages/TestPage';
-import Cisza from '@/pages/Cisza';
 import Events from '@/pages/Events';
 import Login from '@/pages/Login';
 import RegisterGate from '@/components/prelaunch/RegisterGate';
 import SeoMeta from '@/components/seo/SeoMeta';
 import ForgotPassword from '@/pages/ForgotPassword';
 import ResetPassword from '@/pages/ResetPassword';
-import Admin from '@/pages/admin/Admin';
+import { lazy, Suspense } from 'react';
+const Admin = lazy(() => import('@/pages/admin/Admin'));
+const CmsPreview = lazy(() => import('@/pages/CmsPreview'));
+const CoursePlayer = lazy(() => import('@/pages/CoursePlayer'));
+const Cisza = lazy(() => import('@/pages/Cisza'));
 import ProtectedRoute from '@/components/ProtectedRoute';
 import { SiteContentProvider } from '@/components/exmortis/SiteContentProvider';
 import { Navigate } from 'react-router-dom';
@@ -31,7 +34,6 @@ import PrivacyPolicy from '@/pages/PrivacyPolicy';
 import { AdminModeProvider } from '@/components/admin/AdminModeContext';
 import AdminBar from '@/components/admin/AdminBar';
 import Account from '@/pages/Account';
-import CoursePlayer from '@/pages/CoursePlayer';
 import Regulamin from '@/pages/Regulamin';
 import PolitykaCookies from '@/pages/PolitykaCookies';
 import Odstapienie from '@/pages/Odstapienie';
@@ -39,7 +41,6 @@ import Kontakt from '@/pages/Kontakt';
 import CookieBanner from '@/components/legal/CookieBanner';
 import { PodcastPlayerProvider } from '@/components/exmortis/podcast/PlayerContext';
 import CmsPage from '@/pages/CmsPage';
-import CmsPreview from '@/pages/CmsPreview';
 import CmsRoutePage from '@/components/cms/CmsRoutePage';
 import Listopad from '@/pages/Listopad';
 import ShopRedirect from '@/components/exmortis/shop/ShopRedirect';
@@ -80,6 +81,7 @@ const AuthenticatedApp = () => {
       <PodcastPlayerProvider>
       <PrelaunchGate>
       <SeoMeta />
+      <Suspense fallback={<div className="min-h-[100svh] bg-[#0A0A0B]" />}>
       <Routes>
         <Route path="/login" element={<Login />} />
         <Route path="/register" element={<RegisterGate />} />
@@ -123,6 +125,7 @@ const AuthenticatedApp = () => {
           <Route path="*" element={<PageNotFound />} />
         </Route>
       </Routes>
+      </Suspense>
       </PrelaunchGate>
       </PodcastPlayerProvider>
       <CookieBanner />

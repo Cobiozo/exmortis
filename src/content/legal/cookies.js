@@ -1,6 +1,8 @@
 export const BANNER_TEXT =
   "Używamy plików cookies niezbędnych do działania strony. Za Twoją zgodą — także analitycznych i marketingowych (np. piksel Meta), które pomagają nam docierać do osób, którym exmortis może pomóc. Możesz zaakceptować, odrzucić lub wybrać ustawienia — i zmienić zdanie w każdej chwili („Ustawienia cookies” w stopce).";
 
+export const BANNER_TEXT_SHORT = "Używamy cookies niezbędnych do działania strony. Analityczne i marketingowe — tylko za Twoją zgodą.";
+
 // Faktyczna pamięć przeglądarki używana przez aplikację (sprawdzone w kodzie).
 export const COOKIE_TABLE = [
   ["base44_access_token / token", "Base44 (platforma Serwisu)", "Niezbędne", "Utrzymanie zalogowania (localStorage)", "Do wylogowania"],
@@ -8,7 +10,7 @@ export const COOKIE_TABLE = [
   ["exmortis_cart", "exmortis", "Niezbędne", "Zawartość koszyka (localStorage)", "Do opróżnienia koszyka"],
   ["exm_cisza", "exmortis", "Niezbędne", "Głośność, wybrany czas i tło (localStorage)", "Do usunięcia przez użytkownika"],
   ["exm_view", "exmortis", "Niezbędne", "Tryb podglądu strony — tylko administrator (localStorage)", "Do usunięcia przez użytkownika"],
-  ["base44_analytics_session_id", "Base44, Inc. (platforma Serwisu)", "Analityczne", "Statystyka odwiedzin: identyfikator sesji, odwiedzone strony i zdarzenia (localStorage) — działa dopiero po zgodzie", "Do zakończenia sesji lub usunięcia przez użytkownika"],
+  ["base44_analytics_session_id", "Base44, Inc. (platforma Serwisu)", "Niezbędne (identyfikator platformy)", "Losowy identyfikator sesji tworzony przez platformę przy pierwszej wizycie (localStorage). Bez zgody na cookies analityczne nie wysyłamy z nim żadnych danych; po „Odrzucam” jest usuwany", "Do zakończenia sesji, odrzucenia zgody lub usunięcia przez użytkownika"],
   ["cookies YouTube (np. VISITOR_INFO1_LIVE, YSC)", "Google / YouTube", "Marketingowe", "Odtwarzacz osadzonych filmów i muzyki", "YSC — do zamknięcia przeglądarki; VISITOR_INFO1_LIVE — ok. 6 miesięcy"],
   ["cookies operatora płatności", "PayU S.A.", "Niezbędne", "Bezpieczeństwo płatności (na stronie operatora)", "Zgodnie z polityką cookies PayU (na stronie operatora)"],
 ];

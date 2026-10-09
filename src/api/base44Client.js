@@ -13,3 +13,9 @@ export const base44 = createClient({
   appBaseUrl,
   analytics: { enabled: readConsent()?.analytics === true }
 });
+
+// Bez zgody analitycznej nie zostawiamy identyfikatora sesji platformy w pamięci przeglądarki.
+if (readConsent()?.analytics !== true) {
+  const drop = () => localStorage.removeItem("base44_analytics_session_id");
+  drop(); setTimeout(drop, 0); window.addEventListener("load", drop, { once: true });
+}
