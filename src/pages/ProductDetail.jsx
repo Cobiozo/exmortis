@@ -8,6 +8,9 @@ import { useCart } from "@/components/exmortis/CartContext";
 import { Image } from "@/components/ui/image";
 import FreeOrderForm from "@/components/exmortis/shop/FreeOrderForm";
 
+// Zmienione adresy produktów: stary → nowy.
+const OLD_SLUGS = { "krag-mezczyzn-rzeszow": "krag-mezczyzn" };
+
 export default function ProductDetail() {
   const { slug } = useParams();
   const navigate = useNavigate();
@@ -18,6 +21,7 @@ export default function ProductDetail() {
   const [added, setAdded] = useState(false);
 
   useEffect(() => {
+    if (OLD_SLUGS[slug]) { navigate(`/skarbiec/${OLD_SLUGS[slug]}`, { replace: true }); return; }
     setLoading(true);
     base44.functions
       .invoke("shopProducts", { slug })

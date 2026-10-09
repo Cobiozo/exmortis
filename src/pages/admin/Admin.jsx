@@ -7,6 +7,7 @@ import NewsletterManager from "@/components/admin/NewsletterManager";
 import ContentHub from "@/components/admin/cms/ContentHub";
 import NavEditor from "@/components/admin/cms/nav/NavEditor";
 import IntegrationsManager from "@/components/admin/IntegrationsManager";
+import SiteSettingsPanel from "@/components/admin/settings/SiteSettingsPanel";
 import QuizStatsPanel from "@/components/admin/QuizStatsPanel";
 import SilencePanel from "@/components/admin/silence/SilencePanel";
 import SilenceStatsPanel from "@/components/admin/SilenceStatsPanel";
@@ -37,6 +38,7 @@ const SECTIONS = {
   tresci: ["Treści stron", () => <ContentHub />],
   menu: ["Menu i stopka", () => <NavEditor />],
   integracje: ["Integracje", () => <IntegrationsManager />],
+  ustawienia: ["Ustawienia strony", () => <SiteSettingsPanel />],
   testy: ["Wyniki testu", () => <QuizStatsPanel />],
 };
 

@@ -29,6 +29,7 @@ export default function Navbar() {
 
   // Hamburger poniżej 1100 px albo gdy realna szerokość menu się nie mieści.
   useLayoutEffect(() => {
+    if (!rowRef.current) return;
     const check = () => {
       const row = rowRef.current?.clientWidth || 0;
       const need = (logoRef.current?.offsetWidth || 0) + 24 + (measureRef.current?.scrollWidth || 0) + 24 + (rightRef.current?.offsetWidth || 0);
@@ -38,7 +39,7 @@ export default function Navbar() {
     const ro = new ResizeObserver(check);
     ro.observe(rowRef.current);
     return () => ro.disconnect();
-  }, []);
+  }, [gated]);
 
   const close = useCallback(() => { setMobile(false); burgerRef.current?.focus(); }, []);
   useEffect(() => { setMobile(false); }, [location.pathname]);
