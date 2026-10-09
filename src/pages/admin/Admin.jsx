@@ -25,9 +25,11 @@ import PlaylistManager from "@/components/exmortis/glos/PlaylistManager";
 import { ShieldAlert, ArrowLeft } from "lucide-react";
 import PanelHeaderActions from "@/components/admin/PanelHeaderActions";
 import TechDashboard from "@/components/admin/TechDashboard";
+import AnnouncementsAdmin from "@/components/admin/announce/AnnouncementsAdmin";
 
 const SECTIONS = {
   spotkania: ["Spotkania", () => <EventsManager />],
+  ogloszenia: ["Ogłoszenia", () => <AnnouncementsAdmin />],
   cisza: ["Cisza", () => <SilencePanel />],
   skarbiec: ["Skarbiec", () => <ProductsManager />],
   statystyki: ["Statystyki", () => <div className="space-y-16"><SilenceStatsPanel /><QuizStatsPanel /></div>],

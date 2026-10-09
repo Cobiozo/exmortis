@@ -7,6 +7,7 @@ import SeriesTiles from "@/components/obok/SeriesTiles";
 import ObokNotifications from "@/components/obok/ObokNotifications";
 import AccountSettings from "@/components/account/AccountSettings";
 import DailyThought from "@/components/account/DailyThought";
+import AccountAnnouncements from "@/components/account/announce/AccountAnnouncements";
 import { obok } from "@/components/obok/obokApi";
 
 const TABS = [["produkty", "Moje produkty"], ["obok", "Obok"], ["zakupy", "Zakupy"], ["ustawienia", "Ustawienia"]];
@@ -37,7 +38,10 @@ export default function Account() {
               {me ? `Dobrze, że jesteś${me.imie ? `, ${me.imie}` : ""}.` : "Twoje miejsce"}
             </h1>
           </div>
-          <DailyThought hasObok={hasObok} onObok={() => setTab("obok")} />
+          <div className="w-full lg:max-w-[380px] flex flex-col gap-4">
+            <AccountAnnouncements />
+            <DailyThought hasObok={hasObok} onObok={() => setTab("obok")} />
+          </div>
         </div>
         <div className="flex gap-8 mt-12 mb-10 border-b hairline overflow-x-auto [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
           {TABS.map(([k, l]) => (

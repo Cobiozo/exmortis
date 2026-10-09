@@ -1,4 +1,5 @@
 import { useEffect } from "react";
+import { SITE_URL } from "@/config/site";
 
 // Meta-dane strony: kanoniczny adres, obraz udostępniania, noindex.
 export function usePageMeta({ canonical, ogImage, noindex } = {}) {
@@ -10,7 +11,7 @@ export function usePageMeta({ canonical, ogImage, noindex } = {}) {
       document.head.appendChild(el);
       added.push(el);
     };
-    if (canonical) put("link", { rel: "canonical", href: window.location.origin + canonical });
+    if (canonical) put("link", { rel: "canonical", href: SITE_URL + canonical });
     if (ogImage) {
       put("meta", { property: "og:image", content: ogImage });
       put("meta", { property: "og:image:width", content: "1200" });

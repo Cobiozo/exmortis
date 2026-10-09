@@ -1,11 +1,12 @@
 import React, { useState } from "react";
 import { usePodcastPlayer } from "./PlayerContext";
 import { fmtT } from "./podcastUtils";
+import { SITE_URL } from "@/config/site";
 
 export default function ShareBox({ ep }) {
   const p = usePodcastPlayer();
   const [copied, setCopied] = useState("");
-  const base = `${window.location.origin}/glos/${ep.slug}`;
+  const base = `${SITE_URL}/glos/${ep.slug}`;
   const u = (src) => `${base}?src=${src}`;
   const copy = (txt, label) => navigator.clipboard.writeText(txt).then(() => { setCopied(label); setTimeout(() => setCopied(""), 2000); });
   const at = p.ep?.id === ep.id ? Math.floor(p.t) : 0;

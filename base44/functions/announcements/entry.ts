@@ -1,0 +1,164 @@
+import { createClientFromRequest } from "npm:@base44/sdk@0.8.53";
+import { runSql, escStr } from "../../shared/supabase.ts";
+
+// Ogłoszenia na koncie — wyłącznie na stronie (bez e-maili).
+// Klient: "mine" (aktywne dla mnie + liczba nieprzeczytanych), "event" (seen/view/click/dismiss).
+// Administrator: list, options, save, publish, end, duplicate, delete.
+
+const KINDS = ["ogloszenie", "zaproszenie", "przypomnienie"];
+const AUD = ["wszyscy", "produkt", "obok", "spotkanie"];
+const str = (v, max) => String(v ?? "").replace(/<[^>]*>/g, "").trim().slice(0, max);
+const dt = (v) => { if (!v) return null; const d = new Date(v); return isNaN(d.getTime()) ? null : d.toISOString(); };
+
+export function annStatus(a, now = Date.now()) {
+  if (!a.opublikowane) return "Szkic";
+  if (a.zakonczono_at || (a.do && new Date(a.do).getTime() <= now)) return "Zakończone";
+  if (a.od && new Date(a.od).getTime() > now) return "Zaplanowane";
+  return "Aktywne";
+}
+
+function clean(b) {
+  const link = str(b.przycisk_link, 500);
+  if (link && !/^(\/|https:\/\/)/.test(link)) throw new Error("Link przycisku: adres na stronie (/...) albo https://...");
+  const odbiorcy = AUD.includes(b.odbiorcy) ? b.odbiorcy : "wszyscy";
+  if (odbiorcy !== "wszyscy" && !b.cel_id) throw new Error("Wybierz, do kogo trafia ogłoszenie.");
+  const od = dt(b.od), d = dt(b.do);
+  if (od && d && d <= od) throw new Error("Koniec musi być po początku.");
+  return {
+    rodzaj: KINDS.includes(b.rodzaj) ? b.rodzaj : "ogloszenie",
+    tytul: str(b.tytul, 60) || (() => { throw new Error("Wpisz tytuł."); })(),
+    tresc: String(b.tresc ?? "").trim().slice(0, 200),
+    przycisk_napis: str(b.przycisk_napis, 30), przycisk_link: link,
+    odbiorcy, cel_id: odbiorcy === "wszyscy" ? "" : String(b.cel_id), cel_nazwa: odbiorcy === "wszyscy" ? "" : str(b.cel_nazwa, 200),
+    od, do: d, zamykalne: b.zamykalne !== false, wazne: b.wazne === true, test: b.test === true,
+  };
+}
+
+async function inAudience(sr, base44, a, me) {
+  if (a.odbiorcy === "wszyscy") return true;
+  const email = String(me.email).toLowerCase();
+  if (a.odbiorcy === "produkt") {
+    const rows = await sr.entities.Access.filter({ user_email: email, product_id: a.cel_id }, "-created_date", 5);
+    const today = new Date().toISOString().slice(0, 10);
+    return rows.some((r) => !r.valid_until || r.valid_until >= today);
+  }
+  if (a.odbiorcy === "obok") return (await sr.entities.ObokUczestnik.filter({ seria_id: a.cel_id, user_email: email }, "-created_date", 1)).length > 0;
+  if (a.odbiorcy === "spotkanie") {
+    const r = await runSql(base44, `SELECT 1 FROM public.registrations WHERE event_id = ${escStr(a.cel_id)} AND lower(email) = ${escStr(email)}
+      AND status IN ('Zapisany','Obecny','Lista rezerwowa') LIMIT 1`, true).catch(() => []);
+    return r.length > 0;
+  }
+  return false;
+}
+
+async function recipients(sr, base44, a) {
+  if (a.odbiorcy === "wszyscy") return (await sr.entities.User.list("-created_date", 10000)).filter((u) => u.role !== "zablokowane").length;
+  if (a.odbiorcy === "produkt") return sr.entities.Access.count({ product_id: a.cel_id });
+  if (a.odbiorcy === "obok") return sr.entities.ObokUczestnik.count({ seria_id: a.cel_id });
+  const r = await runSql(base44, `SELECT COUNT(DISTINCT lower(email))::int AS n FROM public.registrations WHERE event_id = ${escStr(a.cel_id)}
+    AND status IN ('Zapisany','Obecny','Lista rezerwowa')`, true).catch(() => [{ n: 0 }]);
+  return r[0]?.n || 0;
+}
+
+export default async function (req) {
+  try {
+    const base44 = createClientFromRequest(req);
+    const sr = base44.asServiceRole;
+    const me = await base44.auth.me().catch(() => null);
+    if (!me) return Response.json({ error: "Zaloguj się" }, { status: 401 });
+    const body = await req.json().catch(() => ({}));
+    const A = sr.entities.Announcement, S = sr.entities.AnnouncementSeen;
+
+    if (body.action === "mine") {
+      if (me.role === "zablokowane") return Response.json({ items: [], unread: 0 });
+      const all = (await A.filter({ opublikowane: true }, "-created_date", 200)).filter((a) => annStatus(a) === "Aktywne");
+      const mine = [];
+      for (const a of all) if (await inAudience(sr, base44, a, me)) mine.push(a);
+      const seen = mine.length ? await S.filter({ user_id: me.id, ann_id: { $in: mine.map((a) => a.id) } }, "-created_date", 500) : [];
+      const by = Object.fromEntries(seen.map((s) => [s.ann_id, s]));
+      const items = mine.filter((a) => !by[a.id]?.dismissed_at)
+        .sort((x, y) => (y.wazne ? 1 : 0) - (x.wazne ? 1 : 0) || String(y.od || y.created_date).localeCompare(String(x.od || x.created_date)))
+        .map((a) => ({ id: a.id, rodzaj: a.rodzaj, tytul: a.tytul, tresc: a.tresc, przycisk_napis: a.przycisk_napis, przycisk_link: a.przycisk_link, zamykalne: a.zamykalne !== false, wazne: !!a.wazne }));
+      return Response.json({ items, unread: items.filter((a) => !by[a.id]?.seen_at).length });
+    }
+
+    if (body.action === "event") {
+      const type = { seen: "seen_at", view: "viewed_at", click: "clicked_at", dismiss: "dismissed_at" }[body.type];
+      const ids = (Array.isArray(body.ids) ? body.ids : [body.id]).map(String).slice(0, 50);
+      if (!type || !ids.length) return Response.json({ error: "Zła akcja" }, { status: 400 });
+      const ann = await A.filter({ id: { $in: ids }, opublikowane: true }, "-created_date", 50);
+      const ok = new Set(ann.map((a) => a.id));
+      const prev = await S.filter({ user_id: me.id, ann_id: { $in: [...ok] } }, "-created_date", 50);
+      const now = new Date().toISOString();
+      for (const id of ok) {
+        if (type === "dismiss" && ann.find((a) => a.id === id)?.zamykalne === false) continue;
+        const p = prev.find((s) => s.ann_id === id);
+        const patch = { [type]: p?.[type] || now, seen_at: p?.seen_at || now };
+        if (type !== "seen") patch.viewed_at = p?.viewed_at || now;
+        p ? await S.update(p.id, patch) : await S.create({ ann_id: id, user_id: me.id, ...patch });
+      }
+      return Response.json({ ok: true });
+    }
+
+    // --- Dalej tylko administrator (rola Techniczna nie ma dostępu) ---
+    if (me.role !== "admin") return Response.json({ error: "Brak dostępu" }, { status: 403 });
+    const log = (a, akcja) => sr.entities.AnnouncementLog.create({ ann_id: a.id, tytul: a.tytul, akcja, kto: me.email });
+
+    if (body.action === "list") {
+      const rows = await A.list("-created_date", 200);
+      const items = [];
+      for (const a of rows) {
+        const st = annStatus(a);
+        const stats = st === "Szkic" ? null : {
+          odbiorcy: await recipients(sr, base44, a),
+          wyswietlenia: await S.count({ ann_id: a.id, viewed_at: { $exists: true } }),
+          klikniecia: await S.count({ ann_id: a.id, clicked_at: { $exists: true } }),
+          zamkniecia: await S.count({ ann_id: a.id, dismissed_at: { $exists: true } }),
+        };
+        items.push({ ...a, status: st, stats });
+      }
+      const logs = await sr.entities.AnnouncementLog.list("-created_date", 50);
+      return Response.json({ items, logs });
+    }
+
+    if (body.action === "options") {
+      const [products, series, events] = await Promise.all([
+        sr.entities.Product.list("name", 500),
+        sr.entities.ObokSeria.list("nazwa", 200),
+        runSql(base44, `SELECT id, title, start_datetime FROM public.events WHERE status IN ('Opublikowane','Szkic') ORDER BY start_datetime DESC NULLS LAST LIMIT 100`, true).catch(() => []),
+      ]);
+      return Response.json({
+        produkt: products.map((p) => ({ id: p.id, nazwa: p.name })),
+        obok: series.map((s) => ({ id: s.id, nazwa: s.nazwa })),
+        spotkanie: events.map((e) => ({ id: e.id, nazwa: `${e.title}${e.start_datetime ? " · " + new Date(e.start_datetime).toLocaleDateString("pl-PL", { timeZone: "Europe/Warsaw" }) : ""}` })),
+      });
+    }
+
+    if (body.action === "save" || body.action === "publish") {
+      const data = clean(body.item || {});
+      if (body.action === "publish") { data.opublikowane = true; data.zakonczono_at = null; }
+      const id = body.item?.id;
+      const a = id ? await A.update(id, data) : await A.create(data);
+      await log(a, body.action === "publish" ? "opublikowano" : id ? "zmieniono" : "utworzono");
+      return Response.json({ ok: true, item: a });
+    }
+
+    const a = await A.get(String(body.id || ""));
+    if (body.action === "end") { await A.update(a.id, { zakonczono_at: new Date().toISOString() }); await log(a, "zakonczono"); return Response.json({ ok: true }); }
+    if (body.action === "duplicate") {
+      const { id, created_date, updated_date, created_by_id, created_by, zakonczono_at, ...rest } = a;
+      const c = await A.create({ ...rest, tytul: str(`${a.tytul} (kopia)`, 60), opublikowane: false, zakonczono_at: null });
+      await log(c, "zduplikowano");
+      return Response.json({ ok: true, item: c });
+    }
+    if (body.action === "delete") {
+      await S.deleteMany({ ann_id: a.id });
+      await A.delete(a.id);
+      await log(a, "usunieto");
+      return Response.json({ ok: true });
+    }
+    return Response.json({ error: "Nieznana akcja" }, { status: 400 });
+  } catch (error) {
+    return Response.json({ error: error.message }, { status: 500 });
+  }
+}

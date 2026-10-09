@@ -1,0 +1,51 @@
+{
+  "name": "AnnouncementLog",
+  "type": "object",
+  "properties": {
+    "ann_id": {
+      "type": "string"
+    },
+    "tytul": {
+      "type": "string"
+    },
+    "akcja": {
+      "type": "string",
+      "enum": [
+        "utworzono",
+        "zmieniono",
+        "opublikowano",
+        "zakonczono",
+        "usunieto",
+        "zduplikowano"
+      ]
+    },
+    "kto": {
+      "type": "string"
+    }
+  },
+  "required": [
+    "akcja"
+  ],
+  "rls": {
+    "read": {
+      "user_condition": {
+        "role": "admin"
+      }
+    },
+    "create": {
+      "user_condition": {
+        "role": "admin"
+      }
+    },
+    "update": {
+      "user_condition": {
+        "role": "nikt"
+      }
+    },
+    "delete": {
+      "user_condition": {
+        "role": "nikt"
+      }
+    }
+  }
+}

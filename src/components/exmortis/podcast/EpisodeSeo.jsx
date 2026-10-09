@@ -1,4 +1,5 @@
 import { useEffect } from "react";
+import { SITE_URL } from "@/config/site";
 
 // Tytuł, opis i JSON-LD (PodcastEpisode + PodcastSeries) dla strony odcinka.
 export default function EpisodeSeo({ ep, settings }) {
@@ -14,7 +15,7 @@ export default function EpisodeSeo({ ep, settings }) {
       "@context": "https://schema.org", "@type": "PodcastEpisode", name: ep.tytul, episodeNumber: ep.numer,
       datePublished: ep.publikacja, description: ep.opis_krotki, url: window.location.href.split("?")[0],
       ...(ep.audio ? { associatedMedia: { "@type": "MediaObject", contentUrl: ep.audio } } : {}),
-      partOfSeries: { "@type": "PodcastSeries", name: settings?.nazwa || "Podcast exmortis", url: `${window.location.origin}/glos` },
+      partOfSeries: { "@type": "PodcastSeries", name: settings?.nazwa || "Podcast exmortis", url: `${SITE_URL}/glos` },
     });
     document.head.appendChild(s);
     return () => { document.title = prev; if (prevDesc != null) meta?.setAttribute("content", prevDesc); s.remove(); };

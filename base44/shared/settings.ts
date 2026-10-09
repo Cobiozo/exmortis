@@ -35,12 +35,15 @@ export async function getSetting(base44, key) {
 }
 
 // Adres aplikacji (APP_URL) — ustawiany w panelu admina, używany we wszystkich linkach w e-mailach i przekierowaniach.
-export const DEFAULT_APP_URL = "https://preview--exmortis-return-path.base44.app";
+// Uczestnicy nigdy nie dostają adresu podglądu: pusty albo „preview--” → adres opublikowany.
+export const DEFAULT_APP_URL = "https://exmortis-return-path.base44.app";
 export let APP_URL = DEFAULT_APP_URL;
+export const safeAppUrl = (u) => (!u || /preview--/i.test(String(u)) ? DEFAULT_APP_URL : String(u).replace(/\/+$/, ""));
 
 export function cleanAppUrl(v) {
   const s = String(v || "").trim().replace(/\/+$/, "");
   if (!/^https:\/\/[^\s/]+\.[^\s/]+$/.test(s)) throw new Error("Podaj adres w formie https://twojadomena.pl (bez ścieżki)");
+  if (/preview--/i.test(s)) throw new Error("To adres podglądu — wpisz adres opublikowanej strony.");
   return s;
 }
 
@@ -48,7 +51,7 @@ let APP_URL_AT = 0;
 export async function loadAppUrl(base44) {
   if (Date.now() - APP_URL_AT < 300000) return APP_URL;
   const s = await getSetting(base44, "app").catch(() => null);
-  APP_URL = s?.url || DEFAULT_APP_URL;
+  APP_URL = safeAppUrl(s?.url);
   APP_URL_AT = Date.now();
   return APP_URL;
 }

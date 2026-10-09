@@ -1,0 +1,54 @@
+{
+  "name": "AnnouncementSeen",
+  "type": "object",
+  "properties": {
+    "ann_id": {
+      "type": "string"
+    },
+    "user_id": {
+      "type": "string"
+    },
+    "seen_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "viewed_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "clicked_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "dismissed_at": {
+      "type": "string",
+      "format": "date-time"
+    }
+  },
+  "required": [
+    "ann_id",
+    "user_id"
+  ],
+  "rls": {
+    "read": {
+      "user_condition": {
+        "role": "admin"
+      }
+    },
+    "create": {
+      "user_condition": {
+        "role": "admin"
+      }
+    },
+    "update": {
+      "user_condition": {
+        "role": "admin"
+      }
+    },
+    "delete": {
+      "user_condition": {
+        "role": "admin"
+      }
+    }
+  }
+}

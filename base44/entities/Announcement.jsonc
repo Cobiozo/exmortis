@@ -1,0 +1,96 @@
+{
+  "name": "Announcement",
+  "type": "object",
+  "properties": {
+    "rodzaj": {
+      "type": "string",
+      "enum": [
+        "ogloszenie",
+        "zaproszenie",
+        "przypomnienie"
+      ],
+      "default": "ogloszenie"
+    },
+    "tytul": {
+      "type": "string"
+    },
+    "tresc": {
+      "type": "string"
+    },
+    "przycisk_napis": {
+      "type": "string"
+    },
+    "przycisk_link": {
+      "type": "string"
+    },
+    "odbiorcy": {
+      "type": "string",
+      "enum": [
+        "wszyscy",
+        "produkt",
+        "obok",
+        "spotkanie"
+      ],
+      "default": "wszyscy"
+    },
+    "cel_id": {
+      "type": "string"
+    },
+    "cel_nazwa": {
+      "type": "string"
+    },
+    "od": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "do": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "zamykalne": {
+      "type": "boolean",
+      "default": true
+    },
+    "wazne": {
+      "type": "boolean",
+      "default": false
+    },
+    "opublikowane": {
+      "type": "boolean",
+      "default": false
+    },
+    "zakonczono_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "test": {
+      "type": "boolean",
+      "default": false
+    }
+  },
+  "required": [
+    "tytul"
+  ],
+  "rls": {
+    "read": {
+      "user_condition": {
+        "role": "admin"
+      }
+    },
+    "create": {
+      "user_condition": {
+        "role": "admin"
+      }
+    },
+    "update": {
+      "user_condition": {
+        "role": "admin"
+      }
+    },
+    "delete": {
+      "user_condition": {
+        "role": "admin"
+      }
+    }
+  }
+}
