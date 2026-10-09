@@ -3,10 +3,12 @@
 
 import { SYSTEM_BLOCKS } from "./systemTexts";
 import { LOGIN_BLOCKS } from "./loginTexts";
+import { ONLINE_BLOCKS } from "./onlineTexts";
 
 export const CONTENT_PAGES = [
   { key: "system", label: "Teksty systemowe", blocks: SYSTEM_BLOCKS },
   { key: "login", label: "Logowanie", blocks: LOGIN_BLOCKS },
+  { key: "online", label: "Spotkania online", blocks: ONLINE_BLOCKS },
   {
     key: "home",
     label: "Strona główna",

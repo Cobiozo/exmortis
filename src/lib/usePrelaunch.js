@@ -33,4 +33,5 @@ export default function usePrelaunch() {
   return { loading: false, active, gated, until, sim: sim || null, tick };
 }
 
-export const isHiddenPath = (p) => PRELAUNCH_HIDDEN.some((h) => p === h || p.startsWith(h + "/"));
+// Strony dołączenia (/…/dolacz) działają zawsze — zapisani muszą wejść także przed premierą.
+export const isHiddenPath = (p) => !p.endsWith("/dolacz") && PRELAUNCH_HIDDEN.some((h) => p === h || p.startsWith(h + "/"));

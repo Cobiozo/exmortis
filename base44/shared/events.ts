@@ -29,23 +29,57 @@ function icsStamp(date) {
   return new Date(date).toISOString().replace(/[-:]/g, "").replace(/\.\d{3}/, "");
 }
 
+// Stały adres strony dołączenia (spotkania online) — nigdy surowy link do Zooma.
+export const isOnline = (ev) => ev.format === "Online";
+export function joinUrl(ev) {
+  return ev.slug ? `${APP_URL}/spotkania/${ev.slug}/dolacz` : null;
+}
+
+// Stan pokoju liczony na serwerze: przed / otwarte / po / odwolane.
+export function joinState(ev, now = Date.now()) {
+  if (ev.status === "Odwołane") return "odwolane";
+  const start = new Date(ev.start_datetime).getTime();
+  const open = start - (Number(ev.open_minutes) || 15) * 60000;
+  const close = start + ((Number(ev.duration_minutes) || 60) + 30) * 60000;
+  return now < open ? "przed" : now <= close ? "otwarte" : "po";
+}
+
+// Czas lokalny Europe/Warsaw w formacie ICS (20261101T200000).
+function icsLocal(d) {
+  const o = {};
+  for (const p of warsawFmt({ year: "numeric", month: "2-digit", day: "2-digit", hour: "2-digit", minute: "2-digit", second: "2-digit", hour12: false }).formatToParts(d)) o[p.type] = p.value;
+  return `${o.year}${o.month}${o.day}T${o.hour === "24" ? "00" : o.hour}${o.minute}${o.second}`;
+}
+
+// UID stały dla spotkania → ponowny import aktualizuje wydarzenie; SEQUENCE rośnie z każdą wersją.
 export function buildIcs(ev) {
   const start = new Date(ev.start_datetime);
   const end = new Date(start.getTime() + (Number(ev.duration_minutes) || 60) * 60000);
-  const esc = (s) => escHtml(s).replace(/;/g, "\\;").replace(/,/g, "\\,").replace(/\r?\n/g, "\\n");
+  const esc = (s) => String(s || "").replace(/\\/g, "\\\\").replace(/;/g, "\\;").replace(/,/g, "\\,").replace(/\r?\n/g, "\\n");
+  const url = isOnline(ev) ? joinUrl(ev) : null;
+  const place = url || ev.location || "";
+  const desc = [ev.subtitle || "", url ? `Dołącz: ${url}` : ""].filter(Boolean).join("\n\n");
   return [
     "BEGIN:VCALENDAR",
     "VERSION:2.0",
     "PRODID:-//EXMORTIS//Spotkania//PL",
     "CALSCALE:GREGORIAN",
+    "METHOD:PUBLISH",
     "BEGIN:VEVENT",
     `UID:${ev.id}@exmortis`,
+    `SEQUENCE:${Math.floor(Date.now() / 1000) - 1700000000}`,
     `DTSTAMP:${icsStamp(new Date())}`,
-    `DTSTART:${icsStamp(start)}`,
-    `DTEND:${icsStamp(end)}`,
+    `DTSTART;TZID=Europe/Warsaw:${icsLocal(start)}`,
+    `DTEND;TZID=Europe/Warsaw:${icsLocal(end)}`,
     `SUMMARY:${esc(ev.title)}`,
-    `DESCRIPTION:${esc(ev.subtitle || "")}`,
-    `LOCATION:${esc(ev.location || "")}`,
+    `DESCRIPTION:${esc(desc)}`,
+    `LOCATION:${esc(place)}`,
+    ...(url ? [`URL:${url}`] : []),
+    "BEGIN:VALARM",
+    "TRIGGER:-PT30M",
+    "ACTION:DISPLAY",
+    `DESCRIPTION:${esc(ev.title)}`,
+    "END:VALARM",
     "END:VEVENT",
     "END:VCALENDAR",
   ].join("\r\n");
@@ -89,8 +123,9 @@ function meetingLine(ev) {
 }
 
 function joinBlock(ev) {
-  if (ev.format === "Online" && ev.join_link) {
-    return `<p style="margin-top:20px;">Link do spotkania:<br /><a href="${escHtml(ev.join_link)}" style="color:#C9A24A;">${escHtml(ev.join_link)}</a></p>`;
+  const url = isOnline(ev) && joinUrl(ev);
+  if (url) {
+    return `<p style="margin-top:20px;">Link do dołączenia (zapisz go albo dodaj spotkanie do kalendarza):<br /><a href="${url}" style="color:#C9A24A;">${url}</a></p>`;
   }
   if (ev.format === "Online" && ev.external_url) {
     return `<p style="margin-top:20px;"><a href="${escHtml(ev.external_url)}" style="color:#C9A24A;">Dołącz do spotkania tutaj</a></p>`;
@@ -103,7 +138,7 @@ export async function sendConfirmationMail(base44, ev, reg) {
   const waitlist = reg.status === "Lista rezerwowa";
   const lead = waitlist
     ? `${escHtml(reg.first_name)}, wszystkie miejsca na «${escHtml(ev.title)}» są już zajęte. Zapisałem Cię na listę rezerwową — dam znać, jeśli ktoś zrezygnuje.`
-    : `${escHtml(reg.first_name)}, zapiszuję Cię na «${escHtml(ev.title)}». ${ev.format === "Online" ? "Link do spotkania masz poniżej i w przypomnieniu przed startem." : "Czekam na Ciebie na miejscu."}`;
+    : `${escHtml(reg.first_name)}, zapisuję Cię na «${escHtml(ev.title)}». ${ev.format === "Online" ? "Stały adres dołączenia masz poniżej — zadziała w dniu spotkania." : "Czekam na Ciebie na miejscu."}`;
   return sendMail(base44, {
     kind: "zapis", ref: reg.id, waznyDo: ev.start_datetime,
     to: reg.email,
@@ -181,6 +216,21 @@ export async function sendSpotFreedMail(base44, ev, reg) {
         joinBlock(ev) +
         cancelLink(reg.cancel_token)
     ),
+  });
+}
+
+// Zmiana terminu — nowy plik .ics (ten sam UID aktualizuje wydarzenie w kalendarzu).
+export async function sendRescheduleMail(base44, ev, reg) {
+  return sendMail(base44, {
+    kind: "zmiana_terminu", ref: reg.id, waznyDo: ev.start_datetime,
+    to: reg.email,
+    subject: `EXMORTIS · Nowy termin — ${ev.title}`,
+    html: shell(ev,
+      `<h1 style="font-size:24px;">Nowy termin spotkania</h1>${meetingLine(ev)}` +
+        `<p style="line-height:1.7;">${escHtml(reg.first_name)}, termin spotkania «${escHtml(ev.title)}» się zmienił. Twój zapis jest aktualny. W załączniku nowy plik kalendarza — po otwarciu zaktualizuje wydarzenie.</p>` +
+        joinBlock(ev) + cancelLink(reg.cancel_token)
+    ),
+    attachments: [icsAttachment(ev)],
   });
 }
 

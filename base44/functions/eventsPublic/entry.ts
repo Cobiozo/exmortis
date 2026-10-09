@@ -4,7 +4,23 @@ import { runSql, escStr, textField, emailField } from "../../shared/supabase.ts"
 import { getSetting, loadAppUrl } from "../../shared/settings.ts";
 import { getSnap, clearSnap } from "../../shared/snapshot.ts";
 import { rpcRegister, RPC_ERRORS, saveConsents, afterSaved, enqueue, flushQueue, snapEvent } from "../../shared/registrations.ts";
-import { sendConfirmationMail, sendReminderMail, sendRecordingMail, plWhen, APP_URL } from "../../shared/events.ts";
+import { sendConfirmationMail, sendReminderMail, sendRecordingMail, plWhen, APP_URL, buildIcs, joinState } from "../../shared/events.ts";
+import { sendMail, adminTo } from "../../shared/smtp.ts";
+
+const ensureJoinColumns = (base44) => runSql(base44,
+  `ALTER TABLE public.events ADD COLUMN IF NOT EXISTS open_minutes int DEFAULT 15,
+     ADD COLUMN IF NOT EXISTS zoom_faq boolean DEFAULT true, ADD COLUMN IF NOT EXISTS short_path text`);
+
+// Pokój otwarty, a linku brak — jeden alarm na spotkanie (kolejka maili = widoczny w panelu).
+async function zoomAlarm(base44, ev) {
+  const ref = `zoom:${ev.id}`;
+  if ((await base44.asServiceRole.entities.MailQueue.filter({ kind: "alarm_zoom", ref }, "-created_date", 1)).length) return;
+  const to = await adminTo(base44);
+  const subject = `PILNE: brak linku Zoom — ${ev.title}`;
+  if (!to) return base44.asServiceRole.entities.MailQueue.create({ to_email: "—", kind: "alarm_zoom", ref, subject, status: "pominiety", blad: "Uzupełnij e-mail firmy w Ustawieniach" });
+  await sendMail(base44, { kind: "alarm_zoom", ref, to, subject,
+    html: `<p>Pokój spotkania «${ev.title}» jest otwarty, a w panelu nie ma linku do Zoom. Uczestnicy widzą: „Za chwilę podamy link”.</p>` });
+}
 
 // Publiczny moduł Spotkań: lista nadchodzących/minionych wydarzeń, szczegóły,
 // zapisy (z listą rezerwową) oraz przetwarzanie zaległych przypomnień („tick").
@@ -14,7 +30,8 @@ import { sendConfirmationMail, sendReminderMail, sendRecordingMail, plWhen, APP_
 const PUB_COLS = `e.id, e.title, e.slug, e.subtitle, e.event_type, e.format, e.start_datetime,
   e.duration_minutes, e.description, e.for_whom, e.price, e.checkout_url,
   e.capacity, e.registration_type, e.external_url, e.recording_url, e.recording_until, e.stage,
-  e.cover_image, e.cover, e.status, e.cancel_reason, e.registration_deadline, e.what_registered`;
+  e.cover_image, e.cover, e.status, e.cancel_reason, e.registration_deadline, e.what_registered,
+  e.open_minutes, e.zoom_faq`;
 const REG_COUNT = `(SELECT COUNT(*) FROM public.registrations r
   WHERE r.event_id = e.id AND r.status IN ('Zapisany','Obecny'))::int AS registered`;
 
@@ -123,17 +140,46 @@ export default async function (req) {
       }
       if (res.already) return Response.json({ ok: true, already: true });
       const regRow = res.reg;
-      const ev = res.ev;
+      const ev = { ...res.ev, slug: res.ev.slug || slug };
       // Zgody (dowód z datą, godziną i id zapisu) i e-mail potwierdzający — dopiero po udanym zapisie.
-      waitUntil(Promise.allSettled([saveConsents(base44, d, regRow.id), afterSaved(base44, ev, regRow, d)]));
+      waitUntil(Promise.allSettled([saveConsents(base44, d, regRow.id), loadAppUrl(base44).then(() => afterSaved(base44, ev, regRow, d))]));
       return Response.json({
         ok: true,
         status: regRow.status,
         first_name: regRow.first_name,
         checkout_url: Number(ev.price) > 0 ? ev.checkout_url : null,
-        join_link: regRow.status === "Zapisany" ? ev.join_link || null : null,
-        join_password: regRow.status === "Zapisany" ? ev.join_password || null : null,
+        join_url: regRow.status === "Zapisany" && ev.format === "Online" ? `/spotkania/${slug}/dolacz` : null,
       });
+    }
+
+    // --- Strona dołączenia: link i hasło tylko w oknie czasowym (czas serwera) ---
+    if (body.action === "join" || body.action === "ics") {
+      await ensureJoinColumns(base44);
+      const key = textField(body, "slug", { max: 200 });
+      const rows = await runSql(base44,
+        `SELECT id, title, slug, subtitle, format, status, start_datetime, duration_minutes, location, join_link, join_password,
+           recording_url, recording_until, open_minutes FROM public.events
+         WHERE (slug = ${escStr(key)} OR short_path = ${escStr(key)}) ORDER BY slug = ${escStr(key)} DESC LIMIT 1`, true);
+      const ev = rows[0];
+      const me = body.preview ? await base44.auth.me().catch(() => null) : null;
+      const admin = me?.role === "admin";
+      if (!ev || !ev.start_datetime || (!admin && !["Opublikowane", "Odwołane"].includes(ev.status))) {
+        return Response.json({ error: "Nie znaleziono spotkania" }, { status: 404 });
+      }
+      await loadAppUrl(base44);
+      if (body.action === "ics") return Response.json({ ics: buildIcs(ev) });
+      const base = { title: ev.title, slug: ev.slug, start_datetime: ev.start_datetime, duration_minutes: ev.duration_minutes, open_minutes: Number(ev.open_minutes) || 15 };
+      if (ev.format !== "Online") return Response.json({ ...base, state: "stacjonarne" });
+      const state = admin && ["przed", "otwarte", "po"].includes(body.preview) ? body.preview : joinState(ev);
+      if (state === "otwarte") {
+        if (!ev.join_link) {
+          if (!admin) waitUntil(zoomAlarm(base44, ev).catch((e) => console.error("Alarm Zoom", e.message)));
+          return Response.json({ ...base, state, missing: true });
+        }
+        return Response.json({ ...base, state, join_link: ev.join_link, join_password: ev.join_password || null });
+      }
+      const rec = state === "po" && ev.recording_url && (!ev.recording_until || new Date(ev.recording_until) > new Date()) ? ev.recording_url : null;
+      return Response.json({ ...base, state, recording_url: rec });
     }
 
     // --- Ręczne przeniesienie kolejki (administrator; opcjonalnie z symulacją awarii) ---

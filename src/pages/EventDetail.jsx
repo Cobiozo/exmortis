@@ -12,6 +12,7 @@ import { CoverHero, coverOf } from "@/components/exmortis/events/cover";
 import HeroContent from "@/components/exmortis/events/HeroContent";
 import StickySignup from "@/components/exmortis/events/StickySignup";
 import CalendarButtons from "@/components/exmortis/events/CalendarButtons";
+import ZoomFaq from "@/components/exmortis/events/ZoomFaq";
 import RegistrationBlock from "@/components/exmortis/events/RegistrationBlock";
 import { whenText, durationText, priceText } from "@/components/exmortis/events/time";
 
@@ -150,6 +151,7 @@ export default function EventDetail() {
           <p className="technical text-[10px] text-foreground/40 mb-5">DODAJ DO KALENDARZA</p>
           <CalendarButtons event={event} />
         </div>
+        <ZoomFaq event={event} />
        </div>
 
        <aside className="min-w-0 lg:sticky lg:top-28 lg:self-start">

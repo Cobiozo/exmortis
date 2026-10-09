@@ -71,6 +71,9 @@ export default function EventEditor({ event, onClose, onSaved }) {
         setForm(f);
       }
       const res = await base44.functions.invoke("eventsAdmin", { action: "save", event: toPayload(f, status) });
+      if (res.data?.rescheduled > 0 && window.confirm(`Termin się zmienił. Wysłać zapisanym (${res.data.rescheduled}) informację o zmianie terminu z nowym plikiem kalendarza?`)) {
+        await base44.functions.invoke("eventsAdmin", { action: "notifyReschedule", id: res.data.event.id });
+      }
       clearDraft(event?.id);
       if (!event?.id && res.data?.event?.id) clearDraft(res.data.event.id);
       setDirty(false);

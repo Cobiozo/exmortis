@@ -9,6 +9,7 @@ import {
   sendSpotFreedMail,
   sendReminderMail,
   sendRecordingMail,
+  sendRescheduleMail,
 } from "../../shared/events.ts";
 import { requireMail } from "../../shared/smtp.ts";
 
@@ -89,7 +90,10 @@ export async function ensureEventColumns(base44) {
        ADD COLUMN IF NOT EXISTS mailing_group text,
        ADD COLUMN IF NOT EXISTS what_registered text,
        ADD COLUMN IF NOT EXISTS join_password text,
-       ADD COLUMN IF NOT EXISTS cover jsonb`
+       ADD COLUMN IF NOT EXISTS cover jsonb,
+       ADD COLUMN IF NOT EXISTS open_minutes int DEFAULT 15,
+       ADD COLUMN IF NOT EXISTS zoom_faq boolean DEFAULT true,
+       ADD COLUMN IF NOT EXISTS short_path text`
   );
 }
 
@@ -201,6 +205,10 @@ export default async function (req) {
       const cover_image = cover?.crops?.wide || textField(ev, "cover_image", { required: false, max: 1000 });
       if (cover && !cover.alt) throw new Error("Dodaj opis okładki (tekst alternatywny).");
       const status = pick(STATUSES, ev.status, "Szkic");
+      if (format === "Online" && join_link && !/^https:\/\/([a-z0-9-]+\.)*zoom\.us\//i.test(join_link)) throw new Error("To nie wygląda na link do Zoom");
+      const open_minutes = Math.min(120, Math.max(0, Math.round(Number(ev.open_minutes ?? 15))));
+      const zoom_faq = ev.zoom_faq !== false;
+      const short_path = String(ev.short_path || "").trim().toLowerCase().replace(/[^a-z0-9-]/g, "").slice(0, 80);
 
       let startSql = "NULL";
       if (ev.start_datetime) {
@@ -213,9 +221,6 @@ export default async function (req) {
       if (status === "Opublikowane") {
         if (!ev.start_datetime) throw new Error("Ustaw datę, zanim opublikujesz wydarzenie.");
         if (new Date(ev.start_datetime) < new Date()) throw new Error("Data nie może być w przeszłości.");
-        if (format === "Online" && !join_link && !external_url) {
-          throw new Error("Wydarzenie online wymaga linku Zoom albo linku transmisji.");
-        }
         if (price > 0 && !checkout_url) {
           throw new Error("Wydarzenie płatne wymaga ceny i linku płatności.");
         }
@@ -225,7 +230,7 @@ export default async function (req) {
         location, description, for_whom, price, checkout_url, capacity, registration_type,
         external_url, join_link, join_password, recording_url, recording_until,
         registration_deadline, what_registered, mailing_group, stage, cover_image,
-        cancel_reason, status, cover`;
+        cancel_reason, status, cover, open_minutes, zoom_faq, short_path`;
       const vals = `${escStr(title)}, ${escStr(slug)}, ${subtitle ? escStr(subtitle) : "NULL"},
         ${escStr(event_type)}, ${escStr(format)}, ${startSql}, ${duration},
         ${location ? escStr(location) : "NULL"}, ${description ? escStr(description) : "NULL"},
@@ -238,10 +243,18 @@ export default async function (req) {
         ${mailing_group ? escStr(mailing_group) : "NULL"}, ${escStr(stage)},
         ${cover_image ? escStr(cover_image) : "NULL"},
         ${cancel_reason ? escStr(cancel_reason) : "NULL"}, ${escStr(status)},
-        ${cover ? `${escStr(JSON.stringify(cover))}::jsonb` : "NULL"}`;
+        ${cover ? `${escStr(JSON.stringify(cover))}::jsonb` : "NULL"}, ${open_minutes}, ${zoom_faq}, ${short_path ? escStr(short_path) : "NULL"}`;
 
       let rows;
+      let rescheduled = 0;
       if (ev.id) {
+        // Nowy termin: przypomnienia liczą się od nowa; panel pyta o powiadomienie zapisanych.
+        const old = (await runSql(base44, `SELECT start_datetime FROM public.events WHERE id = ${escStr(ev.id)}`, true))[0];
+        if (old?.start_datetime && ev.start_datetime && new Date(old.start_datetime).getTime() !== new Date(ev.start_datetime).getTime()) {
+          const r = await runSql(base44, `UPDATE public.registrations SET reminder_24h_sent = FALSE, reminder_1h_sent = FALSE
+            WHERE event_id = ${escStr(ev.id)} AND status IN ('Zapisany','Obecny') RETURNING 1`);
+          rescheduled = r.length || -1;
+        }
         rows = await runSql(
           base44,
           `UPDATE public.events SET (${cols}) = (${vals}) WHERE id = ${escStr(ev.id)} RETURNING id, slug`
@@ -252,7 +265,19 @@ export default async function (req) {
           `INSERT INTO public.events (id, ${cols}) VALUES (gen_random_uuid()::text, ${vals}) RETURNING id, slug`
         );
       }
-      return Response.json({ ok: true, event: rows && rows[0] });
+      return Response.json({ ok: true, event: rows && rows[0], rescheduled: Math.max(0, rescheduled) });
+    }
+
+    // --- Informacja o zmianie terminu (z nowym .ics) ---
+    if (body.action === "notifyReschedule") {
+      const id = String(body.id || "");
+      const ev = (await runSql(base44, `SELECT * FROM public.events WHERE id = ${escStr(id)}`, true))[0];
+      if (!ev) throw new Error("Nie znaleziono wydarzenia");
+      const recs = await runSql(base44, `SELECT id, first_name, email, cancel_token FROM public.registrations
+        WHERE event_id = ${escStr(id)} AND status IN ('Zapisany','Obecny','Lista rezerwowa')`, true);
+      let n = 0;
+      for (const r of recs) { try { await sendRescheduleMail(base44, ev, r); n += 1; } catch {} }
+      return Response.json({ ok: true, queued: n });
     }
 
     // --- Duplikacja (spotkania cykliczne): wszystko poza datą i zapisami ---
@@ -360,7 +385,7 @@ export default async function (req) {
       const id = String(body.id || "");
       const evRows = await runSql(
         base44,
-        `SELECT id, title, subtitle, format, start_datetime, duration_minutes, location, join_link, external_url
+        `SELECT id, title, slug, subtitle, format, start_datetime, duration_minutes, location, join_link, external_url
          FROM public.events WHERE id = ${escStr(id)}`,
         true
       );

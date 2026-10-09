@@ -49,6 +49,7 @@ import ObokSeria from '@/pages/ObokSeria';
 import ObokNagranie from '@/pages/ObokNagranie';
 import ListyPotwierdz from '@/pages/ListyPotwierdz';
 import ZmianaAdresu from '@/pages/ZmianaAdresu';
+import JoinMeeting from '@/pages/JoinMeeting';
 // Add page imports here
 
 const AuthenticatedApp = () => {
@@ -114,6 +115,8 @@ const AuthenticatedApp = () => {
           <Route path="/test" element={<TestPage />} />
           <Route path="/spotkania" element={<Events />} />
           <Route path="/spotkania/:slug" element={<CmsRoutePage slug="_spotkanie" />} />
+          <Route path="/spotkania/:slug/dolacz" element={<JoinMeeting />} />
+          <Route path="/:short/dolacz" element={<JoinMeeting />} />
           <Route path="/polityka-prywatnosci" element={<PrivacyPolicy />} />
           <Route path="/regulamin" element={<Regulamin />} />
           <Route path="/polityka-cookies" element={<PolitykaCookies />} />

@@ -1,6 +1,7 @@
 import React from "react";
 import { Field, Input, Group, Chips, Toggle, inputCls } from "./ui";
 import { REG_TYPES } from "./eventForm";
+import JoinPreviewLinks from "./JoinPreviewLinks";
 
 export default function StepAccess(p) {
   const { form: f, set } = p;
@@ -13,9 +14,15 @@ export default function StepAccess(p) {
         {f.format === "Stacjonarnie" ? (
           <Input id="location" label="Adres (widzą go tylko zapisani) *" {...p} />
         ) : (
-          <div className="grid md:grid-cols-2 gap-5">
-            <Input id="join_link" type="url" inputMode="url" label="Link do Zooma (tylko dla zapisanych)" {...p} />
-            <Input id="join_password" label="Hasło do Zooma (opcjonalnie)" {...p} />
+          <div className="space-y-5">
+            <Input id="join_link" type="url" inputMode="url" label="Link do Zoom Webinar (dla uczestników, z wbudowanym hasłem)" hint="Możesz dodać później, nawet w dniu spotkania. Zapisani dostają stały adres strony dołączenia, nie ten link." {...p} />
+            <div className="grid md:grid-cols-2 gap-5">
+              <Input id="join_password" label="Hasło do pokoju (opcjonalnie)" hint="Gdy link nie ma wbudowanego hasła" {...p} />
+              <Input id="open_minutes" type="number" min="0" max="120" inputMode="numeric" label="Otwarcie pokoju: minut przed startem" {...p} />
+            </div>
+            <Input id="short_path" label="Krótki adres (opcjonalnie)" hint={f.short_path ? `Także /${f.short_path}/dolacz` : "np. 1-listopada"} {...p} />
+            <Toggle id="zoom_faq" label="Pokaż pytania o Zoom na stronie spotkania" checked={f.zoom_faq !== false} onChange={(v) => set({ zoom_faq: v })} />
+            <JoinPreviewLinks slug={f.id ? f.slug : ""} />
           </div>
         )}
       </Group>

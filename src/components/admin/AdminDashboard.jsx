@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from "react";
 import CompanyWarning from "./settings/CompanyWarning";
 import MailWarning from "./mail/MailWarning";
+import ZoomWarning from "./events/ZoomWarning";
 import { Link } from "react-router-dom";
 import { base44 } from "@/api/base44Client";
 import { useAdminMode } from "@/components/admin/AdminModeContext";
@@ -41,6 +42,7 @@ export default function AdminDashboard() {
     <>
     <CompanyWarning />
     <MailWarning />
+    <ZoomWarning items={s?.zoom_missing} />
     <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
       <Tile to="/admin/obok" label="17" title="Obok" lines={["Serie, nagrania, uczestnicy"]} />
       <Tile to="/admin/ustawienia" label="16" title="Ustawienia strony" lines={["Dane firmy", "Tryb przedpremierowy", "Wysyłka e-mail"]} />

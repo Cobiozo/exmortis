@@ -6,6 +6,9 @@ const STATS_SQL = `SELECT
   (SELECT COUNT(*)::int FROM public.registrations r JOIN public.events e ON e.id = r.event_id
      WHERE e.start_datetime > now() AND COALESCE(r.status, '') NOT ILIKE 'wycof%') AS upcoming_registrations,
   (SELECT COUNT(*)::int FROM public.events WHERE status = 'Szkic') AS draft_events,
+  (SELECT COALESCE(json_agg(json_build_object('title', title, 'start', start_datetime) ORDER BY start_datetime), '[]'::json)
+     FROM public.events WHERE status = 'Opublikowane' AND format = 'Online' AND COALESCE(join_link, '') = ''
+       AND start_datetime > now() - interval '3 hours' AND start_datetime < now() + interval '48 hours') AS zoom_missing,
   (SELECT row_to_json(s) FROM (SELECT intro_uri, outro_uri, background_uri FROM public.silence_settings LIMIT 1) s) AS silence,
   (SELECT COUNT(*)::int FROM public.products WHERE active = TRUE AND COALESCE(status, 'dostępny') NOT IN ('wkrótce', 'ukryty')) AS products_available,
   (SELECT COUNT(*)::int FROM public.products WHERE active = TRUE AND status = 'wkrótce') AS products_soon,

@@ -24,12 +24,15 @@ const localParts = (iso) => {
 void pad;
 const localInput = (iso) => { const p = localParts(iso); return p.date ? `${p.date}T${p.time}` : ""; };
 
+export const ZOOM_RE = /^https:\/\/([a-z0-9-]+\.)*zoom\.us\//i;
+
 export function initForm(ev) {
   const base = {
     title: "", slug: "", subtitle: "", event_type: "Spotkanie otwarte", format: "Online", duration_minutes: 60,
     location: "", description: "", for_whom: "", price: 0, checkout_url: "", capacity: "", registration_type: "Zapis na stronie",
     external_url: "", join_link: "", join_password: "", recording_url: "", recording_until: "", registration_deadline: "",
     what_registered: "", mailing_group: "", cancel_reason: "", stage: "Wszystkie", status: "Szkic", cover: null,
+    open_minutes: 15, zoom_faq: true, short_path: "",
   };
   if (!ev) return { ...base, date: "", time: defaultTime(), paid: false };
   let cover = ev.cover;
@@ -73,7 +76,8 @@ export function stepErrors(f, step, publish = false) {
     if (f.paid && !f.checkout_url) e.checkout_url = "Podaj link płatności";
     if (f.format === "Stacjonarnie" && !f.location.trim()) e.location = "Podaj adres spotkania";
     if (f.registration_type === "Link zewnętrzny" && !f.external_url) e.external_url = "Podaj link do transmisji lub zapisu";
-    if (publish && f.format === "Online" && !f.join_link && !f.external_url) e.join_link = "Spotkanie online wymaga linku Zoom albo linku transmisji";
+    if (f.format === "Online" && f.join_link && !ZOOM_RE.test(f.join_link.trim())) e.join_link = "To nie wygląda na link do Zoom";
+    if (f.format === "Online" && !(Number(f.open_minutes) >= 0)) e.open_minutes = "Podaj liczbę minut";
   }
   return e;
 }

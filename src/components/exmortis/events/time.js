@@ -1,4 +1,5 @@
 // Formatowanie dat w strefie Europe/Warsaw + linki kalendarzowe (Google, .ics).
+import { SITE_URL } from "@/config/site";
 const TZ = "Europe/Warsaw";
 const fmt = (opts) => new Intl.DateTimeFormat("pl-PL", { timeZone: TZ, ...opts });
 
@@ -91,30 +92,15 @@ export function googleCalendarUrl(ev) {
     text: ev.title,
     dates: `${icsStamp(start)}/${icsStamp(end)}`,
     details: ev.subtitle || "",
-    location: ev.location || "",
+    location: ev.format === "Online" ? `${SITE_URL}/spotkania/${ev.slug}/dolacz` : ev.location || "",
   });
   return `https://calendar.google.com/calendar/render?${params.toString()}`;
 }
 
-export function downloadIcs(ev) {
-  const start = new Date(ev.start_datetime);
-  const end = new Date(start.getTime() + (Number(ev.duration_minutes) || 60) * 60000);
-  const ics = [
-    "BEGIN:VCALENDAR",
-    "VERSION:2.0",
-    "PRODID:-//EXMORTIS//Spotkania//PL",
-    "CALSCALE:GREGORIAN",
-    "BEGIN:VEVENT",
-    `UID:${ev.id}@exmortis`,
-    `DTSTAMP:${icsStamp(new Date())}`,
-    `DTSTART:${icsStamp(start)}`,
-    `DTEND:${icsStamp(end)}`,
-    `SUMMARY:${icsEsc(ev.title)}`,
-    `DESCRIPTION:${icsEsc(ev.subtitle || "")}`,
-    `LOCATION:${icsEsc(ev.location || "")}`,
-    "END:VEVENT",
-    "END:VCALENDAR",
-  ].join("\r\n");
+// Plik .ics budowany na serwerze z aktualnych danych spotkania (stały UID, stały adres dołączenia).
+export async function downloadIcs(ev) {
+  const { base44 } = await import("@/api/base44Client");
+  const { ics } = (await base44.functions.invoke("eventsPublic", { action: "ics", slug: ev.slug })).data;
   const url = URL.createObjectURL(new Blob([ics], { type: "text/calendar;charset=utf-8" }));
   const a = document.createElement("a");
   a.href = url;

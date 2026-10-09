@@ -6,6 +6,7 @@ import { useFirma } from "@/lib/useSiteSettings";
 import { clause } from "@/lib/firma";
 import { CalendarPlus } from "lucide-react";
 import { downloadIcs } from "./time";
+import { SITE_URL } from "@/config/site";
 
 // Formularz zapisu na wydarzenie (strona wydarzenia): imię, e-mail, pytanie, zgoda.
 export default function RegistrationForm({ event: ev }) {
@@ -85,20 +86,15 @@ export default function RegistrationForm({ event: ev }) {
         {ev.what_registered && (
           <p className="text-foreground/60 text-sm mt-3 leading-relaxed">Co dostają zapisani: {ev.what_registered}</p>
         )}
-        {result.join_link ? (
+        {result.join_url ? (
           <p className="text-foreground/70 mt-4 leading-relaxed break-all">
-            Link do spotkania:{" "}
-            <a href={result.join_link} target="_blank" rel="noreferrer" className="gold-text underline">
-              {result.join_link}
-            </a>
+            Link do dołączenia:{" "}
+            <a href={result.join_url} className="gold-text underline">{SITE_URL}{result.join_url}</a>
+            {" "}— zapisz go albo dodaj spotkanie do kalendarza.
           </p>
-        ) : (
+        ) : ev.format !== "Online" ? null : (
           <p className="text-foreground/60 mt-4 leading-relaxed">Link do spotkania wyślę Ci e-mailem.</p>
         )}
-        {result.join_password && (
-          <p className="text-foreground/50 text-sm mt-1">Hasło do spotkania: {result.join_password}</p>
-        )}
-        {result.join_link && <p className="gold-text text-sm mt-3">Zapisz ten link — wyślemy go też e-mailem.</p>}
         {ev.start_datetime && (
           <button type="button" onClick={() => downloadIcs(ev)} className="btn-ghost !px-5 !py-3 mt-5">
             <CalendarPlus className="h-4 w-4" /> DODAJ DO KALENDARZA
