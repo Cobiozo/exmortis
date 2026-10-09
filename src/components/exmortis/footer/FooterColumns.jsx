@@ -4,10 +4,10 @@ import { useSiteNav } from "@/components/exmortis/nav/useSiteNav";
 
 const cls = "text-foreground/70 hover:gold-text transition-colors";
 
-export default function FooterColumns() {
+export default function FooterColumns({ mobile }) {
   const { kolumny } = useSiteNav();
   return (
-    <div className="grid grid-cols-2 sm:grid-cols-4 gap-x-6 gap-y-10">
+    <div className={`grid grid-cols-2 ${mobile ? "" : "sm:grid-cols-4"} gap-x-6 gap-y-10`}>
       {kolumny.map((col, i) => (
         <nav key={i} aria-label={col.title}>
           <p className="technical text-[10px] gold-text mb-5">{col.title}</p>
