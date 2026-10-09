@@ -7,6 +7,7 @@ import { linkError } from "@/components/cms/links";
 import { inputCls, labelCls, smallBtn } from "../ui";
 import LinkRows from "./LinkRows";
 import NavVersions from "./NavVersions";
+import NavPreview from "./NavPreview";
 
 // Menu i stopka: szkic z autozapisem, publikacja z zapisem wersji.
 export default function NavEditor() {
@@ -72,6 +73,7 @@ export default function NavEditor() {
         ))}
         {d.kolumny.length < 4 && <button className={smallBtn} onClick={() => edit({ ...d, kolumny: [...d.kolumny, { title: "Nowa kolumna", links: [] }] })}><Plus className="h-4 w-4" /> Dodaj kolumnę</button>}
       </section>
+      <NavPreview d={d} />
       <NavVersions refresh={ver} onLoad={(v) => v && edit(structuredClone(v))} />
       <div className="flex flex-wrap items-center gap-3 sticky bottom-0 bg-[#0A0A0B] py-4 border-t hairline">
         <button className="btn-relic disabled:opacity-50" disabled={bad || state === "publikowanie"} onClick={publish}>
