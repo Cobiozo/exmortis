@@ -21,6 +21,15 @@
       "type": "string",
       "format": "date-time"
     },
+    "plan_bloki": {
+      "type": "array",
+      "items": {
+        "type": "object"
+      }
+    },
+    "plan_kto": {
+      "type": "string"
+    },
     "seo_title": {
       "type": "string"
     },

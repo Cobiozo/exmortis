@@ -7,7 +7,7 @@ export async function publishPage(page, blocks, opis) {
     seo_image: page.seo_image || "", noindex: !!page.noindex, bloki: blocks, wersja };
   await base44.entities.PublishedPage.upsert([pub], { key: "slug" });
   const now = new Date().toISOString();
-  await base44.entities.SitePage.update(page.id, { bloki: blocks, status: "opublikowana", wersja, opublikowano_at: now, zmiany_niezapisane: false });
+  await base44.entities.SitePage.update(page.id, { bloki: blocks, status: "opublikowana", wersja, opublikowano_at: now, zmiany_niezapisane: false, publikacja: null, plan_bloki: [] });
   const me = await base44.auth.me().catch(() => null);
   const kto = me?.email || "";
   opis = opis || `${blocks.length} bloków`;

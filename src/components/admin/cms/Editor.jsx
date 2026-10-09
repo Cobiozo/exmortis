@@ -11,6 +11,7 @@ import PreviewFrame from "./PreviewFrame";
 import EditorTopBar from "./EditorTopBar";
 import PublishReport from "./PublishReport";
 import VersionHistory from "./VersionHistory";
+import ScheduleDialog, { plWhen } from "./ScheduleDialog";
 import { tabBtn } from "./ui";
 
 export default function Editor({ page, setPage, extra, onBack }) {
@@ -22,6 +23,7 @@ export default function Editor({ page, setPage, extra, onBack }) {
   const [report, setReport] = useState(null);
   const [busy, setBusy] = useState(false);
   const [history, setHistory] = useState(false);
+  const [plan, setPlan] = useState(false);
   const [pane, setPane] = useState("lista");
   const [scrollTo, setScrollTo] = useState(null);
   const first = useRef(true);
@@ -105,6 +107,24 @@ export default function Editor({ page, setPage, extra, onBack }) {
     setBusy(false);
   };
 
+  const schedule = async (iso) => {
+    const r = validatePage(blocks, extra.map(([p]) => p));
+    setReport(r);
+    if (r.errors.length) return;
+    const me = await base44.auth.me().catch(() => null);
+    const patch = { status: "zaplanowana", publikacja: iso, plan_bloki: blocks, plan_kto: me?.email || "", bloki: blocks };
+    await base44.entities.SitePage.update(page.id, patch);
+    await base44.entities.ContentLog.create({ page_slug: page.slug, akcja: "zaplanowano", kto: patch.plan_kto, opis: plWhen(iso) });
+    setPage({ ...page, ...patch });
+    setSave("zapisano");
+    setReport({ ...r, ok: `Zaplanowano publikację na ${plWhen(iso)}.` });
+  };
+  const cancelSchedule = async () => {
+    const patch = { status: page.wersja ? "opublikowana" : "szkic", publikacja: null, plan_bloki: [] };
+    await base44.entities.SitePage.update(page.id, patch);
+    setPage({ ...page, ...patch });
+    setReport({ errors: [], warnings: [], ok: "Plan publikacji anulowany. Szkic pozostaje bez zmian." });
+  };
   const loadVersion = (v) => { setBlocks(structuredClone(v.bloki || [])); setSel(null); setReport({ errors: [], warnings: [], ok: `Wczytano wersję ${v.wersja} do szkicu. Strona publiczna się nie zmieniła — opublikuj, gdy będzie gotowa.` }); };
   const republish = async (v) => {
     const res = await publishPage(page, v.bloki || [], `przywrócono wersję ${v.wersja}`);
@@ -120,7 +140,8 @@ export default function Editor({ page, setPage, extra, onBack }) {
   );
   return (
     <div>
-      <EditorTopBar page={page} save={save} busy={busy} onBack={onBack} onSave={persist} onPublish={publish} onUndo={undo} onRedo={redo} onHistory={() => setHistory(true)} />
+      <EditorTopBar page={page} save={save} busy={busy} onBack={onBack} onSave={persist} onPublish={publish} onUndo={undo} onRedo={redo} onHistory={() => setHistory(true)} onSchedule={() => setPlan(true)} />
+      {plan && <ScheduleDialog open onOpenChange={setPlan} page={page} onSchedule={schedule} onCancel={cancelSchedule} />}
       <VersionHistory open={history} onOpenChange={setHistory} page={page} onLoad={loadVersion} onRepublish={republish} />
       <PublishReport report={report} onClose={() => setReport(null)} />
       {removed && (

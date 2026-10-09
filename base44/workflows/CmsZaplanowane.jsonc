@@ -1,0 +1,45 @@
+{
+  "description": "Co 5 minut publikuje strony z edytora, kt\u00f3rych termin publikacji ju\u017c min\u0105\u0142.",
+  "definition": {
+    "document": {
+      "dsl": "1.0.0",
+      "name": "cms_zaplanowane",
+      "version": "1.0",
+      "namespace": "base44"
+    },
+    "do": [
+      {
+        "publish_due": {
+          "call": "invoke_backend_function",
+          "with": {
+            "function_name": "cmsScheduled",
+            "args": {}
+          },
+          "then": "end",
+          "x-base44": {
+            "title": "Publikacja zaplanowanych stron",
+            "description": "Strony z minionym terminem"
+          }
+        }
+      }
+    ]
+  },
+  "name": "Strony \u2014 publikacje zaplanowane",
+  "trigger": {
+    "condition": null,
+    "config": {
+      "trigger_type": "scheduled",
+      "events": [],
+      "schedule_mode": "recurring",
+      "cron_expression": "*/5 * * * *",
+      "one_time_date": null,
+      "timezone": "Europe/Warsaw",
+      "interval_value": null,
+      "interval_unit": null,
+      "interval_anchor": null,
+      "ends_type": "never",
+      "ends_on_date": null,
+      "ends_after_count": null
+    }
+  }
+}
