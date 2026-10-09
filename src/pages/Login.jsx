@@ -6,12 +6,14 @@ import AuthLayout from "@/components/AuthLayout";
 import AuthField from "@/components/auth/AuthField";
 import GoogleButton from "@/components/auth/GoogleButton";
 import { afterLoginTarget, providerReturnTo } from "@/lib/afterLogin";
+import useLoginText from "@/content/useLoginText";
 
 export default function Login() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
+  const t = useLoginText();
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -21,7 +23,7 @@ export default function Login() {
       await base44.auth.loginViaEmailPassword(email, password);
       window.location.href = await afterLoginTarget();
     } catch (err) {
-      setError("Nie udało się zalogować. Sprawdź e-mail i hasło.");
+      setError(t("blad"));
       setLoading(false);
     }
   };
@@ -31,14 +33,14 @@ export default function Login() {
       <GoogleButton onClick={() => base44.auth.loginWithProvider("google", providerReturnTo())} />
       {error && <p className="mb-5 text-sm text-[#E8C547]">{error}</p>}
       <form onSubmit={handleSubmit} className="space-y-5">
-        <AuthField id="email" label="E-MAIL" type="email" autoComplete="email" value={email} onChange={(e) => setEmail(e.target.value)} required />
+        <AuthField id="email" label={t("pole.email")} type="email" autoComplete="email" value={email} onChange={(e) => setEmail(e.target.value)} required />
         <AuthField
-          id="password" label="HASŁO" type="password" autoComplete="current-password"
+          id="password" label={t("pole.haslo")} type="password" autoComplete="current-password"
           value={password} onChange={(e) => setPassword(e.target.value)} required
-          aside={<Link to="/forgot-password" className="text-xs text-foreground/45 hover:text-[#C9A24A]">Nie pamiętam hasła</Link>}
+          aside={<Link to="/forgot-password" className="text-xs text-foreground/45 hover:text-[#C9A24A]">{t("nie_pamietam")}</Link>}
         />
         <button type="submit" disabled={loading} className="btn-relic w-full disabled:opacity-60">
-          {loading && <Loader2 className="h-4 w-4 animate-spin" />} ZALOGUJ SIĘ
+          {loading && <Loader2 className="h-4 w-4 animate-spin" />} {t("przycisk")}
         </button>
       </form>
     </AuthLayout>

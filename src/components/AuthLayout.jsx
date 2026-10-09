@@ -1,10 +1,12 @@
 import React from "react";
 import { Link, useLocation } from "react-router-dom";
 import Logo from "@/components/exmortis/Logo";
+import useLoginText from "@/content/useLoginText";
 
 // Wspólny układ stron logowania — styl exmortis, zakładki Zaloguj / Załóż konto.
 export default function AuthLayout({ title, subtitle, footer, children, tabs = false }) {
   const { pathname, search } = useLocation();
+  const t = useLoginText();
   const tab = (to, label) => (
     <Link
       to={to + search}
@@ -20,15 +22,15 @@ export default function AuthLayout({ title, subtitle, footer, children, tabs = f
       <div className="w-full max-w-md">
         <div className="text-center mb-10">
           <Link to="/" className="inline-block mb-6"><Logo className="h-14 w-14" glow={false} /></Link>
-          <h1 className="shop-heading text-3xl md:text-4xl text-[#F5EFE1]">{title || "Twoje miejsce w exmortis"}</h1>
+          <h1 className="shop-heading text-3xl md:text-4xl text-[#F5EFE1]">{title || t("tytul")}</h1>
           <p className="text-foreground/55 mt-4 leading-relaxed">
-            {subtitle || "Tu czekają Twoje materiały — w jednym miejscu, na chwilę, kiedy zechcesz do nich wrócić."}
+            {subtitle || t("podtytul")}
           </p>
         </div>
         {tabs && (
           <div className="flex mb-8">
-            {tab("/login", "ZALOGUJ SIĘ")}
-            {tab("/register", "ZAŁÓŻ KONTO")}
+            {tab("/login", t("zakladka.login"))}
+            {tab("/register", t("zakladka.rejestracja"))}
           </div>
         )}
         <div className="border hairline p-6 md:p-8">{children}</div>

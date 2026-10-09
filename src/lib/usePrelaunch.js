@@ -19,7 +19,7 @@ export default function usePrelaunch() {
   const now = sim ? new Date(sim).getTime() : Date.now() + (s.offset || 0);
   const until = new Date(s.premiera.do);
   const active = !s.premiera.wylaczony && now < until.getTime();
-  return { loading: false, active, gated: active && (!isAdmin || guest), until, sim: sim || null, tick };
+  return { loading: false, active, gated: active && (isAdmin ? guest : !s.ja_dostep), until, sim: sim || null, tick };
 }
 
 export const isHiddenPath = (p) => PRELAUNCH_HIDDEN.some((h) => p === h || p.startsWith(h + "/"));

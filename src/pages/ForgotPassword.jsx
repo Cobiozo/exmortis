@@ -6,11 +6,13 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Mail, ArrowLeft, Loader2 } from "lucide-react";
 import AuthLayout from "@/components/AuthLayout";
+import useLoginText from "@/content/useLoginText";
 
 export default function ForgotPassword() {
   const [email, setEmail] = useState("");
   const [loading, setLoading] = useState(false);
   const [sent, setSent] = useState(false);
+  const t = useLoginText();
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -28,17 +30,17 @@ export default function ForgotPassword() {
   return (
     <AuthLayout
       icon={Mail}
-      title="Reset password"
-      subtitle="We'll send you a link to reset it"
+      title={t("reset.tytul")}
+      subtitle={t("reset.podtytul")}
       footer={
         <Link to="/login" className="text-primary font-medium hover:underline">
-          <ArrowLeft className="w-3 h-3 inline mr-1" />Back to log in
+          <ArrowLeft className="w-3 h-3 inline mr-1" />{t("reset.powrot")}
         </Link>
       }
     >
       {sent ? (
         <p className="text-sm text-foreground text-center">
-          If an account exists with that email, you'll receive a password reset link shortly.
+          {t("reset.wyslano")}
         </p>
       ) : (
         <form onSubmit={handleSubmit} className="space-y-4">
@@ -66,7 +68,7 @@ export default function ForgotPassword() {
                 Sending...
               </>
             ) : (
-              "Send reset link"
+              t("reset.przycisk")
             )}
           </Button>
         </form>

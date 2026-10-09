@@ -7,6 +7,7 @@ import { useAdminMode } from "@/components/admin/AdminModeContext";
 import { SIM_KEY } from "@/lib/usePrelaunch";
 import { isoToWarsawLocal, warsawLocalToIso, fmtWarsaw } from "@/lib/warsawTime";
 import DisableConfirm from "./DisableConfirm";
+import PrelaunchAccessList from "./PrelaunchAccessList";
 
 const inp = "dt-input relative bg-transparent border hairline px-4 py-3 focus:border-[#C9A24A] focus:outline-none";
 
@@ -41,7 +42,7 @@ export default function PrelaunchSettings({ initial }) {
       <label className="block technical text-[10px] text-foreground/60 mb-2">Włączony do (czas polski)</label>
       <div className="flex flex-wrap gap-3 mb-6">
         <input type="datetime-local" value={local} onChange={(e) => setLocal(e.target.value)} className={inp} />
-        <button onClick={() => save({ do: warsawLocalToIso(local), wylaczony: false }, "Zapisano datę. Tryb wyłączy się sam o tej godzinie.")} className="btn-ghost">ZAPISZ DATĘ</button>
+        <button onClick={() => save({ ...p, do: warsawLocalToIso(local), wylaczony: false }, "Zapisano datę. Tryb wyłączy się sam o tej godzinie.")} className="btn-ghost">ZAPISZ DATĘ</button>
       </div>
       <div className="flex flex-wrap gap-3 mb-8">
         {active && <button onClick={() => setConfirm(true)} className="btn-blood">WYŁĄCZ TRYB PRZEDPREMIEROWY TERAZ</button>}
@@ -53,6 +54,7 @@ export default function PrelaunchSettings({ initial }) {
         <button disabled={!sim} onClick={() => preview(warsawLocalToIso(sim))} className="btn-ghost">PODGLĄD W TYM DNIU</button>
         {sessionStorage.getItem(SIM_KEY) && <button onClick={() => { sessionStorage.removeItem(SIM_KEY); setSim(""); qc.invalidateQueries({ queryKey: ["siteSettings"] }); }} className="btn-ghost">WYŁĄCZ SYMULACJĘ</button>}
       </div>
+      <PrelaunchAccessList list={p.dostep || []} onSave={(dostep, text) => save({ ...p, dostep }, text)} />
       {msg && <p className={`text-sm mt-6 ${msg.ok ? "gold-text" : "blood-text"}`}>{msg.text}</p>}
       <DisableConfirm open={confirm} onOpenChange={setConfirm} onConfirm={() => save({ ...p, wylaczony: true }, "Tryb przedpremierowy wyłączony. Goście widzą pełną stronę.")} />
     </section>

@@ -11,7 +11,10 @@ export function cleanFirma(data) {
 export function cleanPremiera(data) {
   const d = new Date(data?.do);
   if (isNaN(d.getTime())) throw new Error("Podaj poprawną datę i godzinę");
-  return { do: d.toISOString(), wylaczony: !!data?.wylaczony };
+  const dostep = (Array.isArray(data?.dostep) ? data.dostep : []).slice(0, 50)
+    .map((x) => ({ email: String(x?.email || "").trim().toLowerCase().slice(0, 200), do: new Date(x?.do).toISOString() }))
+    .filter((x) => /^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(x.email));
+  return { do: d.toISOString(), wylaczony: !!data?.wylaczony, dostep };
 }
 
 // Linia do stopek e-maili — tylko wypełnione pola.

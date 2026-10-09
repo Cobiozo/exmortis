@@ -5,11 +5,13 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Lock, Loader2, AlertTriangle } from "lucide-react";
+import useLoginText from "@/content/useLoginText";
 import AuthLayout from "@/components/AuthLayout";
 
 export default function ResetPassword() {
   const [searchParams] = useSearchParams();
   const resetToken = searchParams.get("token");
+  const t = useLoginText();
 
   const [newPassword, setNewPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
@@ -20,7 +22,7 @@ export default function ResetPassword() {
     e.preventDefault();
     setError("");
     if (newPassword !== confirmPassword) {
-      setError("Passwords do not match");
+      setError(t("nowe.niezgodne"));
       return;
     }
     setLoading(true);
@@ -28,7 +30,7 @@ export default function ResetPassword() {
       await base44.auth.resetPassword({ resetToken, newPassword });
       window.location.href = "/login";
     } catch (err) {
-      setError(err.message || "Failed to reset password");
+      setError(t("nowe.blad"));
     } finally {
       setLoading(false);
     }
@@ -38,8 +40,8 @@ export default function ResetPassword() {
     return (
       <AuthLayout
         icon={AlertTriangle}
-        title="Invalid reset link"
-        subtitle="This password reset link is missing or invalid"
+        title={t("nowe.tytul")}
+        subtitle={t("nowe.zly_link")}
         footer={
           <Link to="/forgot-password" className="text-primary font-medium hover:underline">
             Request a new link
@@ -56,8 +58,8 @@ export default function ResetPassword() {
   return (
     <AuthLayout
       icon={Lock}
-      title="New password"
-      subtitle="Enter your new password below"
+      title={t("nowe.tytul")}
+      subtitle={t("nowe.podtytul")}
     >
       {error && (
         <div className="mb-4 p-3 rounded-lg bg-destructive/10 text-destructive text-sm">

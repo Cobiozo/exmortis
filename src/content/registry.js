@@ -2,9 +2,11 @@
 // Strony czytają nadpisania przez useSiteContent(); bez nadpisania obowiązują wartości z kodu.
 
 import { SYSTEM_BLOCKS } from "./systemTexts";
+import { LOGIN_BLOCKS } from "./loginTexts";
 
 export const CONTENT_PAGES = [
   { key: "system", label: "Teksty systemowe", blocks: SYSTEM_BLOCKS },
+  { key: "login", label: "Logowanie", blocks: LOGIN_BLOCKS },
   {
     key: "home",
     label: "Strona główna",
