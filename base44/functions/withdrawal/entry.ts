@@ -1,6 +1,7 @@
 import { createClientFromRequest } from "npm:@base44/sdk@0.8.44";
 import { getSetting } from "../../shared/settings.ts";
-import { sendMail } from "../../shared/smtp.ts";
+import { sendMail as gate, adminTo } from "../../shared/smtp.ts";
+const sendMail = (b, m) => gate(b, { kind: "odstapienie", ...m });
 
 const s = (v, max) => String(v ?? "").trim().slice(0, max);
 const esc = (v) => String(v).replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
@@ -22,11 +23,11 @@ export default async function (req) {
     await base44.asServiceRole.entities.Withdrawal.create({ ...data, received_at, ip, status: "odstąpienie zgłoszone" });
 
     const when = new Date(received_at).toLocaleString("pl-PL", { timeZone: "Europe/Warsaw" });
-    const smtp = await getSetting(base44, "smtp").catch(() => null);
-    if (smtp) {
+    const smtp = base44;
+    {
       const rows = `<p>Zamówienie: ${esc(data.order_id || "—")}<br>Produkt: ${esc(data.product)}<br>Data zawarcia umowy: ${esc(data.order_date || "—")}<br>Data i godzina wpływu: ${when}</p>`;
       await sendMail(smtp, { to: data.email, subject: "Potwierdzenie otrzymania odstąpienia od umowy", html: `<p>${esc(data.name)}, otrzymaliśmy Twoje oświadczenie o odstąpieniu od umowy.</p>${rows}<p>Zwrot płatności nastąpi nie później niż w 14 dni.</p>` }).catch(() => {});
-      const admin = smtp.adminEmail || smtp.from;
+      const admin = await adminTo(base44);
       if (admin) await sendMail(smtp, { to: admin, subject: `Odstąpienie od umowy: ${data.order_id || data.product}`, html: `<p>${esc(data.name)} (${esc(data.email)})</p>${rows}<p>Powód: ${esc(data.reason || "—")}</p>` }).catch(() => {});
     }
     return Response.json({ ok: true, received_at });

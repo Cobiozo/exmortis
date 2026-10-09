@@ -99,12 +99,13 @@ function joinBlock(ev) {
 }
 
 // Potwierdzenie zapisu (z załączonym plikiem .ics).
-export async function sendConfirmationMail(smtp, ev, reg) {
+export async function sendConfirmationMail(base44, ev, reg) {
   const waitlist = reg.status === "Lista rezerwowa";
   const lead = waitlist
     ? `${escHtml(reg.first_name)}, wszystkie miejsca na «${escHtml(ev.title)}» są już zajęte. Zapisałem Cię na listę rezerwową — dam znać, jeśli ktoś zrezygnuje.`
     : `${escHtml(reg.first_name)}, zapiszuję Cię na «${escHtml(ev.title)}». ${ev.format === "Online" ? "Link do spotkania masz poniżej i w przypomnieniu przed startem." : "Czekam na Ciebie na miejscu."}`;
-  await sendMail(smtp, {
+  return sendMail(base44, {
+    kind: "zapis", ref: reg.id, waznyDo: ev.start_datetime,
     to: reg.email,
     subject: `EXMORTIS · ${waitlist ? "Lista rezerwowa" : "Zapis potwierdzony"} — ${ev.title}`,
     html: shell(ev, 
@@ -120,8 +121,9 @@ export async function sendConfirmationMail(smtp, ev, reg) {
 }
 
 // Odwołanie spotkania: przeprosiny, powód, link do listy spotkań.
-export async function sendCancelledMail(smtp, ev, reg, reason) {
-  await sendMail(smtp, {
+export async function sendCancelledMail(base44, ev, reg, reason) {
+  return sendMail(base44, {
+    kind: "odwolanie", ref: reg.id, waznyDo: ev.start_datetime,
     to: reg.email,
     subject: `EXMORTIS · Odwołane — ${ev.title}`,
     html: shell(ev, 
@@ -136,7 +138,7 @@ export async function sendCancelledMail(smtp, ev, reg, reason) {
 
 // Przypomnienie 24 h lub 1 h przed spotkaniem (z linkiem dołączania) —
 // albo wysyłane ręcznie z panelu (kind === "now").
-export async function sendReminderMail(smtp, ev, reg, kind) {
+export async function sendReminderMail(base44, ev, reg, kind) {
   const head = kind === "1h" ? "Za godzinę się widzimy" : kind === "now" ? "Do zobaczenia wkrótce" : "Jutro się widzimy";
   const lead =
     kind === "1h"
@@ -144,7 +146,8 @@ export async function sendReminderMail(smtp, ev, reg, kind) {
       : kind === "now"
         ? `${escHtml(reg.first_name)}, przypominam o spotkaniu «${escHtml(ev.title)}» — ${escHtml(plWhen(ev.start_datetime))}. Czekam na Ciebie.`
         : `${escHtml(reg.first_name)}, jutro o ${escHtml(plTime(ev.start_datetime))} spotykamy się na «${escHtml(ev.title)}». To krótkie przypomnienie — nic nie musisz robić, tylko przyjść.`;
-  await sendMail(smtp, {
+  return sendMail(base44, {
+    kind: "przypomnienie", ref: reg.id, waznyDo: ev.start_datetime,
     to: reg.email,
     subject: `EXMORTIS · ${head} — ${ev.title}`,
     html: shell(ev, `<h1 style="font-size:24px;">${head}</h1>${meetingLine(ev)}<p style="line-height:1.7;">${lead}</p>${joinBlock(ev)}${cancelLink(reg.cancel_token)}`),
@@ -152,8 +155,9 @@ export async function sendReminderMail(smtp, ev, reg, kind) {
 }
 
 // Podziękowanie dzień po spotkaniu, z linkiem do nagrania.
-export async function sendRecordingMail(smtp, ev, reg, inviteHtml) {
-  await sendMail(smtp, {
+export async function sendRecordingMail(base44, ev, reg, inviteHtml) {
+  return sendMail(base44, {
+    kind: "nagranie", ref: reg.id, waznyDo: ev.recording_until || undefined,
     to: reg.email,
     subject: `EXMORTIS · Dziękuję, że byłeś/byłaś — ${ev.title}`,
     html: shell(ev, 
@@ -166,8 +170,9 @@ export async function sendRecordingMail(smtp, ev, reg, inviteHtml) {
 }
 
 // Awans z listy rezerwowej po zwolnieniu miejsca.
-export async function sendSpotFreedMail(smtp, ev, reg) {
-  await sendMail(smtp, {
+export async function sendSpotFreedMail(base44, ev, reg) {
+  return sendMail(base44, {
+    kind: "miejsce", ref: reg.id, waznyDo: ev.start_datetime,
     to: reg.email,
     subject: `EXMORTIS · Zwolniło się miejsce — ${ev.title}`,
     html: shell(ev, 
@@ -180,8 +185,9 @@ export async function sendSpotFreedMail(smtp, ev, reg) {
 }
 
 // Wiadomość od administratora do zapisanych (np. zmiana godziny).
-export async function sendBroadcastMail(smtp, ev, reg, subject, text) {
-  await sendMail(smtp, {
+export async function sendBroadcastMail(base44, ev, reg, subject, text) {
+  return sendMail(base44, {
+    kind: "ogloszenie",
     to: reg.email,
     subject,
     html: shell(ev, 

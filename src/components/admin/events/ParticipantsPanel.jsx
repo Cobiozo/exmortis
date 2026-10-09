@@ -2,6 +2,7 @@ import React, { useEffect, useState } from "react";
 import { logAccess } from "@/lib/auditLog";
 import { X, Download, Send, Bell, Video, ArrowUpCircle, UserMinus } from "lucide-react";
 import { base44 } from "@/api/base44Client";
+import useMailStatus, { MAIL_REQUIRED } from "@/lib/useMailStatus";
 
 const STATUS_STYLE = {
   Zapisany: "text-[#C9A24A]",
@@ -13,6 +14,7 @@ const STATUS_STYLE = {
 // Uczestnicy wydarzenia: pytania do Dawida, obecność, eksport CSV, wysyłka wiadomości.
 export default function ParticipantsPanel({ event, onClose }) {
   const [parts, setParts] = useState(null);
+  const { ready: mailOk } = useMailStatus();
   const [subject, setSubject] = useState("");
   const [text, setText] = useState("");
   const [sending, setSending] = useState(false);
@@ -145,10 +147,10 @@ export default function ParticipantsPanel({ event, onClose }) {
                   <ArrowUpCircle className="h-3.5 w-3.5" /> PRZENIEŚ Z LISTY REZERWOWEJ
                 </button>
               )}
-              <button onClick={() => runAction("remindNow", "przypomnienie")} disabled={busy} className="btn-ghost !px-3 !py-2 disabled:opacity-50">
+              <button onClick={() => runAction("remindNow", "przypomnienie")} disabled={busy || !mailOk} title={mailOk ? undefined : MAIL_REQUIRED} className="btn-ghost !px-3 !py-2 disabled:opacity-50">
                 <Bell className="h-3.5 w-3.5" /> WYŚLIJ PRZYPOMNIENIE TERAZ
               </button>
-              <button onClick={() => runAction("sendRecording", "wysyłka nagrania")} disabled={busy} className="btn-ghost !px-3 !py-2 disabled:opacity-50">
+              <button onClick={() => runAction("sendRecording", "wysyłka nagrania")} disabled={busy || !mailOk} title={mailOk ? undefined : MAIL_REQUIRED} className="btn-ghost !px-3 !py-2 disabled:opacity-50">
                 <Video className="h-3.5 w-3.5" /> WYŚLIJ NAGRANIE ZAPISANYM
               </button>
               <button onClick={exportCsv} className="btn-ghost !px-4 !py-2 ml-auto">
@@ -165,6 +167,7 @@ export default function ParticipantsPanel({ event, onClose }) {
                     <span className={`technical text-[9px] ${STATUS_STYLE[p.status] || ""}`}>
                       {p.status.toUpperCase()}
                     </span>
+                    {p.mail_unsent && <span className="block technical text-[9px] blood-text mt-1">MAIL NIEWYSŁANY</span>}
                   </div>
                   <div className="flex-1">
                     {p.question_for_dawid ? (
@@ -214,7 +217,8 @@ export default function ParticipantsPanel({ event, onClose }) {
           />
           {sentInfo && <p className="technical text-[10px] gold-text">{sentInfo}</p>}
           {error && <p className="technical text-[10px] blood-text">{error}</p>}
-          <button type="submit" disabled={sending || !subject || !text} className="btn-relic !px-5 !py-3 disabled:opacity-50">
+          {!mailOk && <p className="technical text-[10px] text-foreground/40">{MAIL_REQUIRED.toUpperCase()}</p>}
+          <button type="submit" disabled={sending || !subject || !text || !mailOk} className="btn-relic !px-5 !py-3 disabled:opacity-50">
             <Send className="h-4 w-4" /> {sending ? "WYSYŁAM..." : "WYŚLIJ"}
           </button>
         </form>

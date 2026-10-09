@@ -4,6 +4,8 @@ import { base44 } from "@/api/base44Client";
 import useSystemText from "@/content/useSystemText";
 import { useFirma } from "@/lib/useSiteSettings";
 import { clause } from "@/lib/firma";
+import { CalendarPlus } from "lucide-react";
+import { downloadIcs } from "./time";
 
 // Formularz zapisu na wydarzenie (strona wydarzenia): imię, e-mail, pytanie, zgoda.
 export default function RegistrationForm({ event: ev }) {
@@ -95,6 +97,12 @@ export default function RegistrationForm({ event: ev }) {
         )}
         {result.join_password && (
           <p className="text-foreground/50 text-sm mt-1">Hasło do spotkania: {result.join_password}</p>
+        )}
+        {result.join_link && <p className="gold-text text-sm mt-3">Zapisz ten link — wyślemy go też e-mailem.</p>}
+        {ev.start_datetime && (
+          <button type="button" onClick={() => downloadIcs(ev)} className="btn-ghost !px-5 !py-3 mt-5">
+            <CalendarPlus className="h-4 w-4" /> DODAJ DO KALENDARZA
+          </button>
         )}
         {result.checkout_url && (
           <p className="technical text-[10px] gold-text mt-5">ZA CHWILĘ PROWADZĘ CIĘ DO PŁATNOŚCI…</p>

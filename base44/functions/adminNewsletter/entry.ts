@@ -1,7 +1,7 @@
 import { createClientFromRequest } from "npm:@base44/sdk@0.8.44";
 import { runSql, escStr, requireAdmin } from "../../shared/supabase.ts";
 import { getSetting } from "../../shared/settings.ts";
-import { sendMail, campaignEmailHtml } from "../../shared/smtp.ts";
+import { sendMail, campaignEmailHtml, requireMail } from "../../shared/smtp.ts";
 
 // Moduł newslettera: grupy odbiorców, kampanie i wysyłki przez SMTP.
 const SEND_BATCH = 10;
@@ -250,12 +250,13 @@ export default async function (req) {
         return Response.json({ done: true, sent: 0, remaining: 0, failures: [] });
       }
 
-      const smtp = await getSetting(base44, "smtp");
+      await requireMail(base44);
       const sentRows = [];
       const failures = [];
       for (const s of batch) {
         try {
-          await sendMail(smtp, {
+          await sendMail(base44, {
+            kind: "listy", ref: id,
             to: s.email,
             subject: campaign.subject,
             html: campaignEmailHtml(String(campaign.content || ""), s.name || ""),
@@ -266,7 +267,7 @@ export default async function (req) {
         }
       }
       if (sentRows.length === 0) {
-        throw new Error("Wysyłka nie powiodła się — sprawdź konfigurację SMTP w zakładce Integracje");
+        throw new Error("Wysyłka nie powiodła się — sprawdź Ustawienia → Wysyłka e-mail");
       }
       const values = sentRows
         .map((s) => `(${escStr(id)}, ${escStr(String(s.id))}, ${escStr(s.email)})`)

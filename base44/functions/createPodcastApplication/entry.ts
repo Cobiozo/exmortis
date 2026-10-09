@@ -1,7 +1,8 @@
 import { createClientFromRequest } from "npm:@base44/sdk@0.8.52";
 import { waitUntil } from "base44:runtime";
 import { getSetting, loadAppUrl, APP_URL as APP } from "../../shared/settings.ts";
-import { sendMail } from "../../shared/smtp.ts";
+import { sendMail as gate, adminTo } from "../../shared/smtp.ts";
+const sendMail = (b, m) => gate(b, { kind: "podcast", ...m });
 
 const CRISIS = [/nie chc[eę] (już )?żyć/i, /skończyć ze sobą/i, /samob[oó]j/i, /zabić si[eę]/i, /samookalecz/i, /odebrać sobie życie/i];
 const HELP = `<p style="font-size:18px;color:#C9A24A;line-height:1.7"><b>116 123</b> · <b>800 70 2222</b> (całą dobę, bezpłatnie) · <b>112</b></p>`;
@@ -37,9 +38,8 @@ export default async function (req) {
     });
 
     waitUntil((async () => {
-      const smtp = await getSetting(base44, "smtp").catch(() => null);
-      if (!smtp?.host) return;
-      const admin = smtp.from || smtp.user;
+      const admin = await adminTo(base44);
+      const smtp = base44;
       const link = `${APP}/admin/kontakty`;
       if (pilne) {
         await sendMail(smtp, { to: email, subject: "Dziękuję za Twoją wiadomość", html: wrap(`<p>Dziękuję za tę wiadomość. Przeczytam Twoje zgłoszenie osobiście.</p><p>Jeśli jest Ci teraz bardzo ciężko, nie czekaj na moją odpowiedź. Zadzwoń teraz:</p>${HELP}<p>Twoja historia poczeka. Ty jesteś ważniejszy(-a).</p><p>Dawid, exmortis</p>`) }).catch(() => {});

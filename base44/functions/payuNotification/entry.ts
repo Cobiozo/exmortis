@@ -72,9 +72,9 @@ export default async function (req) {
           }
           if (granted.length) await ensureAccount(base44, stored.buyer_email);
         }
-        const smtp = await getSetting(base44, "smtp");
         try {
-          await sendMail(smtp, {
+          await sendMail(base44, {
+            kind: "zamowienie", ref: stored.id,
             to: stored.buyer_email,
             subject: "EXMORTIS — płatność przyjęta",
             html: orderEmailHtml(stored.buyer_name || "", items, stored.total) + accessEmailHtml(granted, !!stored.digital_consent_text),

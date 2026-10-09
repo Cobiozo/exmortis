@@ -149,8 +149,8 @@ export default async function (req) {
 
     let emailSent = false;
     try {
-      const smtp = await getSetting(base44, "smtp");
-      await sendMail(smtp, {
+      const r = await sendMail(base44, {
+        kind: "test_wynik",
         to: email,
         subject: `Twój wynik: ${dominant} · etap ${stage}`,
         html: resultEmailHtml({
@@ -161,7 +161,7 @@ export default async function (req) {
           recommended,
         }),
       });
-      emailSent = true;
+      emailSent = r === "wyslany";
     } catch {
       emailSent = false;
     }

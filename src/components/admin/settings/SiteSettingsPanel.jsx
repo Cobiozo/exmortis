@@ -3,6 +3,7 @@ import { base44 } from "@/api/base44Client";
 import CompanySettings from "./CompanySettings";
 import CompanyWarning from "./CompanyWarning";
 import PrelaunchSettings from "./PrelaunchSettings";
+import MailSettings from "@/components/admin/mail/MailSettings";
 
 // Ustawienia strony: dane firmy i tryb przedpremierowy.
 export default function SiteSettingsPanel() {
@@ -14,6 +15,7 @@ export default function SiteSettingsPanel() {
       <CompanyWarning />
       <PrelaunchSettings initial={s.premiera} />
       <CompanySettings initial={s.firma} />
+      <MailSettings />
     </div>
   );
 }

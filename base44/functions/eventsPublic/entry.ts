@@ -18,9 +18,6 @@ const PUB_COLS = `e.id, e.title, e.slug, e.subtitle, e.event_type, e.format, e.s
 const REG_COUNT = `(SELECT COUNT(*) FROM public.registrations r
   WHERE r.event_id = e.id AND r.status IN ('Zapisany','Obecny'))::int AS registered`;
 
-async function smtpConfig(base44) {
-  return getSetting(base44, "smtp").catch(() => null);
-}
 
 export default async function (req) {
   try {
@@ -231,17 +228,15 @@ export default async function (req) {
 
       waitUntil(
         (async () => {
-          const smtp = await smtpConfig(base44).catch(() => null);
-          if (!smtp) return;
           for (const row of due24) {
             try {
-              await sendReminderMail(smtp, row, row, "24h");
+              await sendReminderMail(base44, row, row, "24h");
               await runSql(base44, `UPDATE public.registrations SET reminder_24h_sent = TRUE WHERE id = ${escStr(row.id)}`);
             } catch {}
           }
           for (const row of due1) {
             try {
-              await sendReminderMail(smtp, row, row, "1h");
+              await sendReminderMail(base44, row, row, "1h");
               await runSql(base44, `UPDATE public.registrations SET reminder_1h_sent = TRUE WHERE id = ${escStr(row.id)}`);
             } catch {}
           }
@@ -258,7 +253,7 @@ export default async function (req) {
               : `<p style="margin-top:24px;color:#8A8A8C;">Jeśli chcesz porozmawiać o własnym powrocie — <a href="${APP_URL}/powrot" style="color:#C9A24A;">umów rozmowę kwalifikacyjną POWRÓT</a>.</p>`;
             for (const row of dueRec) {
               try {
-                await sendRecordingMail(smtp, row, row, inviteHtml);
+                await sendRecordingMail(base44, row, row, inviteHtml);
                 await runSql(base44, `UPDATE public.registrations SET recording_sent = TRUE WHERE id = ${escStr(row.id)}`);
               } catch {}
             }

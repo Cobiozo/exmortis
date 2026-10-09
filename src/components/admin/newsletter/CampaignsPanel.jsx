@@ -2,6 +2,7 @@ import React, { useEffect, useState } from "react";
 import { base44 } from "@/api/base44Client";
 import { Plus, Trash2, X, Check, Pencil, Send } from "lucide-react";
 import RichTextEditor from "@/components/admin/RichTextEditor";
+import useMailStatus, { MAIL_REQUIRED } from "@/lib/useMailStatus";
 
 const inputCls =
   "w-full bg-transparent border hairline px-4 py-2.5 focus:border-[#C9A24A] focus:outline-none transition-colors text-sm";
@@ -10,6 +11,7 @@ const EMPTY = { id: null, subject: "", content: "", group_id: "" };
 
 export default function CampaignsPanel() {
   const [campaigns, setCampaigns] = useState([]);
+  const { ready: mailOk } = useMailStatus();
   const [groups, setGroups] = useState([]);
   const [loading, setLoading] = useState(true);
   const [editor, setEditor] = useState(null);
@@ -193,9 +195,10 @@ export default function CampaignsPanel() {
           <button onClick={save} disabled={busy} className="btn-ghost !px-5 !py-2.5 disabled:opacity-60">
             ZAPISZ SZKIC
           </button>
-          <button onClick={send} disabled={busy} className="btn-relic !px-5 !py-2.5 disabled:opacity-60">
+          <button onClick={send} disabled={busy || !mailOk} title={mailOk ? undefined : MAIL_REQUIRED} className="btn-relic !px-5 !py-2.5 disabled:opacity-60">
             <Send className="h-4 w-4" /> WYŚLIJ
           </button>
+          {!mailOk && <p className="technical text-[10px] text-foreground/40 self-center">{MAIL_REQUIRED.toUpperCase()}</p>}
         </div>
       </div>
     );

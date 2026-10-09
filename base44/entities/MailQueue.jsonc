@@ -1,0 +1,75 @@
+{
+  "name": "MailQueue",
+  "type": "object",
+  "properties": {
+    "to_email": {
+      "type": "string"
+    },
+    "subject": {
+      "type": "string"
+    },
+    "html": {
+      "type": "string"
+    },
+    "attachments": {
+      "type": "array",
+      "items": {
+        "type": "object"
+      }
+    },
+    "kind": {
+      "type": "string"
+    },
+    "ref": {
+      "type": "string"
+    },
+    "wazny_do": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "kolejka",
+        "wyslany",
+        "blad",
+        "pominiety"
+      ],
+      "default": "kolejka"
+    },
+    "blad": {
+      "type": "string"
+    },
+    "sent_at": {
+      "type": "string",
+      "format": "date-time"
+    }
+  },
+  "required": [
+    "to_email",
+    "kind",
+    "status"
+  ],
+  "rls": {
+    "read": {
+      "user_condition": {
+        "role": "admin"
+      }
+    },
+    "create": {
+      "user_condition": {
+        "role": "admin"
+      }
+    },
+    "update": {
+      "user_condition": {
+        "role": "admin"
+      }
+    },
+    "delete": {
+      "user_condition": {
+        "role": "admin"
+      }
+    }
+  }
+}

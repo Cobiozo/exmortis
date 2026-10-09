@@ -1,5 +1,5 @@
 import { getSetting } from "./settings.ts";
-import { sendMail } from "./smtp.ts";
+import { sendMail, adminTo } from "./smtp.ts";
 
 const MAX_PER_HOUR = 60;
 const MAX_IPS_24H = 3;
@@ -27,10 +27,11 @@ export async function checkVideoAbuse(base44, email: string, ip: string) {
     const until = new Date(now.getTime() + 86400000).toISOString();
     const details = `${ips.size} różne sieci w 24 h: ${[...ips].join(", ")}`;
     await sr.SecurityLog.create({ type: "blokada", user_email: email, ip, until, details, resolved: false });
-    const smtp = await getSetting(base44, "smtp").catch(() => null);
-    if (smtp?.adminEmail || smtp?.from) {
-      await sendMail(smtp, {
-        to: smtp.adminEmail || smtp.from,
+    const to = await adminTo(base44);
+    if (to) {
+      await sendMail(base44, {
+        kind: "alarm",
+        to,
         subject: `exmortis: blokada wideo dla ${email}`,
         html: `<p>Konto <b>${email}</b> zostało czasowo zablokowane (24 h).</p><p>${details}</p><p>Decyzja: panel admina → Bezpieczeństwo.</p>`,
       }).catch(() => {});

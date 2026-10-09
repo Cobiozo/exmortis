@@ -1,5 +1,5 @@
 import { runSql, escStr } from "./supabase.ts";
-import { getSetting, loadAppUrl } from "./settings.ts";
+import { loadAppUrl } from "./settings.ts";
 import { sendMail } from "./smtp.ts";
 
 // Listy powrotu — potwierdzenie zapisu (double opt-in).
@@ -15,7 +15,7 @@ export async function addSubscriber(base44, { email, name }) {
   const rows = await runSql(
     base44,
     `INSERT INTO public.subscribers (id, email, name, status, confirm_token, confirm_sent_at)
-     VALUES (gen_random_uuid()::text, ${escStr(String(email).toLowerCase())}, ${nameVal}, 'pending', ${escStr(token)}, now())
+     VALUES (gen_random_uuid()::text, ${escStr(String(email).toLowerCase())}, ${nameVal}, 'pending', ${escStr(token)}, NULL)
      ON CONFLICT (email) DO NOTHING RETURNING id`
   );
   // Błąd wysyłki nie może przerwać zamówienia ani zapisu na spotkanie.
@@ -23,10 +23,10 @@ export async function addSubscriber(base44, { email, name }) {
 }
 
 export async function sendConfirmMail(base44, { email, name, token }) {
-  const smtp = await getSetting(base44, "smtp").catch(() => null);
-  if (!smtp) throw new Error("Brak konfiguracji SMTP");
   const url = `${await loadAppUrl(base44)}/listy/potwierdz?t=${token}`;
-  await sendMail(smtp, {
+  // confirm_sent_at ustawia bramka po faktycznej wysyłce (7 dni liczy się od niej).
+  await sendMail(base44, {
+    kind: "listy_potwierdzenie",
     to: email,
     subject: "Potwierdź zapis na Listy powrotu",
     html: `<div style="background:#0A0A0B;padding:40px 24px;font-family:Cinzel,Georgia,serif;color:#E2E2E2;">

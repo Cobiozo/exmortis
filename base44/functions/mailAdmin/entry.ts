@@ -1,0 +1,102 @@
+import { createClientFromRequest } from "npm:@base44/sdk@0.8.44";
+import { requireStaff, requireAdmin, emailField } from "../../shared/supabase.ts";
+import { getSetting, saveSetting } from "../../shared/settings.ts";
+import { smtpSend, mailReady, resetMailConfig, flushMailQueue } from "../../shared/smtp.ts";
+
+// Ustawienia → Wysyłka e-mail: konfiguracja SMTP, test, status, kolejka zaległych, dziennik, DNS.
+// Hasło zapisywane wyłącznie po stronie serwera (Supabase app_settings, RLS) — nigdy nie wraca do przeglądarki.
+
+const MASK = "••••••••";
+const KEYS = ["host", "port", "user", "password", "from", "from_name", "reply_to"];
+const mask = (e) => { const [u, d] = String(e || "").split("@"); return d ? `${u.slice(0, 2)}***@${d}` : "***"; };
+
+async function txt(name) {
+  const r = await fetch(`https://dns.google/resolve?name=${encodeURIComponent(name)}&type=TXT`).then((x) => x.json()).catch(() => null);
+  return (r?.Answer || []).map((a) => String(a.data || "").replace(/"\s*"/g, "").replace(/"/g, ""));
+}
+async function dnsCheck(domain) {
+  if (!domain) return null;
+  const [root, dmarc] = await Promise.all([txt(domain), txt(`_dmarc.${domain}`)]);
+  const sels = ["default", "dkim", "mail", "google", "selector1", "selector2", "k1", "s1", "s2", "smtp", "resend", "brevo1", "mailjet", "pm", "zoho"];
+  const dk = await Promise.all(sels.map(async (s) => ((await txt(`${s}._domainkey.${domain}`)).some((t) => /v=DKIM1|k=rsa|p=/.test(t)) ? s : null)));
+  return {
+    domain,
+    spf: root.find((t) => t.startsWith("v=spf1")) || null,
+    dmarc: dmarc.find((t) => t.startsWith("v=DMARC1")) || null,
+    dkim: dk.filter(Boolean),
+  };
+}
+
+export default async function (req) {
+  try {
+    const base44 = createClientFromRequest(req);
+    await requireStaff(base44);
+    const body = await req.json().catch(() => ({}));
+    const Q = base44.asServiceRole.entities.MailQueue;
+    const smtp = (await getSetting(base44, "smtp")) || {};
+
+    if (body.action === "status") {
+      const queued = await Q.filter({ status: "kolejka" }, "created_date", 1000);
+      const byKind = {};
+      for (const m of queued) byKind[m.kind] = (byKind[m.kind] || 0) + 1;
+      const cfg = {};
+      for (const k of KEYS) cfg[k] = k === "password" ? (smtp.password ? MASK : "") : smtp[k] || "";
+      return Response.json({ ready: mailReady(smtp), tested_at: smtp.tested_at || null, config: cfg, queue: { total: queued.length, byKind } });
+    }
+
+    if (body.action === "save") {
+      const d = body.data || {};
+      const next = { ...smtp };
+      for (const k of KEYS) {
+        const v = String(d[k] ?? "").trim().slice(0, 300);
+        if (k === "password" && (v === "" || v === MASK)) continue;
+        next[k] = v;
+      }
+      if (!next.port) next.port = "587";
+      if (!next.from_name) next.from_name = "exmortis";
+      next.status = "nieskonfigurowana"; // każda zmiana wymaga ponownego udanego testu
+      delete next.tested_at;
+      await saveSetting(base44, "smtp", next);
+      resetMailConfig();
+      return Response.json({ ok: true });
+    }
+
+    if (body.action === "test") {
+      const to = emailField(body, "to");
+      try {
+        await smtpSend(smtp, { to, subject: "exmortis: test wysyłki e-mail", html: "<p>Test wysyłki z panelu exmortis. Jeśli widzisz tę wiadomość, wysyłka działa.</p>" });
+      } catch (e) {
+        await saveSetting(base44, "smtp", { ...smtp, status: "nieskonfigurowana" });
+        resetMailConfig();
+        await Q.create({ to_email: to, subject: "test", kind: "test", status: "blad", blad: String(e?.message || e).slice(0, 500) });
+        return Response.json({ ok: false, error: String(e?.message || e) });
+      }
+      await saveSetting(base44, "smtp", { ...smtp, status: "dziala", tested_at: new Date().toISOString() });
+      resetMailConfig();
+      await Q.create({ to_email: to, subject: "test", kind: "test", status: "wyslany", sent_at: new Date().toISOString() });
+      return Response.json({ ok: true });
+    }
+
+    if (body.action === "dns") {
+      const addr = String(smtp.from || "").match(/@([^\s>]+)/);
+      return Response.json({ dns: await dnsCheck(addr ? addr[1].toLowerCase() : null) });
+    }
+
+    if (body.action === "log") {
+      const rows = await Q.filter({}, "-created_date", 100);
+      return Response.json({
+        log: rows.map((m) => ({ id: m.id, to: mask(m.to_email), kind: m.kind, at: m.sent_at || m.created_date, status: m.status, blad: m.blad || null })),
+      });
+    }
+
+    if (body.action === "flush") {
+      await requireAdmin(base44);
+      return Response.json(await flushMailQueue(base44));
+    }
+
+    return Response.json({ error: "Nieznana akcja" }, { status: 400 });
+  } catch (error) {
+    if (error?.message === "FORBIDDEN") return Response.json({ error: "Brak dostępu" }, { status: 403 });
+    return Response.json({ error: error.message }, { status: 500 });
+  }
+}

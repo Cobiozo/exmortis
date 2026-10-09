@@ -10,6 +10,7 @@ import {
   sendReminderMail,
   sendRecordingMail,
 } from "../../shared/events.ts";
+import { requireMail } from "../../shared/smtp.ts";
 
 // Administracja wydarzeniami: lista, szczegóły z uczestnikami, zapis/edycja,
 // duplikacja, powtarzanie (Wieczory powrotu), odwołanie, usuwanie, obecność,
@@ -158,6 +159,13 @@ export default async function (req) {
          ORDER BY created_at ASC`,
         true
       );
+      // Znacznik „mail niewysłany”: potwierdzenie zapisu w kolejce albo z błędem.
+      const ids = (parts || []).map((p) => p.id);
+      const pending = ids.length
+        ? await base44.asServiceRole.entities.MailQueue.filter({ kind: "zapis", ref: { $in: ids }, status: { $in: ["kolejka", "blad"] } }, "-created_date", 1000)
+        : [];
+      const unsent = new Set(pending.map((m) => m.ref));
+      for (const p of parts || []) p.mail_unsent = unsent.has(p.id);
       return Response.json({ event: (evRows && evRows[0]) || null, participants: parts || [] });
     }
 
@@ -337,11 +345,9 @@ export default async function (req) {
       );
       waitUntil(
         (async () => {
-          const smtp = await getSetting(base44, "smtp").catch(() => null);
-          if (!smtp) return;
           for (const r of recs) {
             try {
-              await sendCancelledMail(smtp, ev, r, reason);
+              await sendCancelledMail(base44, ev, r, reason);
             } catch {}
           }
         })()
@@ -371,11 +377,7 @@ export default async function (req) {
          RETURNING id, first_name, email, cancel_token`
       );
       if (promoted && promoted.length > 0) {
-        waitUntil(
-          getSetting(base44, "smtp")
-            .then((smtp) => smtp && sendSpotFreedMail(smtp, ev, promoted[0]))
-            .catch(() => {})
-        );
+        waitUntil(sendSpotFreedMail(base44, ev, promoted[0]).catch(() => {}));
         return Response.json({ ok: true, promoted: promoted[0].first_name });
       }
       return Response.json({ ok: true, promoted: null });
@@ -399,12 +401,11 @@ export default async function (req) {
          WHERE event_id = ${escStr(id)} AND status IN ('Zapisany','Obecny')`,
         true
       );
-      const smtp = await getSetting(base44, "smtp").catch(() => null);
-      if (!smtp) throw new Error("SMTP nie jest skonfigurowany (Integracje)");
+      await requireMail(base44);
       let sent = 0;
       for (const r of recs) {
         try {
-          await sendReminderMail(smtp, ev, r, "now");
+          await sendReminderMail(base44, ev, r, "now");
           sent += 1;
         } catch {}
       }
@@ -424,12 +425,11 @@ export default async function (req) {
          WHERE event_id = ${escStr(id)} AND status IN ('Zapisany','Obecny') AND recording_sent = FALSE`,
         true
       );
-      const smtp = await getSetting(base44, "smtp").catch(() => null);
-      if (!smtp) throw new Error("SMTP nie jest skonfigurowany (Integracje)");
+      await requireMail(base44);
       let sent = 0;
       for (const r of recs) {
         try {
-          await sendRecordingMail(smtp, ev, r, "");
+          await sendRecordingMail(base44, ev, r, "");
           await runSql(base44, `UPDATE public.registrations SET recording_sent = TRUE WHERE id = ${escStr(r.id)}`);
           sent += 1;
         } catch {}
@@ -481,12 +481,11 @@ export default async function (req) {
          WHERE event_id = ${escStr(id)} AND status IN ('Zapisany','Obecny','Lista rezerwowa')`,
         true
       );
-      const smtp = await getSetting(base44).catch(() => null);
-      if (!smtp) throw new Error("SMTP nie jest skonfigurowany (Integracje)");
+      await requireMail(base44);
       let sent = 0;
       for (const r of recipients) {
         try {
-          await sendBroadcastMail(smtp, ev || { title: "Spotkanie" }, r, subject, text);
+          await sendBroadcastMail(base44, ev || { title: "Spotkanie" }, r, subject, text);
           sent += 1;
         } catch {}
       }

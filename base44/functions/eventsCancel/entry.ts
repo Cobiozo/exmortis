@@ -68,11 +68,7 @@ export default async function (req) {
     );
 
     if (ev && promoted && promoted.length > 0) {
-      waitUntil(
-        getSetting(base44, "smtp")
-          .then((smtp) => smtp && sendSpotFreedMail(smtp, ev, promoted[0]))
-          .catch(() => {})
-      );
+      waitUntil(sendSpotFreedMail(base44, ev, promoted[0]).catch(() => {}));
     }
 
     return htmlPage(

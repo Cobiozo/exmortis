@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from "react";
 import CompanyWarning from "./settings/CompanyWarning";
+import MailWarning from "./mail/MailWarning";
 import { Link } from "react-router-dom";
 import { base44 } from "@/api/base44Client";
 import { useAdminMode } from "@/components/admin/AdminModeContext";
@@ -39,9 +40,10 @@ export default function AdminDashboard() {
   return (
     <>
     <CompanyWarning />
+    <MailWarning />
     <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
       <Tile to="/admin/obok" label="17" title="Obok" lines={["Serie, nagrania, uczestnicy"]} />
-      <Tile to="/admin/ustawienia" label="16" title="Ustawienia strony" lines={["Dane firmy", "Tryb przedpremierowy"]} />
+      <Tile to="/admin/ustawienia" label="16" title="Ustawienia strony" lines={["Dane firmy", "Tryb przedpremierowy", "Wysyłka e-mail"]} />
       <Tile to="/admin/spotkania" label="01" title="Spotkania" lines={[`Nadchodzące: ${v("upcoming_events")}`, `Zapisani: ${v("upcoming_registrations")}`, `Szkice: ${v("draft_events")}`]} />
       <Tile to="/admin/cisza" label="02" title="Cisza" lines={[`Utwory: ${sound ? sound.length : "…"}`, `Ostrzeżenia: ${sound ? countWarnings(sound) : "…"}`, `Rozpoczęcia (30 dni): ${v("silence_30")}`]} />
       <Tile to="/admin/skarbiec" label="03" title="Skarbiec" lines={[`Dostępne: ${v("products_available")}`, `Wkrótce: ${v("products_soon")}`, `Ukryte: ${v("products_hidden")}`]} />
@@ -51,7 +53,7 @@ export default function AdminDashboard() {
       <Tile to="/admin/podcast" label="15" title="Podcast" lines={["Odcinki, playlisty, goście, ustawienia"]} />
       <Tile to="/admin/newsletter" label="07" title="Newsletter" lines={["Subskrybenci, grupy, kampanie"]} />
       <Tile to="/admin/tresci" label="08" title="Treści stron" lines={["Edycja tekstów"]} />
-      <Tile to="/admin/integracje" label="09" title="Integracje" lines={["SMTP, płatności"]} />
+      <Tile to="/admin/integracje" label="09" title="Integracje" lines={["Płatności, adres aplikacji"]} />
       <Tile to="/admin/testy" label="10" title="Wyniki testu" lines={["Odpowiedzi z testu"]} />
       <Tile to="/admin/klienci" label="11" title="Klienci i dostępy" lines={["Nadawanie, przedłużenia, dziennik odtworzeń"]} />
       <Tile to="/admin/rabaty" label="12" title="Kody rabatowe" lines={["Procent lub kwota, limity, terminy"]} />

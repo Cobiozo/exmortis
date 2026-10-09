@@ -1,27 +1,104 @@
 import nodemailer from "npm:nodemailer@6.9.13";
-import { FIRMA } from "./settings.ts";
+import { FIRMA, getSetting } from "./settings.ts";
 import { firmaFooter } from "./firma.ts";
+import { runSql, escStr } from "./supabase.ts";
 
-// Wysyłka maila SMTP z ustawień zapisanych w panelu (app_settings → smtp).
+// JEDYNA bramka wysyłki maili. Wysyła tylko, gdy wysyłka ma status „dziala” (po udanym teście).
+// W przeciwnym razie mail trafia do kolejki „Oczekuje na konfigurację” (MailQueue) — nic nie ginie.
 
-export async function sendMail(smtp, { to, subject, html, attachments }) {
-  if (!smtp || !smtp.host || !smtp.user || !smtp.password) {
-    throw new Error("SMTP nie jest skonfigurowany");
-  }
+export const mailReady = (s) => !!(s && s.status === "dziala" && s.host && s.user && s.password);
+
+let CFG = null, CFG_AT = 0;
+export async function mailConfig(base44) {
+  if (CFG_AT && Date.now() - CFG_AT < 30000) return CFG;
+  CFG = await getSetting(base44, "smtp").catch(() => null);
+  CFG_AT = Date.now();
+  return CFG;
+}
+export const resetMailConfig = () => { CFG_AT = 0; };
+
+// Akcje wyłącznie mailowe (ogłoszenia, ręczne przypomnienia) — bez działającej wysyłki odmawiamy jawnie.
+export async function requireMail(base44) {
+  if (!mailReady(await getSetting(base44, "smtp").catch(() => null))) throw new Error("Wymaga skonfigurowanej wysyłki e-mail (Ustawienia → Wysyłka e-mail).");
+}
+
+// Adres do powiadomień administracyjnych.
+export async function adminTo(base44) {
+  const s = await mailConfig(base44);
+  return FIRMA?.email || s?.reply_to || s?.from || null;
+}
+
+// Bezpośrednie wysłanie przez SMTP (bez bramki) — test i wysyłka zaległych.
+export async function smtpSend(smtp, { to, subject, html, attachments }) {
+  if (!smtp || !smtp.host || !smtp.user || !smtp.password) throw new Error("Wysyłka e-mail nie jest skonfigurowana");
   const port = Number(smtp.port) || 587;
   const transporter = nodemailer.createTransport({
-    host: smtp.host,
-    port,
-    secure: port === 465,
+    host: smtp.host, port, secure: port === 465,
     auth: { user: smtp.user, pass: smtp.password },
   });
+  const addr = smtp.from || smtp.user;
   await transporter.sendMail({
-    from: smtp.from || smtp.user,
-    to,
-    subject,
+    from: `"${String(smtp.from_name || "exmortis").replace(/"/g, "")}" <${addr}>`,
+    ...(smtp.reply_to ? { replyTo: smtp.reply_to } : {}),
+    to, subject,
     html: html + firmaFooter(FIRMA),
     ...(Array.isArray(attachments) && attachments.length > 0 ? { attachments } : {}),
   });
+}
+
+// Skutki faktycznej wysyłki (np. 7 dni na potwierdzenie Listów liczy się od wysłania).
+export async function afterSent(base44, kind, to) {
+  if (kind === "listy_potwierdzenie") {
+    await runSql(base44, `UPDATE public.subscribers SET confirm_sent_at = now() WHERE email = ${escStr(String(to).toLowerCase())} AND status = 'pending'`).catch(() => {});
+  }
+}
+
+// Zwraca "wyslany" albo "kolejka". Błąd SMTP jest zapisywany w dzienniku i rzucany dalej.
+export async function sendMail(base44, { to, subject, html, attachments, kind = "inne", ref, waznyDo }) {
+  if (!to) throw new Error("Brak adresata");
+  const Q = base44.asServiceRole.entities.MailQueue;
+  const base = { to_email: String(to || ""), subject, kind, ...(ref ? { ref: String(ref) } : {}), ...(waznyDo ? { wazny_do: new Date(waznyDo).toISOString() } : {}) };
+  const smtp = await mailConfig(base44);
+  if (!mailReady(smtp)) {
+    await Q.create({ ...base, html, attachments: attachments || [], status: "kolejka" });
+    return "kolejka";
+  }
+  try {
+    await smtpSend(smtp, { to, subject, html, attachments });
+  } catch (e) {
+    await Q.create({ ...base, html, attachments: attachments || [], status: "blad", blad: String(e?.message || e).slice(0, 500) });
+    throw e;
+  }
+  await Q.create({ ...base, status: "wyslany", sent_at: new Date().toISOString() });
+  await afterSent(base44, kind, to);
+  return "wyslany";
+}
+
+// Wysyłka zaległych (tylko na kliknięcie administratora), partiami.
+export async function flushMailQueue(base44) {
+  const smtp = await getSetting(base44, "smtp");
+  if (!mailReady(smtp)) throw new Error("Wysyłka e-mail nie działa — najpierw wyślij udany test.");
+  const Q = base44.asServiceRole.entities.MailQueue;
+  const items = await Q.filter({ status: "kolejka" }, "created_date", 20);
+  let sent = 0, skipped = 0, failed = 0;
+  for (const m of items) {
+    if (m.wazny_do && new Date(m.wazny_do) < new Date()) {
+      await Q.update(m.id, { status: "pominiety", blad: "Termin minął", html: "", attachments: [] });
+      skipped++;
+      continue;
+    }
+    try {
+      await smtpSend(smtp, { to: m.to_email, subject: m.subject, html: m.html || "", attachments: m.attachments });
+      await Q.update(m.id, { status: "wyslany", sent_at: new Date().toISOString(), html: "", attachments: [] });
+      await afterSent(base44, m.kind, m.to_email);
+      sent++;
+    } catch (e) {
+      await Q.update(m.id, { status: "blad", blad: String(e?.message || e).slice(0, 500) });
+      failed++;
+    }
+  }
+  const left = await Q.filter({ status: "kolejka" }, "created_date", 1);
+  return { sent, skipped, failed, more: left.length > 0 };
 }
 
 export function orderEmailHtml(buyerName, items, total) {

@@ -178,89 +178,14 @@ export default function IntegrationsManager() {
         <Msg msg={payuMsg} />
       </section>
 
-      {/* ===== SMTP ===== */}
       <section className="border hairline p-6 md:p-8">
         <div className="flex items-center gap-3 mb-2">
           <Mail className="h-5 w-5 gold-text" />
-          <h2 className="relic-heading text-xl">Poczta SMTP</h2>
+          <h2 className="relic-heading text-xl">Poczta</h2>
         </div>
-        <p className="text-sm text-foreground/50 mb-6 leading-relaxed">
-          Skrzynka nadawcza dla potwierdzeń zamówień i listów. Dane dostaniesz od dostawcy
-          poczty (np. hosting exmortis.pl).
+        <p className="text-sm text-foreground/50">
+          Konfiguracja przeniesiona: <a href="/admin/ustawienia" className="gold-text underline">Ustawienia → Wysyłka e-mail</a>.
         </p>
-        <div className="grid sm:grid-cols-2 gap-5">
-          <Text
-            label="SERWER SMTP"
-            value={smtp.host}
-            onChange={(e) => setSmtp({ ...smtp, host: e.target.value })}
-            placeholder="smtp.exmortis.pl"
-          />
-          <Text
-            label="PORT"
-            value={smtp.port}
-            onChange={(e) => setSmtp({ ...smtp, port: e.target.value })}
-            placeholder="587"
-          />
-          <Text
-            label="LOGIN"
-            value={smtp.user}
-            onChange={(e) => setSmtp({ ...smtp, user: e.target.value })}
-            placeholder="kontakt@exmortis.pl"
-          />
-          <Text
-            label="HASŁO"
-            type="password"
-            value={smtp.password}
-            onChange={(e) => setSmtp({ ...smtp, password: e.target.value })}
-          />
-          <Text
-            label="NADAWCA"
-            value={smtp.from}
-            onChange={(e) => setSmtp({ ...smtp, from: e.target.value })}
-            placeholder="Exmortis <kontakt@exmortis.pl>"
-          />
-        </div>
-        <p className="technical text-[9px] text-foreground/40 mt-5 leading-relaxed">
-          HASŁO JEST MASKOWANE — ZOSTAW BEZ ZMIAN, ABY UTRZYMAĆ ZAPISANE
-        </p>
-        <div className="flex gap-3 mt-6">
-          <button
-            onClick={() => save("smtp", smtp, setSmtpBusy, setSmtpMsg)}
-            disabled={smtpBusy}
-            className="btn-relic !px-5 !py-2.5 disabled:opacity-60"
-          >
-            {smtpBusy ? "ZAPISUJĘ..." : "ZAPISZ"} {!smtpBusy && <Save className="h-4 w-4" />}
-          </button>
-          <button
-            onClick={() => clearData("smtp", setSmtpBusy, setSmtpMsg)}
-            disabled={smtpBusy}
-            className="btn-ghost !px-5 !py-2.5 disabled:opacity-60"
-          >
-            <Trash2 className="h-4 w-4" /> USUŃ DANE
-          </button>
-        </div>
-        <Msg msg={smtpMsg} />
-
-        <div className="mt-8 pt-6 border-t hairline">
-          <p className="technical text-[10px] text-foreground/50 mb-3">TEST WYSYŁKI</p>
-          <div className="flex flex-col sm:flex-row gap-3">
-            <input
-              value={testTo}
-              onChange={(e) => setTestTo(e.target.value)}
-              type="email"
-              className={inputCls}
-              placeholder="adres do wysłania testu"
-            />
-            <button
-              onClick={sendTest}
-              disabled={testBusy}
-              className="btn-relic !px-5 !py-2.5 whitespace-nowrap disabled:opacity-60"
-            >
-              {testBusy ? "WYSYŁAM..." : "WYŚLIJ TEST"} {!testBusy && <Send className="h-4 w-4" />}
-            </button>
-          </div>
-          <Msg msg={testMsg} />
-        </div>
       </section>
     </div>
   );

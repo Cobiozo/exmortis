@@ -77,7 +77,7 @@ export async function saveConsents(base44, d, refId) {
 
 // Po udanym zapisie: newsletter (jeśli zgoda) i e-mail potwierdzający.
 export function afterSaved(base44, ev, reg, d) {
-  const jobs = [loadAppUrl(base44).then(() => getSetting(base44, "smtp")).then((s) => s && sendConfirmationMail(s, ev, reg))];
+  const jobs = [loadAppUrl(base44).then(() => sendConfirmationMail(base44, ev, reg))];
   if (d.listy) {
     jobs.push(import("./newsletter.ts").then((m) => m.addSubscriber(base44, { email: d.email, name: d.first_name, consentGiven: true })));
   }
@@ -135,8 +135,7 @@ export async function sendAlarm(base44) {
   let via = null;
   const to = firma?.email;
   if (to) {
-    const smtp = await getSetting(base44, "smtp").catch(() => null);
-    if (smtp) via = await sendMail(smtp, { to, subject, html }).then(() => "smtp").catch(() => null);
+    via = await sendMail(base44, { to, subject, html, kind: "alarm" }).then((r) => (r === "wyslany" ? "smtp" : null)).catch(() => null);
     if (!via) via = await base44.asServiceRole.integrations.Core.SendEmail({ to, subject, body: html }).then(() => "platforma").catch(() => null);
   }
   if (!via) {

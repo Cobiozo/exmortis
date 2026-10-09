@@ -75,8 +75,8 @@ export default async function (req) {
     }
 
     const fileUrl = String(product.file_url || "").trim();
-    const smtp = await getSetting(base44, "smtp");
-    await sendMail(smtp, {
+    await sendMail(base44, {
+      kind: "zamowienie",
       to: email,
       subject: `Twój materiał: ${product.name}`,
       html: `
