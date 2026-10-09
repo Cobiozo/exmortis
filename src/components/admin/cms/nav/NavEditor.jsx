@@ -50,7 +50,8 @@ export default function NavEditor() {
   const label = { zapisywanie: "Zapisywanie szkicu…", szkic: "Szkic zapisany · nieopublikowane zmiany", publikowanie: "Publikowanie…", opublikowano: `Opublikowano wersję ${rec?.wersja}` }[state];
 
   return (
-    <div className="space-y-10 max-w-4xl">
+    <div className="grid lg:grid-cols-[minmax(0,1fr)_400px] gap-8 items-start">
+    <div className="space-y-10 min-w-0">
       <section className="space-y-3">
         <h3 className="relic-heading text-xl">Menu górne</h3>
         <LinkRows rows={d.menu} onChange={(menu) => edit({ ...d, menu })} max={9} />
@@ -73,7 +74,6 @@ export default function NavEditor() {
         ))}
         {d.kolumny.length < 4 && <button className={smallBtn} onClick={() => edit({ ...d, kolumny: [...d.kolumny, { title: "Nowa kolumna", links: [] }] })}><Plus className="h-4 w-4" /> Dodaj kolumnę</button>}
       </section>
-      <NavPreview d={d} />
       <NavVersions refresh={ver} onLoad={(v) => v && edit(structuredClone(v))} />
       <div className="flex flex-wrap items-center gap-3 sticky bottom-0 bg-[#0A0A0B] py-4 border-t hairline">
         <button className="btn-relic disabled:opacity-50" disabled={bad || state === "publikowanie"} onClick={publish}>
@@ -83,6 +83,8 @@ export default function NavEditor() {
         {bad ? <span className="text-sm blood-text">Uzupełnij etykiety i popraw linki.</span>
           : label && <span className="technical text-[10px] text-foreground/60">{label}</span>}
       </div>
+    </div>
+    <div className="lg:sticky lg:top-4 lg:max-h-[90vh] lg:overflow-y-auto"><NavPreview d={d} /></div>
     </div>
   );
 }
