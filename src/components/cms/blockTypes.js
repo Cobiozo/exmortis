@@ -1,4 +1,4 @@
-import { Crown, AlignLeft, Columns2, Image as ImageIcon, MousePointerClick, Quote, ListOrdered, LayoutGrid, HelpCircle, Minus, Puzzle, Rows3, Images, Video } from "lucide-react";
+import { Crown, AlignLeft, Columns2, Image as ImageIcon, MousePointerClick, Quote, ListOrdered, LayoutGrid, HelpCircle, Minus, Puzzle, Rows3, Images, Video, CalendarCheck, ShieldAlert } from "lucide-react";
 
 const IMG_RATIOS = [["1:1", "1:1"], ["4:5", "4:5"], ["3:2", "3:2"], ["16:9", "16:9"]];
 const HEAD = [
@@ -69,6 +69,13 @@ export const TYPES = {
     defaults: { url: "", proporcja: "16:9" } },
   separator: { label: "Separator", icon: Minus, opis: "Złota kreska albo pusty odstęp.",
     fields: [{ k: "wariant", label: "Wariant", typ: "select", opcje: [["kreska", "Złota kreska"], ["odstep", "Odstęp"]] }], defaults: { wariant: "kreska" } },
+  zapis_spotkanie: { label: "Formularz zapisu na spotkanie", icon: CalendarCheck, opis: "Zapis na wybrane spotkanie: e-maile, plik kalendarza, przypomnienia.",
+    fields: [{ k: "etykieta", label: "Etykieta", typ: "text", max: 30 }, { k: "tytul", label: "Nagłówek", typ: "textarea", max: 60 },
+      { k: "spotkanie", label: "Adres spotkania (z zakładki Spotkania)", typ: "text" }],
+    defaults: { etykieta: "ZAPIS", tytul: "Zapisz się", spotkanie: "" } },
+  ramka: { label: "Ramka bezpieczeństwa", icon: ShieldAlert, opis: "Wyróżniona informacja, np. telefony zaufania.",
+    fields: [{ k: "tytul", label: "Tytuł", typ: "text", max: 50 }, { k: "tresc", label: "Treść", typ: "rich" }],
+    defaults: { tytul: "JEŚLI JEST CI BARDZO CIĘŻKO", tresc: "<p>Zadzwoń pod <strong>116 123</strong> lub <strong>112</strong>.</p>" } },
   modul: { label: "Moduł dynamiczny", icon: Puzzle, opis: "Spotkania, Skarbiec, newsletter, kontakt i inne moduły.", bare: true,
     fields: [{ k: "modul", label: "Moduł", typ: "module" }, { k: "etykieta", label: "Etykieta (Skarbiec)", typ: "text", max: 30 },
       { k: "tytul", label: "Nagłówek (Skarbiec, Test)", typ: "text", max: 40 }, { k: "tekst", label: "Wstęp (Skarbiec, Test)", typ: "rich" }],

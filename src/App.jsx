@@ -39,6 +39,7 @@ import { PodcastPlayerProvider } from '@/components/exmortis/podcast/PlayerConte
 import CmsPage from '@/pages/CmsPage';
 import CmsPreview from '@/pages/CmsPreview';
 import CmsRoutePage from '@/components/cms/CmsRoutePage';
+import Listopad from '@/pages/Listopad';
 // Add page imports here
 
 const AuthenticatedApp = () => {
@@ -104,7 +105,7 @@ const AuthenticatedApp = () => {
           <Route path="/odstapienie" element={<Odstapienie />} />
           <Route path="/kontakt" element={<Kontakt />} />
           <Route path="/strona/:slug" element={<CmsPage />} />
-          <Route path="/1-listopada" element={<Navigate to="/spotkania/1-listopada" replace />} />
+          <Route path="/1-listopada" element={<Listopad />} />
         </Route>
         <Route path="*" element={<PageNotFound />} />
       </Routes>

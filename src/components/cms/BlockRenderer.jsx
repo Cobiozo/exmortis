@@ -6,9 +6,11 @@ import { TextBlock, ImageBlock, ButtonsBlock, QuoteBlock, SeparatorBlock, LinesB
 import { CardsBlock, StepsBlock, FaqBlock } from "./blocks/ListBlocks";
 import { ModuleBlock } from "./modules";
 import { GalleryBlock, VideoBlock } from "./blocks/MediaBlocks";
+import EventSignupBlock from "./blocks/EventSignupBlock";
+import SafetyBox from "./blocks/SafetyBox";
 
 const VIEW = { hero: HeroBlock, tekst: TextBlock, tekst_zdjecie: TextImageBlock, zdjecie: ImageBlock, przyciski: ButtonsBlock,
-  cytat: QuoteBlock, linie: LinesBlock, etapy: StepsBlock, karty: CardsBlock, faq: FaqBlock, separator: SeparatorBlock, modul: ModuleBlock, galeria: GalleryBlock, wideo: VideoBlock };
+  cytat: QuoteBlock, linie: LinesBlock, etapy: StepsBlock, karty: CardsBlock, faq: FaqBlock, separator: SeparatorBlock, modul: ModuleBlock, galeria: GalleryBlock, wideo: VideoBlock, zapis_spotkanie: EventSignupBlock, ramka: SafetyBox };
 const DEVICE = { telefon: "md:hidden", komputer: "hidden md:block" };
 
 // Rysuje stronę z bloków. editable — podgląd w panelu (klik wybiera blok, linki nie nawigują).

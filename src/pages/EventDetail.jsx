@@ -1,7 +1,12 @@
 import React, { useEffect, useState } from "react";
 import { sanitizeHtml } from "@/lib/sanitizeHtml";
 import { Link, useParams } from "react-router-dom";
-import { ArrowLeft, Clock, MapPin } from "lucide-react";
+import { ArrowLeft, ArrowRight, Clock, MapPin } from "lucide-react";
+import { usePageMeta } from "@/lib/usePageMeta";
+import { LISTOPAD_EVENT } from "@/components/cms/defaults/listopadDefault";
+
+// Spotkania z własną stroną zapisu: karta zostaje, zapis i adres kanoniczny prowadzą tam.
+const LANDINGS = { [LISTOPAD_EVENT]: "/1-listopada", "1-listopada": "/1-listopada" };
 import { base44 } from "@/api/base44Client";
 import { CoverHero, coverOf } from "@/components/exmortis/events/cover";
 import HeroContent from "@/components/exmortis/events/HeroContent";
@@ -15,6 +20,8 @@ export default function EventDetail() {
   const { slug } = useParams();
   const [event, setEvent] = useState(undefined);
   const [error, setError] = useState("");
+  const landing = LANDINGS[slug];
+  usePageMeta({ canonical: landing });
 
   useEffect(() => {
     setEvent(undefined);
@@ -146,7 +153,13 @@ export default function EventDetail() {
        </div>
 
        <aside className="min-w-0 lg:sticky lg:top-28 lg:self-start">
-        {!cancelled && !ended && event.registration_type !== "Bez zapisu" && (
+        {landing && !cancelled && !ended && (
+          <div className="mt-16 lg:mt-0 border hairline bg-[#0D0D0E] p-5 sm:p-7">
+            <p className="technical text-[10px] gold-text mb-6">ZAPIS</p>
+            <Link to={landing} className="btn-relic w-full">ZAPISZ SIĘ <ArrowRight className="h-4 w-4" /></Link>
+          </div>
+        )}
+        {!landing && !cancelled && !ended && event.registration_type !== "Bez zapisu" && (
           <div id="zapis" className="mt-16 lg:mt-0 border hairline bg-[#0D0D0E] p-5 sm:p-7 scroll-mt-28">
             <p className="technical text-[10px] gold-text mb-6">
               {event.registration_type === "Zapis na stronie" ? "ZAPIS" : "DOŁĄCZ"}
@@ -161,7 +174,7 @@ export default function EventDetail() {
         )}
        </aside>
       </div>
-      {!cancelled && !ended && event.registration_type === "Zapis na stronie" && <StickySignup />}
+      {!landing && !cancelled && !ended && event.registration_type === "Zapis na stronie" && <StickySignup />}
     </div>
   );
 }

@@ -10,7 +10,7 @@ export const SITE_MAP = [
   { slug: "spotkania", tytul: "Spotkania", path: "/spotkania", status: "opublikowana", menu: true, zrodlo: "Edytor stron + moduł Spotkania", modul: "/admin/spotkania" },
   { slug: "sklep", tytul: "Skarbiec", path: "/sklep", status: "opublikowana", menu: true, zrodlo: "Edytor stron + moduł Skarbiec", modul: "/admin/skarbiec" },
   { slug: "cisza", tytul: "Cisza (minutnik)", path: "/cisza", status: "opublikowana", menu: true, zrodlo: "Teksty i wygląd w module Cisza", procent: 100, etap: 4, modul: "/admin/cisza" },
-  { slug: "1-listopada", tytul: "1 listopada", path: "/1-listopada", status: "ukryta", menu: false, zrodlo: "Moduł Spotkania (przekierowanie na kartę spotkania)", procent: 100, etap: 4, modul: "/admin/spotkania" },
+  { slug: "1-listopada", tytul: "1 listopada", path: "/1-listopada", status: "ukryta", menu: false, zrodlo: "Edytor (bloki + formularz zapisu na spotkanie)", procent: 100, etap: 4 },
   { slug: "_spotkanie", tytul: "Szablon: pojedyncze spotkanie", path: "/spotkania/…", status: "szablon", menu: false, zrodlo: "Edytor stron + moduł Spotkania", modul: "/admin/spotkania" },
   { slug: "_produkt", tytul: "Szablon: produkt", path: "/produkt/…", status: "szablon", menu: false, zrodlo: "Edytor stron + moduł Skarbiec", modul: "/admin/skarbiec" },
   { slug: "_odcinek", tytul: "Szablon: odcinek podcastu", path: "/glos/…", status: "szablon", menu: false, zrodlo: "Edytor stron + moduł Podcast", modul: "/admin/podcast" },
