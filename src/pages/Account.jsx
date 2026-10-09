@@ -6,6 +6,8 @@ import MyOrders from "@/components/account/MyOrders";
 import SeriesTiles from "@/components/obok/SeriesTiles";
 import ObokNotifications from "@/components/obok/ObokNotifications";
 import AccountSettings from "@/components/account/AccountSettings";
+import DailyThought from "@/components/account/DailyThought";
+import { obok } from "@/components/obok/obokApi";
 
 const TABS = [["produkty", "Moje produkty"], ["obok", "Obok"], ["zakupy", "Zakupy"], ["ustawienia", "Ustawienia"]];
 
@@ -14,7 +16,8 @@ export default function Account() {
   useNoIndex();
   const [tab, setTab] = useState("produkty");
   const [me, setMe] = useState(null);
-  useEffect(() => { base44.auth.me().then(setMe); }, []);
+  const [hasObok, setHasObok] = useState(false);
+  useEffect(() => { base44.auth.me().then(setMe); obok("home").then((d) => setHasObok(!!d.tiles?.length)).catch(() => {}); }, []);
   if (me?.role === "zablokowane") {
     return (
       <div className="bg-[#0A0A0B] pt-28 pb-24 min-h-screen px-5 text-center space-y-6">
@@ -27,11 +30,16 @@ export default function Account() {
   return (
     <div className="bg-[#0A0A0B] pt-28 pb-24 min-h-screen">
       <div className="mx-auto max-w-[1200px] px-5 md:px-10">
-        <p className="technical text-[10px] gold-text mb-4">MOJE KONTO</p>
-        <h1 className="shop-heading text-4xl md:text-5xl text-[#F5EFE1]">
-          {me ? `Dobrze, że jesteś${me.imie ? `, ${me.imie}` : ""}.` : "Twoje miejsce"}
-        </h1>
-        <div className="flex gap-8 mt-12 mb-10 border-b hairline overflow-x-auto">
+        <div className="flex flex-col lg:flex-row lg:items-end lg:justify-between gap-6">
+          <div>
+            <p className="technical text-[10px] gold-text mb-4">MOJE KONTO</p>
+            <h1 className="shop-heading text-4xl md:text-5xl text-[#F5EFE1]">
+              {me ? `Dobrze, że jesteś${me.imie ? `, ${me.imie}` : ""}.` : "Twoje miejsce"}
+            </h1>
+          </div>
+          <DailyThought hasObok={hasObok} onObok={() => setTab("obok")} />
+        </div>
+        <div className="flex gap-8 mt-12 mb-10 border-b hairline overflow-x-auto [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
           {TABS.map(([k, l]) => (
             <button
               key={k}

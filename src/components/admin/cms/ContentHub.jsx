@@ -5,6 +5,7 @@ import PagesList from "./PagesList";
 import MediaLibrary from "./media/MediaLibrary";
 import PageEditor from "./PageEditor";
 import { tabBtn } from "./ui";
+import ThoughtsEditor from "./thoughts/ThoughtsEditor";
 
 // „Treści stron”: edytor stron z bloków + dotychczasowe teksty sekcji (moduły).
 export default function ContentHub() {
@@ -29,9 +30,10 @@ export default function ContentHub() {
           <button className={tabBtn(tab === "strony")} onClick={() => setTab("strony")}>STRONY</button>
           <button className={tabBtn(tab === "media")} onClick={() => setTab("media")}>MEDIA</button>
           <button className={tabBtn(tab === "teksty")} onClick={() => setTab("teksty")}>TEKSTY SYSTEMOWE I SEKCJI</button>
+          <button className={tabBtn(tab === "mysli")} onClick={() => setTab("mysli")}>MYŚLI DNIA</button>
         </div>
       )}
-      {tab === "media" && !pageId ? <MediaLibrary /> : tab === "teksty" && !pageId ? <ContentManager /> : pageId ? <PageEditor pageId={pageId} onBack={() => open(null)} /> : <PagesList onOpen={open} />}
+      {tab === "mysli" && !pageId ? <ThoughtsEditor /> : tab === "media" && !pageId ? <MediaLibrary /> : tab === "teksty" && !pageId ? <ContentManager /> : pageId ? <PageEditor pageId={pageId} onBack={() => open(null)} /> : <PagesList onOpen={open} />}
     </div>
   );
 }
