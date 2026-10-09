@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { Link } from "react-router-dom";
-import { base44 } from "@/api/base44Client";
+import { sendForm } from "@/lib/outbox";
 import useSystemText from "@/content/useSystemText";
 import { clause } from "@/lib/firma";
 import { useFirma } from "@/lib/useSiteSettings";
@@ -28,7 +28,7 @@ export default function ContactPageForm() {
     const er = check(f); setErrs(er);
     if (Object.values(er).some(Boolean)) return;
     setState("busy");
-    await base44.functions.invoke("createContactMessage", f).then(() => setState("done"))
+    await sendForm("createContactMessage", f).then(() => setState("done"))
       .catch((x) => { setMsg(x?.response?.data?.error || "Nie udało się wysłać. Spróbuj ponownie."); setState("error"); });
   };
   return (

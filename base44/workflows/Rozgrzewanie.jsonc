@@ -1,0 +1,47 @@
+{
+  "trigger": {
+    "condition": null,
+    "config": {
+      "trigger_type": "scheduled",
+      "events": [],
+      "schedule_mode": "interval",
+      "cron_expression": null,
+      "one_time_date": null,
+      "timezone": "UTC",
+      "interval_value": 5,
+      "interval_unit": "minutes",
+      "interval_anchor": null,
+      "ends_type": "never",
+      "ends_on_date": null,
+      "ends_after_count": null
+    }
+  },
+  "definition": {
+    "document": {
+      "dsl": "1.0.0",
+      "name": "rozgrzewanie",
+      "version": "1.0",
+      "namespace": "base44"
+    },
+    "do": [
+      {
+        "ping": {
+          "call": "invoke_backend_function",
+          "with": {
+            "function_name": "bootstrap",
+            "args": {
+              "ping": true
+            }
+          },
+          "then": "end",
+          "x-base44": {
+            "title": "Rozgrzanie funkcji startowej",
+            "description": "Lekkie wywo\u0142anie bez odczyt\u00f3w i zapis\u00f3w"
+          }
+        }
+      }
+    ]
+  },
+  "description": "Co 5 minut lekkie wywo\u0142anie funkcji startowej (bootstrap), \u017ceby go\u015bcie nie trafiali na zimny start.",
+  "name": "Rozgrzewanie funkcji startowej"
+}

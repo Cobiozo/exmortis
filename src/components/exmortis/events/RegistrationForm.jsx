@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
-import { base44 } from "@/api/base44Client";
+import { sendForm } from "@/lib/outbox";
 import useSystemText from "@/content/useSystemText";
 import { useFirma } from "@/lib/useSiteSettings";
 import { clause } from "@/lib/firma";
@@ -44,7 +44,7 @@ export default function RegistrationForm({ event: ev }) {
     try {
       const params = new URLSearchParams(window.location.search);
       const src = params.get("src") || params.get("utm_source") || "";
-      const res = await base44.functions.invoke("eventsPublic", {
+      const data = await sendForm("eventsPublic", {
         action: "register",
         slug: ev.slug,
         first_name: firstName,
@@ -55,7 +55,8 @@ export default function RegistrationForm({ event: ev }) {
         website,
         source: src,
       });
-      setResult(res.data);
+      setResult(data.queued ? { ok: true, status: "Zapisany", first_name: firstName, pending: true,
+        join_url: ev.format === "Online" ? `/spotkania/${ev.slug}/dolacz` : null } : data);
     } catch (err) {
       setError(err?.response?.data?.error || "Nie udało się zapisać. Spróbuj ponownie.");
     } finally {

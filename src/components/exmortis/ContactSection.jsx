@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { ArrowRight, Check, Mail, Instagram, Facebook, Youtube } from "lucide-react";
-import { base44 } from "@/api/base44Client";
+import { sendForm } from "@/lib/outbox";
 import { useSiteContent } from "@/components/exmortis/SiteContentProvider";
 import useSystemText from "@/content/useSystemText";
 
@@ -26,7 +26,7 @@ export default function ContactSection() {
     setSending(true);
     setError("");
     try {
-      await base44.functions.invoke("createContactMessage", form);
+      await sendForm("createContactMessage", form);
       setSent(true);
       setForm({ name: "", email: "", message: "" });
     } catch {

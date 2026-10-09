@@ -26,14 +26,7 @@ async function zoomAlarm(base44, ev) {
 // zapisy (z listą rezerwową) oraz przetwarzanie zaległych przypomnień („tick").
 // join_link nigdy nie opuszcza serwera — trafia wyłącznie do e-maili zapisanym.
 
-// Bez e.location, join_link i join_password — to dane prywatne (adres tylko dla zapisanych).
-const PUB_COLS = `e.id, e.title, e.slug, e.subtitle, e.event_type, e.format, e.start_datetime,
-  e.duration_minutes, e.description, e.for_whom, e.price, e.checkout_url,
-  e.capacity, e.registration_type, e.external_url, e.recording_url, e.recording_until, e.stage,
-  e.cover_image, e.cover, e.status, e.cancel_reason, e.registration_deadline, e.what_registered,
-  e.open_minutes, e.zoom_faq`;
-const REG_COUNT = `(SELECT COUNT(*) FROM public.registrations r
-  WHERE r.event_id = e.id AND r.status IN ('Zapisany','Obecny'))::int AS registered`;
+import { PUB_COLS, REG_COUNT, publicEvent } from "../../shared/publicData.ts";
 
 
 export default async function (req) {
@@ -77,16 +70,7 @@ export default async function (req) {
     // --- Szczegóły jednego wydarzenia (bez join_link) ---
     if (body.action === "get") {
       const slug = textField(body, "slug", { max: 200 });
-      const ev = await getSnap(base44, `events:get:${slug}`, async () => {
-        const rows = await runSql(
-          base44,
-          `SELECT ${PUB_COLS}, ${REG_COUNT}
-           FROM public.events e
-           WHERE e.slug = ${escStr(slug)}`,
-          true
-        );
-        return rows?.[0] || null;
-      });
+      const ev = await publicEvent(base44, slug);
       if (!ev) {
         return Response.json({ error: "Nie znaleziono wydarzenia" }, { status: 404 });
       }

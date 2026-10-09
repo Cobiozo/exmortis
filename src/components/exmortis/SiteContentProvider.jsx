@@ -1,6 +1,6 @@
 import React, { createContext, useContext, useEffect, useState } from "react";
 import { base44 } from "@/api/base44Client";
-import { takeContent } from "@/lib/prefetch";
+import { takeContent, onBoot } from "@/lib/prefetch";
 import { readCache, writeCache } from "@/lib/swrCache";
 
 const ContentCtx = createContext(null);
@@ -11,16 +11,15 @@ export function SiteContentProvider({ children }) {
   const [overrides, setOverrides] = useState(() => readCache("content") || {});
 
   useEffect(() => {
-    (takeContent() || base44.functions.invoke("siteContent", {}).then((r) => r.data))
-      .then((data) => {
-        const map = {};
-        for (const row of data.content || []) {
-          map[`${row.page_key}.${row.block_key}`] = row.value;
-        }
-        writeCache("content", map);
-        setOverrides(map);
-      })
-      .catch(() => {});
+    const apply = (data) => {
+      if (!data?.content) return; // brak odpowiedzi → zostaje kopia albo treść wbudowana
+      const map = {};
+      for (const row of data.content) map[`${row.page_key}.${row.block_key}`] = row.value;
+      writeCache("content", map);
+      setOverrides(map);
+    };
+    (takeContent() || base44.functions.invoke("siteContent", {}).then((r) => r.data)).then(apply).catch(() => {});
+    return onBoot(apply);
   }, []);
 
   const value = {
