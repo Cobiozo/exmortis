@@ -2,6 +2,7 @@ import React, { useState } from "react";
 import { Link } from "react-router-dom";
 import { Loader2 } from "lucide-react";
 import { base44 } from "@/api/base44Client";
+import { useFirma } from "@/lib/useSiteSettings";
 
 const EMPTY = { name: "", email: "", phone: "", smierc: "", story: "", today: "", forma: "", social: "", consent_adult: false, consent_art9: false };
 const inp = "w-full bg-transparent border hairline px-5 py-4 focus:border-[#C9A24A] focus:outline-none transition-colors";
@@ -72,7 +73,7 @@ export default function PodcastGuestForm() {
       {error && <p className="text-sm blood-text">{error}</p>}
       <button disabled={sending} className="btn-relic w-full sm:w-auto">{sending && <Loader2 className="h-4 w-4 animate-spin" />}Wyślij zgłoszenie</button>
       <p className="text-xs text-foreground/40 leading-relaxed">
-        Administratorem danych jest [NAZWA FIRMY]. Zgłoszenia, które nie zakończą się nagraniem, usuwam po 6 miesiącach. Więcej: <Link to="/polityka-prywatnosci" className="underline hover:gold-text">Polityka prywatności</Link>.
+        {firma.nazwa && `Administratorem danych jest ${firma.nazwa}. `}Zgłoszenia, które nie zakończą się nagraniem, usuwam po 6 miesiącach. Więcej: <Link to="/polityka-prywatnosci" className="underline hover:gold-text">Polityka prywatności</Link>.
       </p>
     </form>
   );

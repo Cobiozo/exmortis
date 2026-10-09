@@ -1,17 +1,7 @@
-// Dane Sprzedawcy — uzupełnij pola w nawiasach kwadratowych.
-export const SELLER = {
-  company: "[NAZWA FIRMY]",
-  address: "[ADRES DZIAŁALNOŚCI]",
-  nip: "[NIP]",
-  email: "[E-MAIL KONTAKTOWY]",
-  postal: "[ADRES DO KORESPONDENCJI]",
-};
+// Dane firmy są w panelu: Ustawienia strony → Dane firmy (src/lib/firma.js podstawia je w tekstach).
 export const LEGAL_VERSION = "1.0";
 export const LEGAL_FROM = "[DATA WEJŚCIA W ŻYCIE]";
 export const COOKIES_VERSION = "1.0";
-
-export const CLAUSE = (purpose) =>
-  `Administratorem Twoich danych jest Exmortis. Przetwarzamy je, aby ${purpose}. Masz prawo dostępu do danych, ich poprawienia, usunięcia i wycofania zgody.`;
 
 export const TXT = {
   terms: "Akceptuję Regulamin. Znam Politykę prywatności.",

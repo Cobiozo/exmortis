@@ -3,11 +3,13 @@ import { Link } from "react-router-dom";
 import { useSiteContent } from "@/components/exmortis/SiteContentProvider";
 import Logo from "./Logo";
 import FooterColumns from "./footer/FooterColumns";
-import { SELLER } from "@/content/legal/seller";
+import CompanyLines from "@/components/legal/CompanyLines";
+import usePrelaunch from "@/lib/usePrelaunch";
 import { openCookieSettings } from "@/components/legal/cookieStore";
 
 export default function Footer() {
   const { rich } = useSiteContent();
+  const { gated } = usePrelaunch();
   const aboutText = rich("footer", "about", "Wracam z siebie. Uczę wracać. Głos powrotu ze śmierci mentalnej, duchowej i życiowej. Nie musisz być silny, żeby wrócić. Musisz zrobić pierwszy ruch.");
 
   return (
@@ -25,7 +27,7 @@ export default function Footer() {
             <div className="rich-content text-foreground/50 max-w-sm leading-relaxed text-sm" dangerouslySetInnerHTML={{ __html: aboutText }} />
           </div>
 
-          <FooterColumns />
+          {!gated && <FooterColumns />}
         </div>
 
         <div className="mt-16 pt-8 border-t hairline">
@@ -42,7 +44,7 @@ export default function Footer() {
             <button onClick={openCookieSettings} className="text-foreground/60 hover:gold-text">Ustawienia cookies</button>
             <Link to="/kontakt" className="text-foreground/60 hover:gold-text">Kontakt</Link>
           </nav>
-          <p className="text-[11px] text-foreground/35 mb-6">{SELLER.company}, {SELLER.address}, NIP {SELLER.nip}</p>
+          <CompanyLines className="text-[11px] text-foreground/35 mb-6" />
           <div className="flex flex-col sm:flex-row justify-between gap-4">
             <p className="technical text-[10px] text-foreground/30">
               © {new Date().getFullYear()} EXMORTIS · WSZELKIE PRAWA ZASTRZEŻONE

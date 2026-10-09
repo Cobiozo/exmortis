@@ -3,7 +3,8 @@ export const REGULAMIN = {
   sections: [
     { id: "p1", title: "§1. Kim jesteśmy i czego dotyczy regulamin", body: [
       "1. Serwis exmortis.pl (dalej: „Serwis”) prowadzi [IMIĘ I NAZWISKO], prowadzący(-a) działalność gospodarczą pod firmą [NAZWA FIRMY], adres: [ADRES DZIAŁALNOŚCI], NIP: [NIP], REGON: [REGON], wpisany(-a) do Centralnej Ewidencji i Informacji o Działalności Gospodarczej (dalej: „Sprzedawca” albo „Usługodawca”).",
-      "2. Kontakt: e-mail [E-MAIL KONTAKTOWY], adres do korespondencji: [ADRES DO KORESPONDENCJI][, telefon: [TELEFON] — opłata wg taryfy operatora].",
+      "2. Kontakt: e-mail [E-MAIL KONTAKTOWY], adres do korespondencji: [ADRES DO KORESPONDENCJI].",
+      "Telefon: [TELEFON] — opłata wg taryfy operatora.",
       "3. Regulamin określa zasady korzystania z Serwisu, zakładania i prowadzenia Konta, korzystania z bezpłatnych usług elektronicznych, zakupu Treści cyfrowych i usług mentoringowych, udziału w Wydarzeniach online oraz tryb reklamacji i odstąpienia od umowy. Jest regulaminem w rozumieniu ustawy o świadczeniu usług drogą elektroniczną.",
       "4. Regulamin jest dostępny bezpłatnie na stronie exmortis.pl/regulamin w sposób umożliwiający jego pobranie, utrwalenie i wydrukowanie.",
     ]},
