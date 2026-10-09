@@ -2,6 +2,7 @@ import React, { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { base44 } from "@/api/base44Client";
 import useSystemText from "@/content/useSystemText";
+import { useFirma } from "@/lib/useSiteSettings";
 
 // Formularz zapisu na wydarzenie (strona wydarzenia): imię, e-mail, pytanie, zgoda.
 export default function RegistrationForm({ event: ev }) {
@@ -11,6 +12,9 @@ export default function RegistrationForm({ event: ev }) {
   const [consent, setConsent] = useState(false);
   const t = useSystemText();
   const [listy, setListy] = useState(false);
+  const [consentErr, setConsentErr] = useState(false);
+  const [website, setWebsite] = useState("");
+  const firma = useFirma();
   const [sending, setSending] = useState(false);
   const [error, setError] = useState("");
   const [result, setResult] = useState(null);
@@ -28,7 +32,7 @@ export default function RegistrationForm({ event: ev }) {
     e.preventDefault();
     if (sending) return;
     if (!consent) {
-      setError("Potrzebuję Twojej zgody, żeby zapisać Cię na spotkanie.");
+      setConsentErr(true);
       return;
     }
     setSending(true);
@@ -44,6 +48,7 @@ export default function RegistrationForm({ event: ev }) {
         question,
         consent: true,
         listy,
+        website,
         source: src,
       });
       setResult(res.data);
@@ -119,22 +124,36 @@ export default function RegistrationForm({ event: ev }) {
   return (
     <form onSubmit={submit} className="space-y-5">
       <div className="grid sm:grid-cols-2 gap-5">
-        <input
-          type="text"
-          required
-          value={firstName}
-          onChange={(e) => setFirstName(e.target.value)}
-          placeholder="Imię"
-          className="bg-transparent border hairline px-5 py-4 text-foreground placeholder:text-foreground/30 font-mono text-base min-h-[48px] w-full focus:border-[#C9A24A] focus:outline-none transition-colors"
-        />
-        <input
-          type="email"
-          required
-          value={email}
-          onChange={(e) => setEmail(e.target.value)}
-          placeholder="E-mail"
-          className="bg-transparent border hairline px-5 py-4 text-foreground placeholder:text-foreground/30 font-mono text-base min-h-[48px] w-full focus:border-[#C9A24A] focus:outline-none transition-colors"
-        />
+        <label htmlFor="reg-name" className="block">
+          <span className="block technical text-[10px] text-foreground/60 mb-2">IMIĘ</span>
+          <input
+            id="reg-name"
+            type="text"
+            required
+            autoComplete="given-name"
+            value={firstName}
+            onChange={(e) => setFirstName(e.target.value)}
+            placeholder="Imię"
+            className="bg-transparent border hairline px-5 py-4 text-foreground placeholder:text-foreground/30 font-mono text-base min-h-[48px] w-full focus:border-[#C9A24A] focus:outline-none transition-colors"
+          />
+        </label>
+        <label htmlFor="reg-email" className="block">
+          <span className="block technical text-[10px] text-foreground/60 mb-2">E-MAIL</span>
+          <input
+            id="reg-email"
+            type="email"
+            required
+            autoComplete="email"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            placeholder="E-mail"
+            className="bg-transparent border hairline px-5 py-4 text-foreground placeholder:text-foreground/30 font-mono text-base min-h-[48px] w-full focus:border-[#C9A24A] focus:outline-none transition-colors"
+          />
+        </label>
+      </div>
+      <div aria-hidden="true" className="absolute -left-[9999px] h-0 w-0 overflow-hidden">
+        <label htmlFor="reg-web">Strona www</label>
+        <input id="reg-web" tabIndex={-1} autoComplete="off" value={website} onChange={(e) => setWebsite(e.target.value)} />
       </div>
       <textarea
         value={question}
@@ -147,17 +166,18 @@ export default function RegistrationForm({ event: ev }) {
         <input
           type="checkbox"
           checked={consent}
-          onChange={(e) => setConsent(e.target.checked)}
+          onChange={(e) => { setConsent(e.target.checked); if (e.target.checked) setConsentErr(false); }}
+          aria-required="true"
+          aria-invalid={consentErr}
+          aria-describedby={consentErr ? "reg-consent-err" : undefined}
           className="mt-0.5 h-5 w-5 shrink-0 accent-[#C9A24A]"
         />
         <span className="text-xs text-foreground/50 leading-relaxed group-hover:text-foreground/70 transition-colors">
-          Zapisuję się na to spotkanie i akceptuję{" "}
-          <Link to="/polityka-prywatnosci" className="gold-text underline">
-            politykę prywatności
-          </Link>
-          .
+          Akceptuję{" "}
+          <Link to="/regulamin" className="gold-text underline">regulamin</Link>.
         </span>
       </label>
+      {consentErr && <p id="reg-consent-err" role="alert" className="-mt-3 text-sm text-[#E8C547]">Zaznacz, żeby się zapisać.</p>}
       <label className="flex items-start gap-3 cursor-pointer group py-2 min-h-[44px]">
         <input
           type="checkbox"
@@ -169,6 +189,10 @@ export default function RegistrationForm({ event: ev }) {
           Chcę też dostawać Listy powrotu — jeden list w każdy poniedziałek.
         </span>
       </label>
+      <p className="text-xs text-foreground/45 leading-relaxed">
+        {firma.nazwa ? `Administratorem danych jest ${firma.nazwa}. ` : ""}Dane wykorzystam tylko do obsługi spotkania. Szczegóły:{" "}
+        <Link to="/polityka-prywatnosci" className="gold-text underline">polityka prywatności</Link>.
+      </p>
       {error && <p className="technical text-[10px] blood-text">{error}</p>}
       <button type="submit" disabled={sending} className="btn-relic disabled:opacity-60">
         {sending ? "ZAPISUJĘ..." : "ZAPISUJĘ SIĘ"}

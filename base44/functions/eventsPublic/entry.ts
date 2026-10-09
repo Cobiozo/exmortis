@@ -74,13 +74,15 @@ export default async function (req) {
 
     // --- Zapis na wydarzenie (z obsługą listy rezerwowej) ---
     if (body.action === "register") {
+      // Pole-pułapka wypełnione → udajemy sukces, nic nie zapisujemy.
+      if (body.website) return Response.json({ ok: true, status: "Zapisany", first_name: String(body.first_name || "").slice(0, 120) });
       const slug = textField(body, "slug", { max: 200 });
       const firstName = textField(body, "first_name", { max: 120 });
       const email = emailField(body);
       const question = textField(body, "question", { required: false, max: 2000 });
       const listy = body.listy === true;
       if (body.consent !== true) {
-        return Response.json({ error: "Wymagana jest zgoda na przetwarzanie danych." }, { status: 400 });
+        return Response.json({ error: "Zaznacz, żeby się zapisać." }, { status: 400 });
       }
       const source = typeof body.source === "string" && body.source.trim() !== ""
         ? body.source.trim().slice(0, 100)
@@ -147,6 +149,12 @@ export default async function (req) {
         );
       }
       const regRow = reg && reg[0];
+      // Zgoda na Listy powrotu — osobno od zapisu, z datą i godziną.
+      await runSql(base44, `ALTER TABLE public.registrations ADD COLUMN IF NOT EXISTS listy_zgoda_at timestamptz`);
+      await runSql(base44, `UPDATE public.registrations SET listy_zgoda_at = ${listy ? "now()" : "NULL"} WHERE id = ${escStr(regRow.id)}`);
+      if (listy) {
+        await base44.asServiceRole.entities.Consent.create({ email, kind: "newsletter", text: "Chcę też dostawać Listy powrotu — jeden list w każdy poniedziałek.", source: `spotkanie:${slug}` });
+      }
       // Zgoda na Listy powrotu → zapis w liście newslettera (z datą zgody).
       if (listy) {
         waitUntil(

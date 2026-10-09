@@ -1,5 +1,5 @@
 import React from "react";
-import { Link } from "react-router-dom";
+import { Link, useLocation } from "react-router-dom";
 import { useSiteContent } from "@/components/exmortis/SiteContentProvider";
 import Logo from "./Logo";
 import FooterColumns from "./footer/FooterColumns";
@@ -10,7 +10,8 @@ import { openCookieSettings } from "@/components/legal/cookieStore";
 export default function Footer() {
   const { rich } = useSiteContent();
   const { gated } = usePrelaunch();
-  const aboutText = rich("footer", "about", "Wracam z siebie. Uczę wracać. Głos powrotu ze śmierci mentalnej, duchowej i życiowej. Nie musisz być silny, żeby wrócić. Musisz zrobić pierwszy ruch.");
+  const aboutText = rich("footer", "about", "Wracam z siebie. Uczę wracać. Głos powrotu ze śmierci mentalnej, duchowej i życiowej. Siła nie jest warunkiem powrotu. Wystarczy pierwszy ruch.");
+  const { pathname, search } = useLocation();
 
   return (
     <footer className="relative bg-[#0A0A0B] border-t hairline overflow-hidden">
@@ -51,7 +52,7 @@ export default function Footer() {
             </p>
             <p className="technical text-[10px] text-foreground/30">
               WRACAM Z SIEBIE · UCZĘ WRACAĆ
-              <Link to="/login?returnTo=%2Fadmin" className="ml-4 text-foreground/25 hover:text-foreground/50">ZALOGUJ</Link>
+              {!gated && <Link to={`/login?returnTo=${encodeURIComponent(pathname + search)}`} className="ml-4 text-foreground/25 hover:text-foreground/50">ZALOGUJ</Link>}
             </p>
           </div>
         </div>

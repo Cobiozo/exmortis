@@ -289,7 +289,7 @@ export const CONTENT_PAGES = [
         label: "Opis marki",
         type: "richtext",
         default:
-          "Wracam z siebie. Uczę wracać. Głos powrotu ze śmierci mentalnej, duchowej i życiowej. Nie musisz być silny, żeby wrócić. Musisz zrobić pierwszy ruch.",
+          "Wracam z siebie. Uczę wracać. Głos powrotu ze śmierci mentalnej, duchowej i życiowej. Siła nie jest warunkiem powrotu. Wystarczy pierwszy ruch.",
       },
     ],
   },
