@@ -51,7 +51,7 @@ export function PodcastPlayerProvider({ children }) {
   return (
     <Ctx.Provider value={api}>
       {children}
-      {ep && !pathname.startsWith("/cisza") && !pathname.startsWith(`/glos/${ep.slug}`) && <MiniPlayer />}
+      {ep && !pathname.startsWith("/cisza") && !pathname.startsWith(ep.href || `/glos/${ep.slug}`) && <MiniPlayer />}
     </Ctx.Provider>
   );
 }

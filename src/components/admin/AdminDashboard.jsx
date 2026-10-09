@@ -40,6 +40,7 @@ export default function AdminDashboard() {
     <>
     <CompanyWarning />
     <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
+      <Tile to="/admin/obok" label="17" title="Obok" lines={["Serie, nagrania, uczestnicy"]} />
       <Tile to="/admin/ustawienia" label="16" title="Ustawienia strony" lines={["Dane firmy", "Tryb przedpremierowy"]} />
       <Tile to="/admin/spotkania" label="01" title="Spotkania" lines={[`Nadchodzące: ${v("upcoming_events")}`, `Zapisani: ${v("upcoming_registrations")}`, `Szkice: ${v("draft_events")}`]} />
       <Tile to="/admin/cisza" label="02" title="Cisza" lines={[`Utwory: ${sound ? sound.length : "…"}`, `Ostrzeżenia: ${sound ? countWarnings(sound) : "…"}`, `Rozpoczęcia (30 dni): ${v("silence_30")}`]} />

@@ -15,6 +15,7 @@ import EventsManager from "@/components/admin/EventsManager";
 import AdminDashboard from "@/components/admin/AdminDashboard";
 import ContactsTabs from "@/components/admin/ContactsTabs";
 import PodcastAdmin from "@/components/admin/podcast/PodcastAdmin";
+import ObokAdmin from "@/components/admin/obok/ObokAdmin";
 import ClientsPanel from "@/components/admin/clients/ClientsPanel";
 import SecurityPanel from "@/components/admin/security/SecurityPanel";
 import { useNoIndex } from "@/lib/useNoIndex";
@@ -31,6 +32,7 @@ const SECTIONS = {
   glos: ["Głos", () => <PlaylistManager onMutate={() => {}} />],
   kontakty: ["Baza kontaktów", () => <ContactsTabs />],
   podcast: ["Podcast", () => <PodcastAdmin />],
+  obok: ["Obok", () => <ObokAdmin />],
   klienci: ["Klienci i dostępy", () => <ClientsPanel />],
   rabaty: ["Kody rabatowe", () => <DiscountsPanel />],
   bezpieczenstwo: ["Bezpieczeństwo", () => <SecurityPanel />],

@@ -42,6 +42,9 @@ import CmsPreview from '@/pages/CmsPreview';
 import CmsRoutePage from '@/components/cms/CmsRoutePage';
 import Listopad from '@/pages/Listopad';
 import ShopRedirect from '@/components/exmortis/shop/ShopRedirect';
+import Obok from '@/pages/Obok';
+import ObokSeria from '@/pages/ObokSeria';
+import ObokNagranie from '@/pages/ObokNagranie';
 // Add page imports here
 
 const AuthenticatedApp = () => {
@@ -112,6 +115,9 @@ const AuthenticatedApp = () => {
           <Route path="/kontakt" element={<Kontakt />} />
           <Route path="/strona/:slug" element={<CmsPage />} />
           <Route path="/1-listopada" element={<Listopad />} />
+          <Route path="/obok" element={<Obok />} />
+          <Route path="/obok/:seria" element={<ObokSeria />} />
+          <Route path="/obok/:seria/:numer" element={<ObokNagranie />} />
           <Route path="*" element={<PageNotFound />} />
         </Route>
       </Routes>

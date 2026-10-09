@@ -1,0 +1,94 @@
+{
+  "name": "ObokNagranie",
+  "type": "object",
+  "properties": {
+    "seria_id": {
+      "type": "string"
+    },
+    "numer": {
+      "type": "number"
+    },
+    "tytul": {
+      "type": "string"
+    },
+    "opis": {
+      "type": "string"
+    },
+    "format": {
+      "type": "string",
+      "enum": [
+        "audio",
+        "audio_obraz",
+        "wideo"
+      ],
+      "default": "audio"
+    },
+    "plik_uri": {
+      "type": "string"
+    },
+    "plik_mime": {
+      "type": "string"
+    },
+    "obraz": {
+      "type": "string"
+    },
+    "dlugosc_s": {
+      "type": "number"
+    },
+    "pytanie": {
+      "type": "string"
+    },
+    "transkrypcja": {
+      "type": "string"
+    },
+    "material_nazwa": {
+      "type": "string"
+    },
+    "material_url": {
+      "type": "string"
+    },
+    "ostrzezenie": {
+      "type": "boolean",
+      "default": false
+    },
+    "publikacja": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "szkic",
+        "zaplanowane",
+        "opublikowane"
+      ],
+      "default": "szkic"
+    }
+  },
+  "required": [
+    "seria_id",
+    "tytul"
+  ],
+  "rls": {
+    "read": {
+      "user_condition": {
+        "role": "admin"
+      }
+    },
+    "create": {
+      "user_condition": {
+        "role": "admin"
+      }
+    },
+    "update": {
+      "user_condition": {
+        "role": "admin"
+      }
+    },
+    "delete": {
+      "user_condition": {
+        "role": "admin"
+      }
+    }
+  }
+}

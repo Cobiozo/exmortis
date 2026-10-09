@@ -1,0 +1,111 @@
+{
+  "name": "ObokSeria",
+  "type": "object",
+  "properties": {
+    "nazwa": {
+      "type": "string"
+    },
+    "slug": {
+      "type": "string"
+    },
+    "opis_krotki": {
+      "type": "string"
+    },
+    "opis": {
+      "type": "string"
+    },
+    "okladka": {
+      "type": "string"
+    },
+    "typ": {
+      "type": "string",
+      "enum": [
+        "sekwencja",
+        "cotygodniowa",
+        "zbior"
+      ],
+      "default": "sekwencja"
+    },
+    "dostep": {
+      "type": "string",
+      "enum": [
+        "zalogowani",
+        "dolaczeni",
+        "produkt",
+        "powrot",
+        "wybrani"
+      ],
+      "default": "dolaczeni"
+    },
+    "produkt_id": {
+      "type": "string"
+    },
+    "edycja_start": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "godzina": {
+      "type": "string",
+      "default": "20:00"
+    },
+    "po_edycji": {
+      "type": "string",
+      "enum": [
+        "automatyczny",
+        "wszystkie",
+        "zamknieta"
+      ],
+      "default": "automatyczny"
+    },
+    "powiadomienia": {
+      "type": "boolean",
+      "default": true
+    },
+    "landing_slug": {
+      "type": "string"
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "szkic",
+        "aktywna",
+        "archiwalna"
+      ],
+      "default": "szkic"
+    },
+    "kolejnosc": {
+      "type": "number",
+      "default": 0
+    },
+    "test_minuty": {
+      "type": "number",
+      "default": 0
+    }
+  },
+  "required": [
+    "nazwa",
+    "slug"
+  ],
+  "rls": {
+    "read": {
+      "user_condition": {
+        "role": "admin"
+      }
+    },
+    "create": {
+      "user_condition": {
+        "role": "admin"
+      }
+    },
+    "update": {
+      "user_condition": {
+        "role": "admin"
+      }
+    },
+    "delete": {
+      "user_condition": {
+        "role": "admin"
+      }
+    }
+  }
+}

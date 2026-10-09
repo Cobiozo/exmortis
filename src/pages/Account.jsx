@@ -3,9 +3,11 @@ import { base44 } from "@/api/base44Client";
 import { useNoIndex } from "@/lib/useNoIndex";
 import MyProducts from "@/components/account/MyProducts";
 import MyOrders from "@/components/account/MyOrders";
+import SeriesTiles from "@/components/obok/SeriesTiles";
+import ObokNotifications from "@/components/obok/ObokNotifications";
 import AccountSettings from "@/components/account/AccountSettings";
 
-const TABS = [["produkty", "Moje produkty"], ["zakupy", "Zakupy"], ["ustawienia", "Ustawienia"]];
+const TABS = [["produkty", "Moje produkty"], ["obok", "Obok"], ["zakupy", "Zakupy"], ["ustawienia", "Ustawienia"]];
 
 // /konto — tylko dla zalogowanych (ProtectedRoute).
 export default function Account() {
@@ -33,6 +35,7 @@ export default function Account() {
           ))}
         </div>
         {tab === "produkty" && <MyProducts />}
+        {tab === "obok" && <><SeriesTiles /><div className="mt-14"><ObokNotifications /></div></>}
         {tab === "zakupy" && <MyOrders />}
         {tab === "ustawienia" && me && <AccountSettings me={me} />}
       </div>

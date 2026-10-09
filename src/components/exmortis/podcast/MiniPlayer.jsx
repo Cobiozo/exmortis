@@ -12,7 +12,7 @@ export default function MiniPlayer() {
       <div className="h-0.5 bg-[#3D3D3F]"><div className="h-full bg-[#C9A24A]" style={{ width: `${pct}%` }} /></div>
       <div className="flex items-center gap-4 px-4 py-2 max-w-[1400px] mx-auto">
         {p.ep.okladka && <Image src={p.ep.okladka} alt="" className="h-10 w-10 shrink-0" />}
-        <Link to={`/glos/${p.ep.slug}`} className="flex-1 min-w-0 text-sm text-[#F5EFE1] truncate hover:text-[#C9A24A]">#{p.ep.numer} · {p.ep.tytul}</Link>
+        <Link to={p.ep.href || `/glos/${p.ep.slug}`} className="flex-1 min-w-0 text-sm text-[#F5EFE1] truncate hover:text-[#C9A24A]">{p.ep.href ? "" : `#${p.ep.numer} · `}{p.ep.tytul}</Link>
         <button onClick={p.toggle} aria-label={p.playing ? "Pauza" : "Odtwórz"} className="p-2 gold-text">
           {p.playing ? <Pause className="h-5 w-5" /> : <Play className="h-5 w-5" />}
         </button>
