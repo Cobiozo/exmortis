@@ -49,7 +49,7 @@ export const POWROT_BLOCKS = [
   b("spotkanie", "modul", { modul: "powrot_spotkanie" }),
   b("ostatnie-przyciski", "przyciski", { przyciski: [
     { etykieta: "WYPEŁNIJ FORMULARZ KWALIFIKACYJNY", link: "#formularz", styl: "zloty", strzalka: true },
-    { etykieta: "ZOBACZ SKARBIEC — RÓŻNE DROGI POWROTU", link: "/sklep", styl: "obrys", strzalka: false },
+    { etykieta: "ZOBACZ SKARBIEC — RÓŻNE DROGI POWROTU", link: "/skarbiec", styl: "obrys", strzalka: false },
   ] }, { odstep: "maly" }),
   b("formularz", "modul", { modul: "powrot_formularz" }),
   b("koniec", "cytat", { tekst: "„Wracam z siebie. Uczę wracać.”", podpis: "EXMORTIS — ZE ŚMIERCI" }, { wyrownanie: "srodek", szerokosc: "waska" }),

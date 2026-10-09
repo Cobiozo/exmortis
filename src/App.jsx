@@ -40,6 +40,7 @@ import CmsPage from '@/pages/CmsPage';
 import CmsPreview from '@/pages/CmsPreview';
 import CmsRoutePage from '@/components/cms/CmsRoutePage';
 import Listopad from '@/pages/Listopad';
+import ShopRedirect from '@/components/exmortis/shop/ShopRedirect';
 // Add page imports here
 
 const AuthenticatedApp = () => {
@@ -90,8 +91,11 @@ const AuthenticatedApp = () => {
         <Route element={<Layout />}>
           <Route path="/" element={<Home />} />
           <Route path="/o-mnie" element={<About />} />
-          <Route path="/sklep" element={<ShopPage />} />
-          <Route path="/produkt/:slug" element={<CmsRoutePage slug="_produkt" />} />
+          <Route path="/skarbiec" element={<ShopPage />} />
+          <Route path="/skarbiec/:slug" element={<CmsRoutePage slug="_produkt" />} />
+          <Route path="/sklep" element={<ShopRedirect />} />
+          <Route path="/sklep/:slug" element={<ShopRedirect />} />
+          <Route path="/produkt/:slug" element={<ShopRedirect />} />
           <Route path="/kasa" element={<Checkout />} />
           <Route path="/powrot" element={<Powrot />} />
           <Route path="/glos" element={<Glos />} />

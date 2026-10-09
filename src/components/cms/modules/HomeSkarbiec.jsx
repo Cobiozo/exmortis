@@ -25,7 +25,7 @@ export default function HomeSkarbiec({ d = {}, label }) {
             : list.map((p, i) => <ProductCard key={p.id} product={p} index={i} />)}
         </div>
         <div className="mt-12">
-          <Link to="/sklep" className="btn-ghost">Cały Skarbiec <ArrowRight className="h-4 w-4" /></Link>
+          <Link to="/skarbiec" className="btn-ghost">Cały Skarbiec <ArrowRight className="h-4 w-4" /></Link>
         </div>
       </div>
     </section>

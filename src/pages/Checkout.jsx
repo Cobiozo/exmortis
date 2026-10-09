@@ -95,7 +95,7 @@ export default function Checkout() {
       <div className="min-h-screen flex flex-col items-center justify-center bg-[#0A0A0B] pt-20 px-6 text-center gap-8">
         <p className="relic-heading text-4xl text-foreground/40">Skarbiec pusty</p>
         <p className="text-foreground/60">Nie masz jeszcze nic na drodze powrotu.</p>
-        <Link to="/sklep" className="btn-relic">DO SKLEPU <ArrowRight className="h-4 w-4" /></Link>
+        <Link to="/skarbiec" className="btn-relic">DO SKLEPU <ArrowRight className="h-4 w-4" /></Link>
       </div>
     );
   }

@@ -14,7 +14,7 @@ export default function MyProducts() {
     return (
       <div className="py-16 text-center">
         <p className="shop-heading text-2xl text-[#F5EFE1]">Na razie nic tu nie ma. Zajrzyj do Skarbca.</p>
-        <Link to="/sklep" className="btn-ghost mt-8">SKARBIEC</Link>
+        <Link to="/skarbiec" className="btn-ghost mt-8">SKARBIEC</Link>
       </div>
     );
   }

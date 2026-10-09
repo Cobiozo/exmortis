@@ -33,7 +33,7 @@ export default function CartDrawer() {
                 <p className="text-sm text-foreground/50">
                   Skarbiec czeka. Wybierz coś z drogi powrotu.
                 </p>
-                <Link to="/sklep" onClick={() => setOpen(false)} className="btn-ghost mt-2">
+                <Link to="/skarbiec" onClick={() => setOpen(false)} className="btn-ghost mt-2">
                   DO SKLEPU
                 </Link>
               </div>
@@ -48,7 +48,7 @@ export default function CartDrawer() {
                     </div>
                     <div className="flex-1 min-w-0">
                       <Link
-                        to={`/produkt/${item.slug}`}
+                        to={`/skarbiec/${item.slug}`}
                         onClick={() => setOpen(false)}
                         className="relic-heading text-sm gold-text block truncate"
                       >

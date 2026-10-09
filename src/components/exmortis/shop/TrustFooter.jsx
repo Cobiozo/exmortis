@@ -28,7 +28,7 @@ export default function TrustFooter() {
             POLITYKA ZWROTÓW
           </a>
           <span>·</span>
-          <Link to="/produkt/karta-podarunkowa" className="hover:text-foreground/60 transition-colors">
+          <Link to="/skarbiec/karta-podarunkowa" className="hover:text-foreground/60 transition-colors">
             KARTY PODARUNKOWE
           </Link>
         </div>

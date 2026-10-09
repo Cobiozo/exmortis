@@ -45,7 +45,7 @@ export default function ProductDetail() {
     return (
       <div className="min-h-screen flex flex-col items-center justify-center bg-[#0A0A0B] pt-20 gap-6">
         <p className="relic-heading text-4xl text-foreground/40">Nie znaleziono</p>
-        <Link to="/sklep" className="btn-ghost">WRÓĆ DO SKLEPU</Link>
+        <Link to="/skarbiec" className="btn-ghost">WRÓĆ DO SKLEPU</Link>
       </div>
     );
   }
@@ -55,7 +55,7 @@ export default function ProductDetail() {
       {/* Breadcrumb */}
       <div className="mx-auto max-w-[1400px] px-5 md:px-10 py-6">
         <button
-          onClick={() => navigate("/sklep")}
+          onClick={() => navigate("/skarbiec")}
           className="technical text-[10px] text-foreground/40 hover:gold-text flex items-center gap-2 transition-colors"
         >
           <ArrowLeft className="h-3 w-3" /> SKLEP / {product.category.toUpperCase()}

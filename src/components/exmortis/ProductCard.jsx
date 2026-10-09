@@ -11,7 +11,7 @@ export default function ProductCard({ product, index = 0 }) {
 
   return (
     <div className="group relative bg-card border hairline overflow-hidden transition-all duration-500 hover:border-[#C9A24A]/60">
-      <Link to={`/produkt/${product.slug}`} className="block">
+      <Link to={`/skarbiec/${product.slug}`} className="block">
         {product.image_url ? (
           <div className="relative aspect-square overflow-hidden bg-[#0A0A0B]">
             <Image

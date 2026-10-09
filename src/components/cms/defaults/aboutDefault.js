@@ -50,7 +50,7 @@ export const ABOUT_BLOCKS = [
   b("cta", "tekst", { etykieta: "", tytul: "Jeśli coś w Tobie\njuż wie",
     tresc: "<p>Że chodzisz i pracujesz, a w środku jest cisza — to znaczy, że już wracasz. Zrób pierwszy ruch.</p>" }, { wyrownanie: "srodek", szerokosc: "waska", odstep: "maly" }),
   b("cta-przyciski", "przyciski", { przyciski: [
-    { etykieta: "ZOBACZ DROGĘ POWROTU", link: "/sklep", styl: "zloty", strzalka: true },
+    { etykieta: "ZOBACZ DROGĘ POWROTU", link: "/skarbiec", styl: "zloty", strzalka: true },
     { etykieta: "NAPISZ DO MNIE", link: "/kontakt", styl: "obrys", strzalka: true },
   ] }, { wyrownanie: "srodek", odstep: "sredni" }),
 ];

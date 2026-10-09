@@ -1,14 +1,14 @@
 // Strony wewnętrzne do wyboru w przyciskach (zero literówek w adresach).
 export const ROUTES = [
   ["/", "Strona główna"], ["/o-mnie", "O mnie"], ["/powrot", "POWRÓT"], ["/test", "Test"],
-  ["/spotkania", "Spotkania"], ["/1-listopada", "1 listopada"], ["/sklep", "Skarbiec"], ["/glos", "Głos"],
+  ["/spotkania", "Spotkania"], ["/1-listopada", "1 listopada"], ["/skarbiec", "Skarbiec"], ["/glos", "Głos"],
   ["/cisza", "Cisza"], ["/kontakt", "Kontakt"], ["/konto", "Moje konto"], ["/login", "Logowanie"],
   ["/polityka-prywatnosci", "Polityka prywatności"], ["/regulamin", "Regulamin"],
   ["/polityka-cookies", "Polityka cookies"], ["/odstapienie", "Odstąpienie od umowy"],
 ];
-const DYNAMIC = ["/spotkania/", "/produkt/", "/glos/"];
+const DYNAMIC = ["/spotkania/", "/skarbiec/", "/glos/"];
 
-const FIXED = { home: "/", "o-mnie": "/o-mnie", glos: "/glos", kontakt: "/kontakt", powrot: "/powrot", test: "/test", spotkania: "/spotkania", sklep: "/sklep" };
+const FIXED = { home: "/", "o-mnie": "/o-mnie", glos: "/glos", kontakt: "/kontakt", powrot: "/powrot", test: "/test", spotkania: "/spotkania", sklep: "/skarbiec" };
 export const pagePath = (slug) => FIXED[slug] || `/strona/${slug}`;
 
 // Czy link prowadzi do istniejącego miejsca. extraPaths — adresy stron z edytora.

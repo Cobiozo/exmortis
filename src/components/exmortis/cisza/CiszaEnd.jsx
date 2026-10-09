@@ -15,7 +15,7 @@ export default function CiszaEnd({ text, onAgain, onLogo, reduced, view, minutes
         <p className="shop-heading text-3xl md:text-5xl text-[#F5EFE1] max-w-2xl leading-tight mt-4">{text}</p>
         <div className="mt-10 flex items-center gap-8 text-sm">
           <button onClick={onAgain} className="text-foreground/55 hover:text-[#C9A24A] transition-colors">Jeszcze raz</button>
-          <Link to="/sklep" className="text-foreground/55 hover:text-[#C9A24A] transition-colors">Wróć do Skarbca</Link>
+          <Link to="/skarbiec" className="text-foreground/55 hover:text-[#C9A24A] transition-colors">Wróć do Skarbca</Link>
         </div>
         <SilenceCardPanel view={view} minutes={minutes} backdrop={backdrop} />
       </div>

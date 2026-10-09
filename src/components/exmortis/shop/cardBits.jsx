@@ -77,7 +77,7 @@ export function PriceBlock({ p }) {
 
 export function productHref(p) {
   const url = (p.checkout_url || "").trim();
-  return url || `/produkt/${p.slug}`;
+  return url || `/skarbiec/${p.slug}`;
 }
 
 export function ProductButton({ p, onWaitlist }) {
@@ -122,7 +122,7 @@ export function ProductButton({ p, onWaitlist }) {
 
   if (p.is_free) {
     return (
-      <Link to={`/produkt/${p.slug}`} className={cls}>
+      <Link to={`/skarbiec/${p.slug}`} className={cls}>
         Pobierz <ArrowRight className="h-3.5 w-3.5" />
       </Link>
     );

@@ -65,7 +65,7 @@ function resultEmailHtml({ name, dominantText, stage, sText, recommended }) {
   const links = recommended
     .map(
       (p) =>
-        `<p style="margin:8px 0;"><a href="${SITE_URL}/produkt/${p.slug}" style="color:#C9A24A;text-decoration:none;">${p.name}</a></p>`
+        `<p style="margin:8px 0;"><a href="${SITE_URL}/skarbiec/${p.slug}" style="color:#C9A24A;text-decoration:none;">${p.name}</a></p>`
     )
     .join("");
   return `

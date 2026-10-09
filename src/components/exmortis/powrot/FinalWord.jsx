@@ -21,7 +21,7 @@ export default function FinalWord() {
           <a href="#formularz" className="btn-relic">
             WYPEŁNIJ FORMULARZ KWALIFIKACYJNY <ArrowRight className="h-4 w-4" />
           </a>
-          <Link to="/sklep" className="btn-ghost">
+          <Link to="/skarbiec" className="btn-ghost">
             ZOBACZ SKARBIEC — RÓŻNE DROGI POWROTU
           </Link>
         </div>
