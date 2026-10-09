@@ -4,8 +4,8 @@ import { useSiteContent } from "@/components/exmortis/SiteContentProvider";
 const POINTS = [
   "Wracasz z wypalenia zawodowego",
   "Wracasz z kryzysu w relacji",
-  "Wracasz z fasady, którą budowałeś latami",
-  "Wracasz do siebie, którego kiedyś zostawiłeś",
+  "Wracasz z fasady budowanej latami",
+  "Wracasz do siebie sprzed lat",
   "Wracasz z ciszy po stracie",
   "Wracasz z pozycji lidera, który się w tej pozycji zgubił",
   "Wracasz z etapu, który dał Ci wszystko oprócz Ciebie",

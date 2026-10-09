@@ -2,16 +2,16 @@ import React from "react";
 import { useSiteContent } from "@/components/exmortis/SiteContentProvider";
 
 const THREE_TRUTHS = [
-  "Nie musisz być silny, żeby wrócić. Musisz zrobić pierwszy ruch.",
+  "Siła nie jest warunkiem powrotu. Wystarczy pierwszy ruch.",
   "Śmierć mentalna, duchowa i życiowa nie są końcem — są progiem.",
-  "Wracasz nie do tego, kim byłeś. Wracasz jako ktoś nowy.",
+  "Nie wracasz do dawnej wersji siebie. Wracasz jako ktoś nowy.",
 ];
 
 const STAGES = [
   { name: "Śmierć", text: "Nazywasz to, co w tobie umarło." },
   { name: "Próg", text: "Zatrzymujesz się i decydujesz, że wracasz." },
   { name: "Powrót", text: "Krok po kroku budujesz siebie na nowo." },
-  { name: "Inny", text: "Nie wracasz do tego, kim byłeś. Wracasz jako ktoś nowy." },
+  { name: "Inny", text: "Nie wracasz do dawnej wersji siebie. Wracasz jako ktoś nowy." },
 ];
 
 // Strona główna: „Droga powrotu” — trzy zdania i ścieżka czterech etapów.

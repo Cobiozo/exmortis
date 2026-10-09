@@ -57,7 +57,7 @@ export default function PodcastGuestForm() {
           {SMIERC.map(([v, l]) => <option key={v} value={v}>{l}</option>)}
         </select>
       </L>
-      <L t="OPOWIEDZ KRÓTKO SWOJĄ DROGĘ" hint="co się stało i jak wracałeś(-aś)">
+      <L t="OPOWIEDZ KRÓTKO SWOJĄ DROGĘ" hint="co się stało i jak wyglądał Twój powrót">
         <textarea required rows={7} minLength={200} maxLength={2000} value={f.story} onChange={set("story")} className={`${inp} resize-none`} />
         <span className={`block text-right text-xs mt-1 ${f.story.length < 200 ? "text-foreground/35" : "gold-text"}`}>{f.story.length} / 2000 (min. 200)</span>
       </L>

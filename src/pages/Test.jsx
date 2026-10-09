@@ -47,11 +47,11 @@ const resultText = (dominant, isF) => {
   if (dominant === "Duchowa")
     return isF
       ? "Sens, na którym stałaś, przestał wystarczać. Twoja pustka nie jest niewdzięcznością — jest sygnałem, że jesteś gotowa na sens głębszy niż ten, który miałaś. Sensu się nie znajduje. Sens się buduje."
-      : "Sens, na którym stałeś, przestał wystarczać. Twoja pustka nie jest niewdzięcznością — jest sygnałem, że jesteś gotowy na sens głębszy niż ten, który miałeś. Sensu się nie znajduje. Sens się buduje.";
+      : "Sens, który dotąd wystarczał, przestał wystarczać. Twoja pustka nie jest niewdzięcznością — jest sygnałem gotowości na sens głębszy niż dotychczasowy. Sensu się nie znajduje. Sens się buduje.";
   if (dominant === "Życiowa")
     return isF
       ? "Jedno wydarzenie rozebrało to, co znałaś. Nie masz opóźnienia — świat ma zbyt krótką pamięć. Nie chodzi o powrót do siebie sprzed. Chodzi o zbudowanie nowego domu w miejscu, w którym ten pierwszy się spalił."
-      : "Jedno wydarzenie rozebrało to, co znałeś. Nie masz opóźnienia — świat ma zbyt krótką pamięć. Nie chodzi o powrót do siebie sprzed. Chodzi o zbudowanie nowego domu w miejscu, w którym ten pierwszy się spalił.";
+      : "Jedno wydarzenie rozebrało to, co znane. Nie masz opóźnienia — świat ma zbyt krótką pamięć. Nie chodzi o powrót do siebie sprzed. Chodzi o zbudowanie nowego domu w miejscu, w którym ten pierwszy się spalił.";
   return "Tak jest u większości ludzi, którzy do mnie przychodzą. Jedna śmierć uruchamia drugą, druga maskuje trzecią. Dlatego warto zacząć od mapy całej drogi, a nie od jednego fragmentu.";
 };
 
@@ -59,7 +59,7 @@ const stageText = (stage, isF) => {
   if (stage === "Śmierć") return "Jesteś na początku drogi. Tu nie trzeba jeszcze nic zmieniać — trzeba zobaczyć i nazwać.";
   if (stage === "Próg") return "Wiesz już, co umarło. Teraz liczy się jedna rzecz: decyzja, nie deklaracja.";
   if (stage === "Powrót") return "Budujesz coś nowego. To najdłuższy etap — i ten, w którym najłatwiej wrócić do starego.";
-  return isF ? "Wróciłaś. Teraz zadanie na całe życie: nie wrócić do śmierci." : "Wróciłeś. Teraz zadanie na całe życie: nie wrócić do śmierci.";
+  return isF ? "Wróciłaś. Teraz zadanie na całe życie: nie wrócić do śmierci." : "Powrót się wydarzył. Teraz zadanie na całe życie: nie wrócić do śmierci.";
 };
 
 const inputCls =

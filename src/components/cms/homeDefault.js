@@ -23,7 +23,7 @@ export const HOME_BLOCKS = [
       "To nie słabość. To śmierć: mentalna, duchowa, życiowa.",
       "I nikt o niej głośno nie mówi.",
       "exmortis to nie motywacja. To droga powrotu.",
-      "Nie musisz być gotowy. Musisz zrobić pierwszy ruch.",
+      "Gotowość nie jest warunkiem. Wystarczy pierwszy ruch.",
     ] } },
   { id: "home-deaths", typ: "karty", widoczny: true, uklad: { ...LAYOUT_DEFAULT, tlo: "grafit" }, dane: {
     etykieta: "TRZY ŚMIERCI", tytul: "Trzy\nśmierci", numerowane: true, kolumny: "3",

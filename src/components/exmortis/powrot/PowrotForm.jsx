@@ -174,8 +174,8 @@ export default function PowrotForm() {
               </div>
               <p className="relic-heading text-2xl gold-text">Zgłoszenie przyjęte</p>
               <p className="text-foreground/60 leading-relaxed">
-                Dziękuję za zaufanie. Każdy powrót zaczyna się od pierwszego kroku — właśnie go
-                zrobiłeś/aś. Odezwę się w ciągu kilku dni.
+                Dziękuję za zaufanie. Każdy powrót zaczyna się od pierwszego kroku — właśnie
+                został zrobiony. Odezwę się w ciągu kilku dni.
               </p>
             </div>
           ) : (
@@ -224,7 +224,7 @@ export default function PowrotForm() {
                   {...multi("affected_areas")}
                 />
                 <TextArea
-                  label="Co już próbowałeś/aś zrobić, żeby z tego wyjść?"
+                  label="Co już było próbą wyjścia?"
                   {...field("tried_before")}
                 />
                 <SingleChoice
@@ -247,7 +247,7 @@ export default function PowrotForm() {
                   {...field("obstacle")}
                 />
                 <div>
-                  <Label required>Jak bardzo jesteś gotowy/a na zmianę teraz?</Label>
+                  <Label required>Jak bardzo czujesz gotowość na zmianę teraz?</Label>
                   <div className="flex flex-wrap gap-2">
                     {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map((n) => (
                       <button
@@ -283,7 +283,7 @@ export default function PowrotForm() {
                   {...choice("work_form")}
                 />
                 <SingleChoice
-                  label="Czy jesteś gotowy/a zainwestować w swój powrót, jeśli program okaże się dla Ciebie?"
+                  label="Czy czujesz gotowość, żeby zainwestować w swój powrót, jeśli program okaże się dla Ciebie?"
                   required
                   options={INVEST_OPTIONS}
                   {...choice("investment")}
@@ -298,7 +298,7 @@ export default function PowrotForm() {
                   {...field("anything_else")}
                 />
                 <SingleChoice
-                  label="Skąd dowiedziałeś/aś się o exmortis?"
+                  label="Skąd wiesz o exmortis?"
                   options={SOURCE_OPTIONS}
                   {...choice("source")}
                 />

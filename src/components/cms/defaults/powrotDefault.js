@@ -11,7 +11,7 @@ export const POWROT_BLOCKS = [
   b("otwarcie", "tekst", { etykieta: "OTWARCIE · 01", tytul: "Są ludzie, którzy przychodzą do mnie, bo coś w nich umarło.",
     tresc: `<p class="exm-styl-lead">Nie mówią tego wprost. Mówią, że są zmęczeni, stracili sens, nie poznają siebie — mają wszystko, na co pracowali, i jednocześnie nic nie czują. Zwłaszcza szczęścia, satysfakcji, radości z życia.</p><p class="exm-styl-lead">Umarli. Tylko jeszcze o tym nie wiedzą.</p><h2 class="exm-akcent-zloty">POWRÓT jest dla tych, którzy już wiedzą.</h2>` }),
   b("dla-kogo", "tekst", { etykieta: "DLA KOGO · 02", tytul: "To praca dla Ciebie, jeśli:",
-    tresc: ul(["Wracasz z wypalenia, które nie mija po urlopie", "Wracasz z kryzysu, który zdarł Ci maskę", "Wracasz z rozstania, które zabrało więcej niż osobę", "Wracasz z pozycji, w której się zgubiłeś", "Wracasz z sukcesu, który nie smakuje", "Wracasz z ciszy po stracie", "Wracasz z siebie sprzed kilku lat, do którego nie chcesz już wrócić"])
+    tresc: ul(["Wracasz z wypalenia, które nie mija po urlopie", "Wracasz z kryzysu, który zdarł Ci maskę", "Wracasz z rozstania, które zabrało więcej niż osobę", "Wracasz z pozycji, w której łatwo się zgubić", "Wracasz z sukcesu, który nie smakuje", "Wracasz z ciszy po stracie", "Wracasz z siebie sprzed kilku lat, do którego nie chcesz już wrócić"])
       + `<h3>Nie musisz wiedzieć, dokąd wracasz.</h3><h3 class="exm-akcent-zloty">Wystarczy, że wiesz, że tak dalej nie chcesz.</h3>` }),
   b("nie-dla", "tekst", { etykieta: "NIE DLA CIEBIE · 03", tytul: "To NIE jest dla Ciebie, jeśli:",
     tresc: ul(["Chcesz szybkiej motywacji na weekend.", "Szukasz kogoś, kto powie Ci, co masz zrobić.", "Chcesz „poczuć się lepiej”, ale nie chcesz nic zmieniać.", "Jesteś w głębokim kryzysie klinicznym — wtedy potrzebujesz terapeuty, nie mentora. Powiem Ci to na rozmowie i jeśli trzeba, wskażę kierunek."]) }, { tlo: G }),
@@ -45,7 +45,7 @@ export const POWROT_BLOCKS = [
     { pytanie: "Czy to jest to samo, co Pure Life?", odpowiedz: "Nie. Pure Life to przestrzeń systematycznej pracy nad pięcioma płaszczyznami dojrzałości, prowadzona z zespołem liderów i specjalistów. POWRÓT w Exmortis to indywidualna, głęboka praca ze mną — jeden na jeden. Można korzystać z obu. Można z jednego. Można z żadnego." },
   ] }, { tlo: G }),
   b("ostatnie", "tekst", { etykieta: "OSTATNIE SŁOWO", tytul: "Nie musisz decydować się dziś.",
-    tresc: `<p class="exm-styl-lead">Ale jeśli po tym, co przeczytałeś, coś w Tobie mówi „to o mnie” — nie odkładaj tego na kwartał, w którym „będzie lepszy moment”. Powrót nie zaczyna się w lepszym momencie. Powrót zaczyna się od decyzji, żeby przestać czekać.</p>` }, { odstep: "maly" }),
+    tresc: `<p class="exm-styl-lead">Ale jeśli po tej lekturze coś w Tobie mówi „to o mnie” — nie odkładaj tego na kwartał, w którym „będzie lepszy moment”. Powrót nie zaczyna się w lepszym momencie. Powrót zaczyna się od decyzji, żeby przestać czekać.</p>` }, { odstep: "maly" }),
   b("spotkanie", "modul", { modul: "powrot_spotkanie" }),
   b("ostatnie-przyciski", "przyciski", { przyciski: [
     { etykieta: "WYPEŁNIJ FORMULARZ KWALIFIKACYJNY", link: "#formularz", styl: "zloty", strzalka: true },

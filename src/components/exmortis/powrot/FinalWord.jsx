@@ -12,7 +12,7 @@ export default function FinalWord() {
           Nie musisz decydować się dziś.
         </p>
         <p className="text-foreground/60 text-lg leading-relaxed">
-          Ale jeśli po tym, co przeczytałeś, coś w Tobie mówi „to o mnie” — nie odkładaj
+          Ale jeśli po tej lekturze coś w Tobie mówi „to o mnie” — nie odkładaj
           tego na kwartał, w którym „będzie lepszy moment”. Powrót nie zaczyna się
           w lepszym momencie. Powrót zaczyna się od decyzji, żeby przestać czekać.
         </p>

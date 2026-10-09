@@ -5,7 +5,7 @@ const POINTS = [
   "Wracasz z wypalenia, które nie mija po urlopie",
   "Wracasz z kryzysu, który zdarł Ci maskę",
   "Wracasz z rozstania, które zabrało więcej niż osobę",
-  "Wracasz z pozycji, w której się zgubiłeś",
+  "Wracasz z pozycji, w której łatwo się zgubić",
   "Wracasz z sukcesu, który nie smakuje",
   "Wracasz z ciszy po stracie",
   "Wracasz z siebie sprzed kilku lat, do którego nie chcesz już wrócić",

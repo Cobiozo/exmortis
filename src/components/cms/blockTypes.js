@@ -35,7 +35,7 @@ export const TYPES = {
     defaults: { tytul: "Nagłówek", tresc: "<p>Tekst obok zdjęcia.</p>", strona: "lewo", kolumny: "50-50", proporcja: "4:5", mobile: "gora", przyciski: [] } },
   cta: { label: "Wezwanie do działania (CTA)", icon: Megaphone, opis: "Wyśrodkowany nagłówek, krótki tekst i przyciski.",
     fields: [...HEAD, { k: "tekst", label: "Tekst", typ: "textarea", max: 240 }, { k: "przyciski", label: "Przyciski (1–2)", typ: "buttons", maxItems: 2 }],
-    defaults: { etykieta: "PIERWSZY RUCH", tytul: "Nie musisz być gotowy.", tekst: "", przyciski: [{ etykieta: "Zrób test", link: "/test", styl: "zloty", strzalka: true }] } },
+    defaults: { etykieta: "PIERWSZY RUCH", tytul: "Gotowość nie jest warunkiem.", tekst: "", przyciski: [{ etykieta: "Zrób test", link: "/test", styl: "zloty", strzalka: true }] } },
   zdjecie: { label: "Zdjęcie", icon: ImageIcon, opis: "Jedno zdjęcie w kontenerze lub na całą szerokość.",
     fields: [{ k: "zdjecie", label: "Zdjęcie", typ: "image" }, { k: "proporcja", label: "Proporcja", typ: "select", opcje: IMG_RATIOS }, { k: "podpis", label: "Podpis", typ: "text" }],
     defaults: { proporcja: "16:9" } },

@@ -28,7 +28,7 @@ export const CONTENT_PAGES = [
           "I nikt o niej głośno nie mówi.",
           "Ja tam byłem. I wróciłem. Inny.",
           "exmortis to nie motywacja. To droga powrotu.",
-          "Nie musisz być gotowy. Musisz zrobić pierwszy ruch.",
+          "Gotowość nie jest warunkiem. Wystarczy pierwszy ruch.",
           "Reszty nauczę Cię po drodze.",
         ],
       },
@@ -57,9 +57,9 @@ export const CONTENT_PAGES = [
         label: "Trzy zdania — kolejne linie",
         type: "list",
         default: [
-          "Nie musisz być silny, żeby wrócić. Musisz zrobić pierwszy ruch.",
+          "Siła nie jest warunkiem powrotu. Wystarczy pierwszy ruch.",
           "Śmierć mentalna, duchowa i życiowa nie są końcem — są progiem.",
-          "Wracasz nie do tego, kim byłeś. Wracasz jako ktoś nowy.",
+          "Nie wracasz do dawnej wersji siebie. Wracasz jako ktoś nowy.",
         ],
       },
       {
@@ -69,8 +69,8 @@ export const CONTENT_PAGES = [
         default: [
           "Wracasz z wypalenia zawodowego",
           "Wracasz z kryzysu w relacji",
-          "Wracasz z fasady, którą budowałeś latami",
-          "Wracasz do siebie, którego kiedyś zostawiłeś",
+          "Wracasz z fasady budowanej latami",
+          "Wracasz do siebie sprzed lat",
           "Wracasz z ciszy po stracie",
           "Wracasz z pozycji lidera, który się w tej pozycji zgubił",
           "Wracasz z etapu, który dał Ci wszystko oprócz Ciebie",

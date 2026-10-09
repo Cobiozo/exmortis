@@ -87,7 +87,7 @@ export default async function (req) {
       <div style="background:#0A0A0B;padding:32px;font-family:Georgia,serif;color:#E2E2E2;">
         <p style="letter-spacing:4px;color:#C9A24A;font-size:13px;">EXMORTIS</p>
         <p style="color:#8A8A8C;line-height:1.7;">${escapeHtml(firstName)},</p>
-        <p style="line-height:1.7;color:#E2E2E2;">dziękuję, że sięgnąłeś po <strong>${escapeHtml(
+        <p style="line-height:1.7;color:#E2E2E2;">dziękuję za sięgnięcie po <strong>${escapeHtml(
           product.name
         )}</strong>.</p>
         ${

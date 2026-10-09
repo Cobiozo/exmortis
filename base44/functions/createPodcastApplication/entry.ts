@@ -42,7 +42,7 @@ export default async function (req) {
       const admin = smtp.from || smtp.user;
       const link = `${APP}/admin/kontakty`;
       if (pilne) {
-        await sendMail(smtp, { to: email, subject: "Dziękuję za Twoją wiadomość", html: wrap(`<p>Dziękuję, że to napisałeś(-aś). Przeczytam Twoje zgłoszenie osobiście.</p><p>Jeśli jest Ci teraz bardzo ciężko, nie czekaj na moją odpowiedź. Zadzwoń teraz:</p>${HELP}<p>Twoja historia poczeka. Ty jesteś ważniejszy(-a).</p><p>Dawid, exmortis</p>`) }).catch(() => {});
+        await sendMail(smtp, { to: email, subject: "Dziękuję za Twoją wiadomość", html: wrap(`<p>Dziękuję za tę wiadomość. Przeczytam Twoje zgłoszenie osobiście.</p><p>Jeśli jest Ci teraz bardzo ciężko, nie czekaj na moją odpowiedź. Zadzwoń teraz:</p>${HELP}<p>Twoja historia poczeka. Ty jesteś ważniejszy(-a).</p><p>Dawid, exmortis</p>`) }).catch(() => {});
         await sendMail(smtp, { to: admin, subject: "SPRAWDŹ PILNIE — zgłoszenie do podcastu", html: wrap(`<p>Nowe zgłoszenie zawiera słowa wskazujące na kryzys.</p><p><a style="color:#C9A24A" href="${link}">Otwórz panel</a></p>`) }).catch(() => {});
       } else {
         await sendMail(smtp, { to: email, subject: "Twoje zgłoszenie do podcastu exmortis", html: wrap(`<p>Dziękuję. Przeczytam Twoją historię uważnie. Odpowiem w ciągu 14 dni.</p><p>Dawid, exmortis</p>`) }).catch(() => {});
