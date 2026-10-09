@@ -43,6 +43,21 @@
           }
         }
       }
+    },
+    "szkic": {
+      "type": "object"
+    },
+    "zmiany_niezapisane": {
+      "type": "boolean",
+      "default": false
+    },
+    "wersja": {
+      "type": "number",
+      "default": 0
+    },
+    "opublikowano_at": {
+      "type": "string",
+      "format": "date-time"
     }
   },
   "required": [],
