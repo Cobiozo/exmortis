@@ -1,12 +1,12 @@
 import React from "react";
-import { ArrowLeft, ExternalLink, Redo2, Undo2, Loader2, History, CalendarClock } from "lucide-react";
+import { ArrowLeft, ExternalLink, Redo2, Undo2, Loader2, History, CalendarClock, Columns2 } from "lucide-react";
 import { plWhen } from "./ScheduleDialog";
 import { pagePath } from "@/components/cms/links";
 import { smallBtn } from "./ui";
 
 const SAVE = { zapisano: "Szkic zapisany", zapisywanie: "Zapisywanie…", niezapisane: "Zmiany — autozapis za chwilę" };
 
-export default function EditorTopBar({ page, save, busy, onBack, onSave, onPublish, onUndo, onRedo, onHistory, onSchedule }) {
+export default function EditorTopBar({ page, save, busy, onBack, onSave, onPublish, onUndo, onRedo, onHistory, onSchedule, onCompare }) {
   return (
     <div className="flex flex-wrap items-center justify-between gap-4 mb-6">
       <div className="flex items-center gap-4 min-w-0">
@@ -21,6 +21,7 @@ export default function EditorTopBar({ page, save, busy, onBack, onSave, onPubli
         <button onClick={onUndo} className={smallBtn} aria-label="Cofnij"><Undo2 className="h-4 w-4" /></button>
         <button onClick={onRedo} className={smallBtn} aria-label="Ponów"><Redo2 className="h-4 w-4" /></button>
         <button onClick={onHistory} className={smallBtn}><History className="h-4 w-4" /> Historia</button>
+        <button onClick={onCompare} className={smallBtn}><Columns2 className="h-4 w-4" /> Porównaj</button>
         <a href={`${pagePath(page.slug)}?podglad=gosc`} target="_blank" rel="noopener noreferrer" className={smallBtn}><ExternalLink className="h-4 w-4" /> Strona publiczna</a>
         <button onClick={onSave} disabled={save === "zapisywanie"} className={smallBtn}>Zapisz szkic</button>
         <button onClick={onSchedule} className={smallBtn}><CalendarClock className="h-4 w-4" /> {page.status === "zaplanowana" ? "Zmień plan" : "Zaplanuj"}</button>

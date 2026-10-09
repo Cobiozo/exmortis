@@ -13,6 +13,7 @@ import PublishReport from "./PublishReport";
 import VersionHistory from "./VersionHistory";
 import ScheduleDialog, { plWhen } from "./ScheduleDialog";
 import { tabBtn } from "./ui";
+import CompareDialog from "./compare/CompareDialog";
 
 export default function Editor({ page, setPage, extra, onBack }) {
   const [blocks, setBlocks, undo, redo] = useHistory(page.bloki || []);
@@ -24,6 +25,7 @@ export default function Editor({ page, setPage, extra, onBack }) {
   const [busy, setBusy] = useState(false);
   const [history, setHistory] = useState(false);
   const [plan, setPlan] = useState(false);
+  const [compare, setCompare] = useState(false);
   const [pane, setPane] = useState("lista");
   const [scrollTo, setScrollTo] = useState(null);
   const first = useRef(true);
@@ -140,7 +142,8 @@ export default function Editor({ page, setPage, extra, onBack }) {
   );
   return (
     <div>
-      <EditorTopBar page={page} save={save} busy={busy} onBack={onBack} onSave={persist} onPublish={publish} onUndo={undo} onRedo={redo} onHistory={() => setHistory(true)} onSchedule={() => setPlan(true)} />
+      <EditorTopBar page={page} save={save} busy={busy} onBack={onBack} onSave={persist} onPublish={publish} onUndo={undo} onRedo={redo} onHistory={() => setHistory(true)} onSchedule={() => setPlan(true)} onCompare={() => setCompare(true)} />
+      {compare && <CompareDialog open onOpenChange={setCompare} page={page} blocks={blocks} />}
       {plan && <ScheduleDialog open onOpenChange={setPlan} page={page} onSchedule={schedule} onCancel={cancelSchedule} />}
       <VersionHistory open={history} onOpenChange={setHistory} page={page} onLoad={loadVersion} onRepublish={republish} />
       <PublishReport report={report} onClose={() => setReport(null)} />
