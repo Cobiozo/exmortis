@@ -20,7 +20,7 @@ export const SITE_MAP = [
   { slug: "_404", tytul: "Strona nie istnieje (404)", path: "/nie-ma-takiej-strony", status: "systemowa", menu: false, zrodlo: "Kod", procent: 0, etap: 4 },
   { slug: "_dzieki", tytul: "Podziękowania po formularzach", path: "/kontakt", status: "systemowa", menu: false, zrodlo: "Kod (w formularzach)", procent: 0, etap: 4 },
   { slug: "_prawne", tytul: "Dokumenty prawne (4)", path: "/regulamin", status: "systemowa", menu: false, zrodlo: "Pliki dokumentów", procent: 0, etap: 4 },
-  { slug: "_menu", tytul: "Menu i stopka", path: "/", status: "systemowa", menu: false, zrodlo: "Kod + Teksty sekcji", procent: 15, etap: 8 },
+  { slug: "_menu", tytul: "Menu i stopka", path: "/", status: "systemowa", menu: false, zrodlo: "Edytor menu i stopki", procent: 100, etap: 8, modul: "/admin/menu" },
 ];
 
 export const STATUS_LABEL = { opublikowana: "Opublikowana", ukryta: "Ukryta", szkic: "Szkic", zaplanowana: "Zaplanowana", systemowa: "Systemowa", szablon: "Szablon" };

@@ -2,13 +2,15 @@ import React, { useEffect, useRef } from "react";
 import { Link, useLocation } from "react-router-dom";
 import { useViewer } from "@/lib/useViewer";
 import { base44 } from "@/api/base44Client";
-import { NAV, TEST, isActive } from "./navItems";
+import { isActive } from "./navItems";
+import { useSiteNav } from "./useSiteNav";
 
 // Pełnoekranowa warstwa menu; Esc zamyka, blokada przewijania, fokus na pierwszej pozycji.
 export default function MobileMenu({ open, onClose, top }) {
   const { user } = useViewer();
   const { pathname } = useLocation();
   const ref = useRef(null);
+  const { menu: NAV, test: TEST } = useSiteNav();
 
   useEffect(() => {
     if (!open) return;

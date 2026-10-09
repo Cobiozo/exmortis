@@ -5,6 +5,7 @@ import Logo from "@/components/exmortis/Logo";
 import ProductsManager from "@/components/admin/ProductsManager";
 import NewsletterManager from "@/components/admin/NewsletterManager";
 import ContentHub from "@/components/admin/cms/ContentHub";
+import NavEditor from "@/components/admin/cms/nav/NavEditor";
 import IntegrationsManager from "@/components/admin/IntegrationsManager";
 import QuizStatsPanel from "@/components/admin/QuizStatsPanel";
 import SilencePanel from "@/components/admin/silence/SilencePanel";
@@ -34,6 +35,7 @@ const SECTIONS = {
   bezpieczenstwo: ["Bezpieczeństwo", () => <SecurityPanel />],
   newsletter: ["Newsletter i subskrybenci", () => <NewsletterManager />],
   tresci: ["Treści stron", () => <ContentHub />],
+  menu: ["Menu i stopka", () => <NavEditor />],
   integracje: ["Integracje", () => <IntegrationsManager />],
   testy: ["Wyniki testu", () => <QuizStatsPanel />],
 };
