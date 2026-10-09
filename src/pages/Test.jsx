@@ -345,6 +345,7 @@ export default function Test({ d = {} }) {
         {/* ===== 16 · WYNIK ===== */}
         {step === 16 && result && (
           <div className="fade-up">
+            <p className="technical text-[10px] gold-text mb-10">{t("dz.test")}</p>
             <div className="space-y-5 mb-16">
               {[
                 { label: "MENTALNA", v: result.scores.mentalna },

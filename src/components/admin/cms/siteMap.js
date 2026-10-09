@@ -17,9 +17,9 @@ export const SITE_MAP = [
   { slug: "_kasa", tytul: "Kasa", path: "/kasa", status: "systemowa", menu: false, zrodlo: "Kod", procent: 0, etap: 4 },
   { slug: "_login", tytul: "Logowanie i rejestracja", path: "/login", status: "systemowa", menu: false, zrodlo: "Kod", procent: 0, etap: 4 },
   { slug: "_konto", tytul: "Moje konto", path: "/konto", status: "systemowa", menu: false, zrodlo: "Kod + moduł Klienci", procent: 0, etap: 4, modul: "/admin/klienci" },
-  { slug: "_404", tytul: "Strona nie istnieje (404)", path: "/nie-ma-takiej-strony", status: "systemowa", menu: false, zrodlo: "Kod", procent: 0, etap: 4 },
-  { slug: "_dzieki", tytul: "Podziękowania po formularzach", path: "/kontakt", status: "systemowa", menu: false, zrodlo: "Kod (w formularzach)", procent: 0, etap: 4 },
-  { slug: "_prawne", tytul: "Dokumenty prawne (4)", path: "/regulamin", status: "systemowa", menu: false, zrodlo: "Pliki dokumentów", procent: 0, etap: 4 },
+  { slug: "_404", tytul: "Strona nie istnieje (404)", path: "/nie-ma-takiej-strony", status: "systemowa", menu: false, zrodlo: "Teksty systemowe", procent: 100, modul: "/admin/tresci?tab=teksty&strona=system" },
+  { slug: "_dzieki", tytul: "Podziękowania po zapisach (spotkanie, Listy, PDF, kontakt, test)", path: "/kontakt", status: "systemowa", menu: false, zrodlo: "Teksty systemowe", procent: 100, modul: "/admin/tresci?tab=teksty&strona=system" },
+  { slug: "_prawne", tytul: "Dokumenty prawne (4)", path: "/regulamin", status: "systemowa", menu: false, zrodlo: "Moduł Dokumenty prawne", poza: true },
   { slug: "_menu", tytul: "Menu i stopka", path: "/", status: "systemowa", menu: false, zrodlo: "Edytor menu i stopki", procent: 100, etap: 8, modul: "/admin/menu" },
 ];
 

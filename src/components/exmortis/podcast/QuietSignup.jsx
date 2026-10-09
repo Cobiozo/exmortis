@@ -1,12 +1,14 @@
 import React, { useState } from "react";
 import { Loader2 } from "lucide-react";
 import { base44 } from "@/api/base44Client";
+import useSystemText from "@/content/useSystemText";
 
 // Cichy zapis e-mail (Listy powrotu) — bez wyskakujących okienek.
 export default function QuietSignup({ button, source, lead }) {
   const [email, setEmail] = useState("");
   const [ok, setOk] = useState(false);
   const [consent, setConsent] = useState(false);
+  const t = useSystemText();
   const [busy, setBusy] = useState(false);
   const [err, setErr] = useState("");
 
@@ -18,7 +20,7 @@ export default function QuietSignup({ button, source, lead }) {
     setBusy(false);
   };
 
-  if (ok) return <p className="text-sm gold-text">Dziękuję. Sprawdź skrzynkę.</p>;
+  if (ok) return <p className="text-sm gold-text">{t("dz.listy")}</p>;
   return (
     <form onSubmit={submit} className="space-y-3 max-w-lg">
       {lead && <p className="text-sm text-foreground/60">{lead}</p>}

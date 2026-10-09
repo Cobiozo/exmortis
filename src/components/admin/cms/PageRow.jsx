@@ -23,7 +23,7 @@ export default function PageRow({ p, log, onOpen, onRemove, onDuplicate, onRenam
         <span className="technical text-[9px] text-foreground/40">
           {p.path} · {p.menu ? "w menu" : "poza menu"} · zmiana {when(log?.created_date || p.cms?.updated_date)}{log?.kto ? ` · ${log.kto}` : ""}
         </span>
-        {!editable && <span className="block text-xs text-foreground/40 mt-1">{p.zrodlo} · edytowalne ~{p.procent}% · przeniesienie do edytora: etap {p.etap}</span>}
+        {!editable && <span className="block text-xs text-foreground/40 mt-1">{p.poza ? `${p.zrodlo} · nie liczy się do pokrycia edytora` : p.procent >= 100 ? `${p.zrodlo} · edytowalne 100%` : `${p.zrodlo} · edytowalne ~${p.procent}% · przeniesienie do edytora: etap ${p.etap}`}</span>}
       </div>
       <span className={`technical text-[9px] px-2 py-1 border ${gold ? "border-[#C9A24A] gold-text" : p.status === "ukryta" ? "border-[#BC1E22]/60 text-foreground/70" : "hairline text-foreground/50"}`}>
         {STATUS_LABEL[p.status]}{p.cms?.zmiany_niezapisane && gold ? " · szkic zmian" : ""}

@@ -2,6 +2,7 @@ import React, { useState } from "react";
 import { ArrowRight, Check, Mail, Instagram, Facebook, Youtube } from "lucide-react";
 import { base44 } from "@/api/base44Client";
 import { useSiteContent } from "@/components/exmortis/SiteContentProvider";
+import useSystemText from "@/content/useSystemText";
 
 // Wklej tu linki do swoich profili
 const SOCIAL_LINKS = [
@@ -17,6 +18,7 @@ export default function ContactSection() {
   const [form, setForm] = useState({ name: "", email: "", message: "" });
   const [sending, setSending] = useState(false);
   const [sent, setSent] = useState(false);
+  const t = useSystemText();
   const [error, setError] = useState("");
 
   const submit = async (e) => {
@@ -86,10 +88,8 @@ export default function ContactSection() {
               <div className="w-14 h-14 border-2 border-[#C9A24A] rounded-full flex items-center justify-center">
                 <Check className="h-7 w-7 gold-text" />
               </div>
-              <p className="relic-heading text-2xl gold-text">Wiadomość dotarła</p>
-              <p className="text-foreground/60 leading-relaxed">
-                Odpowiadam osobiście, zwykle w ciągu 48 godzin. Do zobaczenia na drodze.
-              </p>
+              <p className="relic-heading text-2xl gold-text">{t("dz.kontakt.tytul")}</p>
+              <p className="text-foreground/60 leading-relaxed">{t("dz.kontakt")}</p>
               <button
                 onClick={() => setSent(false)}
                 className="btn-ghost"

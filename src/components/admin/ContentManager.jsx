@@ -8,7 +8,7 @@ import BlockEditor from "./BlockEditor";
 
 export default function ContentManager() {
   const [overrides, setOverrides] = useState(null);
-  const [pageKey, setPageKey] = useState(CONTENT_PAGES[0].key);
+  const [pageKey, setPageKey] = useState(new URLSearchParams(window.location.search).get("strona") || CONTENT_PAGES[0].key);
 
   const load = () => {
     base44.functions

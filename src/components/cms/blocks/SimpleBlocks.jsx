@@ -2,14 +2,21 @@ import React from "react";
 import { Buttons, Rich, SectionHead } from "../parts";
 import SafeImg from "../SafeImg";
 
-export const RATIO = { "1:1": "aspect-square", "4:5": "aspect-[4/5]", "3:2": "aspect-[3/2]", "16:9": "aspect-video" };
+import { ratioClass } from "../ratios";
 
 export function Img({ img, ratio, className = "" }) {
-  if (!img?.url) return <div className={`${RATIO[ratio] || "aspect-video"} bg-[#0F0F10] border hairline ${className}`} />;
+  if (!img?.url) return <div className={`${ratioClass(null, ratio)} bg-[#0F0F10] border hairline ${className}`} />;
   return (
-    <SafeImg img={img} sizes="(min-width: 768px) 50vw, 100vw" className={`w-full ${RATIO[ratio] || "aspect-video"} ${className}`} />
+    <SafeImg img={img} sizes="(min-width: 768px) 50vw, 100vw" className={`w-full ${ratioClass(img, ratio)} ${className}`} />
   );
 }
+
+// Proporcje kolumn zdjęcie–tekst; kolejność kolumn zależy od strony zdjęcia.
+const COLS = {
+  "50-50": ["md:grid-cols-2", "md:grid-cols-2"],
+  "60-40": ["md:grid-cols-[3fr_2fr]", "md:grid-cols-[2fr_3fr]"],
+  "40-60": ["md:grid-cols-[2fr_3fr]", "md:grid-cols-[3fr_2fr]"],
+};
 
 export function TextBlock({ d, label, center }) {
   return (
@@ -64,7 +71,7 @@ export function TextImageBlock({ d, label }) {
   const right = d.strona === "prawo";
   const imgOrder = d.mobile === "dol" ? "order-2" : "order-1";
   return (
-    <div className="grid md:grid-cols-2 gap-10 md:gap-16 items-center">
+    <div className={`grid ${(COLS[d.kolumny] || COLS["50-50"])[right ? 1 : 0]} gap-10 md:gap-16 items-center`}>
       <figure className={`${imgOrder} ${right ? "md:order-2" : "md:order-1"}`}>
         <Img img={d.zdjecie} ratio={d.proporcja} />
         {d.podpis && <figcaption className="technical text-[10px] text-foreground/40 mt-3">{d.podpis}</figcaption>}

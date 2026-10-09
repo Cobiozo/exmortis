@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import { Link } from "react-router-dom";
 import { base44 } from "@/api/base44Client";
+import useSystemText from "@/content/useSystemText";
 import { SELLER, CLAUSE } from "@/content/legal/seller";
 
 const F = "w-full bg-transparent border hairline px-4 py-3 focus:border-[#C9A24A] focus:outline-none";
@@ -19,7 +20,7 @@ export default function ContactPageForm() {
         <p className="text-foreground/75 leading-relaxed mb-2">{SELLER.company}, {SELLER.address}, NIP {SELLER.nip}</p>
         <p className="text-foreground/75 mb-2">E-mail: {SELLER.email}</p>
         <p className="text-foreground/75 mb-10">Adres do korespondencji: {SELLER.postal}</p>
-        {state === "done" ? <p className="gold-text">Dziękuję — wiadomość dotarła.</p> : (
+        {state === "done" ? <div><p className="relic-heading text-2xl gold-text mb-3">{t("dz.kontakt.tytul")}</p><p className="text-foreground/60 leading-relaxed">{t("dz.kontakt")}</p></div> : (
           <form onSubmit={submit} className="space-y-4">
             <input required placeholder="Imię" value={f.name} onChange={(e) => setF({ ...f, name: e.target.value })} className={F} />
             <input required type="email" placeholder="E-mail" value={f.email} onChange={(e) => setF({ ...f, email: e.target.value })} className={F} />

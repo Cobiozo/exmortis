@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { base44 } from "@/api/base44Client";
+import useSystemText from "@/content/useSystemText";
 
 // Formularz zapisu na wydarzenie (strona wydarzenia): imię, e-mail, pytanie, zgoda.
 export default function RegistrationForm({ event: ev }) {
@@ -8,6 +9,7 @@ export default function RegistrationForm({ event: ev }) {
   const [email, setEmail] = useState("");
   const [question, setQuestion] = useState("");
   const [consent, setConsent] = useState(false);
+  const t = useSystemText();
   const [listy, setListy] = useState(false);
   const [sending, setSending] = useState(false);
   const [error, setError] = useState("");
@@ -70,7 +72,7 @@ export default function RegistrationForm({ event: ev }) {
     return (
       <div className="border border-[#C9A24A]/40 bg-[#0D0D0E] p-8">
         <p className="shop-heading text-xl text-[#F5EFE1]">
-          Dziękuję, {result.first_name || firstName}. Jesteś zapisany/a.
+          {t("dz.spotkanie", { imie: result.first_name || firstName })}
         </p>
         {ev.what_registered && (
           <p className="text-foreground/60 text-sm mt-3 leading-relaxed">Co dostają zapisani: {ev.what_registered}</p>

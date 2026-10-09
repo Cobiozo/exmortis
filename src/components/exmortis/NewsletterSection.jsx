@@ -2,6 +2,7 @@ import React, { useState } from "react";
 import { ArrowRight } from "lucide-react";
 import { base44 } from "@/api/base44Client";
 import { useSiteContent } from "@/components/exmortis/SiteContentProvider";
+import useSystemText from "@/content/useSystemText";
 
 // Sekcja „Listy powrotu" (newsletter) na stronie głównej — podpis pod kontakt.
 export default function NewsletterSection() {
@@ -10,6 +11,7 @@ export default function NewsletterSection() {
   const desc = rich("footer", "newsletterDesc", "Jeden list tygodniowo. Jeden temat powrotu. Jedno narzędzie. Prosto na Twój mail — z prezentem powitalnym: mini-PDF „3 pierwsze ruchy powrotu”.");
   const [email, setEmail] = useState("");
   const [sent, setSent] = useState(false);
+  const t = useSystemText();
   const [sending, setSending] = useState(false);
   const [error, setError] = useState("");
 
@@ -54,7 +56,7 @@ export default function NewsletterSection() {
               </button>
             </div>
             {sent && (
-              <p className="technical text-[10px] gold-text">✓ Rejestracja przyjęta. Sprawdź skrzynkę.</p>
+              <p className="technical text-[10px] gold-text">✓ {t("dz.listy")}</p>
             )}
             {error && <p className="technical text-[10px] blood-text">{error}</p>}
             <p className="technical text-[10px] text-foreground/40">

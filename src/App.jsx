@@ -110,8 +110,8 @@ const AuthenticatedApp = () => {
           <Route path="/kontakt" element={<Kontakt />} />
           <Route path="/strona/:slug" element={<CmsPage />} />
           <Route path="/1-listopada" element={<Listopad />} />
+          <Route path="*" element={<PageNotFound />} />
         </Route>
-        <Route path="*" element={<PageNotFound />} />
       </Routes>
       </PodcastPlayerProvider>
       <CookieBanner />

@@ -3,6 +3,7 @@ import { Upload, Trash2, Loader2, FolderOpen } from "lucide-react";
 import { uploadMedia } from "./media/uploadMedia";
 import MediaPickerDialog from "./media/MediaPickerDialog";
 import { inputCls, labelCls, smallBtn } from "./ui";
+import CropPicker from "./media/CropPicker";
 
 // Wgranie zdjęcia (przeciągnij/upuść, na telefonie aparat/galeria), punkt skupienia i opis alt.
 export default function ImageField({ value, onChange, noAlt }) {
@@ -16,7 +17,7 @@ export default function ImageField({ value, onChange, noAlt }) {
     if (file.size > 10 * 1024 * 1024) return setErr("Maksymalnie 10 MB.");
     setErr(""); setBusy(true);
     const m = await uploadMedia(file);
-    onChange({ ...v, url: m.url, fx: 50, fy: 50 });
+    onChange({ ...v, url: m.url, fx: 50, fy: 50, kadr: v.kadr || null });
     setBusy(false);
   };
   const lib = (
@@ -25,18 +26,10 @@ export default function ImageField({ value, onChange, noAlt }) {
       <MediaPickerDialog open={pick} onOpenChange={setPick} onPick={(m) => onChange({ ...v, url: m.url, alt: v.alt || m.alt || "", fx: 50, fy: 50 })} />
     </>
   );
-  const focus = (e) => {
-    const r = e.currentTarget.getBoundingClientRect();
-    onChange({ ...v, fx: Math.round(((e.clientX - r.left) / r.width) * 100), fy: Math.round(((e.clientY - r.top) / r.height) * 100) });
-  };
-
   return (
     <div className="space-y-3">
       {v.url ? (
-        <div className="relative cursor-crosshair" onClick={focus} title="Kliknij, aby ustawić punkt skupienia">
-          <img src={v.url} alt="" className="w-full max-h-56 object-contain bg-black" />
-          <span className="absolute h-5 w-5 -ml-2.5 -mt-2.5 rounded-full border-2 border-[#C9A24A] bg-[#C9A24A]/30 pointer-events-none" style={{ left: `${v.fx ?? 50}%`, top: `${v.fy ?? 50}%` }} />
-        </div>
+        <CropPicker v={v} onChange={onChange} noKadr={noAlt} />
       ) : (
         <label onDragOver={(e) => e.preventDefault()} onDrop={(e) => { e.preventDefault(); upload(e.dataTransfer.files[0]); }}
           className="flex flex-col items-center justify-center gap-2 min-h-[120px] border border-dashed hairline text-foreground/50 text-sm cursor-pointer hover:border-[#C9A24A]">

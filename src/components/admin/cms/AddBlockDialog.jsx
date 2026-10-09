@@ -2,6 +2,8 @@ import React from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { TYPES, TYPE_ORDER } from "@/components/cms/blockTypes";
 import SavedSections from "./SavedSections";
+import { PRESETS } from "./presets";
+import PresetThumb from "./PresetThumb";
 
 // Okno wyboru typu bloku.
 export default function AddBlockDialog({ open, onOpenChange, onPick }) {
@@ -9,6 +11,15 @@ export default function AddBlockDialog({ open, onOpenChange, onPick }) {
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="bg-[#0A0A0B] border hairline max-w-3xl max-h-[85vh] overflow-y-auto rounded-none">
         <DialogHeader><DialogTitle className="relic-heading text-2xl">Dodaj blok</DialogTitle></DialogHeader>
+        <p className="technical text-[10px] gold-text">GOTOWE SEKCJE</p>
+        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3 mb-6">
+          {PRESETS.map((p) => (
+            <button key={p.key} onClick={() => onPick(p.blok())} className="text-left border hairline p-3 hover:border-[#C9A24A] transition-colors">
+              <PresetThumb szkic={p.szkic} />
+              <p className="text-sm mt-2.5 leading-tight">{p.nazwa}</p>
+            </button>
+          ))}
+        </div>
         <SavedSections open={open} onPick={onPick} />
         <p className="technical text-[10px] gold-text">NOWY BLOK</p>
         <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-3">

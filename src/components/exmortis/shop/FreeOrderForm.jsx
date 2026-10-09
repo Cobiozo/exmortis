@@ -2,6 +2,7 @@ import React, { useState } from "react";
 import { ArrowRight, Check } from "lucide-react";
 import { base44 } from "@/api/base44Client";
 import NewsletterConsent from "./NewsletterConsent";
+import useSystemText from "@/content/useSystemText";
 
 const inputCls =
   "w-full bg-transparent border hairline px-5 py-4 focus:border-[#C9A24A] focus:outline-none transition-colors";
@@ -20,6 +21,7 @@ export default function FreeOrderForm({ product }) {
   });
   const [sending, setSending] = useState(false);
   const [done, setDone] = useState("");
+  const t = useSystemText();
   const [error, setError] = useState("");
 
   const submit = async (e) => {
@@ -49,8 +51,7 @@ export default function FreeOrderForm({ product }) {
       <div className="border border-[#C9A24A]/40 bg-[#0D0D0E] p-8 md:p-10 text-center space-y-5 fade-up">
         <Check className="h-8 w-8 gold-text mx-auto" />
         <p className="text-foreground/80 text-lg leading-relaxed">
-          Gotowe, {done}. Plik jest już w drodze na Twój e-mail. Jeśli nie widzisz go w
-          ciągu kilku minut, sprawdź folder Spam lub Oferty.
+          {t("dz.pdf", { imie: done })}
         </p>
       </div>
     );

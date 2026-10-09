@@ -28,7 +28,7 @@ export default function ContentHub() {
         <div className="flex gap-2 mb-8">
           <button className={tabBtn(tab === "strony")} onClick={() => setTab("strony")}>STRONY</button>
           <button className={tabBtn(tab === "media")} onClick={() => setTab("media")}>MEDIA</button>
-          <button className={tabBtn(tab === "teksty")} onClick={() => setTab("teksty")}>TEKSTY SEKCJI MODUŁÓW</button>
+          <button className={tabBtn(tab === "teksty")} onClick={() => setTab("teksty")}>TEKSTY SYSTEMOWE I SEKCJI</button>
         </div>
       )}
       {tab === "media" && !pageId ? <MediaLibrary /> : tab === "teksty" && !pageId ? <ContentManager /> : pageId ? <PageEditor pageId={pageId} onBack={() => open(null)} /> : <PagesList onOpen={open} />}

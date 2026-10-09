@@ -1,6 +1,6 @@
-import { Crown, AlignLeft, Columns2, Image as ImageIcon, MousePointerClick, Quote, ListOrdered, LayoutGrid, HelpCircle, Minus, Puzzle, Rows3, Images, Video, CalendarCheck, ShieldAlert } from "lucide-react";
+import { Crown, AlignLeft, Columns2, Image as ImageIcon, MousePointerClick, Quote, ListOrdered, LayoutGrid, HelpCircle, Minus, Puzzle, Rows3, Images, Video, CalendarCheck, ShieldAlert, Megaphone } from "lucide-react";
 
-const IMG_RATIOS = [["1:1", "1:1"], ["4:5", "4:5"], ["3:2", "3:2"], ["16:9", "16:9"]];
+const IMG_RATIOS = [["1:1", "1:1"], ["4:5", "4:5"], ["3:2", "3:2"], ["16:9", "16:9"], ["21:9", "21:9"]];
 const HEAD = [
   { k: "etykieta", label: "Etykieta (np. MANIFEST)", typ: "text", max: 30 },
   { k: "tytul", label: "Nagłówek (Enter = nowa linia)", typ: "textarea", max: 40 },
@@ -28,10 +28,14 @@ export const TYPES = {
   tekst_zdjecie: { label: "Tekst + zdjęcie", icon: Columns2, opis: "Zdjęcie po lewej lub prawej, obok tekst.",
     fields: [...HEAD, { k: "tresc", label: "Treść", typ: "rich" }, { k: "zdjecie", label: "Zdjęcie", typ: "image" },
       { k: "strona", label: "Zdjęcie", typ: "select", opcje: [["lewo", "Po lewej"], ["prawo", "Po prawej"]] },
+      { k: "kolumny", label: "Układ kolumn (zdjęcie–tekst)", typ: "select", opcje: [["50-50", "50 / 50"], ["60-40", "60 / 40 (większe zdjęcie)"], ["40-60", "40 / 60 (więcej tekstu)"]] },
       { k: "proporcja", label: "Proporcja zdjęcia", typ: "select", opcje: IMG_RATIOS },
       { k: "mobile", label: "Na telefonie", typ: "select", opcje: [["gora", "Zdjęcie nad tekstem"], ["dol", "Zdjęcie pod tekstem"]] },
       { k: "podpis", label: "Podpis zdjęcia", typ: "text" }, { k: "przyciski", label: "Przyciski", typ: "buttons", maxItems: 2 }],
-    defaults: { tytul: "Nagłówek", tresc: "<p>Tekst obok zdjęcia.</p>", strona: "lewo", proporcja: "4:5", mobile: "gora", przyciski: [] } },
+    defaults: { tytul: "Nagłówek", tresc: "<p>Tekst obok zdjęcia.</p>", strona: "lewo", kolumny: "50-50", proporcja: "4:5", mobile: "gora", przyciski: [] } },
+  cta: { label: "Wezwanie do działania (CTA)", icon: Megaphone, opis: "Wyśrodkowany nagłówek, krótki tekst i przyciski.",
+    fields: [...HEAD, { k: "tekst", label: "Tekst", typ: "textarea", max: 240 }, { k: "przyciski", label: "Przyciski (1–2)", typ: "buttons", maxItems: 2 }],
+    defaults: { etykieta: "PIERWSZY RUCH", tytul: "Nie musisz być gotowy.", tekst: "", przyciski: [{ etykieta: "Zrób test", link: "/test", styl: "zloty", strzalka: true }] } },
   zdjecie: { label: "Zdjęcie", icon: ImageIcon, opis: "Jedno zdjęcie w kontenerze lub na całą szerokość.",
     fields: [{ k: "zdjecie", label: "Zdjęcie", typ: "image" }, { k: "proporcja", label: "Proporcja", typ: "select", opcje: IMG_RATIOS }, { k: "podpis", label: "Podpis", typ: "text" }],
     defaults: { proporcja: "16:9" } },

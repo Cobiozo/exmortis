@@ -1,7 +1,10 @@
 // Rejestr edytowalnych treści stron — używa go panel „Treści stron" w zapleczu.
 // Strony czytają nadpisania przez useSiteContent(); bez nadpisania obowiązują wartości z kodu.
 
+import { SYSTEM_BLOCKS } from "./systemTexts";
+
 export const CONTENT_PAGES = [
+  { key: "system", label: "Teksty systemowe", blocks: SYSTEM_BLOCKS },
   {
     key: "home",
     label: "Strona główna",

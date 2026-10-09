@@ -8,9 +8,10 @@ import { ModuleBlock } from "./modules";
 import { GalleryBlock, VideoBlock } from "./blocks/MediaBlocks";
 import EventSignupBlock from "./blocks/EventSignupBlock";
 import SafetyBox from "./blocks/SafetyBox";
+import CtaBlock from "./blocks/CtaBlock";
 
 const VIEW = { hero: HeroBlock, tekst: TextBlock, tekst_zdjecie: TextImageBlock, zdjecie: ImageBlock, przyciski: ButtonsBlock,
-  cytat: QuoteBlock, linie: LinesBlock, etapy: StepsBlock, karty: CardsBlock, faq: FaqBlock, separator: SeparatorBlock, modul: ModuleBlock, galeria: GalleryBlock, wideo: VideoBlock, zapis_spotkanie: EventSignupBlock, ramka: SafetyBox };
+  cytat: QuoteBlock, linie: LinesBlock, etapy: StepsBlock, karty: CardsBlock, faq: FaqBlock, separator: SeparatorBlock, modul: ModuleBlock, galeria: GalleryBlock, wideo: VideoBlock, zapis_spotkanie: EventSignupBlock, ramka: SafetyBox, cta: CtaBlock };
 const DEVICE = { telefon: "md:hidden", komputer: "hidden md:block" };
 
 // Rysuje stronę z bloków. editable — podgląd w panelu (klik wybiera blok, linki nie nawigują).
