@@ -1,6 +1,6 @@
 import React from "react";
 
-export const CISZA_LOGO = "https://media.base44.com/images/public/6aa08bc6318b0f886cc3b9a3/cecb69dea_logogrupaeq26.png";
+export const CISZA_LOGO = "/exmortis-logo-cisza.png";
 
 // Znak + napis EXMORTIS, zawsze w 100%. Wysokość z --logo-h (clamp w CSS).
 export default function CiszaLogo({ onClick }) {

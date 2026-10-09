@@ -1,5 +1,5 @@
 // „Karta ciszy” 1080×1920: czarne tło, ostatnia klatka widoku, napis, logo, adres.
-const LOGO = "https://media.base44.com/images/public/6aa08bc6318b0f886cc3b9a3/58566649a_logogrupaeq31.png";
+const LOGO = "/exmortis-logo-karta.png";
 
 // Wybrane tło w wersji pionowej (kadr wg punktu skupienia) + przyciemnienie.
 async function drawBackdrop(x, bg) {

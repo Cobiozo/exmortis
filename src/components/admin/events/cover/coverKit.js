@@ -13,7 +13,7 @@ export const SOCIAL = [
   { key: "story", label: "Relacja 1080×1920", w: 1080, h: 1920 },
   { key: "fb", label: "Wydarzenie FB 1920×1005", w: 1920, h: 1005 },
 ];
-export const LOGO = "https://media.base44.com/images/public/6aa08bc6318b0f886cc3b9a3/55ed7a257_logo.png";
+export const LOGO = "/exmortis-logo-okladka.jpg";
 
 export const loadImg = (src) => new Promise((ok, no) => {
   const i = new Image(); i.crossOrigin = "anonymous"; i.onload = () => ok(i); i.onerror = () => no(new Error("Nie udało się wczytać obrazu.")); i.src = src;

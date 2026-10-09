@@ -3,7 +3,7 @@ import { useLocation } from "react-router-dom";
 import { PAGES, PRE, PRE_UNTIL } from "@/components/seo/seoPages";
 
 const ORIGIN = "https://exmortis-return-path.base44.app";
-const LOGO = { url: ORIGIN + "/exmortis-og-logo-500.png", w: "500", h: "500", alt: "exmortis" };
+const LOGO = { url: ORIGIN + "/exmortis-logo-500.png", w: "500", h: "500", alt: "exmortis" };
 const OG = { url: ORIGIN + "/exmortis-og-1-listopada-1200x630.png", w: "1200", h: "630", alt: PRE.title };
 
 const setMeta = (attr, key, content) => {
