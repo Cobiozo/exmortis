@@ -1,19 +1,10 @@
 import { useEffect } from "react";
 import { useLocation } from "react-router-dom";
+import { PAGES, PRE, PRE_UNTIL } from "@/components/seo/seoPages";
 
-const PRE_UNTIL = new Date("2026-11-01T21:30:00+01:00").getTime();
-const PRE = {
-  title: "1 listopada, 20:00 — Ze śmierci. O powrotach, o których świat nie mówi",
-  desc: "Bezpłatne spotkanie online w Wieczór Wszystkich Świętych. 90 minut o trzech śmierciach i czterech etapach powrotu. Zapisz się.",
-};
-const DEFAULT_DESC = "Wypalenie, rozstanie, żałoba, utrata sensu? Wróciłem i uczę wracać. Zapisz się na Listy powrotu albo poznaj program POWRÓT.";
-const TITLES = {
-  "/": "exmortis — ze śmierci", "/1-listopada": "Ze śmierci — spotkanie 1 listopada, 20:00 | exmortis",
-  "/o-mnie": "O mnie — exmortis", "/powrot": "POWRÓT — exmortis", "/skarbiec": "Skarbiec — exmortis", "/spotkania": "Spotkania — exmortis",
-  "/cisza": "Cisza — exmortis", "/glos": "Głos — exmortis", "/kontakt": "Kontakt — exmortis", "/test": "Test — exmortis",
-  "/regulamin": "Regulamin — exmortis", "/polityka-prywatnosci": "Polityka prywatności — exmortis",
-  "/polityka-cookies": "Polityka cookies — exmortis", "/odstapienie": "Odstąpienie od umowy — exmortis", "/obok": "Obok — exmortis",
-};
+const ORIGIN = "https://exmortis-return-path.base44.app";
+const LOGO = { url: ORIGIN + "/exmortis-og-logo-500.png", w: "500", h: "500", alt: "exmortis" };
+const OG = { url: ORIGIN + "/exmortis-og-1-listopada-1200x630.png", w: "1200", h: "630", alt: PRE.title };
 
 const setMeta = (attr, key, content) => {
   let el = document.head.querySelector(`meta[${attr}="${key}"]`);
@@ -21,21 +12,30 @@ const setMeta = (attr, key, content) => {
   el.setAttribute("content", content);
 };
 
-// Tytuł i opisy strony: do 1.11, 21:30 wspólne teksty spotkania, potem osobne dla każdej strony.
+// Do 1.11, 21:30 udostępnianie pokazuje spotkanie; potem każda strona ma własne teksty i logo.
 export default function SeoMeta() {
   const { pathname } = useLocation();
   useEffect(() => {
     const pre = Date.now() < PRE_UNTIL;
-    const title = TITLES[pathname] || "exmortis";
-    document.title = title;
-    const ogTitle = pre ? PRE.title : title;
-    const desc = pre ? PRE.desc : DEFAULT_DESC;
+    const page = PAGES[pathname] || PAGES["/"];
+    const img = pre ? OG : LOGO;
+    const ogTitle = pre ? PRE.title : page.t;
+    const ogDesc = pre ? PRE.d : page.d;
+    document.title = page.t;
+    setMeta("name", "description", page.d);
     setMeta("property", "og:title", ogTitle);
+    setMeta("property", "og:description", ogDesc);
     setMeta("name", "twitter:title", ogTitle);
-    setMeta("name", "description", desc);
-    setMeta("property", "og:description", desc);
-    setMeta("property", "og:url", window.location.origin + pathname);
+    setMeta("name", "twitter:description", ogDesc);
+    setMeta("property", "og:url", ORIGIN + pathname);
     setMeta("property", "og:locale", "pl_PL");
+    setMeta("property", "og:site_name", "exmortis");
+    setMeta("property", "og:image", img.url);
+    setMeta("property", "og:image:width", img.w);
+    setMeta("property", "og:image:height", img.h);
+    setMeta("property", "og:image:alt", img.alt);
+    setMeta("name", "twitter:image", img.url);
+    setMeta("name", "twitter:image:alt", img.alt);
   }, [pathname]);
   return null;
 }

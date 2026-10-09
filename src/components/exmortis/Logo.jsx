@@ -1,7 +1,7 @@
 import React from "react";
 
 const LOGO_URL =
-  "https://media.base44.com/images/public/6aa08bc6318b0f886cc3b9a3/09cc3396f_logogrupaeq26.png";
+  "/exmortis-logo-500.png";
 
 export default function Logo({ className = "h-12 w-12", glow = true }) {
   return (

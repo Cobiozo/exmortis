@@ -41,7 +41,7 @@ export default function HeroBlock({ d }) {
       <Bg d={d} />
       <div className="relative z-10 mx-auto max-w-[1400px] w-full">
         {d.etykieta && <p className="technical text-[11px] gold-text mb-6">{d.etykieta}</p>}
-        <h1 className="relic-heading text-5xl md:text-7xl lg:text-8xl">
+        <h1 className="relic-heading text-[2.6rem] sm:text-5xl md:text-7xl lg:text-8xl">
           <span className="block">{nbsp(d.linia1)}</span>
           {d.linia2 && <span className="block gold-text">{nbsp(d.linia2)}</span>}
         </h1>
