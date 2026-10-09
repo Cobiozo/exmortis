@@ -15,17 +15,6 @@ export default async function (req) {
     const listy = body.listy === true;
     const source = textField(body, "source", { max: 200, required: false }) || null;
 
-    await runSql(
-      base44,
-      `CREATE TABLE IF NOT EXISTS public.webinar_1_11 (
-         id text PRIMARY KEY,
-         email text UNIQUE NOT NULL,
-         name text,
-         source text,
-         listy boolean DEFAULT FALSE,
-         created_at timestamptz DEFAULT now()
-       )`
-    );
 
     const inserted = await runSql(
       base44,

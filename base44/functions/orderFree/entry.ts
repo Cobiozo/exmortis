@@ -30,10 +30,6 @@ export default async function (req) {
     const phoneConsent = body.phone_consent === true && phone !== "";
     const newsletterConsent = body.newsletter_consent === true;
 
-    await runSql(
-      base44,
-      `ALTER TABLE public.products ADD COLUMN IF NOT EXISTS file_url text`
-    );
     const rows = await runSql(
       base44,
       `SELECT id, name, is_free, active, COALESCE(status, 'dostępny') AS status, file_url, product_type

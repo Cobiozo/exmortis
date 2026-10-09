@@ -3,6 +3,7 @@ import { waitUntil } from "base44:runtime";
 import { runSql, escStr, textField, emailField } from "../../shared/supabase.ts";
 import { getSetting, loadAppUrl } from "../../shared/settings.ts";
 import { getSnap, clearSnap } from "../../shared/snapshot.ts";
+import { rpcRegister, RPC_ERRORS, saveConsents, afterSaved, enqueue, flushQueue, snapEvent } from "../../shared/registrations.ts";
 import { sendConfirmationMail, sendReminderMail, sendRecordingMail, plWhen, APP_URL } from "../../shared/events.ts";
 
 // Publiczny moduł Spotkań: lista nadchodzących/minionych wydarzeń, szczegóły,
@@ -78,117 +79,56 @@ export default async function (req) {
       return Response.json({ event: ev });
     }
 
-    await loadAppUrl(base44);
-    if (body.action === "register") waitUntil(clearSnap(base44, "events").catch(() => {}));
-
-    // --- Zapis na wydarzenie (z obsługą listy rezerwowej) ---
+    // --- Zapis na wydarzenie (z obsługą listy rezerwowej i kolejką na wypadek awarii Supabase) ---
     if (body.action === "register") {
       // Pole-pułapka wypełnione → udajemy sukces, nic nie zapisujemy.
       if (body.website) return Response.json({ ok: true, status: "Zapisany", first_name: String(body.first_name || "").slice(0, 120) });
       const slug = textField(body, "slug", { max: 200 });
       const firstName = textField(body, "first_name", { max: 120 });
-      const email = emailField(body);
+      const email = emailField(body).toLowerCase();
       const question = textField(body, "question", { required: false, max: 2000 });
-      const listy = body.listy === true;
       if (body.consent !== true) {
         return Response.json({ error: "Zaznacz, żeby się zapisać." }, { status: 400 });
       }
-      const source = typeof body.source === "string" && body.source.trim() !== ""
-        ? body.source.trim().slice(0, 100)
-        : null;
-
-      const evRows = await runSql(
-        base44,
-        `SELECT e.*, ${REG_COUNT} FROM public.events e WHERE e.slug = ${escStr(slug)}`,
-        true
-      );
-      const ev = evRows && evRows[0];
-      if (!ev) return Response.json({ error: "Nie znaleziono wydarzenia" }, { status: 404 });
-      if (ev.status !== "Opublikowane") {
-        return Response.json({ error: "To wydarzenie nie jest już dostępne." }, { status: 400 });
-      }
-      if (ev.registration_type !== "Zapis na stronie") {
-        return Response.json({ error: "To wydarzenie nie przyjmuje zapisów na stronie." }, { status: 400 });
-      }
-      // Zapisy otwarte do registration_deadline (domyślnie 15 min przed startem).
-      const deadline = ev.registration_deadline
-        ? new Date(ev.registration_deadline)
-        : ev.start_datetime
-          ? new Date(new Date(ev.start_datetime).getTime() - 15 * 60000)
-          : null;
-      if (deadline && new Date() > deadline) {
-        return Response.json({ error: "Zapisy zamknięte.", closed: true }, { status: 400 });
-      }
-
-      // Limit: najwyżej 5 nowych zapisów z jednego adresu IP w 10 minut.
+      const source = typeof body.source === "string" && body.source.trim() !== "" ? body.source.trim().slice(0, 100) : null;
       const ip = (req.headers.get("x-forwarded-for") || "").split(",")[0].trim().slice(0, 64) || "brak";
-      await runSql(base44, `ALTER TABLE public.registrations ADD COLUMN IF NOT EXISTS ip text`);
-      const recent = await runSql(
-        base44,
-        `SELECT count(*)::int AS n FROM public.registrations WHERE ip = ${escStr(ip)} AND created_at > now() - interval '10 minutes'`,
-        true
-      );
-      if ((recent[0]?.n || 0) >= 5) {
-        return Response.json({ error: "Za dużo zapisów w krótkim czasie. Spróbuj za kilka minut." }, { status: 429 });
-      }
+      const d = { slug, first_name: firstName, email, question, listy: body.listy === true, source, ip, at: new Date().toISOString() };
+      // Symulacja awarii Supabase — tylko dla administratora (test kolejki).
+      const isAdmin = (body.simulate_down === true || body.load_test === true) && (await base44.auth.me().catch(() => null))?.role === "admin";
+      const simulate = isAdmin && body.simulate_down === true;
 
-      const existing = await runSql(
-        base44,
-        `SELECT id, status FROM public.registrations
-         WHERE event_id = ${escStr(ev.id)} AND email = ${escStr(email)}`,
-        true
-      );
-      if (existing.length > 0 && ["Zapisany", "Obecny", "Lista rezerwowa"].includes(existing[0].status)) {
-        return Response.json({ ok: true, already: true });
-      }
+      const closedErr = (ev) => {
+        if (ev.status !== "Opublikowane") return "To wydarzenie nie jest już dostępne.";
+        if (ev.registration_type !== "Zapis na stronie") return "To wydarzenie nie przyjmuje zapisów na stronie.";
+        const deadline = ev.registration_deadline ? new Date(ev.registration_deadline)
+          : ev.start_datetime ? new Date(new Date(ev.start_datetime).getTime() - 15 * 60000) : null;
+        if (deadline && new Date() > deadline) return "Zapisy zamknięte.";
+        return null;
+      };
+      const queued = async (err) => {
+        const snap = await snapEvent(base44, slug);
+        const e = snap && closedErr(snap);
+        if (e) return Response.json({ error: e, closed: e === "Zapisy zamknięte." }, { status: 400 });
+        await enqueue(base44, d, err);
+        return Response.json({ ok: true, status: "Zapisany", first_name: firstName, pending: true });
+      };
 
-      const capacity = ev.capacity ? Number(ev.capacity) : 0;
-      const status = capacity > 0 && (ev.registered || 0) >= capacity ? "Lista rezerwowa" : "Zapisany";
-
-      const qSql = question ? escStr(question) : "NULL";
-      let reg;
-      if (existing.length > 0) {
-        reg = await runSql(
-          base44,
-          `UPDATE public.registrations SET
-             first_name = ${escStr(firstName)},
-             question_for_dawid = ${qSql},
-             consent = TRUE,
-             status = ${escStr(status)},
-             created_at = now()
-           WHERE id = ${escStr(existing[0].id)}
-           RETURNING id, first_name, email, status, cancel_token`
-        );
-      } else {
-        reg = await runSql(
-          base44,
-          `INSERT INTO public.registrations
-             (id, event_id, first_name, email, question_for_dawid, consent, status, source)
-           VALUES (gen_random_uuid()::text, ${escStr(ev.id)}, ${escStr(firstName)}, ${escStr(email)},
-             ${qSql}, TRUE, ${escStr(status)}, ${source ? escStr(source) : "NULL"})
-           RETURNING id, first_name, email, status, cancel_token`
-        );
+      let res;
+      try {
+        if (simulate) throw new Error("Symulowana awaria Supabase");
+        res = await rpcRegister(base44, d, isAdmin && body.load_test === true);
+      } catch (err) {
+        return queued(err);
       }
-      const regRow = reg && reg[0];
-      // Zgoda na Listy powrotu — osobno od zapisu, z datą i godziną.
-      await runSql(base44, `ALTER TABLE public.registrations ADD COLUMN IF NOT EXISTS listy_zgoda_at timestamptz`);
-      await runSql(base44, `UPDATE public.registrations SET listy_zgoda_at = ${listy ? "now()" : "NULL"}, ip = ${escStr(ip)} WHERE id = ${escStr(regRow.id)}`);
-      if (listy) {
-        await base44.asServiceRole.entities.Consent.create({ email, kind: "newsletter", text: "Chcę też dostawać Listy powrotu — jeden list w każdy poniedziałek.", source: `spotkanie:${slug}` });
+      if (res.error) {
+        const [code, msg] = RPC_ERRORS[res.error] || [400, "Nie udało się zapisać."];
+        return Response.json({ error: msg, closed: res.error === "closed" }, { status: code });
       }
-      // Zgoda na Listy powrotu → zapis w liście newslettera (z datą zgody).
-      if (listy) {
-        waitUntil(
-          import("../../shared/newsletter.ts")
-            .then((m) => m.addSubscriber(base44, { email, name: firstName, consentGiven: true }))
-            .catch(() => {})
-        );
-      }
-      waitUntil(
-        smtpConfig(base44)
-          .then((smtp) => smtp && sendConfirmationMail(smtp, ev, regRow))
-          .catch(() => {})
-      );
+      if (res.already) return Response.json({ ok: true, already: true });
+      const regRow = res.reg;
+      const ev = res.ev;
+      // Zgody (dowód z datą, godziną i id zapisu) i e-mail potwierdzający — dopiero po udanym zapisie.
+      waitUntil(Promise.allSettled([saveConsents(base44, d, regRow.id), afterSaved(base44, ev, regRow, d)]));
       return Response.json({
         ok: true,
         status: regRow.status,
@@ -198,6 +138,15 @@ export default async function (req) {
         join_password: regRow.status === "Zapisany" ? ev.join_password || null : null,
       });
     }
+
+    // --- Ręczne przeniesienie kolejki (administrator; opcjonalnie z symulacją awarii) ---
+    if (body.action === "flush") {
+      const me = await base44.auth.me().catch(() => null);
+      if (me?.role !== "admin") return Response.json({ error: "Forbidden" }, { status: 403 });
+      return Response.json(await flushQueue(base44, { simulateDown: body.simulate_down === true }));
+    }
+
+    await loadAppUrl(base44);
 
     // --- „Przypomnij mi" dla wydarzeń z zewnętrznym linkiem ---
     if (body.action === "remind") {
@@ -232,6 +181,7 @@ export default async function (req) {
     // --- Tick: higiena danych (zapisy 90 dni po spotkaniu) + przypomnienia
     //     24 h / 1 h przed oraz podziękowania z nagraniem ---
     if (body.action === "tick") {
+      const queue = await flushQueue(base44).catch((e) => ({ error: e.message }));
       const removed = await runSql(
         base44,
         `DELETE FROM public.registrations r USING public.events e
@@ -317,6 +267,7 @@ export default async function (req) {
       return Response.json({
         ok: true,
         removed: (removed || []).length,
+        queue,
         due: { r24: due24.length, r1: due1.length, rec: dueRec.length },
       });
     }

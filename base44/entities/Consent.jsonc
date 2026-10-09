@@ -31,6 +31,13 @@
     "order_id": {
       "type": "string"
     },
+    "ref_id": {
+      "type": "string"
+    },
+    "given_at": {
+      "type": "string",
+      "format": "date-time"
+    },
     "ip": {
       "type": "string"
     },

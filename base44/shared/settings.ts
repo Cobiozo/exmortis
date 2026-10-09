@@ -4,7 +4,8 @@ import { clearSnap } from "./snapshot.ts";
 // Ustawienia integracji (payu / smtp) przechowywane jako jsonb w app_settings.
 
 // Tabela istnieje od wdrożenia — sprawdzamy najwyżej raz na instancję, nie przy każdym odczycie.
-let TABLE_OK = false;
+// Struktura tabel jest zakładana migracją przy wdrożeniu — przy zapytaniach nic nie tworzymy.
+let TABLE_OK = true;
 export async function ensureSettingsTable(base44) {
   if (TABLE_OK) return;
   TABLE_OK = true;

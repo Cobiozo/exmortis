@@ -20,6 +20,7 @@ import ClientsPanel from "@/components/admin/clients/ClientsPanel";
 import SecurityPanel from "@/components/admin/security/SecurityPanel";
 import { useNoIndex } from "@/lib/useNoIndex";
 import DiscountsPanel from "@/components/admin/DiscountsPanel";
+import PersonDataPanel from "@/components/admin/gdpr/PersonDataPanel";
 import PlaylistManager from "@/components/exmortis/glos/PlaylistManager";
 import { ShieldAlert, ArrowLeft } from "lucide-react";
 import PanelHeaderActions from "@/components/admin/PanelHeaderActions";
@@ -36,6 +37,7 @@ const SECTIONS = {
   klienci: ["Klienci i dostępy", () => <ClientsPanel />],
   rabaty: ["Kody rabatowe", () => <DiscountsPanel />],
   bezpieczenstwo: ["Bezpieczeństwo", () => <SecurityPanel />],
+  "dane-osoby": ["Dane osoby (RODO)", () => <PersonDataPanel />],
   newsletter: ["Newsletter i subskrybenci", () => <NewsletterManager />],
   tresci: ["Treści stron", () => <ContentHub />],
   menu: ["Menu i stopka", () => <NavEditor />],

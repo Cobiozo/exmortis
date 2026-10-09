@@ -63,17 +63,6 @@ export default async function (req) {
     const consentRodo = body.consent_rodo === true;
     const consentPaid = body.consent_paid === true;
 
-    for (const [name, type] of COLUMNS) {
-      await runSql(
-        base44,
-        `ALTER TABLE public.powrot_applications ADD COLUMN IF NOT EXISTS ${name} ${type}`
-      );
-    }
-    // Telefon jest teraz opcjonalny.
-    await runSql(
-      base44,
-      `ALTER TABLE public.powrot_applications ALTER COLUMN phone DROP NOT NULL`
-    );
 
     const rows = await runSql(
       base44,

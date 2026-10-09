@@ -1,0 +1,85 @@
+{
+  "name": "PendingRegistration",
+  "type": "object",
+  "properties": {
+    "slug": {
+      "type": "string"
+    },
+    "first_name": {
+      "type": "string"
+    },
+    "email": {
+      "type": "string"
+    },
+    "question": {
+      "type": "string"
+    },
+    "listy": {
+      "type": "boolean",
+      "default": false
+    },
+    "source": {
+      "type": "string"
+    },
+    "ip": {
+      "type": "string"
+    },
+    "at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "oczekujace",
+        "przeniesione",
+        "nieudane"
+      ],
+      "default": "oczekujace"
+    },
+    "proby": {
+      "type": "number",
+      "default": 0
+    },
+    "blad": {
+      "type": "string"
+    },
+    "reg_id": {
+      "type": "string"
+    },
+    "przeniesiono_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "alarm_at": {
+      "type": "string",
+      "format": "date-time"
+    }
+  },
+  "required": [
+    "slug",
+    "email"
+  ],
+  "rls": {
+    "read": {
+      "user_condition": {
+        "role": "admin"
+      }
+    },
+    "create": {
+      "user_condition": {
+        "role": "admin"
+      }
+    },
+    "update": {
+      "user_condition": {
+        "role": "admin"
+      }
+    },
+    "delete": {
+      "user_condition": {
+        "role": "admin"
+      }
+    }
+  }
+}

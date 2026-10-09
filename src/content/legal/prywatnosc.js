@@ -1,5 +1,6 @@
 export const PRYWATNOSC = {
   title: "Polityka prywatności exmortis.pl",
+  version: "1.1",
   sections: [
     { id: "p1", title: "§1. Administrator", body: [
       "1. Administratorem Twoich danych osobowych jest [IMIĘ I NAZWISKO], prowadzący(-a) działalność gospodarczą pod firmą [NAZWA FIRMY], adres: [ADRES DZIAŁALNOŚCI], NIP: [NIP] (dalej: „Administrator”, „my”).",
@@ -31,6 +32,7 @@ export const PRYWATNOSC = {
     { id: "p6", title: "§6. Odbiorcy danych", body: [
       "Twoje dane mogą otrzymać podmioty, które przetwarzają je w naszym imieniu na podstawie umów powierzenia, wyłącznie w zakresie potrzebnym do świadczenia usług:",
       "- hosting i platforma Serwisu, w tym analityka odwiedzin (wyłącznie po Twojej zgodzie na cookies analityczne): Base44, Inc. — dostawca platformy, na której działa Serwis (podmiot przetwarzający dane na podstawie umowy powierzenia: base44.com/dpa). Przekazanie danych poza EOG: EU-US Data Privacy Framework albo standardowe klauzule umowne UE;",
+      "- Supabase, Inc. — dostawca bazy danych (serwery w UE, Frankfurt), podmiot przetwarzający na podstawie umowy powierzenia;",
       "- operator płatności: PayU S.A., ul. Grunwaldzka 186, 60-166 Poznań — w zakresie płatności jest odrębnym administratorem;",
       "- system mailingowy: [NAZWA, np. MailerLite];",
       "- wideokonferencje: Zoom Video Communications, Inc. (USA);",
@@ -42,6 +44,7 @@ export const PRYWATNOSC = {
     ]},
     { id: "p7", title: "§7. Przekazywanie danych poza Europejski Obszar Gospodarczy", body: [
       "Niektórzy dostawcy (np. Zoom, Meta, Google, Base44, Inc.) mogą przetwarzać dane poza EOG, w tym w USA lub w Izraelu. Odbywa się to na podstawie decyzji Komisji Europejskiej stwierdzającej odpowiedni stopień ochrony (np. EU–US Data Privacy Framework dla certyfikowanych podmiotów, decyzja dotycząca Izraela) albo standardowych klauzul umownych zatwierdzonych przez Komisję. Kopię zabezpieczeń możesz uzyskać, pisząc do nas.",
+      "Supabase, Inc. ma siedzibę w USA. Dane w bazie przechowujemy na serwerach w UE (Frankfurt), a ewentualne przekazanie danych do Supabase, Inc. w USA odbywa się na podstawie standardowych klauzul umownych UE lub EU–US Data Privacy Framework.",
     ]},
     { id: "p8", title: "§8. Twoje prawa", body: [
       "Masz prawo do: dostępu do danych i otrzymania ich kopii, sprostowania, usunięcia, ograniczenia przetwarzania, przenoszenia danych, sprzeciwu wobec przetwarzania opartego na prawnie uzasadnionym interesie (a wobec marketingu — w każdej chwili), wycofania zgody w dowolnym momencie (bez wpływu na zgodność z prawem przetwarzania przed wycofaniem). Część praw zrealizujesz sam(a) w Koncie („Pobierz moje dane”, „Usuń konto”, zgody). Odpowiadamy w ciągu miesiąca. Masz też prawo wnieść skargę do Prezesa Urzędu Ochrony Danych Osobowych (ul. Stawki 2, 00-193 Warszawa, uodo.gov.pl).",

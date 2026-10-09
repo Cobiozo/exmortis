@@ -3,10 +3,6 @@ import { runSql, escStr } from "./supabase.ts";
 // Dopisuje adres do listy „Listy powrotu” (public.subscribers).
 // consentGiven=true → zapisuje datę i godzinę udzielenia zgody.
 export async function addSubscriber(base44, { email, name, consentGiven }) {
-  await runSql(
-    base44,
-    `ALTER TABLE public.subscribers ADD COLUMN IF NOT EXISTS consent_date timestamptz`
-  );
   const nameVal =
     name === undefined || name === null || String(name).trim() === ""
       ? "NULL"

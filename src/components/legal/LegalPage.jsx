@@ -14,11 +14,11 @@ export default function LegalPage({ doc, extra = [], children }) {
       <article className="mx-auto max-w-[70ch]">
         <h1 className="relic-heading text-3xl md:text-5xl mb-4">{doc.title}</h1>
         <p className="technical text-[10px] text-foreground/50 mb-6">
-          Wersja {LEGAL_VERSION}{!LEGAL_FROM.startsWith("[") && ` · Obowiązuje od: ${LEGAL_FROM}`}
+          Wersja {doc.version || LEGAL_VERSION}{!LEGAL_FROM.startsWith("[") && ` · Obowiązuje od: ${LEGAL_FROM}`}
         </p>
         <div className="flex flex-wrap gap-4 mb-10 print:hidden">
           <button onClick={() => window.print()} className="btn-ghost !px-4 !py-2 text-[10px]"><Download className="h-4 w-4" /> POBIERZ PDF</button>
-          <span className="technical text-[10px] text-foreground/40 self-center">Poprzednie wersje: brak — to pierwsza wersja</span>
+          <span className="technical text-[10px] text-foreground/40 self-center">{doc.version ? `Poprzednia wersja: ${LEGAL_VERSION}` : "Poprzednie wersje: brak — to pierwsza wersja"}</span>
         </div>
         <nav aria-label="Spis treści" className="border hairline p-5 mb-12 print:hidden">
           <p className="technical text-[10px] gold-text mb-3">SPIS TREŚCI</p>

@@ -2,7 +2,9 @@ import { runSql, escStr, esc } from "./supabase.ts";
 
 // Zamówienia z kasy (PayU) — tabela public.orders.
 
+// Struktura tabeli zakładana migracją przy wdrożeniu — przy zapytaniach nic nie zmieniamy.
 export async function ensureOrdersTable(base44) {
+  return;
   await runSql(
     base44,
     `CREATE TABLE IF NOT EXISTS public.orders (
