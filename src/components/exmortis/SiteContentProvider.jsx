@@ -1,21 +1,23 @@
 import React, { createContext, useContext, useEffect, useState } from "react";
 import { base44 } from "@/api/base44Client";
+import { takeContent } from "@/lib/prefetch";
+import { readCache, writeCache } from "@/lib/swrCache";
 
 const ContentCtx = createContext(null);
 
 // Ładuje raz nadpisania treści z panelu admina i udostępnia je stronom.
 // Bez nadpisania strony używają wartości domyślnych z kodu.
 export function SiteContentProvider({ children }) {
-  const [overrides, setOverrides] = useState({});
+  const [overrides, setOverrides] = useState(() => readCache("content") || {});
 
   useEffect(() => {
-    base44.functions
-      .invoke("siteContent", {})
-      .then((res) => {
+    (takeContent() || base44.functions.invoke("siteContent", {}).then((r) => r.data))
+      .then((data) => {
         const map = {};
-        for (const row of res.data.content || []) {
+        for (const row of data.content || []) {
           map[`${row.page_key}.${row.block_key}`] = row.value;
         }
+        writeCache("content", map);
         setOverrides(map);
       })
       .catch(() => {});

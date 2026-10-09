@@ -1,4 +1,5 @@
 import React from "react";
+import { mediaSrcSet } from "@/lib/imgSrcSet";
 
 const W = [480, 960, 1600, 2000];
 const block = (e) => e.preventDefault();
@@ -7,8 +8,9 @@ const block = (e) => e.preventDefault();
 export default function SafeImg({ img, className = "", imgClass = "", style, eager, sizes = "100vw" }) {
   const url = img?.url || "";
   const proxied = url.startsWith("/functions/media");
-  const src = proxied ? `${url}&w=960` : url;
-  const srcSet = proxied ? W.map((w) => `${url}&w=${w} ${w}w`).join(", ") : undefined;
+  const media = proxied ? null : mediaSrcSet(url);
+  const src = proxied ? `${url}&w=960` : media?.src || url;
+  const srcSet = proxied ? W.map((w) => `${url}&w=${w} ${w}w`).join(", ") : media?.srcSet;
   return (
     <div className={`relative overflow-hidden select-none [-webkit-touch-callout:none] ${className}`} onContextMenu={block}>
       <img src={src} srcSet={srcSet} sizes={srcSet ? sizes : undefined} alt={img?.alt || ""} draggable={false}

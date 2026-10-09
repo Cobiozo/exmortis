@@ -3,8 +3,15 @@
 const PROJECT_REF = "fqhvxhnbeyvwubpnuzxe";
 const QUERY_URL = `https://api.supabase.com/v1/projects/${PROJECT_REF}/database/query`;
 
+// Token łącznika trzymany 5 min w pamięci instancji — bez osobnego zapytania przy każdym SQL.
+let TOKEN: { v: string; at: number } | null = null;
+
 export async function runSql(base44, query, readOnly = false) {
-  const { accessToken } = await base44.asServiceRole.connectors.getConnection("supabase");
+  if (!TOKEN || Date.now() - TOKEN.at > 300000) {
+    const { accessToken } = await base44.asServiceRole.connectors.getConnection("supabase");
+    TOKEN = { v: accessToken, at: Date.now() };
+  }
+  const accessToken = TOKEN.v;
   const res = await fetch(readOnly ? `${QUERY_URL}/read-only` : QUERY_URL, {
     method: "POST",
     headers: {

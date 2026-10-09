@@ -44,7 +44,25 @@ export async function loadAppUrl(base44) {
   return APP_URL;
 }
 
+// Kilka kluczy jednym zapytaniem tylko do odczytu (bez CREATE TABLE), z pamięcią 60 s w instancji.
+const CACHE = new Map<string, { v: unknown; at: number }>();
+export async function getSettingsFast(base44, keys: string[]) {
+  const ck = keys.join(",");
+  const hit = CACHE.get(ck);
+  if (hit && Date.now() - hit.at < 60000) return hit.v as Record<string, any>;
+  const rows = await runSql(
+    base44,
+    `SELECT key, value FROM public.app_settings WHERE key IN (${keys.map(escStr).join(",")})`,
+    true
+  ).catch(() => []);
+  const out: Record<string, any> = {};
+  for (const r of rows || []) out[r.key] = r.value;
+  CACHE.set(ck, { v: out, at: Date.now() });
+  return out;
+}
+
 export async function saveSetting(base44, key, value) {
+  CACHE.clear();
   await ensureSettingsTable(base44);
   const json = JSON.stringify(value);
   await runSql(
