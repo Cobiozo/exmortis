@@ -111,6 +111,18 @@ export default async function (req) {
         return Response.json({ error: "Zapisy zamknięte.", closed: true }, { status: 400 });
       }
 
+      // Limit: najwyżej 5 nowych zapisów z jednego adresu IP w 10 minut.
+      const ip = (req.headers.get("x-forwarded-for") || "").split(",")[0].trim().slice(0, 64) || "brak";
+      await runSql(base44, `ALTER TABLE public.registrations ADD COLUMN IF NOT EXISTS ip text`);
+      const recent = await runSql(
+        base44,
+        `SELECT count(*)::int AS n FROM public.registrations WHERE ip = ${escStr(ip)} AND created_at > now() - interval '10 minutes'`,
+        true
+      );
+      if ((recent[0]?.n || 0) >= 5) {
+        return Response.json({ error: "Za dużo zapisów w krótkim czasie. Spróbuj za kilka minut." }, { status: 429 });
+      }
+
       const existing = await runSql(
         base44,
         `SELECT id, status FROM public.registrations
@@ -151,7 +163,7 @@ export default async function (req) {
       const regRow = reg && reg[0];
       // Zgoda na Listy powrotu — osobno od zapisu, z datą i godziną.
       await runSql(base44, `ALTER TABLE public.registrations ADD COLUMN IF NOT EXISTS listy_zgoda_at timestamptz`);
-      await runSql(base44, `UPDATE public.registrations SET listy_zgoda_at = ${listy ? "now()" : "NULL"} WHERE id = ${escStr(regRow.id)}`);
+      await runSql(base44, `UPDATE public.registrations SET listy_zgoda_at = ${listy ? "now()" : "NULL"}, ip = ${escStr(ip)} WHERE id = ${escStr(regRow.id)}`);
       if (listy) {
         await base44.asServiceRole.entities.Consent.create({ email, kind: "newsletter", text: "Chcę też dostawać Listy powrotu — jeden list w każdy poniedziałek.", source: `spotkanie:${slug}` });
       }
