@@ -3,6 +3,7 @@ import { Link } from "react-router-dom";
 import { ArrowLeft, Share2, Check } from "lucide-react";
 import { base44 } from "@/api/base44Client";
 import { sanitizeHtml } from "@/lib/sanitizeHtml";
+import useSystemText from "@/content/useSystemText";
 import ShopProductCard from "@/components/exmortis/shop/ShopProductCard";
 
 const SHARE_URL = "https://exmortis-return-path.base44.app/test?src=polecenie";
@@ -67,6 +68,7 @@ const inputCls =
 // Kroki: 0 wstęp · 1–12 stwierdzenia · 13 etap · 14 zdanie · 15 formularz · 16 wynik
 // Moduł testu; d.tytul i d.tekst (wstęp) pochodzą z edytora stron.
 export default function Test({ d = {} }) {
+  const t = useSystemText();
   const [step, setStep] = useState(0);
   const [formOfAddress, setFormOfAddress] = useState(null);
   const [answers, setAnswers] = useState(Array(12).fill(null));

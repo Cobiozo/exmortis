@@ -10,6 +10,7 @@ const F = "w-full bg-transparent border hairline px-4 py-3 focus:border-[#C9A24A
 export default function ContactPageForm() {
   const [f, setF] = useState({ name: "", email: "", message: "" });
   const [state, setState] = useState("form");
+  const t = useSystemText();
   const submit = async (e) => {
     e.preventDefault(); setState("busy");
     await base44.functions.invoke("createContactMessage", f).then(() => setState("done")).catch(() => setState("error"));
