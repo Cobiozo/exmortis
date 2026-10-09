@@ -7,6 +7,8 @@ import { useAdminMode } from "@/components/admin/AdminModeContext";
 import DesktopNav, { TestLink } from "./nav/DesktopNav";
 import AccountMenu from "./nav/AccountMenu";
 import MobileMenu from "./nav/MobileMenu";
+import usePrelaunch from "@/lib/usePrelaunch";
+import PrelaunchNav from "@/components/prelaunch/PrelaunchNav";
 
 export default function Navbar() {
   const [scrolled, setScrolled] = useState(false);
@@ -15,6 +17,7 @@ export default function Navbar() {
   const { count, setOpen } = useCart();
   const { isAdmin } = useAdminMode();
   const location = useLocation();
+  const { gated } = usePrelaunch();
   const rowRef = useRef(null), logoRef = useRef(null), rightRef = useRef(null), measureRef = useRef(null), burgerRef = useRef(null);
 
   useEffect(() => {
@@ -42,6 +45,7 @@ export default function Navbar() {
   useEffect(() => { if (!collapsed) setMobile(false); }, [collapsed]);
 
   const top = isAdmin ? "top-10" : "top-0";
+  if (gated) return <PrelaunchNav top={top} />;
   return (
     <>
       <header className={`fixed ${top} inset-x-0 z-50 transition-colors duration-300 ${scrolled || mobile ? "bg-[#0A0A0B]/95 backdrop-blur-md border-b hairline" : "bg-transparent"}`}>

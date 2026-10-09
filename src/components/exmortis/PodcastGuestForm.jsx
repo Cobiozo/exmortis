@@ -20,6 +20,7 @@ export default function PodcastGuestForm() {
   const [f, setF] = useState(EMPTY);
   const [sending, setSending] = useState(false);
   const [sent, setSent] = useState(false);
+  const firma = useFirma();
   const [error, setError] = useState("");
   const set = (k) => (e) => setF({ ...f, [k]: e.target.type === "checkbox" ? e.target.checked : e.target.value });
 

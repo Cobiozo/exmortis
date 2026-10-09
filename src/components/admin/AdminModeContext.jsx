@@ -8,7 +8,7 @@ const KEY = "exm_view";
 
 // Tryb podglądu dla admina: "admin" albo "guest". Trwa w karcie (sessionStorage), ?podglad=gosc działa tylko dla admina.
 export function AdminModeProvider({ children }) {
-  const [isAdmin, setIsAdmin] = useState(false);
+  const [isAdmin, setIsAdmin] = useState(null); // null = jeszcze sprawdzamy
   const [mode, setModeState] = useState(() => {
     if (new URLSearchParams(window.location.search).get("podglad") === "gosc") return "guest";
     return sessionStorage.getItem(KEY) || "admin";
@@ -40,7 +40,7 @@ export function AdminModeProvider({ children }) {
 
   const guest = isAdmin && mode === "guest";
   return (
-    <Ctx.Provider value={{ isAdmin, mode, guest, adminView: isAdmin && mode === "admin", setMode }}>
+    <Ctx.Provider value={{ isAdmin: !!isAdmin, ready: isAdmin !== null, mode, guest: !!guest, adminView: !!isAdmin && mode === "admin", setMode }}>
       {children}
     </Ctx.Provider>
   );

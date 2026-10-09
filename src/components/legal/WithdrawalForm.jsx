@@ -13,6 +13,7 @@ export default function WithdrawalForm({ order }) {
   const [state, setState] = useState("form");
   const [err, setErr] = useState("");
   const [at, setAt] = useState("");
+  const firma = useFirma();
   useEffect(() => { if (user) setF((x) => ({ ...x, email: x.email || user.email, name: x.name || user.full_name || "" })); }, [user]);
   const set = (k) => (e) => setF({ ...f, [k]: e.target.value });
 

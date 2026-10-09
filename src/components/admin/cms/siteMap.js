@@ -2,6 +2,7 @@
 // status: opublikowana | ukryta | systemowa | szablon; menu: czy jest w górnym menu.
 export const SITE_MAP = [
   { slug: "home", tytul: "Strona główna", path: "/", status: "opublikowana", menu: true, zrodlo: "Edytor stron" },
+  { slug: "zapowiedz", tytul: "Strona główna — zapowiedź", path: "/", status: "ukryta", menu: false, zrodlo: "Edytor stron (widzą ją goście w trybie przedpremierowym)" },
   { slug: "o-mnie", tytul: "O mnie", path: "/o-mnie", status: "opublikowana", menu: true, zrodlo: "Edytor stron" },
   { slug: "kontakt", tytul: "Kontakt", path: "/kontakt", status: "opublikowana", menu: true, zrodlo: "Edytor stron" },
   { slug: "glos", tytul: "Głos", path: "/glos", status: "opublikowana", menu: true, zrodlo: "Edytor stron + moduł Podcast", modul: "/admin/podcast" },

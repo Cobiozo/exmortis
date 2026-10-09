@@ -5,6 +5,7 @@ import { POWROT_BLOCKS, TEST_BLOCKS } from "./powrotDefault";
 import { SPOTKANIA_BLOCKS, SKLEP_BLOCKS, SPOTKANIE_TPL, PRODUKT_TPL, ODCINEK_TPL } from "./listingDefaults";
 
 import { LISTOPAD_BLOCKS } from "./listopadDefault";
+import { ZAPOWIEDZ_BLOCKS } from "./zapowiedzDefault";
 
 const bare = { ...L, numer: "brak" };
 const mod = (id, modul) => ({ id, typ: "modul", widoczny: true, dane: { modul }, uklad: { ...bare } });
@@ -22,4 +23,4 @@ export const KONTAKT_BLOCKS = [
 ];
 
 // Treść wyjściowa stron przenoszonych do edytora (zanim admin coś opublikuje).
-export const PAGE_DEFAULTS = { "1-listopada": LISTOPAD_BLOCKS, home: HOME_BLOCKS, "o-mnie": ABOUT_BLOCKS, glos: GLOS_BLOCKS, kontakt: KONTAKT_BLOCKS, powrot: POWROT_BLOCKS, test: TEST_BLOCKS, spotkania: SPOTKANIA_BLOCKS, sklep: SKLEP_BLOCKS, _spotkanie: SPOTKANIE_TPL, _produkt: PRODUKT_TPL, _odcinek: ODCINEK_TPL };
+export const PAGE_DEFAULTS = { zapowiedz: ZAPOWIEDZ_BLOCKS, "1-listopada": LISTOPAD_BLOCKS, home: HOME_BLOCKS, "o-mnie": ABOUT_BLOCKS, glos: GLOS_BLOCKS, kontakt: KONTAKT_BLOCKS, powrot: POWROT_BLOCKS, test: TEST_BLOCKS, spotkania: SPOTKANIA_BLOCKS, sklep: SKLEP_BLOCKS, _spotkanie: SPOTKANIE_TPL, _produkt: PRODUKT_TPL, _odcinek: ODCINEK_TPL };

@@ -8,7 +8,8 @@ import UserNotRegisteredError from '@/components/UserNotRegisteredError';
 import ScrollToTop from './components/ScrollToTop';
 import { CartProvider } from '@/components/exmortis/CartContext';
 import Layout from '@/components/exmortis/Layout';
-import Home from '@/pages/Home';
+import HomeSwitch from '@/components/prelaunch/HomeSwitch';
+import PrelaunchGate from '@/components/prelaunch/PrelaunchGate';
 import About from '@/pages/About';
 import ShopPage from '@/pages/ShopPage';
 import Checkout from '@/pages/Checkout';
@@ -73,6 +74,7 @@ const AuthenticatedApp = () => {
       <AdminBar />
       <SiteContentProvider>
       <PodcastPlayerProvider>
+      <PrelaunchGate>
       <Routes>
         <Route path="/login" element={<Login />} />
         <Route path="/register" element={<Register />} />
@@ -89,7 +91,7 @@ const AuthenticatedApp = () => {
         </Route>
         <Route path="/cisza" element={<Cisza />} />
         <Route element={<Layout />}>
-          <Route path="/" element={<Home />} />
+          <Route path="/" element={<HomeSwitch />} />
           <Route path="/o-mnie" element={<About />} />
           <Route path="/skarbiec" element={<ShopPage />} />
           <Route path="/skarbiec/:slug" element={<CmsRoutePage slug="_produkt" />} />
@@ -113,6 +115,7 @@ const AuthenticatedApp = () => {
           <Route path="*" element={<PageNotFound />} />
         </Route>
       </Routes>
+      </PrelaunchGate>
       </PodcastPlayerProvider>
       <CookieBanner />
       </SiteContentProvider>

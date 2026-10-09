@@ -7,6 +7,8 @@ const until = (m) => { const d = new Date(); d.setMonth(d.getMonth() + m); retur
 
 // Informacje wymagane przed złożeniem zamówienia na odległość.
 export default function OrderSummaryInfo({ items, total }) {
+  const f = useFirma();
+  const seller = [f.nazwa, f.adres, f.nip && `NIP ${f.nip}`].filter(Boolean).join(", ");
   const digital = items.some(isDigital);
   return (
     <div className="border hairline p-5 space-y-2 text-sm text-foreground/65 leading-relaxed">
