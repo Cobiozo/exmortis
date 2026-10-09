@@ -32,6 +32,7 @@ function icsStamp(date) {
 // Stały adres strony dołączenia (spotkania online) — nigdy surowy link do Zooma.
 export const isOnline = (ev) => ev.format === "Online";
 export function joinUrl(ev) {
+  if (ev.short_path) return `${APP_URL}/${ev.short_path}/dolacz`;
   return ev.slug ? `${APP_URL}/spotkania/${ev.slug}/dolacz` : null;
 }
 

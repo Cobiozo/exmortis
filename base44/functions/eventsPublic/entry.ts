@@ -140,7 +140,8 @@ export default async function (req) {
       }
       if (res.already) return Response.json({ ok: true, already: true });
       const regRow = res.reg;
-      const ev = { ...res.ev, slug: res.ev.slug || slug };
+      const sp = (await runSql(base44, `SELECT short_path FROM public.events WHERE slug = ${escStr(slug)}`, true).catch(() => []))[0]?.short_path || null;
+      const ev = { ...res.ev, slug: res.ev.slug || slug, short_path: sp };
       // Zgody (dowód z datą, godziną i id zapisu) i e-mail potwierdzający — dopiero po udanym zapisie.
       waitUntil(Promise.allSettled([saveConsents(base44, d, regRow.id), loadAppUrl(base44).then(() => afterSaved(base44, ev, regRow, d))]));
       return Response.json({
@@ -148,7 +149,7 @@ export default async function (req) {
         status: regRow.status,
         first_name: regRow.first_name,
         checkout_url: Number(ev.price) > 0 ? ev.checkout_url : null,
-        join_url: regRow.status === "Zapisany" && ev.format === "Online" ? `/spotkania/${slug}/dolacz` : null,
+        join_url: regRow.status === "Zapisany" && ev.format === "Online" ? (sp ? `/${sp}/dolacz` : `/spotkania/${slug}/dolacz`) : null,
       });
     }
 
@@ -158,7 +159,7 @@ export default async function (req) {
       const key = textField(body, "slug", { max: 200 });
       const rows = await runSql(base44,
         `SELECT id, title, slug, subtitle, format, status, start_datetime, duration_minutes, location, join_link, join_password,
-           recording_url, recording_until, open_minutes FROM public.events
+           recording_url, recording_until, open_minutes, short_path FROM public.events
          WHERE (slug = ${escStr(key)} OR short_path = ${escStr(key)}) ORDER BY slug = ${escStr(key)} DESC LIMIT 1`, true);
       const ev = rows[0];
       const me = body.preview ? await base44.auth.me().catch(() => null) : null;
@@ -235,7 +236,7 @@ export default async function (req) {
          RETURNING r.id`
       );
       const evCols = `e.id, e.title, e.slug, e.subtitle, e.event_type, e.format,
-        e.start_datetime, e.duration_minutes, e.location, e.join_link, e.external_url, e.recording_url`;
+        e.start_datetime, e.duration_minutes, e.location, e.join_link, e.external_url, e.recording_url, e.short_path`;
       const [due24, due1, dueRec] = await Promise.all([
         runSql(
           base44,

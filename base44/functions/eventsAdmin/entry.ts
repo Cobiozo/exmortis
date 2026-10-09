@@ -385,7 +385,7 @@ export default async function (req) {
       const id = String(body.id || "");
       const evRows = await runSql(
         base44,
-        `SELECT id, title, slug, subtitle, format, start_datetime, duration_minutes, location, join_link, external_url
+        `SELECT id, title, slug, subtitle, format, start_datetime, duration_minutes, location, join_link, external_url, short_path
          FROM public.events WHERE id = ${escStr(id)}`,
         true
       );
@@ -414,7 +414,7 @@ export default async function (req) {
       const evRows = await runSql(
         base44,
         `SELECT id, title, slug, subtitle, event_type, format, start_datetime, duration_minutes,
-           location, join_link, external_url
+           location, join_link, external_url, short_path
          FROM public.events WHERE id = ${escStr(id)}`,
         true
       );
