@@ -13,6 +13,9 @@ export async function ensureSettingsTable(base44) {
   );
 }
 
+// Dane firmy do stopek e-maili — wczytywane razem z ustawieniami SMTP.
+export let FIRMA = null;
+
 export async function getSetting(base44, key) {
   await ensureSettingsTable(base44);
   const rows = await runSql(
@@ -20,7 +23,9 @@ export async function getSetting(base44, key) {
     `SELECT value FROM public.app_settings WHERE key = ${escStr(key)}`,
     true
   );
-  return rows && rows.length > 0 ? rows[0].value : null;
+  const value = rows && rows.length > 0 ? rows[0].value : null;
+  if (key === "smtp") FIRMA = await getSetting(base44, "firma").catch(() => null);
+  return value;
 }
 
 // Adres aplikacji (APP_URL) — ustawiany w panelu admina, używany we wszystkich linkach w e-mailach i przekierowaniach.

@@ -1,4 +1,6 @@
 import nodemailer from "npm:nodemailer@6.9.13";
+import { FIRMA } from "./settings.ts";
+import { firmaFooter } from "./firma.ts";
 
 // Wysyłka maila SMTP z ustawień zapisanych w panelu (app_settings → smtp).
 
@@ -17,7 +19,7 @@ export async function sendMail(smtp, { to, subject, html, attachments }) {
     from: smtp.from || smtp.user,
     to,
     subject,
-    html,
+    html: html + firmaFooter(FIRMA),
     ...(Array.isArray(attachments) && attachments.length > 0 ? { attachments } : {}),
   });
 }

@@ -25,7 +25,7 @@ export default async function (req) {
     const smtp = await getSetting(base44, "smtp").catch(() => null);
     if (smtp) {
       const rows = `<p>Zamówienie: ${esc(data.order_id)}<br>Produkt: ${esc(data.product)}<br>Data zamówienia: ${esc(data.order_date || "—")}<br>Data i godzina wpływu: ${when}</p>`;
-      await sendMail(smtp, { to: data.email, subject: "Potwierdzenie otrzymania odstąpienia od umowy", html: `<p>${esc(data.name)}, otrzymaliśmy Twoje oświadczenie o odstąpieniu od umowy.</p>${rows}<p>Zwrot płatności nastąpi nie później niż w 14 dni.</p><p>[NAZWA FIRMY], [ADRES DZIAŁALNOŚCI], NIP [NIP]</p>` }).catch(() => {});
+      await sendMail(smtp, { to: data.email, subject: "Potwierdzenie otrzymania odstąpienia od umowy", html: `<p>${esc(data.name)}, otrzymaliśmy Twoje oświadczenie o odstąpieniu od umowy.</p>${rows}<p>Zwrot płatności nastąpi nie później niż w 14 dni.</p>` }).catch(() => {});
       const admin = smtp.adminEmail || smtp.from;
       if (admin) await sendMail(smtp, { to: admin, subject: `Odstąpienie od umowy: ${data.order_id}`, html: `<p>${esc(data.name)} (${esc(data.email)})</p>${rows}<p>Powód: ${esc(data.reason || "—")}</p>` }).catch(() => {});
     }

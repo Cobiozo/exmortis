@@ -1,6 +1,7 @@
 import { createClientFromRequest } from "npm:@base44/sdk@0.8.44";
 import { requireAdmin } from "../../shared/supabase.ts";
 import { getSetting, saveSetting, deleteSetting, cleanAppUrl, DEFAULT_APP_URL } from "../../shared/settings.ts";
+import { cleanFirma, cleanPremiera } from "../../shared/firma.ts";
 
 const MASK = "********";
 
@@ -28,6 +29,16 @@ export default async function (req) {
         payu: payu ? maskSecrets(payu, ["clientSecret", "secondKey"]) : {},
         smtp: smtp ? maskSecrets(smtp, ["password"]) : {},
       });
+    }
+
+    if (body.action === "save" && body.target === "firma") {
+      await saveSetting(base44, "firma", cleanFirma(body.data));
+      return Response.json({ ok: true });
+    }
+
+    if (body.action === "save" && body.target === "premiera") {
+      await saveSetting(base44, "premiera", cleanPremiera(body.data));
+      return Response.json({ ok: true });
     }
 
     if (body.action === "save" && body.target === "app") {
