@@ -1,5 +1,6 @@
 import { createClientFromRequest } from "npm:@base44/sdk@0.8.52";
 import { getSettingsFast } from "../../shared/settings.ts";
+import { getSnap } from "../../shared/snapshot.ts";
 import { cleanFirma, PREMIERA_DEFAULT } from "../../shared/firma.ts";
 
 // Publiczne ustawienia strony: dane firmy i tryb przedpremierowy.
@@ -10,7 +11,7 @@ export default async function (req) {
     const base44 = createClientFromRequest(req);
     const hasToken = !!req.headers.get("authorization");
     const [s, me] = await Promise.all([
-      getSettingsFast(base44, ["firma", "premiera"]),
+      getSnap(base44, "settings:firma,premiera", () => getSettingsFast(base44, ["firma", "premiera"])) as Promise<Record<string, any>>,
       hasToken ? base44.auth.me().catch(() => null) : null,
     ]);
     const { dostep = [], ...p } = { ...PREMIERA_DEFAULT, ...(s.premiera || {}) };

@@ -1,5 +1,6 @@
 import { createClientFromRequest } from "npm:@base44/sdk@0.8.44";
 import { runSql, escStr, requireAdmin } from "../../shared/supabase.ts";
+import { clearSnap } from "../../shared/snapshot.ts";
 
 const KEY_RE = /^[a-z0-9._-]+$/;
 
@@ -8,6 +9,7 @@ export default async function (req) {
     const base44 = createClientFromRequest(req);
     await requireAdmin(base44);
     const body = await req.json().catch(() => ({}));
+    if (body.action !== "list") await clearSnap(base44, "content");
 
     if (body.action === "list") {
       const content = await runSql(

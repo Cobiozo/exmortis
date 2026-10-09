@@ -1,8 +1,13 @@
 import { runSql, escStr } from "./supabase.ts";
+import { clearSnap } from "./snapshot.ts";
 
 // Ustawienia integracji (payu / smtp) przechowywane jako jsonb w app_settings.
 
+// Tabela istnieje od wdrożenia — sprawdzamy najwyżej raz na instancję, nie przy każdym odczycie.
+let TABLE_OK = false;
 export async function ensureSettingsTable(base44) {
+  if (TABLE_OK) return;
+  TABLE_OK = true;
   await runSql(
     base44,
     `CREATE TABLE IF NOT EXISTS public.app_settings (
@@ -38,9 +43,12 @@ export function cleanAppUrl(v) {
   return s;
 }
 
+let APP_URL_AT = 0;
 export async function loadAppUrl(base44) {
+  if (Date.now() - APP_URL_AT < 300000) return APP_URL;
   const s = await getSetting(base44, "app").catch(() => null);
   APP_URL = s?.url || DEFAULT_APP_URL;
+  APP_URL_AT = Date.now();
   return APP_URL;
 }
 
@@ -63,6 +71,8 @@ export async function getSettingsFast(base44, keys: string[]) {
 
 export async function saveSetting(base44, key, value) {
   CACHE.clear();
+  APP_URL_AT = 0;
+  await clearSnap(base44, "settings");
   await ensureSettingsTable(base44);
   const json = JSON.stringify(value);
   await runSql(

@@ -1,6 +1,6 @@
 import { base44 } from "@/api/base44Client";
 import { mediaSrcSet } from "@/lib/imgSrcSet";
-import { LISTOPAD_COVER } from "@/components/cms/defaults/listopadDefault";
+import { LISTOPAD_COVER, LISTOPAD_EVENT } from "@/components/cms/defaults/listopadDefault";
 
 // Startuje przy wczytaniu skryptu, równolegle: ustawienia, treści i bieżąca strona z edytora.
 const PRE_END = new Date("2026-11-01T20:30:00.000Z").getTime();
@@ -10,7 +10,10 @@ const SLUG = { "/1-listopada": "1-listopada", ...(Date.now() < PRE_END ? { "/": 
 const settingsP = base44.functions.invoke("siteSettings", {}).then((r) => r.data);
 const contentP = base44.functions.invoke("siteContent", {}).then((r) => r.data);
 const pageP = SLUG ? base44.entities.PublishedPage.filter({ slug: SLUG }, { limit: 1 }) : null;
-[settingsP, contentP, pageP].forEach((p) => p?.catch(() => {}));
+const eventP = path === "/1-listopada" ? base44.functions.invoke("eventsPublic", { action: "get", slug: LISTOPAD_EVENT }).then((r) => r.data.event) : null;
+[settingsP, contentP, pageP, eventP].forEach((p) => p?.catch(() => {}));
+let usedE = false;
+export const takeEvent = (slug) => (slug === LISTOPAD_EVENT && eventP && !usedE ? ((usedE = true), eventP) : null);
 
 let usedS = false, usedC = false, usedP = false;
 export const takeSettings = () => (usedS ? null : ((usedS = true), settingsP));

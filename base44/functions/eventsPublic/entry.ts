@@ -2,6 +2,7 @@ import { createClientFromRequest } from "npm:@base44/sdk@0.8.44";
 import { waitUntil } from "base44:runtime";
 import { runSql, escStr, textField, emailField } from "../../shared/supabase.ts";
 import { getSetting, loadAppUrl } from "../../shared/settings.ts";
+import { getSnap, clearSnap } from "../../shared/snapshot.ts";
 import { sendConfirmationMail, sendReminderMail, sendRecordingMail, plWhen, APP_URL } from "../../shared/events.ts";
 
 // Publiczny moduł Spotkań: lista nadchodzących/minionych wydarzeń, szczegóły,
@@ -23,11 +24,11 @@ async function smtpConfig(base44) {
 export default async function (req) {
   try {
     const base44 = createClientFromRequest(req);
-    await loadAppUrl(base44);
     const body = await req.json().catch(() => ({}));
 
     // --- Lista nadchodzących (Opublikowane + Odwołane) i minionych z nagraniami ---
     if (body.action === "list") {
+      const data = await getSnap(base44, "events:list", async () => {
       const [upcoming, past] = await Promise.all([
         runSql(
           base44,
@@ -53,24 +54,32 @@ export default async function (req) {
           true
         ),
       ]);
-      return Response.json({ upcoming: upcoming || [], past: past || [] });
+      return { upcoming: upcoming || [], past: past || [] };
+      });
+      return Response.json(data);
     }
 
     // --- Szczegóły jednego wydarzenia (bez join_link) ---
     if (body.action === "get") {
       const slug = textField(body, "slug", { max: 200 });
-      const rows = await runSql(
-        base44,
-        `SELECT ${PUB_COLS}, ${REG_COUNT}
-         FROM public.events e
-         WHERE e.slug = ${escStr(slug)}`,
-        true
-      );
-      if (!rows || rows.length === 0) {
+      const ev = await getSnap(base44, `events:get:${slug}`, async () => {
+        const rows = await runSql(
+          base44,
+          `SELECT ${PUB_COLS}, ${REG_COUNT}
+           FROM public.events e
+           WHERE e.slug = ${escStr(slug)}`,
+          true
+        );
+        return rows?.[0] || null;
+      });
+      if (!ev) {
         return Response.json({ error: "Nie znaleziono wydarzenia" }, { status: 404 });
       }
-      return Response.json({ event: rows[0] });
+      return Response.json({ event: ev });
     }
+
+    await loadAppUrl(base44);
+    if (body.action === "register") waitUntil(clearSnap(base44, "events").catch(() => {}));
 
     // --- Zapis na wydarzenie (z obsługą listy rezerwowej) ---
     if (body.action === "register") {
