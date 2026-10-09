@@ -111,9 +111,9 @@ export default async function (req) {
         const st = annStatus(a);
         const stats = st === "Szkic" ? null : {
           odbiorcy: await recipients(sr, base44, a),
-          wyswietlenia: await S.count({ ann_id: a.id, viewed_at: { $exists: true } }),
-          klikniecia: await S.count({ ann_id: a.id, clicked_at: { $exists: true } }),
-          zamkniecia: await S.count({ ann_id: a.id, dismissed_at: { $exists: true } }),
+          wyswietlenia: await S.count({ ann_id: a.id, viewed_at: { $gt: "2000" } }),
+          klikniecia: await S.count({ ann_id: a.id, clicked_at: { $gt: "2000" } }),
+          zamkniecia: await S.count({ ann_id: a.id, dismissed_at: { $gt: "2000" } }),
         };
         items.push({ ...a, status: st, stats });
       }
