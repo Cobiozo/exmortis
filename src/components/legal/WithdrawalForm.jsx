@@ -6,6 +6,13 @@ import { clause } from "@/lib/firma";
 import { useFirma } from "@/lib/useSiteSettings";
 
 const F = "w-full bg-transparent border hairline px-4 py-3 focus:border-[#C9A24A] focus:outline-none";
+const Field = ({ id, label, hint, children }) => (
+  <label htmlFor={id} className="block">
+    <span className="block technical text-[11px] text-foreground/70 mb-2">{label}</span>
+    {children}
+    {hint && <span className="block text-sm text-foreground/60 mt-1">{hint}</span>}
+  </label>
+);
 
 export default function WithdrawalForm({ order }) {
   const { user } = useAuth();
@@ -29,15 +36,15 @@ export default function WithdrawalForm({ order }) {
 
   return (
     <form onSubmit={submit} className="space-y-4">
-      <input required placeholder="Imię i nazwisko" value={f.name} onChange={set("name")} className={F} />
-      <input required type="email" placeholder="Adres e-mail do potwierdzenia" value={f.email} onChange={set("email")} className={F} />
-      <input required placeholder="Numer zamówienia" value={f.order_id} onChange={set("order_id")} className={F} />
-      <input required placeholder="Produkt lub usługa" value={f.product} onChange={set("product")} className={F} />
-      <input type="date" aria-label="Data zamówienia" value={f.order_date} onChange={set("order_date")} className={F} />
-      <textarea rows={3} placeholder="Powód (nieobowiązkowo)" value={f.reason} onChange={set("reason")} className={`${F} resize-none`} />
+      <Field id="w-name" label="IMIĘ I NAZWISKO"><input id="w-name" required value={f.name} onChange={set("name")} className={F} /></Field>
+      <Field id="w-email" label="E-MAIL DO POTWIERDZENIA"><input id="w-email" required type="email" value={f.email} onChange={set("email")} className={F} /></Field>
+      <Field id="w-order" label="NUMER ZAMÓWIENIA (NIEOBOWIĄZKOWO)" hint="Jeśli masz — z e-maila z potwierdzeniem."><input id="w-order" value={f.order_id} onChange={set("order_id")} className={F} /></Field>
+      <Field id="w-product" label="PRODUKT LUB USŁUGA"><input id="w-product" required value={f.product} onChange={set("product")} className={F} /></Field>
+      <Field id="w-date" label="DATA ZAWARCIA UMOWY"><input id="w-date" type="date" value={f.order_date} onChange={set("order_date")} className={`${F} dt-input`} /></Field>
+      <Field id="w-reason" label="POWÓD (NIEOBOWIĄZKOWO)"><textarea id="w-reason" rows={3} value={f.reason} onChange={set("reason")} className={`${F} resize-none`} /></Field>
       {err && <p className="text-sm text-[#E8C547]">{err}</p>}
       <button disabled={state === "busy"} className="btn-relic w-full disabled:opacity-60">Potwierdź odstąpienie od umowy</button>
-      <p className="text-xs text-foreground/45">{clause("przyjąć i obsłużyć Twoje odstąpienie od umowy", firma)} Więcej: <Link to="/polityka-prywatnosci" className="underline">Polityka prywatności</Link>.</p>
+      <p className="text-sm text-foreground/75">{clause("przyjąć i obsłużyć Twoje odstąpienie od umowy", "obowiazek", firma)} Więcej: <Link to="/polityka-prywatnosci" className="underline">Polityka prywatności</Link>.</p>
     </form>
   );
 }

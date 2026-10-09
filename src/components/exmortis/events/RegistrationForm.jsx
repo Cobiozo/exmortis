@@ -3,6 +3,7 @@ import { Link } from "react-router-dom";
 import { base44 } from "@/api/base44Client";
 import useSystemText from "@/content/useSystemText";
 import { useFirma } from "@/lib/useSiteSettings";
+import { clause } from "@/lib/firma";
 
 // Formularz zapisu na wydarzenie (strona wydarzenia): imię, e-mail, pytanie, zgoda.
 export default function RegistrationForm({ event: ev }) {
@@ -155,7 +156,9 @@ export default function RegistrationForm({ event: ev }) {
         <label htmlFor="reg-web">Strona www</label>
         <input id="reg-web" tabIndex={-1} autoComplete="off" value={website} onChange={(e) => setWebsite(e.target.value)} />
       </div>
+      <label htmlFor="reg-q" className="block technical text-[10px] text-foreground/60 -mb-3">PYTANIE (NIEOBOWIĄZKOWO)</label>
       <textarea
+        id="reg-q"
         value={question}
         onChange={(e) => setQuestion(e.target.value)}
         rows={3}
@@ -172,7 +175,7 @@ export default function RegistrationForm({ event: ev }) {
           aria-describedby={consentErr ? "reg-consent-err" : undefined}
           className="mt-0.5 h-5 w-5 shrink-0 accent-[#C9A24A]"
         />
-        <span className="text-xs text-foreground/50 leading-relaxed group-hover:text-foreground/70 transition-colors">
+        <span className="text-sm text-foreground/80 leading-relaxed group-hover:text-foreground transition-colors">
           Akceptuję{" "}
           <Link to="/regulamin" className="gold-text underline">regulamin</Link>.
         </span>
@@ -185,12 +188,12 @@ export default function RegistrationForm({ event: ev }) {
           onChange={(e) => setListy(e.target.checked)}
           className="mt-0.5 h-5 w-5 shrink-0 accent-[#C9A24A]"
         />
-        <span className="text-xs text-foreground/50 leading-relaxed group-hover:text-foreground/70 transition-colors">
+        <span className="text-sm text-foreground/80 leading-relaxed group-hover:text-foreground transition-colors">
           Chcę też dostawać Listy powrotu — jeden list w każdy poniedziałek.
         </span>
       </label>
-      <p className="text-xs text-foreground/45 leading-relaxed">
-        {firma.nazwa ? `Administratorem danych jest ${firma.nazwa}. ` : ""}Dane wykorzystam tylko do obsługi spotkania. Szczegóły:{" "}
+      <p className="text-sm text-foreground/75 leading-relaxed">
+        {clause("obsłużyć Twój udział w spotkaniu", "umowa", firma)} Szczegóły:{" "}
         <Link to="/polityka-prywatnosci" className="gold-text underline">polityka prywatności</Link>.
       </p>
       {error && <p className="technical text-[10px] blood-text">{error}</p>}

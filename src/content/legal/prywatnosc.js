@@ -30,8 +30,8 @@ export const PRYWATNOSC = {
     ]},
     { id: "p6", title: "§6. Odbiorcy danych", body: [
       "Twoje dane mogą otrzymać podmioty, które przetwarzają je w naszym imieniu na podstawie umów powierzenia, wyłącznie w zakresie potrzebnym do świadczenia usług:",
-      "- hosting i platforma Serwisu: [Base44 — NAZWA I ADRES PODMIOTU, DO SPRAWDZENIA];",
-      "- operator płatności: [np. Stripe Payments Europe Ltd., Irlandia] — w zakresie płatności jest odrębnym administratorem;",
+      "- hosting i platforma Serwisu, w tym analityka odwiedzin (wyłącznie po Twojej zgodzie na cookies analityczne): Base44, Inc. — dostawca platformy, na której działa Serwis (podmiot przetwarzający dane na podstawie umowy powierzenia: base44.com/dpa). Przekazanie danych poza EOG: EU-US Data Privacy Framework albo standardowe klauzule umowne UE;",
+      "- operator płatności: PayU S.A., ul. Grunwaldzka 186, 60-166 Poznań — w zakresie płatności jest odrębnym administratorem;",
       "- system mailingowy: [NAZWA, np. MailerLite];",
       "- wideokonferencje: Zoom Video Communications, Inc. (USA);",
       "- poczta e-mail: [DOSTAWCA POCZTY];",
@@ -41,7 +41,7 @@ export const PRYWATNOSC = {
       "- organy publiczne — wyłącznie gdy wymagają tego przepisy.",
     ]},
     { id: "p7", title: "§7. Przekazywanie danych poza Europejski Obszar Gospodarczy", body: [
-      "Niektórzy dostawcy (np. Zoom, Meta, Google, [Base44 — DO SPRAWDZENIA]) mogą przetwarzać dane poza EOG, w tym w USA lub w Izraelu. Odbywa się to na podstawie decyzji Komisji Europejskiej stwierdzającej odpowiedni stopień ochrony (np. EU–US Data Privacy Framework dla certyfikowanych podmiotów, decyzja dotycząca Izraela) albo standardowych klauzul umownych zatwierdzonych przez Komisję. Kopię zabezpieczeń możesz uzyskać, pisząc do nas.",
+      "Niektórzy dostawcy (np. Zoom, Meta, Google, Base44, Inc.) mogą przetwarzać dane poza EOG, w tym w USA lub w Izraelu. Odbywa się to na podstawie decyzji Komisji Europejskiej stwierdzającej odpowiedni stopień ochrony (np. EU–US Data Privacy Framework dla certyfikowanych podmiotów, decyzja dotycząca Izraela) albo standardowych klauzul umownych zatwierdzonych przez Komisję. Kopię zabezpieczeń możesz uzyskać, pisząc do nas.",
     ]},
     { id: "p8", title: "§8. Twoje prawa", body: [
       "Masz prawo do: dostępu do danych i otrzymania ich kopii, sprostowania, usunięcia, ograniczenia przetwarzania, przenoszenia danych, sprzeciwu wobec przetwarzania opartego na prawnie uzasadnionym interesie (a wobec marketingu — w każdej chwili), wycofania zgody w dowolnym momencie (bez wpływu na zgodność z prawem przetwarzania przed wycofaniem). Część praw zrealizujesz sam(a) w Koncie („Pobierz moje dane”, „Usuń konto”, zgody). Odpowiadamy w ciągu miesiąca. Masz też prawo wnieść skargę do Prezesa Urzędu Ochrony Danych Osobowych (ul. Stawki 2, 00-193 Warszawa, uodo.gov.pl).",

@@ -14,8 +14,8 @@ export default async function (req) {
       name: s(b.name, 200), email: s(b.email, 200).toLowerCase(), order_id: s(b.order_id, 100),
       product: s(b.product, 300), order_date: s(b.order_date, 20), reason: s(b.reason, 2000),
     };
-    if (!data.name || !data.order_id || !/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(data.email)) {
-      return Response.json({ error: "Uzupełnij imię i nazwisko, numer zamówienia i poprawny e-mail." }, { status: 400 });
+    if (!data.name || !data.product || !/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(data.email)) {
+      return Response.json({ error: "Uzupełnij imię i nazwisko, produkt i poprawny e-mail." }, { status: 400 });
     }
     const received_at = new Date().toISOString();
     const ip = (req.headers.get("x-forwarded-for") || "").split(",")[0].trim();
@@ -24,10 +24,10 @@ export default async function (req) {
     const when = new Date(received_at).toLocaleString("pl-PL", { timeZone: "Europe/Warsaw" });
     const smtp = await getSetting(base44, "smtp").catch(() => null);
     if (smtp) {
-      const rows = `<p>Zamówienie: ${esc(data.order_id)}<br>Produkt: ${esc(data.product)}<br>Data zamówienia: ${esc(data.order_date || "—")}<br>Data i godzina wpływu: ${when}</p>`;
+      const rows = `<p>Zamówienie: ${esc(data.order_id || "—")}<br>Produkt: ${esc(data.product)}<br>Data zawarcia umowy: ${esc(data.order_date || "—")}<br>Data i godzina wpływu: ${when}</p>`;
       await sendMail(smtp, { to: data.email, subject: "Potwierdzenie otrzymania odstąpienia od umowy", html: `<p>${esc(data.name)}, otrzymaliśmy Twoje oświadczenie o odstąpieniu od umowy.</p>${rows}<p>Zwrot płatności nastąpi nie później niż w 14 dni.</p>` }).catch(() => {});
       const admin = smtp.adminEmail || smtp.from;
-      if (admin) await sendMail(smtp, { to: admin, subject: `Odstąpienie od umowy: ${data.order_id}`, html: `<p>${esc(data.name)} (${esc(data.email)})</p>${rows}<p>Powód: ${esc(data.reason || "—")}</p>` }).catch(() => {});
+      if (admin) await sendMail(smtp, { to: admin, subject: `Odstąpienie od umowy: ${data.order_id || data.product}`, html: `<p>${esc(data.name)} (${esc(data.email)})</p>${rows}<p>Powód: ${esc(data.reason || "—")}</p>` }).catch(() => {});
     }
     return Response.json({ ok: true, received_at });
   } catch (e) {

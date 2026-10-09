@@ -3,10 +3,12 @@ import { Outlet } from "react-router-dom";
 import Navbar from "@/components/exmortis/Navbar";
 import Footer from "@/components/exmortis/Footer";
 import CartDrawer from "@/components/exmortis/CartDrawer";
+import SiteLoader from "@/components/prelaunch/SiteLoader";
 import usePrelaunch from "@/lib/usePrelaunch";
 
 export default function Layout() {
   const { gated, loading } = usePrelaunch();
+  if (loading) return <SiteLoader />;
   return (
     <div className="min-h-screen flex flex-col bg-[#0A0A0B]">
       <Navbar />
@@ -14,7 +16,7 @@ export default function Layout() {
         <Outlet />
       </main>
       <Footer />
-      {!gated && !loading && <CartDrawer />}
+      {!gated && <CartDrawer />}
     </div>
   );
 }

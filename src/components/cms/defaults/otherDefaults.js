@@ -17,7 +17,7 @@ export const GLOS_BLOCKS = [
 ];
 
 export const KONTAKT_BLOCKS = [
-  { id: "kontakt-hero", typ: "hero", widoczny: true, uklad: { ...bare }, dane: { wariant: "standard", etykieta: "KONTAKT", linia1: "Kontakt", linia2: "",
+  { id: "kontakt-hero", typ: "hero", widoczny: true, uklad: { ...bare }, dane: { wariant: "standard", etykieta: "NAPISZ", linia1: "Kontakt", linia2: "",
     lead: "Napisz. Odpowiadam osobiście.", przyciski: [], przyciemnienie: 60 } },
   mod("kontakt-formularz", "kontakt_strona"),
 ];

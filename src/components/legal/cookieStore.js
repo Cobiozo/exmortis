@@ -13,6 +13,7 @@ export function readConsent() {
 }
 
 export function saveConsent(analytics, marketing) {
+  if (!analytics) localStorage.removeItem("base44_analytics_session_id");
   localStorage.setItem(KEY, JSON.stringify({ v: COOKIES_VERSION, at: Date.now(), analytics, marketing }));
   if (!marketing) {
     // Usuń ciasteczka marketingowe Meta, które da się usunąć.

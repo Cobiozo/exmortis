@@ -8,8 +8,9 @@ export const COOKIE_TABLE = [
   ["exmortis_cart", "exmortis", "Niezbędne", "Zawartość koszyka (localStorage)", "Do opróżnienia koszyka"],
   ["exm_cisza", "exmortis", "Niezbędne", "Głośność, wybrany czas i tło (localStorage)", "Do usunięcia przez użytkownika"],
   ["exm_view", "exmortis", "Niezbędne", "Tryb podglądu strony — tylko administrator (localStorage)", "Do usunięcia przez użytkownika"],
-  ["cookies YouTube (np. VISITOR_INFO1_LIVE, YSC)", "Google / YouTube", "[DO SPRAWDZENIA]", "Odtwarzacz osadzonych filmów i muzyki", "[DO SPRAWDZENIA]"],
-  ["cookies operatora płatności", "PayU", "Niezbędne", "Bezpieczeństwo płatności (na stronie operatora)", "[DO SPRAWDZENIA]"],
+  ["base44_analytics_session_id", "Base44, Inc. (platforma Serwisu)", "Analityczne", "Statystyka odwiedzin: identyfikator sesji, odwiedzone strony i zdarzenia (localStorage) — działa dopiero po zgodzie", "Do zakończenia sesji lub usunięcia przez użytkownika"],
+  ["cookies YouTube (np. VISITOR_INFO1_LIVE, YSC)", "Google / YouTube", "Marketingowe", "Odtwarzacz osadzonych filmów i muzyki", "YSC — do zamknięcia przeglądarki; VISITOR_INFO1_LIVE — ok. 6 miesięcy"],
+  ["cookies operatora płatności", "PayU S.A.", "Niezbędne", "Bezpieczeństwo płatności (na stronie operatora)", "Zgodnie z polityką cookies PayU (na stronie operatora)"],
 ];
 
 export const COOKIES = {

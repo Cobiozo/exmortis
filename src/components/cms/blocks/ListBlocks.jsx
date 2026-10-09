@@ -1,5 +1,6 @@
 import React from "react";
-import { ChevronDown } from "lucide-react";
+import FaqItem from "./ListBlocksFaq";
+import { isDraft } from "../draft";
 import { Buttons, SectionHead } from "../parts";
 import { Img } from "./SimpleBlocks";
 
@@ -41,19 +42,12 @@ export function StepsBlock({ d, label, center }) {
   );
 }
 
-export function FaqBlock({ d, label, center }) {
+export function FaqBlock({ d, label, center, editable: editableFaq }) {
   return (
     <>
       <SectionHead label={label} title={d.tytul} center={center} />
       <div className="max-w-3xl text-left divide-y divide-[#3D3D3F]/60 border-y hairline">
-        {(d.pytania || []).map((q, i) => (
-          <details key={i} className="group py-5">
-            <summary className="flex items-center justify-between gap-4 cursor-pointer list-none text-lg">
-              {q.pytanie}<ChevronDown className="h-4 w-4 gold-text shrink-0 transition-transform group-open:rotate-180" />
-            </summary>
-            <p className="mt-4 text-foreground/60 leading-relaxed whitespace-pre-line">{q.odpowiedz}</p>
-          </details>
-        ))}
+        {(d.pytania || []).filter((q) => editableFaq || !isDraft(q.odpowiedz)).map((q, i) => <FaqItem key={i} q={q} i={i} />)}
       </div>
     </>
   );

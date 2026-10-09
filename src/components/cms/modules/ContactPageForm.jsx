@@ -46,7 +46,7 @@ export default function ContactPageForm() {
             </div>
             {state === "error" && <p role="alert" className="text-sm text-[#E8C547]">{msg}</p>}
             <button disabled={state === "busy"} className="btn-relic w-full">{state === "busy" ? "WYSYŁAM…" : "WYŚLIJ"}</button>
-            <p className="text-xs text-foreground/45">{clause("odpowiedzieć na wiadomość", firma)} Więcej: <Link to="/polityka-prywatnosci" className="underline">Polityka prywatności</Link>.</p>
+            <p className="text-sm text-foreground/75">{clause("odpowiedzieć na wiadomość", "interes", firma)} Więcej: <Link to="/polityka-prywatnosci" className="underline">Polityka prywatności</Link>.</p>
           </form>
         )}
         <p className="mt-10 text-sm text-foreground/60">Chcesz odstąpić od umowy? <Link to="/odstapienie" className="gold-text underline">Odstąp od umowy tutaj</Link></p>

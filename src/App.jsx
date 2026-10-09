@@ -19,7 +19,8 @@ import TestPage from '@/pages/TestPage';
 import Cisza from '@/pages/Cisza';
 import Events from '@/pages/Events';
 import Login from '@/pages/Login';
-import Register from '@/pages/Register';
+import RegisterGate from '@/components/prelaunch/RegisterGate';
+import SeoMeta from '@/components/seo/SeoMeta';
 import ForgotPassword from '@/pages/ForgotPassword';
 import ResetPassword from '@/pages/ResetPassword';
 import Admin from '@/pages/admin/Admin';
@@ -78,9 +79,10 @@ const AuthenticatedApp = () => {
       <SiteContentProvider>
       <PodcastPlayerProvider>
       <PrelaunchGate>
+      <SeoMeta />
       <Routes>
         <Route path="/login" element={<Login />} />
-        <Route path="/register" element={<Register />} />
+        <Route path="/register" element={<RegisterGate />} />
         <Route path="/forgot-password" element={<ForgotPassword />} />
         <Route path="/reset-password" element={<ResetPassword />} />
         <Route element={<ProtectedRoute unauthenticatedElement={<Navigate to="/login" replace />} />}>

@@ -1,0 +1,2 @@
+// Twarda spacja po jednoliterowych spójnikach i przyimkach (o, w, z, i, a, u) — nie zostają same na końcu linii.
+export const nbsp = (t) => String(t ?? "").replace(/(^|[\s(„"])([oOwWzZiIaAuU])\s+/g, "$1$2\u00a0").replace(/(^|[\s(„"])([oOwWzZiIaAuU])\s+/g, "$1$2\u00a0");

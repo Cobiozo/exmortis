@@ -2,6 +2,7 @@ import React from "react";
 import { Link } from "react-router-dom";
 import { ArrowRight } from "lucide-react";
 import { sanitizeHtml } from "@/lib/sanitizeHtml";
+import { nbsp } from "@/lib/nbsp";
 
 const STY = { zloty: "btn-relic", obrys: "btn-ghost", tekst: "inline-flex items-center gap-2 technical text-xs gold-text hover:text-[#E2C170]" };
 
@@ -31,7 +32,7 @@ export function SectionHead({ label, title, intro, introHtml, center }) {
   const head = (
     <>
       {label && <p className="technical text-[11px] gold-text mb-4">{label}</p>}
-      {title && <h2 className="relic-heading text-4xl md:text-5xl lg:text-6xl leading-[0.95]"><Lines text={title} /></h2>}
+      {title && <h2 className="relic-heading text-4xl md:text-5xl lg:text-6xl leading-[0.95]"><Lines text={nbsp(title)} /></h2>}
     </>
   );
   if (center || (!intro && !introHtml)) return <div className="mb-12 md:mb-16">{head}</div>;

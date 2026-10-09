@@ -4,9 +4,9 @@ import { useAdminMode } from "@/components/admin/AdminModeContext";
 
 export const SIM_KEY = "exm_sim"; // symulowana data (tylko admin, w karcie)
 export const PRELAUNCH_OPEN = ["/", "/1-listopada", "/kontakt", "/regulamin", "/polityka-prywatnosci", "/polityka-cookies", "/odstapienie",
-  "/login", "/forgot-password", "/reset-password"];
+  "/login", "/register", "/forgot-password", "/reset-password"];
 // Adresy, które w trybie przedpremierowym przekierowują na zapowiedź (reszta nieznanych → 404).
-export const PRELAUNCH_HIDDEN = ["/o-mnie", "/powrot", "/skarbiec", "/sklep", "/produkt", "/kasa", "/glos", "/test", "/spotkania", "/cisza", "/strona", "/konto", "/register", "/obok", "/7-wieczorow"];
+export const PRELAUNCH_HIDDEN = ["/o-mnie", "/powrot", "/skarbiec", "/sklep", "/produkt", "/kasa", "/glos", "/test", "/spotkania", "/cisza", "/strona", "/konto", "/obok", "/7-wieczorow"];
 
 // active — tryb trwa (czas serwera); gated — bieżący widz widzi tylko zapowiedź.
 export default function usePrelaunch() {

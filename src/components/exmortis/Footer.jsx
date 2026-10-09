@@ -6,6 +6,7 @@ import FooterColumns from "./footer/FooterColumns";
 import CompanyLines from "@/components/legal/CompanyLines";
 import usePrelaunch from "@/lib/usePrelaunch";
 import { openCookieSettings } from "@/components/legal/cookieStore";
+import { linkPhones } from "@/lib/phones";
 
 export default function Footer() {
   const { rich } = useSiteContent();
@@ -32,27 +33,22 @@ export default function Footer() {
         </div>
 
         <div className="mt-16 pt-8 border-t hairline">
-          <p className="text-xs text-foreground/40 leading-relaxed max-w-2xl mb-6">
-            exmortis to mentoring, nie terapia. Jeśli jest Ci bardzo ciężko:{" "}
-            <span className="gold-text">116 123</span> · <span className="gold-text">800 70 2222</span> (całą dobę,
-            bezpłatnie) · w zagrożeniu życia <span className="gold-text">112</span>.
-          </p>
-          <nav aria-label="Dokumenty" className="flex flex-wrap gap-x-5 gap-y-2 text-xs mb-4">
-            <Link to="/regulamin" className="text-foreground/60 hover:gold-text">Regulamin</Link>
-            <Link to="/polityka-prywatnosci" className="text-foreground/60 hover:gold-text">Polityka prywatności</Link>
-            <Link to="/polityka-cookies" className="text-foreground/60 hover:gold-text">Polityka cookies</Link>
-            <Link to="/odstapienie" className="text-foreground/60 hover:gold-text">Odstąp od umowy tutaj</Link>
-            <button onClick={openCookieSettings} className="text-foreground/60 hover:gold-text">Ustawienia cookies</button>
-            <Link to="/kontakt" className="text-foreground/60 hover:gold-text">Kontakt</Link>
+          <p className="text-sm text-foreground/85 leading-relaxed max-w-2xl mb-6"
+            dangerouslySetInnerHTML={{ __html: linkPhones("exmortis to mentoring, nie terapia. Jeśli jest Ci bardzo ciężko: 116 123 · 800 70 2222 (całą dobę, bezpłatnie) · w zagrożeniu życia 112.") }} />
+          <nav aria-label="Dokumenty" className="flex flex-col sm:flex-row sm:flex-wrap sm:gap-x-5 text-sm mb-4">
+            {[["/regulamin", "Regulamin"], ["/polityka-prywatnosci", "Polityka prywatności"], ["/polityka-cookies", "Polityka cookies"], ["/odstapienie", "Odstąp od umowy tutaj"], ["/kontakt", "Kontakt"]].map(([to, t]) => (
+              <Link key={to} to={to} className="min-h-[44px] flex items-center text-foreground/75 hover:gold-text">{t}</Link>
+            ))}
+            <button onClick={openCookieSettings} className="min-h-[44px] flex items-center text-left text-foreground/75 hover:gold-text">Ustawienia cookies</button>
           </nav>
-          <CompanyLines className="text-[11px] text-foreground/35 mb-6" />
+          <CompanyLines className="text-xs text-foreground/65 mb-6" />
           <div className="flex flex-col sm:flex-row justify-between gap-4">
-            <p className="technical text-[10px] text-foreground/30">
+            <p className="technical text-xs text-foreground/65">
               © {new Date().getFullYear()} EXMORTIS · WSZELKIE PRAWA ZASTRZEŻONE
             </p>
-            <p className="technical text-[10px] text-foreground/30">
+            <p className="technical text-xs text-foreground/65 flex flex-wrap items-center">
               WRACAM Z SIEBIE · UCZĘ WRACAĆ
-              {!gated && <Link to={`/login?returnTo=${encodeURIComponent(pathname + search)}`} className="ml-4 text-foreground/25 hover:text-foreground/50">ZALOGUJ</Link>}
+              {!gated && <Link to={`/login?returnTo=${encodeURIComponent(pathname + search)}`} className="ml-4 min-h-[44px] inline-flex items-center text-foreground/65 hover:gold-text">ZALOGUJ</Link>}
             </p>
           </div>
         </div>
