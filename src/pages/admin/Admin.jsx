@@ -24,6 +24,7 @@ import PersonDataPanel from "@/components/admin/gdpr/PersonDataPanel";
 import PlaylistManager from "@/components/exmortis/glos/PlaylistManager";
 import { ShieldAlert, ArrowLeft } from "lucide-react";
 import PanelHeaderActions from "@/components/admin/PanelHeaderActions";
+import TechDashboard from "@/components/admin/TechDashboard";
 
 const SECTIONS = {
   spotkania: ["Spotkania", () => <EventsManager />],
@@ -46,6 +47,9 @@ const SECTIONS = {
   testy: ["Wyniki testu", () => <QuizStatsPanel />],
 };
 
+// Rola „techniczna”: ustawienia, treści, wygląd — bez danych osobowych.
+const TECH = ["tresci", "menu", "ustawienia", "integracje", "cisza"];
+
 export default function Admin() {
   useNoIndex();
   const { section } = useParams();
@@ -63,7 +67,8 @@ export default function Admin() {
     );
   }
 
-  if (!me || me.role !== "admin") {
+  const tech = me?.role === "techniczna";
+  if (!me || (me.role !== "admin" && !tech) || (tech && section && !TECH.includes(section))) {
     return (
       <div className="min-h-screen flex flex-col items-center justify-center gap-6 px-5 text-center">
         <ShieldAlert className="h-12 w-12 blood-text" />
@@ -100,7 +105,7 @@ export default function Admin() {
         )}
 
         <div className="mt-10">
-          {!section ? <AdminDashboard /> : current ? current[1]() : <p className="text-foreground/50">Nie ma takiej sekcji.</p>}
+          {!section ? (tech ? <TechDashboard sections={TECH.map((k) => [k, SECTIONS[k][0]])} /> : <AdminDashboard />) : current ? current[1]() : <p className="text-foreground/50">Nie ma takiej sekcji.</p>}
         </div>
       </div>
     </div>

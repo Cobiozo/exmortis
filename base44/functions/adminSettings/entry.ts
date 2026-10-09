@@ -1,5 +1,5 @@
 import { createClientFromRequest } from "npm:@base44/sdk@0.8.44";
-import { requireAdmin } from "../../shared/supabase.ts";
+import { requireStaff } from "../../shared/supabase.ts";
 import { getSetting, saveSetting, deleteSetting, cleanAppUrl, DEFAULT_APP_URL } from "../../shared/settings.ts";
 import { cleanFirma, cleanPremiera, PREMIERA_DEFAULT } from "../../shared/firma.ts";
 
@@ -17,7 +17,8 @@ function maskSecrets(obj, keys) {
 export default async function (req) {
   try {
     const base44 = createClientFromRequest(req);
-    await requireAdmin(base44);
+    const me = await requireStaff(base44);
+    const tech = me.role !== "admin";
     const body = await req.json().catch(() => ({}));
 
     if (body.action === "get") {
@@ -28,7 +29,8 @@ export default async function (req) {
       const premiera = await getSetting(base44, "premiera");
       return Response.json({
         firma: cleanFirma(firma),
-        premiera: { ...PREMIERA_DEFAULT, ...(premiera || {}) },
+        // Rola techniczna nie widzi listy adresów z dostępem przedpremierowym.
+        premiera: { ...PREMIERA_DEFAULT, ...(premiera || {}), ...(tech ? { dostep: [], dostep_ukryty: true } : {}) },
         app: { url: app?.url || DEFAULT_APP_URL },
         payu: payu ? maskSecrets(payu, ["clientSecret", "secondKey"]) : {},
         smtp: smtp ? maskSecrets(smtp, ["password"]) : {},
@@ -41,7 +43,8 @@ export default async function (req) {
     }
 
     if (body.action === "save" && body.target === "premiera") {
-      await saveSetting(base44, "premiera", cleanPremiera(body.data));
+      const data = tech ? { ...body.data, dostep: (await getSetting(base44, "premiera"))?.dostep || [] } : body.data;
+      await saveSetting(base44, "premiera", cleanPremiera(data));
       return Response.json({ ok: true });
     }
 

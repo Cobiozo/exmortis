@@ -1,5 +1,5 @@
 import { createClientFromRequest } from "npm:@base44/sdk@0.8.44";
-import { runSql, escStr, requireAdmin } from "../../shared/supabase.ts";
+import { runSql, escStr, requireStaff as requireAdmin } from "../../shared/supabase.ts";
 import { clearSnap } from "../../shared/snapshot.ts";
 
 const KEY_RE = /^[a-z0-9._-]+$/;

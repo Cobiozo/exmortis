@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from "react";
+import { logAccess } from "@/lib/auditLog";
 import { X, Download, Send, Bell, Video, ArrowUpCircle, UserMinus } from "lucide-react";
 import { base44 } from "@/api/base44Client";
 
@@ -67,6 +68,7 @@ export default function ParticipantsPanel({ event, onClose }) {
   };
 
   const exportCsv = () => {
+    logAccess("eksport", `Zapisy na spotkanie: ${event.title || event.slug} (CSV)`);
     const rows = [["Imię", "E-mail", "Status", "Pytanie do mnie", "Źródło", "Zapisano"].join(";")];
     for (const p of parts) {
       rows.push(

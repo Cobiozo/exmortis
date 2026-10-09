@@ -1,5 +1,5 @@
 import { createClientFromRequest } from "npm:@base44/sdk@0.8.44";
-import { runSql, requireAdmin } from "../../shared/supabase.ts";
+import { runSql, requireStaff as requireAdmin } from "../../shared/supabase.ts";
 
 // Administracja Minutnikiem ciszy: pliki audio (ustawienia) i anonimowe statystyki.
 function uriVal(v) {

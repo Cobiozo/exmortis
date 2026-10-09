@@ -25,6 +25,16 @@ export default async function (req) {
     const body = await req.json().catch(() => ({}));
     const email = emailField(body).toLowerCase();
     const sr = base44.asServiceRole.entities;
+    const [u0, dom] = email.split("@");
+    const log = (akcja, zakres, liczba?) => sr.DataAccessLog.create({ kto: me.email, akcja, zakres, osoba: `${u0[0]}***@${dom}`, liczba, at: new Date().toISOString() });
+
+    // Oznaczenie współpracy POWRÓT (decyduje o okresie przechowywania zgłoszenia).
+    if (body.action === "powrot") {
+      const col = body.field === "do" ? "wspolpraca_do" : "wspolpraca_od";
+      await runSql(base44, `UPDATE public.powrot_applications SET ${col} = ${body.clear ? "NULL" : "current_date"} WHERE lower(email) = ${escStr(email)}`);
+      await log("zmiana", `POWRÓT: ${col} ${body.clear ? "wyczyszczone" : "= dziś"}`);
+      return Response.json({ ok: true });
+    }
 
     const sbData = {};
     await Promise.all(Object.entries(SB).map(async ([t, col]) => {
@@ -42,7 +52,8 @@ export default async function (req) {
         ...Object.entries(appData).map(([e, r]) => ({ baza: "Aplikacja", zbior: e, liczba: r.length, zostaje: KEEP.has(e) })),
         { baza: "Aplikacja", zbior: "Konto (User)", liczba: account.length, zostaje: false },
       ].filter((x) => x.liczba > 0);
-      if (body.action === "find") return Response.json({ email, summary });
+      await log(body.action === "find" ? "otwarcie" : "eksport", body.action === "find" ? "Narzędzie RODO: wyszukanie" : "Narzędzie RODO: eksport JSON");
+      if (body.action === "find") return Response.json({ email, summary, powrot: sbData.powrot_applications.map((r) => ({ id: r.id, created_date: r.created_date, wspolpraca_od: r.wspolpraca_od, wspolpraca_do: r.wspolpraca_do })) });
       return Response.json({ email, wygenerowano: new Date().toISOString(), supabase: sbData, aplikacja: appData, konto: account });
     }
 
@@ -64,8 +75,7 @@ export default async function (req) {
         if (u.role === "admin") { konto = "konto administratora — nie usuwam"; continue; }
         konto = await sr.User.delete(u.id).then(() => "usunięte").catch(() => "usuń ręcznie w panelu: Użytkownicy aplikacji");
       }
-      const [u, dom] = email.split("@");
-      await sr.ContentLog.create({ akcja: "rodo_usuniecie", opis: `Usunięto dane osoby ${u[0]}***@${dom}`, kto: me.email });
+      await log("usuniecie", "Narzędzie RODO: usunięcie danych", Object.values(removed).reduce((a, b) => a + b, 0));
       return Response.json({ email, removed, konto, zostaje: [...KEEP] });
     }
     return Response.json({ error: "Nieznana akcja" }, { status: 400 });

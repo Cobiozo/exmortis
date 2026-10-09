@@ -1,4 +1,5 @@
 import { base44 } from "@/api/base44Client";
+import { logAccess } from "@/lib/auditLog";
 
 export const APP = base44.entities.PodcastApplication;
 export const STATUSES = [["nowe", "Nowe"], ["przeczytane", "Przeczytane"], ["wstepna", "Rozmowa wstępna"], ["zaproszony", "Zaproszony"], ["nagrane", "Nagrane"], ["opublikowane", "Opublikowane"], ["odrzucone", "Odrzucone"], ["wstrzymane", "Wstrzymane"]];
@@ -13,6 +14,7 @@ const cell = (v) => {
 };
 
 export function exportCsv(rows) {
+  logAccess("eksport", "Zgłoszenia do podcastu (CSV)", rows.length);
   const cols = ["created_date", "name", "email", "phone", "smierc", "forma", "status", "pilne", "today", "story"];
   const csv = [cols.join(";"), ...rows.map((r) => cols.map((c) => cell(r[c])).join(";"))].join("\n");
   const a = document.createElement("a");

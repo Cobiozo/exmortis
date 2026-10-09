@@ -2,6 +2,8 @@ import React, { useState } from "react";
 import { base44 } from "@/api/base44Client";
 import { Loader2, Search, Download, Trash2 } from "lucide-react";
 import PersonDeleteBox from "./PersonDeleteBox";
+import PowrotCoop from "./PowrotCoop";
+import AccessLogList from "./AccessLogList";
 
 // RODO art. 15 i 17 — jedno miejsce dla obu baz (Supabase i baza aplikacji).
 export default function PersonDataPanel() {
@@ -50,9 +52,11 @@ export default function PersonDataPanel() {
           <div className="flex flex-wrap gap-3">
             <button onClick={exportData} disabled={!!busy} className="btn-ghost !py-3">{busy === "export" ? <Loader2 className="h-4 w-4 animate-spin" /> : <Download className="h-4 w-4" />} EKSPORTUJ (JSON)</button>
           </div>
+          <PowrotCoop rows={found.powrot} call={call} onDone={find} />
           {found.summary.length > 0 && <PersonDeleteBox email={email.trim()} busy={busy === "delete"} onDelete={(confirm) => call("delete", { confirm })} onDone={find} icon={Trash2} />}
         </div>
       )}
+      <AccessLogList refresh={found} />
     </div>
   );
 }

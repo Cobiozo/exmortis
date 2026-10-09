@@ -4,7 +4,7 @@ import { useAdminMode } from "@/components/admin/AdminModeContext";
 
 const PRE_END = new Date("2026-11-01T20:30:00.000Z").getTime(); // jak PREMIERA_DEFAULT na serwerze
 export const SIM_KEY = "exm_sim"; // symulowana data (tylko admin, w karcie)
-export const PRELAUNCH_OPEN = ["/", "/1-listopada", "/kontakt", "/regulamin", "/polityka-prywatnosci", "/polityka-cookies", "/odstapienie",
+export const PRELAUNCH_OPEN = ["/", "/1-listopada", "/kontakt", "/regulamin", "/polityka-prywatnosci", "/polityka-cookies", "/odstapienie", "/listy/potwierdz",
   "/login", "/register", "/forgot-password", "/reset-password"];
 // Adresy, które w trybie przedpremierowym przekierowują na zapowiedź (reszta nieznanych → 404).
 export const PRELAUNCH_HIDDEN = ["/o-mnie", "/powrot", "/skarbiec", "/sklep", "/produkt", "/kasa", "/glos", "/test", "/spotkania", "/cisza", "/strona", "/konto", "/obok", "/7-wieczorow"];

@@ -182,6 +182,7 @@ export default async function (req) {
     //     24 h / 1 h przed oraz podziękowania z nagraniem ---
     if (body.action === "tick") {
       const queue = await flushQueue(base44).catch((e) => ({ error: e.message }));
+      const retention = await (await import("../../shared/retention.ts")).runRetention(base44).catch((e) => ({ error: e.message }));
       const removed = await runSql(
         base44,
         `DELETE FROM public.registrations r USING public.events e
@@ -268,6 +269,7 @@ export default async function (req) {
         ok: true,
         removed: (removed || []).length,
         queue,
+        retention,
         due: { r24: due24.length, r1: due1.length, rec: dueRec.length },
       });
     }

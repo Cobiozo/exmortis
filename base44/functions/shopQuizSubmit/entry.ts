@@ -137,12 +137,7 @@ export default async function (req) {
     );
 
     if (body.newsletter_consent === true) {
-      await runSql(
-        base44,
-        `INSERT INTO public.subscribers (id, email, name)
-         VALUES (gen_random_uuid()::text, ${escStr(email)}, ${escStr(firstName)})
-         ON CONFLICT (email) DO NOTHING`
-      );
+      await (await import("../../shared/newsletter.ts")).addSubscriber(base44, { email, name: firstName });
     }
 
     const productRows = await runSql(

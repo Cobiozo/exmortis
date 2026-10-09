@@ -1,18 +1,57 @@
 import { runSql, escStr } from "./supabase.ts";
+import { getSetting, loadAppUrl } from "./settings.ts";
+import { sendMail } from "./smtp.ts";
 
-// Dopisuje adres do listy „Listy powrotu” (public.subscribers).
-// consentGiven=true → zapisuje datę i godzinę udzielenia zgody.
-export async function addSubscriber(base44, { email, name, consentGiven }) {
-  const nameVal =
-    name === undefined || name === null || String(name).trim() === ""
-      ? "NULL"
-      : escStr(String(name).trim().slice(0, 200));
-  await runSql(
+// Listy powrotu — potwierdzenie zapisu (double opt-in).
+// Nowy adres trafia jako „pending”; aktywny staje się dopiero po kliknięciu linku z e-maila.
+// Niepotwierdzone po 7 dniach usuwa tick (eventsPublic → purgeUnconfirmed).
+
+const esc = (s) => String(s || "").replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+const newToken = () => crypto.randomUUID().replace(/-/g, "") + crypto.randomUUID().replace(/-/g, "");
+
+export async function addSubscriber(base44, { email, name }) {
+  const nameVal = name === undefined || name === null || String(name).trim() === "" ? "NULL" : escStr(String(name).trim().slice(0, 200));
+  const token = newToken();
+  const rows = await runSql(
     base44,
-    `INSERT INTO public.subscribers (id, email, name, consent_date)
-     VALUES (gen_random_uuid()::text, ${escStr(email)}, ${nameVal}, ${
-      consentGiven ? "now()" : "NULL"
-    })
-     ON CONFLICT (email) DO NOTHING`
+    `INSERT INTO public.subscribers (id, email, name, status, confirm_token, confirm_sent_at)
+     VALUES (gen_random_uuid()::text, ${escStr(String(email).toLowerCase())}, ${nameVal}, 'pending', ${escStr(token)}, now())
+     ON CONFLICT (email) DO NOTHING RETURNING id`
   );
+  // Błąd wysyłki nie może przerwać zamówienia ani zapisu na spotkanie.
+  if (rows.length) await sendConfirmMail(base44, { email, name, token }).catch((e) => console.error("Listy: potwierdzenie", e.message));
+}
+
+export async function sendConfirmMail(base44, { email, name, token }) {
+  const smtp = await getSetting(base44, "smtp").catch(() => null);
+  if (!smtp) throw new Error("Brak konfiguracji SMTP");
+  const url = `${await loadAppUrl(base44)}/listy/potwierdz?t=${token}`;
+  await sendMail(smtp, {
+    to: email,
+    subject: "Potwierdź zapis na Listy powrotu",
+    html: `<div style="background:#0A0A0B;padding:40px 24px;font-family:Cinzel,Georgia,serif;color:#E2E2E2;">
+      <div style="max-width:560px;margin:0 auto;">
+        <p style="letter-spacing:3px;color:#C9A24A;font-size:12px;">EXMORTIS · LISTY POWROTU</p>
+        <h1 style="font-size:24px;">Potwierdź zapis</h1>
+        <p style="font-family:Arial,sans-serif;line-height:1.7;">${name ? esc(name) + ", " : ""}ktoś (mam nadzieję, że Ty) zapisał ten adres na Listy powrotu, jeden list w każdy poniedziałek. Żeby zacząć je dostawać, kliknij poniżej.</p>
+        <p style="margin:32px 0;"><a href="${url}" style="background:#C9A24A;color:#0A0A0B;padding:14px 28px;text-decoration:none;font-family:Arial,sans-serif;font-weight:bold;letter-spacing:2px;">POTWIERDZAM ZAPIS</a></p>
+        <p style="font-family:Arial,sans-serif;color:#8A8A8C;font-size:13px;line-height:1.6;">Jeśli to nie Ty, zignoruj tę wiadomość. Bez potwierdzenia adres zostanie usunięty po 7 dniach.</p>
+      </div></div>`,
+  });
+}
+
+// Kliknięcie linku: aktywacja i data zgody = data kliknięcia.
+export async function confirmSubscriber(base44, token) {
+  if (!/^[a-f0-9]{64}$/.test(token)) return null;
+  const rows = await runSql(
+    base44,
+    `UPDATE public.subscribers SET status = 'active', consent_date = now(), confirmed_at = now(), confirm_token = NULL, updated_date = now()
+     WHERE confirm_token = ${escStr(token)} AND status = 'pending' RETURNING email, name, confirmed_at`
+  );
+  return rows[0] || null;
+}
+
+export async function purgeUnconfirmed(base44) {
+  const r = await runSql(base44, `DELETE FROM public.subscribers WHERE status = 'pending' AND confirm_sent_at < now() - interval '7 days' RETURNING 1`);
+  return r.length;
 }

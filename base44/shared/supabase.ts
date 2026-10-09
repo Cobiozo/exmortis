@@ -90,6 +90,13 @@ export function emailField(body, key = "email") {
   return v;
 }
 
+// Administrator albo rola „techniczna” (ustawienia, treści, wygląd — bez danych osobowych).
+export async function requireStaff(base44) {
+  const user = await base44.auth.me().catch(() => null);
+  if (!user || (user.role !== "admin" && user.role !== "techniczna")) throw new Error("FORBIDDEN");
+  return user;
+}
+
 // Wymaga zalogowanego administratora; rzuca FORBIDDEN, gdy brak dostępu.
 export async function requireAdmin(base44) {
   const user = await base44.auth.me().catch(() => null);

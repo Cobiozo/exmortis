@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from "react";
+import { logAccess } from "@/lib/auditLog";
 import { base44 } from "@/api/base44Client";
 
 const safe = (v) => { const s = String(v ?? ""); return `"${(/^[=+\-@]/.test(s) ? "'" + s : s).replace(/"/g, '""')}"`; };
@@ -15,6 +16,7 @@ export default function Participants({ seria }) {
     setEmail(""); load();
   };
   const csv = async () => {
+    logAccess("eksport", `Uczestnicy Obok: ${seria.slug} (CSV)`);
     const rows = []; let cursor;
     do { const p = await base44.entities.ObokUczestnik.filter({ seria_id: seria.id }, { limit: 500, cursor }); rows.push(...p.items); cursor = p.has_more ? p.next_cursor : null; } while (cursor);
     const txt = ["imie,email,dolaczenie,powiadomienia,zrodlo", ...rows.map((u) => [u.imie, u.user_email, u.joined_at, u.powiadomienia ? "tak" : "nie", u.zrodlo].map(safe).join(","))].join("\n");

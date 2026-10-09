@@ -1,0 +1,58 @@
+{
+  "name": "DataAccessLog",
+  "type": "object",
+  "properties": {
+    "kto": {
+      "type": "string"
+    },
+    "akcja": {
+      "type": "string",
+      "enum": [
+        "otwarcie",
+        "eksport",
+        "usuniecie",
+        "zmiana"
+      ]
+    },
+    "zakres": {
+      "type": "string"
+    },
+    "osoba": {
+      "type": "string"
+    },
+    "liczba": {
+      "type": "number"
+    },
+    "at": {
+      "type": "string",
+      "format": "date-time"
+    }
+  },
+  "required": [
+    "kto",
+    "akcja",
+    "zakres"
+  ],
+  "rls": {
+    "read": {
+      "user_condition": {
+        "role": "admin"
+      }
+    },
+    "create": {
+      "user_condition": {
+        "role": "admin"
+      }
+    },
+    "update": {
+      "user_condition": {
+        "role": "nikt"
+      }
+    },
+    "delete": {
+      "user_condition": {
+        "role": "nikt"
+      }
+    }
+  }
+}

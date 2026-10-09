@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from "react";
+import { logAccess } from "@/lib/auditLog";
 import { Loader2, Download } from "lucide-react";
 import { base44 } from "@/api/base44Client";
 import ClientDetail from "./ClientDetail";
@@ -18,6 +19,7 @@ export default function ClientsPanel() {
 
   const shown = (clients || []).filter((c) => c.email.includes(q.toLowerCase()));
   const exportCsv = () => {
+    logAccess("eksport", "Klienci i dostępy (CSV)", clients.length);
     const csv = "email,liczba_dostepow\n" + clients.map((c) => `${csvCell(c.email)},${c.count}`).join("\n");
     const a = document.createElement("a");
     a.href = URL.createObjectURL(new Blob([csv], { type: "text/csv" }));

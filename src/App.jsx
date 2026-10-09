@@ -47,6 +47,7 @@ import ShopRedirect from '@/components/exmortis/shop/ShopRedirect';
 import Obok from '@/pages/Obok';
 import ObokSeria from '@/pages/ObokSeria';
 import ObokNagranie from '@/pages/ObokNagranie';
+import ListyPotwierdz from '@/pages/ListyPotwierdz';
 // Add page imports here
 
 const AuthenticatedApp = () => {
@@ -119,6 +120,7 @@ const AuthenticatedApp = () => {
           <Route path="/kontakt" element={<Kontakt />} />
           <Route path="/strona/:slug" element={<CmsPage />} />
           <Route path="/1-listopada" element={<Listopad />} />
+          <Route path="/listy/potwierdz" element={<ListyPotwierdz />} />
           <Route path="/obok" element={<Obok />} />
           <Route path="/obok/:seria" element={<ObokSeria />} />
           <Route path="/obok/:seria/:numer" element={<ObokNagranie />} />

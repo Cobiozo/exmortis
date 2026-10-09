@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from "react";
+import { logAccess } from "@/lib/auditLog";
 import { Download } from "lucide-react";
 import { base44 } from "@/api/base44Client";
 
@@ -51,6 +52,7 @@ export default function QuizStatsPanel() {
   const csvCell = (v) => `"${String(v === null || v === undefined ? "" : v).replace(/"/g, '""')}"`;
 
   const exportCsv = () => {
+    logAccess("eksport", "Wyniki testu (CSV)");
     const header = [
       "data", "imię", "e-mail", "forma", "mentalna", "duchowa", "życiowa",
       "dominanta", "etap", "źródło", "newsletter", "odpowiedź otwarta",
