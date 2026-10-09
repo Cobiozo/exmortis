@@ -1,5 +1,6 @@
 import React from "react";
 import FaqItem from "./ListBlocksFaq";
+import ZoomFaqItems from "./ZoomFaqItems";
 import { isDraft } from "../draft";
 import { Buttons, SectionHead } from "../parts";
 import { Img } from "./SimpleBlocks";
@@ -42,12 +43,14 @@ export function StepsBlock({ d, label, center }) {
   );
 }
 
-export function FaqBlock({ d, label, center, editable: editableFaq }) {
+export function FaqBlock({ d, label, center, editable: editableFaq, zoom }) {
+  const list = (d.pytania || []).filter((q) => editableFaq || !isDraft(q.odpowiedz));
   return (
     <>
       <SectionHead label={label} title={d.tytul} center={center} />
       <div className="max-w-3xl text-left divide-y divide-[#3D3D3F]/60 border-y hairline">
-        {(d.pytania || []).filter((q) => editableFaq || !isDraft(q.odpowiedz)).map((q, i) => <FaqItem key={i} q={q} i={i} />)}
+        {list.map((q, i) => <FaqItem key={i} q={q} i={i} />)}
+        {zoom && <ZoomFaqItems start={list.length} />}
       </div>
     </>
   );

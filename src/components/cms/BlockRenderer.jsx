@@ -18,6 +18,7 @@ const DEVICE = { telefon: "md:hidden", komputer: "hidden md:block" };
 // Rysuje stronę z bloków. editable — podgląd w panelu (klik wybiera blok, linki nie nawigują).
 export default function BlockRenderer({ blocks = [], editable, selectedId, onSelect, tools }) {
   let n = 0;
+  const zoom = blocks.some((b) => b.typ === "zapis_spotkanie" && b.widoczny !== false);
   return (
     <div className="bg-[#0A0A0B]">
       {blocks.filter((b) => b.widoczny !== false && VIEW[b.typ] && (editable || b.typ === "faq" || !isDraft(b.dane))).map((b) => {
@@ -26,7 +27,7 @@ export default function BlockRenderer({ blocks = [], editable, selectedId, onSel
         const d = b.dane || {};
         const label = [d.etykieta, num].filter(Boolean).join(" · ");
         const View = VIEW[b.typ];
-        const inner = <View d={d} label={label} center={u.wyrownanie === "srodek"} editable={editable} />;
+        const inner = <View d={d} label={label} center={u.wyrownanie === "srodek"} editable={editable} zoom={b.typ === "faq" && zoom} />;
         const warn = editable && isDraft(b.dane) && (
           <p className="bg-[#5C1A1B] border border-[#BC1E22] text-[#F5EFE1] text-sm px-4 py-2">Do uzupełnienia: „{DRAFT}” — ta treść jest ukryta dla odwiedzających, dopóki jej nie zastąpisz.</p>
         );
