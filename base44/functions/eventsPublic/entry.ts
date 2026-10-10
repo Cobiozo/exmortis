@@ -11,6 +11,9 @@ const ensureJoinColumns = (base44) => runSql(base44,
   `ALTER TABLE public.events ADD COLUMN IF NOT EXISTS open_minutes int DEFAULT 15,
      ADD COLUMN IF NOT EXISTS zoom_faq boolean DEFAULT true, ADD COLUMN IF NOT EXISTS short_path text`);
 
+const JOIN_CACHE = new Map();
+let joinColsReady = false;
+
 // Pokój otwarty, a linku brak — jeden alarm na spotkanie (kolejka maili = widoczny w panelu).
 async function zoomAlarm(base44, ev) {
   const ref = `zoom:${ev.id}`;
@@ -33,6 +36,7 @@ export default async function (req) {
   try {
     const base44 = createClientFromRequest(req);
     const body = await req.json().catch(() => ({}));
+    if (body.ping) return Response.json({ ok: true });
 
     // --- Lista nadchodzących (Opublikowane + Odwołane) i minionych z nagraniami ---
     if (body.action === "list") {
@@ -139,20 +143,25 @@ export default async function (req) {
 
     // --- Strona dołączenia: link i hasło tylko w oknie czasowym (czas serwera) ---
     if (body.action === "join" || body.action === "ics") {
-      await ensureJoinColumns(base44);
       const key = textField(body, "slug", { max: 200 });
-      const rows = await runSql(base44,
-        `SELECT id, title, slug, subtitle, format, status, start_datetime, duration_minutes, location, join_link, join_password,
-           recording_url, recording_until, open_minutes, short_path FROM public.events
-         WHERE (slug = ${escStr(key)} OR short_path = ${escStr(key)}) ORDER BY slug = ${escStr(key)} DESC LIMIT 1`, true);
-      const ev = rows[0];
+      // Kopia wiersza spotkania w pamięci serwera (30 s): w szczycie goście nie trafiają do bazy, stan liczony z zegara.
+      let hit = JOIN_CACHE.get(key);
+      if (!hit || Date.now() - hit.at > 30000 || body.preview) {
+        if (!joinColsReady) { await ensureJoinColumns(base44); joinColsReady = true; }
+        const rows = await runSql(base44,
+          `SELECT id, title, slug, subtitle, format, status, start_datetime, duration_minutes, location, join_link, join_password,
+             recording_url, recording_until, open_minutes, short_path FROM public.events
+           WHERE (slug = ${escStr(key)} OR short_path = ${escStr(key)}) ORDER BY slug = ${escStr(key)} DESC LIMIT 1`, true);
+        hit = { at: Date.now(), ev: rows[0] || null };
+        if (!body.preview) JOIN_CACHE.set(key, hit);
+      }
+      const ev = hit.ev;
       const me = body.preview ? await base44.auth.me().catch(() => null) : null;
       const admin = me?.role === "admin";
       if (!ev || !ev.start_datetime || (!admin && !["Opublikowane", "Odwołane"].includes(ev.status))) {
         return Response.json({ error: "Nie znaleziono spotkania" }, { status: 404 });
       }
-      await loadAppUrl(base44);
-      if (body.action === "ics") return Response.json({ ics: buildIcs(ev) });
+      if (body.action === "ics") { await loadAppUrl(base44); return Response.json({ ics: buildIcs(ev) }); }
       const base = { title: ev.title, slug: ev.slug, start_datetime: ev.start_datetime, duration_minutes: ev.duration_minutes, open_minutes: Number(ev.open_minutes) || 15 };
       if (ev.format !== "Online") return Response.json({ ...base, state: "stacjonarne" });
       const state = admin && ["przed", "otwarte", "po"].includes(body.preview) ? body.preview : joinState(ev);

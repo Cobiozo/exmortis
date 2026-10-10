@@ -33,15 +33,31 @@
               "ping": true
             }
           },
-          "then": "end",
+          "then": "pingJoin",
           "x-base44": {
             "title": "Rozgrzanie funkcji startowej",
+            "description": "Lekkie wywo\u0142anie bez odczyt\u00f3w i zapis\u00f3w"
+          }
+        }
+      },
+      {
+        "pingJoin": {
+          "call": "invoke_backend_function",
+          "with": {
+            "function_name": "eventsPublic",
+            "args": {
+              "ping": true
+            }
+          },
+          "then": "end",
+          "x-base44": {
+            "title": "Rozgrzanie strony /dolacz",
             "description": "Lekkie wywo\u0142anie bez odczyt\u00f3w i zapis\u00f3w"
           }
         }
       }
     ]
   },
-  "description": "Co 5 minut lekkie wywo\u0142anie funkcji startowej (bootstrap), \u017ceby go\u015bcie nie trafiali na zimny start.",
+  "description": "Co 5 minut lekkie wywo\u0142anie funkcji startowej (bootstrap) i strony /dolacz, \u017ceby go\u015bcie nie trafiali na zimny start.",
   "name": "Rozgrzewanie funkcji startowej"
 }

@@ -17,12 +17,30 @@ export default function JoinMeeting() {
   const t = useOnlineText();
   const preview = new URLSearchParams(window.location.search).get("stan");
   const [data, setData] = useState(undefined);
-  const load = useCallback(() => base44.functions.invoke("eventsPublic", { action: "join", slug: slug || short, preview: preview || undefined })
-    .then((r) => setData(r.data)).catch(() => setData(null)), [slug, short, preview]);
+  const metaKey = `join:${slug || short}`;
+  const [waiting, setWaiting] = useState(false);
+  // Limit 3 s; brak odpowiedzi lub błąd sieci/serwera → "Łączymy…" i ponowienie co 5 s. 404 → strona nie istnieje.
+  const load = useCallback(() => Promise.race([
+    base44.functions.invoke("eventsPublic", { action: "join", slug: slug || short, preview: preview || undefined }),
+    new Promise((_, rej) => setTimeout(() => rej(new Error("timeout")), 3000)),
+  ]).then((r) => {
+    setData(r.data); setWaiting(false);
+    try { localStorage.setItem(metaKey, JSON.stringify({ s: r.data.start_datetime, o: r.data.open_minutes, d: r.data.duration_minutes })); } catch {}
+  }).catch((e) => {
+    if (e?.response?.status === 404) return setData(null);
+    setWaiting(true);
+  }), [slug, short, preview, metaKey]);
   useEffect(() => { load(); }, [load]);
+  useEffect(() => { if (!waiting) return; const i = setInterval(load, 5000); return () => clearInterval(i); }, [waiting, load]);
+  const knownOpen = (() => { try { const m = JSON.parse(localStorage.getItem(metaKey)); const st = new Date(m.s).getTime(), n = Date.now();
+    return n >= st - (m.o || 15) * 60000 && n <= st + ((m.d || 60) + 30) * 60000; } catch { return false; } })();
   useEffect(() => { if (data?.state !== "otwarte" || preview) return; const i = setInterval(load, 60000); return () => clearInterval(i); }, [data?.state, load, preview]);
 
-  if (data === undefined) return <div className="min-h-[70svh]" />;
+  if (data === undefined) return (
+    <div className="min-h-[70svh] pt-32 pb-24 px-5 flex justify-center" role="status" aria-live="polite">
+      {<p className="technical text-xs gold-text">{knownOpen ? "ŁĄCZYMY… POKÓJ JEST OTWARTY" : "ŁĄCZYMY…"}</p>}
+    </div>
+  );
   if (data === null || data.state === "stacjonarne") return <NotFoundContent />;
   return (
     <div className="min-h-[70svh] pt-32 pb-24 px-5">
