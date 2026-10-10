@@ -9,7 +9,7 @@ export const LISTOPAD_INDEX_FROM = "2026-10-16T00:00:00+02:00";
 const b = (id, typ, dane, uklad = {}) => ({ id, typ, widoczny: true, dane, uklad: { ...L, numer: "brak", ...uklad } });
 
 export const LISTOPAD_BLOCKS = [
-  b("lis-hero", "hero", { wariant: "standard", etykieta: "1 LISTOPADA · 20:00 · ONLINE", linia1: "Ze śmierci —", linia2: "o powrotach, o których świat nie mówi",
+  b("lis-hero", "hero", { wariant: "standard", etykieta: "1 LISTOPADA · 20:00 (CZASU PL) · ONLINE", linia1: "Ze śmierci —", linia2: "o powrotach, o których świat nie mówi",
     lead: "Wieczór Wszystkich Świętych. 90 minut o trzech śmierciach i czterech etapach powrotu.",
     przyciski: [{ etykieta: "ZAPISZ SIĘ", link: "#zapis", styl: "zloty", strzalka: true }], dopisek: "Bezpłatnie. Link do spotkania przyjdzie e-mailem.",
     tlo: { url: LISTOPAD_COVER }, przyciemnienie: 55 }),

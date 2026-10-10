@@ -39,7 +39,7 @@ const START = [
 export const DEF_LIST = START.map((t) => ({ t, on: true }));
 export const DEF_SPECIAL = [
   { d: "12-24", t: "Jeśli ten wieczór jest trudny, Obok czeka na Ciebie." },
-  { d: "12-25", t: "Siedem wieczorów ciszy zaczyna się dziś o 20:00." },
+  { d: "12-25", t: "Siedem wieczorów ciszy zaczyna się dziś o 20:00 (czasu PL)." },
   { d: "12-31", t: "Nie musisz zamykać roku podsumowaniem. Wystarczy wdzięczność." },
   { d: "01-01", t: "Nowy rok nie wymaga rewolucji. Wystarczy następny krok." },
 ];
