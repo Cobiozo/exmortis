@@ -11,8 +11,9 @@ export const LEGAL_DOCS = {
 };
 
 // Gotowa treść dokumentu (po wstawieniu pól) — ta sama dla strony i archiwum.
-export function renderDoc(key, firma = {}, pola = {}) {
-  const { doc, extra } = LEGAL_DOCS[key];
+// Nieznany klucz (np. /odstapienie): dokument z propsów, bez wersjonowania — nigdy wyjątek.
+export function renderDoc(key, firma = {}, pola = {}, fallbackDoc = null, fallbackExtra = []) {
+  const { doc, extra } = LEGAL_DOCS[key] || { doc: fallbackDoc || { title: "", sections: [] }, extra: fallbackExtra || [] };
   const fill = (t) => fillDocs(fillFirma(t, firma), pola);
   return {
     title: doc.title,

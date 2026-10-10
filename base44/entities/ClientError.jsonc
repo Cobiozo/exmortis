@@ -1,0 +1,43 @@
+{
+  "name": "ClientError",
+  "type": "object",
+  "properties": {
+    "url": {
+      "type": "string"
+    },
+    "message": {
+      "type": "string"
+    },
+    "stack": {
+      "type": "string"
+    },
+    "browser": {
+      "type": "string"
+    },
+    "at": {
+      "type": "string",
+      "format": "date-time"
+    }
+  },
+  "required": [
+    "message"
+  ],
+  "rls": {
+    "read": {
+      "user_condition": {
+        "role": "admin"
+      }
+    },
+    "create": {},
+    "update": {
+      "user_condition": {
+        "role": "nikt"
+      }
+    },
+    "delete": {
+      "user_condition": {
+        "role": "admin"
+      }
+    }
+  }
+}

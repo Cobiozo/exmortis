@@ -7,10 +7,11 @@ export default function useLegalArchive(docKey, want) {
     queryKey: ["legalVersions", docKey],
     queryFn: () => base44.entities.LegalDocVersion.filter({ doc: docKey }, { sort: "-created_date", limit: 50, fields: ["version", "date"] }).then((p) => p.items),
     staleTime: 5 * 60000,
+    enabled: !!docKey,
   });
   const one = useQuery({
     queryKey: ["legalVersion", docKey, want],
-    enabled: !!want,
+    enabled: !!want && !!docKey,
     queryFn: () => base44.entities.LegalDocVersion.filter({ doc: docKey, version: want }, { limit: 1 }).then((p) => p.items[0] || null),
   });
   return { versions: list.data || [], archived: one.data, loading: !!want && one.isLoading };

@@ -2,6 +2,7 @@ import React, { useEffect, useState } from "react";
 import { Loader2 } from "lucide-react";
 import { base44 } from "@/api/base44Client";
 import FindOwner from "./FindOwner";
+import ClientErrors from "./ClientErrors";
 
 const LABEL = { blokada: "Blokada wideo", znak_wodny: "Naruszenie znaku wodnego", wideo_limit: "Limit żądań wideo", rabat: "Limit prób kodu" };
 
@@ -13,6 +14,7 @@ export default function SecurityPanel() {
 
   return (
     <div className="space-y-14">
+      <ClientErrors />
       <FindOwner />
       <section>
         <p className="technical text-[10px] gold-text mb-3">ALERTY I BLOKADY</p>

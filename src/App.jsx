@@ -50,6 +50,7 @@ import ObokNagranie from '@/pages/ObokNagranie';
 import ListyPotwierdz from '@/pages/ListyPotwierdz';
 import ZmianaAdresu from '@/pages/ZmianaAdresu';
 import JoinMeeting from '@/pages/JoinMeeting';
+import ErrorBoundary from '@/components/errors/ErrorBoundary';
 // Add page imports here
 
 const AuthenticatedApp = () => {
@@ -84,6 +85,7 @@ const AuthenticatedApp = () => {
       <PodcastPlayerProvider>
       <PrelaunchGate>
       <SeoMeta />
+      <ErrorBoundary full>
       <Suspense fallback={<div className="min-h-[100svh] bg-[#0A0A0B]" />}>
       <Routes>
         <Route path="/login" element={<Login />} />
@@ -133,6 +135,7 @@ const AuthenticatedApp = () => {
         </Route>
       </Routes>
       </Suspense>
+      </ErrorBoundary>
       </PrelaunchGate>
       </PodcastPlayerProvider>
       <CookieBanner />
