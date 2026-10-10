@@ -54,6 +54,7 @@ export default function RegistrationForm({ event: ev }) {
         listy,
         website,
         source: src,
+        tz: Intl.DateTimeFormat().resolvedOptions().timeZone || "",
       });
       setResult(data.queued ? { ok: true, status: "Zapisany", first_name: firstName, pending: true,
         join_url: ev.format === "Online" ? (ev.short_path ? `/${ev.short_path}/dolacz` : `/spotkania/${ev.slug}/dolacz`) : null } : data);

@@ -1,5 +1,6 @@
 import React from "react";
 import { plWhenFull } from "./time";
+import WarsawNote from "./WarsawNote";
 
 // Treść nagłówka strony spotkania (na okładce): typ, tytuł, data, główny przycisk.
 export function heroAction(ev) {
@@ -18,7 +19,7 @@ export default function HeroContent({ ev, small }) {
         style={{ fontSize: small ? "clamp(1.4rem, 5vw, 2.2rem)" : "clamp(2rem, 6vw, 4.5rem)" }}>
         {ev.title || "Tytuł spotkania"}
       </h1>
-      {ev.start_datetime && <p className="mt-4 gold-text shop-heading text-lg md:text-xl">{plWhenFull(ev.start_datetime, " · ")}</p>}
+      {ev.start_datetime && <p className="mt-4 gold-text shop-heading text-lg md:text-xl">{plWhenFull(ev.start_datetime, " · ")}<WarsawNote iso={ev.start_datetime} /></p>}
       {a && (
         <a href={a.href} target={a.ext ? "_blank" : undefined} rel={a.ext ? "noreferrer" : undefined}
           className="btn-relic mt-6 w-full sm:w-auto">{a.label.toUpperCase()}</a>

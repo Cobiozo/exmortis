@@ -77,8 +77,19 @@ export async function saveConsents(base44, d, refId) {
 }
 
 // Po udanym zapisie: newsletter (jeśli zgoda) i e-mail potwierdzający.
+let tzReady = false;
+// Kolumna strefy gościa (do maili „u Ciebie”).
+export async function ensureTzColumn(base44) {
+  if (tzReady) return;
+  await runSql(base44, `ALTER TABLE public.registrations ADD COLUMN IF NOT EXISTS tz text`);
+  tzReady = true;
+}
+
 export function afterSaved(base44, ev, reg, d) {
+  const tz = typeof d.tz === "string" && /^[A-Za-z_+\-\/0-9]{1,64}$/.test(d.tz) ? d.tz : null;
+  if (tz) reg = { ...reg, tz };
   const jobs = [loadAppUrl(base44).then(() => sendConfirmationMail(base44, ev, reg))];
+  if (tz) jobs.push(ensureTzColumn(base44).then(() => runSql(base44, `UPDATE public.registrations SET tz = ${escStr(tz)} WHERE id = ${escStr(reg.id)}`)));
   if (d.listy) {
     jobs.push(import("./newsletter.ts").then((m) => m.addSubscriber(base44, { email: d.email, name: d.first_name, consentGiven: true })));
   }

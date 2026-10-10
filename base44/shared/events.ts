@@ -21,6 +21,21 @@ export function plWhen(value) {
   return `${plDate(value)} · ${plTime(value)}`;
 }
 
+const CITY = { "Europe/London": "Londyn", "America/New_York": "Nowy Jork", "Asia/Tokyo": "Tokio", "Europe/Dublin": "Dublin",
+  "Europe/Berlin": "Berlin", "Europe/Paris": "Paryż", "America/Chicago": "Chicago", "America/Los_Angeles": "Los Angeles", "Europe/Oslo": "Oslo" };
+const validTz = (tz) => { try { return !!tz && !!new Intl.DateTimeFormat("pl-PL", { timeZone: tz }); } catch { return false; } };
+
+// Maile: godzina polska z dopiskiem; jeśli osoba zapisała się z innej strefy — dodatkowo jej czas (z bazy UTC, bez ręcznych przesunięć).
+export function mailWhen(value, tz) {
+  const pl = `${plDate(value)} · ${plTime(value)} (czas polski, Warszawa)`;
+  if (!validTz(tz) || tz === "Europe/Warsaw") return pl;
+  const f = (o) => new Intl.DateTimeFormat("pl-PL", { timeZone: tz, ...o }).format(new Date(value));
+  const local = f({ hour: "2-digit", minute: "2-digit", hour12: false });
+  if (local === plTime(value) && f({ day: "numeric" }) === warsawFmt({ day: "numeric" }).format(new Date(value))) return pl;
+  const day = f({ day: "numeric" }) !== warsawFmt({ day: "numeric" }).format(new Date(value)) ? `${f({ weekday: "long", day: "numeric", month: "long" })}, ` : "";
+  return `${pl} · ${day}${local} u Ciebie (${CITY[tz] || tz.split("/").pop().replace(/_/g, " ")})`;
+}
+
 function escHtml(s) {
   return String(s || "").replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
 }
@@ -118,8 +133,8 @@ function cancelLink(token) {
   return `<p style="margin-top:28px;font-size:12px;"><a href="${APP_URL}/functions/eventsCancel?token=${token}" style="color:#8A8A8C;">Nie mogę przyjść — zwalniam miejsce</a></p>`;
 }
 
-function meetingLine(ev) {
-  return `<p style="color:#C9A24A;letter-spacing:1px;">${escHtml(plWhen(ev.start_datetime))} · ${escHtml(ev.format || "")}</p>
+function meetingLine(ev, reg) {
+  return `<p style="color:#C9A24A;letter-spacing:1px;">${escHtml(mailWhen(ev.start_datetime, reg?.tz))} · ${escHtml(ev.format || "")}</p>
     <p style="color:#8A8A8C;">${escHtml(ev.location || "")}</p>`;
 }
 
@@ -145,7 +160,7 @@ export async function sendConfirmationMail(base44, ev, reg) {
     to: reg.email,
     subject: `EXMORTIS · ${waitlist ? "Lista rezerwowa" : "Zapis potwierdzony"} — ${ev.title}`,
     html: shell(ev, 
-      `<h1 style="font-size:24px;">${waitlist ? "Jesteś na liście rezerwowej" : "Jesteś zapisany/a"}</h1>${meetingLine(ev)}` +
+      `<h1 style="font-size:24px;">${waitlist ? "Jesteś na liście rezerwowej" : "Jesteś zapisany/a"}</h1>${meetingLine(ev, reg)}` +
         `<p style="line-height:1.7;">${lead}</p>` +
         (ev.what_registered ? `<p style="color:#8A8A8C;font-size:13px;">Co dostają zapisani: ${escHtml(ev.what_registered)}</p>` : "") +
         (waitlist ? "" : joinBlock(ev)) +
@@ -163,7 +178,7 @@ export async function sendCancelledMail(base44, ev, reg, reason) {
     to: reg.email,
     subject: `EXMORTIS · Odwołane — ${ev.title}`,
     html: shell(ev, 
-      `<h1 style="font-size:24px;">To spotkanie się nie odbędzie</h1>${meetingLine(ev)}` +
+      `<h1 style="font-size:24px;">To spotkanie się nie odbędzie</h1>${meetingLine(ev, reg)}` +
         `<p style="line-height:1.7;">${escHtml(reg.first_name)}, przepraszam — spotkanie «${escHtml(ev.title)}» zostało odwołane.</p>` +
         (reason ? `<p style="line-height:1.7;color:#8A8A8C;">${escHtml(reason)}</p>` : "") +
         `<p style="margin-top:20px;"><a href="${APP_URL}/spotkania" style="color:#C9A24A;">Zobacz kolejne terminy</a></p>` +
@@ -180,13 +195,13 @@ export async function sendReminderMail(base44, ev, reg, kind) {
     kind === "1h"
       ? `${escHtml(reg.first_name)}, za godzinę spotykamy się na «${escHtml(ev.title)}». Zostaw wszystko i po prostu przyjdź.`
       : kind === "now"
-        ? `${escHtml(reg.first_name)}, przypominam o spotkaniu «${escHtml(ev.title)}» — ${escHtml(plWhen(ev.start_datetime))}. Czekam na Ciebie.`
-        : `${escHtml(reg.first_name)}, jutro o ${escHtml(plTime(ev.start_datetime))} spotykamy się na «${escHtml(ev.title)}». To krótkie przypomnienie — nic nie musisz robić, tylko przyjść.`;
+        ? `${escHtml(reg.first_name)}, przypominam o spotkaniu «${escHtml(ev.title)}» — ${escHtml(mailWhen(ev.start_datetime, reg.tz))}. Czekam na Ciebie.`
+        : `${escHtml(reg.first_name)}, jutro o ${escHtml(plTime(ev.start_datetime))} (czas polski) spotykamy się na «${escHtml(ev.title)}». To krótkie przypomnienie — nic nie musisz robić, tylko przyjść.`;
   return sendMail(base44, {
     kind: "przypomnienie", ref: reg.id, waznyDo: ev.start_datetime,
     to: reg.email,
     subject: `EXMORTIS · ${head} — ${ev.title}`,
-    html: shell(ev, `<h1 style="font-size:24px;">${head}</h1>${meetingLine(ev)}<p style="line-height:1.7;">${lead}</p>${joinBlock(ev)}${cancelLink(reg.cancel_token)}`),
+    html: shell(ev, `<h1 style="font-size:24px;">${head}</h1>${meetingLine(ev, reg)}<p style="line-height:1.7;">${lead}</p>${joinBlock(ev)}${cancelLink(reg.cancel_token)}`),
   });
 }
 
@@ -212,7 +227,7 @@ export async function sendSpotFreedMail(base44, ev, reg) {
     to: reg.email,
     subject: `EXMORTIS · Zwolniło się miejsce — ${ev.title}`,
     html: shell(ev, 
-      `<h1 style="font-size:24px;">Zwolniło się miejsce</h1>${meetingLine(ev)}` +
+      `<h1 style="font-size:24px;">Zwolniło się miejsce</h1>${meetingLine(ev, reg)}` +
         `<p style="line-height:1.7;">${escHtml(reg.first_name)}, ktoś zrezygnował — miejsce na «${escHtml(ev.title)}» jest Twoje. Do zobaczenia na spotkaniu.</p>` +
         joinBlock(ev) +
         cancelLink(reg.cancel_token)
@@ -227,7 +242,7 @@ export async function sendRescheduleMail(base44, ev, reg) {
     to: reg.email,
     subject: `EXMORTIS · Nowy termin — ${ev.title}`,
     html: shell(ev,
-      `<h1 style="font-size:24px;">Nowy termin spotkania</h1>${meetingLine(ev)}` +
+      `<h1 style="font-size:24px;">Nowy termin spotkania</h1>${meetingLine(ev, reg)}` +
         `<p style="line-height:1.7;">${escHtml(reg.first_name)}, termin spotkania «${escHtml(ev.title)}» się zmienił. Twój zapis jest aktualny. W załączniku nowy plik kalendarza — po otwarciu zaktualizuje wydarzenie.</p>` +
         joinBlock(ev) + cancelLink(reg.cancel_token)
     ),

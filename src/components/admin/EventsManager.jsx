@@ -1,5 +1,6 @@
 import React, { useEffect, useMemo, useState } from "react";
 import { base44 } from "@/api/base44Client";
+import FallbackBadge from "@/components/admin/events/FallbackBadge";
 import { Plus, Pencil, Copy, Trash2, Users, Ban, Link2, Repeat } from "lucide-react";
 import EventEditor from "@/components/admin/events/EventEditor";
 import ParticipantsPanel from "@/components/admin/events/ParticipantsPanel";
@@ -202,6 +203,7 @@ export default function EventsManager() {
                   </span>
                 </div>
                 <p className="shop-heading text-lg text-[#F5EFE1] mt-2 truncate">{ev.title}</p>
+                <FallbackBadge ev={ev} />
                 <p className="text-xs text-foreground/40 mt-1">
                   {ev.start_datetime ? whenText(ev.start_datetime) : "bez daty — ustaw przed publikacją"}
                 </p>

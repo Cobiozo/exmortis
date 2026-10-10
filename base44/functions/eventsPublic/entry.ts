@@ -3,7 +3,7 @@ import { waitUntil } from "base44:runtime";
 import { runSql, escStr, textField, emailField } from "../../shared/supabase.ts";
 import { getSetting, loadAppUrl } from "../../shared/settings.ts";
 import { getSnap, clearSnap } from "../../shared/snapshot.ts";
-import { rpcRegister, RPC_ERRORS, saveConsents, afterSaved, enqueue, flushQueue, snapEvent } from "../../shared/registrations.ts";
+import { rpcRegister, RPC_ERRORS, saveConsents, afterSaved, enqueue, flushQueue, snapEvent, ensureTzColumn } from "../../shared/registrations.ts";
 import { sendConfirmationMail, sendReminderMail, sendRecordingMail, plWhen, APP_URL, buildIcs, joinState } from "../../shared/events.ts";
 import { sendMail, adminTo } from "../../shared/smtp.ts";
 
@@ -94,7 +94,8 @@ export default async function (req) {
       }
       const source = typeof body.source === "string" && body.source.trim() !== "" ? body.source.trim().slice(0, 100) : null;
       const ip = (req.headers.get("x-forwarded-for") || "").split(",")[0].trim().slice(0, 64) || "brak";
-      const d = { slug, first_name: firstName, email, question, listy: body.listy === true, source, ip, at: new Date().toISOString() };
+      const tz = typeof body.tz === "string" ? body.tz.slice(0, 64) : null;
+      const d = { slug, first_name: firstName, email, question, listy: body.listy === true, source, ip, tz, at: new Date().toISOString() };
       // Symulacja awarii Supabase — tylko dla administratora (test kolejki).
       const isAdmin = (body.simulate_down === true || body.load_test === true) && (await base44.auth.me().catch(() => null))?.role === "admin";
       const simulate = isAdmin && body.simulate_down === true;
@@ -218,6 +219,7 @@ export default async function (req) {
     // --- Tick: higiena danych (zapisy 90 dni po spotkaniu) + przypomnienia
     //     24 h / 1 h przed oraz podziękowania z nagraniem ---
     if (body.action === "tick") {
+      await ensureTzColumn(base44);
       const queue = await flushQueue(base44).catch((e) => ({ error: e.message }));
       const retention = await (await import("../../shared/retention.ts")).runRetention(base44).catch((e) => ({ error: e.message }));
       const removed = await runSql(
@@ -233,7 +235,7 @@ export default async function (req) {
       const [due24, due1, dueRec] = await Promise.all([
         runSql(
           base44,
-          `SELECT r.id, r.first_name, r.email, r.cancel_token, ${evCols}
+          `SELECT r.id, r.first_name, r.email, r.cancel_token, r.tz, ${evCols}
            FROM public.registrations r JOIN public.events e ON e.id = r.event_id
            WHERE r.status IN ('Zapisany','Obecny') AND e.status = 'Opublikowane'
              AND e.start_datetime IS NOT NULL
@@ -244,7 +246,7 @@ export default async function (req) {
         ),
         runSql(
           base44,
-          `SELECT r.id, r.first_name, r.email, r.cancel_token, ${evCols}
+          `SELECT r.id, r.first_name, r.email, r.cancel_token, r.tz, ${evCols}
            FROM public.registrations r JOIN public.events e ON e.id = r.event_id
            WHERE r.status IN ('Zapisany','Obecny') AND e.status = 'Opublikowane'
              AND e.start_datetime IS NOT NULL

@@ -1,7 +1,23 @@
 // Formatowanie dat w strefie Europe/Warsaw + linki kalendarzowe (Google, .ics).
 import { SITE_URL } from "@/config/site";
-const TZ = "Europe/Warsaw";
+const PL = "Europe/Warsaw";
+// Strefa urządzenia gościa (?strefa=… tylko do testów). Godziny zawsze z UTC w bazie — bez ręcznych przesunięć.
+export const viewerTz = () => {
+  const q = typeof window !== "undefined" && new URLSearchParams(window.location.search).get("strefa");
+  try { if (q) { new Intl.DateTimeFormat("pl-PL", { timeZone: q }); return q; } } catch {}
+  return Intl.DateTimeFormat().resolvedOptions().timeZone || PL;
+};
+const TZ = viewerTz();
 const fmt = (opts) => new Intl.DateTimeFormat("pl-PL", { timeZone: TZ, ...opts });
+const stamp = (iso, tz) => new Intl.DateTimeFormat("sv-SE", { timeZone: tz, dateStyle: "short", timeStyle: "short" }).format(new Date(iso));
+const hm = (iso, tz) => new Intl.DateTimeFormat("pl-PL", { timeZone: tz, hour: "2-digit", minute: "2-digit", hour12: false }).format(new Date(iso));
+// Gość „gdzie indziej” = w chwili spotkania jego zegar pokazuje inną datę/godzinę niż Warszawa.
+const abroad = (iso) => stamp(iso, TZ) !== stamp(iso, PL);
+
+// „20:00 czasu polskiego” — tylko dla gościa spoza strefy Warszawy.
+export function warsawNote(iso) {
+  return iso && abroad(iso) ? `${hm(iso, PL)} czasu polskiego` : null;
+}
 
 export function dateParts(iso) {
   const parts = {};
@@ -40,7 +56,7 @@ export function formatText(format) {
 }
 
 export function timeText(iso) {
-  return fmt({ hour: "2-digit", minute: "2-digit", hour12: false }).format(new Date(iso));
+  return hm(iso, TZ) + (abroad(iso) ? " (u Ciebie)" : "");
 }
 
 export function whenText(iso) {

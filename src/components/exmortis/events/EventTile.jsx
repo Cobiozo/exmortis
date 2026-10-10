@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { dateTile, timeText, formatText, whenText } from "./time";
+import WarsawNote from "./WarsawNote";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import RegistrationForm from "./RegistrationForm";
 import { CoverTile } from "./cover";
@@ -148,6 +149,7 @@ export default function EventTile({ event: ev, compact = false, past = false }) 
             <DialogTitle className="shop-heading text-xl text-[#F5EFE1]">{ev.title}</DialogTitle>
             <DialogDescription className="text-foreground/50">
               {tbd ? "Termin do ustalenia" : whenText(ev.start_datetime)} · {formatText(ev.format)}
+              {!tbd && <WarsawNote iso={ev.start_datetime} />}
             </DialogDescription>
           </DialogHeader>
           <RegistrationForm event={ev} />

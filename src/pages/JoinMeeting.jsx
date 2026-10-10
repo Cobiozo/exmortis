@@ -8,6 +8,7 @@ import JoinBefore from "@/components/exmortis/events/join/JoinBefore";
 import JoinOpen from "@/components/exmortis/events/join/JoinOpen";
 import NotFoundContent from "@/components/exmortis/NotFoundContent";
 import { joinFallback } from "@/content/joinFallback";
+import WarsawNote from "@/components/exmortis/events/WarsawNote";
 
 const cap = (s) => s.charAt(0).toUpperCase() + s.slice(1);
 
@@ -43,7 +44,7 @@ export default function JoinMeeting() {
       <div className="mx-auto max-w-xl">
         <p className="technical text-[10px] gold-text mb-4">SPOTKANIE ONLINE</p>
         <h1 className="shop-heading text-3xl md:text-4xl text-[#F5EFE1]">{fb.title}</h1>
-        <p className="font-mono text-sm text-[#F5EFE1]/70 mt-3">{cap(plWhenFull(fb.start_datetime))}</p>
+        <p className="font-mono text-sm text-[#F5EFE1]/70 mt-3">{cap(plWhenFull(fb.start_datetime))}<WarsawNote iso={fb.start_datetime} /></p>
         {fb.state === "przed" && <JoinBefore data={fb} onOpen={load} />}
         {fb.state !== "przed" && <p className="technical text-xs gold-text mt-8" role="status" aria-live="polite">{fb.state === "otwarte" ? "ŁĄCZYMY… POKÓJ JEST OTWARTY" : "ŁĄCZYMY…"}</p>}
       </div>
@@ -60,7 +61,7 @@ export default function JoinMeeting() {
       <div className="mx-auto max-w-xl">
         <p className="technical text-[10px] gold-text mb-4">SPOTKANIE ONLINE</p>
         <h1 className="shop-heading text-3xl md:text-4xl text-[#F5EFE1]">{data.title}</h1>
-        <p className="font-mono text-sm text-[#F5EFE1]/70 mt-3">{cap(plWhenFull(data.start_datetime))}</p>
+        <p className="font-mono text-sm text-[#F5EFE1]/70 mt-3">{cap(plWhenFull(data.start_datetime))}<WarsawNote iso={data.start_datetime} /></p>
         {data.state === "przed" && <JoinBefore data={data} onOpen={preview ? () => {} : load} />}
         {data.state === "otwarte" && <JoinOpen data={data} preview={!!preview} />}
         {data.state === "po" && (

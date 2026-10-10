@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from "react";
+import WarsawNote from "@/components/exmortis/events/WarsawNote";
 import { sanitizeHtml } from "@/lib/sanitizeHtml";
 import { Link, useParams } from "react-router-dom";
 import { ArrowLeft, ArrowRight, Clock, MapPin } from "lucide-react";
@@ -94,7 +95,7 @@ export default function EventDetail() {
         <div className="mt-10 grid sm:grid-cols-3 gap-6 border-y hairline py-8">
           <div>
             <p className="technical text-[9px] text-foreground/35 mb-2">KIEDY</p>
-            <p className="text-[#F5EFE1]">{whenText(event.start_datetime)}</p>
+            <p className="text-[#F5EFE1]">{whenText(event.start_datetime)}<WarsawNote iso={event.start_datetime} /></p>
             <p className="text-foreground/40 text-sm mt-1">
               <Clock className="h-3.5 w-3.5 inline mr-1 -mt-0.5" /> {durationText(event.duration_minutes)}
             </p>
