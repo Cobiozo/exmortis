@@ -7,6 +7,7 @@ import { plWhenFull } from "@/components/exmortis/events/time";
 import JoinBefore from "@/components/exmortis/events/join/JoinBefore";
 import JoinOpen from "@/components/exmortis/events/join/JoinOpen";
 import NotFoundContent from "@/components/exmortis/NotFoundContent";
+import { joinFallback } from "@/content/joinFallback";
 
 const cap = (s) => s.charAt(0).toUpperCase() + s.slice(1);
 
@@ -36,6 +37,18 @@ export default function JoinMeeting() {
     return n >= st - (m.o || 15) * 60000 && n <= st + ((m.d || 60) + 30) * 60000; } catch { return false; } })();
   useEffect(() => { if (data?.state !== "otwarte" || preview) return; const i = setInterval(load, 60000); return () => clearInterval(i); }, [data?.state, load, preview]);
 
+  const fb = data === undefined && waiting ? joinFallback(slug || short) : null;
+  if (fb) return (
+    <div className="min-h-[70svh] pt-32 pb-24 px-5">
+      <div className="mx-auto max-w-xl">
+        <p className="technical text-[10px] gold-text mb-4">SPOTKANIE ONLINE</p>
+        <h1 className="shop-heading text-3xl md:text-4xl text-[#F5EFE1]">{fb.title}</h1>
+        <p className="font-mono text-sm text-[#F5EFE1]/70 mt-3">{cap(plWhenFull(fb.start_datetime))}</p>
+        {fb.state === "przed" && <JoinBefore data={fb} onOpen={load} />}
+        {fb.state !== "przed" && <p className="technical text-xs gold-text mt-8" role="status" aria-live="polite">{fb.state === "otwarte" ? "ŁĄCZYMY… POKÓJ JEST OTWARTY" : "ŁĄCZYMY…"}</p>}
+      </div>
+    </div>
+  );
   if (data === undefined) return (
     <div className="min-h-[70svh] pt-32 pb-24 px-5 flex justify-center" role="status" aria-live="polite">
       {<p className="technical text-xs gold-text">{knownOpen ? "ŁĄCZYMY… POKÓJ JEST OTWARTY" : "ŁĄCZYMY…"}</p>}
