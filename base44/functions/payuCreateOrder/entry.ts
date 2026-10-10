@@ -5,6 +5,7 @@ import { getSetting, loadAppUrl, APP_URL } from "../../shared/settings.ts";
 import { insertOrder } from "../../shared/orders.ts";
 import { addSubscriber } from "../../shared/newsletter.ts";
 import { DIGITAL } from "../../shared/access.ts";
+import { regulaminVersion } from "../../shared/legalDocs.ts";
 
 const DIGITAL_CONSENT =
   "Żądam dostarczenia treści cyfrowych przed upływem 14 dni od zawarcia umowy i przyjmuję do wiadomości, że z chwilą rozpoczęcia ich dostarczania tracę prawo odstąpienia od umowy.";
@@ -133,7 +134,7 @@ export default async function (req) {
 
     // Każda zgoda zapisana osobno, z wersją dokumentu.
     const ip = (req.headers.get("x-forwarded-for") || "").split(",")[0].trim();
-    const cBase = { email: buyerEmail, source: "kasa", order_id: extOrderId, doc_version: "regulamin 1.0", ip, status: "udzielona" };
+    const cBase = { email: buyerEmail, source: "kasa", order_id: extOrderId, doc_version: `regulamin ${await regulaminVersion(base44)}`, ip, status: "udzielona" };
     const consents = [{ ...cBase, kind: "regulamin", text: "Akceptuję Regulamin. Znam Politykę prywatności." }];
     if (hasDigital) consents.push({ ...cBase, kind: "tresci_cyfrowe", text: DIGITAL_CONSENT });
     if (newsletterConsent) consents.push({ ...cBase, kind: "newsletter", text: "Chcę otrzymywać Listy powrotu — newsletter exmortis z treściami oraz informacjami o produktach i wydarzeniach — na podany adres e-mail. Zgodę mogę wycofać w każdej chwili." });

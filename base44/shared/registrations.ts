@@ -3,6 +3,7 @@ import { runSql, escStr, rpc } from "./supabase.ts";
 import { getSetting, loadAppUrl } from "./settings.ts";
 import { sendConfirmationMail } from "./events.ts";
 import { sendMail } from "./smtp.ts";
+import { regulaminVersion } from "./legalDocs.ts";
 
 // Zapisy na spotkania: dwa zapytania do Supabase (odczyt + INSERT), bez zmian struktury tabel.
 // Gdy Supabase nie odpowiada — zgłoszenie trafia do kolejki w bazie aplikacji i jest ponawiane.
@@ -70,7 +71,7 @@ export async function insertRegistration(base44, ev, d) {
 // Dowód zgody: e-mail + treść + data i godzina + IP + identyfikator zapisu (ref_id).
 export async function saveConsents(base44, d, refId) {
   const base = { email: d.email, source: `spotkanie:${d.slug}`, ref_id: refId, ip: d.ip, given_at: d.at };
-  const list = [{ ...base, kind: "wydarzenie", text: REGULAMIN_TEXT, doc_version: REGULAMIN_VERSION }];
+  const list = [{ ...base, kind: "wydarzenie", text: REGULAMIN_TEXT, doc_version: `regulamin ${await regulaminVersion(base44)}` }];
   if (d.listy) list.push({ ...base, kind: "newsletter", text: LISTY_TEXT });
   await base44.asServiceRole.entities.Consent.bulkCreate(list);
 }

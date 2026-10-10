@@ -2,7 +2,7 @@ import { createClientFromRequest } from "npm:@base44/sdk@0.8.44";
 import { requireStaff } from "../../shared/supabase.ts";
 import { getSetting, saveSetting, deleteSetting, cleanAppUrl, DEFAULT_APP_URL } from "../../shared/settings.ts";
 import { cleanFirma, cleanPremiera, PREMIERA_DEFAULT } from "../../shared/firma.ts";
-import { nextDocs, publicDocs } from "../../shared/legalDocs.ts";
+import { syncDocs, publicDocs } from "../../shared/legalDocs.ts";
 
 const MASK = "********";
 
@@ -45,9 +45,9 @@ export default async function (req) {
     }
 
     if (body.action === "save" && body.target === "dokumenty") {
-      const next = nextDocs(await getSetting(base44, "dokumenty"), body.data);
-      await saveSetting(base44, "dokumenty", next);
-      return Response.json({ ok: true, dokumenty: next });
+      const { value, created } = await syncDocs(base44, body.data, body.snapshots, me?.email || "admin");
+      await saveSetting(base44, "dokumenty", value);
+      return Response.json({ ok: true, dokumenty: value, created });
     }
 
     if (body.action === "save" && body.target === "premiera") {
