@@ -1,0 +1,142 @@
+{
+  "description": "1 listopada 19:00\u201320:59 (czas polski): uruchamiane co 5 minut, w \u015brodku pinguje stron\u0119 /dolacz co minut\u0119.",
+  "name": "Rozgrzewanie strony do\u0142\u0105czenia 1.11",
+  "definition": {
+    "document": {
+      "dsl": "1.0.0",
+      "name": "dolacz_szczyt",
+      "version": "1.0",
+      "namespace": "base44"
+    },
+    "do": [
+      {
+        "p1": {
+          "call": "invoke_backend_function",
+          "with": {
+            "function_name": "eventsPublic",
+            "args": {
+              "ping": true
+            }
+          },
+          "then": "w1",
+          "x-base44": {
+            "title": "Rozgrzanie /dolacz (minuta 0)"
+          }
+        }
+      },
+      {
+        "w1": {
+          "wait": "PT1M",
+          "then": "p2",
+          "x-base44": {
+            "title": "Minuta przerwy"
+          }
+        }
+      },
+      {
+        "p2": {
+          "call": "invoke_backend_function",
+          "with": {
+            "function_name": "eventsPublic",
+            "args": {
+              "ping": true
+            }
+          },
+          "then": "w2",
+          "x-base44": {
+            "title": "Rozgrzanie /dolacz (minuta 1)"
+          }
+        }
+      },
+      {
+        "w2": {
+          "wait": "PT1M",
+          "then": "p3",
+          "x-base44": {
+            "title": "Minuta przerwy"
+          }
+        }
+      },
+      {
+        "p3": {
+          "call": "invoke_backend_function",
+          "with": {
+            "function_name": "eventsPublic",
+            "args": {
+              "ping": true
+            }
+          },
+          "then": "w3",
+          "x-base44": {
+            "title": "Rozgrzanie /dolacz (minuta 2)"
+          }
+        }
+      },
+      {
+        "w3": {
+          "wait": "PT1M",
+          "then": "p4",
+          "x-base44": {
+            "title": "Minuta przerwy"
+          }
+        }
+      },
+      {
+        "p4": {
+          "call": "invoke_backend_function",
+          "with": {
+            "function_name": "eventsPublic",
+            "args": {
+              "ping": true
+            }
+          },
+          "then": "w4",
+          "x-base44": {
+            "title": "Rozgrzanie /dolacz (minuta 3)"
+          }
+        }
+      },
+      {
+        "w4": {
+          "wait": "PT1M",
+          "then": "p5",
+          "x-base44": {
+            "title": "Minuta przerwy"
+          }
+        }
+      },
+      {
+        "p5": {
+          "call": "invoke_backend_function",
+          "with": {
+            "function_name": "eventsPublic",
+            "args": {
+              "ping": true
+            }
+          },
+          "then": "end",
+          "x-base44": {
+            "title": "Rozgrzanie /dolacz (minuta 4)"
+          }
+        }
+      }
+    ]
+  },
+  "trigger": {
+    "condition": null,
+    "config": {
+      "trigger_type": "scheduled",
+      "events": [],
+      "schedule_mode": "recurring",
+      "cron_expression": "*/5 19-20 1 11 *",
+      "one_time_date": null,
+      "timezone": "Europe/Warsaw",
+      "interval_value": null,
+      "interval_unit": null,
+      "interval_anchor": null,
+      "ends_type": "never",
+      "ends_on_date": null,
+      "ends_after_count": null
+    }
+  }
+}
