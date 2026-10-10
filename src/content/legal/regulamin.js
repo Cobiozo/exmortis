@@ -50,7 +50,7 @@ export const REGULAMIN = {
       "2. Ceny podawane są w złotych polskich i są cenami brutto ([WYBIERZ JEDNO: „zawierają podatek VAT” — jeśli jesteś czynnym podatnikiem VAT / „Sprzedawca korzysta ze zwolnienia podmiotowego z VAT na podstawie art. 113 ust. 1 ustawy o VAT” — jeśli korzystasz ze zwolnienia]). Przy obniżce ceny Sprzedawca podaje także najniższą cenę z 30 dni przed wprowadzeniem obniżki.",
       "3. Ceny mogą się zmieniać w czasie (np. cena premierowa). Wiążąca jest cena widoczna w podsumowaniu Zamówienia w chwili jego złożenia. Kody rabatowe mają warunki podane przy ich udostępnieniu; nie łączą się, chyba że zaznaczono inaczej.",
       "4. Aby złożyć Zamówienie, Klient wybiera produkt, podaje dane, akceptuje Regulamin, składa wymagane oświadczenia (§9) i klika przycisk „Zamawiam z obowiązkiem zapłaty”. Umowa zostaje zawarta z chwilą otrzymania przez Klienta e-maila z potwierdzeniem Zamówienia, wysłanego po zaksięgowaniu płatności.",
-      "5. Płatności obsługuje PayU S.A. z siedzibą w Poznaniu (ul. Grunwaldzka 186, 60-166 Poznań). Dostępne metody: [BLIK, Przelewy24, karta płatnicza]. Płatność jest jednorazowa i z góry.",
+      "5. Płatności obsługuje [OPERATOR PŁATNOŚCI] ([ADRES OPERATORA]). Dostępne metody: [BLIK, Przelewy24, karta płatnicza]. Płatność jest jednorazowa i z góry.",
       "6. Potwierdzenie zawarcia umowy, treść Regulaminu w wersji z dnia Zamówienia i wzór formularza odstąpienia Klient otrzymuje e-mailem (trwały nośnik) i może je pobrać w Koncie.",
       "7. Dokument sprzedaży: [OPIS — np. „na życzenie Klienta wystawiamy fakturę / rachunek; dane do faktury można podać w Zamówieniu”].",
     ]},

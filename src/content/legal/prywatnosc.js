@@ -34,7 +34,7 @@ export const PRYWATNOSC = {
       "Twoje dane mogą otrzymać podmioty, które przetwarzają je w naszym imieniu na podstawie umów powierzenia, wyłącznie w zakresie potrzebnym do świadczenia usług:",
       "- hosting i platforma Serwisu, w tym analityka odwiedzin (wyłącznie po Twojej zgodzie na cookies analityczne): Base44, Inc. — dostawca platformy, na której działa Serwis (podmiot przetwarzający dane na podstawie umowy powierzenia: base44.com/dpa). Przekazanie danych poza EOG: EU-US Data Privacy Framework albo standardowe klauzule umowne UE;",
       "- Supabase, Inc. — dostawca bazy danych (serwery w UE, Frankfurt), podmiot przetwarzający na podstawie umowy powierzenia;",
-      "- operator płatności: PayU S.A., ul. Grunwaldzka 186, 60-166 Poznań — w zakresie płatności jest odrębnym administratorem;",
+      "- operator płatności: [OPERATOR PŁATNOŚCI], [ADRES OPERATORA] — w zakresie płatności jest odrębnym administratorem;",
       "- system mailingowy: [NAZWA, np. MailerLite];",
       "- wideokonferencje: Zoom Video Communications, Inc. (USA);",
       "- poczta e-mail: [DOSTAWCA POCZTY];",

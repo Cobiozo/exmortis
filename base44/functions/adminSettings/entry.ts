@@ -2,6 +2,7 @@ import { createClientFromRequest } from "npm:@base44/sdk@0.8.44";
 import { requireStaff } from "../../shared/supabase.ts";
 import { getSetting, saveSetting, deleteSetting, cleanAppUrl, DEFAULT_APP_URL } from "../../shared/settings.ts";
 import { cleanFirma, cleanPremiera, PREMIERA_DEFAULT } from "../../shared/firma.ts";
+import { nextDocs, publicDocs } from "../../shared/legalDocs.ts";
 
 const MASK = "********";
 
@@ -29,6 +30,7 @@ export default async function (req) {
       const premiera = await getSetting(base44, "premiera");
       return Response.json({
         firma: cleanFirma(firma),
+        dokumenty: publicDocs(await getSetting(base44, "dokumenty")),
         // Rola techniczna nie widzi listy adresów z dostępem przedpremierowym.
         premiera: { ...PREMIERA_DEFAULT, ...(premiera || {}), ...(tech ? { dostep: [], dostep_ukryty: true } : {}) },
         app: { url: app?.url || DEFAULT_APP_URL },
@@ -40,6 +42,12 @@ export default async function (req) {
     if (body.action === "save" && body.target === "firma") {
       await saveSetting(base44, "firma", cleanFirma(body.data));
       return Response.json({ ok: true });
+    }
+
+    if (body.action === "save" && body.target === "dokumenty") {
+      const next = nextDocs(await getSetting(base44, "dokumenty"), body.data);
+      await saveSetting(base44, "dokumenty", next);
+      return Response.json({ ok: true, dokumenty: next });
     }
 
     if (body.action === "save" && body.target === "premiera") {

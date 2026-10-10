@@ -3,5 +3,5 @@ import LegalPage from "@/components/legal/LegalPage";
 import { REGULAMIN, WZOR } from "@/content/legal/regulamin";
 
 export default function Regulamin() {
-  return <LegalPage doc={REGULAMIN} extra={[WZOR]} />;
+  return <LegalPage doc={REGULAMIN} docKey="regulamin" extra={[WZOR]} />;
 }

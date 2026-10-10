@@ -12,7 +12,7 @@ export const COOKIE_TABLE = [
   ["exm_view", "exmortis", "Niezbędne", "Tryb podglądu strony — tylko administrator (localStorage)", "Do usunięcia przez użytkownika"],
   ["base44_analytics_session_id", "Base44, Inc. (platforma Serwisu)", "Niezbędne (identyfikator platformy)", "Losowy identyfikator sesji tworzony przez platformę przy pierwszej wizycie (localStorage). Bez zgody na cookies analityczne nie wysyłamy z nim żadnych danych; po „Odrzucam” jest usuwany", "Do zakończenia sesji, odrzucenia zgody lub usunięcia przez użytkownika"],
   ["cookies YouTube (np. VISITOR_INFO1_LIVE, YSC)", "Google / YouTube", "Marketingowe", "Odtwarzacz osadzonych filmów i muzyki", "YSC — do zamknięcia przeglądarki; VISITOR_INFO1_LIVE — ok. 6 miesięcy"],
-  ["cookies operatora płatności", "PayU S.A.", "Niezbędne", "Bezpieczeństwo płatności (na stronie operatora)", "Zgodnie z polityką cookies PayU (na stronie operatora)"],
+  ["cookies operatora płatności", "[OPERATOR PŁATNOŚCI]", "Niezbędne", "Bezpieczeństwo płatności (na stronie operatora)", "Zgodnie z polityką cookies PayU (na stronie operatora)"],
 ];
 
 export const COOKIES = {

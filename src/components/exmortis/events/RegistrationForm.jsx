@@ -56,7 +56,7 @@ export default function RegistrationForm({ event: ev }) {
         source: src,
       });
       setResult(data.queued ? { ok: true, status: "Zapisany", first_name: firstName, pending: true,
-        join_url: ev.format === "Online" ? `/spotkania/${ev.slug}/dolacz` : null } : data);
+        join_url: ev.format === "Online" ? (ev.short_path ? `/${ev.short_path}/dolacz` : `/spotkania/${ev.slug}/dolacz`) : null } : data);
     } catch (err) {
       setError(err?.response?.data?.error || "Nie udało się zapisać. Spróbuj ponownie.");
     } finally {
@@ -202,8 +202,8 @@ export default function RegistrationForm({ event: ev }) {
         <Link to="/polityka-prywatnosci" className="gold-text underline">polityka prywatności</Link>.
       </p>
       {error && <p className="technical text-[10px] blood-text">{error}</p>}
-      <button type="submit" disabled={sending} className="btn-relic disabled:opacity-60">
-        {sending ? "ZAPISUJĘ..." : "ZAPISUJĘ SIĘ"}
+      <button type="submit" disabled={sending} aria-busy={sending} className="btn-relic disabled:opacity-60 disabled:cursor-wait">
+        {sending ? "ZAPISUJĘ…" : "ZAPISUJĘ SIĘ"}
       </button>
     </form>
   );
