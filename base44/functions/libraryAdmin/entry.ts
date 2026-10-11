@@ -159,7 +159,10 @@ export default async function (req) {
       const wa = String(body.whatsapp || "").trim();
       if (wa && !/^https:\/\/wa\.me\/[0-9]{6,20}$/.test(wa)) throw new Error("Adres WhatsApp: wyłącznie format https://wa.me/cyfry");
       const limit = int(body.space_limit_mb, 64, 1048576, 5120);
-      const podane = Array.isArray(body.video_domains) ? body.video_domains : [];
+      // Brak pola w żądaniu = lista domen bez zmian (starszy formularz nie może jej wyczyścić).
+      const podane = Array.isArray(body.video_domains)
+        ? body.video_domains
+        : (((await libSettings(base44, true).catch(() => null)) || {}).video_domains || []);
       const dom = videoDomains(podane);
       const odrzucone = podane.map((x) => String(x || "").trim()).filter((x) => x && !dom.includes(x.toLowerCase()));
       await rpc(base44, "mb_admin_settings_save", { p: {
@@ -681,7 +684,14 @@ export default async function (req) {
       if (status === "ZAPLANOWANA" && !sendAt) return bad("Podaj termin wysyłki.");
       const t = cleanTarget(body.target || {});
       const title = body.title ? String(body.title).trim().slice(0, 200) : null;
-      const att = (Array.isArray(body.attachments) ? body.attachments : []).slice(0, 10)
+      // Brak pola attachments przy edycji = załączniki bez zmian; czyścimy tylko przy jawnie pustej tablicy.
+      let attIn = body.attachments;
+      if (!Array.isArray(attIn)) {
+        attIn = id && !body.attached_material_id && !body.attached_collection_id
+          ? ((await rpc(base44, "mb_admin_message_attachments", { p_id: id }).catch(() => [])) || [])
+          : [];
+      }
+      const att = attIn.slice(0, 10)
         .map((x) => ({ material_id: uuidOrNull(x && x.material_id), collection_id: uuidOrNull(x && x.collection_id) }))
         .filter((x) => (x.material_id ? 1 : 0) + (x.collection_id ? 1 : 0) === 1);
       const matId = uuidOrNull(body.attached_material_id);
