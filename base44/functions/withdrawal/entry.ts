@@ -1,5 +1,6 @@
 import { createClientFromRequest } from "npm:@base44/sdk@0.8.44";
 import { getSetting } from "../../shared/settings.ts";
+import { clientIp } from "../../shared/supabase.ts";
 import { sendMail as gate, adminTo } from "../../shared/smtp.ts";
 const sendMail = (b, m) => gate(b, { kind: "odstapienie", ...m });
 
@@ -19,7 +20,7 @@ export default async function (req) {
       return Response.json({ error: "Uzupełnij imię i nazwisko, produkt i poprawny e-mail." }, { status: 400 });
     }
     const received_at = new Date().toISOString();
-    const ip = (req.headers.get("x-forwarded-for") || "").split(",")[0].trim();
+    const ip = clientIp(req);
     await base44.asServiceRole.entities.Withdrawal.create({ ...data, received_at, ip, status: "odstąpienie zgłoszone" });
 
     const when = new Date(received_at).toLocaleString("pl-PL", { timeZone: "Europe/Warsaw" });
