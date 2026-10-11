@@ -1,5 +1,5 @@
 import { createClientFromRequest } from "npm:@base44/sdk@0.8.52";
-import { runSql, escStr, requireAdmin, textField } from "../../shared/supabase.ts";
+import { runSql, esc, escStr, requireAdmin, textField } from "../../shared/supabase.ts";
 import { SCHEMA_SQL, SEED_SQL, CHECKPOINT_TABLES_SQL, CHECKPOINT_FUNCS_SQL } from "../../shared/librarySchema.ts";
 import { libSettings, resetLibSettings, MODES, resolveRecipients, randomToken } from "../../shared/libraryAccess.ts";
 import { sanitizeHtml, plainText } from "../../shared/librarySanitize.ts";
@@ -748,7 +748,7 @@ export default async function (req) {
     const msg = String((e && e.message) || e);
     console.error("libraryAdmin:", msg.slice(0, 300));
     const known = /^(Niepoprawn|Wybierz|Wpisz|Podaj|Dozwolone|Sygnatura|Plik|Adres|Klucz|Ten rodzaj|Kolor|Ta grupa|Grupy|Dołącz|Potwierdź|Wskaż|Nieznany)/.test(msg);
-    return Response.json({ error: known ? msg : "Nie udało się zapisać.", debug: body.dbg === true ? msg : undefined }, { status: 400 });
+    return Response.json({ error: known ? msg : "Nie udało się zapisać." }, { status: 400 });
   }
 }
 
