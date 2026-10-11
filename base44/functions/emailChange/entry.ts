@@ -2,6 +2,8 @@ import { createClientFromRequest } from "npm:@base44/sdk@0.8.52";
 import { runSql, escStr, requireAdmin, EMAIL_RE } from "../../shared/supabase.ts";
 import { getSetting, saveSetting, loadAppUrl } from "../../shared/settings.ts";
 import { sendMail, mailConfig, mailReady } from "../../shared/smtp.ts";
+import { moveLibraryEmail } from "../../shared/libraryAccess.ts";
+import { libLog } from "../../shared/libraryNotify.ts";
 
 // Zmiana adresu e-mail konta — wyłącznie z panelu administratora. Osobny moduł:
 // istniejące tabele czyta i zmienia tylko w kolumnach adresu, z kopią i przywracaniem.
@@ -79,6 +81,13 @@ async function transfer(base44, ch) {
   for (const [e, f] of Object.entries(APP)) {
     const ids = (ch.kopia.aplikacja[e] || []).map((r) => r.id);
     for (let i = 0; i < ids.length; i += 500) await sr[e].updateMany({ id: { $in: ids.slice(i, i + 500) } }, { $set: { [f]: n } });
+  }
+  // Biblioteka i wiadomości: krok dodatkowy po przeniesieniu adresu. Błąd biblioteki NIE może
+  // zablokować zmiany adresu — wpis w historii bez pełnych adresów.
+  try {
+    await moveLibraryEmail(base44, o, n);
+  } catch (e) {
+    await libLog(base44, "zmiana_adresu", "biblioteka_blad", "klient", null, "danych biblioteki nie przeniesiono").catch(() => {});
   }
   const done = new Set((await sr.ConsentNote.filter({ change_id: ch.id }, "-created_date", 5000)).map((x) => x.consent_id));
   const date = new Date().toLocaleString("pl-PL", { timeZone: "Europe/Warsaw" });

@@ -57,8 +57,10 @@ export async function libraryData(base44, email, admin, preview) {
 
 export async function messagesData(base44, email, me, preview) {
   const rows = await runSql(base44, `SELECT m.id, m.title, m.body_html, m.sent_at, m.attached_material_id, m.attached_collection_id,
-      r.read_at, r.delivered_at
+      r.read_at, r.delivered_at, mt.title AS material_title, mt.kind AS material_kind, cl.title AS collection_title
     FROM public.mb_message_recipients r JOIN public.mb_messages m ON m.id = r.message_id
+    LEFT JOIN public.mb_materials mt ON mt.id = m.attached_material_id AND mt.deleted_at IS NULL
+    LEFT JOIN public.mb_collections cl ON cl.id = m.attached_collection_id AND cl.deleted_at IS NULL
     WHERE r.client_email = ${escStr(email)} AND m.status = 'WYSLANA' AND r.hidden_at IS NULL
     ORDER BY m.sent_at DESC NULLS LAST LIMIT 100`, true).catch(() => []);
   const name = firstName(me);
@@ -66,6 +68,7 @@ export async function messagesData(base44, email, me, preview) {
     id: m.id, title: m.title || null, text: sanitizeHtml(renderBody(m.body_html, name)),
     sent_at: m.sent_at || null, read_at: m.read_at || null,
     material_id: m.attached_material_id || null, collection_id: m.attached_collection_id || null,
+    material_title: m.material_title || null, material_kind: m.material_kind || null, collection_title: m.collection_title || null,
   }));
   return { items, unread: preview ? 0 : items.filter((m) => !m.read_at).length };
 }

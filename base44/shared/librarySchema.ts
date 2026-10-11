@@ -219,6 +219,9 @@ DO $r$ BEGIN
     CREATE ROLE mb_log_maint NOLOGIN;
   END IF;
 END $r$;
+-- mb_log ma włączone RLS bez polityk, więc rola niebędąca właścicielem tabeli nie widzi
+-- ani jednego wiersza. Bez tej linii UPDATE w funkcji czyszczącej i anonimizującej cicho nic nie robi.
+ALTER ROLE mb_log_maint BYPASSRLS;
 GRANT USAGE ON SCHEMA public TO mb_log_maint;
 -- CREATE na schemacie jest potrzebne wyłącznie po to, by przekazać funkcję czyszczącą na własność tej roli.
 GRANT CREATE ON SCHEMA public TO mb_log_maint;
@@ -245,6 +248,23 @@ BEGIN
   RETURN n;
 END $p$;
 ALTER FUNCTION public.mb_log_purge() OWNER TO mb_log_maint;
+
+-- RODO: anonimizacja wpisów historii dotyczących danej osoby (bez usuwania historii).
+-- Właścicielem jest mb_log_maint — tylko ta rola może zmieniać wpisy (trigger mb_log_guard).
+CREATE OR REPLACE FUNCTION public.mb_log_anonymize(p_email text) RETURNS int
+LANGUAGE plpgsql SECURITY DEFINER SET search_path = '' AS $an$
+DECLARE n int;
+BEGIN
+  UPDATE public.mb_log SET
+    actor = CASE WHEN lower(actor) = lower(btrim(COALESCE(p_email,''))) THEN '[usuniete]' ELSE actor END,
+    summary = regexp_replace(COALESCE(summary,''), '[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}', '[usuniete]', 'g'),
+    anonymized = true
+  WHERE lower(actor) = lower(btrim(COALESCE(p_email,'')))
+     OR COALESCE(summary,'') ILIKE '%' || lower(btrim(COALESCE(p_email,''))) || '%';
+  GET DIAGNOSTICS n = ROW_COUNT;
+  RETURN n;
+END $an$;
+ALTER FUNCTION public.mb_log_anonymize(text) OWNER TO mb_log_maint;
 REVOKE CREATE ON SCHEMA public FROM mb_log_maint;
 
 -- ============ 9b. GRUPY AUTOMATYCZNE (jedno miejsce prawdy) ============
@@ -447,6 +467,7 @@ REVOKE ALL ON FUNCTION public.mb_visible_materials(text, boolean) FROM PUBLIC, a
 REVOKE ALL ON FUNCTION public.mb_resolve_recipients(jsonb) FROM PUBLIC, anon, authenticated;
 REVOKE ALL ON FUNCTION public.mb_move_email(text, text) FROM PUBLIC, anon, authenticated;
 REVOKE ALL ON FUNCTION public.mb_link_hit(text, int) FROM PUBLIC, anon, authenticated;
+REVOKE ALL ON FUNCTION public.mb_log_anonymize(text) FROM PUBLIC, anon, authenticated;
 GRANT EXECUTE ON FUNCTION public.mb_log_purge() TO service_role;
 GRANT EXECUTE ON FUNCTION public.mb_auto_group_emails(jsonb) TO service_role;
 GRANT EXECUTE ON FUNCTION public.mb_group_members_now(uuid) TO service_role;
@@ -454,6 +475,7 @@ GRANT EXECUTE ON FUNCTION public.mb_visible_materials(text, boolean) TO service_
 GRANT EXECUTE ON FUNCTION public.mb_resolve_recipients(jsonb) TO service_role;
 GRANT EXECUTE ON FUNCTION public.mb_move_email(text, text) TO service_role;
 GRANT EXECUTE ON FUNCTION public.mb_link_hit(text, int) TO service_role;
+GRANT EXECUTE ON FUNCTION public.mb_log_anonymize(text) TO service_role;
 
 NOTIFY pgrst, 'reload schema';
 `;

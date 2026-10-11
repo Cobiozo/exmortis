@@ -10,16 +10,29 @@ import DailyThought from "@/components/account/DailyThought";
 import AccountAnnouncements from "@/components/account/announce/AccountAnnouncements";
 import MySessions from "@/components/account/sessions/MySessions";
 import { obok } from "@/components/obok/obokApi";
+import { libConfig } from "@/components/account/library/libApi";
+import MyLibrary from "@/components/account/library/MyLibrary";
+import MyMessages from "@/components/account/messages/MyMessages";
+import AccountUnreadMessage from "@/components/account/messages/AccountUnreadMessage";
 
-const TABS = [["produkty", "Moje produkty"], ["sesje", "Moje sesje"], ["obok", "Obok"], ["zakupy", "Zakupy"], ["ustawienia", "Ustawienia"]];
+const HEAD = [["produkty", "Moje produkty"], ["sesje", "Moje sesje"]];
+const TAIL = [["obok", "Obok"], ["zakupy", "Zakupy"], ["ustawienia", "Ustawienia"]];
 
-// /konto — tylko dla zalogowanych (ProtectedRoute).
+// /konto — tylko dla zalogowanych (ProtectedRoute). Zakładki biblioteki i wiadomości
+// pokazują się wyłącznie wtedy, gdy moduł jest dla tej osoby dostępny (jeden lekki odczyt).
 export default function Account() {
   useNoIndex();
   const [tab, setTab] = useState(() => new URLSearchParams(window.location.search).get("tab") || "produkty");
   const [me, setMe] = useState(null);
   const [hasObok, setHasObok] = useState(false);
-  useEffect(() => { base44.auth.me().then(setMe); obok("home").then((d) => setHasObok(!!d.tiles?.length)).catch(() => {}); }, []);
+  const [cfg, setCfg] = useState(null);
+
+  useEffect(() => {
+    base44.auth.me().then(setMe);
+    obok("home").then((d) => setHasObok(!!d.tiles?.length)).catch(() => {});
+    libConfig().then(setCfg);
+  }, []);
+
   if (me?.role === "zablokowane") {
     return (
       <div className="bg-[#0A0A0B] pt-28 pb-24 min-h-screen px-5 text-center space-y-6">
@@ -28,6 +41,15 @@ export default function Account() {
       </div>
     );
   }
+
+  const TABS = [
+    ...HEAD,
+    ...(cfg?.library ? [["biblioteka", "Moja biblioteka"]] : []),
+    ...(cfg?.messages ? [["wiadomosci", "Wiadomości"]] : []),
+    ...TAIL,
+  ];
+  // Zanim przełączniki dojdą, nie przeskakujemy między zakładkami.
+  const active = !cfg || TABS.some(([k]) => k === tab) ? tab : "produkty";
 
   return (
     <div className="bg-[#0A0A0B] pt-28 pb-24 min-h-screen">
@@ -40,6 +62,7 @@ export default function Account() {
             </h1>
           </div>
           <div className="w-full lg:max-w-[380px] flex flex-col gap-4">
+            {cfg?.messages && <AccountUnreadMessage onOpen={() => setTab("wiadomosci")} />}
             <AccountAnnouncements />
             <DailyThought hasObok={hasObok} onObok={() => setTab("obok")} />
           </div>
@@ -49,17 +72,19 @@ export default function Account() {
             <button
               key={k}
               onClick={() => setTab(k)}
-              className={`pb-4 -mb-px technical text-[10px] whitespace-nowrap border-b ${tab === k ? "border-[#C9A24A] gold-text" : "border-transparent text-foreground/45 hover:text-[#F5EFE1]"}`}
+              className={`pb-4 -mb-px technical text-[10px] whitespace-nowrap border-b ${active === k ? "border-[#C9A24A] gold-text" : "border-transparent text-foreground/45 hover:text-[#F5EFE1]"}`}
             >
               {l}
             </button>
           ))}
         </div>
-        {tab === "produkty" && <MyProducts />}
-        {tab === "sesje" && <MySessions />}
-        {tab === "obok" && <><SeriesTiles /><div className="mt-14"><ObokNotifications /></div></>}
-        {tab === "zakupy" && <MyOrders />}
-        {tab === "ustawienia" && me && <AccountSettings me={me} />}
+        {active === "produkty" && <MyProducts />}
+        {active === "sesje" && <MySessions />}
+        {active === "biblioteka" && <MyLibrary onGoToOrders={() => setTab("zakupy")} />}
+        {active === "wiadomosci" && <MyMessages footer={cfg?.footer} />}
+        {active === "obok" && <><SeriesTiles /><div className="mt-14"><ObokNotifications /></div></>}
+        {active === "zakupy" && <MyOrders />}
+        {active === "ustawienia" && me && <AccountSettings me={me} />}
       </div>
     </div>
   );

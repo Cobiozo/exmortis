@@ -6,6 +6,7 @@ import { sanitizeHtml, plainText } from "../../shared/librarySanitize.ts";
 import { normalizeVideo, extOf, sniff, pdfHasJs, MAX_BYTES, ALLOWED_EXT, MAX_MB, SNIFF_BYTES, mb } from "../../shared/libraryMedia.ts";
 import { libLog, deliverMessage, sendMessageEmail, renderBody } from "../../shared/libraryNotify.ts";
 import { libraryData, messagesData } from "../../shared/libraryView.ts";
+import { getSettingsFast } from "../../shared/settings.ts";
 
 // Panel biblioteki i wiadomości. Wyłącznie rola „admin" (konto techniczne nie ma dostępu),
 // wszystko sprawdzane na serwerze, nieznana akcja = 404.
@@ -749,7 +750,7 @@ export default async function (req) {
         count: emails.length, emails: emails.slice(0, 500),
         email: pick, imie: imie || null,
         html: pick ? sanitizeHtml(renderBody(html, imie)) : null,
-        stopka: footerData(me, s),
+        stopka: footerData(s, (await getSettingsFast(base44, ["firma"]).catch(() => ({}))).firma),
       });
     }
 

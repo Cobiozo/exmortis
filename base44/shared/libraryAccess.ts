@@ -64,9 +64,12 @@ export function randomToken() {
   return btoa(s).replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/, "");
 }
 
-// Adresy do stopki wiadomości (bez treści w logach).
-export const footerData = (me, s) => ({
-  mailto: `mailto:${String((me && me.email) || "")}`,
+// Stopka wiadomości dla klienta. „Odpowiedz e-mailem" prowadzi na skrzynkę kontaktową
+// exmortis (Dane firmy), NIGDY na adres klienta — to my odpowiadamy na wiadomości.
+export const CONTACT_FALLBACK = "kontakt@exmortis.pl";
+
+export const footerData = (s, firma) => ({
+  mailto: `mailto:${String((firma && firma.email) || "").trim() || CONTACT_FALLBACK}`,
   whatsapp: s && s.whatsapp ? s.whatsapp : null,
   crisis: "Jeśli jesteś w kryzysie: 116 123 · 800 70 2222 (całą dobę, bezpłatnie) · 112.",
   reply: "Na tę wiadomość odpowiesz e-mailem lub na WhatsAppie.",
