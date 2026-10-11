@@ -1,6 +1,6 @@
 import { createClientFromRequest } from "npm:@base44/sdk@0.8.44";
 import { applyDiscount } from "../../shared/discounts.ts";
-import { runSql, escStr, textField, emailField } from "../../shared/supabase.ts";
+import { runSql, escStr, textField, emailField, clientIp } from "../../shared/supabase.ts";
 import { getSetting, loadAppUrl, APP_URL } from "../../shared/settings.ts";
 import { insertOrder } from "../../shared/orders.ts";
 import { addSubscriber } from "../../shared/newsletter.ts";
@@ -90,8 +90,8 @@ export default async function (req) {
     }
 
     const extOrderId = crypto.randomUUID();
-    const customerIp =
-      (req.headers.get("x-forwarded-for") || "").split(",")[0].trim() || "127.0.0.1";
+    const realIp = clientIp(req);
+    const customerIp = realIp === "brak" ? "127.0.0.1" : realIp;
 
     const orderRes = await fetch(`${base}/api/v2_1/orders`, {
       method: "POST",
@@ -133,7 +133,7 @@ export default async function (req) {
     });
 
     // Każda zgoda zapisana osobno, z wersją dokumentu.
-    const ip = (req.headers.get("x-forwarded-for") || "").split(",")[0].trim();
+    const ip = realIp;
     const cBase = { email: buyerEmail, source: "kasa", order_id: extOrderId, doc_version: `regulamin ${await regulaminVersion(base44)}`, ip, status: "udzielona" };
     const consents = [{ ...cBase, kind: "regulamin", text: "Akceptuję Regulamin. Znam Politykę prywatności." }];
     if (hasDigital) consents.push({ ...cBase, kind: "tresci_cyfrowe", text: DIGITAL_CONSENT });
