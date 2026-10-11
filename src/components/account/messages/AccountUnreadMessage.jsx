@@ -5,11 +5,12 @@ const FOCUS = "focus-visible:outline focus-visible:outline-2 focus-visible:outli
 const BTN = `inline-flex items-center justify-center min-h-[44px] px-5 font-mono text-xs tracking-[0.14em] uppercase transition-colors ${FOCUS}`;
 
 // Najnowsza nieprzeczytana wiadomość w nagłówku konta — nad ogłoszeniami.
-export default function AccountUnreadMessage({ onOpen }) {
-  const [m, setM] = useState(null);
+export default function AccountUnreadMessage({ initial, onOpen }) {
+  const [m, setM] = useState(initial || null);
   const [gone, setGone] = useState(false);
 
-  useEffect(() => { unreadMessage().then((d) => setM(d.latest || null)).catch(() => {}); }, []);
+  // Dane z wejścia na /konto są już wczytane — osobne zapytanie tylko, gdy ich nie ma.
+  useEffect(() => { if (initial) return; unreadMessage().then((d) => setM(d.latest || null)).catch(() => {}); }, [initial]);
 
   if (!m || gone) return null;
   const preview = plainText(m.text).slice(0, 180);

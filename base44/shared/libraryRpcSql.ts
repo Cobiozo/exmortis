@@ -59,7 +59,7 @@ it AS (
     'has_file', m.has_file, 'allow_download', m.allow_download,
     'external_url', m.external_url, 'video_provider', m.video_provider, 'video_id', m.video_id,
     'body_html', m.body_html) AS j,
-    m.kind, v.collection_id, v.pos, m.title
+    m.kind, v.collection_id, v.pos, m.title, st.opened_at
   FROM m JOIN v ON v.material_id = m.id LEFT JOIN st ON st.material_id = m.id
 ),
 col AS (
@@ -510,7 +510,18 @@ BEGIN
   RETURN k;
 END $agm$;
 
+-- ============ USTAWIENIA APLIKACJI (wspólne, nie mb_*) ============
+-- Ten sam odczyt co getSettingsFast, ale przez PostgREST (Management API to ~1,5 s na zapytanie).
+-- Korzystają z niego wszystkie funkcje czytające Dane firmy i ustawienia SMTP.
+CREATE OR REPLACE FUNCTION public.app_settings_get(p_keys text[]) RETURNS jsonb
+LANGUAGE sql STABLE SECURITY DEFINER SET search_path = '' AS $asg$
+SELECT COALESCE(jsonb_object_agg(s.key, s.value), '{}'::jsonb)
+FROM public.app_settings s WHERE s.key = ANY(p_keys)
+$asg$;
+
 -- ============ DOSTĘP: wyłącznie serwer ============
+REVOKE ALL ON FUNCTION public.app_settings_get(text[]) FROM PUBLIC, anon, authenticated;
+GRANT EXECUTE ON FUNCTION public.app_settings_get(text[]) TO service_role;
 REVOKE ALL ON FUNCTION public.mb_lib_settings() FROM PUBLIC, anon, authenticated;
 REVOKE ALL ON FUNCTION public.mb_admin_space() FROM PUBLIC, anon, authenticated;
 REVOKE ALL ON FUNCTION public.mb_client_library(text, boolean, boolean) FROM PUBLIC, anon, authenticated;

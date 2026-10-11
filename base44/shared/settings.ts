@@ -1,4 +1,4 @@
-import { runSql, escStr } from "./supabase.ts";
+import { runSql, rpc, escStr } from "./supabase.ts";
 import { clearSnap } from "./snapshot.ts";
 
 // Ustawienia integracji (payu / smtp) przechowywane jako jsonb w app_settings.
@@ -62,13 +62,18 @@ export async function getSettingsFast(base44, keys: string[]) {
   const ck = keys.join(",");
   const hit = CACHE.get(ck);
   if (hit && Date.now() - hit.at < 60000) return hit.v as Record<string, any>;
-  const rows = await runSql(
-    base44,
-    `SELECT key, value FROM public.app_settings WHERE key IN (${keys.map(escStr).join(",")})`,
-    true
-  ).catch(() => []);
-  const out: Record<string, any> = {};
-  for (const r of rows || []) out[r.key] = r.value;
+  // ETAP 2A: najpierw PostgREST (jedno szybkie wywołanie). Gdyby funkcji jeszcze nie było,
+  // zostaje dotychczasowa ścieżka przez Management API — zachowanie bez zmian.
+  let out: Record<string, any> | null = await rpc(base44, "app_settings_get", { p_keys: keys }).catch(() => null);
+  if (!out || typeof out !== "object" || Array.isArray(out)) {
+    const rows = await runSql(
+      base44,
+      `SELECT key, value FROM public.app_settings WHERE key IN (${keys.map(escStr).join(",")})`,
+      true
+    ).catch(() => []);
+    out = {};
+    for (const r of rows || []) out[r.key] = r.value;
+  }
   CACHE.set(ck, { v: out, at: Date.now() });
   return out;
 }

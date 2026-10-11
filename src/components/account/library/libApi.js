@@ -5,6 +5,8 @@ import { base44 } from "@/api/base44Client";
 const call = async (action, payload = {}) => (await base44.functions.invoke("library", { action, ...payload })).data;
 
 export const libConfig = () => call("config").catch(() => ({ library: false, messages: false, footer: null }));
+// Jedno wejście na /konto: przełączniki + biblioteka + wiadomości + nieprzeczytane naraz.
+export const libBundle = () => call("bundle").catch(() => ({ library: false, messages: false, footer: null }));
 export const myLibrary = () => call("my_library");
 export const myMessages = () => call("my_messages");
 export const unreadMessage = () => call("unread");

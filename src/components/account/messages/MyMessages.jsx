@@ -4,12 +4,13 @@ import MaterialSheet from "@/components/account/library/MaterialSheet";
 import MessageCard from "./MessageCard";
 
 // „Wiadomości": od najnowszej. Otwarcie oznacza jako przeczytaną, „Ukryj" zdejmuje z listy.
-export default function MyMessages({ footer }) {
-  const [data, setData] = useState(null);
+export default function MyMessages({ initial, footer }) {
+  const [data, setData] = useState(initial || null);
   const [err, setErr] = useState("");
   const [openMat, setOpenMat] = useState(null);
 
-  useEffect(() => { myMessages().then(setData).catch(() => setErr("Nie udało się wczytać wiadomości.")); }, []);
+  // Dane przyszły razem z wejściem na /konto — nie wołamy ich drugi raz.
+  useEffect(() => { if (initial) return; myMessages().then(setData).catch(() => setErr("Nie udało się wczytać wiadomości.")); }, [initial]);
 
   const read = async (id) => {
     setData((d) => ({ ...d, items: d.items.map((m) => (m.id === id ? { ...m, read_at: m.read_at || new Date().toISOString() } : m)) }));
@@ -26,7 +27,18 @@ export default function MyMessages({ footer }) {
   };
 
   if (err) return <p className="font-body text-[15px] text-[#F5EFE1]/70 py-10">{err}</p>;
-  if (!data) return <p className="text-foreground/50 font-body py-10">Ładowanie…</p>;
+  if (!data) return (
+    <div className="space-y-6" aria-busy="true" aria-label="Wczytywanie wiadomości">
+      {[0, 1].map((i) => (
+        <div key={i} className="border hairline p-6 animate-pulse space-y-4">
+          <div className="h-3 w-32 bg-foreground/10" />
+          <div className="h-5 w-2/3 bg-foreground/10" />
+          <div className="h-4 w-full bg-foreground/10" />
+          <div className="h-4 w-4/5 bg-foreground/10" />
+        </div>
+      ))}
+    </div>
+  );
 
   if (!data.items.length) {
     return (
