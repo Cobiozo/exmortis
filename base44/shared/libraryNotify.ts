@@ -1,6 +1,6 @@
 // E-maile biblioteki i wiadomości — przez istniejącą kolejkę (bez SMTP czekają, nic nie ginie).
 
-import { runSql, escStr } from "./supabase.ts";
+import { runSql, rpc, escStr } from "./supabase.ts";
 import { sendMail } from "./smtp.ts";
 import { loadAppUrl } from "./settings.ts";
 import { resolveRecipients, libSettings } from "./libraryAccess.ts";
@@ -104,50 +104,28 @@ function sqlArr(v) {
 // Atomowe przejęcie i wysyłka jednej wiadomości. Ponowne uruchomienie nic nie dubluje:
 // status przechodzi ZAPLANOWANA → WYSYLANIE w jednym UPDATE, a odbiorcy wchodzą przez ON CONFLICT DO NOTHING.
 export async function deliverMessage(base44, messageId, actor) {
-  const claimed = await runSql(base44, `UPDATE public.mb_messages
-    SET status = 'WYSYLANIE', idem_key = COALESCE(idem_key, 'send:' || id::text), updated_at = now()
-    WHERE id = ${escStr(messageId)}::uuid AND status = 'ZAPLANOWANA'
-    RETURNING id, title, body_html, email_mode, attached_material_id, attached_collection_id, target`).catch(() => []);
-  if (!claimed || !claimed.length) return { ok: false, reason: "nie_przejeta" };
-  const m = claimed[0];
+  // Przejęcie wiadomości i domknięcie wysyłki to dwa wywołania bazy; p_promote podnosi też szkic
+  // („Wyślij teraz"). Ponowne uruchomienie nic nie dubluje — status idzie tylko z ZAPLANOWANA.
+  const m = await rpc(base44, "mb_admin_message_claim", { p_id: messageId, p_promote: true }).catch(() => null);
+  if (!m || !m.id) return { ok: false, reason: "nie_przejeta" };
   const people = (await resolveRecipients(base44, m.target || {}).catch(() => [])) || [];
   const emails = [...new Set(people.map((p) => String(p.email || "").toLowerCase()).filter(Boolean))];
 
-  if (emails.length) {
-    await runSql(base44, `INSERT INTO public.mb_message_recipients (message_id, client_email)
-      SELECT ${escStr(m.id)}::uuid, e FROM unnest(ARRAY[${emails.map(escStr).join(",")}]::text[]) AS e
-      ON CONFLICT (message_id, client_email) DO NOTHING`).catch(() => {});
-  }
-  await runSql(base44, `UPDATE public.mb_messages SET status = 'WYSLANA', sent_at = now(),
-    recipient_count = ${emails.length}, updated_at = now() WHERE id = ${escStr(m.id)}::uuid AND status = 'WYSYLANIE'`);
+  // Odbiorcy, status i przydział dołączonego materiału — jedna transakcja w bazie.
+  await rpc(base44, "mb_admin_message_finish", {
+    p_id: m.id, p_emails: emails, p_actor: String(actor || "system").slice(0, 200),
+  }).catch(() => 0);
 
-  // Dołączony materiał albo kolekcja = przydział dla tych samych odbiorców (także na przyszłość).
-  // Osoby dostają przydział wprost — po jednym na faktycznego odbiorcę (grupa: jeden wiersz grupowy).
-  if (m.attached_material_id || m.attached_collection_id) {
-    const t = m.target || {};
-    const mat = m.attached_material_id ? escStr(m.attached_material_id) + "::uuid" : "NULL";
-    const col = m.attached_collection_id ? escStr(m.attached_collection_id) + "::uuid" : "NULL";
-    const by = escStr(String(actor || "system").slice(0, 200));
-    if (t.kind === "grupa" && t.group_id) {
-      await runSql(base44, `INSERT INTO public.mb_assignments
-        (material_id, collection_id, target_kind, group_id, group_mode, snapshot_emails, exceptions_add, exceptions_drop, note, created_by)
-        VALUES (${mat}, ${col}, 'grupa', ${escStr(t.group_id)}::uuid, ${escStr(t.group_mode || "OBECNI_I_PRZYSZLI")},
-          ${sqlArr(t.snapshot_emails)}, ${sqlArr(t.exceptions_add)}, ${sqlArr(t.exceptions_drop)},
-          'dołączone do wiadomości', ${by})`).catch(() => {});
-    } else if (emails.length) {
-      await runSql(base44, `INSERT INTO public.mb_assignments
-        (material_id, collection_id, target_kind, target_email, note, created_by)
-        SELECT ${mat}, ${col}, 'osoba', e, 'dołączone do wiadomości', ${by}
-        FROM unnest(ARRAY[${emails.map(escStr).join(",")}]::text[]) AS e`).catch(() => {});
-    }
-  }
   await sendMessageEmail(base44, m, emails).catch(() => {});
   await libLog(base44, actor, "wiadomosc_wyslana", "message", m.id, `odbiorcy: ${emails.length}`);
   return { ok: true, id: m.id, odbiorcy: emails.length };
 }
 
 // Wpis do historii zmian — nigdy z treścią wiadomości, tokenem ani pełnym adresem.
-export const libLog = (base44, actor, action, objectType, objectId, summary) => runSql(base44,
-  `INSERT INTO public.mb_log (actor, action, object_type, object_id, summary)
-   VALUES (${escStr(String(actor || "system").slice(0, 200))}, ${escStr(String(action).slice(0, 60))},
-     ${escStr(objectType || null)}, ${escStr(objectId || null)}, ${escStr(summary ? String(summary).slice(0, 500) : null)})`);
+export const libLog = (base44, actor, action, objectType, objectId, summary) => rpc(base44, "mb_log_add", {
+  p_actor: String(actor || "system").slice(0, 200),
+  p_action: String(action || "").slice(0, 60),
+  p_object_type: objectType || null,
+  p_object_id: objectId ? String(objectId) : null,
+  p_summary: summary ? String(summary).slice(0, 500) : null,
+});

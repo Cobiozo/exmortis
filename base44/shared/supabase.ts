@@ -52,7 +52,7 @@ export async function rpc(base44, fn, args) {
   });
   const text = await res.text();
   if (!res.ok) throw new Error(`Supabase RPC ${res.status}: ${text.slice(0, 300)}`);
-  return JSON.parse(text);
+  return text ? JSON.parse(text) : null;   // funkcja bez wyniku odsyła pustą odpowiedź
 }
 
 // Bezpieczne opakowanie wartości w dollar-quoting (ogranicznik unikalny względem treści).

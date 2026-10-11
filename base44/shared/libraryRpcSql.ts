@@ -510,6 +510,340 @@ BEGIN
   RETURN k;
 END $agm$;
 
+-- ============ PANEL: MATERIAŁY (ZAPIS) ============
+-- Dodanie albo zmiana materiału. Kolumny właściwe dla rodzaju ustawia baza, więc warstwa
+-- funkcji nie skleja SQL-a — wysyła tylko wartości.
+CREATE OR REPLACE FUNCTION public.mb_admin_material_save(p jsonb) RETURNS jsonb
+LANGUAGE plpgsql SECURITY DEFINER SET search_path = '' AS $ms$
+DECLARE
+  mid uuid := NULLIF(p->>'id','')::uuid;
+  k text := p->>'kind';
+  vurl text := NULLIF(btrim(COALESCE(p->>'external_url','')), '');
+  vprov text := NULLIF(p->>'video_provider','');
+  vid text := NULLIF(p->>'video_id','');
+  vhtml text := NULLIF(p->>'body_html','');
+  vkeep boolean := COALESCE((p->>'keep_video')::boolean, false);
+  out_id uuid;
+BEGIN
+  IF k IS NULL OR k NOT IN ('AUDIO','WIDEO','PDF','LINK','TEKST') THEN RAISE EXCEPTION 'nieznany rodzaj'; END IF;
+  IF NULLIF(btrim(COALESCE(p->>'title','')), '') IS NULL THEN RAISE EXCEPTION 'brak tytulu'; END IF;
+
+  IF k = 'LINK' THEN
+    IF vurl IS NULL OR vurl NOT LIKE 'https://%' THEN RAISE EXCEPTION 'brak adresu'; END IF;
+    vprov := NULL; vid := NULL; vhtml := NULL;
+  ELSIF k = 'WIDEO' THEN
+    vurl := NULL; vhtml := NULL;
+    IF vkeep THEN vprov := NULL; vid := NULL; END IF;
+  ELSIF k = 'TEKST' THEN
+    IF vhtml IS NULL THEN RAISE EXCEPTION 'brak tresci'; END IF;
+    vurl := NULL; vprov := NULL; vid := NULL;
+  ELSE
+    vurl := NULL; vprov := NULL; vid := NULL; vhtml := NULL;
+  END IF;
+
+  IF mid IS NULL THEN
+    IF k IN ('PDF','AUDIO') THEN RAISE EXCEPTION 'najpierw plik'; END IF;
+    INSERT INTO public.mb_materials (kind, title, description, stage, tags, duration_s, pages, allow_download,
+      source, external_url, video_provider, video_id, body_html, created_by)
+    VALUES (k, btrim(p->>'title'), NULLIF(p->>'description',''), NULLIF(p->>'stage',''),
+      COALESCE((SELECT array_agg(x) FROM jsonb_array_elements_text(COALESCE(p->'tags','[]')) x), '{}'::text[]),
+      NULLIF(p->>'duration_s','')::int, NULLIF(p->>'pages','')::int,
+      COALESCE((p->>'allow_download')::boolean, false), NULLIF(p->>'source',''),
+      vurl, vprov, vid, vhtml, NULLIF(p->>'actor',''))
+    RETURNING id INTO out_id;
+  ELSE
+    UPDATE public.mb_materials SET
+      kind = k, title = btrim(p->>'title'), description = NULLIF(p->>'description',''),
+      stage = NULLIF(p->>'stage',''),
+      tags = COALESCE((SELECT array_agg(x) FROM jsonb_array_elements_text(COALESCE(p->'tags','[]')) x), '{}'::text[]),
+      duration_s = NULLIF(p->>'duration_s','')::int, pages = NULLIF(p->>'pages','')::int,
+      allow_download = COALESCE((p->>'allow_download')::boolean, false), source = NULLIF(p->>'source',''),
+      external_url = vurl,
+      video_provider = CASE WHEN k = 'WIDEO' AND vkeep THEN public.mb_materials.video_provider ELSE vprov END,
+      video_id = CASE WHEN k = 'WIDEO' AND vkeep THEN public.mb_materials.video_id ELSE vid END,
+      body_html = vhtml, updated_at = now()
+    WHERE id = mid AND deleted_at IS NULL
+    RETURNING id INTO out_id;
+    IF out_id IS NULL THEN RETURN jsonb_build_object('ok', false); END IF;
+  END IF;
+  RETURN jsonb_build_object('ok', true, 'id', out_id);
+END $ms$;
+
+-- Rejestracja pliku po sprawdzeniu sygnatury i rozmiaru (samo wgranie zostaje w warstwie funkcji).
+CREATE OR REPLACE FUNCTION public.mb_admin_material_register(p jsonb) RETURNS jsonb
+LANGUAGE plpgsql SECURITY DEFINER SET search_path = '' AS $mrg$
+DECLARE out_id uuid;
+BEGIN
+  IF p->>'kind' IS NULL OR p->>'kind' NOT IN ('AUDIO','PDF') THEN RAISE EXCEPTION 'zly rodzaj'; END IF;
+  IF NULLIF(btrim(COALESCE(p->>'title','')), '') IS NULL THEN RAISE EXCEPTION 'brak tytulu'; END IF;
+  INSERT INTO public.mb_materials (kind, title, file_key, file_name, file_size, pdf_js_warning, created_by)
+  VALUES (p->>'kind', btrim(p->>'title'), p->>'file_key', p->>'file_name',
+    NULLIF(p->>'file_size','')::bigint, COALESCE((p->>'pdf_js')::boolean, false), NULLIF(p->>'actor',''))
+  RETURNING id INTO out_id;
+  RETURN jsonb_build_object('id', out_id);
+END $mrg$;
+
+-- Ile osób straci dostęp po usunięciu materiału — liczone w bazie, bez pętli po przydziałach.
+CREATE OR REPLACE FUNCTION public.mb_admin_material_impact(p_material uuid) RETURNS jsonb
+LANGUAGE sql STABLE SECURITY DEFINER SET search_path = '' AS $mi$
+WITH a AS (SELECT * FROM public.mb_assignments WHERE material_id = p_material AND revoked_at IS NULL),
+pp AS (SELECT DISTINCT e.email FROM a, LATERAL public.mb_resolve_recipients(
+   CASE WHEN a.target_kind = 'osoba' THEN jsonb_build_object('kind','osoba','emails', jsonb_build_array(a.target_email))
+   ELSE jsonb_build_object('kind','grupa','group_id', a.group_id, 'group_mode', a.group_mode,
+     'snapshot_emails', to_jsonb(a.snapshot_emails), 'exceptions_add', to_jsonb(a.exceptions_add),
+     'exceptions_drop', to_jsonb(a.exceptions_drop)) END) e)
+SELECT jsonb_build_object('osoby', (SELECT count(*) FROM pp), 'przydzialy', (SELECT count(*) FROM a))
+$mi$;
+
+-- Przydziały materiału/kolekcji: odbiorcy i grupy liczone od razu w bazie.
+CREATE OR REPLACE FUNCTION public.mb_admin_assignments_of(p_material uuid DEFAULT NULL, p_collection uuid DEFAULT NULL)
+RETURNS jsonb
+LANGUAGE sql STABLE SECURITY DEFINER SET search_path = '' AS $ao$
+WITH a AS (
+  SELECT x.* FROM public.mb_assignments x
+   WHERE (p_material IS NOT NULL AND x.material_id = p_material)
+      OR (p_collection IS NOT NULL AND x.collection_id = p_collection)
+   ORDER BY x.created_at DESC LIMIT 500
+),
+pp AS (
+  SELECT a.id, e.email FROM a, LATERAL public.mb_resolve_recipients(
+    CASE WHEN a.target_kind = 'osoba' THEN jsonb_build_object('kind','osoba','emails', jsonb_build_array(a.target_email))
+    ELSE jsonb_build_object('kind','grupa','group_id', a.group_id, 'group_mode', a.group_mode,
+      'snapshot_emails', to_jsonb(a.snapshot_emails), 'exceptions_add', to_jsonb(a.exceptions_add),
+      'exceptions_drop', to_jsonb(a.exceptions_drop)) END) e
+   WHERE a.revoked_at IS NULL
+),
+it AS (
+  SELECT jsonb_build_object('id', a.id, 'target_kind', a.target_kind, 'target_email', a.target_email,
+    'group_id', a.group_id, 'group_mode', a.group_mode, 'note', a.note,
+    'visible_from', a.visible_from, 'visible_to', a.visible_to, 'created_at', a.created_at, 'revoked_at', a.revoked_at,
+    'people', CASE WHEN a.revoked_at IS NULL THEN (SELECT count(*) FROM pp WHERE pp.id = a.id) ELSE 0 END,
+    'sample', CASE WHEN a.revoked_at IS NULL THEN COALESCE((SELECT jsonb_agg(x.email ORDER BY x.email) FROM
+       (SELECT DISTINCT email FROM pp WHERE pp.id = a.id ORDER BY email LIMIT 5) x), '[]'::jsonb) ELSE '[]'::jsonb END,
+    'group', CASE WHEN a.group_id IS NULL THEN NULL ELSE
+       (SELECT jsonb_build_object('id', g.id, 'name', g.name, 'color', g.color, 'kind', g.kind)
+          FROM public.mb_groups g WHERE g.id = a.group_id) END) AS j,
+    a.created_at
+  FROM a
+)
+SELECT jsonb_build_object(
+  'items', COALESCE((SELECT jsonb_agg(it.j ORDER BY it.created_at DESC) FROM it), '[]'::jsonb),
+  'odbiorcy', (SELECT count(DISTINCT email) FROM pp),
+  'otwarte', CASE WHEN p_material IS NULL THEN NULL ELSE
+    (SELECT count(*) FROM public.mb_material_state s WHERE s.material_id = p_material AND s.opened_at IS NOT NULL) END)
+$ao$;
+
+-- ============ PANEL: WIADOMOŚCI (ZAPIS) ============
+CREATE OR REPLACE FUNCTION public.mb_admin_message_save(p jsonb) RETURNS jsonb
+LANGUAGE plpgsql SECURITY DEFINER SET search_path = '' AS $mss$
+DECLARE
+  mid uuid := NULLIF(p->>'id','')::uuid;
+  tgt jsonb := COALESCE(p->'target','{}'::jsonb);
+  snap jsonb;
+  cnt int;
+  out_id uuid;
+  st text := CASE WHEN p->>'status' = 'ZAPLANOWANA' THEN 'ZAPLANOWANA' ELSE 'SZKIC' END;
+  snd timestamptz := NULLIF(p->>'send_at','')::timestamptz;
+BEGIN
+  IF NULLIF(p->>'body_html','') IS NULL THEN RAISE EXCEPTION 'brak tresci'; END IF;
+  IF st = 'ZAPLANOWANA' AND snd IS NULL THEN RAISE EXCEPTION 'brak terminu'; END IF;
+
+  -- Snapshot „tylko obecni" powstaje tu, w tej samej transakcji co zapis.
+  IF tgt->>'kind' = 'grupa' AND tgt->>'group_mode' = 'TYLKO_OBECNI' THEN
+    SELECT COALESCE(to_jsonb(array_agg(DISTINCT lower(btrim(m.client_email)))), '[]'::jsonb) INTO snap
+      FROM public.mb_group_members m WHERE m.group_id = NULLIF(tgt->>'group_id','')::uuid;
+    tgt := jsonb_set(tgt, '{snapshot_emails}', COALESCE(snap, '[]'::jsonb));
+  END IF;
+
+  SELECT count(*) INTO cnt FROM public.mb_resolve_recipients(tgt) r;
+
+  IF mid IS NULL THEN
+    INSERT INTO public.mb_messages (title, body_html, email_mode, attached_material_id, attached_collection_id,
+      target, recipient_count, status, send_at, created_by)
+    VALUES (NULLIF(p->>'title',''), p->>'body_html', COALESCE(NULLIF(p->>'email_mode',''), 'BRAK'),
+      NULLIF(p->>'attached_material_id','')::uuid, NULLIF(p->>'attached_collection_id','')::uuid,
+      tgt, cnt, st, snd, NULLIF(p->>'actor',''))
+    RETURNING id INTO out_id;
+  ELSE
+    UPDATE public.mb_messages SET title = NULLIF(p->>'title',''), body_html = p->>'body_html',
+      email_mode = COALESCE(NULLIF(p->>'email_mode',''), 'BRAK'),
+      attached_material_id = NULLIF(p->>'attached_material_id','')::uuid,
+      attached_collection_id = NULLIF(p->>'attached_collection_id','')::uuid,
+      target = tgt, recipient_count = cnt, status = st, send_at = snd, updated_at = now()
+    WHERE id = mid AND status IN ('SZKIC','ZAPLANOWANA')
+    RETURNING id INTO out_id;
+    IF out_id IS NULL THEN RETURN jsonb_build_object('ok', false); END IF;
+  END IF;
+  RETURN jsonb_build_object('ok', true, 'id', out_id, 'count', cnt);
+END $mss$;
+
+-- Atomowe przejęcie wiadomości (ZAPLANOWANA → WYSYLANIE). p_promote podnosi szkic na „teraz".
+CREATE OR REPLACE FUNCTION public.mb_admin_message_claim(p_id uuid, p_promote boolean DEFAULT false)
+RETURNS jsonb
+LANGUAGE plpgsql SECURITY DEFINER SET search_path = '' AS $mcl$
+DECLARE r record;
+BEGIN
+  IF p_id IS NULL THEN RETURN NULL; END IF;
+  IF p_promote THEN
+    UPDATE public.mb_messages SET status = 'ZAPLANOWANA', send_at = now(), updated_at = now()
+     WHERE id = p_id AND status = 'SZKIC';
+  END IF;
+  UPDATE public.mb_messages
+     SET status = 'WYSYLANIE', idem_key = COALESCE(idem_key, 'send:' || id::text), updated_at = now()
+   WHERE id = p_id AND status = 'ZAPLANOWANA'
+  RETURNING id, title, body_html, email_mode, attached_material_id, attached_collection_id, target INTO r;
+  IF NOT FOUND THEN RETURN NULL; END IF;
+  RETURN jsonb_build_object('id', r.id, 'title', r.title, 'body_html', r.body_html, 'email_mode', r.email_mode,
+    'attached_material_id', r.attached_material_id, 'attached_collection_id', r.attached_collection_id, 'target', r.target);
+END $mcl$;
+
+-- Domknięcie wysyłki: odbiorcy, status i przydział dołączonego materiału w jednym wywołaniu.
+CREATE OR REPLACE FUNCTION public.mb_admin_message_finish(p_id uuid, p_emails text[], p_actor text DEFAULT NULL)
+RETURNS int
+LANGUAGE plpgsql SECURITY DEFINER SET search_path = '' AS $mfn$
+DECLARE
+  m record;
+  n int := 0;
+  who text := COALESCE(NULLIF(p_actor,''), 'system');
+BEGIN
+  IF p_id IS NULL THEN RETURN 0; END IF;
+  SELECT target, attached_material_id, attached_collection_id INTO m FROM public.mb_messages WHERE id = p_id;
+  IF NOT FOUND THEN RETURN 0; END IF;
+  n := COALESCE(array_length(p_emails, 1), 0);
+
+  IF n > 0 THEN
+    INSERT INTO public.mb_message_recipients (message_id, client_email)
+    SELECT p_id, lower(btrim(e)) FROM unnest(p_emails) AS e WHERE lower(btrim(e)) <> ''
+    ON CONFLICT (message_id, client_email) DO NOTHING;
+  END IF;
+
+  UPDATE public.mb_messages SET status = 'WYSLANA', sent_at = now(), recipient_count = n, updated_at = now()
+   WHERE id = p_id AND status = 'WYSYLANIE';
+
+  IF m.attached_material_id IS NOT NULL OR m.attached_collection_id IS NOT NULL THEN
+    IF m.target->>'kind' = 'grupa' AND NULLIF(m.target->>'group_id','') IS NOT NULL THEN
+      INSERT INTO public.mb_assignments (material_id, collection_id, target_kind, group_id, group_mode,
+        snapshot_emails, exceptions_add, exceptions_drop, note, created_by)
+      VALUES (m.attached_material_id, m.attached_collection_id, 'grupa', (m.target->>'group_id')::uuid,
+        COALESCE(m.target->>'group_mode', 'OBECNI_I_PRZYSZLI'),
+        COALESCE((SELECT array_agg(x) FROM jsonb_array_elements_text(COALESCE(m.target->'snapshot_emails','[]')) x), '{}'::text[]),
+        COALESCE((SELECT array_agg(x) FROM jsonb_array_elements_text(COALESCE(m.target->'exceptions_add','[]')) x), '{}'::text[]),
+        COALESCE((SELECT array_agg(x) FROM jsonb_array_elements_text(COALESCE(m.target->'exceptions_drop','[]')) x), '{}'::text[]),
+        'dołączone do wiadomości', who);
+    ELSIF n > 0 THEN
+      INSERT INTO public.mb_assignments (material_id, collection_id, target_kind, target_email, note, created_by)
+      SELECT m.attached_material_id, m.attached_collection_id, 'osoba', lower(btrim(e)), 'dołączone do wiadomości', who
+        FROM unnest(p_emails) AS e WHERE lower(btrim(e)) <> '';
+    END IF;
+  END IF;
+  RETURN n;
+END $mfn$;
+
+CREATE OR REPLACE FUNCTION public.mb_admin_message_edit(p_id uuid, p_title text, p_body_html text) RETURNS boolean
+LANGUAGE plpgsql SECURITY DEFINER SET search_path = '' AS $med$
+DECLARE k int;
+BEGIN
+  UPDATE public.mb_messages SET title = NULLIF(p_title,''), body_html = p_body_html, updated_at = now()
+   WHERE id = p_id AND status = 'WYSLANA';
+  GET DIAGNOSTICS k = ROW_COUNT; RETURN k > 0;
+END $med$;
+
+CREATE OR REPLACE FUNCTION public.mb_admin_message_cancel(p_id uuid) RETURNS boolean
+LANGUAGE plpgsql SECURITY DEFINER SET search_path = '' AS $mca$
+DECLARE k int;
+BEGIN
+  UPDATE public.mb_messages SET status = 'SZKIC', send_at = NULL, updated_at = now()
+   WHERE id = p_id AND status = 'ZAPLANOWANA';
+  GET DIAGNOSTICS k = ROW_COUNT; RETURN k > 0;
+END $mca$;
+
+CREATE OR REPLACE FUNCTION public.mb_admin_message_delete(p_id uuid) RETURNS boolean
+LANGUAGE plpgsql SECURITY DEFINER SET search_path = '' AS $mdl$
+DECLARE k int;
+BEGIN
+  DELETE FROM public.mb_messages WHERE id = p_id AND status IN ('SZKIC','WYCOFANA');
+  GET DIAGNOSTICS k = ROW_COUNT; RETURN k > 0;
+END $mdl$;
+
+CREATE OR REPLACE FUNCTION public.mb_admin_message_withdraw(p_id uuid) RETURNS boolean
+LANGUAGE plpgsql SECURITY DEFINER SET search_path = '' AS $mwd$
+DECLARE k int;
+BEGIN
+  UPDATE public.mb_messages SET status = 'WYCOFANA', withdrawn_at = now(), updated_at = now()
+   WHERE id = p_id AND status = 'WYSLANA';
+  GET DIAGNOSTICS k = ROW_COUNT; RETURN k > 0;
+END $mwd$;
+
+-- Limit 20 wysyłek na godzinę — jedno zapytanie zamiast osobnego odczytu.
+CREATE OR REPLACE FUNCTION public.mb_admin_message_send_rate() RETURNS int
+LANGUAGE sql STABLE SECURITY DEFINER SET search_path = '' AS $mrt$
+SELECT count(*)::int FROM public.mb_messages WHERE sent_at > now() - interval '1 hour'
+$mrt$;
+
+-- Wiadomość + adresy nieprzeczytanych (do ponownego powiadomienia) jednym wywołaniem.
+CREATE OR REPLACE FUNCTION public.mb_admin_message_notify(p_id uuid) RETURNS jsonb
+LANGUAGE sql STABLE SECURITY DEFINER SET search_path = '' AS $mnt$
+SELECT jsonb_build_object(
+  'message', (SELECT jsonb_build_object('id', m.id, 'title', m.title, 'body_html', m.body_html, 'email_mode', m.email_mode)
+     FROM public.mb_messages m WHERE m.id = p_id AND m.status = 'WYSLANA'),
+  'emails', COALESCE((SELECT jsonb_agg(x.email) FROM
+     (SELECT r.client_email AS email FROM public.mb_message_recipients r
+       WHERE r.message_id = p_id AND r.read_at IS NULL AND r.hidden_at IS NULL LIMIT 500) x), '[]'::jsonb),
+  'niedawno', EXISTS (SELECT 1 FROM public.mb_log l WHERE l.action = 'powiadomienie_ponowne'
+     AND l.object_id = p_id::text AND l.at > now() - interval '24 hours'))
+$mnt$;
+
+CREATE OR REPLACE FUNCTION public.mb_admin_message_stats(p_id uuid) RETURNS jsonb
+LANGUAGE sql STABLE SECURITY DEFINER SET search_path = '' AS $mst$
+SELECT COALESCE(jsonb_agg(jsonb_build_object('client_email', x.client_email, 'delivered_at', x.delivered_at,
+  'read_at', x.read_at, 'hidden_at', x.hidden_at) ORDER BY x.read_at DESC NULLS LAST), '[]'::jsonb)
+FROM (SELECT * FROM public.mb_message_recipients WHERE message_id = p_id ORDER BY read_at DESC NULLS LAST LIMIT 500) x
+$mst$;
+
+-- ============ PANEL: SZABLONY ============
+CREATE OR REPLACE FUNCTION public.mb_admin_templates() RETURNS jsonb
+LANGUAGE sql STABLE SECURITY DEFINER SET search_path = '' AS $mtl$
+SELECT COALESCE(jsonb_agg(jsonb_build_object('id', t.id, 'name', t.name, 'title', t.title,
+  'body_html', t.body_html, 'created_at', t.created_at) ORDER BY t.name), '[]'::jsonb)
+FROM public.mb_templates t
+$mtl$;
+
+CREATE OR REPLACE FUNCTION public.mb_admin_template_save(p jsonb) RETURNS jsonb
+LANGUAGE plpgsql SECURITY DEFINER SET search_path = '' AS $mts$
+DECLARE
+  mid uuid := NULLIF(p->>'id','')::uuid;
+  out_id uuid;
+BEGIN
+  IF NULLIF(btrim(COALESCE(p->>'name','')), '') IS NULL THEN RAISE EXCEPTION 'brak nazwy'; END IF;
+  IF NULLIF(p->>'body_html','') IS NULL THEN RAISE EXCEPTION 'brak tresci'; END IF;
+  IF mid IS NULL THEN
+    INSERT INTO public.mb_templates (name, title, body_html, created_by)
+    VALUES (btrim(p->>'name'), NULLIF(p->>'title',''), p->>'body_html', NULLIF(p->>'actor',''))
+    RETURNING id INTO out_id;
+  ELSE
+    UPDATE public.mb_templates SET name = btrim(p->>'name'), title = NULLIF(p->>'title',''), body_html = p->>'body_html'
+     WHERE id = mid RETURNING id INTO out_id;
+    IF out_id IS NULL THEN RETURN jsonb_build_object('ok', false); END IF;
+  END IF;
+  RETURN jsonb_build_object('ok', true, 'id', out_id);
+END $mts$;
+
+CREATE OR REPLACE FUNCTION public.mb_admin_template_delete(p_id uuid) RETURNS boolean
+LANGUAGE plpgsql SECURITY DEFINER SET search_path = '' AS $mtd$
+DECLARE k int;
+BEGIN
+  DELETE FROM public.mb_templates WHERE id = p_id;
+  GET DIAGNOSTICS k = ROW_COUNT; RETURN k > 0;
+END $mtd$;
+
+-- ============ HISTORIA ZMIAN (ZAPIS) ============
+CREATE OR REPLACE FUNCTION public.mb_log_add(p_actor text, p_action text, p_object_type text,
+  p_object_id text, p_summary text) RETURNS void
+LANGUAGE sql SECURITY DEFINER SET search_path = '' AS $lga$
+INSERT INTO public.mb_log (actor, action, object_type, object_id, summary)
+VALUES (left(COALESCE(p_actor, 'system'), 200), left(p_action, 60), p_object_type, p_object_id, left(p_summary, 500))
+$lga$;
+
 -- ============ USTAWIENIA APLIKACJI (wspólne, nie mb_*) ============
 -- Ten sam odczyt co getSettingsFast, ale przez PostgREST (Management API to ~1,5 s na zapytanie).
 -- Korzystają z niego wszystkie funkcje czytające Dane firmy i ustawienia SMTP.
@@ -544,6 +878,24 @@ REVOKE ALL ON FUNCTION public.mb_admin_assignment_save(jsonb) FROM PUBLIC, anon,
 REVOKE ALL ON FUNCTION public.mb_admin_assignment_bulk(uuid, text[], text, timestamptz, timestamptz, text) FROM PUBLIC, anon, authenticated;
 REVOKE ALL ON FUNCTION public.mb_admin_assignment_revoke(uuid, uuid, uuid, uuid) FROM PUBLIC, anon, authenticated;
 REVOKE ALL ON FUNCTION public.mb_admin_group_members(uuid, text[], boolean, text) FROM PUBLIC, anon, authenticated;
+REVOKE ALL ON FUNCTION public.mb_admin_material_save(jsonb) FROM PUBLIC, anon, authenticated;
+REVOKE ALL ON FUNCTION public.mb_admin_material_register(jsonb) FROM PUBLIC, anon, authenticated;
+REVOKE ALL ON FUNCTION public.mb_admin_material_impact(uuid) FROM PUBLIC, anon, authenticated;
+REVOKE ALL ON FUNCTION public.mb_admin_assignments_of(uuid, uuid) FROM PUBLIC, anon, authenticated;
+REVOKE ALL ON FUNCTION public.mb_admin_message_save(jsonb) FROM PUBLIC, anon, authenticated;
+REVOKE ALL ON FUNCTION public.mb_admin_message_claim(uuid, boolean) FROM PUBLIC, anon, authenticated;
+REVOKE ALL ON FUNCTION public.mb_admin_message_finish(uuid, text[], text) FROM PUBLIC, anon, authenticated;
+REVOKE ALL ON FUNCTION public.mb_admin_message_edit(uuid, text, text) FROM PUBLIC, anon, authenticated;
+REVOKE ALL ON FUNCTION public.mb_admin_message_cancel(uuid) FROM PUBLIC, anon, authenticated;
+REVOKE ALL ON FUNCTION public.mb_admin_message_delete(uuid) FROM PUBLIC, anon, authenticated;
+REVOKE ALL ON FUNCTION public.mb_admin_message_withdraw(uuid) FROM PUBLIC, anon, authenticated;
+REVOKE ALL ON FUNCTION public.mb_admin_message_send_rate() FROM PUBLIC, anon, authenticated;
+REVOKE ALL ON FUNCTION public.mb_admin_message_notify(uuid) FROM PUBLIC, anon, authenticated;
+REVOKE ALL ON FUNCTION public.mb_admin_message_stats(uuid) FROM PUBLIC, anon, authenticated;
+REVOKE ALL ON FUNCTION public.mb_admin_templates() FROM PUBLIC, anon, authenticated;
+REVOKE ALL ON FUNCTION public.mb_admin_template_save(jsonb) FROM PUBLIC, anon, authenticated;
+REVOKE ALL ON FUNCTION public.mb_admin_template_delete(uuid) FROM PUBLIC, anon, authenticated;
+REVOKE ALL ON FUNCTION public.mb_log_add(text, text, text, text, text) FROM PUBLIC, anon, authenticated;
 
 GRANT EXECUTE ON FUNCTION public.mb_lib_settings() TO service_role;
 GRANT EXECUTE ON FUNCTION public.mb_admin_space() TO service_role;
@@ -567,6 +919,24 @@ GRANT EXECUTE ON FUNCTION public.mb_admin_assignment_save(jsonb) TO service_role
 GRANT EXECUTE ON FUNCTION public.mb_admin_assignment_bulk(uuid, text[], text, timestamptz, timestamptz, text) TO service_role;
 GRANT EXECUTE ON FUNCTION public.mb_admin_assignment_revoke(uuid, uuid, uuid, uuid) TO service_role;
 GRANT EXECUTE ON FUNCTION public.mb_admin_group_members(uuid, text[], boolean, text) TO service_role;
+GRANT EXECUTE ON FUNCTION public.mb_admin_material_save(jsonb) TO service_role;
+GRANT EXECUTE ON FUNCTION public.mb_admin_material_register(jsonb) TO service_role;
+GRANT EXECUTE ON FUNCTION public.mb_admin_material_impact(uuid) TO service_role;
+GRANT EXECUTE ON FUNCTION public.mb_admin_assignments_of(uuid, uuid) TO service_role;
+GRANT EXECUTE ON FUNCTION public.mb_admin_message_save(jsonb) TO service_role;
+GRANT EXECUTE ON FUNCTION public.mb_admin_message_claim(uuid, boolean) TO service_role;
+GRANT EXECUTE ON FUNCTION public.mb_admin_message_finish(uuid, text[], text) TO service_role;
+GRANT EXECUTE ON FUNCTION public.mb_admin_message_edit(uuid, text, text) TO service_role;
+GRANT EXECUTE ON FUNCTION public.mb_admin_message_cancel(uuid) TO service_role;
+GRANT EXECUTE ON FUNCTION public.mb_admin_message_delete(uuid) TO service_role;
+GRANT EXECUTE ON FUNCTION public.mb_admin_message_withdraw(uuid) TO service_role;
+GRANT EXECUTE ON FUNCTION public.mb_admin_message_send_rate() TO service_role;
+GRANT EXECUTE ON FUNCTION public.mb_admin_message_notify(uuid) TO service_role;
+GRANT EXECUTE ON FUNCTION public.mb_admin_message_stats(uuid) TO service_role;
+GRANT EXECUTE ON FUNCTION public.mb_admin_templates() TO service_role;
+GRANT EXECUTE ON FUNCTION public.mb_admin_template_save(jsonb) TO service_role;
+GRANT EXECUTE ON FUNCTION public.mb_admin_template_delete(uuid) TO service_role;
+GRANT EXECUTE ON FUNCTION public.mb_log_add(text, text, text, text, text) TO service_role;
 
 NOTIFY pgrst, 'reload schema';
 `;

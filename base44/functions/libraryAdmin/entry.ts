@@ -84,7 +84,10 @@ async function namesOf(base44, emails) {
 async function imionaOf(base44, emails) {
   const list = (emails || []).slice(0, 200);
   if (!list.length) return {};
-  const users = await base44.asServiceRole.entities.User.list("-created_date", 2000).catch(() => []);
+  // Podgląd dotyczy jednej osoby — nie ciągniemy listy wszystkich kont (2000 rekordów ≈ 1 s).
+  const users = list.length <= 5
+    ? (await Promise.all(list.map((e) => base44.asServiceRole.entities.User.filter({ email: e }).catch(() => [])))).flat()
+    : await base44.asServiceRole.entities.User.list("-created_date", 2000).catch(() => []);
   const out = {};
   for (const u of users || []) {
     const e = lower(u.email);
@@ -197,8 +200,10 @@ export default async function (req) {
         await libLog(base44, me.email, "plik_odrzucony", "material", null, `${kind}: ${v.err}`);
         return bad(v.err);
       }
-      const id = (await runSql(base44, `INSERT INTO public.mb_materials (kind, title, file_key, file_name, file_size, pdf_js_warning, created_by)
-        VALUES (${escStr(kind)}, ${escStr(title)}, ${escStr(fileUri)}, ${escStr(fileName)}, ${v.size}, ${v.pdfJs ? "TRUE" : "FALSE"}, ${escStr(me.email)}) RETURNING id`))[0].id;
+      const reg = await rpc(base44, "mb_admin_material_register", { p: {
+        kind, title, file_key: fileUri, file_name: fileName, file_size: v.size, pdf_js: v.pdfJs, actor: me.email,
+      } });
+      const id = reg.id;
       await libLog(base44, me.email, "plik_wgrany", "material", id, `${kind} ${mb(v.size)} MB${v.pdfJs ? " · ostrzezenie: PDF z aktywna trescia" : ""}`);
       return Response.json({ ok: true, id, file_size: v.size, pdf_js_warning: v.pdfJs });
     }
@@ -212,48 +217,35 @@ export default async function (req) {
       const stage = body.stage ? String(body.stage).trim().slice(0, 60) : null;
       const tags = (Array.isArray(body.tags) ? body.tags : []).map((t) => String(t).trim().slice(0, 40)).filter(Boolean).slice(0, 20);
       const allowDownload = body.allow_download === true;
-      let cols = {};
+      const payload = { id: id || null, kind, title, actor: me.email };
 
       if (kind === "LINK") {
         const url = String(body.external_url || "").trim();
         if (!/^https:\/\/\S+$/.test(url)) return bad("Adres musi zaczynać się od https://");
-        cols = { external_url: escStr(url), video_provider: "NULL", video_id: "NULL", body_html: "NULL", file_key: "NULL", file_name: "NULL", file_size: "NULL" };
+        payload.external_url = url;
       } else if (kind === "WIDEO") {
         const v = normalizeVideo(body.external_url);
         if (!v && !id) return bad("Dozwolone są tylko filmy z YouTube, Vimeo i Bunny — wklej poprawny adres https.");
         // Pusty adres przy edycji = zostawiamy dotychczasowego dostawcę i identyfikator.
-        cols = v
-          ? { video_provider: escStr(v.provider), video_id: escStr(v.id), external_url: "NULL", body_html: "NULL", file_key: "NULL", file_name: "NULL", file_size: "NULL" }
-          : { external_url: "NULL", body_html: "NULL", file_key: "NULL", file_name: "NULL", file_size: "NULL" };
+        if (v) { payload.video_provider = v.provider; payload.video_id = v.id; }
+        else payload.keep_video = true;
       } else if (kind === "TEKST") {
         const html = sanitizeHtml(body.body_html);
         if (!html) return bad("Wpisz treść materiału.");
-        cols = { body_html: escStr(html), external_url: "NULL", video_provider: "NULL", video_id: "NULL", file_key: "NULL", file_name: "NULL", file_size: "NULL" };
-      } else {
-        if (!id) return bad("Najpierw wgraj plik (PDF albo audio).");
-        cols = { external_url: "NULL", video_provider: "NULL", video_id: "NULL", body_html: "NULL" };
+        payload.body_html = html;
+      } else if (!id) {
+        return bad("Najpierw wgraj plik (PDF albo audio).");
       }
 
-      const meta = `title = ${escStr(title)}, description = ${esc(desc)}, stage = ${esc(stage)},
-        tags = ${tags.length ? `ARRAY[${tags.map(escStr).join(",")}]::text[]` : `'{}'::text[]`},
-        duration_s = ${esc(int(body.duration_s, 0, 100000, null))}, pages = ${esc(int(body.pages, 0, 100000, null))},
-        allow_download = ${allowDownload ? "TRUE" : "FALSE"}, source = ${esc(body.source ? String(body.source).slice(0, 200) : null)}, updated_at = now()`;
-      const setCols = Object.entries(cols).map(([k, v]) => `${k} = ${v}`).join(", ");
-
-      if (id) {
-        const r = await runSql(base44, `UPDATE public.mb_materials SET kind = ${escStr(kind)}, ${meta}, ${setCols}
-          WHERE id = ${escStr(id)}::uuid AND deleted_at IS NULL RETURNING id`);
-        if (!r || !r.length) return NOT_FOUND();
-        await libLog(base44, me.email, "material_zmiana", "material", id, title);
-        return Response.json({ ok: true, id });
-      }
-      const created = await runSql(base44, `INSERT INTO public.mb_materials (kind, title, description, stage, tags, duration_s, pages, allow_download, source, created_by, ${Object.keys(cols).join(", ")})
-        VALUES (${escStr(kind)}, ${escStr(title)}, ${esc(desc)}, ${esc(stage)}, ${tags.length ? `ARRAY[${tags.map(escStr).join(",")}]::text[]` : `'{}'::text[]`},
-          ${esc(int(body.duration_s, 0, 100000, null))}, ${esc(int(body.pages, 0, 100000, null))}, ${allowDownload ? "TRUE" : "FALSE"},
-          ${esc(body.source ? String(body.source).slice(0, 200) : null)}, ${escStr(me.email)}, ${Object.values(cols).join(", ")}) RETURNING id`);
-      const newId = created[0].id;
-      await libLog(base44, me.email, "material_dodany", "material", newId, `${kind} ${title}`);
-      return Response.json({ ok: true, id: newId });
+      // Kolumny właściwe dla rodzaju ustawia baza — funkcja wysyła tylko wartości.
+      const saved = await rpc(base44, "mb_admin_material_save", { p: {
+        ...payload, description: desc, stage, tags,
+        duration_s: int(body.duration_s, 0, 100000, null), pages: int(body.pages, 0, 100000, null),
+        allow_download: allowDownload, source: body.source ? String(body.source).slice(0, 200) : null,
+      } });
+      if (!saved || !saved.ok) return NOT_FOUND();
+      await libLog(base44, me.email, id ? "material_zmiana" : "material_dodany", "material", saved.id, id ? title : `${kind} ${title}`);
+      return Response.json({ ok: true, id: saved.id });
     }
 
     // Zamiana pliku: nowa wersja, jedna poprzednia do cofnięcia, przydziały bez zmian.
@@ -283,16 +275,8 @@ export default async function (req) {
     if (a === "material_impact") {
       const materialId = uuidOrNull(body.material_id);
       if (!materialId) return NOT_FOUND();
-      const rows = await runSql(base44, `SELECT id, target_kind, target_email, group_id, group_mode, snapshot_emails, exceptions_add, exceptions_drop
-        FROM public.mb_assignments WHERE material_id = ${escStr(materialId)}::uuid AND revoked_at IS NULL`, true);
-      const seen = new Set();
-      for (const r of rows || []) {
-        const t = r.target_kind === "osoba"
-          ? { kind: "osoba", emails: [r.target_email] }
-          : { kind: "grupa", group_id: r.group_id, group_mode: r.group_mode, snapshot_emails: r.snapshot_emails, exceptions_add: r.exceptions_add, exceptions_drop: r.exceptions_drop };
-        for (const p of (await resolveRecipients(base44, t).catch(() => [])) || []) seen.add(lower(p.email));
-      }
-      return Response.json({ osoby: seen.size, przydzialy: (rows || []).length });
+      const r = await rpc(base44, "mb_admin_material_impact", { p_material: materialId });
+      return Response.json({ osoby: (r && r.osoby) || 0, przydzialy: (r && r.przydzialy) || 0 });
     }
 
     // Przywrócenie poprzedniej wersji pliku (jedna wstecz), bez zmiany przydziałów.
@@ -518,15 +502,14 @@ export default async function (req) {
     if (a === "client_detail") {
       const email = lower(body.email);
       if (!email.includes("@")) return bad("Podaj e-mail.");
-      const [users, mb] = await Promise.all([
+      const [users, mb, lib] = await Promise.all([
         sr.User.filter({ email }).catch(() => []),
         rpc(base44, "mb_admin_client_mb", { p_email: email }),
+        libraryData(base44, email, true, true),
       ]);
       const u = (users || [])[0] || null;
-      const [lib, msgs] = await Promise.all([
-        libraryData(base44, email, true, true),
-        messagesData(base44, email, u || { email }, true),
-      ]);
+      // Zostaje tylko dołożenie imienia do wiadomości — biblioteka i konto poszły równolegle.
+      const msgs = await messagesData(base44, email, u || { email }, true);
       const d = mb || {};
       return Response.json({
         client: { email, name: u ? String(u.imie || u.full_name || "").trim() : "", joined: u ? u.created_date : null, role: u ? u.role : null },
@@ -607,24 +590,9 @@ export default async function (req) {
       const materialId = uuidOrNull(body.material_id);
       const collectionId = uuidOrNull(body.collection_id);
       if (!materialId && !collectionId) return NOT_FOUND();
-      const where = materialId ? `material_id = ${escStr(materialId)}::uuid` : `collection_id = ${escStr(collectionId)}::uuid`;
-      const rows = await runSql(base44, `SELECT id, target_kind, target_email, group_id, group_mode, snapshot_emails, exceptions_add, exceptions_drop,
-          note, visible_from, visible_to, created_at, revoked_at FROM public.mb_assignments WHERE ${where} ORDER BY created_at DESC LIMIT 500`, true);
-      const groups = (await runSql(base44, `SELECT id, name, color, kind FROM public.mb_groups`, true)) || [];
-      const out = [];
-      const seen = new Set();
-      for (const r of rows || []) {
-        const t = r.target_kind === "osoba"
-          ? { kind: "osoba", emails: [r.target_email] }
-          : { kind: "grupa", group_id: r.group_id, group_mode: r.group_mode, snapshot_emails: r.snapshot_emails, exceptions_add: r.exceptions_add, exceptions_drop: r.exceptions_drop };
-        const people = r.revoked_at ? [] : ((await resolveRecipients(base44, t).catch(() => [])) || []).map((p) => lower(p.email)).filter(Boolean);
-        for (const e of people) seen.add(e);
-        out.push({ ...r, group: groups.find((g) => g.id === r.group_id) || null, people: people.length, sample: people.slice(0, 5) });
-      }
-      const opened = materialId
-        ? Number(((await runSql(base44, `SELECT count(*)::int AS n FROM public.mb_material_state WHERE material_id = ${escStr(materialId)}::uuid AND opened_at IS NOT NULL`, true))[0] || {}).n || 0)
-        : null;
-      return Response.json({ items: out, odbiorcy: seen.size, otwarte: opened });
+      // Odbiorcy, grupy i licznik otwarć liczone w bazie — jedno wywołanie zamiast pętli po przydziałach.
+      const d = (await rpc(base44, "mb_admin_assignments_of", { p_material: materialId, p_collection: collectionId })) || {};
+      return Response.json({ items: d.items || [], odbiorcy: d.odbiorcy || 0, otwarte: d.otwarte === undefined ? null : d.otwarte });
     }
 
     if (a === "assignments_of_client") {
@@ -674,46 +642,29 @@ export default async function (req) {
       const sendAt = status === "ZAPLANOWANA" ? iso(body.send_at) : null;
       if (status === "ZAPLANOWANA" && !sendAt) return bad("Podaj termin wysyłki.");
       const t = cleanTarget(body.target || {});
-      if (t.kind === "grupa" && t.group_mode === "TYLKO_OBECNI") {
-        const m = await runSql(base44, `SELECT client_email FROM public.mb_group_members WHERE group_id = ${escStr(t.group_id)}::uuid`, true);
-        t.snapshot_emails = [...new Set((m || []).map((x) => lower(x.client_email)))];
-      }
-      const people = (await resolveRecipients(base44, t).catch(() => [])) || [];
-      const count = new Set(people.map((p) => lower(p.email))).size;
       const title = body.title ? String(body.title).trim().slice(0, 200) : null;
       const matId = uuidOrNull(body.attached_material_id);
       const colId = uuidOrNull(body.attached_collection_id);
       if (matId && colId) return bad("Dołącz materiał albo kolekcję — nie oba.");
-      if (id) {
-        const r = await runSql(base44, `UPDATE public.mb_messages SET title = ${esc(title)}, body_html = ${escStr(html)},
-          email_mode = ${escStr(emailMode)}, attached_material_id = ${matId ? escStr(matId) + "::uuid" : "NULL"},
-          attached_collection_id = ${colId ? escStr(colId) + "::uuid" : "NULL"}, target = ${escStr(JSON.stringify(t))}::jsonb,
-          recipient_count = ${count}, status = ${escStr(status)}, send_at = ${sendAt ? escStr(sendAt) : "NULL"}, updated_at = now()
-          WHERE id = ${escStr(id)}::uuid AND status IN ('SZKIC','ZAPLANOWANA') RETURNING id`);
-        if (!r || !r.length) return NOT_FOUND();
-        await libLog(base44, me.email, "wiadomosc_zmiana", "message", id, `${status} · odbiorcy: ${count}`);
-        return Response.json({ ok: true, id, count });
-      }
-      const created = await runSql(base44, `INSERT INTO public.mb_messages
-        (title, body_html, email_mode, attached_material_id, attached_collection_id, target, recipient_count, status, send_at, created_by)
-        VALUES (${esc(title)}, ${escStr(html)}, ${escStr(emailMode)}, ${matId ? escStr(matId) + "::uuid" : "NULL"},
-          ${colId ? escStr(colId) + "::uuid" : "NULL"}, ${escStr(JSON.stringify(t))}::jsonb, ${count},
-          ${escStr(status)}, ${sendAt ? escStr(sendAt) : "NULL"}, ${escStr(me.email)}) RETURNING id`);
-      await libLog(base44, me.email, "wiadomosc_szkic", "message", created[0].id, `${status} · odbiorcy: ${count}`);
-      return Response.json({ ok: true, id: created[0].id, count });
+      // Snapshot „tylko obecni" i liczba odbiorców powstają w bazie, w tej samej transakcji co zapis.
+      const saved = await rpc(base44, "mb_admin_message_save", { p: {
+        id: id || null, title, body_html: html, email_mode: emailMode, target: t,
+        attached_material_id: matId, attached_collection_id: colId, status, send_at: sendAt, actor: me.email,
+      } });
+      if (!saved || !saved.ok) return NOT_FOUND();
+      await libLog(base44, me.email, id ? "wiadomosc_zmiana" : "wiadomosc_szkic", "message", saved.id, `${status} · odbiorcy: ${saved.count}`);
+      return Response.json({ ok: true, id: saved.id, count: saved.count });
     }
 
     if (a === "message_send") {
       const id = uuidOrNull(body.id);
       if (!id) return NOT_FOUND();
-      const used = await runSql(base44, `SELECT count(*)::int AS n FROM public.mb_messages WHERE sent_at > now() - interval '1 hour'`, true).catch(() => [{ n: 0 }]);
-      if (Number(((used || [])[0] || {}).n || 0) >= 20) {
+      const used = Number(await rpc(base44, "mb_admin_message_send_rate", {}).catch(() => 0)) || 0;
+      if (used >= 20) {
         return bad("Wykorzystany limit 20 wysłanych wiadomości na godzinę. Kolejną wyślesz po godzinie.", 429);
       }
       if (body.confirm !== true && body.count > 10) return bad("Potwierdź wysyłkę do ponad 10 osób.");
-      // „Wyślij teraz": szkic staje się zaplanowaną na teraz i od razu zostaje przejęta.
-      await runSql(base44, `UPDATE public.mb_messages SET status = 'ZAPLANOWANA', send_at = now(), updated_at = now()
-        WHERE id = ${escStr(id)}::uuid AND status = 'SZKIC'`);
+      // „Wyślij teraz": przejęcie szkicu i wysyłka — jedno przejście przez bazę (p_promote).
       const r = await deliverMessage(base44, id, me.email);
       if (!r.ok) return bad("Ta wiadomość nie jest już do wysłania.", 409);
       return Response.json(r);
@@ -726,9 +677,8 @@ export default async function (req) {
       const html = sanitizeHtml(body.body_html);
       if (!html) return bad("Wpisz treść wiadomości.");
       const title = body.title ? String(body.title).trim().slice(0, 200) : null;
-      const r = await runSql(base44, `UPDATE public.mb_messages SET title = ${esc(title)}, body_html = ${escStr(html)}, updated_at = now()
-        WHERE id = ${escStr(id)}::uuid AND status = 'WYSLANA' RETURNING id`);
-      if (!r || !r.length) return NOT_FOUND();
+      const ok = await rpc(base44, "mb_admin_message_edit", { p_id: id, p_title: title, p_body_html: html });
+      if (!ok) return NOT_FOUND();
       await libLog(base44, me.email, "wiadomosc_poprawiona", "message", id, "poprawka tresci po wyslaniu, bez ponownego e-maila");
       return Response.json({ ok: true });
     }
@@ -737,9 +687,8 @@ export default async function (req) {
     if (a === "message_cancel") {
       const id = uuidOrNull(body.id);
       if (!id) return NOT_FOUND();
-      const r = await runSql(base44, `UPDATE public.mb_messages SET status = 'SZKIC', send_at = NULL, updated_at = now()
-        WHERE id = ${escStr(id)}::uuid AND status = 'ZAPLANOWANA' RETURNING id`);
-      if (!r || !r.length) return bad("Tej wiadomości nie można już anulować — zadanie ją przejęło.", 409);
+      const ok = await rpc(base44, "mb_admin_message_cancel", { p_id: id });
+      if (!ok) return bad("Tej wiadomości nie można już anulować — zadanie ją przejęło.", 409);
       await libLog(base44, me.email, "wiadomosc_anulowana", "message", id, "zaplanowana wrocila do szkicow");
       return Response.json({ ok: true });
     }
@@ -748,9 +697,8 @@ export default async function (req) {
     if (a === "message_delete") {
       const id = uuidOrNull(body.id);
       if (!id) return NOT_FOUND();
-      const r = await runSql(base44, `DELETE FROM public.mb_messages
-        WHERE id = ${escStr(id)}::uuid AND status IN ('SZKIC','WYCOFANA') RETURNING id`);
-      if (!r || !r.length) return bad("Usunąć można tylko szkic albo wiadomość wycofaną.", 409);
+      const ok = await rpc(base44, "mb_admin_message_delete", { p_id: id });
+      if (!ok) return bad("Usunąć można tylko szkic albo wiadomość wycofaną.", 409);
       await libLog(base44, me.email, "wiadomosc_usunieta", "message", id, null);
       return Response.json({ ok: true });
     }
@@ -758,9 +706,8 @@ export default async function (req) {
     if (a === "message_withdraw") {
       const id = uuidOrNull(body.id);
       if (!id) return NOT_FOUND();
-      const r = await runSql(base44, `UPDATE public.mb_messages SET status = 'WYCOFANA', withdrawn_at = now(), updated_at = now()
-        WHERE id = ${escStr(id)}::uuid AND status = 'WYSLANA' RETURNING id`);
-      if (!r || !r.length) return NOT_FOUND();
+      const ok = await rpc(base44, "mb_admin_message_withdraw", { p_id: id });
+      if (!ok) return NOT_FOUND();
       await libLog(base44, me.email, "wiadomosc_wycofana", "message", id, null);
       return Response.json({ ok: true, uwaga: "Wysłanego e-maila nie da się cofnąć." });
     }
@@ -768,24 +715,20 @@ export default async function (req) {
     if (a === "message_notify_unread") {
       const id = uuidOrNull(body.id);
       if (!id) return NOT_FOUND();
-      const [m] = await runSql(base44, `SELECT id, title, body_html, email_mode FROM public.mb_messages WHERE id = ${escStr(id)}::uuid AND status = 'WYSLANA'`, true);
-      if (!m) return NOT_FOUND();
-      if (m.email_mode === "BRAK") return bad("Ta wiadomość nie ma włączonej kopii e-mail.");
-      const recent = await runSql(base44, `SELECT 1 FROM public.mb_log WHERE action = 'powiadomienie_ponowne'
-        AND object_id = ${escStr(id)} AND at > now() - interval '24 hours' LIMIT 1`, true).catch(() => []);
-      if (recent && recent.length) return bad("Powiadomienie do nieprzeczytanych zostało już wysłane w ciągu ostatnich 24 godzin.", 429);
-      const unread = (await runSql(base44, `SELECT client_email FROM public.mb_message_recipients
-        WHERE message_id = ${escStr(id)}::uuid AND read_at IS NULL AND hidden_at IS NULL LIMIT 500`, true)) || [];
-      const sent = await sendMessageEmail(base44, m, unread.map((x) => lower(x.client_email)));
-      await libLog(base44, me.email, "powiadomienie_ponowne", "message", id, `nieprzeczytane: ${unread.length}`);
-      return Response.json({ ok: true, ...sent, nieprzeczytane: unread.length });
+      const d = await rpc(base44, "mb_admin_message_notify", { p_id: id });
+      if (!d || !d.message) return NOT_FOUND();
+      if (d.message.email_mode === "BRAK") return bad("Ta wiadomość nie ma włączonej kopii e-mail.");
+      if (d.niedawno) return bad("Powiadomienie do nieprzeczytanych zostało już wysłane w ciągu ostatnich 24 godzin.", 429);
+      const emails = (d.emails || []).map(lower);
+      const sent = await sendMessageEmail(base44, d.message, emails);
+      await libLog(base44, me.email, "powiadomienie_ponowne", "message", id, `nieprzeczytane: ${emails.length}`);
+      return Response.json({ ok: true, ...sent, nieprzeczytane: emails.length });
     }
 
     if (a === "message_stats") {
       const id = uuidOrNull(body.id);
       if (!id) return NOT_FOUND();
-      const rows = await runSql(base44, `SELECT r.client_email, r.delivered_at, r.read_at, r.hidden_at FROM public.mb_message_recipients r
-        WHERE r.message_id = ${escStr(id)}::uuid ORDER BY r.read_at DESC NULLS LAST LIMIT 500`, true);
+      const rows = await rpc(base44, "mb_admin_message_stats", { p_id: id });
       const users = await sr.User.list("-created_date", 2000).catch(() => []);
       const names = {};
       for (const u of users || []) names[lower(u.email)] = String(u.imie || u.full_name || "").trim();
@@ -793,7 +736,7 @@ export default async function (req) {
     }
 
     if (a === "templates_list") {
-      const rows = await runSql(base44, `SELECT id, name, title, body_html, created_at FROM public.mb_templates ORDER BY name`, true);
+      const rows = await rpc(base44, "mb_admin_templates", {});
       return Response.json({ items: (rows || []).map((t) => ({ ...t, preview: plainText(t.body_html) })) });
     }
 
@@ -803,21 +746,15 @@ export default async function (req) {
       if (!html) return bad("Wpisz treść szablonu.");
       const title = body.title ? String(body.title).trim().slice(0, 200) : null;
       const id = uuidOrNull(body.id);
-      if (id) {
-        const r = await runSql(base44, `UPDATE public.mb_templates SET name = ${escStr(name)}, title = ${esc(title)}, body_html = ${escStr(html)}
-          WHERE id = ${escStr(id)}::uuid RETURNING id`);
-        if (!r || !r.length) return NOT_FOUND();
-        return Response.json({ ok: true, id });
-      }
-      const c = await runSql(base44, `INSERT INTO public.mb_templates (name, title, body_html, created_by)
-        VALUES (${escStr(name)}, ${esc(title)}, ${escStr(html)}, ${escStr(me.email)}) RETURNING id`);
-      return Response.json({ ok: true, id: c[0].id });
+      const saved = await rpc(base44, "mb_admin_template_save", { p: { id: id || null, name, title, body_html: html, actor: me.email } });
+      if (!saved || !saved.ok) return NOT_FOUND();
+      return Response.json({ ok: true, id: saved.id });
     }
 
     if (a === "template_delete") {
       const id = uuidOrNull(body.id);
       if (!id) return NOT_FOUND();
-      await runSql(base44, `DELETE FROM public.mb_templates WHERE id = ${escStr(id)}::uuid`);
+      await rpc(base44, "mb_admin_template_delete", { p_id: id });
       return Response.json({ ok: true });
     }
 
