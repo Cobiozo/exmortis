@@ -35,8 +35,42 @@ export function safeHref(raw) {
   return null;
 }
 
+// Quill 2 (react-quill-new) zapisuje listę punktowaną jako <ol><li data-list="bullet">.
+// Atrybuty zdejmujemy, więc rozpoznajemy ją tutaj i zamieniamy otaczający <ol> na <ul> —
+// inaczej każda lista punktowana wyszłaby jako numerowana. Działa też dla list zagnieżdżonych.
+function fixQuillLists(s) {
+  const TOKEN = /<\/?ol\b[^>]*>|<li\b[^>]*>/gi;
+  const parts = [];
+  const open = [];
+  let last = 0;
+  let m;
+  while ((m = TOKEN.exec(s)) !== null) {
+    parts.push(s.slice(last, m.index));
+    last = TOKEN.lastIndex;
+    const t = m[0];
+    if (/^<li\b/i.test(t)) {
+      // Rodzaj listy rozstrzyga pierwszy punkt w bloku; brak data-list = zwykły HTML, zostawiamy.
+      if (/data-list\s*=\s*["']?bullet/i.test(t)) {
+        const top = open[open.length - 1];
+        if (top) parts[top.idx] = "<ul>";
+      }
+      parts.push(t);
+    } else if (/^<\/ol/i.test(t)) {
+      const top = open.pop();
+      parts.push(top && parts[top.idx] === "<ul>" ? "</ul>" : "</ol>");
+    } else {
+      open.push({ idx: parts.length });
+      parts.push("<ol>");
+    }
+  }
+  parts.push(s.slice(last));
+  return parts.join("");
+}
+
 export function sanitizeHtml(input) {
   let s = String(input == null ? "" : input);
+  // 0. Listy punktowane z edytora — przed zdjęciem atrybutów.
+  s = fixQuillLists(s);
   // 1. Komentarze (mogą ukrywać znaczniki).
   s = s.replace(/<!--[\s\S]*?-->/g, "");
   // 2. Znaczniki niebezpieczne — razem z zawartością.
