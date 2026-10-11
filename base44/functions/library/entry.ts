@@ -30,8 +30,12 @@ export default async function (req) {
     // Jedno wejście dla /konto: przełączniki + biblioteka + wiadomości + nieprzeczytane.
     // Odpowiada też przy obu „off" — wtedy zakładki po prostu się nie pokazują.
     if (a === "bundle" || a === "config") {
-      const d = await bundleData(base44, email, me, admin, preview).catch(() => null);
-      const f = await getSettingsFast(base44, ["firma"]).catch(() => ({}));
+      // Oba moduły niedostępne dla tej osoby → odpowiedź bez żadnego zapytania do bazy.
+      if (!lib && !msg) return Response.json({ library: false, messages: false });
+      const [d, f] = await Promise.all([
+        bundleData(base44, email, me, admin, preview).catch(() => null),
+        getSettingsFast(base44, ["firma"]).catch(() => ({})),
+      ]);
       const out = {
         library: lib, messages: msg, email,
         library_mode: (d && d.library_mode) || s.library_mode,
