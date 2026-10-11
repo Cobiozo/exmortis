@@ -1,6 +1,6 @@
 // Wspólna logika modułu biblioteki: ustawienia, przełączniki, tożsamość, widoczność, odbiorcy.
 
-import { runSql, rpc } from "./supabase.ts";
+import { rpc } from "./supabase.ts";
 
 export const MODES = ["off", "admin", "on"];
 export const DEFAULT_SETTINGS = { library_mode: "off", messages_mode: "off", email_notify: false, whatsapp: null, space_limit_mb: 5120 };
@@ -8,12 +8,12 @@ export const DEFAULT_SETTINGS = { library_mode: "off", messages_mode: "off", ema
 let CFG = null;
 let CFG_AT = 0;
 
-// Ustawienia modułu — 30 s pamięci w instancji (jak przy SMTP).
+// Ustawienia modułu — jedno wywołanie RPC i 30 s pamięci w instancji (jak przy SMTP).
+// Wcześniej szedł tędy runSql (Management API, ~1,5 s) — to był koszt płacony przy KAŻDEJ akcji.
 export async function libSettings(base44, fresh = false) {
   if (!fresh && CFG && Date.now() - CFG_AT < 30000) return CFG;
-  const rows = await runSql(base44,
-    `SELECT library_mode, messages_mode, email_notify, whatsapp, space_limit_mb FROM public.mb_settings WHERE id = 1`, true);
-  CFG = rows && rows[0] ? rows[0] : { ...DEFAULT_SETTINGS };
+  const s = await rpc(base44, "mb_lib_settings", {});
+  CFG = s && s.library_mode ? s : { ...DEFAULT_SETTINGS };
   CFG_AT = Date.now();
   return CFG;
 }
