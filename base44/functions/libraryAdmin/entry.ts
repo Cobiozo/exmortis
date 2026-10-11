@@ -588,6 +588,30 @@ export default async function (req) {
       if (!materialId && !collectionId) return bad("Wybierz materiał albo kolekcję.");
       if (materialId && collectionId) return bad("Wybierz materiał albo kolekcję — nie oba.");
       const t = cleanTarget(body.target || {});
+      // Kilka osób naraz: materiał — jednym wywołaniem bazy; kolekcja — przydział na każdą osobę.
+      if (t.kind === "osoba" && t.emails.length > 1) {
+        const note = body.note ? String(body.note).slice(0, 2000) : null;
+        let count = 0;
+        if (materialId) {
+          const rm = await rpc(base44, "mb_admin_assign_many", {
+            p_materials: [materialId], p_target: t, p_note: note,
+            p_from: iso(body.visible_from), p_to: iso(body.visible_to), p_actor: me.email,
+          });
+          count = Number((rm && rm.osoby) || 0);
+        } else {
+          for (const e of t.emails.slice(0, 500)) {
+            await rpc(base44, "mb_admin_assignment_save", { p: {
+              material_id: null, collection_id: collectionId, target_kind: "osoba", target_email: e,
+              group_id: null, group_mode: null, snapshot_emails: [], exceptions_add: [], exceptions_drop: [],
+              note, visible_from: iso(body.visible_from), visible_to: iso(body.visible_to), actor: me.email,
+            } });
+            count += 1;
+          }
+        }
+        await libLog(base44, me.email, "przydzial", materialId ? "material" : "collection", materialId || collectionId,
+          `osoby · odbiorcy: ${count}`);
+        return Response.json({ ok: true, count });
+      }
       // Snapshot „tylko obecni" wyznacza baza w tej samej transakcji co zapis przydziału.
       const r = await rpc(base44, "mb_admin_assignment_save", { p: {
         material_id: materialId, collection_id: collectionId,
