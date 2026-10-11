@@ -8,6 +8,7 @@ import { SCHEMA_SQL, SEED_SQL } from "../../shared/bookingSchema.ts";
 const int = (v, min, max, def = null) => { const n = Math.round(Number(v)); return Number.isFinite(n) && v !== "" && v !== null ? Math.min(max, Math.max(min, n)) : def; };
 const TIME = /^([01]\d|2[0-3]):[0-5]\d$/;
 const iso = (v) => { const d = new Date(v); if (isNaN(d.getTime())) throw new Error("Niepoprawna data"); return d.toISOString(); };
+const uuidOrNull = (v) => { const s = String(v || "").trim(); return /^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$/.test(s) ? s : null; };
 const log = (base44, actor, action, type, id, summary) => runSql(base44,
   `INSERT INTO public.bk_log (actor, action, object_type, object_id, summary) VALUES (${escStr(actor)}, ${escStr(action)}, ${esc(type)}, ${esc(id)}, ${esc(summary)})`);
 
@@ -31,7 +32,7 @@ export default async function (req) {
 
     if (a === "get") {
       const [s, types, hours, blocks, hol] = await Promise.all([
-        runSql(base44, `SELECT mode, min_notice_h, daily_limit, weekly_limit FROM public.bk_settings WHERE id = 1`, true),
+        runSql(base44, `SELECT mode, min_notice_h, daily_limit, weekly_limit, late_cancel_policy, threshold_product_id, threshold_type_id, threshold_sessions, threshold_valid_days, service_consent_version, service_consent_text FROM public.bk_settings WHERE id = 1`, true),
         runSql(base44, `SELECT id, slug, name, description, duration_min, buffer_before, buffer_after, step_min, horizon_days, access, zoom_link, questions, change_window_h, monthly_limit, active FROM public.bk_types ORDER BY sort, name`, true),
         runSql(base44, `SELECT id, type_id, weekday, to_char(start_local,'HH24:MI') AS "from", to_char(end_local,'HH24:MI') AS "to" FROM public.bk_hours ORDER BY weekday, start_local`, true),
         runSql(base44, `SELECT id, kind, starts_at, ends_at, rep_weekday, to_char(rep_from,'HH24:MI') AS rep_from, to_char(rep_to,'HH24:MI') AS rep_to, note FROM public.bk_blocks WHERE NOT disabled AND ends_at > now() ORDER BY starts_at LIMIT 200`, true),
@@ -43,8 +44,17 @@ export default async function (req) {
     if (a === "save_settings") {
       const mode = ["off", "admin", "on"].includes(body.mode) ? body.mode : "off";
       const daily = int(body.daily_limit, 1, 20, 3), weekly = int(body.weekly_limit, 1, 100, null);
-      await runSql(base44, `UPDATE public.bk_settings SET mode = ${escStr(mode)}, daily_limit = ${daily}, weekly_limit = ${esc(weekly)}, updated_at = now() WHERE id = 1`);
-      await log(base44, me.email, "ustawienia", "settings", "1", `tryb=${mode} dzien=${daily} tydzien=${weekly ?? "-"}`);
+      const policy = body.late_cancel_policy === "przepada" ? "przepada" : "admin";
+      const prodId = uuidOrNull(body.threshold_product_id), typeId = uuidOrNull(body.threshold_type_id);
+      const thSessions = int(body.threshold_sessions, 1, 20, 1), thDays = int(body.threshold_valid_days, 1, 365, 60);
+      const svcText = String(body.service_consent_text || "").trim().slice(0, 2000);
+      if (!svcText) throw new Error("Treść zgody nie może być pusta");
+      const svcVer = String(body.service_consent_version || "").trim().slice(0, 40) || "rez-2026-11";
+      await runSql(base44, `UPDATE public.bk_settings SET mode = ${escStr(mode)}, daily_limit = ${daily}, weekly_limit = ${esc(weekly)},
+        late_cancel_policy = ${escStr(policy)}, threshold_product_id = ${esc(prodId)}, threshold_type_id = ${esc(typeId)},
+        threshold_sessions = ${thSessions}, threshold_valid_days = ${thDays},
+        service_consent_text = ${escStr(svcText)}, service_consent_version = ${escStr(svcVer)}, updated_at = now() WHERE id = 1`);
+      await log(base44, me.email, "ustawienia", "settings", "1", `tryb=${mode} dzien=${daily} tydzien=${weekly ?? "-"} pozne=${policy} prog=${prodId ? "tak" : "nie"}`);
       await getMode(base44, true);
       return Response.json({ ok: true });
     }
@@ -148,6 +158,26 @@ export default async function (req) {
       const health = d?.health_enc ? await decryptHealth(keys.enc, d.health_enc).catch(() => null) : null;
       await log(base44, me.email, "odczyt_odpowiedzi", "booking", id, null);
       return Response.json({ booking, detail: { answers: d?.answers ?? null, health_consent: d?.health_consent ?? false, deleted_at: d?.deleted_at ?? null, health } });
+    }
+
+    // Produkty skarbca — wybór „Rozmowy na progu” po identyfikatorze, nie po nazwie.
+    if (a === "products") {
+      const rows = await runSql(base44, `SELECT id, name, active, product_type FROM public.products ORDER BY name LIMIT 500`, true);
+      return Response.json({ products: rows });
+    }
+
+    if (a === "packages") {
+      const r = await rpc(base44, "bk_admin_packages");
+      return Response.json({ packages: r || [] });
+    }
+
+    // Polityka „decyduje admin”: ręczne oddanie sesji do pakietu.
+    if (a === "return_session") {
+      const r = await rpc(base44, "bk_return_session", { p: {
+        package_id: textField(body, "package_id", { max: 40 }), actor: me.email,
+        note: String(body.note || "").slice(0, 200) || null,
+      } });
+      return Response.json(r, { status: r?.error ? 404 : 200 });
     }
 
     // Rezerwacja przez admina: może pominąć 24 h, ale nie zająć zajętego terminu (te same reguły w bk_book).

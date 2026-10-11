@@ -3,8 +3,40 @@ import { createClientFromRequest } from "npm:@base44/sdk@0.8.44";
 import { getSetting, loadAppUrl, APP_URL } from "../../shared/settings.ts";
 import { getOrderByPayuId, updateOrderStatus } from "../../shared/orders.ts";
 import { sendMail, orderEmailHtml } from "../../shared/smtp.ts";
-import { runSql, escStr } from "../../shared/supabase.ts";
+import { runSql, rpc, escStr } from "../../shared/supabase.ts";
 import { DIGITAL, grantAccess, ensureAccount } from "../../shared/access.ts";
+import { randomToken, sha256hex } from "../../shared/booking.ts";
+
+// KROK 2: „Rozmowa na progu” — zakup produktu wskazanego w panelu zakłada pakiet sesji.
+// Idempotentnie po numerze zamówienia; każde wywołanie w try/catch, żeby błąd pakietu
+// nigdy nie zepsuł obsługi samego zamówienia.
+function packageEmailHtml(token) {
+  const link = `${APP_URL}/rezerwacja/termin#t=${token}`;
+  return `<div style="background:#0A0A0B;padding:0 32px 32px;font-family:Georgia,serif;">
+    <p style="color:#E2E2E2;margin:0 0 12px;">Płatność przyjęta. Zostało jedno: wybierz termin rozmowy.</p>
+    <p style="margin:20px 0;"><a href="${link}" style="color:#C9A24A;">Wybierz termin</a></p>
+    <p style="color:#8A8A8C;font-size:13px;line-height:1.6;">Link jest jednorazowy i ważny 60 dni. Ten sam termin możesz wybrać w Moich sesjach na koncie, po zalogowaniu się tym adresem.</p>
+  </div>`;
+}
+
+async function grantThresholdPackage(base44, stored) {
+  const [s] = await runSql(base44, `SELECT threshold_product_id, threshold_type_id, threshold_sessions, threshold_valid_days FROM public.bk_settings WHERE id = 1`, true);
+  if (!s?.threshold_product_id || !s?.threshold_type_id) return;
+  const items = Array.isArray(stored.items) ? stored.items : [];
+  const match = items.find((i) => String(i.product_id) === String(s.threshold_product_id));
+  if (!match) return;
+  const token = randomToken();
+  const r = await rpc(base44, "bk_grant_package", { p: {
+    order_id: String(stored.id), email: stored.buyer_email, type_id: s.threshold_type_id,
+    sessions: (s.threshold_sessions || 1) * Math.max(1, Number(match.quantity) || 1),
+    valid_days: s.threshold_valid_days || 60, token_hash: await sha256hex(token),
+  } });
+  if (r?.already || !r?.ok) return;
+  await sendMail(base44, {
+    kind: "pakiet", ref: stored.id, to: stored.buyer_email,
+    subject: "EXMORTIS — wybierz termin rozmowy", html: packageEmailHtml(token),
+  });
+}
 
 const PL_DATE = (ymd) =>
   new Date(`${ymd}T12:00:00Z`).toLocaleDateString("pl-PL", { day: "numeric", month: "long", year: "numeric" });
@@ -81,6 +113,12 @@ export default async function (req) {
           });
         } catch {
           // e-mail potwierdzenia jest opcjonalny — nie blokuj ack dla PayU
+        }
+        // KROK 2: pakiet „Rozmowa na progu” — po obecnej logice, w try/catch.
+        try {
+          await grantThresholdPackage(base44, stored);
+        } catch {
+          // pakiet założymy ręcznie — zamówienie i tak jest obsłużone
         }
       }
     }

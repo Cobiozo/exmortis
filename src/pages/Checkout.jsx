@@ -8,6 +8,7 @@ import { base44 } from "@/api/base44Client";
 import NewsletterConsent from "@/components/exmortis/shop/NewsletterConsent";
 import DiscountField from "@/components/exmortis/shop/DiscountField";
 import OrderSummaryInfo from "@/components/exmortis/shop/OrderSummaryInfo";
+import ChooseTermButton from "@/components/exmortis/shop/ChooseTermButton";
 
 export default function Checkout() {
   const { items, total, clear } = useCart();
@@ -69,6 +70,7 @@ export default function Checkout() {
         <p className="text-foreground/60 text-lg max-w-md leading-relaxed">
           Płatność dotarła. Dostęp i szczegóły wyślę na Twój mail — pierwszy ruch jest już za Tobą.
         </p>
+        <ChooseTermButton />
         <Link to="/" className="btn-ghost">WRÓĆ NA POCZĄTEK</Link>
       </div>
     );

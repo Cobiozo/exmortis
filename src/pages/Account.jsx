@@ -8,14 +8,15 @@ import ObokNotifications from "@/components/obok/ObokNotifications";
 import AccountSettings from "@/components/account/AccountSettings";
 import DailyThought from "@/components/account/DailyThought";
 import AccountAnnouncements from "@/components/account/announce/AccountAnnouncements";
+import MySessions from "@/components/account/sessions/MySessions";
 import { obok } from "@/components/obok/obokApi";
 
-const TABS = [["produkty", "Moje produkty"], ["obok", "Obok"], ["zakupy", "Zakupy"], ["ustawienia", "Ustawienia"]];
+const TABS = [["produkty", "Moje produkty"], ["sesje", "Moje sesje"], ["obok", "Obok"], ["zakupy", "Zakupy"], ["ustawienia", "Ustawienia"]];
 
 // /konto — tylko dla zalogowanych (ProtectedRoute).
 export default function Account() {
   useNoIndex();
-  const [tab, setTab] = useState("produkty");
+  const [tab, setTab] = useState(() => new URLSearchParams(window.location.search).get("tab") || "produkty");
   const [me, setMe] = useState(null);
   const [hasObok, setHasObok] = useState(false);
   useEffect(() => { base44.auth.me().then(setMe); obok("home").then((d) => setHasObok(!!d.tiles?.length)).catch(() => {}); }, []);
@@ -55,6 +56,7 @@ export default function Account() {
           ))}
         </div>
         {tab === "produkty" && <MyProducts />}
+        {tab === "sesje" && <MySessions />}
         {tab === "obok" && <><SeriesTiles /><div className="mt-14"><ObokNotifications /></div></>}
         {tab === "zakupy" && <MyOrders />}
         {tab === "ustawienia" && me && <AccountSettings me={me} />}

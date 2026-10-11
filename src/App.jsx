@@ -52,6 +52,7 @@ import ZmianaAdresu from '@/pages/ZmianaAdresu';
 import JoinMeeting from '@/pages/JoinMeeting';
 import ErrorBoundary from '@/components/errors/ErrorBoundary';
 import Rezerwacja from '@/pages/Rezerwacja';
+import RezerwacjaTermin from '@/pages/RezerwacjaTermin';
 import RezerwacjaZarzadzaj from '@/pages/RezerwacjaZarzadzaj';
 // Add page imports here
 
@@ -126,6 +127,7 @@ const AuthenticatedApp = () => {
           <Route path="/polityka-cookies" element={<PolitykaCookies />} />
           <Route path="/odstapienie" element={<Odstapienie />} />
           <Route path="/kontakt" element={<Kontakt />} />
+          <Route path="/rezerwacja/termin" element={<RezerwacjaTermin />} />
           <Route path="/rezerwacja/zarzadzaj" element={<RezerwacjaZarzadzaj />} />
           <Route path="/rezerwacja/:slug" element={<Rezerwacja />} />
           <Route path="/strona/:slug" element={<CmsPage />} />

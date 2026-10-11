@@ -497,6 +497,305 @@ DO $x$ BEGIN
   END IF;
 END $x$;
 
+-- ============ KROK 2: pakiety, „Rozmowa na progu”, przenoszenie i anulowanie ============
+
+-- 11) Ustawienia pakietów, polityki późnego odwołania i zgody o wykonaniu usługi.
+ALTER TABLE public.bk_settings ADD COLUMN IF NOT EXISTS late_cancel_policy text NOT NULL DEFAULT 'admin';
+ALTER TABLE public.bk_settings ADD COLUMN IF NOT EXISTS threshold_product_id uuid;
+ALTER TABLE public.bk_settings ADD COLUMN IF NOT EXISTS threshold_type_id uuid;
+ALTER TABLE public.bk_settings ADD COLUMN IF NOT EXISTS threshold_sessions int NOT NULL DEFAULT 1;
+ALTER TABLE public.bk_settings ADD COLUMN IF NOT EXISTS threshold_valid_days int NOT NULL DEFAULT 60;
+ALTER TABLE public.bk_settings ADD COLUMN IF NOT EXISTS service_consent_version text NOT NULL DEFAULT 'rez-2026-11';
+ALTER TABLE public.bk_settings ADD COLUMN IF NOT EXISTS service_consent_text text NOT NULL DEFAULT 'Żądam wykonania usługi przed upływem 14 dni od zawarcia umowy oraz przyjmuję do wiadomości utratę prawa odstąpienia od umowy z chwilą rozpoczęcia świadczenia.';
+DO $c$ BEGIN
+  IF NOT EXISTS (SELECT 1 FROM pg_constraint WHERE conname = 'bk_settings_late_cancel_policy_check') THEN
+    ALTER TABLE public.bk_settings ADD CONSTRAINT bk_settings_late_cancel_policy_check CHECK (late_cancel_policy IN ('admin','przepada'));
+  END IF;
+  IF NOT EXISTS (SELECT 1 FROM pg_constraint WHERE conname = 'bk_settings_threshold_sessions_check') THEN
+    ALTER TABLE public.bk_settings ADD CONSTRAINT bk_settings_threshold_sessions_check CHECK (threshold_sessions BETWEEN 1 AND 20);
+  END IF;
+  IF NOT EXISTS (SELECT 1 FROM pg_constraint WHERE conname = 'bk_settings_threshold_valid_days_check') THEN
+    ALTER TABLE public.bk_settings ADD CONSTRAINT bk_settings_threshold_valid_days_check CHECK (threshold_valid_days BETWEEN 1 AND 365);
+  END IF;
+END $c$;
+
+-- 12) Pakiet z zamówienia — idempotentnie po unikalnym numerze zamówienia.
+CREATE OR REPLACE FUNCTION public.bk_grant_package(p jsonb) RETURNS jsonb
+LANGUAGE plpgsql SECURITY DEFINER SET search_path = '' AS $gp$
+DECLARE v_id uuid; v_days int;
+BEGIN
+  IF COALESCE(p->>'order_id','') = '' OR COALESCE(p->>'type_id','') = '' THEN RETURN jsonb_build_object('error','config'); END IF;
+  v_days := GREATEST(1, LEAST(365, COALESCE((p->>'valid_days')::int, 60)));
+  INSERT INTO public.bk_packages (user_id, email_display, type_id, sessions_total, valid_until, source, order_id, payment_status)
+  VALUES (COALESCE(NULLIF(p->>'user_id',''), 'zamowienie:' || (p->>'order_id')), lower(btrim(COALESCE(p->>'email',''))),
+    (p->>'type_id')::uuid, GREATEST(1, LEAST(20, COALESCE((p->>'sessions')::int, 1))),
+    now() + (v_days || ' days')::interval, 'zamowienie', p->>'order_id', 'oplacony')
+  ON CONFLICT (order_id) DO NOTHING
+  RETURNING id INTO v_id;
+  IF v_id IS NULL THEN
+    SELECT id INTO v_id FROM public.bk_packages WHERE order_id = p->>'order_id';
+    RETURN jsonb_build_object('ok', true, 'already', true, 'id', v_id);
+  END IF;
+  IF COALESCE(p->>'token_hash','') <> '' THEN
+    INSERT INTO public.bk_tokens (purpose, token_hash, owner_email, package_id, expires_at)
+    VALUES ('zamowienie', p->>'token_hash', lower(btrim(COALESCE(p->>'email',''))), v_id, now() + (v_days || ' days')::interval);
+  END IF;
+  INSERT INTO public.bk_log (actor, action, object_type, object_id, summary)
+  VALUES ('system', 'pakiet_z_zamowienia', 'package', v_id::text, p->>'order_id');
+  RETURN jsonb_build_object('ok', true, 'id', v_id);
+END $gp$;
+
+-- 13) Pakiet po jednorazowym tokenie z zamówienia (w bazie tylko skrót).
+CREATE OR REPLACE FUNCTION public.bk_token_package(p_hash text) RETURNS jsonb
+LANGUAGE sql STABLE SECURITY DEFINER SET search_path = '' AS $tp$
+SELECT jsonb_build_object('package_id', pk.id, 'email', pk.email_display, 'type_id', t.id, 'slug', t.slug,
+  'type', t.name, 'duration_min', t.duration_min, 'sessions_left', GREATEST(0, pk.sessions_total - pk.sessions_used),
+  'valid_until', pk.valid_until, 'purchased_at', pk.created_at,
+  'consent_version', (SELECT service_consent_version FROM public.bk_settings WHERE id = 1),
+  'consent_text', (SELECT service_consent_text FROM public.bk_settings WHERE id = 1))
+FROM public.bk_tokens x JOIN public.bk_packages pk ON pk.id = x.package_id JOIN public.bk_types t ON t.id = pk.type_id
+WHERE x.token_hash = p_hash AND x.purpose = 'zamowienie' AND x.used_at IS NULL AND x.expires_at > now()
+  AND pk.payment_status = 'oplacony' AND pk.valid_until > now() AND pk.sessions_used < pk.sessions_total
+$tp$;
+
+-- 14) Rezerwacja z pakietu: właściciel po user_id albo e-mailu, nigdy po samym id pakietu.
+--     Odstęp, ważność, liczba sesji i granica 24 h sprawdzane tutaj, w tej samej transakcji.
+CREATE OR REPLACE FUNCTION public.bk_book_package(p jsonb) RETURNS jsonb
+LANGUAGE plpgsql SECURITY DEFINER SET search_path = '' AS $bp$
+DECLARE
+  v_pk public.bk_packages; v_t public.bk_types; v_id uuid; v_en timestamptz; v_last timestamptz;
+  v_token boolean := false;
+  v_st timestamptz := (p->>'starts_at')::timestamptz;
+  v_admin boolean := COALESCE((p->>'viewer_admin')::boolean, false);
+  v_uid text := NULLIF(p->>'user_id','');
+  v_email text := lower(btrim(COALESCE(p->>'email','')));
+BEGIN
+  PERFORM pg_advisory_xact_lock(hashtext('bk_calendar'));
+  SELECT * INTO v_pk FROM public.bk_packages WHERE id = (p->>'package_id')::uuid FOR UPDATE;
+  IF NOT FOUND THEN RETURN jsonb_build_object('error','not_found'); END IF;
+  SELECT EXISTS (SELECT 1 FROM public.bk_tokens x WHERE x.token_hash = NULLIF(p->>'token_hash','')
+    AND x.purpose = 'zamowienie' AND x.package_id = v_pk.id AND x.used_at IS NULL AND x.expires_at > now()) INTO v_token;
+  IF NOT v_admin AND NOT v_token THEN
+    IF (v_uid IS NULL OR v_pk.user_id IS DISTINCT FROM v_uid)
+      AND (v_email = '' OR lower(btrim(COALESCE(v_pk.email_display,''))) IS DISTINCT FROM v_email) THEN
+      RETURN jsonb_build_object('error','forbidden');
+    END IF;
+  END IF;
+  IF v_pk.payment_status <> 'oplacony' THEN RETURN jsonb_build_object('error','unpaid'); END IF;
+  IF v_pk.valid_until < now() THEN RETURN jsonb_build_object('error','expired'); END IF;
+  IF v_pk.sessions_used >= v_pk.sessions_total THEN RETURN jsonb_build_object('error','used_up'); END IF;
+  SELECT * INTO v_t FROM public.bk_types WHERE id = v_pk.type_id;
+  IF NOT FOUND OR (NOT v_t.active AND NOT v_admin) THEN RETURN jsonb_build_object('error','not_found'); END IF;
+  SELECT max(k.starts_at) INTO v_last FROM public.bk_bookings k
+    WHERE k.package_id = v_pk.id AND k.status IN ('POTWIERDZONA','ODBYLA_SIE');
+  IF v_pk.min_gap_days > 0 AND v_last IS NOT NULL AND v_st < v_last + (v_pk.min_gap_days || ' days')::interval THEN
+    RETURN jsonb_build_object('error','gap', 'min_days', v_pk.min_gap_days);
+  END IF;
+  IF NOT EXISTS (SELECT 1 FROM public.bk_free_slots(v_t.id, v_st, v_st + interval '1 minute', v_admin) f WHERE f.slot_start = v_st) THEN
+    RETURN jsonb_build_object('error','taken');
+  END IF;
+  -- Zgoda o wykonaniu usługi przed upływem 14 dni — wymagana tylko, gdy termin wypada w tym oknie.
+  IF v_st < v_pk.created_at + interval '14 days'
+     AND NOT EXISTS (SELECT 1 FROM jsonb_to_recordset(COALESCE(p->'consents','[]')) AS x(kind text) WHERE x.kind = 'odstapienie') THEN
+    RETURN jsonb_build_object('error','consent');
+  END IF;
+  v_en := v_st + v_t.duration_min * interval '1 minute';
+  BEGIN
+    INSERT INTO public.bk_bookings (type_id, package_id, user_id, email, first_name, is_public, starts_at, ends_at, busy, client_tz, source)
+    VALUES (v_t.id, v_pk.id, COALESCE(v_uid, v_pk.user_id), v_pk.email_display, p->>'first_name', false, v_st, v_en,
+      tstzrange(v_st - v_t.buffer_before * interval '1 minute', v_en + v_t.buffer_after * interval '1 minute', '[)'),
+      p->>'tz', COALESCE(p->>'source','klient'))
+    RETURNING id INTO v_id;
+  EXCEPTION WHEN exclusion_violation THEN RETURN jsonb_build_object('error','taken');
+  END;
+  UPDATE public.bk_packages SET sessions_used = sessions_used + 1 WHERE id = v_pk.id;
+  IF NULLIF(p->>'token_hash','') IS NOT NULL THEN
+    UPDATE public.bk_tokens SET used_at = now() WHERE token_hash = p->>'token_hash' AND used_at IS NULL;
+  END IF;
+  INSERT INTO public.bk_consents (booking_id, kind, text_version, text, email_hmac, ip_hmac)
+  SELECT v_id, x.kind, x.text_version, x.text, x.email_hmac, x.ip_hmac
+  FROM jsonb_to_recordset(COALESCE(p->'consents','[]')) AS x(kind text, text_version text, text text, email_hmac text, ip_hmac text);
+  INSERT INTO public.bk_log (actor, action, object_type, object_id, summary)
+  VALUES (COALESCE(p->>'actor','klient'), 'rezerwacja_z_pakietu', 'booking', v_id::text,
+    v_t.slug || ' ' || to_char(v_st AT TIME ZONE 'Europe/Warsaw', 'YYYY-MM-DD HH24:MI'));
+  RETURN jsonb_build_object('ok', true, 'id', v_id, 'starts_at', v_st, 'ends_at', v_en);
+END $bp$;
+
+-- 15) Przeniesienie terminu — granica zmiany, limit przełożeń i wolny termin w jednej transakcji.
+CREATE OR REPLACE FUNCTION public.bk_reschedule(p jsonb) RETURNS jsonb
+LANGUAGE plpgsql SECURITY DEFINER SET search_path = '' AS $r$
+DECLARE
+  v_k public.bk_bookings; v_t public.bk_types; v_pk public.bk_packages; v_en timestamptz;
+  v_new timestamptz := (p->>'starts_at')::timestamptz;
+  v_admin boolean := COALESCE((p->>'viewer_admin')::boolean, false);
+  v_uid text := NULLIF(p->>'user_id','');
+  v_email text := lower(btrim(COALESCE(p->>'email','')));
+BEGIN
+  PERFORM pg_advisory_xact_lock(hashtext('bk_calendar'));
+  SELECT * INTO v_k FROM public.bk_bookings WHERE id = (p->>'booking_id')::uuid FOR UPDATE;
+  IF NOT FOUND OR v_k.status <> 'POTWIERDZONA' THEN RETURN jsonb_build_object('error','not_found'); END IF;
+  IF NOT v_admin THEN
+    IF (v_uid IS NULL OR v_k.user_id IS DISTINCT FROM v_uid)
+      AND (v_email = '' OR lower(btrim(COALESCE(v_k.email,''))) IS DISTINCT FROM v_email) THEN
+      RETURN jsonb_build_object('error','forbidden');
+    END IF;
+  END IF;
+  SELECT * INTO v_t FROM public.bk_types WHERE id = v_k.type_id;
+  IF NOT v_admin AND v_k.starts_at < now() + v_t.change_window_h * interval '1 hour' THEN
+    RETURN jsonb_build_object('error','too_late');
+  END IF;
+  IF v_k.package_id IS NOT NULL THEN
+    SELECT * INTO v_pk FROM public.bk_packages WHERE id = v_k.package_id;
+    IF NOT v_admin AND v_pk.reschedule_limit IS NOT NULL AND v_k.reschedule_count >= v_pk.reschedule_limit THEN
+      RETURN jsonb_build_object('error','limit', 'max', v_pk.reschedule_limit);
+    END IF;
+    IF v_pk.valid_until < now() THEN RETURN jsonb_build_object('error','expired'); END IF;
+  END IF;
+  IF NOT EXISTS (SELECT 1 FROM public.bk_free_slots(v_t.id, v_new, v_new + interval '1 minute', v_admin, v_k.id) f WHERE f.slot_start = v_new) THEN
+    RETURN jsonb_build_object('error','taken');
+  END IF;
+  v_en := v_new + v_t.duration_min * interval '1 minute';
+  BEGIN
+    UPDATE public.bk_bookings SET starts_at = v_new, ends_at = v_en,
+      busy = tstzrange(v_new - v_t.buffer_before * interval '1 minute', v_en + v_t.buffer_after * interval '1 minute', '[)'),
+      reschedule_count = reschedule_count + 1, version = version + 1, updated_at = now()
+    WHERE id = v_k.id;
+  EXCEPTION WHEN exclusion_violation THEN RETURN jsonb_build_object('error','taken');
+  END;
+  INSERT INTO public.bk_log (actor, action, object_type, object_id, summary)
+  VALUES (COALESCE(p->>'actor','klient'), 'przeniesienie', 'booking', v_k.id::text,
+    to_char(v_k.starts_at AT TIME ZONE 'Europe/Warsaw', 'YYYY-MM-DD HH24:MI') || ' -> ' || to_char(v_new AT TIME ZONE 'Europe/Warsaw', 'YYYY-MM-DD HH24:MI'));
+  RETURN jsonb_build_object('ok', true, 'starts_at', v_new, 'ends_at', v_en);
+END $r$;
+
+-- 16) Anulowanie: w terminie sesja wraca do pakietu; po granicy zostaje wykorzystana
+--     (polityka: „decyduje admin” albo „sesja przepada”). Admin zawsze oddaje sesję.
+CREATE OR REPLACE FUNCTION public.bk_cancel(p jsonb) RETURNS jsonb
+LANGUAGE plpgsql SECURITY DEFINER SET search_path = '' AS $cx$
+DECLARE
+  v_k public.bk_bookings; v_t public.bk_types; v_s public.bk_settings; v_in_time boolean;
+  v_admin boolean := COALESCE((p->>'viewer_admin')::boolean, false);
+  v_uid text := NULLIF(p->>'user_id','');
+  v_email text := lower(btrim(COALESCE(p->>'email','')));
+BEGIN
+  PERFORM pg_advisory_xact_lock(hashtext('bk_calendar'));
+  SELECT * INTO v_k FROM public.bk_bookings WHERE id = (p->>'booking_id')::uuid FOR UPDATE;
+  IF NOT FOUND OR v_k.status <> 'POTWIERDZONA' THEN RETURN jsonb_build_object('error','not_found'); END IF;
+  IF NOT v_admin THEN
+    IF (v_uid IS NULL OR v_k.user_id IS DISTINCT FROM v_uid)
+      AND (v_email = '' OR lower(btrim(COALESCE(v_k.email,''))) IS DISTINCT FROM v_email) THEN
+      RETURN jsonb_build_object('error','forbidden');
+    END IF;
+  END IF;
+  SELECT * INTO v_t FROM public.bk_types WHERE id = v_k.type_id;
+  SELECT * INTO v_s FROM public.bk_settings WHERE id = 1;
+  v_in_time := v_admin OR v_k.starts_at >= now() + v_t.change_window_h * interval '1 hour';
+  IF v_k.package_id IS NOT NULL AND v_in_time THEN
+    UPDATE public.bk_packages SET sessions_used = GREATEST(0, sessions_used - 1) WHERE id = v_k.package_id;
+  END IF;
+  UPDATE public.bk_bookings SET status = CASE WHEN v_admin THEN 'ANULOWANA_ADMIN' ELSE 'ANULOWANA_KLIENT' END,
+    version = version + 1, updated_at = now() WHERE id = v_k.id;
+  UPDATE public.bk_tokens SET used_at = now() WHERE booking_id = v_k.id AND used_at IS NULL;
+  INSERT INTO public.bk_log (actor, action, object_type, object_id, summary)
+  VALUES (COALESCE(p->>'actor','klient'), CASE WHEN v_admin THEN 'anulowanie_admin' ELSE 'anulowanie_klient' END, 'booking', v_k.id::text,
+    CASE WHEN v_in_time THEN 'w terminie' WHEN v_s.late_cancel_policy = 'przepada' THEN 'po terminie, sesja przepada'
+      ELSE 'po terminie, decyduje admin' END);
+  RETURN jsonb_build_object('ok', true, 'in_time', v_in_time, 'returned', v_k.package_id IS NOT NULL AND v_in_time);
+END $cx$;
+
+-- 17) „Moje sesje”: pakiety i rezerwacje właściciela. Link Zoom wyłącznie dla właściciela
+--     i tylko od 15 minut przed spotkaniem.
+CREATE OR REPLACE FUNCTION public.bk_my_sessions(p jsonb) RETURNS jsonb
+LANGUAGE sql STABLE SECURITY DEFINER SET search_path = '' AS $ms$
+WITH me AS (
+  SELECT NULLIF(p->>'user_id','') AS uid, lower(btrim(COALESCE(p->>'email',''))) AS mail
+)
+SELECT jsonb_build_object(
+  'consent', (SELECT jsonb_build_object('version', service_consent_version, 'text', service_consent_text) FROM public.bk_settings WHERE id = 1),
+  'packages', COALESCE((
+    SELECT jsonb_agg(jsonb_build_object(
+      'id', pk.id, 'type', t.name, 'slug', t.slug, 'type_id', t.id,
+      'sessions_total', pk.sessions_total, 'sessions_used', pk.sessions_used,
+      'sessions_left', GREATEST(0, pk.sessions_total - pk.sessions_used),
+      'valid_until', pk.valid_until, 'purchased_at', pk.created_at, 'min_gap_days', pk.min_gap_days,
+      'reschedule_limit', pk.reschedule_limit) ORDER BY pk.valid_until)
+    FROM public.bk_packages pk JOIN public.bk_types t ON t.id = pk.type_id, me
+    WHERE pk.payment_status = 'oplacony' AND pk.valid_until > now()
+      AND ((me.uid IS NOT NULL AND pk.user_id = me.uid) OR (me.mail <> '' AND lower(btrim(COALESCE(pk.email_display,''))) = me.mail))
+  ), '[]'::jsonb),
+  'bookings', COALESCE((
+    SELECT jsonb_agg(z.b) FROM (
+      SELECT jsonb_build_object(
+        'id', k.id, 'type', t.name, 'slug', t.slug, 'starts_at', k.starts_at, 'ends_at', k.ends_at,
+        'status', k.status, 'package_id', k.package_id, 'reschedule_count', k.reschedule_count,
+        'reschedule_limit', (SELECT pk2.reschedule_limit FROM public.bk_packages pk2 WHERE pk2.id = k.package_id),
+        'change_window_h', t.change_window_h,
+        'in_window', k.starts_at >= now() + t.change_window_h * interval '1 hour',
+        'can_change', k.status = 'POTWIERDZONA' AND k.starts_at >= now() + t.change_window_h * interval '1 hour'
+          AND (k.package_id IS NULL OR (SELECT COALESCE(pk2.reschedule_limit, 0) FROM public.bk_packages pk2 WHERE pk2.id = k.package_id) > k.reschedule_count),
+        'can_cancel', k.status = 'POTWIERDZONA' AND k.starts_at >= now() + t.change_window_h * interval '1 hour',
+        'zoom_link', CASE WHEN now() >= k.starts_at - interval '15 minutes' AND now() < k.ends_at THEN t.zoom_link END) AS b
+      FROM public.bk_bookings k JOIN public.bk_types t ON t.id = k.type_id, me
+      WHERE (me.uid IS NOT NULL AND k.user_id = me.uid) OR (me.mail <> '' AND lower(btrim(COALESCE(k.email,''))) = me.mail)
+      ORDER BY k.starts_at DESC LIMIT 100
+    ) z
+  ), '[]'::jsonb)
+);
+$ms$;
+
+-- 18) Panel: lista pakietów i ręczne oddanie sesji (polityka „decyduje admin”).
+CREATE OR REPLACE FUNCTION public.bk_admin_packages() RETURNS jsonb
+LANGUAGE sql STABLE SECURITY DEFINER SET search_path = '' AS $ap$
+SELECT COALESCE(jsonb_agg(jsonb_build_object('id', pk.id, 'type', t.name, 'email', pk.email_display,
+  'sessions_total', pk.sessions_total, 'sessions_used', pk.sessions_used, 'valid_until', pk.valid_until,
+  'payment_status', pk.payment_status, 'source', pk.source, 'order_id', pk.order_id, 'created_at', pk.created_at) ORDER BY pk.created_at DESC), '[]'::jsonb)
+FROM public.bk_packages pk JOIN public.bk_types t ON t.id = pk.type_id
+$ap$;
+
+CREATE OR REPLACE FUNCTION public.bk_return_session(p jsonb) RETURNS jsonb
+LANGUAGE plpgsql SECURITY DEFINER SET search_path = '' AS $rs$
+DECLARE v_pk uuid;
+BEGIN
+  UPDATE public.bk_packages SET sessions_used = GREATEST(0, sessions_used - 1)
+  WHERE id = (p->>'package_id')::uuid RETURNING id INTO v_pk;
+  IF v_pk IS NULL THEN RETURN jsonb_build_object('error','not_found'); END IF;
+  INSERT INTO public.bk_log (actor, action, object_type, object_id, summary)
+  VALUES (COALESCE(p->>'actor','admin'), 'sesja_oddana', 'package', v_pk::text, p->>'note');
+  RETURN jsonb_build_object('ok', true);
+END $rs$;
+
+-- 19) Widok rezerwacji po tokenie: dodane id, granica zmiany i link Zoom od 15 minut przed.
+CREATE OR REPLACE FUNCTION public.bk_manage_view(p_hash text) RETURNS jsonb
+LANGUAGE sql STABLE SECURITY DEFINER SET search_path = '' AS $m$
+  SELECT jsonb_build_object('id', k.id, 'type', t.name, 'slug', t.slug,
+    'starts_at', k.starts_at, 'ends_at', k.ends_at, 'status', k.status, 'first_name', k.first_name,
+    'change_window_h', t.change_window_h,
+    'in_window', k.starts_at >= now() + t.change_window_h * interval '1 hour',
+    'can_change', k.starts_at >= now() + t.change_window_h * interval '1 hour',
+    'can_cancel', k.starts_at >= now() + t.change_window_h * interval '1 hour',
+    'zoom_link', CASE WHEN now() >= k.starts_at - interval '15 minutes' AND now() < k.ends_at THEN t.zoom_link END)
+  FROM public.bk_tokens x JOIN public.bk_bookings k ON k.id = x.booking_id JOIN public.bk_types t ON t.id = k.type_id
+  WHERE x.token_hash = p_hash AND x.purpose = 'zarzadzaj' AND x.expires_at > now() AND k.status = 'POTWIERDZONA'
+$m$;
+
+-- 20) Uprawnienia: nowe funkcje wyłącznie dla service_role.
+REVOKE EXECUTE ON FUNCTION public.bk_grant_package(jsonb) FROM PUBLIC, anon, authenticated;
+REVOKE EXECUTE ON FUNCTION public.bk_token_package(text) FROM PUBLIC, anon, authenticated;
+REVOKE EXECUTE ON FUNCTION public.bk_book_package(jsonb) FROM PUBLIC, anon, authenticated;
+REVOKE EXECUTE ON FUNCTION public.bk_reschedule(jsonb) FROM PUBLIC, anon, authenticated;
+REVOKE EXECUTE ON FUNCTION public.bk_cancel(jsonb) FROM PUBLIC, anon, authenticated;
+REVOKE EXECUTE ON FUNCTION public.bk_my_sessions(jsonb) FROM PUBLIC, anon, authenticated;
+REVOKE EXECUTE ON FUNCTION public.bk_admin_packages() FROM PUBLIC, anon, authenticated;
+REVOKE EXECUTE ON FUNCTION public.bk_return_session(jsonb) FROM PUBLIC, anon, authenticated;
+GRANT EXECUTE ON FUNCTION public.bk_grant_package(jsonb) TO service_role;
+GRANT EXECUTE ON FUNCTION public.bk_token_package(text) TO service_role;
+GRANT EXECUTE ON FUNCTION public.bk_book_package(jsonb) TO service_role;
+GRANT EXECUTE ON FUNCTION public.bk_reschedule(jsonb) TO service_role;
+GRANT EXECUTE ON FUNCTION public.bk_cancel(jsonb) TO service_role;
+GRANT EXECUTE ON FUNCTION public.bk_my_sessions(jsonb) TO service_role;
+GRANT EXECUTE ON FUNCTION public.bk_admin_packages() TO service_role;
+GRANT EXECUTE ON FUNCTION public.bk_return_session(jsonb) TO service_role;
+
 SELECT public.bk_fill_holidays(2);
 NOTIFY pgrst, 'reload schema';
 `;

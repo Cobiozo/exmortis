@@ -21,6 +21,29 @@ async function getType(base44, slug, admin) {
   return t;
 }
 
+// Pakiet wskazany identyfikatorem albo jednorazowym tokenem. Samo id pakietu nigdy nie daje
+// dostępu — właściciela sprawdzamy tutaj, a potem ponownie w funkcji bazy.
+async function resolvePackage(base44, body, me, admin) {
+  const tok = typeof body.token === "string" && /^[A-Za-z0-9_-]{20,100}$/.test(body.token) ? body.token : null;
+  if (tok) {
+    const r = await rpc(base44, "bk_token_package", { p_hash: await sha256hex(tok) });
+    return r ? { package_id: r.package_id, type_id: r.type_id, email: r.email, from_token: true } : null;
+  }
+  if (body.package_id) {
+    const rows = await runSql(base44,
+      `SELECT id, type_id, user_id, email_display FROM public.bk_packages WHERE id = ${escStr(textField(body, "package_id", { max: 40 }))}::uuid`, true);
+    const p = rows?.[0];
+    if (!p) return null;
+    if (!admin) {
+      const mine = (me?.id && p.user_id === me.id)
+        || (me?.email && (p.email_display || "").toLowerCase() === String(me.email).toLowerCase());
+      if (!mine) return null;
+    }
+    return { package_id: p.id, type_id: p.type_id, email: p.email_display, from_token: false };
+  }
+  return null;
+}
+
 export default async function (req) {
   try {
     const base44 = createClientFromRequest(req);
@@ -58,7 +81,22 @@ export default async function (req) {
     }
 
     if (a === "slots") {
-      const t = await getType(base44, textField(body, "slug", { max: 60 }), admin);
+      let t = null;
+      if (body.slug) t = await getType(base44, textField(body, "slug", { max: 60 }), admin);
+      else if (body.manage_token) {
+        const tok = typeof body.manage_token === "string" && /^[A-Za-z0-9_-]{20,100}$/.test(body.manage_token) ? body.manage_token : null;
+        const v = tok ? await rpc(base44, "bk_manage_view", { p_hash: await sha256hex(tok) }) : null;
+        if (v?.id) t = (await runSql(base44, `SELECT id, slug, name, duration_min FROM public.bk_types WHERE id = (SELECT type_id FROM public.bk_bookings WHERE id = ${escStr(v.id)}::uuid)`, true))?.[0] || null;
+      } else if (body.booking_id) {
+        const own = admin ? "TRUE" : `(user_id = ${me?.id ? escStr(me.id) : "NULL"} OR lower(btrim(COALESCE(email,''))) = ${escStr(String(me?.email || "").toLowerCase())})`;
+        const rows = await runSql(base44, `SELECT type_id FROM public.bk_bookings WHERE id = ${escStr(textField(body, "booking_id", { max: 40 }))}::uuid AND ${own}`, true);
+        if (rows?.[0]) t = (await runSql(base44, `SELECT id, slug, name, duration_min FROM public.bk_types WHERE id = ${escStr(rows[0].type_id)} AND (active OR ${admin ? "TRUE" : "FALSE"})`, true))?.[0] || null;
+      } else {
+        const pk = await resolvePackage(base44, body, me, admin);
+        if (pk) {
+          t = (await runSql(base44, `SELECT id, slug, name, duration_min FROM public.bk_types WHERE id = ${escStr(pk.type_id)} AND (active OR ${admin ? "TRUE" : "FALSE"})`, true))?.[0] || null;
+        }
+      }
       if (!t) return bad("Nie znaleziono", 404);
       const from = new Date(body.from || Date.now());
       const to = new Date(Math.min(new Date(body.to || Date.now() + 31 * 864e5).getTime(), from.getTime() + 62 * 864e5));
@@ -115,6 +153,107 @@ export default async function (req) {
       const r = await rpc(base44, "bk_manage_view", { p_hash: await sha256hex(tok) });
       if (!r) return bad("Link jest nieważny.", 404);
       return Response.json({ booking: r });
+    }
+
+    // ---- KROK 2: pakiety, „Rozmowa na progu”, przenoszenie i anulowanie ----
+
+    // Pakiet po jednorazowym tokenie z zamówienia (w bazie tylko skrót).
+    if (a === "order") {
+      const tok = typeof body.token === "string" ? body.token : "";
+      if (!/^[A-Za-z0-9_-]{20,100}$/.test(tok)) return bad("Link jest nieważny.", 404);
+      const r = await rpc(base44, "bk_token_package", { p_hash: await sha256hex(tok) });
+      if (!r) return bad("Link jest nieważny albo został już użyty.", 404);
+      return Response.json({ package: r });
+    }
+
+    // „Moje sesje” — wyłącznie dla zalogowanego właściciela (user_id albo e-mail konta).
+    if (a === "my_sessions") {
+      if (!me) return bad("Zaloguj się, aby zobaczyć swoje sesje.", 401);
+      const r = await rpc(base44, "bk_my_sessions", { p: { user_id: me.id, email: String(me.email || "").toLowerCase() } });
+      return Response.json(r || { packages: [], bookings: [] });
+    }
+
+    if (a === "book_package") {
+      const keys = await loadKeys(admin && body.simulate_missing_keys === true);
+      if (!keys.ok) return bad(KEYS_MSG, 503);
+      if (body.website) return Response.json({ ok: true });
+      const tok = typeof body.token === "string" && body.token ? body.token : null;
+      if (tok && !/^[A-Za-z0-9_-]{20,100}$/.test(tok)) return bad("Link jest nieważny.", 404);
+      if (!me && !tok) return bad("Zaloguj się, aby zarezerwować termin.", 401);
+      const st = new Date(body.starts_at);
+      if (isNaN(st.getTime())) return bad("Wybierz termin.");
+      let firstName;
+      try { firstName = textField(body, "first_name", { max: 120 }); } catch { return bad("Uzupełnij imię."); }
+      const ip = clientIp(req);
+      const emailForRate = String(me?.email || body.email || "").toLowerCase();
+      if (emailForRate) {
+        const rate = await rpc(base44, "bk_rate_hit", { p_ip: await keys.hmac(ip), p_email: await keys.hmac(emailForRate) });
+        if (rate !== "ok") return bad("Za dużo prób w krótkim czasie. Spróbuj ponownie za kilka minut.", 429);
+      }
+      const emailH = await keys.hmac(emailForRate || "brak"), ipH = await keys.hmac(ip);
+      const consents = [];
+      if (body.service_consent === true) {
+        consents.push({ kind: "odstapienie", text_version: String(body.consent_version || "").slice(0, 40), text: String(body.consent_text || "").slice(0, 2000), email_hmac: emailH, ip_hmac: ipH });
+      }
+      const res = await rpc(base44, "bk_book_package", { p: {
+        package_id: tok ? null : textField(body, "package_id", { max: 40 }),
+        token_hash: tok ? await sha256hex(tok) : null,
+        starts_at: st.toISOString(),
+        user_id: me?.id || null, email: String(me?.email || "").toLowerCase() || null, first_name: firstName,
+        tz: typeof body.tz === "string" && TZ_RE.test(body.tz) ? body.tz : null,
+        viewer_admin: admin, source: "klient", actor: "klient", consents,
+      } });
+      if (res?.error) {
+        const map = {
+          forbidden: [403, "Ten pakiet należy do innego konta."],
+          not_found: [404, "Nie znaleziono pakietu."],
+          unpaid: [409, "Płatność za pakiet nie została potwierdzona."],
+          expired: [409, "Ważność pakietu się skończyła."],
+          used_up: [409, "Wszystkie sesje z pakietu są już wykorzystane."],
+          consent: [400, "Zaznacz zgodę o wykonaniu usługi przed upływem 14 dni."],
+          gap: [409, `Odstęp między sesjami to co najmniej ${res.min_days} dni.`],
+          taken: [409, "Ten termin właśnie się zajął. Wybierz inny."],
+        };
+        const [c, m] = map[res.error] || [400, "Nie udało się zarezerwować."];
+        return bad(m, c);
+      }
+      return Response.json({ ok: true, starts_at: res.starts_at, ends_at: res.ends_at });
+    }
+
+    // Przeniesienie i anulowanie: token z linku (krok 1) albo zalogowany właściciel.
+    if (a === "reschedule" || a === "cancel") {
+      const tok = typeof body.token === "string" && body.token ? body.token : null;
+      if (tok && !/^[A-Za-z0-9_-]{20,100}$/.test(tok)) return bad("Link jest nieważny.", 404);
+      if (!me && !tok) return bad("Zaloguj się, aby zmienić rezerwację.", 401);
+      let bookingId = body.booking_id ? textField(body, "booking_id", { max: 40 }) : null;
+      if (!bookingId && tok) {
+        const v = await rpc(base44, "bk_manage_view", { p_hash: await sha256hex(tok) });
+        bookingId = v?.id || null;
+      }
+      if (!bookingId) return bad("Nie znaleziono rezerwacji.", 404);
+      const p = {
+        booking_id: bookingId, user_id: me?.id || null, email: String(me?.email || "").toLowerCase() || null,
+        viewer_admin: admin, actor: admin ? me.email : "klient",
+      };
+      if (a === "reschedule") {
+        const st = new Date(body.starts_at);
+        if (isNaN(st.getTime())) return bad("Wybierz nowy termin.");
+        p.starts_at = st.toISOString();
+      }
+      const res = await rpc(base44, a === "reschedule" ? "bk_reschedule" : "bk_cancel", { p });
+      if (res?.error) {
+        const map = {
+          forbidden: [403, "Ta rezerwacja należy do innego konta."],
+          not_found: [404, "Nie znaleziono rezerwacji."],
+          too_late: [409, `Do spotkania zostało mniej niż ${(body.change_window_h || 24)} godzin — napisz do mnie.`],
+          limit: [409, `Limit przełożeń (${res.max}) został wykorzystany.`],
+          expired: [409, "Ważność pakietu się skończyła."],
+          taken: [409, "Ten termin właśnie się zajął. Wybierz inny."],
+        };
+        const [c, m] = map[res.error] || [400, "Nie udało się zmienić rezerwacji."];
+        return bad(m, c);
+      }
+      return Response.json(res);
     }
 
     return bad("Nieznana akcja");
