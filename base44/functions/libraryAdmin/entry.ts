@@ -748,7 +748,7 @@ export default async function (req) {
     const msg = String((e && e.message) || e);
     console.error("libraryAdmin:", msg.slice(0, 300));
     const known = /^(Niepoprawn|Wybierz|Wpisz|Podaj|Dozwolone|Sygnatura|Plik|Adres|Klucz|Ten rodzaj|Kolor|Ta grupa|Grupy|Dołącz|Potwierdź|Wskaż|Nieznany)/.test(msg);
-    return Response.json({ error: known ? msg : "Nie udało się zapisać." }, { status: 400 });
+    return Response.json({ error: known ? msg : "Nie udało się zapisać.", debug: body.dbg === true ? msg : undefined }, { status: 400 });
   }
 }
 
