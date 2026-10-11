@@ -1,5 +1,5 @@
 import { createClientFromRequest } from "npm:@base44/sdk@0.8.52";
-import { runSql, escStr } from "../../shared/supabase.ts";
+import { runSql, escStr, clientIp } from "../../shared/supabase.ts";
 import { sendConfirmMail } from "../../shared/newsletter.ts";
 import { LISTY_TEXT } from "../../shared/registrations.ts";
 import { collectPerson, deletePerson, maskEmail } from "../../shared/gdpr.ts";
@@ -13,7 +13,7 @@ export default async function (req) {
     const email = String(me.email).toLowerCase();
     const body = await req.json().catch(() => ({}));
     const sr = base44.asServiceRole.entities;
-    const ip = (req.headers.get("x-forwarded-for") || "").split(",")[0].trim().slice(0, 64) || "brak";
+    const ip = clientIp(req);
     const sub = async () => (await runSql(base44, `SELECT status, updated_date FROM public.subscribers WHERE lower(email) = ${escStr(email)}`, true))[0];
     const state = (s) => (s?.status === "active" ? "on" : s?.status === "pending" ? "pending" : "off");
     const log = (akcja, zakres, liczba?) => sr.DataAccessLog.create({ kto: email, akcja, zakres, osoba: maskEmail(email), liczba, at: new Date().toISOString() });
