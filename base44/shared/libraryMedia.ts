@@ -2,6 +2,7 @@
 
 const YT_ID = /^[A-Za-z0-9_-]{11}$/;
 const VIMEO_ID = /^\d{6,12}$/;
+const VIMEO_HASH = /^[0-9a-f]{6,20}$/;
 const BUNNY_ID = /^\d{3,12}\/[A-Za-z0-9_-]{1,40}$/;
 
 // Limity platformy dla prywatnych plików (potwierdzone w dokumentacji).
@@ -33,9 +34,13 @@ export function normalizeVideo(raw) {
     return { provider: "youtube", id, embed: `https://www.youtube-nocookie.com/embed/${id}?playsinline=1&rel=0` };
   }
   if (["vimeo.com", "www.vimeo.com", "player.vimeo.com"].includes(host)) {
-    const m = /^\/(?:video\/)?(\d{6,12})$/.exec(path);
+    // Filmy niepubliczne (unlisted) mają hash prywatności: vimeo.com/{id}/{hash} albo ?h={hash}.
+    const m = /^\/(?:video\/)?(\d{6,12})(?:\/([0-9a-f]{6,20}))?$/.exec(path);
     if (!m || !VIMEO_ID.test(m[1])) return null;
-    return { provider: "vimeo", id: m[1], embed: `https://player.vimeo.com/video/${m[1]}` };
+    const h = m[2] || u.searchParams.get("h") || "";
+    if (h && !VIMEO_HASH.test(h)) return null;
+    const id = h ? `${m[1]}:${h}` : m[1];
+    return { provider: "vimeo", id, embed: embedUrl("vimeo", id) };
   }
   if (["iframe.mediadelivery.net", "player.mediadelivery.net"].includes(host)) {
     const m = /^\/embed\/(\d{3,12}\/[A-Za-z0-9_-]{1,40})$/.exec(path);
@@ -48,7 +53,11 @@ export function normalizeVideo(raw) {
 // Adres odtwarzacza z zapisanych danych (bez ponownej walidacji treści).
 export function embedUrl(provider, id) {
   if (provider === "youtube") return `https://www.youtube-nocookie.com/embed/${id}?playsinline=1&rel=0`;
-  if (provider === "vimeo") return `https://player.vimeo.com/video/${id}`;
+  if (provider === "vimeo") {
+    const [vid, h] = String(id || "").split(":");
+    if (!VIMEO_ID.test(vid) || (h && !VIMEO_HASH.test(h))) return null;
+    return `https://player.vimeo.com/video/${vid}${h ? `?h=${h}` : ""}`;
+  }
   if (provider === "bunny") return `https://iframe.mediadelivery.net/embed/${id}`;
   return null;
 }

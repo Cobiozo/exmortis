@@ -44,22 +44,35 @@ export function sanitizeHtml(input) {
     s = s.replace(new RegExp(`<${t}\\b[\\s\\S]*?<\\/${t}\\s*>`, "gi"), "");
     s = s.replace(new RegExp(`<\\/?${t}\\b[^>]*>`, "gi"), "");
   }
-  // 3. Reszta: przechodzą tylko dozwolone znaczniki, zbudowane od zera (żaden atrybut zdarzenia nie ma szans).
-  s = s.replace(/<\/?([a-zA-Z][a-zA-Z0-9]*)((?:"[^"]*"|'[^']*'|[^>"'])*)>/g, (m, name, attrs) => {
+  // 3. Tokenizacja: przechodzą tylko dozwolone znaczniki, zbudowane od zera (żaden atrybut zdarzenia nie ma szans).
+  //    Cały tekst pomiędzy znacznikami ma escapowane < i > — niedomknięty znacznik (np. „<img src=x onerror=…”
+  //    bez „>”) nie przetrwa jako surowy HTML.
+  const TAG = /<\/?([a-zA-Z][a-zA-Z0-9]*)((?:"[^"]*"|'[^']*'|[^>"'])*)>/g;
+  const escText = (t) => t.replace(/</g, "&lt;").replace(/>/g, "&gt;");
+  const rebuild = (m, name, attrs) => {
     const tag = String(name).toLowerCase();
     if (!ALLOWED.has(tag)) return "";
+    const closing = m.slice(0, 2) === "</";
     if (tag === "a") {
+      if (closing) return "</a>";
       const h = /\bhref\s*=\s*("([^"]*)"|'([^']*)'|([^\s>]+))/i.exec(attrs || "");
       const raw = h ? (h[2] !== undefined ? h[2] : h[3] !== undefined ? h[3] : h[4] || "") : "";
       const href = safeHref(raw);
       if (!href) return "<a>";
-      return `<a href="${href.replace(/"/g, "&quot;")}" target="_blank" rel="noopener noreferrer">`;
+      return `<a href="${href.replace(/&/g, "&amp;").replace(/"/g, "&quot;").replace(/</g, "&lt;").replace(/>/g, "&gt;")}" target="_blank" rel="noopener noreferrer">`;
     }
-    if (VOID.has(tag)) return `<${tag}>`;
-    return m.slice(0, 2) === "</" ? `</${tag}>` : `<${tag}>`;
-  });
-  // 4. Osierocone nawiasy ostre w tekście.
-  s = s.replace(/<(?![a-zA-Z/])/g, "&lt;");
+    if (VOID.has(tag)) return closing ? "" : `<${tag}>`;
+    return closing ? `</${tag}>` : `<${tag}>`;
+  };
+  let out = "";
+  let last = 0;
+  let mt;
+  while ((mt = TAG.exec(s)) !== null) {
+    out += escText(s.slice(last, mt.index)) + rebuild(mt[0], mt[1], mt[2]);
+    last = TAG.lastIndex;
+  }
+  out += escText(s.slice(last));
+  s = out;
   return s.trim();
 }
 
