@@ -1,4 +1,5 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.52';
+import { clientIp } from '../../shared/supabase.ts';
 
 // Proxy obrazów z prywatnej biblioteki: sprawdza pochodzenie, limit żądań, zwraca wersję WebP z cache przeglądarki.
 const ALLOWED = [/^exmortis\.pl$/, /^www\.exmortis\.pl$/, /\.base44\.app$/, /\.base44\.com$/, /^localhost$/];
@@ -35,7 +36,7 @@ export default async function (req) {
     const id = url.searchParams.get('id') || '';
     if (!/^[a-f0-9]{32}$/.test(id)) return deny(404);
     if (!fromSite(req)) return deny(403);
-    const ip = (req.headers.get('x-forwarded-for') || '').split(',')[0].trim() || 'anon';
+    const ip = clientIp(req);
     if (limited(ip)) return deny(429);
 
     let a = assets.get(id);
