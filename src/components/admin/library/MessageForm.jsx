@@ -5,15 +5,26 @@ import LibModal from "./LibModal";
 import TargetPicker, { EMPTY_TARGET } from "./TargetPicker";
 import RichLite from "./RichLite";
 import MessagePreview from "./MessagePreview";
+import AttachmentPicker from "./AttachmentPicker";
 
-const EMPTY = { title: "", body_html: "", email_mode: "BRAK", attached_material_id: "", attached_collection_id: "" };
+const EMPTY = { title: "", body_html: "", email_mode: "BRAK", attachments: [] };
+
+// Załączniki zapisanej wiadomości: nowa lista albo (starsze wiadomości) pojedynczy materiał / kolekcja.
+const attOf = (item) => {
+  if (Array.isArray(item?.attachments) && item.attachments.length) {
+    return item.attachments.map((a) => (a.material_id ? { material_id: a.material_id, material_title: a.material_title } : { collection_id: a.collection_id, collection_title: a.collection_title }));
+  }
+  if (item?.attached_material_id) return [{ material_id: item.attached_material_id }];
+  if (item?.attached_collection_id) return [{ collection_id: item.attached_collection_id }];
+  return [];
+};
 
 // Tworzenie i edycja wiadomości. `editSent` = poprawka literówki po wysłaniu (bez ponownego e-maila).
 // Ten sam formularz obsługuje zapis jako szablon i użycie szablonu.
 export default function MessageForm({ open, onClose, item, editSent, presetTarget, template, onDone }) {
   const [t, setT] = useState(() => presetTarget || { ...EMPTY_TARGET });
   const [m, setM] = useState(() => (item
-    ? { title: item.title || "", body_html: item.body_html || "", email_mode: item.email_mode || "BRAK", attached_material_id: item.attached_material_id || "", attached_collection_id: item.attached_collection_id || "" }
+    ? { title: item.title || "", body_html: item.body_html || "", email_mode: item.email_mode || "BRAK", attachments: attOf(item) }
     : template
       ? { ...EMPTY, title: template.title || "", body_html: template.body_html || "" }
       : { ...EMPTY }));
@@ -57,8 +68,7 @@ export default function MessageForm({ open, onClose, item, editSent, presetTarge
 
   const payload = () => ({
     title: m.title || null, body_html: m.body_html, email_mode: m.email_mode,
-    attached_material_id: m.attached_material_id || null,
-    attached_collection_id: m.attached_collection_id || null,
+    attachments: (m.attachments || []).map((a) => (a.material_id ? { material_id: a.material_id } : { collection_id: a.collection_id })),
     target: target(),
   });
 
@@ -150,23 +160,7 @@ export default function MessageForm({ open, onClose, item, editSent, presetTarge
           <>
             <MessagePreview data={prev} email={pick} onPick={setPick} busy={prevBusy} />
 
-            <div className="grid sm:grid-cols-2 gap-4">
-              <div>
-                <label className="technical text-[10px] text-foreground/50 block mb-2">DOŁĄCZ MATERIAŁ</label>
-                <select value={m.attached_material_id} onChange={(e) => setM({ ...m, attached_material_id: e.target.value, attached_collection_id: "" })} className={inputCls}>
-                  <option value="">— brak —</option>
-                  {mats.map((x) => <option key={x.id} value={x.id}>{x.title}</option>)}
-                </select>
-              </div>
-              <div>
-                <label className="technical text-[10px] text-foreground/50 block mb-2">DOŁĄCZ KOLEKCJĘ</label>
-                <select value={m.attached_collection_id} onChange={(e) => setM({ ...m, attached_collection_id: e.target.value, attached_material_id: "" })} className={inputCls}>
-                  <option value="">— brak —</option>
-                  {cols.map((c) => <option key={c.id} value={c.id}>{c.title}</option>)}
-                </select>
-              </div>
-            </div>
-            <p className="text-xs text-foreground/45">Dołączony materiał lub kolekcja to jednocześnie przydział dla tych samych odbiorców.</p>
+            <AttachmentPicker value={m.attachments} onChange={(v) => setM({ ...m, attachments: v })} mats={mats} cols={cols} />
 
             <div>
               <label className="technical text-[10px] text-foreground/50 block mb-2">KOPIA E-MAIL</label>
