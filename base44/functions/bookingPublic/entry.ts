@@ -2,6 +2,8 @@ import { createClientFromRequest } from "npm:@base44/sdk@0.8.52";
 import { runSql, rpc, escStr, textField, emailField, clientIp } from "../../shared/supabase.ts";
 import { loadKeys, sha256hex, safeEqual, randomToken, getMode, safeErr, CONSENTS, TZ_RE, KEYS_MSG } from "../../shared/booking.ts";
 import { encryptHealth } from "../../shared/bookingCrypto.ts";
+import { icalFeed } from "../../shared/bookingIcal.ts";
+import { onBookingCreated, onBookingMoved, onBookingCancelled, runReminders } from "../../shared/bookingNotify.ts";
 
 // Publiczne rezerwacje 1:1. Zwraca wyłącznie godziny i dane potrzebne formularzowi — nigdy linku Zoom ani cudzych danych.
 const ERR = {
@@ -47,13 +49,17 @@ async function resolvePackage(base44, body, me, admin) {
 export default async function (req) {
   try {
     const base44 = createClientFromRequest(req);
+    // Prywatny kanał iCal (MUSI 6): zwykłe pobranie GET pod tajnym adresem.
+    // W treści wyłącznie rodzaj spotkania i imię — nigdy adresu ani odpowiedzi z formularza.
+    const icalToken = new URL(req.url).searchParams.get("ical");
+    if (icalToken) return await icalFeed(base44, icalToken);
     const body = await req.json().catch(() => ({}));
     const a = body.action;
 
     // Zadanie cykliczne: święta 2 lata do przodu, czyszczenie rejestru po 12 mies., usuwanie odpowiedzi po 60 dniach.
     // Dostęp: administrator albo zadanie RezerwacjeTick (token z bk_settings, porównanie w czasie stałym).
     // Anonimowe wywołanie kończy się 403 (wcześniej każdy mógł wywołać higienę danych).
-    if (a === "tick") {
+    if (a === "tick" || a === "notify_tick") {
       const who = await base44.auth.me().catch(() => null);
       let allowed = who?.role === "admin";
       if (!allowed) {
@@ -62,6 +68,8 @@ export default async function (req) {
         allowed = !!row?.tick_token && !!given && (await safeEqual(given, row.tick_token));
       }
       if (!allowed) return bad("Forbidden", 403);
+      // Przypomnienia 24 h i 1 h (MUSI 15) — wywołanie z zadania cyklicznego, ten sam token.
+      if (a === "notify_tick") return Response.json({ ok: true, ...(await runReminders(base44)) });
       const r = await runSql(base44, `SELECT public.bk_fill_holidays(2) AS holidays, public.bk_log_purge() AS log_purged, public.bk_answers_retention() AS answers_removed, backup.purge_expired() AS backups_removed`);
       return Response.json({ ok: true, ...(r?.[0] || {}) });
     }
@@ -143,6 +151,8 @@ export default async function (req) {
         consents, token_hash: await sha256hex(token),
       } });
       if (res?.error) { const [c, m] = ERR[res.error] || [400, "Nie udało się zarezerwować."]; return bad(m, c); }
+      // Potwierdzenie z plikiem .ics, przypomnienia i powiadomienie do mnie (MUSI 15).
+      if (!res.already && res.id) await onBookingCreated(base44, res.id, token, "klient").catch(() => {});
       return Response.json({ ok: true, starts_at: res.starts_at, ends_at: res.ends_at,
         manage_url: res.already ? null : `/rezerwacja/zarzadzaj#t=${token}` });
     }
@@ -217,6 +227,7 @@ export default async function (req) {
         const [c, m] = map[res.error] || [400, "Nie udało się zarezerwować."];
         return bad(m, c);
       }
+      if (res.id) await onBookingCreated(base44, res.id, null, "klient").catch(() => {});
       return Response.json({ ok: true, starts_at: res.starts_at, ends_at: res.ends_at });
     }
 
@@ -253,6 +264,10 @@ export default async function (req) {
         const [c, m] = map[res.error] || [400, "Nie udało się zmienić rezerwacji."];
         return bad(m, c);
       }
+      // iCal: ten sam UID, SEQUENCE + 1. Przypomnienia liczone od nowego terminu, stare anulowane.
+      await runSql(base44, `UPDATE public.bk_bookings SET ics_sequence = ics_sequence + 1 WHERE id = ${escStr(bookingId)}::uuid`).catch(() => {});
+      if (a === "reschedule") await onBookingMoved(base44, bookingId).catch(() => {});
+      else await onBookingCancelled(base44, bookingId).catch(() => {});
       return Response.json(res);
     }
 

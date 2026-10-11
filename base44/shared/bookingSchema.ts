@@ -796,6 +796,119 @@ GRANT EXECUTE ON FUNCTION public.bk_my_sessions(jsonb) TO service_role;
 GRANT EXECUTE ON FUNCTION public.bk_admin_packages() TO service_role;
 GRANT EXECUTE ON FUNCTION public.bk_return_session(jsonb) TO service_role;
 
+-- ============ KROK 3: powiadomienia, kalendarz, statusy, kanał iCal ============
+
+-- 21) Kanał iCal i treści e-maili (edytowalne w panelu).
+ALTER TABLE public.bk_settings ADD COLUMN IF NOT EXISTS ical_token text;
+ALTER TABLE public.bk_settings ADD COLUMN IF NOT EXISTS ical_rotated_at timestamptz;
+ALTER TABLE public.bk_settings ADD COLUMN IF NOT EXISTS mail_texts jsonb NOT NULL DEFAULT '{}'::jsonb;
+
+-- 22) Status po spotkaniu, numer wydarzenia iCal, notatka administratora.
+ALTER TABLE public.bk_bookings ADD COLUMN IF NOT EXISTS ics_sequence int NOT NULL DEFAULT 0;
+ALTER TABLE public.bk_bookings ADD COLUMN IF NOT EXISTS marked_at timestamptz;
+ALTER TABLE public.bk_bookings ADD COLUMN IF NOT EXISTS marked_by text;
+ALTER TABLE public.bk_bookings ADD COLUMN IF NOT EXISTS admin_note text;
+DO $n$ BEGIN
+  IF NOT EXISTS (SELECT 1 FROM pg_constraint WHERE conname = 'bk_bookings_admin_note_check') THEN
+    ALTER TABLE public.bk_bookings ADD CONSTRAINT bk_bookings_admin_note_check CHECK (admin_note IS NULL OR length(admin_note) <= 500);
+  END IF;
+END $n$;
+
+-- 23) Kolejka powiadomień: ślad wysyłki i indeks na termin.
+ALTER TABLE public.bk_notifications ADD COLUMN IF NOT EXISTS sent_at timestamptz;
+ALTER TABLE public.bk_notifications ADD COLUMN IF NOT EXISTS error text;
+CREATE INDEX IF NOT EXISTS bk_notifications_due ON public.bk_notifications (send_at) WHERE status = 'zaplanowane';
+
+-- 24) Status po spotkaniu: odbyła się / nieobecność / przełożona przez admina.
+--     Do oznaczenia liczy się jako wykorzystana; rezerwacja przestaje blokować kalendarz.
+CREATE OR REPLACE FUNCTION public.bk_mark_status(p jsonb) RETURNS jsonb
+LANGUAGE plpgsql SECURITY DEFINER SET search_path = '' AS $ms$
+DECLARE v_k public.bk_bookings; v_st text := COALESCE(p->>'status','');
+BEGIN
+  IF v_st NOT IN ('ODBYLA_SIE','NIEOBECNOSC','PRZENIESIONA') THEN RETURN jsonb_build_object('error','bad'); END IF;
+  SELECT * INTO v_k FROM public.bk_bookings WHERE id = (p->>'booking_id')::uuid FOR UPDATE;
+  IF NOT FOUND THEN RETURN jsonb_build_object('error','not_found'); END IF;
+  IF v_k.status <> 'POTWIERDZONA' THEN RETURN jsonb_build_object('error','closed'); END IF;
+  IF v_k.ends_at > now() AND v_st <> 'PRZENIESIONA' THEN RETURN jsonb_build_object('error','future'); END IF;
+  UPDATE public.bk_bookings SET status = v_st, marked_at = now(), marked_by = p->>'actor', version = version + 1, updated_at = now()
+  WHERE id = v_k.id;
+  UPDATE public.bk_notifications SET status = 'pominiete' WHERE booking_id = v_k.id AND status = 'zaplanowane';
+  UPDATE public.bk_tokens SET used_at = now() WHERE booking_id = v_k.id AND used_at IS NULL;
+  INSERT INTO public.bk_log (actor, action, object_type, object_id, summary)
+  VALUES (COALESCE(p->>'actor','admin'), 'status_po_spotkaniu', 'booking', v_k.id::text, v_st);
+  RETURN jsonb_build_object('ok', true, 'status', v_st);
+END $ms$;
+
+-- 25) Kalendarz panelu: rezerwacje, spotkania grupowe (tylko odczyt), blokady.
+CREATE OR REPLACE FUNCTION public.bk_admin_calendar(p_from timestamptz, p_to timestamptz) RETURNS jsonb
+LANGUAGE sql STABLE SECURITY DEFINER SET search_path = '' AS $c$
+SELECT jsonb_build_object(
+  'bookings', COALESCE((SELECT jsonb_agg(jsonb_build_object('id', k.id, 'type_id', k.type_id, 'type', t.name, 'slug', t.slug,
+      'starts_at', k.starts_at, 'ends_at', k.ends_at, 'first_name', k.first_name, 'email', k.email, 'status', k.status,
+      'source', k.source, 'package_id', k.package_id, 'marked', k.marked_at IS NOT NULL, 'client_tz', k.client_tz)
+      ORDER BY k.starts_at)
+    FROM public.bk_bookings k JOIN public.bk_types t ON t.id = k.type_id
+    WHERE k.starts_at < p_to AND k.ends_at > p_from), '[]'::jsonb),
+  'events', COALESCE((SELECT jsonb_agg(jsonb_build_object('id', e.id, 'title', e.title, 'starts_at', e.start_datetime,
+      'ends_at', e.start_datetime + COALESCE(e.duration_minutes, 60) * interval '1 minute') ORDER BY e.start_datetime)
+    FROM public.events e WHERE e.status = 'Opublikowane' AND e.start_datetime IS NOT NULL
+      AND e.start_datetime < p_to AND e.start_datetime + COALESCE(e.duration_minutes, 60) * interval '1 minute' > p_from), '[]'::jsonb),
+  'blocks', COALESCE((SELECT jsonb_agg(jsonb_build_object('id', x.id, 'kind', x.kind, 'starts_at', x.starts_at,
+      'ends_at', x.ends_at, 'note', x.note) ORDER BY x.starts_at)
+    FROM public.bk_blocks x WHERE NOT x.disabled AND x.starts_at < p_to AND x.ends_at > p_from), '[]'::jsonb),
+  'unmarked', (SELECT count(*) FROM public.bk_bookings k WHERE k.status = 'POTWIERDZONA' AND k.ends_at < now())
+);
+$c$;
+
+-- 26) Eksport CSV: bez odpowiedzi z formularza i bez danych o zdrowiu.
+CREATE OR REPLACE FUNCTION public.bk_export_rows(p_from timestamptz, p_to timestamptz) RETURNS jsonb
+LANGUAGE sql STABLE SECURITY DEFINER SET search_path = '' AS $e$
+SELECT COALESCE(jsonb_agg(z ORDER BY z->>'starts_at'), '[]'::jsonb) FROM (
+  SELECT jsonb_build_object(
+    'starts_at', to_char(k.starts_at AT TIME ZONE 'Europe/Warsaw', 'YYYY-MM-DD HH24:MI'),
+    'koniec', to_char(k.ends_at AT TIME ZONE 'Europe/Warsaw', 'HH24:MI'),
+    'rodzaj', t.name, 'imie', k.first_name, 'email', k.email, 'status', k.status,
+    'zrodlo', k.source, 'strefa', k.client_tz) AS z
+  FROM public.bk_bookings k JOIN public.bk_types t ON t.id = k.type_id
+  WHERE k.starts_at >= p_from AND k.starts_at < p_to
+) s;
+$e$;
+
+-- 27) Kanał iCal: obrót tajnego adresu.
+CREATE OR REPLACE FUNCTION public.bk_rotate_ical(p_token text) RETURNS jsonb
+LANGUAGE sql SECURITY DEFINER SET search_path = '' AS $ri$
+  UPDATE public.bk_settings SET ical_token = p_token, ical_rotated_at = now(), updated_at = now() WHERE id = 1
+  RETURNING jsonb_build_object('ok', true, 'rotated_at', ical_rotated_at);
+$ri$;
+
+-- 28) Uprawnienia nowych funkcji.
+REVOKE EXECUTE ON FUNCTION public.bk_mark_status(jsonb) FROM PUBLIC, anon, authenticated;
+REVOKE EXECUTE ON FUNCTION public.bk_admin_calendar(timestamptz, timestamptz) FROM PUBLIC, anon, authenticated;
+REVOKE EXECUTE ON FUNCTION public.bk_export_rows(timestamptz, timestamptz) FROM PUBLIC, anon, authenticated;
+REVOKE EXECUTE ON FUNCTION public.bk_rotate_ical(text) FROM PUBLIC, anon, authenticated;
+GRANT EXECUTE ON FUNCTION public.bk_mark_status(jsonb) TO service_role;
+GRANT EXECUTE ON FUNCTION public.bk_admin_calendar(timestamptz, timestamptz) TO service_role;
+GRANT EXECUTE ON FUNCTION public.bk_export_rows(timestamptz, timestamptz) TO service_role;
+GRANT EXECUTE ON FUNCTION public.bk_rotate_ical(text) TO service_role;
+
+-- 29) Security Advisor: żaden obiekt bk_* nie jest dostępny dla anon/authenticated/PUBLIC.
+--     Wszystkie funkcje bk_* mają ustawione search_path (SECURITY DEFINER albo jawne SET).
+DO $s$ DECLARE r record; BEGIN
+  FOR r IN SELECT p.proname, pg_get_function_identity_arguments(p.oid) AS args
+    FROM pg_proc p JOIN pg_namespace n ON n.oid = p.pronamespace
+    WHERE n.nspname = 'public' AND p.proname LIKE 'bk\_%' LOOP
+    EXECUTE format('REVOKE ALL ON FUNCTION public.%I(%s) FROM PUBLIC, anon, authenticated', r.proname, r.args);
+    EXECUTE format('GRANT EXECUTE ON FUNCTION public.%I(%s) TO service_role', r.proname, r.args);
+  END LOOP;
+END $s$;
+DO $s$ DECLARE r record; BEGIN
+  FOR r IN SELECT c.relname FROM pg_class c JOIN pg_namespace n ON n.oid = c.relnamespace
+    WHERE n.nspname = 'public' AND c.relkind IN ('r','p') AND c.relname LIKE 'bk\_%' LOOP
+    EXECUTE format('REVOKE ALL ON TABLE public.%I FROM PUBLIC, anon, authenticated', r.relname);
+    EXECUTE format('ALTER TABLE public.%I ENABLE ROW LEVEL SECURITY', r.relname);
+  END LOOP;
+END $s$;
+
 SELECT public.bk_fill_holidays(2);
 NOTIFY pgrst, 'reload schema';
 `;

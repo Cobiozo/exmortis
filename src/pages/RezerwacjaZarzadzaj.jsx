@@ -14,6 +14,7 @@ export default function RezerwacjaZarzadzaj() {
   const [msg, setMsg] = useState("");
   const [err, setErr] = useState("");
   const [busy, setBusy] = useState(false);
+  const [wantCancel, setWantCancel] = useState(false);
 
   const load = useCallback(
     (tok) => call({ action: "manage", token: tok }).then((d) => setB(d.booking)).catch(() => setB(null)),
@@ -24,7 +25,10 @@ export default function RezerwacjaZarzadzaj() {
     const meta = document.createElement("meta");
     meta.name = "referrer"; meta.content = "no-referrer";
     document.head.appendChild(meta);
-    const t = new URLSearchParams(window.location.hash.slice(1)).get("t") || "";
+    const params = new URLSearchParams(window.location.hash.slice(1));
+    const t = params.get("t") || "";
+    // Link „Anuluj” z e-maila prowadzi tu z &a=anuluj — podświetlamy przycisk anulowania.
+    setWantCancel(params.get("a") === "anuluj");
     setToken(t);
     window.history.replaceState(null, "", window.location.pathname);
     load(t);
@@ -79,7 +83,7 @@ export default function RezerwacjaZarzadzaj() {
             {b.can_change || b.can_cancel ? (
               <div className="flex flex-wrap gap-3">
                 {b.can_change && <button onClick={wantChange} className="btn-ghost text-[10px]">PRZENIEŚ</button>}
-                {b.can_cancel && <button onClick={doCancel} disabled={busy} className="btn-ghost text-[10px]">{busy ? "ANULUJĘ…" : "ANULUJ"}</button>}
+                {b.can_cancel && <button onClick={doCancel} disabled={busy} className={wantCancel ? "btn-blood text-[10px]" : "btn-ghost text-[10px]"}>{busy ? "ANULUJĘ…" : "ANULUJ"}</button>}
               </div>
             ) : (
               <p className="text-sm text-[#E8C547]">Do sesji zostało mniej niż {b.change_window_h || 24} godziny — napisz do mnie.</p>

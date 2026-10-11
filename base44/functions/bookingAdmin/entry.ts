@@ -1,6 +1,8 @@
 import { createClientFromRequest } from "npm:@base44/sdk@0.8.52";
 import { runSql, rpc, esc, escStr, requireAdmin, emailField, textField } from "../../shared/supabase.ts";
-import { loadKeys, getMode, safeErr, KEYS_MSG } from "../../shared/booking.ts";
+import { loadKeys, getMode, safeErr, KEYS_MSG, randomToken } from "../../shared/booking.ts";
+import { loadAppUrl } from "../../shared/settings.ts";
+import { onBookingCreated, onBookingMoved, loadBooking, sendBookingMail, mailTexts, DEFAULT_TEXTS } from "../../shared/bookingNotify.ts";
 import { decryptHealth } from "../../shared/bookingCrypto.ts";
 import { SCHEMA_SQL, SEED_SQL } from "../../shared/bookingSchema.ts";
 
@@ -186,7 +188,131 @@ export default async function (req) {
         type_id: textField(body, "type_id", { max: 40 }), starts_at: iso(body.starts_at), email: emailField(body).toLowerCase(),
         first_name: textField(body, "first_name", { max: 120 }), viewer_admin: true, source: "admin", actor: me.email,
       } });
+      // Klient dostaje standardowe potwierdzenie (MUSI 13) — ten sam mechanizm co przy zapisie własnym.
+      if (!r?.error && r?.id) await onBookingCreated(base44, r.id, null, "admin").catch(() => {});
       return Response.json(r, { status: r?.error ? 409 : 200 });
+    }
+
+    // ---- KROK 3: kalendarz, statusy po spotkaniu, „Umów klienta”, eksport, iCal, treści e-maili ----
+
+    // Terminy dla „Umów klienta”: administrator pomija regułę 24 h, ale nie zajmuje zajętego terminu.
+    if (a === "slots") {
+      const from = new Date(body.from || Date.now());
+      const to = new Date(Math.min(new Date(body.to || Date.now() + 31 * 864e5).getTime(), from.getTime() + 62 * 864e5));
+      if (isNaN(from.getTime()) || isNaN(to.getTime())) throw new Error("Niepoprawny zakres");
+      const rows = await rpc(base44, "bk_free_slots", { p_type: textField(body, "type_id", { max: 40 }),
+        p_from: from.toISOString(), p_to: to.toISOString(), p_admin: true, p_ignore: null });
+      return Response.json({ slots: (rows || []).map((r) => ({ start: r.slot_start, end: r.slot_end })) });
+    }
+
+    if (a === "calendar") {
+      const from = new Date(body.from || Date.now());
+      const to = new Date(body.to || Date.now() + 7 * 864e5);
+      if (isNaN(from.getTime()) || isNaN(to.getTime())) throw new Error("Niepoprawny zakres");
+      const r = await rpc(base44, "bk_admin_calendar", { p_from: from.toISOString(), p_to: to.toISOString() });
+      return Response.json(r || { bookings: [], events: [], blocks: [], unmarked: 0 });
+    }
+
+    // Pulpit: „Dziś i jutro”, przypomnienie o nieoznaczonych spotkaniach, ostatnie zdarzenia.
+    if (a === "dashboard") {
+      const cal = await rpc(base44, "bk_admin_calendar", { p_from: new Date().toISOString(), p_to: new Date(Date.now() + 2 * 864e5).toISOString() });
+      const log = await runSql(base44, `SELECT at, actor, action, summary FROM public.bk_log
+        WHERE action IN ('rezerwacja','rezerwacja_z_pakietu','przeniesienie','anulowanie_klient','anulowanie_admin','status_po_spotkaniu','sesja_oddana')
+        ORDER BY at DESC LIMIT 12`, true);
+      return Response.json({ ...(cal || { bookings: [], events: [], blocks: [], unmarked: 0 }), log });
+    }
+
+    if (a === "mark_status") {
+      const r = await rpc(base44, "bk_mark_status", { p: {
+        booking_id: textField(body, "booking_id", { max: 40 }),
+        status: textField(body, "status", { max: 20 }), actor: me.email,
+      } });
+      const map = { bad: "Nieznany status.", not_found: "Nie znaleziono rezerwacji.", closed: "Ta rezerwacja jest już zamknięta.", future: "Termin jeszcze się nie odbył." };
+      if (r?.error) return Response.json({ error: map[r.error] || "Nie udało się oznaczyć." }, { status: 409 });
+      return Response.json(r);
+    }
+
+    // Przeniesienie przez administratora (bez granicy 24 h) + powiadomienie z SEQUENCE + 1.
+    if (a === "reschedule") {
+      const bookingId = textField(body, "booking_id", { max: 40 });
+      const r = await rpc(base44, "bk_reschedule", { p: { booking_id: bookingId, starts_at: iso(body.starts_at), viewer_admin: true, actor: me.email } });
+      if (r?.error) return Response.json({ error: r.error === "taken" ? "Ten termin jest zajęty." : "Nie udało się przenieść." }, { status: 409 });
+      await runSql(base44, `UPDATE public.bk_bookings SET ics_sequence = ics_sequence + 1 WHERE id = ${escStr(bookingId)}::uuid`);
+      await onBookingMoved(base44, bookingId).catch(() => {});
+      return Response.json(r);
+    }
+
+    // Ponowne wysłanie wybranej wiadomości (potwierdzenie / przypomnienie 24 h / przypomnienie 1 h).
+    if (a === "send_mail") {
+      const kind = ["potwierdzenie", "przypomnienie24", "przypomnienie1"].includes(body.kind) ? body.kind : "potwierdzenie";
+      const booking = await loadBooking(base44, textField(body, "booking_id", { max: 40 }));
+      if (!booking) return Response.json({ error: "Nie znaleziono" }, { status: 404 });
+      const res = await sendBookingMail(base44, { kind, booking, token: null });
+      await log(base44, me.email, "wysylka_reczna", "booking", booking.id, kind);
+      return Response.json({ ok: true, result: res });
+    }
+
+    // „Jestem niedostępny” — trzy gotowe zakresy, maksymalnie trzy kliknięcia z telefonu.
+    if (a === "unavailable") {
+      const preset = ["do-konca-dnia", "2h", "jutro"].includes(body.preset) ? body.preset : "2h";
+      const note = String(body.note || "").slice(0, 200) || null;
+      const range = {
+        "do-konca-dnia": `(date_trunc('day', now() AT TIME ZONE 'Europe/Warsaw')) AT TIME ZONE 'Europe/Warsaw',
+          ((date_trunc('day', now() AT TIME ZONE 'Europe/Warsaw') + interval '1 day') - interval '1 minute') AT TIME ZONE 'Europe/Warsaw'`,
+        "2h": `now(), now() + interval '2 hours'`,
+        "jutro": `(date_trunc('day', now() AT TIME ZONE 'Europe/Warsaw') + interval '1 day') AT TIME ZONE 'Europe/Warsaw',
+          (date_trunc('day', now() AT TIME ZONE 'Europe/Warsaw') + interval '2 days') AT TIME ZONE 'Europe/Warsaw'`,
+      }[preset];
+      const id = (await runSql(base44, `INSERT INTO public.bk_blocks (kind, starts_at, ends_at, note, created_by)
+        VALUES (${preset === "2h" ? "'jednorazowa'" : "'calodniowa'"}, ${range}, ${esc(note)}, ${escStr(me.email)}) RETURNING id`))[0].id;
+      await log(base44, me.email, "blokada", "block", id, `niedostepny: ${preset}`);
+      return Response.json({ ok: true, id, preset });
+    }
+
+    // Eksport CSV — z ochroną przed wstrzyknięciem formuł w arkuszu.
+    if (a === "export_csv") {
+      const from = new Date(body.from || Date.now() - 30 * 864e5);
+      const to = new Date(body.to || Date.now() + 90 * 864e5);
+      const rows = await rpc(base44, "bk_export_rows", { p_from: from.toISOString(), p_to: to.toISOString() });
+      const cols = ["starts_at", "koniec", "rodzaj", "imie", "email", "status", "zrodlo", "strefa"];
+      const cell = (v) => {
+        let s = v === null || v === undefined ? "" : String(v);
+        if (/^[=+\-@\t\r]/.test(s)) s = `'${s}`;   // komórka nie może zacząć się jak formuła
+        return `"${s.replace(/"/g, '""')}"`;
+      };
+      const csv = [cols.join(","), ...(rows || []).map((r) => cols.map((c) => cell(r[c])).join(","))].join("\r\n");
+      await log(base44, me.email, "eksport", "csv", null, `${(rows || []).length} wierszy`);
+      return Response.json({ csv, rows: (rows || []).length });
+    }
+
+    // Prywatny kanał iCal: tajny adres (token tylko w bazie) i obrót.
+    if (a === "ical") {
+      const r = await runSql(base44, `SELECT ical_token, ical_rotated_at FROM public.bk_settings WHERE id = 1`, true);
+      const had = r?.[0]?.ical_token;
+      let token = had;
+      if (body.rotate === true || !had) {
+        token = randomToken();
+        await rpc(base44, "bk_rotate_ical", { p_token: token });
+        await log(base44, me.email, "ical_obrot", "settings", "1", null);
+      }
+      const appUrl = await loadAppUrl(base44);
+      return Response.json({ url: `${appUrl}/functions/bookingPublic?ical=${token}`, rotated_at: r?.[0]?.ical_rotated_at || null, fresh: body.rotate === true || !had });
+    }
+
+    if (a === "mail_texts") return Response.json({ texts: await mailTexts(base44), defaults: DEFAULT_TEXTS });
+
+    if (a === "save_mail_texts") {
+      const src = body.texts && typeof body.texts === "object" ? body.texts : {};
+      const out = {};
+      for (const k of Object.keys(DEFAULT_TEXTS)) {
+        out[k] = {
+          subject: String(src?.[k]?.subject || "").slice(0, 200).trim() || DEFAULT_TEXTS[k].subject,
+          body: String(src?.[k]?.body || "").slice(0, 8000).trim() || DEFAULT_TEXTS[k].body,
+        };
+      }
+      await runSql(base44, `UPDATE public.bk_settings SET mail_texts = ${escStr(JSON.stringify(out))}::jsonb, updated_at = now() WHERE id = 1`);
+      await log(base44, me.email, "tresci_maili", "settings", "1", null);
+      return Response.json({ ok: true, texts: out });
     }
 
     return Response.json({ error: "Nieznana akcja" }, { status: 400 });
