@@ -20,10 +20,9 @@ export function renderBody(html, name) {
     out = out.replace(token, n);
   } else {
     out = out
-      .replace(new RegExp(`(^|>)(\\s*)${token.source}\\s*([a-ząćęłńóśźż])?`, "gi"),
-        (m, lead, sp, ch) => lead + (lead === ">" ? "" : sp) + String(ch || "").toUpperCase())
-      .replace(token, "")
-      .replace(/(>)\s*([,.!?;:]+)\s*/g, "$1");
+      .replace(new RegExp(`(^|>)(\\s*)${token.source}\\s*([,.!?;:]+\\s*)?([a-ząćęłńóśźż])?`, "gi"),
+        (m, lead, sp, punct, ch) => lead + (lead === ">" ? "" : sp) + String(ch || "").toUpperCase())
+      .replace(token, "");
   }
   return out.replace(/[ \t]{2,}/g, " ").replace(/\s+([,.!?;:])/g, "$1").replace(/\s+(<)/g, "$1");
 }
