@@ -16,11 +16,15 @@ const uuid = (v) => (/^[0-9a-fA-F-]{36}$/.test(String(v || "")) ? String(v) : nu
 export default async function (req) {
   try {
     const base44 = createClientFromRequest(req);
-    const me = await base44.auth.me().catch(() => null);
+    // Sesja i ustawienia modułu równolegle (ustawienia są w pamięci instancji przez 30 s).
+    const [me, s, body] = await Promise.all([
+      base44.auth.me().catch(() => null),
+      libSettings(base44).catch(() => null),
+      req.json().catch(() => ({})),
+    ]);
     if (!me) return Response.json({ error: "Zaloguj się" }, { status: 401 });
-    const body = await req.json().catch(() => ({}));
+    if (!s) return Response.json({ error: "Coś poszło nie tak. Spróbuj ponownie." }, { status: 503 });
     const a = body.action;
-    const s = await libSettings(base44);
     const admin = me.role === "admin";
     const lib = modeVisible(s.library_mode, me);
     const msg = modeVisible(s.messages_mode, me);
