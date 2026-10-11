@@ -29,6 +29,8 @@ import AnnouncementsAdmin from "@/components/admin/announce/AnnouncementsAdmin";
 import BookingAdmin from "@/components/admin/booking/BookingAdmin";
 import LibraryPanel from "@/components/admin/library/LibraryPanel";
 import GroupsTab from "@/components/admin/library/GroupsTab";
+import MessagesPanel from "@/components/admin/library/MessagesPanel";
+import HistoryPanel from "@/components/admin/library/HistoryPanel";
 
 const SECTIONS = {
   spotkania: ["Spotkania", () => <EventsManager />],
@@ -44,6 +46,8 @@ const SECTIONS = {
   klienci: ["Klienci i dostępy", () => <ClientsPanel />],
   biblioteka: ["Biblioteka", () => <LibraryPanel />],
   grupy: ["Grupy", () => <GroupsTab />],
+  wiadomosci: ["Wiadomości", () => <MessagesPanel />],
+  historia: ["Historia zmian", () => <HistoryPanel />],
   rabaty: ["Kody rabatowe", () => <DiscountsPanel />],
   bezpieczenstwo: ["Bezpieczeństwo", () => <SecurityPanel />],
   "dane-osoby": ["Dane osoby (RODO)", () => <PersonDataPanel />],

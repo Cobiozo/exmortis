@@ -122,21 +122,24 @@ export async function deliverMessage(base44, messageId, actor) {
     recipient_count = ${emails.length}, updated_at = now() WHERE id = ${escStr(m.id)}::uuid AND status = 'WYSYLANIE'`);
 
   // Dołączony materiał albo kolekcja = przydział dla tych samych odbiorców (też na przyszłość).
+  // Osoby dostają przydział wprost — po jednym na faktycznego odbiorcę (grupa: jeden wiersz grupowy).
   if (m.attached_material_id || m.attached_collection_id) {
     const t = m.target || {};
-    const kind = t.kind === "grupa" ? "grupa" : "osoba";
-    await runSql(base44, `INSERT INTO public.mb_assignments
-      (material_id, collection_id, target_kind, target_email, group_id, group_mode, snapshot_emails, exceptions_add, exceptions_drop, note, created_by)
-      VALUES (${m.attached_material_id ? escStr(m.attached_material_id) + "::uuid" : "NULL"},
-              ${m.attached_collection_id ? escStr(m.attached_collection_id) + "::uuid" : "NULL"},
-              ${escStr(kind)},
-              ${kind === "osoba" ? escStr(String(t.email || "").toLowerCase()) : "NULL"},
-              ${kind === "grupa" ? escStr(t.group_id) + "::uuid" : "NULL"},
-              ${kind === "grupa" ? escStr(t.group_mode || "OBECNI_I_PRZYSZLI") : "NULL"},
-              ${sqlArr(kind === "grupa" ? t.snapshot_emails : [])},
-              ${sqlArr(kind === "grupa" ? t.exceptions_add : [])},
-              ${sqlArr(kind === "grupa" ? t.exceptions_drop : [])},
-              'dołączone do wiadomości', ${escStr(String(actor || "system").slice(0, 200))})`).catch(() => {});
+    const mat = m.attached_material_id ? escStr(m.attached_material_id) + "::uuid" : "NULL";
+    const col = m.attached_collection_id ? escStr(m.attached_collection_id) + "::uuid" : "NULL";
+    const by = escStr(String(actor || "system").slice(0, 200));
+    if (t.kind === "grupa" && t.group_id) {
+      await runSql(base44, `INSERT INTO public.mb_assignments
+        (material_id, collection_id, target_kind, group_id, group_mode, snapshot_emails, exceptions_add, exceptions_drop, note, created_by)
+        VALUES (${mat}, ${col}, 'grupa', ${escStr(t.group_id)}::uuid, ${escStr(t.group_mode || "OBECNI_I_PRZYSZLI")},
+          ${sqlArr(t.snapshot_emails)}, ${sqlArr(t.exceptions_add)}, ${sqlArr(t.exceptions_drop)},
+          'dołączone do wiadomości', ${by})`).catch(() => {});
+    } else if (emails.length) {
+      await runSql(base44, `INSERT INTO public.mb_assignments
+        (material_id, collection_id, target_kind, target_email, note, created_by)
+        SELECT ${mat}, ${col}, 'osoba', e, 'dołączone do wiadomości', ${by}
+        FROM unnest(ARRAY[${emails.map(escStr).join(",")}]::text[]) AS e`).catch(() => {});
+    }
   }
   await sendMessageEmail(base44, m, emails).catch(() => {});
   await libLog(base44, actor, "wiadomosc_wyslana", "message", m.id, `odbiorcy: ${emails.length}`);

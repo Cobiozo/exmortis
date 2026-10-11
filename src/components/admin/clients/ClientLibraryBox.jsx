@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { Loader2, X, Plus } from "lucide-react";
 import { lib, inputCls, KIND_LABEL, plDate } from "@/components/admin/library/libApi";
+import ClientMessagesBox from "./ClientMessagesBox";
 
 const Dot = ({ c }) => <span className="h-2.5 w-2.5 inline-block" style={{ background: c || "#3D3D3F" }} />;
 
@@ -112,10 +113,7 @@ export default function ClientLibraryBox({ email, onChange }) {
         ) : <p className="text-sm text-foreground/45">Brak przydziałów.</p>}
       </section>
 
-      <section>
-        <p className="technical text-[10px] gold-text mb-3">WIADOMOŚCI</p>
-        <p className="text-sm text-foreground/45">W przygotowaniu.</p>
-      </section>
+      <ClientMessagesBox email={email} onChange={onChange} />
 
       <section>
         <p className="technical text-[10px] gold-text mb-3">PAKIETY I SESJE</p>

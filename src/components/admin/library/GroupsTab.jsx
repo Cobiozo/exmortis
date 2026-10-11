@@ -3,6 +3,9 @@ import { Loader2, Plus, Pencil, Trash2, Users } from "lucide-react";
 import { lib } from "./libApi";
 import LibModal from "./LibModal";
 import GroupForm from "./GroupForm";
+import GroupPanel from "./GroupPanel";
+import MessageForm from "./MessageForm";
+import AssignDialog from "./AssignDialog";
 
 export default function GroupsTab() {
   const [items, setItems] = useState(null);
@@ -11,6 +14,8 @@ export default function GroupsTab() {
   const [open, setOpen] = useState("");
   const [busy, setBusy] = useState("");
   const [err, setErr] = useState("");
+  const [write, setWrite] = useState(null);
+  const [assign, setAssign] = useState(null);
 
   const load = () => {
     setErr("");
@@ -63,11 +68,9 @@ export default function GroupsTab() {
                     </p>
                   </div>
                   <div className="flex flex-wrap gap-2">
-                    {g.count > 0 && (
-                      <button onClick={() => setOpen(open === g.id ? "" : g.id)} className="btn-ghost !px-3 !py-2" title="Pokaż osoby">
-                        <Users className="h-4 w-4" />
-                      </button>
-                    )}
+                    <button onClick={() => setOpen(open === g.id ? "" : g.id)} className="btn-ghost !px-3 !py-2" title="Karta grupy">
+                      <Users className="h-4 w-4" />
+                    </button>
                     {starter && (
                       <button onClick={() => accept(g)} className="btn-relic !px-3 !py-2" disabled={busy === g.id}>ZOSTAW</button>
                     )}
@@ -77,11 +80,7 @@ export default function GroupsTab() {
                     <button onClick={() => setDel(g)} className="btn-ghost !px-3 !py-2" title="Usuń"><Trash2 className="h-4 w-4" /></button>
                   </div>
                 </div>
-                {open === g.id && (
-                  <div className="text-xs text-foreground/60 border-t hairline pt-3 space-y-1 max-h-40 overflow-y-auto">
-                    {g.members?.length ? g.members.map((e) => <p key={e}>{e}</p>) : <p className="text-foreground/40">Nikt nie pasuje do tej reguły.</p>}
-                  </div>
-                )}
+                {open === g.id && <GroupPanel group={g} onWrite={setWrite} onAssign={setAssign} />}
               </div>
             );
           })}
@@ -89,6 +88,16 @@ export default function GroupsTab() {
       )}
 
       {form && <GroupForm open onClose={() => setForm(null)} item={form.item} onDone={() => { setForm(null); load(); }} />}
+
+      {write && (
+        <MessageForm open onClose={() => setWrite(null)}
+          presetTarget={{ kind: "grupa", emails: [], group_id: write.id, group_mode: "OBECNI_I_PRZYSZLI", exceptions_add: [], exceptions_drop: [] }}
+          onDone={() => { setWrite(null); load(); }} />
+      )}
+      {assign && (
+        <AssignDialog open onClose={() => setAssign(null)} presetGroupId={assign.id}
+          label={`Grupa: ${assign.name}`} onDone={() => { setAssign(null); load(); }} />
+      )}
 
       <LibModal
         open={!!del} onClose={() => setDel(null)} title="Usunąć grupę?"

@@ -3,6 +3,7 @@ import { Loader2, Search } from "lucide-react";
 import { lib, inputCls } from "@/components/admin/library/libApi";
 import LibModal from "@/components/admin/library/LibModal";
 import AssignDialog from "@/components/admin/library/AssignDialog";
+import MessageForm from "@/components/admin/library/MessageForm";
 import ClientDetail from "./ClientDetail";
 
 const Badge = ({ g }) => (
@@ -24,6 +25,7 @@ export default function ClientsLibraryList() {
   const [picked, setPicked] = useState("");
   const [confirm, setConfirm] = useState(null);
   const [assign, setAssign] = useState(false);
+  const [write, setWrite] = useState(false);
   const [busy, setBusy] = useState(false);
   const [err, setErr] = useState("");
 
@@ -88,6 +90,7 @@ export default function ClientsLibraryList() {
               <button onClick={() => ask("add")} disabled={!grupy.length} className="btn-ghost !px-3 !py-2">DODAJ DO GRUPY</button>
               <button onClick={() => ask("remove")} disabled={!grupy.length} className="btn-ghost !px-3 !py-2">USUŃ Z GRUPY</button>
               <button onClick={() => setAssign(true)} className="btn-relic !px-3 !py-2">PRZYDZIEL MATERIAŁ</button>
+              <button onClick={() => setWrite(true)} className="btn-ghost !px-3 !py-2">NAPISZ WIADOMOŚĆ</button>
               <button onClick={() => setSel([])} className="btn-ghost !px-3 !py-2">WYCZYŚĆ</button>
             </div>
           </div>
@@ -128,6 +131,12 @@ export default function ClientsLibraryList() {
       </div>
 
       {assign && <AssignDialog open onClose={() => setAssign(false)} presetEmails={sel} label={`Wybrane osoby: ${sel.length}`} onDone={() => { setAssign(false); load(); }} />}
+
+      {write && (
+        <MessageForm open onClose={() => setWrite(false)}
+          presetTarget={{ kind: "osoba", emails: sel, group_id: "", group_mode: "OBECNI_I_PRZYSZLI", exceptions_add: [], exceptions_drop: [] }}
+          onDone={() => { setWrite(false); load(); }} />
+      )}
 
       <LibModal
         open={!!confirm} onClose={() => setConfirm(null)} title={confirm?.kind === "add" ? "Dodać do grupy?" : "Usunąć z grupy?"}

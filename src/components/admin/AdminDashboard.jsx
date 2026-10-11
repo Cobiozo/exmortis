@@ -4,6 +4,7 @@ import MailWarning from "./mail/MailWarning";
 import ZoomWarning from "./events/ZoomWarning";
 import FallbackWarning from "./events/FallbackWarning";
 import BookingWarnings from "./booking/BookingWarnings";
+import DashboardLibraryTile from "./DashboardLibraryTile";
 import { Link } from "react-router-dom";
 import { base44 } from "@/api/base44Client";
 import { useAdminMode } from "@/components/admin/AdminModeContext";
@@ -72,6 +73,7 @@ export default function AdminDashboard() {
       <Tile to="/admin/klienci" label="11" title="Klienci i dostępy" lines={["Nadawanie, przedłużenia, dziennik odtworzeń"]} />
       {libOn && <Tile to="/admin/biblioteka" label="21" title="Biblioteka" lines={["Materiały, kolekcje, przydziały"]} />}
       {libOn && <Tile to="/admin/grupy" label="22" title="Grupy" lines={["Ręczne i automatyczne, znaczniki"]} />}
+      {libOn && <DashboardLibraryTile />}
       <Tile to="/admin/rabaty" label="12" title="Kody rabatowe" lines={["Procent lub kwota, limity, terminy"]} />
       <Tile to="/admin/bezpieczenstwo" label="13" title="Bezpieczeństwo" lines={["Alerty, blokady, znajdź właściciela kopii"]} />
       <Tile to="/admin/dane-osoby" label="18" title="Dane osoby (RODO)" lines={["Znajdź / usuń / wyeksportuj po e-mailu", "Obie bazy naraz"]} />
