@@ -49,9 +49,11 @@ export function messagesFromRpc(raw, me) {
   const items = (((raw || {}).items) || []).map((m) => ({
     id: m.id, title: m.title || null, text: sanitizeHtml(renderBody(m.body_html, name)),
     sent_at: m.sent_at || null, read_at: m.read_at || null,
-    material_id: m.material_id || null, collection_id: m.collection_id || null,
-    material_title: m.material_title || null, material_kind: m.material_kind || null,
-    collection_title: m.collection_title || null,
+    attachments: ((m.attachments || [])).map((a) => ({
+      material_id: a.material_id || null, collection_id: a.collection_id || null,
+      material_title: a.material_title || null, material_kind: a.material_kind || null,
+      collection_title: a.collection_title || null, position: a.position || 0,
+    })),
   }));
   return { items, unread: ((raw || {}).unread) || 0 };
 }

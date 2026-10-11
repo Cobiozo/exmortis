@@ -2,7 +2,7 @@ import { createClientFromRequest } from "npm:@base44/sdk@0.8.52";
 import { rpc } from "../../shared/supabase.ts";
 import { libSettings, modeVisible, clientEmail, footerData } from "../../shared/libraryAccess.ts";
 import { sanitizeHtml } from "../../shared/librarySanitize.ts";
-import { embedUrl, sha256hex } from "../../shared/libraryMedia.ts";
+import { embedUrl, sha256hex, normalizeServerVideo } from "../../shared/libraryMedia.ts";
 import { getSettingsFast } from "../../shared/settings.ts";
 import { libraryData, messagesData, bundleData } from "../../shared/libraryView.ts";
 
@@ -89,7 +89,8 @@ export default async function (req) {
       const m = r.material || {};
       let url = null;
       let ttl = null;
-      if (m.kind === "PDF" || m.kind === "AUDIO") {
+      const videoFile = m.kind === "WIDEO" && m.video_provider === "plik";
+      if (m.kind === "PDF" || m.kind === "AUDIO" || videoFile) {
         ttl = m.kind === "PDF" ? 600 : 3600;
         const signed = await base44.asServiceRole.integrations.Core.CreateFileSignedUrl({ file_uri: m.file_key, expires_in: ttl });
         url = signed && signed.signed_url ? signed.signed_url : null;
@@ -97,6 +98,14 @@ export default async function (req) {
       }
       const out = { id: m.id, title: m.title, kind: m.kind, url, expires_in: ttl, allow_download: !!m.allow_download };
       if (m.kind === "WIDEO") out.embed = embedUrl(m.video_provider, m.video_id);
+      if (m.kind === "WIDEO" && m.video_provider === "serwer") {
+        // Adres sprawdzany ponownie przy każdym wydaniu — zmiana listy domen zamyka dostęp od razu.
+        const ok = normalizeServerVideo(m.server_url, s.video_domains);
+        if (!ok) return Response.json({ error: "Adres tego pliku nie jest już dozwolony." }, { status: 502 });
+        out.url = ok;
+        out.server = true;
+      }
+      if (m.kind === "WIDEO" && videoFile) out.file = true;
       if (m.kind === "TEKST") out.text = sanitizeHtml(m.body_html);
       if (m.kind === "LINK") out.external = m.external_url || null;
       return Response.json(out);

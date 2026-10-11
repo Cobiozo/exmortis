@@ -3,7 +3,12 @@ import { base44 } from "@/api/base44Client";
 import { Loader2, Upload } from "lucide-react";
 import { lib, LIMITS, mb1 } from "./libApi";
 
-const ALLOWED = { PDF: ["pdf"], AUDIO: ["mp3", "m4a"] };
+const ALLOWED = { PDF: ["pdf"], AUDIO: ["mp3", "m4a"], WIDEO: ["mp4", "m4v", "webm"] };
+const ACCEPT = {
+  PDF: ".pdf,application/pdf",
+  AUDIO: ".mp3,.m4a,audio/*",
+  WIDEO: ".mp4,.m4v,.webm,video/mp4,video/webm",
+};
 
 // Wgranie pliku do magazynu prywatnego (bez publicznego adresu).
 // Klucz pliku nigdy nie trafia do stanu interfejsu — leci prosto do serwera.
@@ -35,7 +40,12 @@ export default function MaterialUpload({ kind, id, onDone }) {
       <p className="text-xs text-foreground/50">
         {id ? "Zamiana pliku tworzy nową wersję — przydziały zostają bez zmian." : `Wgranie pliku. Limit: ${lim.ext} do ${lim.mb} MB.`}
       </p>
-      <input ref={ref} type="file" accept={kind === "PDF" ? ".pdf,application/pdf" : ".mp3,.m4a,audio/*"}
+      {kind === "WIDEO" && (
+        <p className="text-xs text-foreground/45">
+          {lim.mb} MB to ok. 10–15 min w Full HD; dłuższe nagrania wgraj na własny serwer i podaj adres.
+        </p>
+      )}
+      <input ref={ref} type="file" accept={ACCEPT[kind]}
         onChange={(e) => pick(e.target.files?.[0])} disabled={busy}
         className="block w-full text-xs text-foreground/70 file:mr-3 file:px-4 file:py-2 file:border file:border-[#3D3D3F] file:bg-transparent file:text-[#C9A24A] file:technical file:text-[10px]" />
       {busy && (

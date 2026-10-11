@@ -21,7 +21,11 @@ export const KINDS = ["AUDIO", "WIDEO", "PDF", "LINK", "TEKST"];
 export const GROUP_COLORS = ["#C9A24A", "#BC1E22", "#8A8A8C", "#3D3D3F", "#4C7A5A", "#3F5F8A", "#7A4C7A", "#8A6A3F"];
 
 // Limity plików pokazywane PRZED wyborem (te same wartości pilnuje serwer).
-export const LIMITS = { PDF: { mb: 10, ext: "PDF" }, AUDIO: { mb: 100, ext: "MP3, M4A" } };
+export const LIMITS = {
+  PDF: { mb: 10, ext: "PDF" },
+  AUDIO: { mb: 100, ext: "MP3, M4A" },
+  WIDEO: { mb: 100, ext: "MP4, M4V, WEBM" },
+};
 
 export const mb1 = (b) => (Number(b || 0) / 1048576).toFixed(1);
 export const gb2 = (b) => (Number(b || 0) / 1073741824).toFixed(2);

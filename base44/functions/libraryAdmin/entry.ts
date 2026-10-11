@@ -2,9 +2,10 @@ import { createClientFromRequest } from "npm:@base44/sdk@0.8.52";
 import { runSql, rpc, esc, escStr, requireAdmin, textField } from "../../shared/supabase.ts";
 import { SCHEMA_SQL, SEED_SQL, CHECKPOINT_TABLES_SQL, CHECKPOINT_FUNCS_SQL } from "../../shared/librarySchema.ts";
 import { LIBRARY_RPC_SQL, CHECKPOINT_RPC_SQL } from "../../shared/libraryRpcSql.ts";
+import { SCHEMA_2B_SQL, RPC_2B_SQL } from "../../shared/library2bSql.ts";
 import { libSettings, resetLibSettings, MODES, resolveRecipients, randomToken, footerData } from "../../shared/libraryAccess.ts";
 import { sanitizeHtml, plainText } from "../../shared/librarySanitize.ts";
-import { normalizeVideo, extOf, sniff, pdfHasJs, MAX_BYTES, ALLOWED_EXT, MAX_MB, SNIFF_BYTES, mb } from "../../shared/libraryMedia.ts";
+import { normalizeVideo, normalizeServerVideo, videoDomains, extOf, sniff, pdfHasJs, MAX_BYTES, ALLOWED_EXT, MAX_MB, SNIFF_BYTES, mb } from "../../shared/libraryMedia.ts";
 import { libLog, deliverMessage, sendMessageEmail, renderBody } from "../../shared/libraryNotify.ts";
 import { libraryData, messagesData } from "../../shared/libraryView.ts";
 import { getSettingsFast } from "../../shared/settings.ts";
@@ -121,6 +122,8 @@ export default async function (req) {
     if (a === "migrate") {
       await runSql(base44, SCHEMA_SQL);
       await runSql(base44, LIBRARY_RPC_SQL);
+      await runSql(base44, SCHEMA_2B_SQL);
+      await runSql(base44, RPC_2B_SQL);
       await runSql(base44, SEED_SQL);
       const t = await runSql(base44, `SELECT tick_token FROM public.mb_settings WHERE id = 1`, true);
       if (!t || !t[0] || !t[0].tick_token) {
@@ -156,12 +159,17 @@ export default async function (req) {
       const wa = String(body.whatsapp || "").trim();
       if (wa && !/^https:\/\/wa\.me\/[0-9]{6,20}$/.test(wa)) throw new Error("Adres WhatsApp: wyłącznie format https://wa.me/cyfry");
       const limit = int(body.space_limit_mb, 64, 1048576, 5120);
-      await runSql(base44, `UPDATE public.mb_settings SET library_mode = ${escStr(lib)}, messages_mode = ${escStr(msg)},
-        email_notify = ${body.email_notify === true ? "TRUE" : "FALSE"}, whatsapp = ${wa ? escStr(wa) : "NULL"},
-        space_limit_mb = ${limit}, updated_at = now() WHERE id = 1`);
-      await libLog(base44, me.email, "ustawienia", "settings", "1", `biblioteka=${lib} wiadomosci=${msg} mail=${body.email_notify === true ? "wl" : "wyl"}`);
+      const podane = Array.isArray(body.video_domains) ? body.video_domains : [];
+      const dom = videoDomains(podane);
+      const odrzucone = podane.map((x) => String(x || "").trim()).filter((x) => x && !dom.includes(x.toLowerCase()));
+      await rpc(base44, "mb_admin_settings_save", { p: {
+        library_mode: lib, messages_mode: msg, email_notify: body.email_notify === true,
+        whatsapp: wa, space_limit_mb: limit, video_domains: dom,
+      } });
+      await libLog(base44, me.email, "ustawienia", "settings", "1",
+        `biblioteka=${lib} wiadomosci=${msg} mail=${body.email_notify === true ? "wl" : "wyl"} domeny=${dom.length}`);
       resetLibSettings();
-      return Response.json({ ok: true });
+      return Response.json({ ok: true, video_domains: dom, odrzucone });
     }
 
     // Token zadania — pokazywany administratorowi raz do wklejenia w automatyzacji.
@@ -189,7 +197,7 @@ export default async function (req) {
 
     // Rejestracja pliku wgranego z przeglądarki — dopiero po sprawdzeniu sygnatury i rozmiaru.
     if (a === "material_register") {
-      const kind = body.kind === "AUDIO" ? "AUDIO" : body.kind === "PDF" ? "PDF" : null;
+      const kind = ["AUDIO", "PDF", "WIDEO"].includes(body.kind) ? body.kind : null;
       if (!kind) return bad("Wybierz rodzaj pliku.");
       const fileUri = textField(body, "file_uri", { max: 500 });
       const fileName = textField(body, "file_name", { max: 300 });
@@ -224,11 +232,23 @@ export default async function (req) {
         if (!/^https:\/\/\S+$/.test(url)) return bad("Adres musi zaczynać się od https://");
         payload.external_url = url;
       } else if (kind === "WIDEO") {
-        const v = normalizeVideo(body.external_url);
-        if (!v && !id) return bad("Dozwolone są tylko filmy z YouTube, Vimeo i Bunny — wklej poprawny adres https.");
-        // Pusty adres przy edycji = zostawiamy dotychczasowego dostawcę i identyfikator.
-        if (v) { payload.video_provider = v.provider; payload.video_id = v.id; }
-        else payload.keep_video = true;
+        const src = ["link", "plik", "serwer"].includes(body.video_source) ? body.video_source : "link";
+        payload.video_source = src;
+        if (src === "serwer") {
+          const s = await libSettings(base44);
+          const ok = normalizeServerVideo(body.server_url, s.video_domains);
+          if (!ok) return bad("Adres musi być https, kończyć się .mp4, .m4v albo .webm i pochodzić z domeny wpisanej w ustawieniach.");
+          payload.server_url = ok;
+        } else if (src === "plik") {
+          if (!id) return bad("Najpierw wgraj plik wideo.");
+          payload.keep_video = true;
+        } else {
+          const v = normalizeVideo(body.external_url);
+          if (!v && !id) return bad("Dozwolone są tylko filmy z YouTube, Vimeo i Bunny — wklej poprawny adres https.");
+          // Pusty adres przy edycji = zostawiamy dotychczasowego dostawcę i identyfikator.
+          if (v) { payload.video_provider = v.provider; payload.video_id = v.id; }
+          else payload.keep_video = true;
+        }
       } else if (kind === "TEKST") {
         const html = sanitizeHtml(body.body_html);
         if (!html) return bad("Wpisz treść materiału.");
@@ -254,7 +274,7 @@ export default async function (req) {
       if (!id) return NOT_FOUND();
       const [m] = await runSql(base44, `SELECT id, kind, title FROM public.mb_materials WHERE id = ${escStr(id)}::uuid AND deleted_at IS NULL`, true);
       if (!m) return NOT_FOUND();
-      if (m.kind !== "PDF" && m.kind !== "AUDIO") return bad("Plik można zamienić tylko w materiale PDF albo audio.");
+      if (m.kind !== "PDF" && m.kind !== "AUDIO" && m.kind !== "WIDEO") return bad("Plik można zamienić tylko w materiale PDF, audio albo wideo.");
       const fileUri = textField(body, "file_uri", { max: 500 });
       const fileName = textField(body, "file_name", { max: 300 });
       const v = await verifyUpload(base44, m.kind, fileUri, fileName, body.file_size).catch((e) => ({ err: e.message }));
@@ -265,7 +285,10 @@ export default async function (req) {
       await runSql(base44, `UPDATE public.mb_materials SET
         prev_file_key = file_key, prev_file_name = file_name, prev_file_size = file_size,
         file_key = ${escStr(fileUri)}, file_name = ${escStr(fileName)}, file_size = ${v.size},
-        file_version = file_version + 1, pdf_js_warning = ${v.pdfJs ? "TRUE" : "FALSE"}, updated_at = now()
+        file_version = file_version + 1, pdf_js_warning = ${v.pdfJs ? "TRUE" : "FALSE"},
+        video_provider = CASE WHEN kind = 'WIDEO' THEN 'plik' ELSE video_provider END,
+        server_url = CASE WHEN kind = 'WIDEO' THEN NULL ELSE server_url END,
+        updated_at = now()
         WHERE id = ${escStr(id)}::uuid`);
       await libLog(base44, me.email, "plik_zamieniony", "material", id, `${m.kind} ${mb(v.size)} MB`);
       return Response.json({ ok: true, id, file_size: v.size, pdf_js_warning: v.pdfJs });
@@ -541,6 +564,21 @@ export default async function (req) {
       return Response.json({ ok: true, count: Number(n) || 0 });
     }
 
+    // Przydział kilku materiałów naraz — jedno wywołanie bazy, jeden wpis w historii.
+    if (a === "assign_many") {
+      const ids = [...new Set((Array.isArray(body.material_ids) ? body.material_ids : []).map(uuidOrNull).filter(Boolean))].slice(0, 100);
+      if (!ids.length) return bad("Zaznacz materiały.");
+      const t = cleanTarget(body.target || {});
+      const r = await rpc(base44, "mb_admin_assign_many", {
+        p_materials: ids, p_target: t,
+        p_note: body.note ? String(body.note).slice(0, 2000) : null,
+        p_from: iso(body.visible_from), p_to: iso(body.visible_to), p_actor: me.email,
+      });
+      await libLog(base44, me.email, "przydzial_zbiorczy", "material", null,
+        `materialy: ${ids.length} · odbiorcy: ${(r && r.osoby) || 0}`);
+      return Response.json({ ok: true, ...(r || {}) });
+    }
+
     if (a === "assignment_save") {
       const materialId = uuidOrNull(body.material_id);
       const collectionId = uuidOrNull(body.collection_id);
@@ -643,16 +681,21 @@ export default async function (req) {
       if (status === "ZAPLANOWANA" && !sendAt) return bad("Podaj termin wysyłki.");
       const t = cleanTarget(body.target || {});
       const title = body.title ? String(body.title).trim().slice(0, 200) : null;
+      const att = (Array.isArray(body.attachments) ? body.attachments : []).slice(0, 10)
+        .map((x) => ({ material_id: uuidOrNull(x && x.material_id), collection_id: uuidOrNull(x && x.collection_id) }))
+        .filter((x) => (x.material_id ? 1 : 0) + (x.collection_id ? 1 : 0) === 1);
       const matId = uuidOrNull(body.attached_material_id);
       const colId = uuidOrNull(body.attached_collection_id);
       if (matId && colId) return bad("Dołącz materiał albo kolekcję — nie oba.");
       // Snapshot „tylko obecni" i liczba odbiorców powstają w bazie, w tej samej transakcji co zapis.
       const saved = await rpc(base44, "mb_admin_message_save", { p: {
         id: id || null, title, body_html: html, email_mode: emailMode, target: t,
+        attachments: att,
         attached_material_id: matId, attached_collection_id: colId, status, send_at: sendAt, actor: me.email,
       } });
       if (!saved || !saved.ok) return NOT_FOUND();
-      await libLog(base44, me.email, id ? "wiadomosc_zmiana" : "wiadomosc_szkic", "message", saved.id, `${status} · odbiorcy: ${saved.count}`);
+      await libLog(base44, me.email, id ? "wiadomosc_zmiana" : "wiadomosc_szkic", "message", saved.id,
+        `${status} · odbiorcy: ${saved.count} · zalaczniki: ${att.length}`);
       return Response.json({ ok: true, id: saved.id, count: saved.count });
     }
 

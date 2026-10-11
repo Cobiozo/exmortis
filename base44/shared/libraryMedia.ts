@@ -6,12 +6,54 @@ const VIMEO_HASH = /^[0-9a-f]{6,20}$/;
 const BUNNY_ID = /^\d{3,12}\/[A-Za-z0-9_-]{1,40}$/;
 
 // Limity platformy dla prywatnych plików (potwierdzone w dokumentacji).
-export const MAX_BYTES = { PDF: 10 * 1024 * 1024, AUDIO: 100 * 1024 * 1024 };
-export const ALLOWED_EXT = { PDF: ["pdf"], AUDIO: ["mp3", "m4a"] };
+export const MAX_BYTES = { PDF: 10 * 1024 * 1024, AUDIO: 100 * 1024 * 1024, WIDEO: 100 * 1024 * 1024 };
+export const ALLOWED_EXT = { PDF: ["pdf"], AUDIO: ["mp3", "m4a"], WIDEO: ["mp4", "m4v", "webm"] };
 // Ile bajtów pobieramy do sprawdzenia sygnatury (i skanu PDF).
 export const SNIFF_BYTES = 262144;
 
-export const MAX_MB = { PDF: 10, AUDIO: 100 };
+export const MAX_MB = { PDF: 10, AUDIO: 100, WIDEO: 100 };
+
+// ---- Własne wideo (2B): plik wgrany albo adres z serwera właściciela ----
+
+// Sygnatura pliku wideo: MP4/M4V mają „ftyp" na offsecie 4, WebM/Matroska zaczyna się od 1A 45 DF A3.
+export function sniffVideo(b) {
+  if (!b || b.length < 16) return false;
+  if (b[0] === 0x1a && b[1] === 0x45 && b[2] === 0xdf && b[3] === 0xa3) return true;
+  let s = "";
+  for (let i = 4; i < 8; i++) s += String.fromCharCode(b[i]);
+  return s === "ftyp";
+}
+
+export const VIDEO_FILE_EXT = ALLOWED_EXT.WIDEO;
+
+// Sama nazwa hosta: bez ścieżki, bez portu, bez IP, bez localhost, co najmniej dwie etykiety.
+export function validHost(value) {
+  const h = String(value || "").trim().toLowerCase();
+  if (!h || h.length > 253) return null;
+  if (/[\/\\:@?#\s]/.test(h)) return null;
+  if (/^\d{1,3}(\.\d{1,3}){3}$/.test(h)) return null;
+  if (h === "localhost" || h.endsWith(".localhost")) return null;
+  if (!/^[a-z0-9]([a-z0-9-]*[a-z0-9])?(\.[a-z0-9]([a-z0-9-]*[a-z0-9])?)+$/.test(h)) return null;
+  return h;
+}
+
+export const videoDomains = (list) =>
+  [...new Set((Array.isArray(list) ? list : []).map(validHost).filter(Boolean))];
+
+// Adres pliku z serwera: wyłącznie https, host z listy, ścieżka kończąca się rozszerzeniem wideo.
+export function normalizeServerVideo(raw, domains) {
+  const s = String(raw || "").trim();
+  if (!/^https:\/\//i.test(s) || s.length > 500) return null;
+  let u;
+  try { u = new URL(s); } catch { return null; }
+  const host = validHost(u.hostname);
+  if (!host) return null;
+  const allowed = videoDomains(domains);
+  if (!allowed.includes(host)) return null;
+  const ext = extOf(u.pathname);
+  if (!VIDEO_FILE_EXT.includes(ext)) return null;
+  return u.toString();
+}
 
 // Zwraca {provider, id, embed} albo null. Przechowujemy znormalizowany identyfikator, nie surowy adres.
 export function normalizeVideo(raw) {
@@ -82,6 +124,7 @@ export function sniff(kind, b) {
     if (ascii(4, 4) === "ftyp") return true;
     return false;
   }
+  if (kind === "WIDEO") return sniffVideo(b);
   return false;
 }
 

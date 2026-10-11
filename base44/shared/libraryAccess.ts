@@ -3,7 +3,7 @@
 import { rpc } from "./supabase.ts";
 
 export const MODES = ["off", "admin", "on"];
-export const DEFAULT_SETTINGS = { library_mode: "off", messages_mode: "off", email_notify: false, whatsapp: null, space_limit_mb: 5120 };
+export const DEFAULT_SETTINGS = { library_mode: "off", messages_mode: "off", email_notify: false, whatsapp: null, space_limit_mb: 5120, video_domains: [] };
 
 let CFG = null;
 let CFG_AT = 0;
