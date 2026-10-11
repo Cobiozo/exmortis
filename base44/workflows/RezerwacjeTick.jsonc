@@ -1,0 +1,47 @@
+{
+  "name": "Rezerwacje 1:1 \u2014 \u015bwi\u0119ta i higiena danych",
+  "trigger": {
+    "condition": null,
+    "config": {
+      "trigger_type": "scheduled",
+      "events": [],
+      "schedule_mode": "recurring",
+      "cron_expression": "15 3 * * *",
+      "one_time_date": null,
+      "timezone": "Europe/Warsaw",
+      "interval_value": null,
+      "interval_unit": null,
+      "interval_anchor": null,
+      "ends_type": "never",
+      "ends_on_date": null,
+      "ends_after_count": null
+    }
+  },
+  "description": "Raz dziennie: dopisuje polskie \u015bwi\u0119ta na 2 lata do przodu (odblokowane zostaj\u0105 odblokowane), czy\u015bci rejestr dzia\u0142a\u0144 starszy ni\u017c 12 miesi\u0119cy i usuwa odpowiedzi z formularza 60 dni po rozmowie.",
+  "definition": {
+    "document": {
+      "dsl": "1.0.0",
+      "name": "rezerwacje_tick",
+      "version": "1.0",
+      "namespace": "base44"
+    },
+    "do": [
+      {
+        "tick": {
+          "call": "invoke_backend_function",
+          "with": {
+            "function_name": "bookingPublic",
+            "args": {
+              "action": "tick"
+            }
+          },
+          "then": "end",
+          "x-base44": {
+            "title": "Tick rezerwacji",
+            "description": "\u015awi\u0119ta, rejestr, odpowiedzi"
+          }
+        }
+      }
+    ]
+  }
+}

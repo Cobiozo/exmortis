@@ -3,6 +3,7 @@ import CompanyWarning from "./settings/CompanyWarning";
 import MailWarning from "./mail/MailWarning";
 import ZoomWarning from "./events/ZoomWarning";
 import FallbackWarning from "./events/FallbackWarning";
+import BookingWarnings from "./booking/BookingWarnings";
 import { Link } from "react-router-dom";
 import { base44 } from "@/api/base44Client";
 import { useAdminMode } from "@/components/admin/AdminModeContext";
@@ -41,12 +42,14 @@ export default function AdminDashboard() {
 
   return (
     <>
+    <BookingWarnings />
     <CompanyWarning />
     <MailWarning />
     <ZoomWarning items={s?.zoom_missing} />
     <FallbackWarning />
     <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
       <Tile to="/admin/ogloszenia" label="19" title="Ogłoszenia" lines={["Na koncie klienta, bez e-maili"]} />
+      <Tile to="/admin/rezerwacje" label="20" title="Rezerwacje 1:1" lines={["Rodzaje, godziny, blokady, święta"]} />
       <Tile to="/admin/obok" label="17" title="Obok" lines={["Serie, nagrania, uczestnicy"]} />
       <Tile to="/admin/ustawienia" label="16" title="Ustawienia strony" lines={["Dane firmy", "Tryb przedpremierowy", "Wysyłka e-mail"]} />
       <Tile to="/admin/spotkania" label="01" title="Spotkania" lines={[`Nadchodzące: ${v("upcoming_events")}`, `Zapisani: ${v("upcoming_registrations")}`, `Szkice: ${v("draft_events")}`]} />

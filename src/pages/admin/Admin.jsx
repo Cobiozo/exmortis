@@ -26,9 +26,11 @@ import { ShieldAlert, ArrowLeft } from "lucide-react";
 import PanelHeaderActions from "@/components/admin/PanelHeaderActions";
 import TechDashboard from "@/components/admin/TechDashboard";
 import AnnouncementsAdmin from "@/components/admin/announce/AnnouncementsAdmin";
+import BookingAdmin from "@/components/admin/booking/BookingAdmin";
 
 const SECTIONS = {
   spotkania: ["Spotkania", () => <EventsManager />],
+  rezerwacje: ["Rezerwacje 1:1", () => <BookingAdmin />],
   ogloszenia: ["Ogłoszenia", () => <AnnouncementsAdmin />],
   cisza: ["Cisza", () => <SilencePanel />],
   skarbiec: ["Skarbiec", () => <ProductsManager />],

@@ -21,6 +21,7 @@ export default function Login() {
     setLoading(true);
     try {
       await base44.auth.loginViaEmailPassword(email, password);
+      localStorage.setItem("exm_login_via", "haslo");
       window.location.href = await afterLoginTarget();
     } catch (err) {
       setError(t("blad"));
@@ -30,7 +31,7 @@ export default function Login() {
 
   return (
     <AuthLayout tabs>
-      <GoogleButton onClick={() => base44.auth.loginWithProvider("google", providerReturnTo())} />
+      <GoogleButton onClick={() => { localStorage.setItem("exm_login_via", "google"); base44.auth.loginWithProvider("google", providerReturnTo()); }} />
       {error && <p className="mb-5 text-sm text-[#E8C547]">{error}</p>}
       <form onSubmit={handleSubmit} className="space-y-5">
         <AuthField id="email" label={t("pole.email")} type="email" autoComplete="email" value={email} onChange={(e) => setEmail(e.target.value)} required />
