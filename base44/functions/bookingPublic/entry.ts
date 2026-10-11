@@ -1,6 +1,7 @@
 import { createClientFromRequest } from "npm:@base44/sdk@0.8.52";
-import { runSql, rpc, escStr, textField, emailField } from "../../shared/supabase.ts";
+import { runSql, rpc, escStr, textField, emailField, clientIp } from "../../shared/supabase.ts";
 import { loadKeys, sha256hex, randomToken, getMode, safeErr, CONSENTS, TZ_RE, KEYS_MSG } from "../../shared/booking.ts";
+import { encryptHealth } from "../../shared/bookingCrypto.ts";
 
 // Publiczne rezerwacje 1:1. Zwraca wyłącznie godziny i dane potrzebne formularzowi — nigdy linku Zoom ani cudzych danych.
 const ERR = {
@@ -28,7 +29,7 @@ export default async function (req) {
 
     // Zadanie cykliczne: święta 2 lata do przodu, czyszczenie rejestru po 12 mies., usuwanie odpowiedzi po 60 dniach.
     if (a === "tick") {
-      const r = await runSql(base44, `SELECT public.bk_fill_holidays(2) AS holidays, public.bk_log_purge() AS log_purged, public.bk_answers_retention() AS answers_removed`);
+      const r = await runSql(base44, `SELECT public.bk_fill_holidays(2) AS holidays, public.bk_log_purge() AS log_purged, public.bk_answers_retention() AS answers_removed, backup.purge_expired() AS backups_removed`);
       return Response.json({ ok: true, ...(r?.[0] || {}) });
     }
 
@@ -67,7 +68,7 @@ export default async function (req) {
         firstName = textField(body, "first_name", { max: 120 });
         email = emailField(body).toLowerCase();
       } catch (e) { return bad(e.message.startsWith("Brak") ? "Uzupełnij imię i e-mail." : e.message); }
-      const ip = (req.headers.get("x-forwarded-for") || "").split(",")[0].trim().slice(0, 64) || "brak";
+      const ip = clientIp(req);
       const rate = await rpc(base44, "bk_rate_hit", { p_ip: await keys.hmac(ip), p_email: await keys.hmac(email) });
       if (rate !== "ok") return bad("Za dużo prób w krótkim czasie. Spróbuj ponownie za kilka minut.", 429);
       if (body.consent !== true) return bad("Zaznacz akceptację regulaminu i polityki prywatności.");
@@ -86,10 +87,11 @@ export default async function (req) {
       if (health) consents.push({ kind: "zdrowie", text_version: CONSENTS.zdrowie.version, text: CONSENTS.zdrowie.text, email_hmac: emailH, ip_hmac: ipH });
       const token = randomToken();
       const idem = typeof body.idem_key === "string" && /^[A-Za-z0-9-]{8,64}$/.test(body.idem_key) ? body.idem_key : null;
+      const health_enc = health ? await encryptHealth(keys.enc, health) : null;
       const res = await rpc(base44, "bk_book", { p: {
         type_id: t.id, starts_at: st.toISOString(), email, first_name: firstName, user_id: me?.id || null,
         tz: typeof body.tz === "string" && TZ_RE.test(body.tz) ? body.tz : null, idem_key: idem, viewer_admin: admin,
-        source: "klient", actor: "klient", answers, health, health_consent: !!health, enc_key: keys.encPw,
+        source: "klient", actor: "klient", answers, health_enc, health_consent: !!health,
         consents, token_hash: await sha256hex(token),
       } });
       if (res?.error) { const [c, m] = ERR[res.error] || [400, "Nie udało się zarezerwować."]; return bad(m, c); }

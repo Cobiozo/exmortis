@@ -1,6 +1,6 @@
 import { createClientFromRequest } from "npm:@base44/sdk@0.8.44";
 import { waitUntil } from "base44:runtime";
-import { runSql, escStr, textField, emailField } from "../../shared/supabase.ts";
+import { runSql, escStr, textField, emailField, clientIp } from "../../shared/supabase.ts";
 import { getSetting, loadAppUrl } from "../../shared/settings.ts";
 import { getSnap, clearSnap } from "../../shared/snapshot.ts";
 import { rpcRegister, RPC_ERRORS, saveConsents, afterSaved, enqueue, flushQueue, snapEvent, ensureTzColumn } from "../../shared/registrations.ts";
@@ -93,7 +93,7 @@ export default async function (req) {
         return Response.json({ error: "Zaznacz, żeby się zapisać." }, { status: 400 });
       }
       const source = typeof body.source === "string" && body.source.trim() !== "" ? body.source.trim().slice(0, 100) : null;
-      const ip = (req.headers.get("x-forwarded-for") || "").split(",")[0].trim().slice(0, 64) || "brak";
+      const ip = clientIp(req);
       const tz = typeof body.tz === "string" ? body.tz.slice(0, 64) : null;
       const d = { slug, first_name: firstName, email, question, listy: body.listy === true, source, ip, tz, at: new Date().toISOString() };
       // Symulacja awarii Supabase — tylko dla administratora (test kolejki).

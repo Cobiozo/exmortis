@@ -1,17 +1,67 @@
-// Rezerwacje 1:1 — schemat w Supabase (wyłącznie dodający: nowe tabele bk_*, funkcje i wyzwalacze).
-// Uruchamiane przez bookingAdmin {action:"migrate"}; każde polecenie jest powtarzalne (IF NOT EXISTS / OR REPLACE).
-
-export const BACKUP_SQL = `
-CREATE TABLE IF NOT EXISTS public.bk_backup_20261011_events AS TABLE public.events;
-CREATE TABLE IF NOT EXISTS public.bk_backup_20261011_registrations AS TABLE public.registrations;
-ALTER TABLE public.bk_backup_20261011_events ENABLE ROW LEVEL SECURITY;
-ALTER TABLE public.bk_backup_20261011_registrations ENABLE ROW LEVEL SECURITY;
-REVOKE ALL ON public.bk_backup_20261011_events, public.bk_backup_20261011_registrations FROM anon, authenticated;
-`;
+// Rezerwacje 1:1 — schemat w Supabase (wyłącznie dodający). Uruchamiane przez bookingAdmin {action:"migrate"};
+// każde polecenie jest powtarzalne (IF NOT EXISTS / OR REPLACE). KROK 1B: utwardzenie uprawnień i szyfrowania.
 
 export const SCHEMA_SQL = `
+-- ============ KROK 1B: utwardzenie bezpieczeństwa ============
+
+-- 1) Kopie zapasowe poza schematem public (nie są wystawione w API), z RLS i odebranymi uprawnieniami.
+CREATE SCHEMA IF NOT EXISTS backup;
+REVOKE ALL ON SCHEMA backup FROM PUBLIC, anon, authenticated;
+GRANT USAGE ON SCHEMA backup TO service_role;
+
+DO $m$ BEGIN
+  IF to_regclass('public.bk_backup_20261011_events') IS NOT NULL THEN
+    EXECUTE 'ALTER TABLE public.bk_backup_20261011_events SET SCHEMA backup';
+  END IF;
+  IF to_regclass('public.bk_backup_20261011_registrations') IS NOT NULL THEN
+    EXECUTE 'ALTER TABLE public.bk_backup_20261011_registrations SET SCHEMA backup';
+  END IF;
+END $m$;
+
+DO $m$ DECLARE r text; BEGIN
+  FOR r IN SELECT tablename FROM pg_tables WHERE schemaname = 'backup' AND tablename LIKE 'bk_backup_%' LOOP
+    EXECUTE format('ALTER TABLE backup.%I ENABLE ROW LEVEL SECURITY', r);
+    EXECUTE format('REVOKE ALL ON backup.%I FROM PUBLIC, anon, authenticated, service_role', r);
+  END LOOP;
+END $m$;
+
+-- Rejestr kopii + automatyczne usunięcie po 30 dniach.
+CREATE TABLE IF NOT EXISTS backup.bk_registry (
+  id bigserial PRIMARY KEY,
+  table_name text NOT NULL UNIQUE,
+  created_at timestamptz NOT NULL DEFAULT now(),
+  drop_after timestamptz NOT NULL DEFAULT now() + interval '30 days',
+  dropped_at timestamptz,
+  note text
+);
+ALTER TABLE backup.bk_registry ENABLE ROW LEVEL SECURITY;
+REVOKE ALL ON backup.bk_registry FROM PUBLIC, anon, authenticated, service_role;
+
+INSERT INTO backup.bk_registry (table_name)
+SELECT c.relname FROM pg_class c JOIN pg_namespace n ON n.oid = c.relnamespace
+WHERE n.nspname = 'backup' AND c.relname LIKE 'bk_backup_%'
+ON CONFLICT (table_name) DO NOTHING;
+
+CREATE OR REPLACE FUNCTION backup.purge_expired() RETURNS int
+LANGUAGE plpgsql SECURITY DEFINER SET search_path = '' AS $p$
+DECLARE r record; n int := 0;
+BEGIN
+  FOR r IN SELECT table_name FROM backup.bk_registry WHERE dropped_at IS NULL AND drop_after < now() LOOP
+    IF to_regclass('backup.' || quote_ident(r.table_name)) IS NOT NULL THEN
+      EXECUTE format('DROP TABLE backup.%I', r.table_name);
+    END IF;
+    UPDATE backup.bk_registry SET dropped_at = now(), note = 'usunieto po 30 dniach' WHERE table_name = r.table_name;
+    INSERT INTO public.bk_log (actor, action, object_type, object_id, summary)
+      VALUES ('system', 'backup_usuniety', 'backup', r.table_name, 'kopia starsza niz 30 dni');
+    n := n + 1;
+  END LOOP;
+  RETURN n;
+END $p$;
+REVOKE ALL ON FUNCTION backup.purge_expired() FROM PUBLIC, anon, authenticated;
+GRANT EXECUTE ON FUNCTION backup.purge_expired() TO service_role;
+
+-- 2) Role i tabele modułu
 CREATE EXTENSION IF NOT EXISTS btree_gist;
-CREATE EXTENSION IF NOT EXISTS pgcrypto;
 
 CREATE TABLE IF NOT EXISTS public.bk_settings (
   id int PRIMARY KEY DEFAULT 1 CHECK (id = 1),
@@ -187,10 +237,21 @@ CREATE TABLE IF NOT EXISTS public.bk_log (
   anonymized boolean NOT NULL DEFAULT false
 );
 
--- bk_log: tylko dopisywanie. Zmiana/usunięcie wyłącznie w funkcjach poniżej (ustawiają flagę transakcji).
-CREATE OR REPLACE FUNCTION public.bk_log_guard() RETURNS trigger LANGUAGE plpgsql AS $g$
+-- 3) Rejestr działań: dopisywanie dozwolone dla wszystkich; zmiana/usunięcie wyłącznie przez rolę
+--    bk_log_maint (NOLOGIN, właściciel funkcji anonimizującej i czyszczącej). Flagi sesji już nie ma —
+--    nie da się jej ustawić z dowolnej sesji SQL.
+DO $r$ BEGIN
+  IF NOT EXISTS (SELECT 1 FROM pg_roles WHERE rolname = 'bk_log_maint') THEN
+    CREATE ROLE bk_log_maint NOLOGIN;
+  END IF;
+END $r$;
+GRANT USAGE ON SCHEMA public TO bk_log_maint;
+GRANT SELECT, UPDATE, DELETE ON public.bk_log TO bk_log_maint;
+
+CREATE OR REPLACE FUNCTION public.bk_log_guard() RETURNS trigger
+LANGUAGE plpgsql SECURITY INVOKER SET search_path = '' AS $g$
 BEGIN
-  IF current_setting('bk.log_maint', true) = 'on' THEN RETURN COALESCE(NEW, OLD); END IF;
+  IF current_user = 'bk_log_maint' THEN RETURN COALESCE(NEW, OLD); END IF;
   RAISE EXCEPTION 'bk_log: wpisy mozna tylko dopisywac';
 END $g$;
 DROP TRIGGER IF EXISTS bk_log_no_change ON public.bk_log;
@@ -199,31 +260,30 @@ DROP TRIGGER IF EXISTS bk_log_no_truncate ON public.bk_log;
 CREATE TRIGGER bk_log_no_truncate BEFORE TRUNCATE ON public.bk_log FOR EACH STATEMENT EXECUTE FUNCTION public.bk_log_guard();
 
 CREATE OR REPLACE FUNCTION public.bk_log_anonymize(p_actor text, p_object_ids text[]) RETURNS int
-LANGUAGE plpgsql SECURITY DEFINER SET search_path = public AS $a$
+LANGUAGE plpgsql SECURITY DEFINER SET search_path = '' AS $a$
 DECLARE n int;
 BEGIN
-  PERFORM set_config('bk.log_maint', 'on', true);
-  UPDATE bk_log SET actor = CASE WHEN actor = p_actor THEN 'usunieto' ELSE actor END,
+  UPDATE public.bk_log SET actor = CASE WHEN actor = p_actor THEN 'usunieto' ELSE actor END,
     summary = '[zanonimizowano]', anonymized = true
   WHERE (p_actor IS NOT NULL AND actor = p_actor) OR object_id = ANY(COALESCE(p_object_ids, '{}'));
   GET DIAGNOSTICS n = ROW_COUNT;
-  PERFORM set_config('bk.log_maint', 'off', true);
   RETURN n;
 END $a$;
+ALTER FUNCTION public.bk_log_anonymize(text, text[]) OWNER TO bk_log_maint;
 
 CREATE OR REPLACE FUNCTION public.bk_log_purge() RETURNS int
-LANGUAGE plpgsql SECURITY DEFINER SET search_path = public AS $p$
+LANGUAGE plpgsql SECURITY DEFINER SET search_path = '' AS $p$
 DECLARE n int;
 BEGIN
-  PERFORM set_config('bk.log_maint', 'on', true);
-  DELETE FROM bk_log WHERE at < now() - interval '12 months';
+  DELETE FROM public.bk_log WHERE at < now() - interval '12 months';
   GET DIAGNOSTICS n = ROW_COUNT;
-  PERFORM set_config('bk.log_maint', 'off', true);
   RETURN n;
 END $p$;
+ALTER FUNCTION public.bk_log_purge() OWNER TO bk_log_maint;
 
--- Święta: Wielkanoc (algorytm Meeusa/Jonesa/Butchera) + stałe i ruchome dni wolne, zawsze 2 lata do przodu.
-CREATE OR REPLACE FUNCTION public.bk_easter(y int) RETURNS date LANGUAGE plpgsql IMMUTABLE AS $e$
+-- 4) Święta: Wielkanoc (Meeus/Jones/Butcher) + stałe i ruchome dni wolne, 2 lata do przodu.
+CREATE OR REPLACE FUNCTION public.bk_easter(y int) RETURNS date
+LANGUAGE plpgsql IMMUTABLE SET search_path = '' AS $e$
 DECLARE a int; b int; c int; d int; e int; f int; g int; h int; i int; k int; l int; m int;
 BEGIN
   a := y % 19; b := y / 100; c := y % 100; d := b / 4; e := b % 4; f := (b + 8) / 25; g := (b - f + 1) / 3;
@@ -233,12 +293,12 @@ BEGIN
 END $e$;
 
 CREATE OR REPLACE FUNCTION public.bk_fill_holidays(p_years int DEFAULT 2) RETURNS int
-LANGUAGE plpgsql SECURITY DEFINER SET search_path = public AS $h$
+LANGUAGE plpgsql SECURITY DEFINER SET search_path = '' AS $h$
 DECLARE y int; ea date; n int := 0; c int;
 BEGIN
   FOR y IN extract(year FROM now())::int .. extract(year FROM now())::int + p_years LOOP
-    ea := bk_easter(y);
-    INSERT INTO bk_holidays (d, name) VALUES
+    ea := public.bk_easter(y);
+    INSERT INTO public.bk_holidays (d, name) VALUES
       (make_date(y,1,1), 'Nowy Rok'), (make_date(y,1,6), 'Trzech Króli'),
       (ea, 'Wielkanoc'), (ea + 1, 'Poniedziałek Wielkanocny'),
       (make_date(y,5,1), 'Święto Pracy'), (make_date(y,5,3), 'Święto Konstytucji 3 Maja'),
@@ -246,20 +306,19 @@ BEGIN
       (make_date(y,8,15), 'Wniebowzięcie NMP'), (make_date(y,11,1), 'Wszystkich Świętych'),
       (make_date(y,11,11), 'Święto Niepodległości'), (make_date(y,12,24), 'Wigilia'),
       (make_date(y,12,25), 'Boże Narodzenie'), (make_date(y,12,26), 'Drugi dzień Bożego Narodzenia')
-    ON CONFLICT (d) DO NOTHING;  -- nie nadpisuje odblokowanych
+    ON CONFLICT (d) DO NOTHING;
     GET DIAGNOSTICS c = ROW_COUNT; n := n + c;
   END LOOP;
   RETURN n;
 END $h$;
 
--- Wolne sloty jednego rodzaju. Wspólna dostępność: rezerwacje WSZYSTKICH rodzajów (z buforami), blokady,
--- święta i opublikowane spotkania grupowe. Zakresy półotwarte [od, do) — sesje „na styk” się nie nakładają.
+-- 5) Wolne sloty jednego rodzaju (zakresy półotwarte [od, do)).
 CREATE OR REPLACE FUNCTION public.bk_free_slots(p_type uuid, p_from timestamptz, p_to timestamptz,
   p_admin boolean DEFAULT false, p_ignore uuid DEFAULT NULL)
 RETURNS TABLE (slot_start timestamptz, slot_end timestamptz)
-LANGUAGE sql STABLE SECURITY DEFINER SET search_path = public AS $f$
-WITH s AS (SELECT * FROM bk_settings WHERE id = 1),
-t AS (SELECT * FROM bk_types WHERE id = p_type),
+LANGUAGE sql STABLE SECURITY DEFINER SET search_path = '' AS $f$
+WITH s AS (SELECT * FROM public.bk_settings WHERE id = 1),
+t AS (SELECT * FROM public.bk_types WHERE id = p_type),
 days AS (
   SELECT g::date AS d FROM generate_series((p_from AT TIME ZONE 'Europe/Warsaw')::date,
     (p_to AT TIME ZONE 'Europe/Warsaw')::date, interval '1 day') g
@@ -269,7 +328,7 @@ cand AS (
     ((dy.d + h.end_local) AT TIME ZONE 'Europe/Warsaw') AS win_end,
     t.duration_min, t.buffer_before, t.buffer_after, t.horizon_days, t.monthly_limit
   FROM days dy
-  JOIN bk_hours h ON h.type_id = p_type AND h.weekday = extract(isodow FROM dy.d)::int
+  JOIN public.bk_hours h ON h.type_id = p_type AND h.weekday = extract(isodow FROM dy.d)::int
   CROSS JOIN t
   CROSS JOIN LATERAL generate_series(0, (extract(epoch FROM (h.end_local - h.start_local)) / 60 / t.step_min)::int) n
 ),
@@ -285,64 +344,64 @@ c AS (
     AND (p_admin OR st >= now() + s.min_notice_h * interval '1 hour')
 )
 SELECT c.st, c.en FROM c, s
-WHERE NOT EXISTS (SELECT 1 FROM bk_bookings k WHERE k.status = 'POTWIERDZONA' AND k.busy && c.b AND k.id IS DISTINCT FROM p_ignore)
-  AND NOT EXISTS (SELECT 1 FROM bk_blocks x WHERE NOT x.disabled AND x.kind IN ('jednorazowa','calodniowa')
+WHERE NOT EXISTS (SELECT 1 FROM public.bk_bookings k WHERE k.status = 'POTWIERDZONA' AND k.busy && c.b AND k.id IS DISTINCT FROM p_ignore)
+  AND NOT EXISTS (SELECT 1 FROM public.bk_blocks x WHERE NOT x.disabled AND x.kind IN ('jednorazowa','calodniowa')
     AND tstzrange(x.starts_at, x.ends_at, '[)') && c.b)
-  AND NOT EXISTS (SELECT 1 FROM bk_blocks x WHERE NOT x.disabled AND x.kind = 'powtarzalna'
+  AND NOT EXISTS (SELECT 1 FROM public.bk_blocks x WHERE NOT x.disabled AND x.kind = 'powtarzalna'
     AND x.rep_weekday = extract(isodow FROM c.ld)::int
     AND c.ld BETWEEN (x.starts_at AT TIME ZONE 'Europe/Warsaw')::date AND (x.ends_at AT TIME ZONE 'Europe/Warsaw')::date
     AND tstzrange((c.ld + x.rep_from) AT TIME ZONE 'Europe/Warsaw', (c.ld + x.rep_to) AT TIME ZONE 'Europe/Warsaw', '[)') && c.b)
-  AND NOT EXISTS (SELECT 1 FROM bk_holidays hd WHERE hd.blocked
+  AND NOT EXISTS (SELECT 1 FROM public.bk_holidays hd WHERE hd.blocked
     AND tstzrange(hd.d::timestamp AT TIME ZONE 'Europe/Warsaw', (hd.d + 1)::timestamp AT TIME ZONE 'Europe/Warsaw', '[)') && c.b)
   AND NOT EXISTS (SELECT 1 FROM public.events e WHERE e.status = 'Opublikowane' AND e.start_datetime IS NOT NULL
     AND tstzrange(e.start_datetime, e.start_datetime + COALESCE(e.duration_minutes, 60) * interval '1 minute', '[)') && c.b)
-  AND (SELECT count(*) FROM bk_bookings k WHERE k.status = 'POTWIERDZONA' AND k.id IS DISTINCT FROM p_ignore
+  AND (SELECT count(*) FROM public.bk_bookings k WHERE k.status = 'POTWIERDZONA' AND k.id IS DISTINCT FROM p_ignore
     AND (k.starts_at AT TIME ZONE 'Europe/Warsaw')::date = c.ld) < s.daily_limit
-  AND (s.weekly_limit IS NULL OR (SELECT count(*) FROM bk_bookings k WHERE k.status = 'POTWIERDZONA' AND k.id IS DISTINCT FROM p_ignore
+  AND (s.weekly_limit IS NULL OR (SELECT count(*) FROM public.bk_bookings k WHERE k.status = 'POTWIERDZONA' AND k.id IS DISTINCT FROM p_ignore
     AND date_trunc('week', k.starts_at AT TIME ZONE 'Europe/Warsaw') = date_trunc('week', c.st AT TIME ZONE 'Europe/Warsaw')) < s.weekly_limit)
-  AND (c.monthly_limit IS NULL OR (SELECT count(*) FROM bk_bookings k WHERE k.status = 'POTWIERDZONA' AND k.type_id = p_type
+  AND (c.monthly_limit IS NULL OR (SELECT count(*) FROM public.bk_bookings k WHERE k.status = 'POTWIERDZONA' AND k.type_id = p_type
     AND k.id IS DISTINCT FROM p_ignore
     AND date_trunc('month', k.starts_at AT TIME ZONE 'Europe/Warsaw') = date_trunc('month', c.st AT TIME ZONE 'Europe/Warsaw')) < c.monthly_limit)
 ORDER BY c.st
 $f$;
 
--- Limit prób: 5 na IP / 10 min, 3 na e-mail / godzinę. Klucze to HMAC liczony na serwerze funkcji.
+-- 6) Limit prób: 5 na IP / 10 min, 3 na e-mail / godzinę. Klucze to HMAC liczony na serwerze funkcji.
 CREATE OR REPLACE FUNCTION public.bk_rate_hit(p_ip text, p_email text) RETURNS text
-LANGUAGE plpgsql SECURITY DEFINER SET search_path = public AS $r$
+LANGUAGE plpgsql SECURITY DEFINER SET search_path = '' AS $r$
 BEGIN
-  DELETE FROM bk_rate WHERE at < now() - interval '1 day';
-  INSERT INTO bk_rate (bucket, key_hmac) VALUES ('ip', p_ip);
-  IF p_email IS NOT NULL THEN INSERT INTO bk_rate (bucket, key_hmac) VALUES ('email', p_email); END IF;
-  IF (SELECT count(*) FROM bk_rate WHERE bucket = 'ip' AND key_hmac = p_ip AND at > now() - interval '10 minutes') > 5 THEN RETURN 'rate'; END IF;
-  IF p_email IS NOT NULL AND (SELECT count(*) FROM bk_rate WHERE bucket = 'email' AND key_hmac = p_email AND at > now() - interval '1 hour') > 3 THEN RETURN 'rate'; END IF;
+  DELETE FROM public.bk_rate WHERE at < now() - interval '1 day';
+  INSERT INTO public.bk_rate (bucket, key_hmac) VALUES ('ip', p_ip);
+  IF p_email IS NOT NULL THEN INSERT INTO public.bk_rate (bucket, key_hmac) VALUES ('email', p_email); END IF;
+  IF (SELECT count(*) FROM public.bk_rate WHERE bucket = 'ip' AND key_hmac = p_ip AND at > now() - interval '10 minutes') > 5 THEN RETURN 'rate'; END IF;
+  IF p_email IS NOT NULL AND (SELECT count(*) FROM public.bk_rate WHERE bucket = 'email' AND key_hmac = p_email AND at > now() - interval '1 hour') > 3 THEN RETURN 'rate'; END IF;
   RETURN 'ok';
 END $r$;
 
--- Rezerwacja atomowo: blokada kalendarza → idempotencja → reguły (przez bk_free_slots) → zapis.
+-- 7) Rezerwacja atomowo. Dane o zdrowiu przychodzą już zaszyfrowane (AES-256-GCM, serwer funkcji) jako hex.
 CREATE OR REPLACE FUNCTION public.bk_book(p jsonb) RETURNS jsonb
-LANGUAGE plpgsql SECURITY DEFINER SET search_path = public, extensions AS $b$
+LANGUAGE plpgsql SECURITY DEFINER SET search_path = '' AS $b$
 DECLARE
-  v_s bk_settings; v_t bk_types; v_ex bk_bookings; v_id uuid; v_en timestamptz;
+  v_s public.bk_settings; v_t public.bk_types; v_ex public.bk_bookings; v_id uuid; v_en timestamptz;
   v_st timestamptz := (p->>'starts_at')::timestamptz;
   v_vadmin boolean := COALESCE((p->>'viewer_admin')::boolean, false);
   v_src text := COALESCE(p->>'source', 'klient');
 BEGIN
   PERFORM pg_advisory_xact_lock(hashtext('bk_calendar'));
-  SELECT * INTO v_s FROM bk_settings WHERE id = 1;
+  SELECT * INTO v_s FROM public.bk_settings WHERE id = 1;
   IF v_s.mode = 'off' OR (v_s.mode = 'admin' AND NOT v_vadmin) THEN RETURN jsonb_build_object('error', 'disabled'); END IF;
   IF p->>'idem_key' IS NOT NULL THEN
-    SELECT * INTO v_ex FROM bk_bookings WHERE idem_key = p->>'idem_key';
+    SELECT * INTO v_ex FROM public.bk_bookings WHERE idem_key = p->>'idem_key';
     IF FOUND THEN RETURN jsonb_build_object('ok', true, 'already', true, 'id', v_ex.id, 'starts_at', v_ex.starts_at, 'ends_at', v_ex.ends_at); END IF;
   END IF;
-  SELECT * INTO v_t FROM bk_types WHERE id = (p->>'type_id')::uuid;
+  SELECT * INTO v_t FROM public.bk_types WHERE id = (p->>'type_id')::uuid;
   IF NOT FOUND OR (NOT v_t.active AND NOT v_vadmin) THEN RETURN jsonb_build_object('error', 'not_found'); END IF;
   IF v_src <> 'admin' AND v_t.access <> 'PUBLICZNY' THEN RETURN jsonb_build_object('error', 'access'); END IF;
-  IF NOT EXISTS (SELECT 1 FROM bk_free_slots(v_t.id, v_st, v_st + interval '1 minute', v_src = 'admin') f WHERE f.slot_start = v_st) THEN
+  IF NOT EXISTS (SELECT 1 FROM public.bk_free_slots(v_t.id, v_st, v_st + interval '1 minute', v_src = 'admin') f WHERE f.slot_start = v_st) THEN
     RETURN jsonb_build_object('error', 'taken');
   END IF;
   v_en := v_st + v_t.duration_min * interval '1 minute';
   BEGIN
-    INSERT INTO bk_bookings (type_id, user_id, email, first_name, is_public, starts_at, ends_at, busy, client_tz, source, idem_key)
+    INSERT INTO public.bk_bookings (type_id, user_id, email, first_name, is_public, starts_at, ends_at, busy, client_tz, source, idem_key)
     VALUES (v_t.id, p->>'user_id', p->>'email', p->>'first_name', v_t.access = 'PUBLICZNY', v_st, v_en,
       tstzrange(v_st - v_t.buffer_before * interval '1 minute', v_en + v_t.buffer_after * interval '1 minute', '[)'),
       p->>'tz', v_src, p->>'idem_key')
@@ -351,64 +410,91 @@ BEGIN
     WHEN exclusion_violation THEN RETURN jsonb_build_object('error', 'taken');
     WHEN unique_violation THEN RETURN jsonb_build_object('error', 'one_per_email');
   END;
-  IF p ? 'answers' OR p->>'health' IS NOT NULL THEN
-    INSERT INTO bk_answers (booking_id, answers, health_enc, health_consent, delete_after)
+  IF p ? 'answers' OR COALESCE(p->>'health_enc', '') <> '' THEN
+    INSERT INTO public.bk_answers (booking_id, answers, health_enc, health_consent, delete_after)
     VALUES (v_id, p->'answers',
-      CASE WHEN COALESCE(p->>'health', '') <> '' THEN pgp_sym_encrypt(p->>'health', p->>'enc_key') END,
+      CASE WHEN COALESCE(p->>'health_enc', '') <> '' THEN decode(p->>'health_enc', 'hex') END,
       COALESCE((p->>'health_consent')::boolean, false), v_en + interval '60 days');
   END IF;
-  INSERT INTO bk_consents (booking_id, kind, text_version, text, email_hmac, ip_hmac)
+  INSERT INTO public.bk_consents (booking_id, kind, text_version, text, email_hmac, ip_hmac)
   SELECT v_id, x.kind, x.text_version, x.text, x.email_hmac, x.ip_hmac
   FROM jsonb_to_recordset(COALESCE(p->'consents', '[]')) AS x(kind text, text_version text, text text, email_hmac text, ip_hmac text);
   IF p->>'token_hash' IS NOT NULL THEN
-    INSERT INTO bk_tokens (purpose, token_hash, owner_user_id, owner_email, booking_id, expires_at)
+    INSERT INTO public.bk_tokens (purpose, token_hash, owner_user_id, owner_email, booking_id, expires_at)
     VALUES ('zarzadzaj', p->>'token_hash', p->>'user_id', p->>'email', v_id, v_en + interval '30 days');
   END IF;
-  INSERT INTO bk_log (actor, action, object_type, object_id, summary)
+  INSERT INTO public.bk_log (actor, action, object_type, object_id, summary)
   VALUES (COALESCE(p->>'actor', v_src), 'rezerwacja', 'booking', v_id::text, v_t.slug || ' ' || to_char(v_st AT TIME ZONE 'Europe/Warsaw', 'YYYY-MM-DD HH24:MI'));
   RETURN jsonb_build_object('ok', true, 'id', v_id, 'starts_at', v_st, 'ends_at', v_en);
 END $b$;
 
 CREATE OR REPLACE FUNCTION public.bk_manage_view(p_hash text) RETURNS jsonb
-LANGUAGE sql STABLE SECURITY DEFINER SET search_path = public AS $m$
+LANGUAGE sql STABLE SECURITY DEFINER SET search_path = '' AS $m$
   SELECT jsonb_build_object('type', t.name, 'starts_at', k.starts_at, 'ends_at', k.ends_at, 'status', k.status, 'first_name', k.first_name)
-  FROM bk_tokens x JOIN bk_bookings k ON k.id = x.booking_id JOIN bk_types t ON t.id = k.type_id
+  FROM public.bk_tokens x JOIN public.bk_bookings k ON k.id = x.booking_id JOIN public.bk_types t ON t.id = k.type_id
   WHERE x.token_hash = p_hash AND x.purpose = 'zarzadzaj' AND x.used_at IS NULL AND x.expires_at > now() AND k.status = 'POTWIERDZONA'
 $m$;
 
--- Odszyfrowanie odpowiedzi o zdrowiu — wywoływane wyłącznie z bookingAdmin (klucz podaje serwer funkcji).
-CREATE OR REPLACE FUNCTION public.bk_admin_detail(p_id uuid, p_key text) RETURNS jsonb
-LANGUAGE sql STABLE SECURITY DEFINER SET search_path = public, extensions AS $d$
+-- Odczyt odpowiedzi o zdrowiu: zwraca zaszyfrowaną wartość (hex) — odszyfrowuje ją wyłącznie funkcja serwera.
+DROP FUNCTION IF EXISTS public.bk_admin_detail(uuid, text);
+CREATE OR REPLACE FUNCTION public.bk_admin_detail(p_id uuid) RETURNS jsonb
+LANGUAGE sql STABLE SECURITY DEFINER SET search_path = '' AS $d$
   SELECT jsonb_build_object('answers', a.answers, 'health_consent', a.health_consent, 'deleted_at', a.deleted_at,
-    'health', CASE WHEN a.health_enc IS NOT NULL THEN pgp_sym_decrypt(a.health_enc, p_key) END)
-  FROM bk_answers a WHERE a.booking_id = p_id
+    'health_enc', CASE WHEN a.health_enc IS NOT NULL THEN encode(a.health_enc, 'hex') END)
+  FROM public.bk_answers a WHERE a.booking_id = p_id
 $d$;
 
 CREATE OR REPLACE FUNCTION public.bk_answers_retention() RETURNS int
-LANGUAGE plpgsql SECURITY DEFINER SET search_path = public AS $t$
+LANGUAGE plpgsql SECURITY DEFINER SET search_path = '' AS $t$
 DECLARE n int;
 BEGIN
-  UPDATE bk_answers SET answers = NULL, health_enc = NULL, deleted_at = now()
+  UPDATE public.bk_answers SET answers = NULL, health_enc = NULL, deleted_at = now()
   WHERE delete_after < now() AND deleted_at IS NULL AND NOT keep;
   GET DIAGNOSTICS n = ROW_COUNT; RETURN n;
 END $t$;
 
--- Dostęp: tylko serwer (service_role). RLS bez polityk blokuje role anon/authenticated w PostgREST.
+-- 8) Dostęp do danych: wyłącznie serwer (service_role). RLS bez polityk blokuje role anon/authenticated w PostgREST.
 DO $x$ DECLARE r text; BEGIN
   FOREACH r IN ARRAY ARRAY['bk_settings','bk_types','bk_hours','bk_blocks','bk_holidays','bk_packages','bk_bookings',
     'bk_answers','bk_consents','bk_tokens','bk_notifications','bk_rate','bk_log'] LOOP
     EXECUTE format('ALTER TABLE public.%I ENABLE ROW LEVEL SECURITY', r);
-    EXECUTE format('REVOKE ALL ON public.%I FROM anon, authenticated', r);
+    EXECUTE format('REVOKE ALL ON public.%I FROM PUBLIC, anon, authenticated', r);
   END LOOP;
 END $x$;
-REVOKE EXECUTE ON FUNCTION public.bk_free_slots(uuid, timestamptz, timestamptz, boolean, uuid), public.bk_book(jsonb),
-  public.bk_rate_hit(text, text), public.bk_manage_view(text), public.bk_admin_detail(uuid, text),
-  public.bk_log_anonymize(text, text[]), public.bk_log_purge(), public.bk_fill_holidays(int), public.bk_answers_retention()
-  FROM PUBLIC, anon, authenticated;
-GRANT EXECUTE ON FUNCTION public.bk_free_slots(uuid, timestamptz, timestamptz, boolean, uuid), public.bk_book(jsonb),
-  public.bk_rate_hit(text, text), public.bk_manage_view(text), public.bk_admin_detail(uuid, text),
-  public.bk_log_anonymize(text, text[]), public.bk_log_purge(), public.bk_fill_holidays(int), public.bk_answers_retention()
-  TO service_role;
+REVOKE ALL ON SEQUENCE public.bk_log_id_seq, public.bk_rate_id_seq FROM PUBLIC, anon, authenticated;
+
+-- 9) Wykonanie funkcji bk_*: odebrane PUBLIC/anon/authenticated, zostaje tylko service_role.
+REVOKE EXECUTE ON FUNCTION public.bk_easter(int) FROM PUBLIC, anon, authenticated;
+REVOKE EXECUTE ON FUNCTION public.bk_log_guard() FROM PUBLIC, anon, authenticated;
+REVOKE EXECUTE ON FUNCTION public.bk_free_slots(uuid, timestamptz, timestamptz, boolean, uuid) FROM PUBLIC, anon, authenticated;
+REVOKE EXECUTE ON FUNCTION public.bk_book(jsonb) FROM PUBLIC, anon, authenticated;
+REVOKE EXECUTE ON FUNCTION public.bk_rate_hit(text, text) FROM PUBLIC, anon, authenticated;
+REVOKE EXECUTE ON FUNCTION public.bk_manage_view(text) FROM PUBLIC, anon, authenticated;
+REVOKE EXECUTE ON FUNCTION public.bk_admin_detail(uuid) FROM PUBLIC, anon, authenticated;
+REVOKE EXECUTE ON FUNCTION public.bk_log_anonymize(text, text[]) FROM PUBLIC, anon, authenticated;
+REVOKE EXECUTE ON FUNCTION public.bk_log_purge() FROM PUBLIC, anon, authenticated;
+REVOKE EXECUTE ON FUNCTION public.bk_fill_holidays(int) FROM PUBLIC, anon, authenticated;
+REVOKE EXECUTE ON FUNCTION public.bk_answers_retention() FROM PUBLIC, anon, authenticated;
+
+GRANT EXECUTE ON FUNCTION public.bk_free_slots(uuid, timestamptz, timestamptz, boolean, uuid) TO service_role;
+GRANT EXECUTE ON FUNCTION public.bk_book(jsonb) TO service_role;
+GRANT EXECUTE ON FUNCTION public.bk_rate_hit(text, text) TO service_role;
+GRANT EXECUTE ON FUNCTION public.bk_manage_view(text) TO service_role;
+GRANT EXECUTE ON FUNCTION public.bk_admin_detail(uuid) TO service_role;
+GRANT EXECUTE ON FUNCTION public.bk_log_anonymize(text, text[]) TO service_role;
+GRANT EXECUTE ON FUNCTION public.bk_log_purge() TO service_role;
+GRANT EXECUTE ON FUNCTION public.bk_fill_holidays(int) TO service_role;
+GRANT EXECUTE ON FUNCTION public.bk_answers_retention() TO service_role;
+
+-- 10) pgcrypto usuwane — nic już z niego nie korzysta (szyfrowanie przeniesione do funkcji serwera).
+DO $x$ BEGIN
+  IF EXISTS (SELECT 1 FROM pg_extension WHERE extname = 'pgcrypto')
+     AND NOT EXISTS (SELECT 1 FROM pg_proc p JOIN pg_namespace n ON n.oid = p.pronamespace
+       WHERE p.prokind = 'f' AND n.nspname NOT IN ('pg_catalog','information_schema','extensions')
+       AND p.prosrc ILIKE '%pgp_%') THEN
+    DROP EXTENSION pgcrypto;
+  END IF;
+END $x$;
 
 SELECT public.bk_fill_holidays(2);
 NOTIFY pgrst, 'reload schema';

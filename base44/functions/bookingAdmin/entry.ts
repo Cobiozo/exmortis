@@ -1,7 +1,8 @@
 import { createClientFromRequest } from "npm:@base44/sdk@0.8.52";
 import { runSql, rpc, esc, escStr, requireAdmin, emailField, textField } from "../../shared/supabase.ts";
 import { loadKeys, getMode, safeErr, KEYS_MSG } from "../../shared/booking.ts";
-import { BACKUP_SQL, SCHEMA_SQL, SEED_SQL } from "../../shared/bookingSchema.ts";
+import { decryptHealth } from "../../shared/bookingCrypto.ts";
+import { SCHEMA_SQL, SEED_SQL } from "../../shared/bookingSchema.ts";
 
 // Panel rezerwacji 1:1 — wyłącznie administrator. Jedyne miejsce odszyfrowania odpowiedzi o zdrowiu.
 const int = (v, min, max, def = null) => { const n = Math.round(Number(v)); return Number.isFinite(n) && v !== "" && v !== null ? Math.min(max, Math.max(min, n)) : def; };
@@ -18,7 +19,6 @@ export default async function (req) {
     const a = body.action;
 
     if (a === "migrate") {
-      await runSql(base44, BACKUP_SQL);
       await runSql(base44, SCHEMA_SQL);
       await runSql(base44, SEED_SQL);
       return Response.json({ ok: true });
@@ -144,9 +144,10 @@ export default async function (req) {
       const [booking] = await runSql(base44, `SELECT k.id, t.name AS type, t.zoom_link, k.starts_at, k.first_name, k.email, k.status FROM public.bk_bookings k
         JOIN public.bk_types t ON t.id = k.type_id WHERE k.id = ${escStr(id)}::uuid`, true);
       if (!booking) return Response.json({ error: "Nie znaleziono" }, { status: 404 });
-      const detail = await rpc(base44, "bk_admin_detail", { p_id: id, p_key: keys.encPw });
+      const d = await rpc(base44, "bk_admin_detail", { p_id: id });
+      const health = d?.health_enc ? await decryptHealth(keys.enc, d.health_enc).catch(() => null) : null;
       await log(base44, me.email, "odczyt_odpowiedzi", "booking", id, null);
-      return Response.json({ booking, detail });
+      return Response.json({ booking, detail: { answers: d?.answers ?? null, health_consent: d?.health_consent ?? false, deleted_at: d?.deleted_at ?? null, health } });
     }
 
     // Rezerwacja przez admina: może pominąć 24 h, ale nie zająć zajętego terminu (te same reguły w bk_book).

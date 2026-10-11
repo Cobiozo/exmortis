@@ -70,6 +70,14 @@ export function esc(value) {
   return escStr(value);
 }
 
+// IP klienta wyłącznie z nagłówka ustawianego przez brzeg platformy (Cloudflare).
+// cf-connecting-ip i x-real-ip są nadpisywane przy każdym żądaniu — klient nie może ich podrobić.
+// X-Forwarded-For pomijamy: jego wartość pochodzi od klienta (można podać dowolną).
+export function clientIp(req) {
+  const v = (req.headers.get("cf-connecting-ip") || req.headers.get("x-real-ip") || "").trim();
+  return /^[0-9a-fA-F:.]{3,45}$/.test(v) ? v : "brak";
+}
+
 export const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
 // Skraca i waliduje pole tekstowe formularza; zwraca null, gdy niepoprawne.

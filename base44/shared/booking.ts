@@ -1,6 +1,7 @@
 // Rezerwacje 1:1 — wspólne: klucze bezpieczeństwa, skróty, tryb modułu.
 import { secrets } from "base44:runtime";
 import { runSql } from "./supabase.ts";
+import { aesKeyFromSecret } from "./bookingCrypto.ts";
 
 export const KEYS_MSG = "Rezerwacje chwilowo niedostępne";
 const te = new TextEncoder();
@@ -30,7 +31,7 @@ export async function loadKeys(simulateMissing = false) {
   return {
     ok, info,
     hmac: async (text) => hex(await crypto.subtle.sign("HMAC", key, te.encode(String(text)))),
-    encPw: btoa(String.fromCharCode(...e.bytes)), // hasło pgcrypto = bajty klucza w base64
+    enc: await aesKeyFromSecret(e.bytes), // klucz AES-256-GCM; zostaje wyłącznie w pamięci funkcji
   };
 }
 
