@@ -1,5 +1,5 @@
 import { createClientFromRequest } from "npm:@base44/sdk@0.8.53";
-import { runSql, escStr } from "../../shared/supabase.ts";
+import { runSql, escStr, clientIp } from "../../shared/supabase.ts";
 import { applyDiscount } from "../../shared/discounts.ts";
 
 // Podgląd rabatu w kasie (ostateczne wyliczenie i tak robi payuCreateOrder).
@@ -8,7 +8,7 @@ export default async function (req) {
     const base44 = createClientFromRequest(req);
     const body = await req.json().catch(() => ({}));
     // Limit: 10 prób na godzinę na IP.
-    const ip = (req.headers.get("x-forwarded-for") || "").split(",")[0].trim();
+    const ip = clientIp(req);
     const L = base44.asServiceRole.entities.SecurityLog;
     const tries = await L.filter({ type: "rabat", ip, created_date: { $gte: new Date(Date.now() - 3600000).toISOString() } }, "-created_date", 11);
     if (tries.length >= 10) throw new Error("Zbyt wiele prób. Spróbuj za godzinę.");
