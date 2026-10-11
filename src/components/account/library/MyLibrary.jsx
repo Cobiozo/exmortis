@@ -14,14 +14,15 @@ const Grid = ({ items, onOpen, onToggleDone }) => (
 );
 
 // „Moja biblioteka": kafelki, kolekcje w kolejności, filtry typu, wyszukiwarka przy większej liczbie.
-export default function MyLibrary({ onGoToOrders }) {
-  const [data, setData] = useState(null);
+export default function MyLibrary({ initial, onGoToOrders }) {
+  const [data, setData] = useState(initial || null);
   const [err, setErr] = useState("");
   const [kind, setKind] = useState("all");
   const [q, setQ] = useState("");
   const [open, setOpen] = useState(null);
 
-  useEffect(() => { myLibrary().then(setData).catch(() => setErr("Nie udało się wczytać biblioteki.")); }, []);
+  // Dane przyszły razem z wejściem na /konto — nie wołamy ich drugi raz.
+  useEffect(() => { if (initial) return; myLibrary().then(setData).catch(() => setErr("Nie udało się wczytać biblioteki.")); }, [initial]);
 
   const items = (data && data.items) || [];
   const counts = (data && data.counts) || {};
@@ -46,7 +47,22 @@ export default function MyLibrary({ onGoToOrders }) {
   }));
 
   if (err) return <p className="font-body text-[15px] text-[#F5EFE1]/70 py-10">{err}</p>;
-  if (!data) return <p className="text-foreground/50 font-body py-10">Ładowanie…</p>;
+  if (!data) return (
+    <div className="space-y-10" aria-busy="true" aria-label="Wczytywanie biblioteki">
+      <div className="flex flex-wrap gap-3">
+        {[0, 1, 2, 3].map((i) => <div key={i} className="h-[44px] w-28 border hairline bg-foreground/5 animate-pulse" />)}
+      </div>
+      <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-5">
+        {[0, 1, 2, 3, 4, 5].map((i) => (
+          <div key={i} className="border hairline p-6 space-y-4 animate-pulse">
+            <div className="h-3 w-16 bg-foreground/10" />
+            <div className="h-5 w-3/4 bg-foreground/10" />
+            <div className="h-4 w-full bg-foreground/10" />
+          </div>
+        ))}
+      </div>
+    </div>
+  );
 
   if (!items.length) {
     return (

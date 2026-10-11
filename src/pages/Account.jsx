@@ -10,7 +10,7 @@ import DailyThought from "@/components/account/DailyThought";
 import AccountAnnouncements from "@/components/account/announce/AccountAnnouncements";
 import MySessions from "@/components/account/sessions/MySessions";
 import { obok } from "@/components/obok/obokApi";
-import { libConfig } from "@/components/account/library/libApi";
+import { libBundle } from "@/components/account/library/libApi";
 import MyLibrary from "@/components/account/library/MyLibrary";
 import MyMessages from "@/components/account/messages/MyMessages";
 import AccountUnreadMessage from "@/components/account/messages/AccountUnreadMessage";
@@ -28,9 +28,10 @@ export default function Account() {
   const [cfg, setCfg] = useState(null);
 
   useEffect(() => {
+    // Wszystko równolegle: konto, Obok i jedno wejście do modułu (przełączniki + biblioteka + wiadomości).
     base44.auth.me().then(setMe);
     obok("home").then((d) => setHasObok(!!d.tiles?.length)).catch(() => {});
-    libConfig().then(setCfg);
+    libBundle().then(setCfg).catch(() => setCfg({ library: false, messages: false }));
   }, []);
 
   if (me?.role === "zablokowane") {
@@ -62,7 +63,12 @@ export default function Account() {
             </h1>
           </div>
           <div className="w-full lg:max-w-[380px] flex flex-col gap-4">
-            {cfg?.messages && <AccountUnreadMessage onOpen={() => setTab("wiadomosci")} />}
+            {cfg?.messages && (
+              <AccountUnreadMessage
+                initial={(cfg?.messages_data?.items || []).find((m) => !m.read_at) || null}
+                onOpen={() => setTab("wiadomosci")}
+              />
+            )}
             <AccountAnnouncements />
             <DailyThought hasObok={hasObok} onObok={() => setTab("obok")} />
           </div>
@@ -80,8 +86,8 @@ export default function Account() {
         </div>
         {active === "produkty" && <MyProducts />}
         {active === "sesje" && <MySessions />}
-        {active === "biblioteka" && <MyLibrary onGoToOrders={() => setTab("zakupy")} />}
-        {active === "wiadomosci" && <MyMessages footer={cfg?.footer} />}
+        {active === "biblioteka" && <MyLibrary initial={cfg?.library_data} onGoToOrders={() => setTab("zakupy")} />}
+        {active === "wiadomosci" && <MyMessages initial={cfg?.messages_data} footer={cfg?.footer} />}
         {active === "obok" && <><SeriesTiles /><div className="mt-14"><ObokNotifications /></div></>}
         {active === "zakupy" && <MyOrders />}
         {active === "ustawienia" && me && <AccountSettings me={me} />}
