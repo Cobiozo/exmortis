@@ -1,13 +1,14 @@
 import { createClientFromRequest } from "npm:@base44/sdk@0.8.52";
-import { runSql, escStr } from "../../shared/supabase.ts";
-import { libSettings, modeVisible, clientEmail, visibleMaterials, footerData } from "../../shared/libraryAccess.ts";
+import { rpc } from "../../shared/supabase.ts";
+import { libSettings, modeVisible, clientEmail, footerData } from "../../shared/libraryAccess.ts";
 import { sanitizeHtml } from "../../shared/librarySanitize.ts";
 import { embedUrl, sha256hex } from "../../shared/libraryMedia.ts";
 import { getSettingsFast } from "../../shared/settings.ts";
-import { libraryData, messagesData } from "../../shared/libraryView.ts";
+import { libraryData, messagesData, bundleData } from "../../shared/libraryView.ts";
 
 // Strona klienta: „Moja biblioteka" i „Wiadomości".
 // Tożsamość wyłącznie z sesji. Zwracamy minimum — nigdy kluczy plików, nazw grup, list odbiorców ani statystyk.
+// ETAP 2A: wszystkie ścieżki idą jednym wywołaniem RPC (zamiast kilku zapytań Management API).
 
 const NOT_FOUND = () => Response.json({ error: "Nie znaleziono" }, { status: 404 });
 const uuid = (v) => (/^[0-9a-fA-F-]{36}$/.test(String(v || "")) ? String(v) : null);
@@ -24,12 +25,24 @@ export default async function (req) {
     const lib = modeVisible(s.library_mode, me);
     const msg = modeVisible(s.messages_mode, me);
     const email = clientEmail(me);
+    const preview = body.preview === true && admin;
 
-    // Lekki odczyt przełączników dla /konto. Odpowiada też przy obu „off" — wtedy zakładki
-    // po prostu się nie pokazują, a strona konta wygląda jak dotąd.
-    if (a === "config") {
+    // Jedno wejście dla /konto: przełączniki + biblioteka + wiadomości + nieprzeczytane.
+    // Odpowiada też przy obu „off" — wtedy zakładki po prostu się nie pokazują.
+    if (a === "bundle" || a === "config") {
+      const d = await bundleData(base44, email, me, admin, preview).catch(() => null);
       const f = await getSettingsFast(base44, ["firma"]).catch(() => ({}));
-      return Response.json({ library: lib, messages: msg, email, footer: footerData(s, f && f.firma) });
+      const out = {
+        library: lib, messages: msg, email,
+        library_mode: (d && d.library_mode) || s.library_mode,
+        messages_mode: (d && d.messages_mode) || s.messages_mode,
+        footer: footerData(s, f && f.firma),
+      };
+      if (a === "bundle") {
+        out.library_data = d ? d.library : null;
+        out.messages_data = d ? d.messages : null;
+      }
+      return Response.json(out);
     }
 
     // Wyłączony moduł = nie ma czego szukać (404), a nie „brak dostępu".
@@ -37,34 +50,35 @@ export default async function (req) {
 
     if (a === "my_library") {
       if (!lib) return NOT_FOUND();
-      return Response.json(await libraryData(base44, email, admin, body.preview === true && admin));
+      return Response.json(await libraryData(base44, email, admin, preview));
     }
 
     if (a === "my_messages" || a === "unread") {
       if (!msg) return NOT_FOUND();
-      const d = await messagesData(base44, email, me, body.preview === true && admin);
+      const d = await messagesData(base44, email, me, preview);
       if (a === "unread") return Response.json({ unread: d.unread, latest: d.items.find((m) => !m.read_at) || null });
       return Response.json(d);
     }
 
+    // Dostęp + dane materiału + limit odświeżeń + zapis „otwarte" — jedno wywołanie bazy.
+    // Podpisany adres pliku powstaje tutaj; klucz pliku nie opuszcza serwera.
     if (a === "open_material" || a === "refresh_link") {
       if (!lib) return NOT_FOUND();
       const id = uuid(body.material_id);
       if (!id) return NOT_FOUND();
-      const vis = (await visibleMaterials(base44, email, admin).catch(() => [])) || [];
-      if (!vis.some((r) => r.material_id === id)) return NOT_FOUND();   // cudzy materiał = odmowa bez danych
-      const [m] = await runSql(base44, `SELECT id, title, kind, file_key, external_url, video_provider, video_id, body_html, allow_download
-        FROM public.mb_materials WHERE id = ${escStr(id)}::uuid AND deleted_at IS NULL`, true);
-      if (!m) return NOT_FOUND();
-
-      if (a === "refresh_link") {
-        const key = await sha256hex(`${email}|${id}`);
-        const rate = await runSql(base44, `SELECT public.mb_link_hit(${escStr(key)}, 30) AS r`).catch(() => null);
-        if (rate && rate[0] && rate[0].r !== "ok") {
-          return Response.json({ error: "Zbyt wiele odświeżeń. Spróbuj ponownie za chwilę." }, { status: 429 });
-        }
+      const refreshing = a === "refresh_link";
+      const rateKey = refreshing ? await sha256hex(`${email}|${id}`) : null;
+      const r = await rpc(base44, "mb_client_open", {
+        p_email: email, p_admin: admin, p_material_id: id,
+        p_mark_opened: !refreshing && !preview,
+        p_rate_key: rateKey, p_limit: 30,
+      });
+      const status = (r && r.status) || "denied";
+      if (status === "denied") return NOT_FOUND();
+      if (status === "rate") {
+        return Response.json({ error: "Zbyt wiele odświeżeń. Spróbuj ponownie za chwilę." }, { status: 429 });
       }
-
+      const m = r.material || {};
       let url = null;
       let ttl = null;
       if (m.kind === "PDF" || m.kind === "AUDIO") {
@@ -72,13 +86,6 @@ export default async function (req) {
         const signed = await base44.asServiceRole.integrations.Core.CreateFileSignedUrl({ file_uri: m.file_key, expires_in: ttl });
         url = signed && signed.signed_url ? signed.signed_url : null;
         if (!url) return Response.json({ error: "Nie udało się przygotować pliku." }, { status: 502 });
-      }
-      const preview = body.preview === true && admin;
-      if (a === "open_material" && !preview) {
-        await runSql(base44, `INSERT INTO public.mb_material_state (client_email, material_id, opened_at)
-          VALUES (${escStr(email)}, ${escStr(id)}::uuid, now())
-          ON CONFLICT (client_email, material_id)
-          DO UPDATE SET opened_at = COALESCE(public.mb_material_state.opened_at, EXCLUDED.opened_at)`).catch(() => {});
       }
       const out = { id: m.id, title: m.title, kind: m.kind, url, expires_in: ttl, allow_download: !!m.allow_download };
       if (m.kind === "WIDEO") out.embed = embedUrl(m.video_provider, m.video_id);
@@ -91,12 +98,9 @@ export default async function (req) {
       if (!lib) return NOT_FOUND();
       const id = uuid(body.material_id);
       if (!id) return NOT_FOUND();
-      const vis = (await visibleMaterials(base44, email, admin).catch(() => [])) || [];
-      if (!vis.some((r) => r.material_id === id)) return NOT_FOUND();
       const done = body.completed === true;
-      await runSql(base44, `INSERT INTO public.mb_material_state (client_email, material_id, completed_at)
-        VALUES (${escStr(email)}, ${escStr(id)}::uuid, ${done ? "now()" : "NULL"})
-        ON CONFLICT (client_email, material_id) DO UPDATE SET completed_at = ${done ? "now()" : "NULL"}`);
+      const ok = await rpc(base44, "mb_material_complete", { p_email: email, p_admin: admin, p_material_id: id, p_completed: done });
+      if (!ok) return NOT_FOUND();
       return Response.json({ ok: true, completed_at: done ? new Date().toISOString() : null });
     }
 
@@ -104,10 +108,8 @@ export default async function (req) {
       if (!msg) return NOT_FOUND();
       const id = uuid(body.message_id);
       if (!id) return NOT_FOUND();
-      const col = a === "read_message" ? "read_at" : "hidden_at";
-      const r = await runSql(base44, `UPDATE public.mb_message_recipients SET ${col} = COALESCE(${col}, now())
-        WHERE message_id = ${escStr(id)}::uuid AND client_email = ${escStr(email)} RETURNING 1`).catch(() => []);
-      if (!r || !r.length) return NOT_FOUND();                        // cudza wiadomość = brak wiersza = odmowa
+      const ok = await rpc(base44, "mb_message_flag", { p_email: email, p_message_id: id, p_hidden: a === "hide_message" });
+      if (!ok) return NOT_FOUND();                                     // cudza wiadomość = brak wiersza = odmowa
       return Response.json({ ok: true });
     }
 

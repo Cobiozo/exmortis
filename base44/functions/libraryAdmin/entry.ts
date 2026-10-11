@@ -1,6 +1,7 @@
 import { createClientFromRequest } from "npm:@base44/sdk@0.8.52";
 import { runSql, rpc, esc, escStr, requireAdmin, textField } from "../../shared/supabase.ts";
 import { SCHEMA_SQL, SEED_SQL, CHECKPOINT_TABLES_SQL, CHECKPOINT_FUNCS_SQL } from "../../shared/librarySchema.ts";
+import { LIBRARY_RPC_SQL, CHECKPOINT_RPC_SQL } from "../../shared/libraryRpcSql.ts";
 import { libSettings, resetLibSettings, MODES, resolveRecipients, randomToken, footerData } from "../../shared/libraryAccess.ts";
 import { sanitizeHtml, plainText } from "../../shared/librarySanitize.ts";
 import { normalizeVideo, extOf, sniff, pdfHasJs, MAX_BYTES, ALLOWED_EXT, MAX_MB, SNIFF_BYTES, mb } from "../../shared/libraryMedia.ts";
@@ -23,22 +24,8 @@ const emailsOf = (v, max = 2000) => [...new Set((Array.isArray(v) ? v : []).map(
 const lower = (v) => String(v || "").trim().toLowerCase();
 
 // ---- pomocnicze ----
-
-async function spaceUsed(base44) {
-  const r = await runSql(base44, `SELECT COALESCE(sum(COALESCE(file_size,0) + COALESCE(prev_file_size,0)),0)::bigint AS bytes,
-    count(*)::int AS pliki FROM public.mb_materials WHERE deleted_at IS NULL AND file_key IS NOT NULL`, true).catch(() => []);
-  const row = (r && r[0]) || {};
-  return { bytes: Number(row.bytes || 0), files: Number(row.pliki || 0) };
-}
-
-// Grupa automatyczna: reguła liczy się w bazie (mb_auto_group_emails) — to samo źródło co przy
-// widoczności materiałów i liście odbiorców. Logika zakupów i rezerwacji nietknięta.
-async function autoEmails(base44, g) {
-  const rule = (g && g.rule) || null;
-  if (!rule || !rule.typ) return [];
-  const rows = await rpc(base44, "mb_auto_group_emails", { p_rule: rule }).catch(() => []);
-  return (rows || []).map((x) => lower(x.email)).filter(Boolean);
-}
+// ETAP 2A: zużycie przestrzeni (mb_admin_space) i członkostwo grup, także automatycznych
+// (mb_admin_groups) liczy baza — bez osobnego zapytania na grupę i bez zapytań po Management API.
 
 // Sprawdzenie wgranego pliku: rozszerzenie, sygnatura, rozmiar; dla PDF dodatkowo aktywna zawartość (ostrzeżenie).
 async function verifyUpload(base44, kind, fileUri, fileName, declaredSize) {
@@ -130,6 +117,7 @@ export default async function (req) {
     // ---- migracja i kontrola ----
     if (a === "migrate") {
       await runSql(base44, SCHEMA_SQL);
+      await runSql(base44, LIBRARY_RPC_SQL);
       await runSql(base44, SEED_SQL);
       const t = await runSql(base44, `SELECT tick_token FROM public.mb_settings WHERE id = 1`, true);
       if (!t || !t[0] || !t[0].tick_token) {
@@ -141,20 +129,22 @@ export default async function (req) {
     }
 
     if (a === "checkpoint") {
-      const [tables, funcs] = await Promise.all([
+      const [tables, funcs, rpcs] = await Promise.all([
         runSql(base44, CHECKPOINT_TABLES_SQL, true),
         runSql(base44, CHECKPOINT_FUNCS_SQL, true),
+        runSql(base44, CHECKPOINT_RPC_SQL, true),
       ]);
-      const space = await spaceUsed(base44);
-      return Response.json({ tabele: tables || [], funkcje: funcs || [], przestrzen: space });
+      const space = await rpc(base44, "mb_admin_space", {});
+      return Response.json({ tabele: tables || [], funkcje: funcs || [], rpc: rpcs || [], przestrzen: space });
     }
 
     // ---- ustawienia ----
     if (a === "settings") {
-      const s = await libSettings(base44, true);
-      const space = await spaceUsed(base44);
-      const limitBytes = Number(s.space_limit_mb || 5120) * 1048576;
-      return Response.json({ settings: s, przestrzen: { ...space, limit_mb: s.space_limit_mb, procent: Math.round((space.bytes / limitBytes) * 100) } });
+      const [s, sp] = await Promise.all([
+        libSettings(base44, true),
+        rpc(base44, "mb_admin_space", {}),
+      ]);
+      return Response.json({ settings: s, przestrzen: sp });
     }
 
     if (a === "save_settings") {
@@ -186,22 +176,12 @@ export default async function (req) {
     // ---- materiały ----
     if (a === "materials_list") {
       const kind = ["AUDIO", "WIDEO", "PDF", "LINK", "TEKST"].includes(body.kind) ? body.kind : null;
-      const q = String(body.q || "").trim().slice(0, 100);
-      const like = `%${q.replace(/[\\%_]/g, "\\$&")}%`;
-      const where = ["m.deleted_at IS NULL"];
-      if (kind) where.push(`m.kind = ${escStr(kind)}`);
-      if (q) where.push(`(m.title ILIKE ${escStr(like)} OR m.description ILIKE ${escStr(like)})`);
-      const rows = await runSql(base44, `SELECT m.id, m.title, m.kind, m.description, m.stage, m.tags, m.file_version,
-          m.file_size, m.prev_file_size, m.prev_file_name, m.pdf_js_warning, m.external_url, m.video_provider, m.video_id, m.duration_s, m.pages,
-          m.allow_download, m.body_html, m.created_at, m.source,
-          (SELECT count(*)::int FROM public.mb_assignments x WHERE x.revoked_at IS NULL
-             AND (x.material_id = m.id OR x.collection_id IN (SELECT ci.collection_id FROM public.mb_collection_items ci WHERE ci.material_id = m.id))) AS przydzialy,
-          (SELECT count(*)::int FROM public.mb_material_state s WHERE s.material_id = m.id AND s.opened_at IS NOT NULL) AS otwarte,
-          (SELECT count(*)::int FROM public.mb_material_state s WHERE s.material_id = m.id AND s.completed_at IS NOT NULL) AS ukonczone
-        FROM public.mb_materials m WHERE ${where.join(" AND ")} ORDER BY m.created_at DESC LIMIT 500`, true);
-      const space = await spaceUsed(base44);
-      const s = await libSettings(base44);
-      return Response.json({ items: (rows || []).map((r) => ({ ...r, preview: plainText(r.body_html) })), przestrzen: { ...space, limit_mb: s.space_limit_mb } });
+      const q = String(body.q || "").trim().slice(0, 100) || null;
+      const [rows, sp] = await Promise.all([
+        rpc(base44, "mb_admin_materials", { p_kind: kind, p_q: q }),
+        rpc(base44, "mb_admin_space", {}),
+      ]);
+      return Response.json({ items: (rows || []).map((r) => ({ ...r, preview: plainText(r.body_html) })), przestrzen: sp });
     }
 
     // Rejestracja pliku wgranego z przeglądarki — dopiero po sprawdzeniu sygnatury i rozmiaru.
@@ -342,14 +322,8 @@ export default async function (req) {
 
     // ---- kolekcje ----
     if (a === "collections_list") {
-      const rows = await runSql(base44, `SELECT c.id, c.title, c.description, c.sort, c.created_at,
-          COALESCE(json_agg(json_build_object('material_id', ci.material_id, 'position', ci.position, 'title', m.title, 'kind', m.kind)
-            ORDER BY ci.position) FILTER (WHERE ci.material_id IS NOT NULL), '[]') AS items
-        FROM public.mb_collections c
-        LEFT JOIN public.mb_collection_items ci ON ci.collection_id = c.id
-        LEFT JOIN public.mb_materials m ON m.id = ci.material_id AND m.deleted_at IS NULL
-        WHERE c.deleted_at IS NULL GROUP BY c.id ORDER BY c.sort, c.created_at`, true);
-      return Response.json({ items: rows || [] });
+      const items = await rpc(base44, "mb_admin_collections", {});
+      return Response.json({ items: items || [] });
     }
 
     if (a === "collection_save") {
@@ -387,16 +361,10 @@ export default async function (req) {
     }
 
     // ---- grupy ----
+    // Grupy z członkami (także z grup automatycznych) — jednym wywołaniem bazy.
     if (a === "groups_list") {
-      const groups = await runSql(base44, `SELECT id, name, color, description, kind, rule, accepted_at, created_at FROM public.mb_groups ORDER BY kind, name`, true);
-      const members = await runSql(base44, `SELECT group_id, client_email FROM public.mb_group_members`, true);
-      const out = [];
-      for (const g of groups || []) {
-        const manual = (members || []).filter((m) => m.group_id === g.id).map((m) => lower(m.client_email));
-        const auto = g.kind === "AUTOMATYCZNA" ? await autoEmails(base44, g) : [];
-        out.push({ ...g, members: g.kind === "AUTOMATYCZNA" ? auto : manual, count: g.kind === "AUTOMATYCZNA" ? auto.length : manual.length });
-      }
-      return Response.json({ items: out });
+      const items = await rpc(base44, "mb_admin_groups", {});
+      return Response.json({ items: items || [] });
     }
 
     if (a === "group_save") {
@@ -442,28 +410,14 @@ export default async function (req) {
     if (a === "group_detail") {
       const id = uuidOrNull(body.id);
       if (!id) return NOT_FOUND();
-      const [g] = await runSql(base44, `SELECT id, name, color, description, kind, rule, accepted_at FROM public.mb_groups WHERE id = ${escStr(id)}::uuid`, true);
-      if (!g) return NOT_FOUND();
-      const members = ((await rpc(base44, "mb_group_members_now", { p_group: id }).catch(() => [])) || []).map((x) => lower(x.email)).filter(Boolean);
-      const [names, mats, msgs] = await Promise.all([
-        namesOf(base44, members),
-        runSql(base44, `SELECT a.id, a.material_id, a.collection_id, m.title AS material_title, c.title AS collection_title,
-            a.visible_from, a.visible_to, a.created_at
-          FROM public.mb_assignments a
-          LEFT JOIN public.mb_materials m ON m.id = a.material_id AND m.deleted_at IS NULL
-          LEFT JOIN public.mb_collections c ON c.id = a.collection_id AND c.deleted_at IS NULL
-          WHERE a.group_id = ${escStr(id)}::uuid AND a.revoked_at IS NULL
-          ORDER BY a.created_at DESC LIMIT 200`, true),
-        runSql(base44, `SELECT m.id, m.title, m.status, m.sent_at, m.send_at, m.recipient_count, m.created_at,
-            (SELECT count(*)::int FROM public.mb_message_recipients r WHERE r.message_id = m.id AND r.read_at IS NOT NULL) AS przeczytane
-          FROM public.mb_messages m
-          WHERE m.target->>'kind' = 'grupa' AND m.target->>'group_id' = ${escStr(id)}
-          ORDER BY COALESCE(m.sent_at, m.send_at, m.created_at) DESC LIMIT 50`, true),
-      ]);
+      const d = await rpc(base44, "mb_admin_group_detail", { p_group: id });
+      if (!d || !d.group) return NOT_FOUND();
+      const members = ((d.members || [])).map((x) => lower(x)).filter(Boolean);
+      const names = await namesOf(base44, members);
       return Response.json({
-        group: g,
+        group: d.group,
         members: members.map((e) => ({ email: e, name: names[e] || "" })),
-        materials: mats || [], messages: msgs || [],
+        materials: d.materials || [], messages: d.messages || [],
       });
     }
 
@@ -515,42 +469,36 @@ export default async function (req) {
     if (a === "group_members_add" || a === "group_members_remove") {
       const id = uuidOrNull(body.group_id);
       if (!id) return NOT_FOUND();
-      const [g] = await runSql(base44, `SELECT kind, name FROM public.mb_groups WHERE id = ${escStr(id)}::uuid`, true);
+      const d = await rpc(base44, "mb_admin_group_detail", { p_group: id });
+      const g = d && d.group;
       if (!g) return NOT_FOUND();
       if (g.kind === "AUTOMATYCZNA") return bad("Ta grupa jest automatyczna — członków wyznaczają zakupy i pakiety.");
       const list = emailsOf(body.emails);
       if (!list.length) return bad("Wybierz osoby.");
-      if (a === "group_members_add") {
-        await runSql(base44, `INSERT INTO public.mb_group_members (group_id, client_email, added_by)
-          SELECT ${escStr(id)}::uuid, e, ${escStr(me.email)} FROM unnest(ARRAY[${list.map(escStr).join(",")}]::text[]) AS e
-          ON CONFLICT (group_id, client_email) DO NOTHING`);
-      } else {
-        await runSql(base44, `DELETE FROM public.mb_group_members WHERE group_id = ${escStr(id)}::uuid AND client_email IN (${list.map(escStr).join(",")})`);
-      }
+      const n = Number(await rpc(base44, "mb_admin_group_members", {
+        p_group: id, p_emails: list, p_add: a === "group_members_add", p_actor: me.email,
+      }));
       await libLog(base44, me.email, a === "group_members_add" ? "grupa_dodanie" : "grupa_usuniecie", "group", id, `${g.name} · ${list.length}`);
-      return Response.json({ ok: true, count: list.length });
+      return Response.json({ ok: true, count: list.length, zmienione: n });
     }
 
     // ---- klienci ----
     if (a === "clients_list") {
-      const users = await sr.User.list("-created_date", 2000).catch(() => []);
-      const members = await runSql(base44, `SELECT group_id, client_email FROM public.mb_group_members`, true);
-      const groups = (await runSql(base44, `SELECT id, name, color, kind, rule FROM public.mb_groups ORDER BY name`, true)) || [];
-      const autoByGroup = new Map();
-      for (const g of groups.filter((x) => x.kind === "AUTOMATYCZNA")) autoByGroup.set(g.id, new Set(await autoEmails(base44, g)));
-      const pkg = new Set(((await runSql(base44, `SELECT DISTINCT lower(btrim(email_display)) AS email FROM public.bk_packages
-        WHERE payment_status = 'oplacony' AND valid_until > now() AND sessions_used < sessions_total AND email_display IS NOT NULL`, true).catch(() => [])) || []).map((x) => lower(x.email)));
+      // Konta Base44 i fakty z tabel mb_* (grupy, pakiet) — równolegle, jednym zapytaniem do bazy.
+      const [users, mb, groups] = await Promise.all([
+        sr.User.list("-created_date", 2000).catch(() => []),
+        rpc(base44, "mb_admin_clients_mb", {}),
+        rpc(base44, "mb_admin_groups", {}),
+      ]);
+      const facts = new Map(((mb || [])).map((r) => [lower(r.email), r]));
       const rows = [];
       for (const u of users || []) {
         const e = lower(u.email);
         if (!e || u.role === "zablokowane") continue;
-        const mine = [];
-        for (const m of members || []) if (m.group_id && lower(m.client_email) === e) mine.push(m.group_id);
-        for (const [gid, set] of autoByGroup) if (set.has(e)) mine.push(gid);
+        const f = facts.get(e) || { groups: [], package: false };
         rows.push({
           email: e, name: String(u.imie || u.full_name || "").trim(), joined: u.created_date || null,
-          groups: groups.filter((g) => mine.includes(g.id)).map((g) => ({ id: g.id, name: g.name, color: g.color || null, kind: g.kind })),
-          package: pkg.has(e), blocked: u.role === "zablokowane",
+          groups: f.groups || [], package: !!f.package, blocked: u.role === "zablokowane",
         });
       }
       const q = lower(body.q);
@@ -563,56 +511,34 @@ export default async function (req) {
         : gids.every((g) => r.groups.some((x) => x.id === g))));
       if (body.no_group === true) out = out.filter((r) => !r.groups.length);
       if (body.has_package === true) out = out.filter((r) => r.package);
-      return Response.json({ items: out, total: out.length, grupy: groups });
+      const grupy = ((groups || [])).map((g) => ({ id: g.id, name: g.name, color: g.color || null, kind: g.kind, rule: g.rule || null }));
+      return Response.json({ items: out, total: out.length, grupy });
     }
 
     if (a === "client_detail") {
       const email = lower(body.email);
       if (!email.includes("@")) return bad("Podaj e-mail.");
-      const users = await sr.User.filter({ email }).catch(() => []);
+      const [users, mb] = await Promise.all([
+        sr.User.filter({ email }).catch(() => []),
+        rpc(base44, "mb_admin_client_mb", { p_email: email }),
+      ]);
       const u = (users || [])[0] || null;
       const [lib, msgs] = await Promise.all([
         libraryData(base44, email, true, true),
         messagesData(base44, email, u || { email }, true),
       ]);
-      const groups = (await runSql(base44, `SELECT g.id, g.name, g.color, g.kind FROM public.mb_groups g
-        WHERE (g.kind = 'RECZNA' AND EXISTS (SELECT 1 FROM public.mb_group_members m WHERE m.group_id = g.id AND m.client_email = ${escStr(email)}))
-           OR g.kind = 'AUTOMATYCZNA' ORDER BY g.name`, true)) || [];
-      const withAuto = [];
-      for (const g of groups) {
-        if (g.kind !== "AUTOMATYCZNA") { withAuto.push(g); continue; }
-        const list = await autoEmails(base44, (await runSql(base44, `SELECT rule FROM public.mb_groups WHERE id = ${escStr(g.id)}::uuid`, true))[0]);
-        if (list.includes(email)) withAuto.push(g);
-      }
-      const pkgs = (await runSql(base44, `SELECT id, sessions_total, sessions_used, valid_until, payment_status, source, created_at
-        FROM public.bk_packages WHERE lower(btrim(email_display)) = ${escStr(email)} ORDER BY created_at DESC LIMIT 20`, true).catch(() => [])) || [];
-      const sends = (await runSql(base44, `SELECT m.id, m.title, m.sent_at, r.read_at, r.hidden_at
-        FROM public.mb_message_recipients r JOIN public.mb_messages m ON m.id = r.message_id
-        WHERE r.client_email = ${escStr(email)} ORDER BY m.sent_at DESC NULLS LAST LIMIT 50`, true).catch(() => [])) || [];
-      // Przydziały faktycznie dotyczące tej osoby: wprost, przez jej grupy ręczne i automatyczne.
-      const assigns = (await runSql(base44, `SELECT a.id, a.material_id, a.collection_id, a.note, a.visible_from, a.visible_to,
-          a.target_kind, a.group_id, g.name AS group_name, m.title AS material_title, c.title AS collection_title
-        FROM public.mb_assignments a
-        LEFT JOIN public.mb_groups g ON g.id = a.group_id
-        LEFT JOIN public.mb_materials m ON m.id = a.material_id
-        LEFT JOIN public.mb_collections c ON c.id = a.collection_id
-        WHERE a.revoked_at IS NULL AND (
-          a.target_email = ${escStr(email)}
-          OR a.group_id IN (SELECT group_id FROM public.mb_group_members WHERE client_email = ${escStr(email)})
-          OR a.group_id IN (SELECT g2.id FROM public.mb_groups g2 WHERE g2.kind = 'AUTOMATYCZNA'
-              AND ${escStr(email)} IN (SELECT e.email FROM public.mb_auto_group_emails(g2.rule) e))
-        ) ORDER BY a.created_at DESC LIMIT 200`, true)) || [];
+      const d = mb || {};
       return Response.json({
         client: { email, name: u ? String(u.imie || u.full_name || "").trim() : "", joined: u ? u.created_date : null, role: u ? u.role : null },
-        groups: withAuto, materials: lib.items, messages: msgs.items, sends, packages: pkgs, assignments: assigns,
+        groups: d.groups || [], materials: lib.items, messages: msgs.items,
+        sends: d.sends || [], packages: d.packages || [], assignments: d.assignments || [],
       });
     }
 
     // ---- przydziały ----
     if (a === "assignment_preview") {
       const t = cleanTarget(body.target || {});
-      const people = (await resolveRecipients(base44, t).catch(() => [])) || [];
-      const emails = [...new Set(people.map((p) => lower(p.email)).filter(Boolean))];
+      const emails = [...new Set((((await rpc(base44, "mb_admin_assignment_preview", { p_target: t })) || [])).map(lower).filter(Boolean))];
       const names = await namesOf(base44, emails);
       return Response.json({ count: emails.length, emails, names });
     }
@@ -624,12 +550,12 @@ export default async function (req) {
       const emails = emailsOf(body.emails, 500);
       if (!emails.length) return bad("Wybierz osoby.");
       const note = body.note ? String(body.note).slice(0, 2000) : null;
-      await runSql(base44, `INSERT INTO public.mb_assignments (material_id, target_kind, target_email, note, visible_from, visible_to, created_by)
-        SELECT ${escStr(materialId)}::uuid, 'osoba', e, ${esc(note)},
-          ${iso(body.visible_from) ? escStr(iso(body.visible_from)) : "NULL"}, ${iso(body.visible_to) ? escStr(iso(body.visible_to)) : "NULL"}, ${escStr(me.email)}
-        FROM unnest(ARRAY[${emails.map(escStr).join(",")}]::text[]) AS e`);
+      const n = await rpc(base44, "mb_admin_assignment_bulk", {
+        p_material: materialId, p_emails: emails, p_note: note,
+        p_from: iso(body.visible_from), p_to: iso(body.visible_to), p_actor: me.email,
+      });
       await libLog(base44, me.email, "przydzial_zbiorczy", "material", materialId, `osoby: ${emails.length}`);
-      return Response.json({ ok: true, count: emails.length });
+      return Response.json({ ok: true, count: Number(n) || 0 });
     }
 
     if (a === "assignment_save") {
@@ -638,45 +564,43 @@ export default async function (req) {
       if (!materialId && !collectionId) return bad("Wybierz materiał albo kolekcję.");
       if (materialId && collectionId) return bad("Wybierz materiał albo kolekcję — nie oba.");
       const t = cleanTarget(body.target || {});
-      if (t.kind === "grupa" && t.group_mode === "TYLKO_OBECNI") {
-        const m = await runSql(base44, `SELECT client_email FROM public.mb_group_members WHERE group_id = ${escStr(t.group_id)}::uuid`, true);
-        t.snapshot_emails = [...new Set((m || []).map((x) => lower(x.client_email)))];
-      }
-      const id = (await runSql(base44, `INSERT INTO public.mb_assignments
-        (material_id, collection_id, target_kind, target_email, group_id, group_mode, snapshot_emails, exceptions_add, exceptions_drop, note, visible_from, visible_to, created_by)
-        VALUES (${materialId ? escStr(materialId) + "::uuid" : "NULL"}, ${collectionId ? escStr(collectionId) + "::uuid" : "NULL"},
-          ${escStr(t.kind)},
-          ${t.kind === "osoba" ? escStr(t.emails[0]) : "NULL"},
-          ${t.kind === "grupa" ? escStr(t.group_id) + "::uuid" : "NULL"},
-          ${t.kind === "grupa" ? escStr(t.group_mode) : "NULL"},
-          ${arr(t.kind === "grupa" ? t.snapshot_emails : [])}, ${arr(t.kind === "grupa" ? t.exceptions_add : [])}, ${arr(t.kind === "grupa" ? t.exceptions_drop : [])},
-          ${esc(body.note ? String(body.note).slice(0, 2000) : null)}, ${iso(body.visible_from) ? escStr(iso(body.visible_from)) : "NULL"},
-          ${iso(body.visible_to) ? escStr(iso(body.visible_to)) : "NULL"}, ${escStr(me.email)}) RETURNING id`))[0].id;
-      const people = (await resolveRecipients(base44, t).catch(() => [])) || [];
+      // Snapshot „tylko obecni" wyznacza baza w tej samej transakcji co zapis przydziału.
+      const r = await rpc(base44, "mb_admin_assignment_save", { p: {
+        material_id: materialId, collection_id: collectionId,
+        target_kind: t.kind,
+        target_email: t.kind === "osoba" ? t.emails[0] : null,
+        group_id: t.kind === "grupa" ? t.group_id : null,
+        group_mode: t.kind === "grupa" ? t.group_mode : null,
+        snapshot_emails: t.kind === "grupa" ? t.snapshot_emails : [],
+        exceptions_add: t.kind === "grupa" ? t.exceptions_add : [],
+        exceptions_drop: t.kind === "grupa" ? t.exceptions_drop : [],
+        note: body.note ? String(body.note).slice(0, 2000) : null,
+        visible_from: iso(body.visible_from), visible_to: iso(body.visible_to), actor: me.email,
+      } });
+      const count = Number((r && r.count) || 0);
       await libLog(base44, me.email, "przydzial", materialId ? "material" : "collection", materialId || collectionId,
-        `${t.kind === "grupa" ? "grupa" : "osoba"} · odbiorcy: ${new Set(people.map((p) => lower(p.email))).size}`);
-      return Response.json({ ok: true, id, count: new Set(people.map((p) => lower(p.email))).size });
+        `${t.kind === "grupa" ? "grupa" : "osoba"} · odbiorcy: ${count}`);
+      return Response.json({ ok: true, id: r && r.id, count });
     }
 
     if (a === "assignment_revoke") {
       const id = uuidOrNull(body.id);
       if (id) {
-        const r = await runSql(base44, `UPDATE public.mb_assignments SET revoked_at = now()
-          WHERE id = ${escStr(id)}::uuid AND revoked_at IS NULL RETURNING material_id, collection_id`);
-        if (!r || !r.length) return NOT_FOUND();
-        await libLog(base44, me.email, "przydzial_odebrany", r[0].material_id ? "material" : "collection", r[0].material_id || r[0].collection_id, "pojedynczy");
-        return Response.json({ ok: true, count: 1 });
+        const n = Number(await rpc(base44, "mb_admin_assignment_revoke", { p_id: id }));
+        if (!n) return NOT_FOUND();
+        await libLog(base44, me.email, "przydzial_odebrany", "przydzial", id, "pojedynczy");
+        return Response.json({ ok: true, count: n });
       }
       // Odebranie całej grupie przy jednym materiale.
       const materialId = uuidOrNull(body.material_id);
       const collectionId = uuidOrNull(body.collection_id);
       const groupId = uuidOrNull(body.group_id);
       if ((!materialId && !collectionId) || !groupId) return bad("Wskaż materiał i grupę.");
-      const r = await runSql(base44, `UPDATE public.mb_assignments SET revoked_at = now()
-        WHERE revoked_at IS NULL AND group_id = ${escStr(groupId)}::uuid
-          AND ${materialId ? `material_id = ${escStr(materialId)}::uuid` : `collection_id = ${escStr(collectionId)}::uuid`} RETURNING 1`);
-      await libLog(base44, me.email, "przydzial_odebrany", materialId ? "material" : "collection", materialId || collectionId, `grupa · ${(r || []).length}`);
-      return Response.json({ ok: true, count: (r || []).length });
+      const n = Number(await rpc(base44, "mb_admin_assignment_revoke", {
+        p_material: materialId, p_collection: collectionId, p_group: groupId,
+      }));
+      await libLog(base44, me.email, "przydzial_odebrany", materialId ? "material" : "collection", materialId || collectionId, `grupa · ${n}`);
+      return Response.json({ ok: true, count: n });
     }
 
     if (a === "assignments_of_material") {
@@ -712,27 +636,14 @@ export default async function (req) {
 
     // ---- wiadomości ----
     if (a === "messages_list") {
-      const rows = await runSql(base44, `SELECT m.id, m.title, m.body_html, m.status, m.send_at, m.email_mode, m.recipient_count,
-          m.attached_material_id, m.attached_collection_id, m.target, m.created_at, m.sent_at, m.withdrawn_at,
-          (SELECT count(*)::int FROM public.mb_message_recipients r WHERE r.message_id = m.id) AS dostarczone,
-          (SELECT count(*)::int FROM public.mb_message_recipients r WHERE r.message_id = m.id AND r.read_at IS NOT NULL) AS przeczytane
-        FROM public.mb_messages m ORDER BY COALESCE(m.sent_at, m.send_at, m.created_at) DESC LIMIT 200`, true);
-      const [groups, cnt] = await Promise.all([
-        runSql(base44, `SELECT id, name FROM public.mb_groups`, true),
-        runSql(base44, `SELECT
-            count(*) FILTER (WHERE status = 'WYSLANA')::int AS wyslane,
-            count(*) FILTER (WHERE status = 'ZAPLANOWANA')::int AS zaplanowane,
-            count(*) FILTER (WHERE status = 'SZKIC')::int AS szkice,
-            count(*) FILTER (WHERE status = 'WYCOFANA')::int AS wycofane
-          FROM public.mb_messages`, true),
-      ]);
-      const items = (rows || []).map((m) => ({
+      const d = (await rpc(base44, "mb_admin_messages", {})) || { items: [], liczniki: null };
+      const items = (d.items || []).map((m) => ({
         ...m, preview: plainText(m.body_html),
         target_label: m.target && m.target.kind === "grupa"
-          ? `Grupa: ${((groups || []).find((g) => g.id === m.target.group_id) || {}).name || "—"}${m.target.group_mode === "TYLKO_OBECNI" ? " (tylko obecni)" : ""}`
+          ? `Grupa: ${m.group_name || "—"}${m.target.group_mode === "TYLKO_OBECNI" ? " (tylko obecni)" : ""}`
           : m.target && m.target.emails && m.target.emails.length ? `Osoby: ${m.target.emails.length}` : "—",
       }));
-      return Response.json({ items, liczniki: (cnt || [])[0] || { wyslane: 0, zaplanowane: 0, szkice: 0, wycofane: 0 } });
+      return Response.json({ items, liczniki: d.liczniki || { wyslane: 0, zaplanowane: 0, szkice: 0, wycofane: 0 } });
     }
 
     // Podgląd „tak zobaczy to [osoba]" — ta sama ścieżka renderBody + sanitizeHtml co u klienta.
@@ -911,26 +822,15 @@ export default async function (req) {
     }
 
     // ---- pulpit, historia, podgląd ----
+    // Cały pulpit (liczniki, ostatnia wysyłka, przestrzeń, przełączniki) — jedno wywołanie bazy.
     if (a === "dashboard") {
-      const [scheduled, last, unlocking, space, s] = await Promise.all([
-        runSql(base44, `SELECT count(*)::int AS n FROM public.mb_messages WHERE status = 'ZAPLANOWANA'
-          AND (send_at AT TIME ZONE 'Europe/Warsaw')::date = (now() AT TIME ZONE 'Europe/Warsaw')::date`, true),
-        runSql(base44, `SELECT m.id, m.title, m.sent_at,
-            (SELECT count(*)::int FROM public.mb_message_recipients r WHERE r.message_id = m.id) AS dostarczone,
-            (SELECT count(*)::int FROM public.mb_message_recipients r WHERE r.message_id = m.id AND r.read_at IS NOT NULL) AS przeczytane
-          FROM public.mb_messages m WHERE m.status = 'WYSLANA' ORDER BY m.sent_at DESC LIMIT 1`, true),
-        runSql(base44, `SELECT count(*)::int AS n FROM public.mb_assignments WHERE revoked_at IS NULL
-          AND visible_from IS NOT NULL AND visible_from > now() AND visible_from < now() + interval '7 days'`, true),
-        spaceUsed(base44),
-        libSettings(base44, true),
-      ]);
-      const limitBytes = Number(s.space_limit_mb || 5120) * 1048576;
+      const d = (await rpc(base44, "mb_admin_dashboard", {})) || {};
       return Response.json({
-        zaplanowane_dzis: Number(((scheduled || [])[0] || {}).n || 0),
-        ostatnia: (last || [])[0] || null,
-        odblokowuje_sie: Number(((unlocking || [])[0] || {}).n || 0),
-        przestrzen: { ...space, limit_mb: s.space_limit_mb, procent: Math.round((space.bytes / limitBytes) * 100) },
-        tryby: { library_mode: s.library_mode, messages_mode: s.messages_mode, email_notify: s.email_notify },
+        zaplanowane_dzis: d.zaplanowane_dzis || 0,
+        ostatnia: d.ostatnia || null,
+        odblokowuje_sie: d.odblokowuje_sie || 0,
+        przestrzen: d.przestrzen || null,
+        tryby: d.tryby || null,
       });
     }
 
@@ -939,17 +839,10 @@ export default async function (req) {
       // Uwaga: pole akcji żądania nazywa się „action", więc filtr rodzaju działania podaje się jako „action_filter".
       const filterAction = body.action_filter ? String(body.action_filter).slice(0, 60) : null;
       const days = int(body.days, 1, 3650, null);
-      const where = [];
-      if (filterAction) where.push(`action = ${escStr(filterAction)}`);
-      if (days) where.push(`at > now() - interval '${days} days'`);
-      const [rows, acts] = await Promise.all([
-        runSql(base44, `SELECT at, actor, action, object_type, object_id, summary, anonymized FROM public.mb_log
-          ${where.length ? `WHERE ${where.join(" AND ")}` : ""} ORDER BY at DESC LIMIT 300`, true),
-        runSql(base44, `SELECT DISTINCT action FROM public.mb_log ORDER BY action`, true),
-      ]);
+      const d = (await rpc(base44, "mb_admin_history", { p_action: filterAction, p_days: days })) || {};
       return Response.json({
-        items: (rows || []).map((r) => ({ ...r, actor: maskEmail(r.actor), summary: maskEmailsIn(r.summary) })),
-        akcje: (acts || []).map((x) => x.action),
+        items: (d.items || []).map((r) => ({ ...r, actor: maskEmail(r.actor), summary: maskEmailsIn(r.summary) })),
+        akcje: d.akcje || [],
       });
     }
 
