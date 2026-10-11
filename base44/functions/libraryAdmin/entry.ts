@@ -159,14 +159,20 @@ export default async function (req) {
 
     // ---- materiały ----
     if (a === "materials_list") {
+      const kind = ["AUDIO", "WIDEO", "PDF", "LINK", "TEKST"].includes(body.kind) ? body.kind : null;
+      const q = String(body.q || "").trim().slice(0, 100);
+      const like = `%${q.replace(/[\\%_]/g, "\\$&")}%`;
+      const where = ["m.deleted_at IS NULL"];
+      if (kind) where.push(`m.kind = ${escStr(kind)}`);
+      if (q) where.push(`(m.title ILIKE ${escStr(like)} OR m.description ILIKE ${escStr(like)})`);
       const rows = await runSql(base44, `SELECT m.id, m.title, m.kind, m.description, m.stage, m.tags, m.file_version,
-          m.file_size, m.prev_file_size, m.pdf_js_warning, m.external_url, m.video_provider, m.video_id, m.duration_s, m.pages,
+          m.file_size, m.prev_file_size, m.prev_file_name, m.pdf_js_warning, m.external_url, m.video_provider, m.video_id, m.duration_s, m.pages,
           m.allow_download, m.body_html, m.created_at, m.source,
           (SELECT count(*)::int FROM public.mb_assignments x WHERE x.revoked_at IS NULL
              AND (x.material_id = m.id OR x.collection_id IN (SELECT ci.collection_id FROM public.mb_collection_items ci WHERE ci.material_id = m.id))) AS przydzialy,
           (SELECT count(*)::int FROM public.mb_material_state s WHERE s.material_id = m.id AND s.opened_at IS NOT NULL) AS otwarte,
           (SELECT count(*)::int FROM public.mb_material_state s WHERE s.material_id = m.id AND s.completed_at IS NOT NULL) AS ukonczone
-        FROM public.mb_materials m WHERE m.deleted_at IS NULL ORDER BY m.created_at DESC LIMIT 500`, true);
+        FROM public.mb_materials m WHERE ${where.join(" AND ")} ORDER BY m.created_at DESC LIMIT 500`, true);
       const space = await spaceUsed(base44);
       const s = await libSettings(base44);
       return Response.json({ items: (rows || []).map((r) => ({ ...r, preview: plainText(r.body_html) })), przestrzen: { ...space, limit_mb: s.space_limit_mb } });
@@ -208,8 +214,11 @@ export default async function (req) {
         cols = { external_url: escStr(url), video_provider: "NULL", video_id: "NULL", body_html: "NULL", file_key: "NULL", file_name: "NULL", file_size: "NULL" };
       } else if (kind === "WIDEO") {
         const v = normalizeVideo(body.external_url);
-        if (!v) return bad("Dozwolone są tylko filmy z YouTube, Vimeo i Bunny — wklej poprawny adres https.");
-        cols = { video_provider: escStr(v.provider), video_id: escStr(v.id), external_url: "NULL", body_html: "NULL", file_key: "NULL", file_name: "NULL", file_size: "NULL" };
+        if (!v && !id) return bad("Dozwolone są tylko filmy z YouTube, Vimeo i Bunny — wklej poprawny adres https.");
+        // Pusty adres przy edycji = zostawiamy dotychczasowego dostawcę i identyfikator.
+        cols = v
+          ? { video_provider: escStr(v.provider), video_id: escStr(v.id), external_url: "NULL", body_html: "NULL", file_key: "NULL", file_name: "NULL", file_size: "NULL" }
+          : { external_url: "NULL", body_html: "NULL", file_key: "NULL", file_name: "NULL", file_size: "NULL" };
       } else if (kind === "TEKST") {
         const html = sanitizeHtml(body.body_html);
         if (!html) return bad("Wpisz treść materiału.");
@@ -262,6 +271,36 @@ export default async function (req) {
         WHERE id = ${escStr(id)}::uuid`);
       await libLog(base44, me.email, "plik_zamieniony", "material", id, `${m.kind} ${mb(v.size)} MB`);
       return Response.json({ ok: true, id, file_size: v.size, pdf_js_warning: v.pdfJs });
+    }
+
+    // Ile osób straci dostęp po usunięciu materiału — do okna potwierdzenia.
+    if (a === "material_impact") {
+      const materialId = uuidOrNull(body.material_id);
+      if (!materialId) return NOT_FOUND();
+      const rows = await runSql(base44, `SELECT id, target_kind, target_email, group_id, group_mode, snapshot_emails, exceptions_add, exceptions_drop
+        FROM public.mb_assignments WHERE material_id = ${escStr(materialId)}::uuid AND revoked_at IS NULL`, true);
+      const seen = new Set();
+      for (const r of rows || []) {
+        const t = r.target_kind === "osoba"
+          ? { kind: "osoba", emails: [r.target_email] }
+          : { kind: "grupa", group_id: r.group_id, group_mode: r.group_mode, snapshot_emails: r.snapshot_emails, exceptions_add: r.exceptions_add, exceptions_drop: r.exceptions_drop };
+        for (const p of (await resolveRecipients(base44, t).catch(() => [])) || []) seen.add(lower(p.email));
+      }
+      return Response.json({ osoby: seen.size, przydzialy: (rows || []).length });
+    }
+
+    // Przywrócenie poprzedniej wersji pliku (jedna wstecz), bez zmiany przydziałów.
+    if (a === "material_restore_prev") {
+      const id = uuidOrNull(body.id);
+      if (!id) return NOT_FOUND();
+      const r = await runSql(base44, `UPDATE public.mb_materials SET
+        file_key = prev_file_key, file_name = prev_file_name, file_size = prev_file_size,
+        prev_file_key = file_key, prev_file_name = file_name, prev_file_size = file_size,
+        file_version = file_version + 1, updated_at = now()
+        WHERE id = ${escStr(id)}::uuid AND deleted_at IS NULL AND prev_file_key IS NOT NULL RETURNING id`);
+      if (!r || !r.length) return bad("Nie ma poprzedniej wersji pliku do przywrócenia.");
+      await libLog(base44, me.email, "plik_przywrocony", "material", id, "przywrocono poprzednia wersje");
+      return Response.json({ ok: true, id });
     }
 
     if (a === "material_delete") {
@@ -323,7 +362,7 @@ export default async function (req) {
 
     // ---- grupy ----
     if (a === "groups_list") {
-      const groups = await runSql(base44, `SELECT id, name, color, description, kind, rule, created_at FROM public.mb_groups ORDER BY kind, name`, true);
+      const groups = await runSql(base44, `SELECT id, name, color, description, kind, rule, accepted_at, created_at FROM public.mb_groups ORDER BY kind, name`, true);
       const members = await runSql(base44, `SELECT group_id, client_email FROM public.mb_group_members`, true);
       const out = [];
       for (const g of groups || []) {
@@ -345,7 +384,8 @@ export default async function (req) {
       if (kind === "AUTOMATYCZNA") {
         const typ = body.rule && body.rule.typ === "aktywny_pakiet" ? "aktywny_pakiet" : "produkt";
         if (typ === "produkt" && !uuidOrNull(body.rule && body.rule.id)) return bad("Wybierz produkt.");
-        rule = typ === "produkt" ? { typ, id: uuidOrNull(body.rule.id) } : { typ };
+        const tid = uuidOrNull(body.rule && body.rule.type_id);
+        rule = typ === "produkt" ? { typ, id: uuidOrNull(body.rule.id) } : { typ, ...(tid ? { type_id: tid } : {}) };
       }
       if (id) {
         const r = await runSql(base44, `UPDATE public.mb_groups SET name = ${escStr(name)}, color = ${esc(color)},
@@ -355,10 +395,30 @@ export default async function (req) {
         await libLog(base44, me.email, "grupa_zmiana", "group", id, name);
         return Response.json({ ok: true, id });
       }
-      const created = await runSql(base44, `INSERT INTO public.mb_groups (name, color, description, kind, rule, created_by)
-        VALUES (${escStr(name)}, ${esc(color)}, ${esc(desc)}, ${escStr(kind)}, ${rule ? escStr(JSON.stringify(rule)) + "::jsonb" : "NULL"}, ${escStr(me.email)}) RETURNING id`);
+      const created = await runSql(base44, `INSERT INTO public.mb_groups (name, color, description, kind, rule, accepted_at, created_by)
+        VALUES (${escStr(name)}, ${esc(color)}, ${esc(desc)}, ${escStr(kind)}, ${rule ? escStr(JSON.stringify(rule)) + "::jsonb" : "NULL"}, now(), ${escStr(me.email)}) RETURNING id`);
       await libLog(base44, me.email, "grupa_dodana", "group", created[0].id, name);
       return Response.json({ ok: true, id: created[0].id });
+    }
+
+    // Zatwierdzenie grupy startowej („Zostaw") — znika dopisek „do akceptacji".
+    if (a === "group_accept") {
+      const id = uuidOrNull(body.id);
+      if (!id) return NOT_FOUND();
+      const r = await runSql(base44, `UPDATE public.mb_groups SET accepted_at = now(), updated_at = now()
+        WHERE id = ${escStr(id)}::uuid AND accepted_at IS NULL RETURNING name`);
+      if (!r || !r.length) return NOT_FOUND();
+      await libLog(base44, me.email, "grupa_zatwierdzona", "group", id, r[0].name);
+      return Response.json({ ok: true });
+    }
+
+    // Listy do budowy reguły grupy automatycznej: produkty ze Skarbca i typy spotkań.
+    if (a === "rule_options") {
+      const [produkty, typy] = await Promise.all([
+        runSql(base44, `SELECT id, name FROM public.products ORDER BY sort_order NULLS LAST, name LIMIT 500`, true).catch(() => []),
+        runSql(base44, `SELECT id, name FROM public.bk_types ORDER BY name LIMIT 200`, true).catch(() => []),
+      ]);
+      return Response.json({ produkty: produkty || [], typy: typy || [] });
     }
 
     // Usunięcie grupy: pytamy, co z materiałami członków — odebranie albo zostawienie indywidualnie.
@@ -368,8 +428,8 @@ export default async function (req) {
       const take = body.materials === "odbierz";
       const [g] = await runSql(base44, `SELECT id, name, kind FROM public.mb_groups WHERE id = ${escStr(id)}::uuid`, true);
       if (!g) return NOT_FOUND();
-      if (g.kind === "AUTOMATYCZNA") return bad("Grupy automatycznej nie można usunąć — usuń jej regułę w kodzie produktu.");
-      const members = await runSql(base44, `SELECT client_email FROM public.mb_group_members WHERE group_id = ${escStr(id)}::uuid`, true);
+      // Członkostwo liczone tak samo jak przy widoczności: ręczne + (dla automatycznej) aktualny wynik reguły.
+      const members = ((await rpc(base44, "mb_group_members_now", { p_group: id }).catch(() => [])) || []).map((m) => lower(m.email));
       let assigned = 0;
       if (take) {
         const r = await runSql(base44, `UPDATE public.mb_assignments SET revoked_at = now()
@@ -382,7 +442,7 @@ export default async function (req) {
         for (const a2 of rows || []) {
           const list = a2.group_mode === "TYLKO_OBECNI"
             ? emailsOf(a2.snapshot_emails).filter((e) => !emailsOf(a2.exceptions_drop).includes(e)).concat(emailsOf(a2.exceptions_add))
-            : (members || []).map((m) => lower(m.client_email)).filter((e) => !emailsOf(a2.exceptions_drop).includes(e)).concat(emailsOf(a2.exceptions_add));
+            : members.filter((e) => !emailsOf(a2.exceptions_drop).includes(e)).concat(emailsOf(a2.exceptions_add));
           for (const e of [...new Set(list)]) {
             await runSql(base44, `INSERT INTO public.mb_assignments (material_id, collection_id, target_kind, target_email, note, visible_from, visible_to, created_by)
               SELECT material_id, collection_id, 'osoba', ${escStr(e)}, note, visible_from, visible_to, ${escStr(me.email)}
@@ -439,11 +499,13 @@ export default async function (req) {
         });
       }
       const q = lower(body.q);
-      const gid = uuidOrNull(body.group_id);
+      const gids = [...new Set((Array.isArray(body.group_ids) ? body.group_ids : [body.group_id]).map(uuidOrNull).filter(Boolean))];
       const mode = body.group_mode === "any" ? "any" : "all";
       let out = rows;
       if (q) out = out.filter((r) => r.email.includes(q) || lower(r.name).includes(q));
-      if (gid) out = out.filter((r) => (mode === "any" ? r.groups.some((g) => g.id === gid) : r.groups.every((g) => g.id === gid) && r.groups.some((g) => g.id === gid)));
+      if (gids.length) out = out.filter((r) => (mode === "any"
+        ? gids.some((g) => r.groups.some((x) => x.id === g))
+        : gids.every((g) => r.groups.some((x) => x.id === g))));
       if (body.no_group === true) out = out.filter((r) => !r.groups.length);
       if (body.has_package === true) out = out.filter((r) => r.package);
       return Response.json({ items: out, total: out.length, grupy: groups });
@@ -472,9 +534,22 @@ export default async function (req) {
       const sends = (await runSql(base44, `SELECT m.id, m.title, m.sent_at, r.read_at, r.hidden_at
         FROM public.mb_message_recipients r JOIN public.mb_messages m ON m.id = r.message_id
         WHERE r.client_email = ${escStr(email)} ORDER BY m.sent_at DESC NULLS LAST LIMIT 50`, true).catch(() => [])) || [];
+      // Przydziały faktycznie dotyczące tej osoby: wprost, przez jej grupy ręczne i automatyczne.
+      const assigns = (await runSql(base44, `SELECT a.id, a.material_id, a.collection_id, a.note, a.visible_from, a.visible_to,
+          a.target_kind, a.group_id, g.name AS group_name, m.title AS material_title, c.title AS collection_title
+        FROM public.mb_assignments a
+        LEFT JOIN public.mb_groups g ON g.id = a.group_id
+        LEFT JOIN public.mb_materials m ON m.id = a.material_id
+        LEFT JOIN public.mb_collections c ON c.id = a.collection_id
+        WHERE a.revoked_at IS NULL AND (
+          a.target_email = ${escStr(email)}
+          OR a.group_id IN (SELECT group_id FROM public.mb_group_members WHERE client_email = ${escStr(email)})
+          OR a.group_id IN (SELECT g2.id FROM public.mb_groups g2 WHERE g2.kind = 'AUTOMATYCZNA'
+              AND ${escStr(email)} IN (SELECT e.email FROM public.mb_auto_group_emails(g2.rule) e))
+        ) ORDER BY a.created_at DESC LIMIT 200`, true)) || [];
       return Response.json({
         client: { email, name: u ? String(u.imie || u.full_name || "").trim() : "", joined: u ? u.created_date : null, role: u ? u.role : null },
-        groups: withAuto, materials: lib.items, messages: msgs.items, sends, packages: pkgs,
+        groups: withAuto, materials: lib.items, messages: msgs.items, sends, packages: pkgs, assignments: assigns,
       });
     }
 
@@ -485,6 +560,21 @@ export default async function (req) {
       const emails = [...new Set(people.map((p) => lower(p.email)).filter(Boolean))];
       const names = await namesOf(base44, emails);
       return Response.json({ count: emails.length, emails, names });
+    }
+
+    // Przydział zbiorczy z listy klientów: jeden materiał, wiele osób.
+    if (a === "assignment_bulk") {
+      const materialId = uuidOrNull(body.material_id);
+      if (!materialId) return bad("Wybierz materiał.");
+      const emails = emailsOf(body.emails, 500);
+      if (!emails.length) return bad("Wybierz osoby.");
+      const note = body.note ? String(body.note).slice(0, 2000) : null;
+      await runSql(base44, `INSERT INTO public.mb_assignments (material_id, target_kind, target_email, note, visible_from, visible_to, created_by)
+        SELECT ${escStr(materialId)}::uuid, 'osoba', e, ${esc(note)},
+          ${iso(body.visible_from) ? escStr(iso(body.visible_from)) : "NULL"}, ${iso(body.visible_to) ? escStr(iso(body.visible_to)) : "NULL"}, ${escStr(me.email)}
+        FROM unnest(ARRAY[${emails.map(escStr).join(",")}]::text[]) AS e`);
+      await libLog(base44, me.email, "przydzial_zbiorczy", "material", materialId, `osoby: ${emails.length}`);
+      return Response.json({ ok: true, count: emails.length });
     }
 
     if (a === "assignment_save") {

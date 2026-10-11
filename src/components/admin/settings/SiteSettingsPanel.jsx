@@ -6,6 +6,7 @@ import PrelaunchSettings from "./PrelaunchSettings";
 import MailSettings from "@/components/admin/mail/MailSettings";
 import EmailChangeToggle from "./EmailChangeToggle";
 import LegalDocsSettings from "./LegalDocsSettings";
+import LibrarySettingsPanel from "@/components/admin/library/LibrarySettingsPanel";
 
 // Ustawienia strony: dane firmy i tryb przedpremierowy.
 export default function SiteSettingsPanel() {
@@ -19,6 +20,7 @@ export default function SiteSettingsPanel() {
       <CompanySettings initial={s.firma} />
       <LegalDocsSettings initial={s.dokumenty} />
       <MailSettings />
+      <LibrarySettingsPanel />
       <EmailChangeToggle />
     </div>
   );

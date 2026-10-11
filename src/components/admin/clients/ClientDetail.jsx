@@ -5,8 +5,9 @@ import { plDate, TYPE_LABEL } from "@/components/account/accountUtils";
 import AccessActions from "./AccessActions";
 import EmailChangeBox from "./EmailChangeBox";
 import ClientDataBox from "./ClientDataBox";
+import ClientLibraryBox from "./ClientLibraryBox";
 
-export default function ClientDetail({ email, onChange }) {
+export default function ClientDetail({ email, onChange, libOn }) {
   const [d, setD] = useState(null);
   const load = () => base44.functions.invoke("adminClients", { action: "detail", email }).then((r) => setD(r.data));
   useEffect(() => { load(); }, [email]);
@@ -44,6 +45,7 @@ export default function ClientDetail({ email, onChange }) {
           </div>
         )}
       </section>
+      {libOn && <ClientLibraryBox email={email} onChange={onChange} />}
     </div>
   );
 }

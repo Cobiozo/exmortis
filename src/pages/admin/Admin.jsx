@@ -27,6 +27,8 @@ import PanelHeaderActions from "@/components/admin/PanelHeaderActions";
 import TechDashboard from "@/components/admin/TechDashboard";
 import AnnouncementsAdmin from "@/components/admin/announce/AnnouncementsAdmin";
 import BookingAdmin from "@/components/admin/booking/BookingAdmin";
+import LibraryPanel from "@/components/admin/library/LibraryPanel";
+import GroupsTab from "@/components/admin/library/GroupsTab";
 
 const SECTIONS = {
   spotkania: ["Spotkania", () => <EventsManager />],
@@ -40,6 +42,8 @@ const SECTIONS = {
   podcast: ["Podcast", () => <PodcastAdmin />],
   obok: ["Obok", () => <ObokAdmin />],
   klienci: ["Klienci i dostępy", () => <ClientsPanel />],
+  biblioteka: ["Biblioteka", () => <LibraryPanel />],
+  grupy: ["Grupy", () => <GroupsTab />],
   rabaty: ["Kody rabatowe", () => <DiscountsPanel />],
   bezpieczenstwo: ["Bezpieczeństwo", () => <SecurityPanel />],
   "dane-osoby": ["Dane osoby (RODO)", () => <PersonDataPanel />],

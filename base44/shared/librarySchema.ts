@@ -87,11 +87,14 @@ CREATE TABLE IF NOT EXISTS public.mb_groups (
   kind text NOT NULL DEFAULT 'RECZNA' CHECK (kind IN ('RECZNA','AUTOMATYCZNA')),
   rule jsonb,
   created_by text,
+  accepted_at timestamptz,
   created_at timestamptz NOT NULL DEFAULT now(),
   updated_at timestamptz NOT NULL DEFAULT now(),
   CHECK ((kind = 'RECZNA' AND rule IS NULL)
       OR (kind = 'AUTOMATYCZNA' AND rule IS NOT NULL AND rule->>'typ' IN ('produkt','aktywny_pakiet')))
 );
+-- Dopisane w 1B-1: grupy startowe czekają na akceptację (NULL = „do akceptacji").
+ALTER TABLE public.mb_groups ADD COLUMN IF NOT EXISTS accepted_at timestamptz;
 CREATE TABLE IF NOT EXISTS public.mb_group_members (
   group_id uuid NOT NULL REFERENCES public.mb_groups(id) ON DELETE CASCADE,
   client_email text NOT NULL CHECK (client_email = lower(btrim(client_email)) AND length(client_email) <= 320),
@@ -258,11 +261,13 @@ BEGIN
         FROM public.orders o, jsonb_array_elements(o.items) e
        WHERE o.status = 'COMPLETED' AND e->>'product_id' = p_rule->>'id' AND o.buyer_email IS NOT NULL;
   ELSIF p_rule->>'typ' = 'aktywny_pakiet' THEN
+    -- Opcjonalny type_id: bez niego reguła obejmuje KAŻDY aktywny pakiet, z nim tylko ten typ spotkania.
     RETURN QUERY
       SELECT DISTINCT lower(btrim(p.email_display))
         FROM public.bk_packages p
        WHERE p.payment_status = 'oplacony' AND p.valid_until > now()
-         AND p.sessions_used < p.sessions_total AND p.email_display IS NOT NULL;
+         AND p.sessions_used < p.sessions_total AND p.email_display IS NOT NULL
+         AND (COALESCE(p_rule->>'type_id','') = '' OR p.type_id::text = p_rule->>'type_id');
   END IF;
 END $ae$;
 

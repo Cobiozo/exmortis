@@ -35,6 +35,12 @@ export default function AdminDashboard() {
   const v = (k) => (s ? s[k] ?? 0 : "…");
   const [sound, setSound] = useState(null);
   const [newApps, setNewApps] = useState(null);
+  const [libOn, setLibOn] = useState(false);
+  useEffect(() => {
+    base44.functions.invoke("libraryAdmin", { action: "settings" })
+      .then((r) => setLibOn(r.data.settings.library_mode !== "off" || r.data.settings.messages_mode !== "off"))
+      .catch(() => setLibOn(false));
+  }, []);
   useEffect(() => { base44.entities.PodcastApplication.count({ status: "nowe" }).then(setNewApps).catch(() => setNewApps(0)); }, []);
   useEffect(() => {
     base44.entities.SilenceTrack.filter({}, { limit: 200 }).then((p) => setSound(p.items));
@@ -64,6 +70,8 @@ export default function AdminDashboard() {
       <Tile to="/admin/integracje" label="09" title="Integracje" lines={["Płatności, adres aplikacji"]} />
       <Tile to="/admin/testy" label="10" title="Wyniki testu" lines={["Odpowiedzi z testu"]} />
       <Tile to="/admin/klienci" label="11" title="Klienci i dostępy" lines={["Nadawanie, przedłużenia, dziennik odtworzeń"]} />
+      {libOn && <Tile to="/admin/biblioteka" label="21" title="Biblioteka" lines={["Materiały, kolekcje, przydziały"]} />}
+      {libOn && <Tile to="/admin/grupy" label="22" title="Grupy" lines={["Ręczne i automatyczne, znaczniki"]} />}
       <Tile to="/admin/rabaty" label="12" title="Kody rabatowe" lines={["Procent lub kwota, limity, terminy"]} />
       <Tile to="/admin/bezpieczenstwo" label="13" title="Bezpieczeństwo" lines={["Alerty, blokady, znajdź właściciela kopii"]} />
       <Tile to="/admin/dane-osoby" label="18" title="Dane osoby (RODO)" lines={["Znajdź / usuń / wyeksportuj po e-mailu", "Obie bazy naraz"]} />
