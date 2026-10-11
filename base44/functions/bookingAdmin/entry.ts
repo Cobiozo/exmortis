@@ -5,6 +5,7 @@ import { loadAppUrl } from "../../shared/settings.ts";
 import { onBookingCreated, onBookingMoved, loadBooking, sendBookingMail, mailTexts, DEFAULT_TEXTS } from "../../shared/bookingNotify.ts";
 import { decryptHealth } from "../../shared/bookingCrypto.ts";
 import { SCHEMA_SQL, SEED_SQL } from "../../shared/bookingSchema.ts";
+import { googleStatus, ensureCalendar, syncBooking, dropBusy, takenByGoogle, typeDuration } from "../../shared/bookingGoogle.ts";
 
 // Panel rezerwacji 1:1 — wyłącznie administrator. Jedyne miejsce odszyfrowania odpowiedzi o zdrowiu.
 const int = (v, min, max, def = null) => { const n = Math.round(Number(v)); return Number.isFinite(n) && v !== "" && v !== null ? Math.min(max, Math.max(min, n)) : def; };
@@ -184,12 +185,19 @@ export default async function (req) {
 
     // Rezerwacja przez admina: może pominąć 24 h, ale nie zająć zajętego terminu (te same reguły w bk_book).
     if (a === "book") {
+      const typeId = textField(body, "type_id", { max: 40 });
+      const st = iso(body.starts_at);
+      const dur = await typeDuration(base44, typeId);
+      if (dur && await takenByGoogle(base44, st, new Date(new Date(st).getTime() + dur * 60000).toISOString())) {
+        return Response.json({ error: "Ten termin jest zajęty w Twoim kalendarzu Google." }, { status: 409 });
+      }
       const r = await rpc(base44, "bk_book", { p: {
-        type_id: textField(body, "type_id", { max: 40 }), starts_at: iso(body.starts_at), email: emailField(body).toLowerCase(),
+        type_id: typeId, starts_at: st, email: emailField(body).toLowerCase(),
         first_name: textField(body, "first_name", { max: 120 }), viewer_admin: true, source: "admin", actor: me.email,
       } });
       // Klient dostaje standardowe potwierdzenie (MUSI 13) — ten sam mechanizm co przy zapisie własnym.
       if (!r?.error && r?.id) await onBookingCreated(base44, r.id, null, "admin").catch(() => {});
+      if (!r?.error && r?.id) await syncBooking(base44, r.id, "upsert").catch(() => {});
       return Response.json(r, { status: r?.error ? 409 : 200 });
     }
 
@@ -202,7 +210,8 @@ export default async function (req) {
       if (isNaN(from.getTime()) || isNaN(to.getTime())) throw new Error("Niepoprawny zakres");
       const rows = await rpc(base44, "bk_free_slots", { p_type: textField(body, "type_id", { max: 40 }),
         p_from: from.toISOString(), p_to: to.toISOString(), p_admin: true, p_ignore: null });
-      return Response.json({ slots: (rows || []).map((r) => ({ start: r.slot_start, end: r.slot_end })) });
+      const slots = (rows || []).map((r) => ({ start: r.slot_start, end: r.slot_end }));
+      return Response.json({ slots: await dropBusy(base44, slots, from.toISOString(), to.toISOString()) });
     }
 
     if (a === "calendar") {
@@ -219,7 +228,9 @@ export default async function (req) {
       const log = await runSql(base44, `SELECT at, actor, action, summary FROM public.bk_log
         WHERE action IN ('rezerwacja','rezerwacja_z_pakietu','przeniesienie','anulowanie_klient','anulowanie_admin','status_po_spotkaniu','sesja_oddana')
         ORDER BY at DESC LIMIT 12`, true);
-      return Response.json({ ...(cal || { bookings: [], events: [], blocks: [], unmarked: 0 }), log });
+      const g = await googleStatus(base44);
+      return Response.json({ ...(cal || { bookings: [], events: [], blocks: [], unmarked: 0 }), log,
+        google: { status: g.status, error: g.error, pending: g.pending, busy: g.busy } });
     }
 
     if (a === "mark_status") {
@@ -239,6 +250,7 @@ export default async function (req) {
       if (r?.error) return Response.json({ error: r.error === "taken" ? "Ten termin jest zajęty." : "Nie udało się przenieść." }, { status: 409 });
       await runSql(base44, `UPDATE public.bk_bookings SET ics_sequence = ics_sequence + 1 WHERE id = ${escStr(bookingId)}::uuid`);
       await onBookingMoved(base44, bookingId).catch(() => {});
+      await syncBooking(base44, bookingId, "upsert").catch(() => {});
       return Response.json(r);
     }
 
@@ -313,6 +325,27 @@ export default async function (req) {
       await runSql(base44, `UPDATE public.bk_settings SET mail_texts = ${escStr(JSON.stringify(out))}::jsonb, updated_at = now() WHERE id = 1`);
       await log(base44, me.email, "tresci_maili", "settings", "1", null);
       return Response.json({ ok: true, texts: out });
+    }
+
+    // ---- KROK 4: Kalendarz Google (tylko calendar.app.created + calendar.freebusy) ----
+
+    if (a === "google_status") return Response.json({ google: await googleStatus(base44) });
+
+    // Zakłada własny kalendarz „exmortis · sesje”, jeśli jeszcze go nie ma.
+    if (a === "google_calendar") {
+      try {
+        const id = await ensureCalendar(base44);
+        await log(base44, me.email, "google_kalendarz", "settings", "1", id || null);
+        return Response.json({ ok: true, calendar_id: id });
+      } catch {
+        return Response.json({ error: "Nie udało się utworzyć kalendarza w Google." }, { status: 400 });
+      }
+    }
+
+    if (a === "save_google") {
+      await runSql(base44, `UPDATE public.bk_settings SET google_busy = ${body.busy === true ? "TRUE" : "FALSE"}, updated_at = now() WHERE id = 1`);
+      await log(base44, me.email, "google_zajetosc", "settings", "1", body.busy === true ? "wlaczona" : "wylaczona");
+      return Response.json({ ok: true });
     }
 
     return Response.json({ error: "Nieznana akcja" }, { status: 400 });

@@ -11,6 +11,7 @@ import BookingCalendar from "./BookingCalendar";
 import BookForClient from "./BookForClient";
 import IcalPanel from "./IcalPanel";
 import MailTextsPanel from "./MailTextsPanel";
+import GooglePanel from "./GooglePanel";
 
 const TABS = [["pulpit", "Pulpit"], ["kalendarz", "Kalendarz"], ["rezerwacje", "Rezerwacje"], ["pakiety", "Pakiety"],
   ["rodzaje", "Rodzaje i godziny"], ["blokady", "Blokady"], ["swieta", "Święta"], ["emaile", "E-maile"], ["ustawienia", "Ustawienia"]];
@@ -40,7 +41,12 @@ export default function BookingAdmin() {
         </div>
       )}
       {tab === "emaile" && <MailTextsPanel />}
-      {tab === "ustawienia" && <ModeSettings settings={data.settings} types={data.types} onSaved={load} />}
+      {tab === "ustawienia" && (
+        <div className="space-y-10">
+          <ModeSettings settings={data.settings} types={data.types} onSaved={load} />
+          <GooglePanel />
+        </div>
+      )}
       {tab === "rodzaje" && <div className="space-y-8">{data.types.map((t) => <TypeEditor key={t.id} type={t} onSaved={load} />)}</div>}
       {tab === "blokady" && <BlocksPanel blocks={data.blocks} onSaved={load} />}
       {tab === "swieta" && <HolidaysPanel holidays={data.holidays} onSaved={load} />}

@@ -911,6 +911,35 @@ END $s$;
 
 SELECT public.bk_fill_holidays(2);
 NOTIFY pgrst, 'reload schema';
+
+-- ============ KROK 4: Kalendarz Google (tylko calendar.app.created + calendar.freebusy) ============
+
+-- 30) Własny kalendarz „exmortis · sesje”, przełącznik zajętości i stan połączenia.
+ALTER TABLE public.bk_settings ADD COLUMN IF NOT EXISTS google_calendar_id text;
+ALTER TABLE public.bk_settings ADD COLUMN IF NOT EXISTS google_busy boolean NOT NULL DEFAULT true;
+ALTER TABLE public.bk_settings ADD COLUMN IF NOT EXISTS google_status text;
+ALTER TABLE public.bk_settings ADD COLUMN IF NOT EXISTS google_status_at timestamptz;
+ALTER TABLE public.bk_settings ADD COLUMN IF NOT EXISTS google_error text;
+
+-- 31) Identyfikator wydarzenia w kalendarzu Google — zapisywany przy rezerwacji.
+ALTER TABLE public.bk_bookings ADD COLUMN IF NOT EXISTS gcal_event_id text;
+ALTER TABLE public.bk_bookings ADD COLUMN IF NOT EXISTS gcal_synced_at timestamptz;
+
+-- 32) Ponowienia: nieudany zapis do Google nie blokuje rezerwacji, tylko tu czeka.
+CREATE TABLE IF NOT EXISTS public.bk_gcal_queue (
+  id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+  booking_id uuid NOT NULL REFERENCES public.bk_bookings(id) ON DELETE CASCADE,
+  op text NOT NULL CHECK (op IN ('upsert','delete')),
+  attempts int NOT NULL DEFAULT 0 CHECK (attempts >= 0),
+  last_error text CHECK (last_error IS NULL OR length(last_error) <= 500),
+  created_at timestamptz NOT NULL DEFAULT now(),
+  UNIQUE (booking_id, op)
+);
+CREATE INDEX IF NOT EXISTS bk_gcal_queue_due ON public.bk_gcal_queue (created_at);
+
+-- 33) Nowa tabela jak pozostałe: wyłącznie serwer (service_role).
+ALTER TABLE public.bk_gcal_queue ENABLE ROW LEVEL SECURITY;
+REVOKE ALL ON TABLE public.bk_gcal_queue FROM PUBLIC, anon, authenticated;
 `;
 
 // Rodzaje startowe — NIEAKTYWNE, do akceptacji w panelu.

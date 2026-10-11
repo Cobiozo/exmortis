@@ -4,6 +4,7 @@ import { loadKeys, sha256hex, safeEqual, randomToken, getMode, safeErr, CONSENTS
 import { encryptHealth } from "../../shared/bookingCrypto.ts";
 import { icalFeed } from "../../shared/bookingIcal.ts";
 import { onBookingCreated, onBookingMoved, onBookingCancelled, runReminders } from "../../shared/bookingNotify.ts";
+import { ensureCalendar, syncBooking, dropBusy, takenByGoogle, typeDuration, retryGoogle } from "../../shared/bookingGoogle.ts";
 
 // Publiczne rezerwacje 1:1. Zwraca wyłącznie godziny i dane potrzebne formularzowi — nigdy linku Zoom ani cudzych danych.
 const ERR = {
@@ -68,10 +69,11 @@ export default async function (req) {
         allowed = !!row?.tick_token && !!given && (await safeEqual(given, row.tick_token));
       }
       if (!allowed) return bad("Forbidden", 403);
-      // Przypomnienia 24 h i 1 h (MUSI 15) — wywołanie z zadania cyklicznego, ten sam token.
-      if (a === "notify_tick") return Response.json({ ok: true, ...(await runReminders(base44)) });
+      // Przypomnienia 24 h i 1 h (MUSI 15) oraz ponowienia do Kalendarza Google (MUSI 6) — ten sam token.
+      if (a === "notify_tick") return Response.json({ ok: true, ...(await runReminders(base44)), ...(await retryGoogle(base44)) });
       const r = await runSql(base44, `SELECT public.bk_fill_holidays(2) AS holidays, public.bk_log_purge() AS log_purged, public.bk_answers_retention() AS answers_removed, backup.purge_expired() AS backups_removed`);
-      return Response.json({ ok: true, ...(r?.[0] || {}) });
+      await ensureCalendar(base44).catch(() => {});   // własny kalendarz „exmortis · sesje” powstaje raz
+      return Response.json({ ok: true, ...(r?.[0] || {}), ...(await retryGoogle(base44)) });
     }
 
     const me = await base44.auth.me().catch(() => null);
@@ -110,7 +112,9 @@ export default async function (req) {
       const to = new Date(Math.min(new Date(body.to || Date.now() + 31 * 864e5).getTime(), from.getTime() + 62 * 864e5));
       if (isNaN(from.getTime()) || isNaN(to.getTime())) return bad("Niepoprawny zakres");
       const rows = await rpc(base44, "bk_free_slots", { p_type: t.id, p_from: from.toISOString(), p_to: to.toISOString() });
-      return Response.json({ slots: (rows || []).map((r) => ({ start: r.slot_start, end: r.slot_end })) });
+      const slots = (rows || []).map((r) => ({ start: r.slot_start, end: r.slot_end }));
+      // Zajętość z kalendarza głównego działa jak ręczna blokada; brak odpowiedzi Google nic nie blokuje.
+      return Response.json({ slots: await dropBusy(base44, slots, from.toISOString(), to.toISOString()) });
     }
 
     if (a === "book") {
@@ -144,6 +148,8 @@ export default async function (req) {
       const token = randomToken();
       const idem = typeof body.idem_key === "string" && /^[A-Za-z0-9-]{8,64}$/.test(body.idem_key) ? body.idem_key : null;
       const health_enc = health ? await encryptHealth(keys.enc, health) : null;
+      // Ostatni sprawdzian zajętości Google — bez pamięci podręcznej, tuż przed zapisem.
+      if (await takenByGoogle(base44, st.toISOString(), new Date(st.getTime() + t.duration_min * 60000).toISOString())) return bad(ERR.taken[1], 409);
       const res = await rpc(base44, "bk_book", { p: {
         type_id: t.id, starts_at: st.toISOString(), email, first_name: firstName, user_id: me?.id || null,
         tz: typeof body.tz === "string" && TZ_RE.test(body.tz) ? body.tz : null, idem_key: idem, viewer_admin: admin,
@@ -153,6 +159,7 @@ export default async function (req) {
       if (res?.error) { const [c, m] = ERR[res.error] || [400, "Nie udało się zarezerwować."]; return bad(m, c); }
       // Potwierdzenie z plikiem .ics, przypomnienia i powiadomienie do mnie (MUSI 15).
       if (!res.already && res.id) await onBookingCreated(base44, res.id, token, "klient").catch(() => {});
+      if (!res.already && res.id) await syncBooking(base44, res.id, "upsert").catch(() => {});
       return Response.json({ ok: true, starts_at: res.starts_at, ends_at: res.ends_at,
         manage_url: res.already ? null : `/rezerwacja/zarzadzaj#t=${token}` });
     }
@@ -205,6 +212,11 @@ export default async function (req) {
       if (body.service_consent === true) {
         consents.push({ kind: "odstapienie", text_version: String(body.consent_version || "").slice(0, 40), text: String(body.consent_text || "").slice(0, 2000), email_hmac: emailH, ip_hmac: ipH });
       }
+      const pkRow = await resolvePackage(base44, body, me, admin);
+      const dur = pkRow ? await typeDuration(base44, pkRow.type_id) : null;
+      if (dur && await takenByGoogle(base44, st.toISOString(), new Date(st.getTime() + dur * 60000).toISOString())) {
+        return bad("Ten termin jest zajęty w Twoim kalendarzu Google.", 409);
+      }
       const res = await rpc(base44, "bk_book_package", { p: {
         package_id: tok ? null : textField(body, "package_id", { max: 40 }),
         token_hash: tok ? await sha256hex(tok) : null,
@@ -228,6 +240,7 @@ export default async function (req) {
         return bad(m, c);
       }
       if (res.id) await onBookingCreated(base44, res.id, null, "klient").catch(() => {});
+      if (res.id) await syncBooking(base44, res.id, "upsert").catch(() => {});
       return Response.json({ ok: true, starts_at: res.starts_at, ends_at: res.ends_at });
     }
 
@@ -268,6 +281,8 @@ export default async function (req) {
       await runSql(base44, `UPDATE public.bk_bookings SET ics_sequence = ics_sequence + 1 WHERE id = ${escStr(bookingId)}::uuid`).catch(() => {});
       if (a === "reschedule") await onBookingMoved(base44, bookingId).catch(() => {});
       else await onBookingCancelled(base44, bookingId).catch(() => {});
+      // Google: przeniesienie poprawia to samo wydarzenie, anulowanie je usuwa.
+      await syncBooking(base44, bookingId, a === "reschedule" ? "upsert" : "delete").catch(() => {});
       return Response.json(res);
     }
 

@@ -43,6 +43,19 @@ export default function BookingDashboard({ onGo }) {
         </div>
       )}
 
+      {d.google && (d.google.status === "error" || d.google.pending > 0) && (
+        <div className="border border-[#BC1E22] p-4 flex flex-wrap items-center gap-4">
+          <AlertTriangle className="h-5 w-5 blood-text" />
+          <p className="text-sm flex-1">
+            {d.google.status === "error"
+              ? "Kalendarz Google niedostępny — sprawdź zajętość ręcznie."
+              : `Kalendarz Google: ${d.google.pending} zmian czeka na ponowienie.`}
+            {d.google.error ? <span className="text-foreground/50"> ({d.google.error})</span> : null}
+          </p>
+          <button onClick={() => onGo?.("ustawienia")} className="btn-ghost !py-2 text-[10px]">USTAWIENIA</button>
+        </div>
+      )}
+
       <section>
         <p className="technical text-[10px] text-foreground/50 mb-3">DZIŚ I JUTRO</p>
         {items.length === 0 ? <p className="text-sm text-foreground/40">Nic zaplanowanego.</p> : (
