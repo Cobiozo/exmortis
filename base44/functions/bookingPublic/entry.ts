@@ -1,6 +1,6 @@
 import { createClientFromRequest } from "npm:@base44/sdk@0.8.52";
 import { runSql, rpc, escStr, textField, emailField, clientIp } from "../../shared/supabase.ts";
-import { loadKeys, sha256hex, randomToken, getMode, safeErr, CONSENTS, TZ_RE, KEYS_MSG } from "../../shared/booking.ts";
+import { loadKeys, sha256hex, safeEqual, randomToken, getMode, safeErr, CONSENTS, TZ_RE, KEYS_MSG } from "../../shared/booking.ts";
 import { encryptHealth } from "../../shared/bookingCrypto.ts";
 
 // Publiczne rezerwacje 1:1. Zwraca wyłącznie godziny i dane potrzebne formularzowi — nigdy linku Zoom ani cudzych danych.
@@ -28,7 +28,17 @@ export default async function (req) {
     const a = body.action;
 
     // Zadanie cykliczne: święta 2 lata do przodu, czyszczenie rejestru po 12 mies., usuwanie odpowiedzi po 60 dniach.
+    // Dostęp: administrator albo zadanie RezerwacjeTick (token z bk_settings, porównanie w czasie stałym).
+    // Anonimowe wywołanie kończy się 403 (wcześniej każdy mógł wywołać higienę danych).
     if (a === "tick") {
+      const who = await base44.auth.me().catch(() => null);
+      let allowed = who?.role === "admin";
+      if (!allowed) {
+        const [row] = await runSql(base44, `SELECT tick_token FROM public.bk_settings WHERE id = 1`, true);
+        const given = typeof body.tick_token === "string" ? body.tick_token : "";
+        allowed = !!row?.tick_token && !!given && (await safeEqual(given, row.tick_token));
+      }
+      if (!allowed) return bad("Forbidden", 403);
       const r = await runSql(base44, `SELECT public.bk_fill_holidays(2) AS holidays, public.bk_log_purge() AS log_purged, public.bk_answers_retention() AS answers_removed, backup.purge_expired() AS backups_removed`);
       return Response.json({ ok: true, ...(r?.[0] || {}) });
     }

@@ -37,6 +37,15 @@ export async function loadKeys(simulateMissing = false) {
 
 export const sha256hex = async (text) => hex(await crypto.subtle.digest("SHA-256", te.encode(String(text))));
 
+// Porównanie w czasie stałym: skróty mają zawsze tę samą długość, więc czas nie zdradza
+// ani długości, ani treści porównywanej wartości.
+export async function safeEqual(a, b) {
+  const x = await sha256hex(String(a)), y = await sha256hex(String(b));
+  let d = 0;
+  for (let i = 0; i < x.length; i++) d |= x.charCodeAt(i) ^ y.charCodeAt(i);
+  return d === 0;
+}
+
 export function randomToken() {
   const b = crypto.getRandomValues(new Uint8Array(32));
   return btoa(String.fromCharCode(...b)).replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/, "");

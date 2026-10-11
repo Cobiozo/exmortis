@@ -69,6 +69,7 @@ CREATE TABLE IF NOT EXISTS public.bk_settings (
   min_notice_h int NOT NULL DEFAULT 24 CHECK (min_notice_h >= 24),
   daily_limit int NOT NULL DEFAULT 3 CHECK (daily_limit BETWEEN 1 AND 20),
   weekly_limit int CHECK (weekly_limit IS NULL OR weekly_limit BETWEEN 1 AND 100),
+  tick_token text,
   updated_at timestamptz NOT NULL DEFAULT now()
 );
 INSERT INTO public.bk_settings (id) VALUES (1) ON CONFLICT DO NOTHING;

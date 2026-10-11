@@ -7,7 +7,7 @@ export default async function (req) {
   try {
     const base44 = createClientFromRequest(req);
     const body = await req.json().catch(() => ({}));
-    // Limit: 10 prób na godzinę na IP.
+    // Limit: 10 prób na godzinę na IP (IP wyłącznie z nagłówków ustawianych przez brzeg platformy).
     const ip = clientIp(req);
     const L = base44.asServiceRole.entities.SecurityLog;
     const tries = await L.filter({ type: "rabat", ip, created_date: { $gte: new Date(Date.now() - 3600000).toISOString() } }, "-created_date", 11);

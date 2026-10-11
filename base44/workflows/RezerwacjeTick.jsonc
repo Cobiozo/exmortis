@@ -17,12 +17,12 @@
       "ends_after_count": null
     }
   },
-  "description": "Raz dziennie: dopisuje polskie \u015bwi\u0119ta na 2 lata do przodu (odblokowane zostaj\u0105 odblokowane), czy\u015bci rejestr dzia\u0142a\u0144 starszy ni\u017c 12 miesi\u0119cy i usuwa odpowiedzi z formularza 60 dni po rozmowie.",
+  "description": "Raz dziennie: dopisuje polskie \u015bwi\u0119ta na 2 lata do przodu (odblokowane zostaj\u0105 odblokowane), czy\u015bci rejestr dzia\u0142a\u0144 starszy ni\u017c 12 miesi\u0119cy i usuwa odpowiedzi z formularza 60 dni po rozmowie. Wywo\u0142anie potwierdza si\u0119 tokenem tick_token z bk_settings \u2014 bez niego bookingPublic/tick zwraca 403.",
   "definition": {
     "document": {
       "dsl": "1.0.0",
       "name": "rezerwacje_tick",
-      "version": "1.0",
+      "version": "1.1",
       "namespace": "base44"
     },
     "do": [
@@ -32,7 +32,8 @@
           "with": {
             "function_name": "bookingPublic",
             "args": {
-              "action": "tick"
+              "action": "tick",
+              "tick_token": "09c45682ab6dfd72d0f5413702d6001b89eac0bb95bc88aa257795099058fad9"
             }
           },
           "then": "end",
