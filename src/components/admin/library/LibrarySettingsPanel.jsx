@@ -12,7 +12,11 @@ export default function LibrarySettingsPanel() {
   const [confirm, setConfirm] = useState(null);
   const [busy, setBusy] = useState(false);
 
-  useEffect(() => { lib("settings").then((d) => setS(d.settings)).catch(() => setErr("Nie udało się wczytać ustawień.")); }, []);
+  useEffect(() => {
+    lib("settings")
+      .then((d) => setS({ ...d.settings, video_domains_text: (d.settings.video_domains || []).join("\n") }))
+      .catch(() => setErr("Nie udało się wczytać ustawień."));
+  }, []);
   if (!s) return <p className="technical text-[10px] text-foreground/40">{err || "WCZYTUJĘ…"}</p>;
 
   const set = (k, v) => setS((x) => ({ ...x, [k]: v }));
@@ -20,12 +24,19 @@ export default function LibrarySettingsPanel() {
   const save = async (next) => {
     setBusy(true); setErr(""); setSaved("");
     try {
-      await lib("save_settings", {
+      const domeny = String(next.video_domains_text || "").split(/[\s,;]+/).map((t) => t.trim()).filter(Boolean);
+      const gbNow = next.space_gb !== undefined ? next.space_gb : Number(next.space_limit_mb || 5120) / 1024;
+      const r = await lib("save_settings", {
         library_mode: next.library_mode, messages_mode: next.messages_mode,
         email_notify: next.email_notify === true, whatsapp: next.whatsapp || "",
-        space_limit_mb: Math.round(Number(next.space_gb || 5) * 1024),
+        space_limit_mb: Math.round(Number(gbNow || 5) * 1024),
+        video_domains: domeny,
       });
-      setS(next); setSaved("Zapisano.");
+      const zapisane = (r && r.video_domains) || domeny;
+      setS({ ...next, video_domains: zapisane, video_domains_text: zapisane.join("\n") });
+      setSaved(r && r.odrzucone && r.odrzucone.length
+        ? `Zapisano. Pominięte (niepoprawne): ${r.odrzucone.join(", ")}`
+        : "Zapisano.");
     } catch (e) { setErr(e.message); } finally { setBusy(false); }
   };
 
@@ -77,8 +88,23 @@ export default function LibrarySettingsPanel() {
 
       <div>
         <label className="technical text-[10px] text-foreground/50 block mb-2">PRÓG PRZESTRZENI (GB)</label>
-        <input type="number" min="0.1" step="0.1" value={gb} onChange={(e) => set("space_gb", e.target.value)} className={inputCls} />
+        <input type="number" min="0.1" step="0.1" value={s.space_gb !== undefined ? s.space_gb : gb} onChange={(e) => set("space_gb", e.target.value)} className={inputCls} />
         <p className="text-xs text-foreground/45 mt-2">Powyżej 80% panel pokazuje ostrzeżenie.</p>
+      </div>
+
+      <div>
+        <label className="technical text-[10px] text-foreground/50 block mb-2">DOMENY MOICH PLIKÓW WIDEO</label>
+        <textarea
+          rows={3}
+          value={s.video_domains_text || ""}
+          onChange={(e) => set("video_domains_text", e.target.value)}
+          placeholder={"media.exmortis.pl\nmojserwer.pl"}
+          className={inputCls}
+        />
+        <p className="text-xs text-foreground/45 mt-2">
+          Jedna domena w wierszu, sama nazwa (bez https:// i bez ścieżki). Tylko z tych domen dodasz wideo jako „Adres pliku z mojego serwera”.
+          Plik na Twoim serwerze jest dostępny dla każdego, kto zna adres.
+        </p>
       </div>
 
       {err && <p className="text-sm blood-text">{err}</p>}
