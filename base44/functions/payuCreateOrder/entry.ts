@@ -150,6 +150,8 @@ export default async function (req) {
 
     return Response.json({ redirectUri: data.redirectUri, orderId: extOrderId });
   } catch (error) {
-    return Response.json({ error: error.message }, { status: 500 });
+    // Błąd walidacji formularza = 400 (wina danych), reszta = 500.
+    const bad = /^(Brak pola|Pole .* jest zbyt długie|Niepoprawny adres e-mail)/.test(String(error?.message || ""));
+    return Response.json({ error: error.message }, { status: bad ? 400 : 500 });
   }
 }
