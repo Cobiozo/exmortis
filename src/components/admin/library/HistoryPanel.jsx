@@ -11,7 +11,7 @@ export default function HistoryPanel() {
 
   useEffect(() => {
     setErr("");
-    lib("history", { action, days: Number(days) }).then(setD).catch((e) => { setErr(e.message); setD({ items: [], akcje: [] }); });
+    lib("history", { action_filter: action, days: Number(days) }).then(setD).catch((e) => { setErr(e.message); setD({ items: [], akcje: [] }); });
   }, [action, days]);
 
   return (
