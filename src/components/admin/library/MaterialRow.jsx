@@ -4,7 +4,7 @@ import { lib, KIND_LABEL, mb1 } from "./libApi";
 import LibModal from "./LibModal";
 
 // Jeden materiał na liście. Na telefonie karta, na szerokim ekranie wiersz.
-export default function MaterialRow({ item, onEdit, onAssign, onDone }) {
+export default function MaterialRow({ item, selected, onSelect, onEdit, onAssign, onDone }) {
   const [del, setDel] = useState(null);
   const [busy, setBusy] = useState(false);
   const [err, setErr] = useState("");
@@ -24,6 +24,10 @@ export default function MaterialRow({ item, onEdit, onAssign, onDone }) {
   return (
     <div className="p-4 border hairline space-y-3">
       <div className="flex flex-wrap items-start justify-between gap-3">
+        {onSelect && (
+          <input type="checkbox" checked={!!selected} onChange={onSelect} aria-label={`Zaznacz: ${item.title}`}
+            className="mt-1 h-4 w-4 accent-[#C9A24A] shrink-0" />
+        )}
         <div className="min-w-0 flex-1">
           <div className="flex flex-wrap items-center gap-2 mb-1">
             <span className="technical text-[10px] gold-text">{KIND_LABEL[item.kind]}</span>

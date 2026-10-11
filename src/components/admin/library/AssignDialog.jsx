@@ -1,13 +1,16 @@
 import React, { useEffect, useState } from "react";
 import { Loader2, ChevronDown } from "lucide-react";
-import { lib, inputCls } from "./libApi";
+import { lib, inputCls, plToUtc } from "./libApi";
 import LibModal from "./LibModal";
 import TargetPicker, { EMPTY_TARGET } from "./TargetPicker";
 import AssignList from "./AssignList";
 
 // Jedno okno przydziału — wołane z materiału, kolekcji, listy klientów, karty klienta i karty grupy.
 // Odbiorców wybiera się tym samym komponentem co przy wiadomości (TargetPicker).
-export default function AssignDialog({ open, onClose, materialId, collectionId, label, presetEmails, presetGroupId, onDone }) {
+// materialIds = kilka materiałów naraz (z listy „Przydziel zaznaczone”) — jedno wywołanie serwera.
+export default function AssignDialog({ open, onClose, materialId, materialIds, collectionId, label, presetEmails, presetGroupId, onDone }) {
+  const many = Array.isArray(materialIds) && materialIds.length > 0;
+  const [done, setDone] = useState("");
   const [t, setT] = useState(() => ({ ...EMPTY_TARGET, emails: presetEmails || [], group_id: presetGroupId || "" }));
   const [prev, setPrev] = useState(null);
   const [ver, setVer] = useState(0);
@@ -30,12 +33,19 @@ export default function AssignDialog({ open, onClose, materialId, collectionId, 
   }, [t, ver]);
 
   const submit = async () => {
-    setBusy(true); setErr("");
+    setBusy(true); setErr(""); setDone("");
     try {
-      await lib("assignment_save", {
-        material_id: materialId, collection_id: collectionId, target: target(),
-        note: t.note, visible_from: t.visible_from || null, visible_to: t.visible_to || null,
-      });
+      // Pola dat są w czasie PL — na serwer idą jako UTC.
+      const from = plToUtc(t.visible_from), to = plToUtc(t.visible_to);
+      if (many) {
+        const r = await lib("assign_many", { material_ids: materialIds, target: target(), note: t.note, visible_from: from, visible_to: to });
+        setDone(`Przydzielono: ${r.materialy || materialIds.length} ${(r.materialy || materialIds.length) === 1 ? "materiał" : "materiałów"} → ${r.osoby || 0} ${r.osoby === 1 ? "osobie" : "osobom"}.`);
+      } else {
+        await lib("assignment_save", {
+          material_id: materialId, collection_id: collectionId, target: target(),
+          note: t.note, visible_from: from, visible_to: to,
+        });
+      }
       setT({ ...EMPTY_TARGET, emails: presetEmails || [] });
       setVer((v) => v + 1);
       onDone?.();
@@ -76,7 +86,10 @@ export default function AssignDialog({ open, onClose, materialId, collectionId, 
 
       <div className="border hairline p-3">
         <button onClick={() => setOpenPrev((v) => !v)} className="w-full flex items-center justify-between gap-3 text-left">
-          <span className="text-sm">Przydzielasz {prev ? prev.count : 0} {prev?.count === 1 ? "osobie" : "osobom"}</span>
+          <span className="text-sm">
+            {many ? `${materialIds.length} ${materialIds.length === 1 ? "materiał" : "materiałów"} → ` : "Przydzielasz "}
+            {prev ? prev.count : 0} {prev?.count === 1 ? "osobie" : "osobom"}
+          </span>
           <ChevronDown className={`h-4 w-4 text-foreground/40 transition-transform ${openPrev ? "rotate-180" : ""}`} />
         </button>
         {openPrev && (
@@ -89,8 +102,9 @@ export default function AssignDialog({ open, onClose, materialId, collectionId, 
       </div>
 
       {err && <p className="text-sm blood-text">{err}</p>}
+      {done && <p className="text-sm gold-text">{done}</p>}
 
-      <AssignList materialId={materialId} collectionId={collectionId} version={ver} onChange={() => onDone?.()} />
+      {!many && <AssignList materialId={materialId} collectionId={collectionId} version={ver} onChange={() => onDone?.()} />}
     </LibModal>
   );
 }

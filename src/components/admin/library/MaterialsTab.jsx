@@ -14,6 +14,9 @@ export default function MaterialsTab() {
   const [err, setErr] = useState("");
   const [form, setForm] = useState(null);      // { item } — null = zamknięte
   const [assign, setAssign] = useState(null);  // material do przydziału
+  const [sel, setSel] = useState(() => new Set()); // zaznaczone do przydziału zbiorczego
+  const [assignMany, setAssignMany] = useState(false);
+  const toggle = (id) => setSel((s0) => { const n = new Set(s0); if (n.has(id)) n.delete(id); else n.add(id); return n; });
 
   const load = () => {
     setErr("");
@@ -44,6 +47,16 @@ export default function MaterialsTab() {
 
       <input value={q} onChange={(e) => setQ(e.target.value)} placeholder="Szukaj w tytule i opisie" className={inputCls} />
 
+      {sel.size > 0 && (
+        <div className="sticky top-2 z-10 flex flex-wrap items-center justify-between gap-3 border hairline bg-[#0A0A0B] p-3">
+          <span className="text-sm">Zaznaczone: {sel.size}</span>
+          <div className="flex flex-wrap gap-2">
+            <button className="btn-ghost !px-3 !py-2" onClick={() => setSel(new Set())}>WYCZYŚĆ</button>
+            <button className="btn-relic !px-3 !py-2" onClick={() => setAssignMany(true)}>PRZYDZIEL ZAZNACZONE ({sel.size})</button>
+          </div>
+        </div>
+      )}
+
       {space && <SpaceBar bytes={space.bytes} limitMb={space.limit_mb} />}
       {err && <p className="text-sm blood-text">{err}</p>}
 
@@ -54,13 +67,22 @@ export default function MaterialsTab() {
       ) : (
         <div className="space-y-3">
           {items.map((m) => (
-            <MaterialRow key={m.id} item={m} onEdit={(it) => setForm({ item: it })} onAssign={setAssign} onDone={load} />
+            <MaterialRow key={m.id} item={m} selected={sel.has(m.id)} onSelect={() => toggle(m.id)} onEdit={(it) => setForm({ item: it })} onAssign={setAssign} onDone={load} />
           ))}
         </div>
       )}
 
       {form && (
         <MaterialForm open onClose={() => setForm(null)} item={form.item} onRefresh={load} onDone={() => { setForm(null); load(); }} />
+      )}
+      {assignMany && (
+        <AssignDialog
+          open
+          onClose={() => setAssignMany(false)}
+          materialIds={[...sel]}
+          label={`Materiały: ${(items || []).filter((m) => sel.has(m.id)).map((m) => m.title).join(", ")}`}
+          onDone={() => { setSel(new Set()); load(); }}
+        />
       )}
       {assign && (
         <AssignDialog open onClose={() => setAssign(null)} materialId={assign.id} label={`Materiał: ${assign.title}`} onDone={load} />
