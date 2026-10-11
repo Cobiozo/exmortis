@@ -1,5 +1,5 @@
 import { createClientFromRequest } from "npm:@base44/sdk@0.8.44";
-import { runSql, escStr } from "../../shared/supabase.ts";
+import { runSql, escStr, clientIp } from "../../shared/supabase.ts";
 import { isActive } from "../../shared/access.ts";
 import { personalizePdf, newLicenseId } from "../../shared/pdfLicense.ts";
 
@@ -85,7 +85,7 @@ export default async function (req) {
           else lic = await sr.entities.License.create({ ...data, downloads: 0 });
         }
         await sr.entities.License.update(lic.id, { downloads: (lic.downloads || 0) + 1 });
-        await sr.entities.SecurityLog.create({ type: "pdf", user_email: email, ip: (req.headers.get("x-forwarded-for") || "").split(",")[0].trim(), details: `${p.name} · ${lic.license_id}` });
+        await sr.entities.SecurityLog.create({ type: "pdf", user_email: email, ip: clientIp(req), details: `${p.name} · ${lic.license_id}` });
         const { signed_url } = await sr.integrations.Core.CreateFileSignedUrl({ file_uri: lic.file_uri, expires_in: 600 });
         const safe = String(p.name).normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/ł/g, "l").replace(/[^A-Za-z0-9]+/g, "_").replace(/^_|_$/g, "");
         return Response.json({ url: signed_url, name: `${safe}_exmortis_${orderNo}.pdf` });
