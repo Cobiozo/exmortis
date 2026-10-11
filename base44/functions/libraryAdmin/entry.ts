@@ -1,5 +1,5 @@
 import { createClientFromRequest } from "npm:@base44/sdk@0.8.52";
-import { runSql, esc, escStr, requireAdmin, textField } from "../../shared/supabase.ts";
+import { runSql, rpc, esc, escStr, requireAdmin, textField } from "../../shared/supabase.ts";
 import { SCHEMA_SQL, SEED_SQL, CHECKPOINT_TABLES_SQL, CHECKPOINT_FUNCS_SQL } from "../../shared/librarySchema.ts";
 import { libSettings, resetLibSettings, MODES, resolveRecipients, randomToken } from "../../shared/libraryAccess.ts";
 import { sanitizeHtml, plainText } from "../../shared/librarySanitize.ts";
@@ -30,22 +30,13 @@ async function spaceUsed(base44) {
   return { bytes: Number(row.bytes || 0), files: Number(row.pliki || 0) };
 }
 
-// Grupa automatyczna: tylko odczyt z istniejących danych (zakupy, pakiety). Logika zakupów i rezerwacji nietknięta.
+// Grupa automatyczna: reguła liczy się w bazie (mb_auto_group_emails) — to samo źródło co przy
+// widoczności materiałów i liście odbiorców. Logika zakupów i rezerwacji nietknięta.
 async function autoEmails(base44, g) {
-  const r = (g && g.rule) || {};
-  if (r.typ === "produkt" && r.id) {
-    const rows = await runSql(base44, `SELECT DISTINCT lower(btrim(o.buyer_email)) AS email
-      FROM public.orders o, jsonb_array_elements(o.items) e
-      WHERE o.status = 'COMPLETED' AND e->>'product_id' = ${escStr(String(r.id))} AND o.buyer_email IS NOT NULL`, true).catch(() => []);
-    return (rows || []).map((x) => lower(x.email)).filter(Boolean);
-  }
-  if (r.typ === "aktywny_pakiet") {
-    const rows = await runSql(base44, `SELECT DISTINCT lower(btrim(p.email_display)) AS email FROM public.bk_packages p
-      WHERE p.payment_status = 'oplacony' AND p.valid_until > now() AND p.sessions_used < p.sessions_total
-        AND p.email_display IS NOT NULL`, true).catch(() => []);
-    return (rows || []).map((x) => lower(x.email)).filter(Boolean);
-  }
-  return [];
+  const rule = (g && g.rule) || null;
+  if (!rule || !rule.typ) return [];
+  const rows = await rpc(base44, "mb_auto_group_emails", { p_rule: rule }).catch(() => []);
+  return (rows || []).map((x) => lower(x.email)).filter(Boolean);
 }
 
 // Sprawdzenie wgranego pliku: rozszerzenie, sygnatura, rozmiar; dla PDF dodatkowo aktywna zawartość (ostrzeżenie).

@@ -10,13 +10,22 @@ export const FOOTER_REPLY = "Na tę wiadomość odpowiesz e-mailem lub na WhatsA
 export const FOOTER_CRISIS = "Jeśli jesteś w kryzysie: 116 123 · 800 70 2222 (całą dobę, bezpłatnie) · 112.";
 
 // {imię} → imię. Brak imienia = zdanie bez pustego miejsca („Cześć {imię}," → „Cześć,").
+// {imię} → imię. Bez imienia znacznik znika razem z odstępem, a zdanie zaczyna się wielką literą
+// („<p>dziękuję", nie „<p> dziękuję").
 export function renderBody(html, name) {
   const n = String(name || "").trim();
-  return String(html == null ? "" : html)
-    .replace(/\{\s*imi[ęe]\s*\}/gi, n)
-    .replace(/[ \t]{2,}/g, " ")
-    .replace(/\s+([,.!?;:])/g, "$1")
-    .replace(/\s+(<)/g, "$1");
+  const token = /\{\s*imi[ęe]\s*\}/gi;
+  let out = String(html == null ? "" : html);
+  if (n) {
+    out = out.replace(token, n);
+  } else {
+    out = out
+      .replace(new RegExp(`(^|>)(\\s*)${token.source}\\s*([a-ząćęłńóśźż])?`, "gi"),
+        (m, lead, sp, ch) => lead + (lead === ">" ? "" : sp) + String(ch || "").toUpperCase())
+      .replace(token, "")
+      .replace(/(>)\s*([,.!?;:]+)\s*/g, "$1");
+  }
+  return out.replace(/[ \t]{2,}/g, " ").replace(/\s+([,.!?;:])/g, "$1").replace(/\s+(<)/g, "$1");
 }
 
 const wrap = (title, inner, appUrl) => `<div style="font-family:Arial,Helvetica,sans-serif;color:#E3E3E3;background:#0A0A0B;padding:24px">

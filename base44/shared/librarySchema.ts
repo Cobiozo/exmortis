@@ -244,6 +244,39 @@ END $p$;
 ALTER FUNCTION public.mb_log_purge() OWNER TO mb_log_maint;
 REVOKE CREATE ON SCHEMA public FROM mb_log_maint;
 
+-- ============ 9b. GRUPY AUTOMATYCZNE (jedno miejsce prawdy) ============
+-- Członkostwo grupy automatycznej liczone wyłącznie ODCZYTEM istniejących danych:
+-- opłacone zamówienia (orders) i aktywne pakiety (bk_packages). Zero zmian w zakupach i rezerwacjach.
+-- Ta sama reguła obsługuje widoczność materiałów, listę odbiorców wiadomości i podgląd w panelu.
+CREATE OR REPLACE FUNCTION public.mb_auto_group_emails(p_rule jsonb)
+RETURNS TABLE (email text)
+LANGUAGE plpgsql STABLE SECURITY DEFINER SET search_path = '' AS $ae$
+BEGIN
+  IF p_rule->>'typ' = 'produkt' AND COALESCE(p_rule->>'id','') <> '' THEN
+    RETURN QUERY
+      SELECT DISTINCT lower(btrim(o.buyer_email))
+        FROM public.orders o, jsonb_array_elements(o.items) e
+       WHERE o.status = 'COMPLETED' AND e->>'product_id' = p_rule->>'id' AND o.buyer_email IS NOT NULL;
+  ELSIF p_rule->>'typ' = 'aktywny_pakiet' THEN
+    RETURN QUERY
+      SELECT DISTINCT lower(btrim(p.email_display))
+        FROM public.bk_packages p
+       WHERE p.payment_status = 'oplacony' AND p.valid_until > now()
+         AND p.sessions_used < p.sessions_total AND p.email_display IS NOT NULL;
+  END IF;
+END $ae$;
+
+-- Kto jest w grupie TERAZ: członkowie ręczni plus, dla grupy automatycznej, aktualny wynik reguły.
+CREATE OR REPLACE FUNCTION public.mb_group_members_now(p_group uuid)
+RETURNS TABLE (email text)
+LANGUAGE sql STABLE SECURITY DEFINER SET search_path = '' AS $gm$
+  SELECT DISTINCT lower(btrim(m.client_email)) AS email
+    FROM public.mb_group_members m WHERE m.group_id = p_group
+  UNION
+  SELECT e.email FROM public.mb_groups g, public.mb_auto_group_emails(g.rule) e
+   WHERE g.id = p_group AND g.kind = 'AUTOMATYCZNA'
+$gm$;
+
 -- ============ 10. REGUŁA WIDOCZNOŚCI (jedno miejsce prawdy) ============
 -- Zwraca materiały widoczne dla danej osoby: przydział wprost, przez grupę wg trybu,
 -- z wyjątkami (dodani / wykluczeni), w oknie dat, przy włączonym przełączniku modułu.
@@ -253,7 +286,14 @@ RETURNS TABLE (material_id uuid, collection_id uuid, assignment_id uuid, note te
 LANGUAGE sql STABLE SECURITY DEFINER SET search_path = '' AS $vm$
 WITH me AS (SELECT lower(btrim(COALESCE(p_email,''))) AS mail),
 s AS (SELECT library_mode FROM public.mb_settings WHERE id = 1),
-mine AS (SELECT m.group_id FROM public.mb_group_members m, me WHERE m.client_email = me.mail),
+-- „moje grupy": ręczne (z listy członków) ORAZ automatyczne (aktualny wynik reguły zakupowej / pakietowej)
+mine AS (
+  SELECT m.group_id FROM public.mb_group_members m, me WHERE m.client_email = me.mail
+  UNION
+  SELECT g.id FROM public.mb_groups g, me
+   WHERE g.kind = 'AUTOMATYCZNA' AND me.mail <> ''
+     AND me.mail IN (SELECT e.email FROM public.mb_auto_group_emails(g.rule) e)
+),
 a AS (
   SELECT x.*, CASE WHEN x.target_kind = 'osoba' THEN 0 ELSE 1 END AS prio
   FROM public.mb_assignments x, me, s
@@ -266,7 +306,9 @@ a AS (
       (x.target_kind = 'osoba' AND x.target_email = me.mail)
       OR (x.target_kind = 'grupa' AND NOT (me.mail = ANY(x.exceptions_drop)) AND (
            (x.group_mode = 'OBECNI_I_PRZYSZLI' AND (x.group_id IN (SELECT group_id FROM mine) OR me.mail = ANY(x.exceptions_add)))
-        OR (x.group_mode = 'TYLKO_OBECNI' AND (me.mail = ANY(x.snapshot_emails) OR me.mail = ANY(x.exceptions_add)))
+        OR (x.group_mode = 'TYLKO_OBECNI' AND (
+             (me.mail = ANY(x.snapshot_emails) AND me.mail IN (SELECT e.email FROM public.mb_group_members_now(x.group_id) e))
+             OR me.mail = ANY(x.exceptions_add)))
       ))
     )
 ),
@@ -294,17 +336,24 @@ CREATE OR REPLACE FUNCTION public.mb_resolve_recipients(p_target jsonb)
 RETURNS TABLE (email text)
 LANGUAGE sql STABLE SECURITY DEFINER SET search_path = '' AS $rr$
 WITH t AS (SELECT p_target AS p),
+tg AS (
+  SELECT (t.p->>'group_id')::uuid AS gid, COALESCE(t.p->>'group_mode','') AS mode, t.p
+  FROM t
+  WHERE t.p->>'kind' = 'grupa'
+    AND (t.p->>'group_id') ~ '^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$'
+),
 base AS (
   SELECT lower(btrim(x.e)) AS email FROM t, jsonb_array_elements_text(COALESCE(t.p->'emails','[]')) AS x(e)
   UNION
-  SELECT lower(btrim(m.client_email)) FROM t
-    JOIN public.mb_group_members m ON m.group_id = (t.p->>'group_id')::uuid
-    WHERE t.p->>'kind' = 'grupa' AND t.p->>'group_mode' = 'OBECNI_I_PRZYSZLI'
+  -- grupa wg trybu: „obecni i przyszli" = wszyscy w grupie teraz (ręczni i automatyczni)
+  SELECT e.email FROM tg, public.mb_group_members_now(tg.gid) e WHERE tg.mode = 'OBECNI_I_PRZYSZLI'
   UNION
-  SELECT lower(btrim(x.e)) FROM t, jsonb_array_elements_text(COALESCE(t.p->'snapshot_emails','[]')) AS x(e)
-    WHERE t.p->>'kind' = 'grupa' AND t.p->>'group_mode' = 'TYLKO_OBECNI'
+  -- „tylko obecni": z listy z chwili przydziału zostają wyłącznie osoby, które nadal są w grupie
+  SELECT lower(btrim(x.e)) AS email FROM tg, jsonb_array_elements_text(COALESCE(tg.p->'snapshot_emails','[]')) AS x(e)
+    WHERE tg.mode = 'TYLKO_OBECNI'
+      AND lower(btrim(x.e)) IN (SELECT e.email FROM public.mb_group_members_now(tg.gid) e)
   UNION
-  SELECT lower(btrim(x.e)) FROM t, jsonb_array_elements_text(COALESCE(t.p->'exceptions_add','[]')) AS x(e)
+  SELECT lower(btrim(x.e)) AS email FROM t, jsonb_array_elements_text(COALESCE(t.p->'exceptions_add','[]')) AS x(e)
 ),
 drop_ AS (
   SELECT lower(btrim(x.e)) AS email FROM t, jsonb_array_elements_text(COALESCE(t.p->'exceptions_drop','[]')) AS x(e)
@@ -387,11 +436,15 @@ REVOKE ALL ON SEQUENCE public.mb_rate_id_seq, public.mb_log_id_seq FROM PUBLIC, 
 -- (PostgreSQL nadaje EXECUTE dla PUBLIC domyślnie — dlatego każda funkcja jest wymieniona z nazwy.)
 REVOKE ALL ON FUNCTION public.mb_log_guard() FROM PUBLIC, anon, authenticated;
 REVOKE ALL ON FUNCTION public.mb_log_purge() FROM PUBLIC, anon, authenticated;
+REVOKE ALL ON FUNCTION public.mb_auto_group_emails(jsonb) FROM PUBLIC, anon, authenticated;
+REVOKE ALL ON FUNCTION public.mb_group_members_now(uuid) FROM PUBLIC, anon, authenticated;
 REVOKE ALL ON FUNCTION public.mb_visible_materials(text, boolean) FROM PUBLIC, anon, authenticated;
 REVOKE ALL ON FUNCTION public.mb_resolve_recipients(jsonb) FROM PUBLIC, anon, authenticated;
 REVOKE ALL ON FUNCTION public.mb_move_email(text, text) FROM PUBLIC, anon, authenticated;
 REVOKE ALL ON FUNCTION public.mb_link_hit(text, int) FROM PUBLIC, anon, authenticated;
 GRANT EXECUTE ON FUNCTION public.mb_log_purge() TO service_role;
+GRANT EXECUTE ON FUNCTION public.mb_auto_group_emails(jsonb) TO service_role;
+GRANT EXECUTE ON FUNCTION public.mb_group_members_now(uuid) TO service_role;
 GRANT EXECUTE ON FUNCTION public.mb_visible_materials(text, boolean) TO service_role;
 GRANT EXECUTE ON FUNCTION public.mb_resolve_recipients(jsonb) TO service_role;
 GRANT EXECUTE ON FUNCTION public.mb_move_email(text, text) TO service_role;
