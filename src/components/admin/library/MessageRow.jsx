@@ -74,8 +74,19 @@ export default function MessageRow({ m, onChanged, onEdit }) {
             </div>
           )}
 
-          {m.attached_material_id && <p className="text-xs text-foreground/45">Dołączony materiał (przydzielony odbiorcom).</p>}
-          {m.attached_collection_id && <p className="text-xs text-foreground/45">Dołączona kolekcja (przydzielona odbiorcom).</p>}
+          {Array.isArray(m.attachments) && m.attachments.length > 0 ? (
+            <div className="text-xs text-foreground/45 space-y-1">
+              <p>Załączniki ({m.attachments.length}) — przydzielone odbiorcom:</p>
+              <ul className="list-disc pl-5">
+                {m.attachments.map((x, i) => <li key={i}>{x.material_title || (x.collection_title ? `Kolekcja · ${x.collection_title}` : "Materiał")}</li>)}
+              </ul>
+            </div>
+          ) : (
+            <>
+              {m.attached_material_id && <p className="text-xs text-foreground/45">Dołączony materiał (przydzielony odbiorcom).</p>}
+              {m.attached_collection_id && <p className="text-xs text-foreground/45">Dołączona kolekcja (przydzielona odbiorcom).</p>}
+            </>
+          )}
           {m.email_mode !== "BRAK" && <p className="text-xs text-foreground/45">Kopia e-mail: {m.email_mode === "PELNA" ? "pełna treść" : "powiadomienie bez treści"}.</p>}
 
           {notice && <p className="text-xs gold-text">{notice}</p>}
