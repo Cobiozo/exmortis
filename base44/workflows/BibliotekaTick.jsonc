@@ -17,7 +17,7 @@
       "ends_after_count": null
     }
   },
-  "description": "Co 5 minut: wysy\u0142a wiadomo\u015bci zaplanowane na teraz (atomowe przej\u0119cie, najwy\u017cej 20 na godzin\u0119), wysy\u0142a zbiorcze powiadomienia o nowych materia\u0142ach i czy\u015bci histori\u0119 zmian starsz\u0105 ni\u017c 12 miesi\u0119cy. Wywo\u0142anie potwierdza si\u0119 tokenem tick_token z mb_settings \u2014 bez niego libraryTick zwraca 403. Token musi by\u0107 wpisany w tym pliku, bo workflow Base44 nie potrafi odczyta\u0107 sekret\u00f3w ani warto\u015bci z bazy.",
+  "description": "Co 5 minut: wysy\u0142a wiadomo\u015bci zaplanowane na teraz (atomowe przej\u0119cie, najwy\u017cej 20 na godzin\u0119), wysy\u0142a zbiorcze powiadomienia o nowych materia\u0142ach i czy\u015bci histori\u0119 zmian starsz\u0105 ni\u017c 12 miesi\u0119cy. Wywo\u0142anie potwierdza si\u0119 tokenem tick_token z mb_settings \u2014 bez niego libraryTick zwraca 403. Token musi by\u0107 wpisany w tym pliku, bo workflow Base44 nie potrafi odczyta\u0107 sekret\u00f3w ani warto\u015bci z bazy. Obr\u00f3t: akcja tick_token z rotate, potem podmiana warto\u015bci tutaj.",
   "definition": {
     "document": {
       "dsl": "1.0.0",

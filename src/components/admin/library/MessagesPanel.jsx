@@ -12,7 +12,7 @@ const TABS = [
   ["SZABLONY", "Szablony", null],
 ];
 
-// Sekcja panelu „Wiadomości" — widoczna, gdy moduł nie jest wyłączony.
+// Sekcja panelu „Wiadomości" — widoczna, gdy messages_mode ≠ off.
 export default function MessagesPanel({ presetTarget }) {
   const [mode, setMode] = useState(undefined);
   const [d, setD] = useState(null);

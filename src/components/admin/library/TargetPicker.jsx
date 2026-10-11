@@ -7,7 +7,7 @@ export const EMPTY_TARGET = {
   exceptions_add: [], exceptions_drop: [],
 };
 
-// Jedno okno wyboru odbiorców — to samo przy przydziale materiału i przy wiadomości.
+// Jedno okno wyboru odbiorców — to samo przy przydziale materiału, przy wiadomości i przy karcie grupy.
 export default function TargetPicker({ value, onChange, groups }) {
   const [list, setList] = useState(groups || null);
 

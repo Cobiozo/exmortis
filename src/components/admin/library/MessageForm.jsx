@@ -9,6 +9,7 @@ import MessagePreview from "./MessagePreview";
 const EMPTY = { title: "", body_html: "", email_mode: "BRAK", attached_material_id: "", attached_collection_id: "" };
 
 // Tworzenie i edycja wiadomości. `editSent` = poprawka literówki po wysłaniu (bez ponownego e-maila).
+// Ten sam formularz obsługuje zapis jako szablon i użycie szablonu.
 export default function MessageForm({ open, onClose, item, editSent, presetTarget, template, onDone }) {
   const [t, setT] = useState(() => presetTarget || { ...EMPTY_TARGET });
   const [m, setM] = useState(() => (item

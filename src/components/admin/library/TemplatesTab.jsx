@@ -4,7 +4,7 @@ import { lib } from "./libApi";
 import LibModal from "./LibModal";
 import RichLite from "./RichLite";
 
-// Szablony treści wiadomości: podgląd, użycie, edycja i usunięcie.
+// Szablony treści wiadomości: użycie w nowej wiadomości, edycja i usunięcie.
 export default function TemplatesTab({ onUse, onChanged }) {
   const [items, setItems] = useState(null);
   const [edit, setEdit] = useState(null);

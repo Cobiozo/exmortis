@@ -6,6 +6,7 @@ import TargetPicker, { EMPTY_TARGET } from "./TargetPicker";
 import AssignList from "./AssignList";
 
 // Jedno okno przydziału — wołane z materiału, kolekcji, listy klientów, karty klienta i karty grupy.
+// Odbiorców wybiera się tym samym komponentem co przy wiadomości (TargetPicker).
 export default function AssignDialog({ open, onClose, materialId, collectionId, label, presetEmails, presetGroupId, onDone }) {
   const [t, setT] = useState(() => ({ ...EMPTY_TARGET, emails: presetEmails || [], group_id: presetGroupId || "" }));
   const [prev, setPrev] = useState(null);

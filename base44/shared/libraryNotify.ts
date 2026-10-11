@@ -121,7 +121,7 @@ export async function deliverMessage(base44, messageId, actor) {
   await runSql(base44, `UPDATE public.mb_messages SET status = 'WYSLANA', sent_at = now(),
     recipient_count = ${emails.length}, updated_at = now() WHERE id = ${escStr(m.id)}::uuid AND status = 'WYSYLANIE'`);
 
-  // Dołączony materiał albo kolekcja = przydział dla tych samych odbiorców (też na przyszłość).
+  // Dołączony materiał albo kolekcja = przydział dla tych samych odbiorców (także na przyszłość).
   // Osoby dostają przydział wprost — po jednym na faktycznego odbiorcę (grupa: jeden wiersz grupowy).
   if (m.attached_material_id || m.attached_collection_id) {
     const t = m.target || {};

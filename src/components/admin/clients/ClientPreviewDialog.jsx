@@ -3,8 +3,8 @@ import { Loader2 } from "lucide-react";
 import { lib, plDateTime, KIND_LABEL } from "@/components/admin/library/libApi";
 import LibModal from "@/components/admin/library/LibModal";
 
-// „Podgląd oczami klienta" — tylko do odczytu. Nic nie jest oznaczane jako przeczytane,
-// nie otwieramy podpisanych linków do plików (same kafelki). Wpis w Historii zmian powstaje na serwerze.
+// „Podgląd oczami klienta" — tylko do odczytu. Nic nie jest oznaczane jako przeczytane
+// i nie otwieramy podpisanych linków do plików (same kafelki). Wpis w Historii zmian powstaje na serwerze.
 export default function ClientPreviewDialog({ email, onClose }) {
   const [d, setD] = useState(null);
   const [err, setErr] = useState("");

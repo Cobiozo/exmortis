@@ -5,6 +5,7 @@ import ZoomWarning from "./events/ZoomWarning";
 import FallbackWarning from "./events/FallbackWarning";
 import BookingWarnings from "./booking/BookingWarnings";
 import DashboardLibraryTile from "./DashboardLibraryTile";
+// Kafelek modułu biblioteki i wiadomości pokazuje się tylko, gdy którykolwiek przełącznik ≠ off.
 import { Link } from "react-router-dom";
 import { base44 } from "@/api/base44Client";
 import { useAdminMode } from "@/components/admin/AdminModeContext";

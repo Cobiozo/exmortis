@@ -4,6 +4,7 @@ import { lib, inputCls } from "@/components/admin/library/libApi";
 import LibModal from "@/components/admin/library/LibModal";
 import AssignDialog from "@/components/admin/library/AssignDialog";
 import MessageForm from "@/components/admin/library/MessageForm";
+// Akcja zbiorcza „Napisz wiadomość" korzysta z tego samego kompozytora co sekcja Wiadomości.
 import ClientDetail from "./ClientDetail";
 
 const Badge = ({ g }) => (

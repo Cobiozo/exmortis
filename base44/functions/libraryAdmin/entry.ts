@@ -935,7 +935,7 @@ export default async function (req) {
 
     // Historia zmian: bez treści wiadomości, e-maile maskowane („da***@gmail.com").
     if (a === "history") {
-      // Uwaga: pole akcji żądania nazywa się „action", więc filtr podaje się jako „action_filter".
+      // Uwaga: pole akcji żądania nazywa się „action", więc filtr rodzaju działania podaje się jako „action_filter".
       const filterAction = body.action_filter ? String(body.action_filter).slice(0, 60) : null;
       const days = int(body.days, 1, 3650, null);
       const where = [];

@@ -3,6 +3,7 @@ import ReactQuill from "react-quill-new";
 import "react-quill-new/dist/quill.snow.css";
 
 // Edytor treści: tylko pogrubienie, kursywa, listy, nagłówki i link.
+// Tryb znaczeniowy (getSemanticHTML) jest niekontrolowany, więc kursor nie przeskakuje przy pisaniu.
 // Wklejanie jest odzierane ze stylów (kolory, czcionki, tabele) — zostaje sam sens.
 // `semantic` zwraca HTML znaczeniowy (getSemanticHTML), `token` dokłada przycisk {imię}.
 const KEEP = ["bold", "italic", "list", "header", "link", "ordered", "bullet"];

@@ -4,6 +4,7 @@ import { lib } from "./libApi";
 import LibModal from "./LibModal";
 import GroupForm from "./GroupForm";
 import GroupPanel from "./GroupPanel";
+// Rozwinięcie grupy pokazuje jej kartę: członków, materiały i wiadomości.
 import MessageForm from "./MessageForm";
 import AssignDialog from "./AssignDialog";
 

@@ -5,7 +5,7 @@ import AssignDialog from "@/components/admin/library/AssignDialog";
 import MessageForm from "@/components/admin/library/MessageForm";
 import { base44 } from "@/api/base44Client";
 
-// Sekcja „Wiadomości" karty klienta + szybkie akcje. „Umów sesję" tylko gdy moduł rezerwacji działa.
+// Sekcja „Wiadomości" karty klienta i szybkie akcje. „Umów sesję" pokazuje się tylko, gdy moduł rezerwacji działa.
 export default function ClientMessagesBox({ email, onChange }) {
   const [d, setD] = useState(null);
   const [grupy, setGrupy] = useState([]);

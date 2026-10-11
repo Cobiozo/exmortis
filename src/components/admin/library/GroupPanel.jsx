@@ -4,7 +4,7 @@ import { lib, plDateTime } from "./libApi";
 
 const STATUS = { WYSLANA: "wysłana", ZAPLANOWANA: "zaplanowana", SZKIC: "szkic", WYCOFANA: "wycofana" };
 
-// Karta grupy: członkowie teraz, materiały grupy, wiadomości do grupy i dwie szybkie akcje.
+// Karta grupy: członkowie teraz, materiały grupy, wiadomości do grupy oraz „Napisz do grupy" i „Przydziel grupie".
 export default function GroupPanel({ group, onWrite, onAssign }) {
   const [d, setD] = useState(null);
   const [err, setErr] = useState("");

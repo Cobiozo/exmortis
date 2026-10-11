@@ -1,7 +1,7 @@
 import React from "react";
 import { Loader2 } from "lucide-react";
 
-// Podgląd „tak zobaczy to [osoba]" — liczony na serwerze, tą samą ścieżką co u klienta.
+// Podgląd „tak zobaczy to [osoba]" — liczony na serwerze, tą samą ścieżką co u klienta (renderBody → sanitizeHtml).
 export default function MessagePreview({ data, email, onPick, busy }) {
   if (busy) return <Loader2 className="h-4 w-4 animate-spin gold-text" />;
   if (!data || !data.html) return <p className="text-sm text-foreground/45">Wybierz odbiorców, aby zobaczyć podgląd.</p>;

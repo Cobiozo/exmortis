@@ -46,6 +46,7 @@ const SECTIONS = {
   klienci: ["Klienci i dostępy", () => <ClientsPanel />],
   biblioteka: ["Biblioteka", () => <LibraryPanel />],
   grupy: ["Grupy", () => <GroupsTab />],
+  // Sekcje modułu biblioteki i wiadomości — wyłącznie dla roli „admin".
   wiadomosci: ["Wiadomości", () => <MessagesPanel />],
   historia: ["Historia zmian", () => <HistoryPanel />],
   rabaty: ["Kody rabatowe", () => <DiscountsPanel />],

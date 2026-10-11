@@ -2,7 +2,7 @@ import React, { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { lib, gb2 } from "@/components/admin/library/libApi";
 
-// Kafelek pulpitu: zaplanowane na dziś, przeczytanie ostatniej wysłanej, odblokowania i przestrzeń.
+// Kafelek pulpitu: zaplanowane na dziś, przeczytanie ostatniej wysłanej, odblokowania w tym tygodniu i zajęta przestrzeń.
 export default function DashboardLibraryTile() {
   const [d, setD] = useState(null);
 

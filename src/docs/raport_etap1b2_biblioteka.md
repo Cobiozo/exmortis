@@ -1,4 +1,4 @@
-# RAPORT — ETAP 1B-2 (panel wiadomości, karty klienta i grupy, historia zmian, zadanie co 5 minut)
+# RAPORT — ETAP 1B-2 (sekcja wiadomości, karty klienta i grupy, historia zmian, zadanie co 5 minut)
 
 Moduły „Moja biblioteka" i „Wiadomości" · exmortis.pl · 11.10.2026
 

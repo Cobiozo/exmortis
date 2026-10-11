@@ -3,7 +3,7 @@ import { Loader2, ChevronDown, Mail, Pencil } from "lucide-react";
 import { lib, plDateTime } from "./libApi";
 import LibModal from "./LibModal";
 
-// Jeden wiersz listy wiadomości: stan, odbiorcy, akcje zależne od statusu.
+// Jeden wiersz listy wiadomości: stan, odbiorcy i akcje zależne od statusu.
 export default function MessageRow({ m, onChanged, onEdit }) {
   const [open, setOpen] = useState(false);
   const [stats, setStats] = useState(null);

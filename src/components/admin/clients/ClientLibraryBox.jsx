@@ -2,6 +2,7 @@ import React, { useEffect, useState } from "react";
 import { Loader2, X, Plus } from "lucide-react";
 import { lib, inputCls, KIND_LABEL, plDate } from "@/components/admin/library/libApi";
 import ClientMessagesBox from "./ClientMessagesBox";
+// Sekcja „Wiadomości" karty klienta żyje we własnym pliku (historia, stan przeczytania, szybkie akcje).
 
 const Dot = ({ c }) => <span className="h-2.5 w-2.5 inline-block" style={{ background: c || "#3D3D3F" }} />;
 

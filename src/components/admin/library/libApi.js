@@ -31,7 +31,7 @@ export const plDateTime = (iso) =>
   iso ? new Date(iso).toLocaleString("pl-PL", { timeZone: TZ, day: "numeric", month: "short", year: "numeric", hour: "2-digit", minute: "2-digit" }) : "—";
 export const plDate = (iso) => (iso ? new Date(iso).toLocaleDateString("pl-PL", { timeZone: TZ }) : "—");
 
-// Różnica strefy polskiej wobec UTC w danej chwili (uwzględnia czas letni/zimowy).
+// Różnica strefy polskiej wobec UTC w danej chwili (uwzględnia czas letni i zimowy).
 function plOffsetMs(utcMs) {
   const parts = new Intl.DateTimeFormat("en-US", {
     timeZone: TZ, hour12: false, year: "numeric", month: "2-digit", day: "2-digit",

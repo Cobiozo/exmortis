@@ -2,7 +2,7 @@ import React, { useEffect, useState } from "react";
 import { Loader2 } from "lucide-react";
 import { lib, plDateTime, inputCls } from "./libApi";
 
-// Historia zmian (mb_log): filtr po rodzaju działania i okresie. E-maile przychodzą zamaskowane z serwera.
+// Historia zmian (mb_log): filtr po rodzaju działania i okresie. Adresy e-mail przychodzą zamaskowane z serwera.
 export default function HistoryPanel() {
   const [d, setD] = useState(null);
   const [action, setAction] = useState("");
