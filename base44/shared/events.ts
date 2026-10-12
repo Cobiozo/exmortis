@@ -212,7 +212,7 @@ export async function sendRecordingMail(base44, ev, reg, inviteHtml) {
     to: reg.email,
     subject: `EXMORTIS · Dziękuję za obecność — ${ev.title}`,
     html: shell(ev, 
-      `<h1 style="font-size:24px;">Dziękuję, że byłeś/byłaś</h1>` +
+      `<h1 style="font-size:24px;">Dziękuję za obecność</h1>` +
         `<p style="line-height:1.7;">${escHtml(reg.first_name)}, nagranie ze spotkania «${escHtml(ev.title)}» czeka na Ciebie:</p>` +
         `<p><a href="${escHtml(ev.recording_url)}" style="color:#C9A24A;">Obejrzyj nagranie</a></p>` +
         inviteHtml
