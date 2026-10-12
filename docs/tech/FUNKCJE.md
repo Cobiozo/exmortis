@@ -16,8 +16,8 @@ Adres: `https://exmortis.pl/functions/<nazwa>` (POST, JSON; z przeglądarki prze
 | adminSettings | Panel: ustawienia strony (dane firmy, premiera, Zoom, ochrona filmów, PayU, dokumenty). | admin | get, save, zoom_get, zoom_save, video_get, video_save, video_new_key, video_sign_preview, delete | 10 plików front |
 | adminSubscribers | Panel: subskrybenci newslettera. | admin | list, save, delete | 1 plików front |
 | announcements | Ogłoszenia na koncie — wyłącznie na stronie (bez e-maili). | admin / zalogowany | mine, event, list, options, save, publish, end, duplicate, delete | 1 plików front |
-| bookingAdmin | Panel rezerwacji 1:1 — wyłącznie administrator. Jedyne miejsce odszyfrowania odpowiedzi o zdrowiu. | admin |  | 3 plików front |
-| bookingPublic | Publiczne rezerwacje 1:1. Zwraca wyłącznie godziny i dane potrzebne formularzowi — nigdy linku Zoom ani cudzych danych. | admin / zalogowany |  | 9 plików front, 2 zad. cykl. |
+| bookingAdmin | Panel rezerwacji 1:1 — wyłącznie administrator. Jedyne miejsce odszyfrowania odpowiedzi o zdrowiu. | admin | migrate, status, get, save_settings, save_type, save_hours, save_block, delete_block, toggle_holiday, bookings, detail, products, packages, return_session, book, slots, calendar, dashboard, … | 3 plików front |
+| bookingPublic | Publiczne rezerwacje 1:1. Zwraca wyłącznie godziny i dane potrzebne formularzowi — nigdy linku Zoom ani cudzych danych. | admin / zalogowany | tick, notify_tick, config, type, slots, book, manage, order, my_sessions, book_package, reschedule, cancel | 9 plików front, 2 zad. cykl. |
 | bootstrap | Jedno wywołanie startowe gościa: ustawienia + treści + strona z edytora + spotkanie. | publiczna |  | 1 plików front, 1 zad. cykl. |
 | checkDiscount | Podgląd rabatu w kasie (ostateczne wyliczenie i tak robi payuCreateOrder). | publiczna |  | 1 plików front |
 | cmsScheduled | Higiena listy oczekujących (raz na dobę na instancję): 90 dni po powiadomieniu, a bez powiadomienia po 12 miesiącach. | publiczna |  | 0 plików front, 1 zad. cykl. |
@@ -32,21 +32,21 @@ Adres: `https://exmortis.pl/functions/<nazwa>` (POST, JSON; z przeglądarki prze
 | eventsPublic | Start zapisów na wybrane spotkania (adres spotkania → chwila otwarcia). Na stronie to samo pole: | admin / zalogowany | list, get, register, join, ics, flush, remind, tick | 10 plików front, 4 zad. cykl. |
 | gdprPerson | RODO art. 15 i 17: znajdź / wyeksportuj / usuń dane osoby po e-mailu — w Supabase i w bazie aplikacji naraz. | admin / zalogowany | powrot, find, export, delete | 2 plików front |
 | instagramFeed | Zwraca najnowsze posty z Instagrama (profil podłączony przez connector). | publiczna |  | 1 plików front |
-| library | Strona klienta: „Moja biblioteka" i „Wiadomości". | admin / zalogowany |  | 1 plików front |
-| libraryAdmin | Panel biblioteki i wiadomości. Wyłącznie rola „admin" (konto techniczne nie ma dostępu), | admin |  | 4 plików front |
+| library | Strona klienta: „Moja biblioteka" i „Wiadomości". | admin / zalogowany | bundle, config, my_library, my_messages, unread, open_material, refresh_link, mark_completed, read_message, hide_message | 1 plików front |
+| libraryAdmin | Panel biblioteki i wiadomości. Wyłącznie rola „admin" (konto techniczne nie ma dostępu), | admin | migrate, checkpoint, settings, save_settings, add_video_domain, tick_token, materials_list, material_register, material_save, material_replace, material_impact, material_restore_prev, material_delete, collections_list, collection_save, collection_delete, groups_list, group_save, … | 4 plików front |
 | libraryTick | Zadanie serwera: wysyłka zaplanowanych wiadomości (idempotentnie), zbiorcze powiadomienia | admin / zalogowany |  | 0 plików front, 1 zad. cykl. |
 | mailAdmin | Ustawienia → Wysyłka e-mail: konfiguracja SMTP, test, status, kolejka zaległych, dziennik, DNS. | admin | status, save, test, dns, log, flush | 5 plików front |
 | media | Proxy obrazów z prywatnej biblioteki: sprawdza pochodzenie, limit żądań, zwraca wersję WebP z cache przeglądarki. | publiczna |  | 1 plików front |
 | myAccount | Konto klienta: moje produkty, zakupy, podpisany link do pliku (po sprawdzeniu dostępu). | zalogowany | products, orders, file | 3 plików front |
 | myEvents | Moje konto → Spotkania: zapisy zalogowanej osoby (po adresie e-mail) i nagrania. | admin / zalogowany | list, play, violation | 2 plików front |
 | mySettings | Ustawienia konta klienta: Listy powrotu (stan z bazy), eksport i usunięcie własnych danych. | admin / zalogowany | listy, listy_on, listy_resend, listy_off, export, delete | 3 plików front |
-| notifications | Powiadomienia zalogowanego klienta (dzwoneczek w nagłówku). | zalogowany |  | 1 plików front |
+| notifications | Powiadomienia zalogowanego klienta (dzwoneczek w nagłówku). | zalogowany | prefs, read, hide, read_all | 1 plików front |
 | obok | Strefa Obok: dostęp, harmonogram i pliki sprawdzane na serwerze. | admin / zalogowany | unsub, public, home, join, notify, leave, seria, nagranie, progress | 3 plików front |
 | orderFree | Zamówienie bezpłatnego materiału: zgody, dostęp, e-mail (limit 5/h z IP). | publiczna |  | 1 plików front |
 | payuCreateOrder | Kasa: wyliczenie ceny i rabatu na serwerze, utworzenie zamówienia w PayU, status po powrocie. | publiczna | status | 1 plików front |
 | payuNotification | Powiadomienia PayU (webhook): weryfikacja podpisu, opłacenie zamówienia, nadanie dostępów, e-maile, pakiety sesji. | publiczna |  | 0 plików front |
 | rozdroza | ROZDROŻA dla zalogowanego klienta: tylko opublikowane, sprawdzone kopie historii (nigdy szkice). | admin / zalogowany | list, story | 2 plików front |
-| rozdrozaAdmin | ROZDROŻA — administracja (tylko rola admin): import z JSON, okładki i obrazy scen, | admin |  | 2 plików front |
+| rozdrozaAdmin | ROZDROŻA — administracja (tylko rola admin): import z JSON, okładki i obrazy scen, | admin | list, get, preview, import, update_story, update_scene, publish, schedule, schedule_plan, unpublish, delete, generate, candidate, use_previous, fill_previous, ai_get, ai_save | 2 plików front |
 | shopProducts | Publiczny katalog Skarbca: produkty dostępne i "wkrótce", posortowane po poziomie drabiny. | publiczna | curriculum | 6 plików front |
 | shopQuizSubmit | Publiczne przesłanie testu "Która śmierć jest Twoja?": zapis pełnego wyniku, | publiczna |  | 1 plików front |
 | shopWaitlist | Publiczny zapis na listę oczekujących przy produkcie "wkrótce" (limit 10 zapisów na godzinę z jednego IP). | publiczna |  | 1 plików front |

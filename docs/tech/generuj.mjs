@@ -46,7 +46,7 @@ for (const n of fns) {
   const t = fs.readFileSync(`${A}/base44/functions/${n}/entry.ts`, "utf8");
   const cm = OPIS[n] || (t.match(/^\s*\/\/\s*(.+)$/m) || [])[1] || "";
   const acc = /requireAdmin|role !== "admin"|role === "admin"/.test(t) ? (/auth\.me\(\)/.test(t) && !/requireAdmin\(base44\);\s*$/m.test(t) ? "admin / zalogowany" : "admin") : /auth\.me\(\)|auth\.isAuthenticated/.test(t) ? "zalogowany" : /tick_token|TICK/.test(t) ? "publiczna + token zadań" : "publiczna";
-  const acts = [...new Set([...t.matchAll(/action\s*===\s*"([a-z_0-9]+)"/g)].map((m) => m[1]))];
+  const acts = [...new Set([...t.matchAll(/(?:action|\ba)\s*===\s*"([a-z_0-9]+)"/g)].map((m) => m[1]))];
   const from = srcAll.filter(([, c]) => c.includes(`"${n}"`)).length + wf.filter((c) => c.includes(`"${n}"`)).length;
   const wfs = wf.filter((c) => c.includes(`"${n}"`)).length;
   F += `| ${n} | ${cm.replace(/\|/g, "/").slice(0, 140)} | ${acc} | ${acts.slice(0, 18).join(", ")}${acts.length > 18 ? ", …" : ""} | ${from - wfs} plików front${wfs ? `, ${wfs} zad. cykl.` : ""} |\n`;
