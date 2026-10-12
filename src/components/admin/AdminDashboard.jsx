@@ -22,7 +22,8 @@ function Tile({ to, label, title, lines, onClick }) {
       </div>
     </>
   );
-  const cls = "block text-left bg-[#0A0A0B] p-8 border hairline hover:border-[#C9A24A] transition-colors";
+  // flex-col + justify-start: kafelek-przycisk wygląda tak samo jak kafelek-link (bez centrowania w pionie).
+  const cls = "flex flex-col justify-start w-full text-left bg-[#0A0A0B] p-8 border hairline hover:border-[#C9A24A] transition-colors";
   return onClick ? <button onClick={onClick} className={cls}>{Inner}</button> : <Link to={to} className={cls}>{Inner}</Link>;
 }
 
