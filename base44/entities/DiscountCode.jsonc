@@ -36,6 +36,15 @@
     "active": {
       "type": "boolean",
       "default": true
+    },
+    "w_powiadomieniach": {
+      "type": "boolean",
+      "default": false,
+      "description": "Poka\u017c kod zalogowanym klientom w powiadomieniach (dzwoneczek)"
+    },
+    "opis": {
+      "type": "string",
+      "description": "Kr\u00f3tki opis dla klienta, np. 'Na start Skarbca'"
     }
   },
   "required": [
