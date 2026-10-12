@@ -1,6 +1,6 @@
 import { useEffect } from "react";
 import { useLocation } from "react-router-dom";
-import { PAGES } from "@/components/seo/seoPages";
+import { pageMeta } from "@/components/seo/seoPages";
 import { SITE_URL, OG_SPOTKANIE, OG_MARKA, metaMode } from "@/config/site";
 
 const setMeta = (attr, key, content) => {
@@ -15,7 +15,7 @@ export default function SeoMeta() {
   const { pathname } = useLocation();
   useEffect(() => {
     const og = metaMode() === "spotkanie" || pathname === "/1-listopada" ? OG_SPOTKANIE : OG_MARKA;
-    const page = PAGES[pathname] || PAGES["/"];
+    const page = pageMeta(pathname);
     const ogTitle = og === OG_SPOTKANIE ? og.title : page.t;
     const ogDesc = og === OG_SPOTKANIE ? og.d : page.d;
     document.title = page.t;

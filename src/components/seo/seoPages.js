@@ -21,4 +21,20 @@ export const PAGES = {
   "/polityka-prywatnosci": { t: "Polityka prywatności — exmortis", d: "Kto przetwarza Twoje dane w exmortis.pl, w jakim celu, jak długo i jakie masz prawa." },
   "/polityka-cookies": { t: "Polityka cookies — exmortis", d: "Jakie pliki cookies i dane w przeglądarce stosuje exmortis.pl i jak zmienić swoje ustawienia." },
   "/odstapienie": { t: "Odstąpienie od umowy — exmortis", d: "Formularz i zasady odstąpienia od umowy zawartej w exmortis.pl." },
+  "/login": { t: "Logowanie — exmortis", d: "Zaloguj się do swojego konta exmortis: materiały, nagrania i zapisy na spotkania." },
+  "/register": { t: "Załóż konto — exmortis", d: "Konto exmortis: Twoje materiały, nagrania i zapisy na spotkania w jednym miejscu." },
+  "/forgot-password": { t: "Nie pamiętam hasła — exmortis", d: "Ustaw nowe hasło do konta exmortis." },
+  "/reset-password": { t: "Nowe hasło — exmortis", d: "Ustaw nowe hasło do konta exmortis." },
+  "/konto": { t: "Moje konto — exmortis", d: "Twoje materiały, nagrania i zapisy na spotkania." },
+  "/kasa": { t: "Kasa — exmortis", d: "Podsumowanie zamówienia w Skarbcu exmortis." },
+  "/listy/potwierdz": { t: "Listy powrotu — exmortis", d: "Potwierdzenie zapisu na Listy powrotu." },
+  "/zmiana-adresu": { t: "Zmiana adresu e-mail — exmortis", d: "Potwierdzenie zmiany adresu e-mail w koncie exmortis." },
 };
+
+// Strony z parametrem w adresie: pierwszy pasujący wzór.
+export const PAGE_PATTERNS = [
+  [/\/dolacz$/, { t: "Dołącz do spotkania — exmortis", d: "Link do spotkania online i nagranie dla zapisanych." }],
+  [/^\/rezerwacja\//, { t: "Rezerwacja rozmowy — exmortis", d: "Wybierz termin rozmowy online." }],
+];
+
+export const pageMeta = (pathname) => PAGES[pathname] || PAGE_PATTERNS.find(([re]) => re.test(pathname))?.[1] || PAGES["/"];
