@@ -1,5 +1,6 @@
 import { createClientFromRequest } from "npm:@base44/sdk@0.8.44";
-import { runSql, esc, escStr, textField, emailField } from "../../shared/supabase.ts";
+import { runSql, esc, escStr, textField, emailField, clientIp } from "../../shared/supabase.ts";
+import { ipAllowed, TOO_MANY } from "../../shared/rateLimit.ts";
 
 // Nowe kolumny formularza kwalifikacyjnego (tele jest zgodne z encją PowrotApplication).
 const COLUMNS = [
@@ -63,6 +64,8 @@ export default async function (req) {
     const consentRodo = body.consent_rodo === true;
     const consentPaid = body.consent_paid === true;
 
+    // Limit zgłoszeń z jednego połączenia (ochrona przed zasypaniem formularza).
+    if (!(await ipAllowed(base44, clientIp(req), "powrot", 5, 3600000))) return Response.json({ error: TOO_MANY }, { status: 429 });
 
     const rows = await runSql(
       base44,
