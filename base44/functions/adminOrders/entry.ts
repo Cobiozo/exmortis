@@ -17,6 +17,42 @@ const SUMMARY_SQL = `SELECT
     AND COALESCE((to_jsonb(o)->'invoice'->>'wystawiona')::boolean, false) = false)::int AS invoices_todo
   FROM public.orders o WHERE COALESCE(total, 0) > 0`;
 
+// Statystyki sprzedaży za okres (dni) i poprzedni okres tej samej długości. Tylko opłacone zamówienia (COMPLETED).
+const STATS_SQL = (days) => `WITH win AS (SELECT now() - interval '${days} days' AS a, now() - interval '${days * 2} days' AS b),
+o AS (SELECT o.* FROM public.orders o, win WHERE o.status = 'COMPLETED' AND o.created_date::timestamptz >= win.a),
+prev AS (SELECT o.* FROM public.orders o, win WHERE o.status = 'COMPLETED' AND o.created_date::timestamptz >= win.b AND o.created_date::timestamptz < win.a)
+SELECT
+  (SELECT json_build_object(
+    'revenue', COALESCE(SUM(total) FILTER (WHERE total > 0), 0)::float8,
+    'orders', COUNT(*) FILTER (WHERE total > 0)::int,
+    'buyers', COUNT(DISTINCT lower(buyer_email)) FILTER (WHERE total > 0)::int,
+    'downloads', COUNT(*) FILTER (WHERE COALESCE(total, 0) = 0)::int) FROM o) AS cur,
+  (SELECT json_build_object(
+    'revenue', COALESCE(SUM(total) FILTER (WHERE total > 0), 0)::float8,
+    'orders', COUNT(*) FILTER (WHERE total > 0)::int,
+    'buyers', COUNT(DISTINCT lower(buyer_email)) FILTER (WHERE total > 0)::int,
+    'downloads', COUNT(*) FILTER (WHERE COALESCE(total, 0) = 0)::int) FROM prev) AS prev,
+  (SELECT COALESCE(json_agg(d ORDER BY d.day), '[]'::json) FROM (
+    SELECT (created_date::timestamptz AT TIME ZONE 'Europe/Warsaw')::date::text AS day, SUM(total)::float8 AS revenue, COUNT(*)::int AS orders
+    FROM o WHERE total > 0 GROUP BY 1) d) AS daily,
+  (SELECT COALESCE(json_agg(x ORDER BY x.value DESC, x.units DESC), '[]'::json) FROM (
+    SELECT COALESCE(it->>'product_id', it->>'name') AS id, MAX(it->>'name') AS name,
+      SUM(COALESCE((it->>'quantity')::int, 1))::int AS units,
+      (SUM(COALESCE((it->>'unitPrice')::numeric, 0) * COALESCE((it->>'quantity')::int, 1)) / 100)::float8 AS value,
+      COUNT(DISTINCT lower(o.buyer_email))::int AS buyers
+    FROM o, jsonb_array_elements(CASE WHEN jsonb_typeof(o.items::jsonb) = 'array' THEN o.items::jsonb ELSE '[]'::jsonb END) it
+    GROUP BY 1) x) AS products,
+  (SELECT COALESCE(json_agg(c ORDER BY c.uses DESC), '[]'::json) FROM (
+    SELECT substring(note from 'Kod rabatowy: ([^ ]+)') AS code, COUNT(*)::int AS uses,
+      COALESCE(SUM(replace(substring(note from '\(−([0-9.,]+) zł\)'), ',', '.')::numeric), 0)::float8 AS discount
+    FROM o WHERE note LIKE '%Kod rabatowy:%' GROUP BY 1) c) AS codes,
+  (SELECT COALESCE(json_agg(w ORDER BY w.total DESC), '[]'::json) FROM (
+    SELECT w.product_id::text AS id, MAX(p.name) AS name, COUNT(*)::int AS total,
+      COUNT(*) FILTER (WHERE to_jsonb(w)->>'notified_at' IS NOT NULL)::int AS notified,
+      COUNT(*) FILTER (WHERE EXISTS (SELECT 1 FROM public.orders o2, jsonb_array_elements(CASE WHEN jsonb_typeof(o2.items::jsonb) = 'array' THEN o2.items::jsonb ELSE '[]'::jsonb END) it2
+        WHERE o2.status = 'COMPLETED' AND lower(o2.buyer_email) = lower(w.email) AND it2->>'product_id' = w.product_id::text))::int AS bought
+    FROM public.waitlist w LEFT JOIN public.products p ON p.id::text = w.product_id::text GROUP BY 1) w) AS waitlist`;
+
 export default async function (req) {
   try {
     const base44 = createClientFromRequest(req);
@@ -42,6 +78,12 @@ export default async function (req) {
         runSql(base44, SUMMARY_SQL, true),
       ]);
       return Response.json({ orders, summary: summary[0] || {} });
+    }
+
+    if (body.action === "stats") {
+      const days = [7, 30, 90, 365].includes(Number(body.days)) ? Number(body.days) : 30;
+      const [row] = await runSql(base44, STATS_SQL(days), true);
+      return Response.json({ days, ...(row || {}) });
     }
 
     if (body.action === "invoice_issued") {
