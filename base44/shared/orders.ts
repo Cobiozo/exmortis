@@ -49,6 +49,26 @@ export async function insertOrder(base44, order) {
              ${order.digitalConsent ? escStr(order.digitalConsent) : "NULL"},
              ${order.digitalConsent ? "now()" : "NULL"})`
   );
+  // Dane do faktury osobno: brak kolumny / błąd nie psuje zamówienia (tekst i tak jest w notatce).
+  if (order.invoice) {
+    try {
+      if (await ensureInvoiceColumn(base44)) {
+        await runSql(base44, `UPDATE public.orders SET invoice = ${escStr(JSON.stringify(order.invoice))}::jsonb WHERE id = ${escStr(order.id)}`);
+      }
+    } catch {
+      // zostaje zapis w notatce
+    }
+  }
+}
+
+// Kolumna „invoice” zakładana przy pierwszym zamówieniu z fakturą (sprawdzenie bez blokowania tabeli).
+let INVOICE_COL = false;
+export async function ensureInvoiceColumn(base44) {
+  if (INVOICE_COL) return true;
+  const has = await runSql(base44, `SELECT 1 FROM information_schema.columns WHERE table_schema = 'public' AND table_name = 'orders' AND column_name = 'invoice'`, true);
+  if (!(Array.isArray(has) && has.length)) await runSql(base44, `ALTER TABLE public.orders ADD COLUMN IF NOT EXISTS invoice jsonb`);
+  INVOICE_COL = true;
+  return true;
 }
 
 export async function getOrderByPayuId(base44, payuOrderId) {
