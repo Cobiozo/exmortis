@@ -75,7 +75,7 @@ async function buildFeed(base44, me) {
   const push = (x) => { if (x.at) out.push(x); };
 
   const [anns, regs, access, msgs, obok] = await Promise.all([
-    myAnnouncements(sr, base44, me).catch(() => ({ items: [], seen: {} })),
+    myAnnouncements(base44.asServiceRole, base44, me).catch(() => ({ items: [], seen: {} })),
     runSql(base44, `SELECT e.id::text AS id, e.title, e.slug, e.start_datetime, r.status AS reg_status, e.recording_until,
         (e.recording_url IS NOT NULL AND e.recording_until IS NOT NULL AND e.recording_until > now()
           AND e.start_datetime + (COALESCE(e.duration_minutes,60) * interval '1 minute') < now()) AS rec_open,
@@ -140,7 +140,7 @@ async function buildFeed(base44, me) {
     if (c.max_uses && (c.uses || 0) >= c.max_uses) continue;
     const val = c.kind === "kwota" ? `−${zl(c.value)}` : `−${c.value}%`;
     push({ key: `code:${c.id}`, kind: "kod", title: `Kod rabatowy ${c.code}: ${val}`,
-      body: [c.opis, c.product_ids?.length ? "Na wybrane produkty." : "Na cały Skarbiec.", c.valid_until ? `Ważny do ${plDate(c.valid_until)}.` : ""].filter(Boolean).join(" "),
+      body: [c.opis ? String(c.opis).replace(/[.!]?\s*$/, ".") : "", c.product_ids?.length ? "Na wybrane produkty." : "Na cały Skarbiec.", c.valid_until ? `Ważny do ${plDate(c.valid_until)}.` : ""].filter(Boolean).join(" "),
       link: "/skarbiec", at: iso(c.created_date), code: c.code });
   }
   // Moje spotkania: przypomnienie w ostatniej dobie, nagranie do obejrzenia.
