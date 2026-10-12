@@ -116,18 +116,18 @@ export default function EventEditor({ event, onClose, onSaved }) {
       </div>
 
       <div className="fixed inset-x-0 bottom-0 z-30 bg-[#0D0D0E] border-t hairline px-4 sm:px-8 pt-3 pb-[max(12px,env(safe-area-inset-bottom))]">
-        <div className="mx-auto max-w-[1440px] flex items-center gap-2">
-          <button type="button" onClick={() => go(step - 1)} disabled={step === 0} className="btn-ghost !px-4 !py-3 disabled:opacity-30">WSTECZ</button>
-          <button type="button" onClick={() => save(keepStatus)} disabled={!!saving} className="btn-ghost !px-4 !py-3 disabled:opacity-50">
+        <div className="mx-auto max-w-[1440px] flex items-center gap-1.5 sm:gap-2">
+          <button type="button" onClick={() => go(step - 1)} disabled={step === 0} className="btn-ghost !px-3 sm:!px-4 !py-3 disabled:opacity-30">WSTECZ</button>
+          <button type="button" onClick={() => save(keepStatus)} disabled={!!saving} className="btn-ghost !px-3 sm:!px-4 !py-3 disabled:opacity-50">
             {saving && saving !== "Opublikowane" && <Loader2 className="h-4 w-4 animate-spin" />}{keepStatus === "Szkic" ? <>ZAPISZ<span className="hidden sm:inline">&nbsp;SZKIC</span></> : "ZAPISZ"}
           </button>
           {step < 3 && <button type="button" onClick={() => go(3)} className="lg:hidden btn-ghost !px-3 !py-3" aria-label="Podgląd"><Eye className="h-4 w-4" /></button>}
           <span className="flex-1" />
           {step < 3 ? (
-            <button type="button" onClick={next} className="btn-relic !px-6 !py-3">DALEJ</button>
+            <button type="button" onClick={next} className="btn-relic !px-4 sm:!px-6 !py-3">DALEJ</button>
           ) : (
-            <button type="button" onClick={() => save("Opublikowane")} disabled={!!saving} className="btn-relic !px-6 !py-3 disabled:opacity-60">
-              {saving === "Opublikowane" && <Loader2 className="h-4 w-4 animate-spin" />}{event?.status === "Opublikowane" ? "ZAPISZ I PUBLIKUJ" : "OPUBLIKUJ"}
+            <button type="button" onClick={() => save("Opublikowane")} disabled={!!saving} className="btn-relic !px-4 sm:!px-6 !py-3 disabled:opacity-60">
+              {saving === "Opublikowane" && <Loader2 className="h-4 w-4 animate-spin" />}{event?.status === "Opublikowane" ? <><span className="hidden sm:inline">ZAPISZ I&nbsp;</span>PUBLIKUJ</> : "OPUBLIKUJ"}
             </button>
           )}
         </div>
