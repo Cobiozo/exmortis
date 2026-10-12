@@ -121,7 +121,10 @@ export default function MessageForm({ open, onClose, item, editSent, presetTarge
             <button className="btn-ghost" onClick={onClose}>ZAMKNIJ</button>
             {btn("draft", "ZAPISZ SZKIC", "btn-ghost")}
             {btn("schedule", "ZAPLANUJ", "btn-ghost")}
-            {btn("now", "WYŚLIJ TERAZ", "btn-relic")}
+            {/* Powyżej 10 odbiorców — najpierw okno potwierdzenia. */}
+            <button className="btn-relic" onClick={sendNow} disabled={!!busy}>
+              {busy === "now" ? <Loader2 className="h-4 w-4 animate-spin" /> : "WYŚLIJ TERAZ"}
+            </button>
           </>
         )}
       >
