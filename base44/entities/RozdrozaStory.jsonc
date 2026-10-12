@@ -104,6 +104,10 @@
       "type": "string",
       "description": "Postacie dozwolone na ok\u0142adkach (po angielsku)"
     },
+    "visible_from": {
+      "type": "string",
+      "description": "Zaplanowana publikacja: od tej chwili (ISO) opublikowana historia jest widoczna dla klient\u00f3w; puste = od razu"
+    },
     "reference_image_url": {
       "type": "string",
       "description": "Wz\u00f3r postaci (obraz referencyjny, tylko dostawca OpenAI)"
