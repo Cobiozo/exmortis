@@ -3,6 +3,7 @@ import { base44 } from "@/api/base44Client";
 import { Image } from "@/components/ui/image";
 import { Plus, Pencil, Trash2, Eye, EyeOff } from "lucide-react";
 import ProductEditor from "./ProductEditor";
+import WaitlistPanel from "./WaitlistPanel";
 
 const LEVEL_NAMES = {
   0: "BRAMA",
@@ -18,6 +19,7 @@ export default function ProductsManager() {
   const [loading, setLoading] = useState(true);
   const [editing, setEditing] = useState(null); // null | "new" | produkt
   const [busy, setBusy] = useState(false);
+  const [waitlist, setWaitlist] = useState(null);
 
   const load = () => {
     setLoading(true);
@@ -105,9 +107,13 @@ export default function ProductsManager() {
                     : p.price === 0
                     ? "BEZPŁATNE"
                     : `${p.price} ZŁ`}
-                  {p.waitlist_count > 0 ? ` · LISTA OCZEKUJĄCYCH: ${p.waitlist_count}` : ""}
                 </p>
               </div>
+              {p.waitlist_count > 0 && (
+                <button onClick={() => setWaitlist(p)} className="technical text-[9px] px-3 py-2 border border-[#C9A24A]/40 gold-text hover:bg-[#C9A24A]/10 whitespace-nowrap" title="Lista oczekujących: podgląd, CSV, powiadomienie o premierze">
+                  LISTA {p.waitlist_count}
+                </button>
+              )}
               <button
                 onClick={() => toggleActive(p)}
                 disabled={busy}
@@ -135,6 +141,7 @@ export default function ProductsManager() {
           ))}
         </div>
       )}
+      {waitlist && <WaitlistPanel product={waitlist} onClose={() => { setWaitlist(null); load(); }} />}
     </div>
   );
 }
