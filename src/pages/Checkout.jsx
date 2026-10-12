@@ -143,7 +143,7 @@ export default function Checkout() {
   if (items.length === 0) {
     return (
       <div className="min-h-screen flex flex-col items-center justify-center bg-[#0A0A0B] pt-20 px-6 text-center gap-8">
-        <p className="relic-heading text-4xl text-foreground/40">Skarbiec pusty</p>
+        <h1 className="relic-heading text-4xl text-foreground/40">Skarbiec pusty</h1>
         <p className="text-foreground/60">Nie masz jeszcze nic na drodze powrotu.</p>
         <Link to="/skarbiec" className="btn-relic">DO SKLEPU <ArrowRight className="h-4 w-4" /></Link>
       </div>
@@ -162,8 +162,10 @@ export default function Checkout() {
           {/* Form */}
           <form onSubmit={submit} className="md:col-span-3 space-y-8">
             <div>
-              <label className="technical text-[10px] text-foreground/50 block mb-3">IMIĘ</label>
+              <label htmlFor="co-name" className="technical text-[10px] text-foreground/50 block mb-3">IMIĘ I NAZWISKO</label>
               <input
+                id="co-name"
+                autoComplete="name"
                 required
                 value={form.name}
                 onChange={(e) => setForm({ ...form, name: e.target.value })}
@@ -171,8 +173,11 @@ export default function Checkout() {
               />
             </div>
             <div>
-              <label className="technical text-[10px] text-foreground/50 block mb-3">EMAIL</label>
+              <label htmlFor="co-email" className="technical text-[10px] text-foreground/50 block mb-3">E-MAIL</label>
               <input
+                id="co-email"
+                autoComplete="email"
+                inputMode="email"
                 required
                 type="email"
                 value={form.email}
@@ -184,8 +189,9 @@ export default function Checkout() {
               </div>
             </div>
             <div>
-              <label className="technical text-[10px] text-foreground/50 block mb-3">NOTATKA (opcjonalnie)</label>
+              <label htmlFor="co-note" className="technical text-[10px] text-foreground/50 block mb-3">NOTATKA (OPCJONALNIE)</label>
               <textarea
+                id="co-note"
                 rows={4}
                 value={form.note}
                 onChange={(e) => setForm({ ...form, note: e.target.value })}
