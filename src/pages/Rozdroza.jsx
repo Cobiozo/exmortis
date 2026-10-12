@@ -56,7 +56,7 @@ function AdminPreviewBar() {
     if (user?.role !== "admin" || q === null) return;
     adminPreview.set(q === "1"); setOn(q === "1");
   }, [q, user?.role]);
-  if (user?.role !== "admin") return null;
+  if (user?.role !== "admin" || loc.pathname.startsWith("/konto/rozdroza/podglad")) return null;
   const toggle = () => { adminPreview.set(!on); setOn(!on); window.location.replace(loc.pathname); };
   return (
     <div className={`mb-6 border p-3 flex flex-wrap items-center gap-3 text-xs ${on ? "border-[#C9A24A]/60 bg-[#C9A24A]/[0.06]" : "hairline"}`} role="note">
