@@ -55,7 +55,7 @@ function AdminPreviewBar({ onChange }) {
   React.useEffect(() => {
     if (user?.role !== "admin" || q === null) return;
     if (adminPreview.on() === (q === "1")) return;
-    adminPreview.set(q === "1"); setOn(q === "1"); onChange(q === "1"); // przeładowuje widok biblioteki z właściwą listą
+    adminPreview.set(q === "1"); setOn(q === "1"); onChange(); // przeładowuje widok biblioteki z właściwą listą
   }, [q, user?.role, onChange]);
   if (user?.role !== "admin" || loc.pathname.startsWith("/konto/rozdroza/podglad")) return null;
   const toggle = () => { adminPreview.set(!on); setOn(!on); window.location.replace(loc.pathname); };
@@ -74,7 +74,8 @@ function AdminPreviewBar({ onChange }) {
 export default function Rozdroza() {
   useNoIndex();
   const { pathname } = useLocation();
-  const [pv, setPv] = React.useState(false);
+  const [pv, setPv] = React.useState(0);
+  const bump = React.useCallback(() => setPv((n) => n + 1), []);
   return (
     <div className="bg-[#0A0A0B] pt-24 md:pt-28 pb-24 min-h-[100svh]">
       <div className="mx-auto max-w-[1200px] px-4 sm:px-5 md:px-10">
@@ -83,7 +84,7 @@ export default function Rozdroza() {
           <span aria-hidden="true">/</span>
           {pathname.replace(/\/+$/, "") === "/konto/rozdroza" ? <span className="gold-text">ROZDROŻA</span> : <Link to="/konto/rozdroza" className="hover:text-foreground min-h-[32px] inline-flex items-center">ROZDROŻA</Link>}
         </nav>
-        <AdminPreviewBar onChange={setPv} />
+        <AdminPreviewBar onChange={bump} />
         <RzBoundary key={`${pathname}|${pv}`}>
           <Routes>
             <Route index element={<RzIntro />} />
