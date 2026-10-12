@@ -55,7 +55,7 @@ export default function MySessions() {
   const head = (
     <div className="mb-10">
       <p className="technical text-[10px] gold-text mb-3">UMÓW INDYWIDUALNE SPOTKANIE</p>
-      <p className="text-sm text-foreground/60 max-w-[640px]">Spotkanie 1:1 z exmortis w ramach programu POWRÓT — termin wybierasz sam/sama z dostępnych godzin.</p>
+      <p className="text-sm text-foreground/60 max-w-[640px]">Spotkanie 1:1 z exmortis w ramach programu POWRÓT — termin wybierasz z dostępnych godzin.</p>
     </div>
   );
 
@@ -101,6 +101,22 @@ export default function MySessions() {
         </section>
       )}
 
+      {bookFrom && (
+        <div className="border border-[#C9A24A] p-6 space-y-5">
+          <div className="flex items-center justify-between gap-4">
+            <p className="relic-heading text-xl">Wybierz termin — {bookFrom.type}</p>
+            <button onClick={() => setBookFrom(null)} className="technical text-[10px] text-foreground/50">ZAMKNIJ</button>
+          </div>
+          <PackageBooker
+            packageId={bookFrom.id}
+            purchasedAt={bookFrom.purchased_at}
+            consent={d.consent}
+            onDone={() => { setBookFrom(null); load(); }}
+          />
+        </div>
+      )}
+
+      {(hasAccess || bookings.length > 0) && (<>
       <section>
         <p className="technical text-[10px] gold-text mb-6">NAJBLIŻSZE</p>
         {upcoming.length === 0 ? (
@@ -124,21 +140,7 @@ export default function MySessions() {
           </div>
         )}
       </section>
-
-      {bookFrom && (
-        <div className="border border-[#C9A24A] p-6 space-y-5">
-          <div className="flex items-center justify-between gap-4">
-            <p className="relic-heading text-xl">Wybierz termin — {bookFrom.type}</p>
-            <button onClick={() => setBookFrom(null)} className="technical text-[10px] text-foreground/50">ZAMKNIJ</button>
-          </div>
-          <PackageBooker
-            packageId={bookFrom.id}
-            purchasedAt={bookFrom.purchased_at}
-            consent={d.consent}
-            onDone={() => { setBookFrom(null); load(); }}
-          />
-        </div>
-      )}
+      </>)}
 
       {reschedule && (
         <ChangeSession b={reschedule} onClose={() => setReschedule(null)} onChanged={() => { setReschedule(null); load(); }} />
