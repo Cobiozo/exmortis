@@ -1,3 +1,4 @@
+import { rememberJoinEvent } from "@/content/joinFallback";
 import React, { useEffect, useState } from "react";
 import WarsawNote from "@/components/exmortis/events/WarsawNote";
 import { sanitizeHtml } from "@/lib/sanitizeHtml";
@@ -32,7 +33,7 @@ export default function EventDetail() {
     setError("");
     base44.functions
       .invoke("eventsPublic", { action: "get", slug })
-      .then((res) => setEvent(res.data.event))
+      .then((res) => { setEvent(res.data.event); rememberJoinEvent(res.data.event); })
       .catch(() => {
         setEvent(null);
         setError("Nie znaleziono takiego spotkania.");

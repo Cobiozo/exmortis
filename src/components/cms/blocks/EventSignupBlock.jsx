@@ -1,3 +1,4 @@
+import { rememberJoinEvent } from "@/content/joinFallback";
 import React, { useEffect, useState } from "react";
 import WarsawNote from "@/components/exmortis/events/WarsawNote";
 import { useLocation } from "react-router-dom";
@@ -32,7 +33,7 @@ export default function EventSignupBlock({ d, label }) {
   useEffect(() => {
     if (!d.spotkanie) return setEv(null);
     (takeEvent(d.spotkanie) || base44.functions.invoke("eventsPublic", { action: "get", slug: d.spotkanie }).then((r) => r.data.event))
-      .then((e) => { setEv(e || null); writeCache("events", { ...(readCache("events") || {}), [d.spotkanie]: e || undefined }); })
+      .then((e) => { setEv(e || null); rememberJoinEvent(e); writeCache("events", { ...(readCache("events") || {}), [d.spotkanie]: e || undefined }); })
       .catch((err) => { if (err?.response?.status === 404) setEv(null); });
   }, [d.spotkanie]);
 
