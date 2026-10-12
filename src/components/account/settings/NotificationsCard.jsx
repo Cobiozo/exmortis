@@ -50,7 +50,7 @@ export default function NotificationsCard() {
             })}
           </div>
         )}
-        <p className="text-sm text-[#E2E2E2]/70 mt-3">Sprawy Twojego konta (spotkania, na które się zapisano, nagrania, kończący się dostęp, wiadomości) i moje ogłoszenia widzisz zawsze. Powiadomienia są tylko na stronie, pod dzwoneczkiem — nie wysyłam przez nie maili.</p>
+        <p className="text-sm text-[#E2E2E2]/70 mt-3">Sprawy Twojego konta (zamówienia i płatności, premiery z Twojej listy oczekujących, nowe lekcje w Twoich kursach, spotkania, na które się zapisano, nagrania, kończący się dostęp, wiadomości) i moje ogłoszenia widzisz zawsze. Powiadomienia są tylko na stronie, pod dzwoneczkiem — nie wysyłam przez nie maili.</p>
         {err && <p role="alert" className="text-sm text-[#E8C547] mt-3">{err}</p>}
       </SettingsCard>
     </div>
