@@ -165,7 +165,7 @@ export default async function (req) {
         first_name: regRow.first_name,
         checkout_url: Number(ev.price) > 0 ? ev.checkout_url : null,
         join_url: regRow.status === "Zapisany" && ev.format === "Online"
-          ? `${sp ? `/${sp}/dolacz` : `/spotkania/${slug}/dolacz`}?t=${await joinToken(regRow.cancel_token)}` : null,
+          ? `${sp ? `/${sp}/dolacz` : `/spotkania/${slug}/dolacz`}${(await joinToken(regRow.cancel_token)) ? `?t=${await joinToken(regRow.cancel_token)}` : ""}` : null,
       });
     }
 
