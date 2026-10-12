@@ -148,6 +148,17 @@ export default async function (req) {
 
     // ---- Ponawianie (harmonogram): wykrycie przyjęcia zaproszenia i ponowienie nieudanych przeniesień ----
     if (body.action === "tick") {
+      // Zadanie publiczne (wywołuje je workflow bez sekretu): najwyżej jeden przebieg na 5 minut,
+      // więc wywołania z zewnątrz nie mnożą pracy. Przebieg robi tylko to, co i tak zrobiłby harmonogram.
+      const lock = await runSql(
+        base44,
+        `INSERT INTO public.app_settings (key, value, updated_date)
+           VALUES ('email_change_tick', jsonb_build_object('at', now()), now())
+         ON CONFLICT (key) DO UPDATE SET value = EXCLUDED.value, updated_date = now()
+           WHERE public.app_settings.updated_date < now() - interval '240 seconds'
+         RETURNING key`
+      ).catch(() => [{ key: "email_change_tick" }]);
+      if (!lock || !lock.length) return Response.json({ ok: true, skipped: true });
       const open = await sr.EmailChange.filter({ status: { $in: ["podano", "przenoszenie", "blad"] } }, "created_date", 50);
       let accepted = 0, moved = 0;
       for (const c of open) {
