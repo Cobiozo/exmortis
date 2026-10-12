@@ -326,11 +326,15 @@ export default async function (req) {
       for (const id of ids) {
         const { story, scenes, choices } = await load(sr, id);
         const when = new Date(addDaysWarsaw(start, every * n)).toISOString();
+        // Najpierw data, potem publikacja — historia nie może ani na chwilę pokazać się przed czasem.
+        await sr.RozdrozaStory.update(story.id, { visible_from: when });
         if (story.status !== "published") {
           const r = await publishStory(sr, story, scenes, choices);
-          if (!r.ok) { results.push({ id, title: story.title, skipped: "ma błędy — pominięta" }); continue; }
+          if (!r.ok) {
+            await sr.RozdrozaStory.update(story.id, { visible_from: story.visible_from || "" });
+            results.push({ id, title: story.title, skipped: "ma błędy — pominięta" }); continue;
+          }
         }
-        await sr.RozdrozaStory.update(story.id, { visible_from: when });
         results.push({ id, title: story.title, visible_from: when });
         n++;
       }
