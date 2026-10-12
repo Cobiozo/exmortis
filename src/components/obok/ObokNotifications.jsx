@@ -5,7 +5,7 @@ import { obok } from "./obokApi";
 // Konto → Obok: powiadomienia e-mail dla każdej serii i „Opuść serię”.
 export default function ObokNotifications() {
   const [tiles, setTiles] = useState([]);
-  const load = () => obok("home").then((d) => setTiles(d.tiles.filter((t) => t.member)));
+  const load = () => obok("home").then((d) => setTiles((d?.tiles || []).filter((t) => t.member))).catch(() => {}); // błąd sieci = brak sekcji, bez wyjątku
   useEffect(() => { load(); }, []);
   if (!tiles.length) return null;
   return (
