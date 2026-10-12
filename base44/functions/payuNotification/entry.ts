@@ -2,7 +2,7 @@ import { createHash } from "node:crypto";
 import { createClientFromRequest } from "npm:@base44/sdk@0.8.44";
 import { getSetting, loadAppUrl, APP_URL } from "../../shared/settings.ts";
 import { getOrderByPayuId, updateOrderStatus, claimCompletion, releaseCompletion } from "../../shared/orders.ts";
-import { sendMail, orderEmailHtml } from "../../shared/smtp.ts";
+import { sendMail, orderEmailHtml, adminTo } from "../../shared/smtp.ts";
 import { runSql, rpc, escStr } from "../../shared/supabase.ts";
 import { DIGITAL, grantAccess, ensureAccount } from "../../shared/access.ts";
 import { randomToken, sha256hex } from "../../shared/booking.ts";
@@ -140,6 +140,20 @@ export default async function (req) {
       } catch {
         // e-mail potwierdzenia jest opcjonalny — nie blokuj ack dla PayU
       }
+    }
+    // Powiadomienie dla prowadzącego o opłaconym zamówieniu.
+    try {
+      const admin = await adminTo(base44);
+      if (admin) {
+        const list = items.map((i) => `${String(i.name).replace(/</g, "&lt;")} × ${Number(i.quantity) || 1}`).join("<br>");
+        await sendMail(base44, {
+          kind: "zamowienie_admin", ref: stored.id, to: admin,
+          subject: `Nowe zamówienie: ${Number(stored.total || 0).toFixed(2).replace(".", ",")} zł`,
+          html: `<p>${String(stored.buyer_name || "").replace(/</g, "&lt;")} (${String(stored.buyer_email || "").replace(/</g, "&lt;")})</p><p>${list}</p><p>Numer: ${String(stored.id).slice(0, 8).toUpperCase()}</p>`,
+        });
+      }
+    } catch {
+      // informacja dla admina nie blokuje zamówienia
     }
     // KROK 2: pakiet „Rozmowa na progu” — po obecnej logice, w try/catch.
     try {
