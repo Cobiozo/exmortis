@@ -89,7 +89,7 @@ export default function WaitlistDialog({ product, onClose }) {
                 type="checkbox"
                 checked={form.consent}
                 onChange={(e) => setForm({ ...form, consent: e.target.checked })}
-                className="accent-[#C9A24A] w-4 h-4 mt-0.5"
+                className="accent-[#C9A24A] w-5 h-5 shrink-0 mt-0.5"
               />
               <span className="text-xs text-foreground/50 leading-relaxed">
                 Wyrażam zgodę, żeby exmortis napisał do mnie, kiedy ten materiał będzie dostępny.

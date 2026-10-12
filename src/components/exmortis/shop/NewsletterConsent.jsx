@@ -9,7 +9,7 @@ export default function NewsletterConsent({ checked, onChange }) {
         type="checkbox"
         checked={checked}
         onChange={(e) => onChange(e.target.checked)}
-        className="accent-[#C9A24A] w-4 h-4 mt-0.5"
+        className="accent-[#C9A24A] w-5 h-5 shrink-0 mt-0.5"
       />
       <span className="text-xs text-foreground/50 leading-relaxed">
         Chcę dostawać Listy powrotu — jeden list w każdy poniedziałek. Mogę wypisać się w

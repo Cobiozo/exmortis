@@ -317,7 +317,7 @@ export default function Test({ d = {} }) {
                 required
                 checked={lead.consent}
                 onChange={(e) => setLead({ ...lead, consent: e.target.checked })}
-                className="accent-[#C9A24A] w-4 h-4 mt-0.5"
+                className="accent-[#C9A24A] w-5 h-5 shrink-0 mt-0.5"
               />
               <span className="text-sm text-foreground/50 leading-relaxed">
                 Zgadzam się na przetwarzanie danych w celu przesłania wyniku.
@@ -328,7 +328,7 @@ export default function Test({ d = {} }) {
                 type="checkbox"
                 checked={lead.newsletter}
                 onChange={(e) => setLead({ ...lead, newsletter: e.target.checked })}
-                className="accent-[#C9A24A] w-4 h-4 mt-0.5"
+                className="accent-[#C9A24A] w-5 h-5 shrink-0 mt-0.5"
               />
               <span className="text-sm text-foreground/50 leading-relaxed">
                 Chcę też dostawać „Listy powrotu” — jeden list w każdy poniedziałek.
