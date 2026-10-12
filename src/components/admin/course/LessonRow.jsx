@@ -19,12 +19,18 @@ export function videoSource(url) {
   return { ok: false, label: "Obsługiwane: plik .mp4/.webm z Twojego serwera, YouTube, Vimeo, Bunny Stream." };
 }
 
-export default function LessonRow({ lesson, onChange }) {
+export default function LessonRow({ lesson, onChange, domains, onAddDomain }) {
   const [f, setF] = useState(lesson);
   const [busy, setBusy] = useState("");
   const [confirmDel, setConfirmDel] = useState(false);
   const [msg, setMsg] = useState("");
   const set = (k, v) => setF((x) => ({ ...x, [k]: v }));
+  const [test, setTest] = useState(null); // null | "load" | "ok" | "err"
+  const [testInfo, setTestInfo] = useState("");
+  const serverHost = (() => {
+    try { const u = new URL(String(f.video_url || "").trim()); return /\.(mp4|m4v|webm)$/i.test(u.pathname) ? u.hostname.toLowerCase() : null; } catch { return null; }
+  })();
+  const hostMissing = serverHost && Array.isArray(domains) && !domains.includes(serverHost);
 
   const save = async (extra = {}) => {
     const src = videoSource(f.video_url);
@@ -64,8 +70,34 @@ export default function LessonRow({ lesson, onChange }) {
       <textarea className={inp} rows={2} value={f.description || ""} onChange={(e) => set("description", e.target.value)} placeholder="Opis / notatki pod wideo" />
       <div className="space-y-1">
         <input className={inp} value={f.video_url || ""} onChange={(e) => set("video_url", e.target.value)}
-          placeholder="Adres wideo (Twój serwer .mp4, Vimeo, YouTube, Bunny) — albo wgraj plik poniżej (do 100 MB)" aria-label="Adres wideo" />
-        {(() => { const v = videoSource(f.video_url); return v ? <p className={`text-xs ${v.ok ? "text-foreground/50" : "text-[#E8C547]"}`}>{v.label}{v.ok && f.video_uri ? " Uwaga: wgrany plik ma pierwszeństwo — usuń go, żeby używać adresu." : ""}</p> : null; })()}
+          placeholder="Adres filmu z Twojego serwera, np. https://wideo.exmortis.pl/kurs/lekcja-1.mp4" aria-label="Adres wideo" />
+        {(() => { const v = videoSource(f.video_url); return v && !serverHost ? <p className={`text-xs ${v.ok ? "text-foreground/50" : "text-[#E8C547]"}`}>{v.label}</p> : null; })()}
+        {f.video_uri && f.video_url && <p className="text-xs text-[#E8C547]">Wgrany plik ma pierwszeństwo — usuń go, żeby lekcja używała adresu.</p>}
+        {serverHost && (
+          <div className="flex flex-wrap items-center gap-3 pt-1">
+            {hostMissing ? (
+              <>
+                <span className="text-xs text-[#E8C547]">Domena {serverHost} nie jest na liście zaufanych — klient nie zobaczy filmu.</span>
+                <button type="button" onClick={() => onAddDomain(serverHost)} className="btn-ghost !px-3 !py-1.5 text-[10px]">DODAJ {serverHost.toUpperCase()}</button>
+              </>
+            ) : domains ? <span className="text-xs text-[#9FD3A0]">Twój serwer ({serverHost}) — domena zaufana.</span> : null}
+            <button type="button" onClick={() => { setTest(test ? null : "load"); setTestInfo(""); }} className="btn-ghost !px-3 !py-1.5 text-[10px]">{test ? "ZAMKNIJ PODGLĄD" : "SPRAWDŹ ODTWARZANIE"}</button>
+          </div>
+        )}
+        {serverHost && test && (
+          <div className="pt-2 space-y-2">
+            <video src={String(f.video_url).trim()} controls preload="metadata" playsInline className="w-full max-w-md bg-black aspect-video"
+              onLoadedMetadata={(e) => {
+                const d = e.currentTarget.duration;
+                const min = Number.isFinite(d) ? Math.max(1, Math.round(d / 60)) : null;
+                setTest("ok");
+                setTestInfo(min ? `Działa. Długość: ${min} min.${!f.duration_min ? " Wpisałem ją w pole „min” — zapisz lekcję." : ""}` : "Działa.");
+                if (min && !f.duration_min) set("duration_min", min);
+              }}
+              onError={() => { setTest("err"); setTestInfo("Nie udało się odtworzyć. Sprawdź: adres otwiera film w przeglądarce, serwer podaje typ video/mp4 (albo video/webm) i obsługuje przewijanie (Accept-Ranges: bytes), film jest w H.264 + AAC."); }} />
+            {testInfo && <p className={`text-xs ${test === "err" ? "text-[#E8C547]" : "text-[#9FD3A0]"}`}>{testInfo}</p>}
+          </div>
+        )}
       </div>
       <div className="flex flex-wrap items-center gap-3">
         <label className="btn-ghost cursor-pointer !px-3 !py-2 text-[10px]">
