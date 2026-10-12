@@ -18,7 +18,7 @@ import MyLibrary from "@/components/account/library/MyLibrary";
 import MyMessages from "@/components/account/messages/MyMessages";
 import AccountUnreadMessage from "@/components/account/messages/AccountUnreadMessage";
 
-const HEAD = [["produkty", "Moje produkty"], ["spotkania", "Spotkania"], ["sesje", "Moje sesje"]];
+const HEAD = [["produkty", "Moje produkty"], ["spotkania", "Spotkania"], ["sesje", "Umów spotkanie"]];
 const TAIL = [["obok", "Obok"], ["zakupy", "Zakupy"], ["ustawienia", "Ustawienia"]];
 
 // /konto — tylko dla zalogowanych (ProtectedRoute). Zakładki biblioteki i wiadomości
