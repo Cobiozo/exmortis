@@ -1,7 +1,8 @@
 import React, { useEffect, useState } from "react";
 import { ArrowLeft, Loader2, Eye, ChevronDown } from "lucide-react";
 import ImageField from "@/components/admin/cms/ImageField";
-import { rz, statusBadge, thumb, isStartScene } from "./rzApi";
+import { rz, statusBadge, thumb, isStartScene, isScheduled, fmtWhen } from "./rzApi";
+import { isoToWarsawLocal, warsawLocalToIso } from "@/lib/warsawTime";
 import GenBlock from "./GenBlock";
 import BulkImages from "./BulkImages";
 
@@ -79,6 +80,28 @@ function RefImages({ value, onChange }) {
   );
 }
 
+// Termin publikacji: od kiedy opublikowana historia jest widoczna dla klientów (czas polski).
+function ScheduleField({ story, busy, onSave }) {
+  const [v, setV] = useState(story.visible_from ? isoToWarsawLocal(story.visible_from) : "");
+  useEffect(() => { setV(story.visible_from ? isoToWarsawLocal(story.visible_from) : ""); }, [story.visible_from]);
+  const cur = story.visible_from ? isoToWarsawLocal(story.visible_from) : "";
+  const pub = story.status === "published";
+  const info = !story.visible_from ? (pub ? "Widoczna dla klientów od razu po publikacji." : "Bez terminu — po kliknięciu „Opublikuj” będzie widoczna od razu.")
+    : isScheduled(story) ? (pub ? `Opublikowana i ukryta — klienci zobaczą ją ${fmtWhen(story.visible_from)}.` : `Termin ${fmtWhen(story.visible_from)} — zadziała dopiero po kliknięciu „Opublikuj”.`)
+    : (pub ? `Widoczna od ${fmtWhen(story.visible_from)}.` : `Termin minął (${fmtWhen(story.visible_from)}) — po publikacji będzie widoczna od razu.`);
+  return (
+    <div className="border-t hairline pt-4 space-y-2">
+      <p className={lab}>TERMIN PUBLIKACJI (CZAS POLSKI)</p>
+      <div className="flex flex-wrap items-center gap-3">
+        <input type="datetime-local" className={`${inp} !w-auto`} value={v} onChange={(e) => setV(e.target.value)} aria-label="Widoczna dla klientów od" />
+        <button type="button" className="btn-ghost !px-4 !py-2 text-[10px] disabled:opacity-40" disabled={busy || !v || v === cur} onClick={() => onSave(warsawLocalToIso(v))}>ZAPISZ TERMIN</button>
+        {story.visible_from && <button type="button" className="text-xs text-foreground/50 underline hover:text-foreground" disabled={busy} onClick={() => onSave("")}>usuń termin (widoczna od razu)</button>}
+      </div>
+      <p className="text-xs text-foreground/55">{info}</p>
+    </div>
+  );
+}
+
 // Jedna historia: dane do biblioteki, okładki, obrazy scen, raport połączeń, podgląd i publikacja.
 export default function StoryEditor({ id, onClose }) {
   const [d, setD] = useState(null);
@@ -134,7 +157,7 @@ export default function StoryEditor({ id, onClose }) {
         )}
         <div className="flex flex-wrap items-center gap-3 pt-2">
           <a href={`/konto/rozdroza/podglad?id=${encodeURIComponent(id)}`} target="_blank" rel="noreferrer" className="btn-ghost !px-4 !py-2 text-[10px]"><Eye className="h-4 w-4" /> PODGLĄD SZKICU</a>
-          <button type="button" onClick={() => run("publish", {}, "Opublikowano — klienci widzą nową wersję w ciągu minuty.")} disabled={!!busy || r.errors.length > 0} className="btn-relic !px-4 !py-2 text-[10px] disabled:opacity-40">
+          <button type="button" onClick={() => run("publish", {}, isScheduled(d.story) ? `Opublikowano — klienci zobaczą historię ${fmtWhen(d.story.visible_from)}.` : "Opublikowano — klienci widzą nową wersję w ciągu minuty.")} disabled={!!busy || r.errors.length > 0} className="btn-relic !px-4 !py-2 text-[10px] disabled:opacity-40">
             {busy === "publish" && <Loader2 className="h-4 w-4 animate-spin" />}{d.story.status === "published" ? "OPUBLIKUJ PONOWNIE" : "OPUBLIKUJ"}
           </button>
           {d.story.status === "published" && <button type="button" onClick={() => run("unpublish", {}, "Wycofano — historia zniknie z biblioteki w ciągu minuty.")} disabled={!!busy} className="btn-ghost !px-4 !py-2 text-[10px]">WYCOFAJ PUBLIKACJĘ</button>}
@@ -142,6 +165,7 @@ export default function StoryEditor({ id, onClose }) {
             ? <button type="button" onClick={async () => { if (await run("delete")) onClose(); }} className="btn-blood !px-4 !py-2 text-[10px]">NA PEWNO USUŃ SZKIC</button>
             : <button type="button" onClick={() => setConfirmDel(true)} className="text-xs text-foreground/45 underline hover:text-[#E8676A]">usuń szkic</button>)}
         </div>
+        <ScheduleField story={d.story} busy={!!busy} onSave={(iso) => run("schedule", { visible_from: iso }, iso ? `Termin zapisany: ${fmtWhen(iso)}.` : "Termin usunięty.")} />
         {msg && <p className="text-sm text-[#9FD3A0]" role="status">{msg}</p>}
         {err && <p className="text-sm text-[#E8676A]" role="alert">{err}</p>}
       </section>
