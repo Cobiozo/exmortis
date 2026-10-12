@@ -49,7 +49,7 @@ export default async function (req) {
         const server = normalizeServerVideo(lesson.video_url, s?.video_domains || []);
         const embed = server ? null : normalizeVideo(lesson.video_url);
         if (!server && !embed) return Response.json({ error: "Wideo tej lekcji jest chwilowo niedostępne." }, { status: 502 });
-        external = server ? { url: server } : { embed: embed.embed, provider: embed.provider };
+        external = server ? { url: server, server: true } : { embed: embed.embed, provider: embed.provider };
       }
       const ip = (req.headers.get("x-forwarded-for") || "").split(",")[0].trim();
       const blocked = await checkVideoAbuse(base44, email, ip);

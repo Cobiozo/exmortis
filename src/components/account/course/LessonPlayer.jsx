@@ -14,6 +14,7 @@ export default function LessonPlayer({ accessId, lesson, onDone, onNext, nextTit
   const box = useRef(null);
   const lastSave = useRef(0);
   const resumeAt = useRef(null);
+  const retried = useRef(false);
   const [src, setSrc] = useState(null);
   const [err, setErr] = useState("");
   const [done, setDone] = useState(lesson.completed);
@@ -30,7 +31,7 @@ export default function LessonPlayer({ accessId, lesson, onDone, onNext, nextTit
 
   // Link wygasa po 60 min — odświeżamy co 50 min, zachowując pozycję.
   useEffect(() => {
-    if (!src || src.embed) return;
+    if (!src || src.embed || src.server) return; // link z serwera nie wygasa
     const t = setTimeout(() => { resumeAt.current = ref.current?.currentTime || 0; loadUrl(); }, 50 * 60000);
     return () => clearTimeout(t);
   }, [src]);
@@ -79,7 +80,15 @@ export default function LessonPlayer({ accessId, lesson, onDone, onNext, nextTit
         {!lesson.has_video ? (
           <p className="absolute inset-0 flex items-center justify-center text-sm text-foreground/50">Wideo jest przygotowywane.</p>
         ) : err ? (
-          <p className="absolute inset-0 flex items-center justify-center text-sm text-[#E8C547] px-6 text-center">{err}</p>
+          <div className="absolute inset-0 flex flex-col items-center justify-center gap-4 px-6 text-center">
+            <p className="text-sm text-[#E8C547]">{err}</p>
+            {!/innym urządzeniu|wstrzyman/i.test(err) && (
+              <button onClick={() => { setErr(""); setSrc(null); retried.current = false; loadUrl(); }} className="btn-ghost !px-4 !py-2 text-[10px]">SPRÓBUJ PONOWNIE</button>
+            )}
+            {/innym urządzeniu/i.test(err) && (
+              <button onClick={() => { setErr(""); setSrc(null); loadUrl(); }} className="btn-ghost !px-4 !py-2 text-[10px]">OGLĄDAJ TUTAJ</button>
+            )}
+          </div>
         ) : !src ? (
           <Loader2 className="absolute inset-0 m-auto h-6 w-6 animate-spin gold-text" />
         ) : src.embed ? (
@@ -92,7 +101,12 @@ export default function LessonPlayer({ accessId, lesson, onDone, onNext, nextTit
               if (at) e.currentTarget.currentTime = at;
               if (resumeAt.current != null) { resumeAt.current = null; e.currentTarget.play().catch(() => {}); }
             }}
-            onTimeUpdate={onTime} onPause={() => send()} />
+            onTimeUpdate={onTime} onPause={() => send()} preload="metadata"
+            onError={() => {
+              // Podpisany link mógł wygasnąć — jedna próba odświeżenia z zachowaniem pozycji; potem komunikat.
+              if (!src.server && !retried.current) { retried.current = true; resumeAt.current = ref.current?.currentTime || 0; loadUrl(); return; }
+              setErr("Film nie chce się wczytać. Sprawdź połączenie i spróbuj ponownie.");
+            }} />
         )}
         {src && !err && <Watermark text={`${user?.email || ""} · ${src.license} · ${stamp}`} />}
         {src && !err && !src.embed && (
