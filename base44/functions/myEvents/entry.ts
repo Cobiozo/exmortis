@@ -1,5 +1,5 @@
 import { createClientFromRequest } from "npm:@base44/sdk@0.8.44";
-import { runSql, escStr } from "../../shared/supabase.ts";
+import { runSql, escStr, clientIp } from "../../shared/supabase.ts";
 import { joinToken } from "../../shared/events.ts";
 import { normalizeServerVideo, normalizeVideo } from "../../shared/libraryMedia.ts";
 import { libSettings } from "../../shared/libraryAccess.ts";
@@ -56,7 +56,7 @@ export default async function (req) {
       const reg = ev && (await runSql(base44,
         `SELECT id FROM public.registrations WHERE event_id = ${escStr(id)} AND lower(email) = ${escStr(email)}
             AND status IN ${OK_REG} LIMIT 1`, true))[0];
-      const ip = (req.headers.get("cf-connecting-ip") || (req.headers.get("x-forwarded-for") || "").split(",")[0]).trim().slice(0, 64);
+      const ip = clientIp(req);
 
       if (body.action === "violation") {
         if (ev) await base44.asServiceRole.entities.SecurityLog.create({ type: "znak_wodny", user_email: email, ip, details: `Nagranie: ${ev.title}` }).catch(() => {});
