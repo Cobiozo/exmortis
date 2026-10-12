@@ -3,6 +3,7 @@ import Logo from "@/components/exmortis/Logo";
 import { Buttons } from "../parts";
 import SafeImg from "../SafeImg";
 import { nbsp } from "@/lib/nbsp";
+import { useBefore } from "@/lib/wawDate";
 
 function Bg({ d }) {
   if (!d.tlo?.url) return null;
@@ -15,6 +16,17 @@ function Bg({ d }) {
 }
 
 const Dopisek = ({ t }) => t ? <p className="technical text-xs text-foreground/75 mt-3">{t}</p> : null;
+
+// Informacja przy przyciskach (np. „Zapisy ruszają 16 października”) — znika sama o podanej godzinie (czas polski).
+function Zapowiedz({ d, center }) {
+  const before = useBefore(d.zapowiedz_do);
+  if (!d.zapowiedz || (d.zapowiedz_do && !before)) return null;
+  return (
+    <p className={`technical text-[11px] gold-text flex items-center gap-2.5 mt-10 -mb-6 ${center ? "justify-center" : ""}`}>
+      <span className="h-1.5 w-1.5 rounded-full bg-[#C9A24A] animate-pulse shrink-0" aria-hidden="true" />{d.zapowiedz}
+    </p>
+  );
+}
 
 // Nagłówek strony (H1). Wariant „znak” = pełnoekranowy hero strony głównej z logo.
 export default function HeroBlock({ d }) {
@@ -30,6 +42,7 @@ export default function HeroBlock({ d }) {
         </h1>
         {d.lead && <p className="no-hyph mt-8 text-lg md:text-2xl text-foreground/75 font-light">{nbsp(d.lead)}</p>}
         {d.podlead && <p className="no-hyph mt-2 text-sm md:text-base text-foreground/50 font-light">{d.podlead}</p>}
+        <Zapowiedz d={d} center />
         <Buttons list={d.przyciski} className="mt-12 justify-center" pion={d.przyciski_pion} />
         <Dopisek t={d.dopisek} />
       </div>
@@ -48,6 +61,7 @@ export default function HeroBlock({ d }) {
         </h1>
         {d.lead && <p className="no-hyph mt-8 text-lg md:text-xl text-foreground/70 max-w-2xl leading-relaxed">{nbsp(d.lead)}</p>}
         {d.podlead && <p className="no-hyph mt-3 text-foreground/50 max-w-2xl">{d.podlead}</p>}
+        <Zapowiedz d={d} />
         <Buttons list={d.przyciski} className="mt-10" pion={d.przyciski_pion} />
         <Dopisek t={d.dopisek} />
       </div>
