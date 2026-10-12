@@ -86,7 +86,7 @@ export default function AdminDashboard() {
           { to: "/admin/testy", title: "Wyniki testu", lines: ["Odpowiedzi z testu"] },
         ]],
         ["USTAWIENIA I BEZPIECZEŃSTWO", [
-          { to: "/admin/ustawienia", title: "Ustawienia strony", lines: ["Dane firmy", "Tryb przedpremierowy", "Wysyłka e-mail"] },
+          { to: "/admin/ustawienia", title: "Ustawienia strony", lines: ["Dane firmy", "Tryb przedpremierowy", "Wysyłka e-mail", "Mój stały link Zoom"] },
           { to: "/admin/integracje", title: "Integracje", lines: ["Płatności, adres aplikacji"] },
           { to: "/admin/bezpieczenstwo", title: "Bezpieczeństwo", lines: ["Alerty, blokady, znajdź właściciela kopii"] },
           { to: "/admin/dane-osoby", title: "Dane osoby (RODO)", lines: ["Znajdź / usuń / wyeksportuj po e-mailu", "Obie bazy naraz"] },

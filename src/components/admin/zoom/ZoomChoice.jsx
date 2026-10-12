@@ -12,7 +12,7 @@ export default function ZoomChoice({ link, withPassword = false, onSet, children
   if (!z.link) return (
     <div className="space-y-2">
       {children}
-      <p className="text-xs text-foreground/45">Masz stały pokój Zoom? Dodaj go w <Link to="/admin?sekcja=ustawienia" className="underline hover:text-foreground">Ustawieniach strony</Link> („Mój stały link Zoom”), a tutaj wybierzesz go jednym kliknięciem.</p>
+      <p className="text-xs text-foreground/45">Masz stały pokój Zoom? Dodaj go w <Link to="/admin/ustawienia" className="underline hover:text-foreground">Ustawieniach strony</Link> („Mój stały link Zoom”), a tutaj wybierzesz go jednym kliknięciem.</p>
     </div>
   );
   const fixed = !other && String(link || "").trim() === z.link;
