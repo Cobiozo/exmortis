@@ -1,5 +1,6 @@
 import { createClientFromRequest } from "npm:@base44/sdk@0.8.53";
 import { runSql, escStr } from "../../shared/supabase.ts";
+import { annStatus, myAnnouncements } from "../../shared/announce.ts";
 
 // Ogłoszenia na koncie — wyłącznie na stronie (bez e-maili).
 // Klient: "mine" (aktywne dla mnie + liczba nieprzeczytanych), "event" (seen/view/click/dismiss).
@@ -10,12 +11,7 @@ const AUD = ["wszyscy", "produkt", "obok", "spotkanie"];
 const str = (v, max) => String(v ?? "").replace(/<[^>]*>/g, "").trim().slice(0, max);
 const dt = (v) => { if (!v) return null; const d = new Date(v); return isNaN(d.getTime()) ? null : d.toISOString(); };
 
-export function annStatus(a, now = Date.now()) {
-  if (!a.opublikowane) return "Szkic";
-  if (a.zakonczono_at || (a.do && new Date(a.do).getTime() <= now)) return "Zakończone";
-  if (a.od && new Date(a.od).getTime() > now) return "Zaplanowane";
-  return "Aktywne";
-}
+export { annStatus };
 
 function clean(b) {
   const link = str(b.przycisk_link, 500);
@@ -32,23 +28,6 @@ function clean(b) {
     odbiorcy, cel_id: odbiorcy === "wszyscy" ? "" : String(b.cel_id), cel_nazwa: odbiorcy === "wszyscy" ? "" : str(b.cel_nazwa, 200),
     od, do: d, zamykalne: b.zamykalne !== false, wazne: b.wazne === true, test: b.test === true,
   };
-}
-
-async function inAudience(sr, base44, a, me) {
-  if (a.odbiorcy === "wszyscy") return true;
-  const email = String(me.email).toLowerCase();
-  if (a.odbiorcy === "produkt") {
-    const rows = await sr.entities.Access.filter({ user_email: email, product_id: a.cel_id }, "-created_date", 5);
-    const today = new Date().toISOString().slice(0, 10);
-    return rows.some((r) => !r.valid_until || r.valid_until >= today);
-  }
-  if (a.odbiorcy === "obok") return (await sr.entities.ObokUczestnik.filter({ seria_id: a.cel_id, user_email: email }, "-created_date", 1)).length > 0;
-  if (a.odbiorcy === "spotkanie") {
-    const r = await runSql(base44, `SELECT 1 FROM public.registrations WHERE event_id = ${escStr(a.cel_id)} AND lower(email) = ${escStr(email)}
-      AND status IN ('Zapisany','Obecny','Lista rezerwowa') LIMIT 1`, true).catch(() => []);
-    return r.length > 0;
-  }
-  return false;
 }
 
 async function recipients(sr, base44, a) {
@@ -71,12 +50,8 @@ export default async function (req) {
 
     if (body.action === "mine") {
       if (me.role === "zablokowane") return Response.json({ items: [], unread: 0 });
-      const all = (await A.filter({ opublikowane: true }, "-created_date", 200)).filter((a) => annStatus(a) === "Aktywne");
-      const mine = [];
-      for (const a of all) if (await inAudience(sr, base44, a, me)) mine.push(a);
-      const seen = mine.length ? await S.filter({ user_id: me.id, ann_id: { $in: mine.map((a) => a.id) } }, "-created_date", 500) : [];
-      const by = Object.fromEntries(seen.map((s) => [s.ann_id, s]));
-      const items = mine.filter((a) => !by[a.id]?.dismissed_at)
+      const { items: mineOpen, seen: by } = await myAnnouncements(sr, base44, me);
+      const items = mineOpen
         .sort((x, y) => (y.wazne ? 1 : 0) - (x.wazne ? 1 : 0) || String(y.od || y.created_date).localeCompare(String(x.od || x.created_date)))
         .map((a) => ({ id: a.id, rodzaj: a.rodzaj, tytul: a.tytul, tresc: a.tresc, przycisk_napis: a.przycisk_napis, przycisk_link: a.przycisk_link, zamykalne: a.zamykalne !== false, wazne: !!a.wazne }));
       return Response.json({ items, unread: items.filter((a) => !by[a.id]?.seen_at).length });
