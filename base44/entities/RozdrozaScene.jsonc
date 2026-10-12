@@ -1,7 +1,7 @@
 {
   "name": "RozdrozaScene",
   "type": "object",
-  "description": "ROZDROŻA — scena (szkic). Tylko administrator.",
+  "description": "ROZDRO\u017bA \u2014 scena (szkic). Tylko administrator.",
   "properties": {
     "story_id": {
       "type": "string"
@@ -40,11 +40,15 @@
     },
     "image_prompt": {
       "type": "string",
-      "description": "Opis kadru (KADR) do generowania — nie jest pokazywany czytelnikom"
+      "description": "Opis kadru (KADR) do generowania \u2014 nie jest pokazywany czytelnikom"
     },
     "image_candidate_url": {
       "type": "string",
-      "description": "Wygenerowany kadr czekający na zatwierdzenie (nie zastępuje zatwierdzonego obrazu bez akceptacji)"
+      "description": "Wygenerowany kadr czekaj\u0105cy na zatwierdzenie (nie zast\u0119puje zatwierdzonego obrazu bez akceptacji)"
+    },
+    "image_from": {
+      "type": "string",
+      "description": "Klucz sceny, z kt\u00f3rej po\u017cyczono obraz (alt tekst bierzemy z tamtej sceny)"
     }
   },
   "required": [
