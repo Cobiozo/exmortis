@@ -1,6 +1,7 @@
 import { createClientFromRequest } from "npm:@base44/sdk@0.8.53";
 import { runSql, escStr, clientIp } from "../../shared/supabase.ts";
 import { applyDiscount } from "../../shared/discounts.ts";
+import { unitPrice } from "../../shared/productPrice.ts";
 
 // Podgląd rabatu w kasie (ostateczne wyliczenie i tak robi payuCreateOrder).
 export default async function (req) {
@@ -16,8 +17,10 @@ export default async function (req) {
     const items = Array.isArray(body.items) ? body.items.slice(0, 20) : [];
     const ids = [...new Set(items.map((i) => String(i?.id || "")).filter(Boolean))];
     if (!ids.length) throw new Error("Koszyk jest pusty");
-    const rows = await runSql(base44, `SELECT id, price::float8 AS price FROM public.products WHERE id IN (${ids.map(escStr).join(",")})`, true);
-    const price = new Map(rows.map((r) => [String(r.id), Math.round(Number(r.price) * 100)]));
+    // Ta sama cena co w kasie (z promocją), żeby podgląd rabatu zgadzał się z płatnością.
+    const rows = await runSql(base44, `SELECT id, price::float8 AS price, price_regular::float8 AS price_regular, price_start::float8 AS price_start,
+      promo_end_date::text AS promo_end_date FROM public.products WHERE id IN (${ids.map(escStr).join(",")})`, true);
+    const price = new Map(rows.map((r) => [String(r.id), Math.round(unitPrice(r) * 100)]));
     const lines = items.filter((i) => price.has(String(i.id))).map((i) => ({
       product_id: String(i.id), unit: price.get(String(i.id)), qty: Math.max(1, Math.min(20, Math.floor(Number(i.qty) || 1))),
     }));
