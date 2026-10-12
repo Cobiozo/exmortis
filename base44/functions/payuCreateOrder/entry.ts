@@ -7,6 +7,7 @@ import { addSubscriber } from "../../shared/newsletter.ts";
 import { DIGITAL } from "../../shared/access.ts";
 import { regulaminVersion } from "../../shared/legalDocs.ts";
 import { unitPrice } from "../../shared/productPrice.ts";
+import { cleanInvoice, invoiceText } from "../../shared/invoice.ts";
 
 const DIGITAL_CONSENT =
   "Żądam dostarczenia treści cyfrowych przed upływem 14 dni od zawarcia umowy i przyjmuję do wiadomości, że z chwilą rozpoczęcia ich dostarczania tracę prawo odstąpienia od umowy.";
@@ -34,6 +35,7 @@ export default async function (req) {
     const note = textField(body, "note", { max: 2000, required: false }) || "";
     const newsletterConsent = body.newsletter_consent === true;
     if (body.terms_consent !== true) throw new Error("Zaakceptuj Regulamin");
+    const invoice = cleanInvoice(body.invoice);
     const items = Array.isArray(body.items) ? body.items.slice(0, 20) : [];
     if (items.length === 0) throw new Error("Koszyk jest pusty");
 
@@ -136,7 +138,8 @@ export default async function (req) {
       payuOrderId: String(data.orderId || ""),
       buyerName,
       buyerEmail,
-      note: disc ? `${note}${note ? "\n" : ""}Kod rabatowy: ${disc.code} (−${(disc.discount / 100).toFixed(2)} zł)` : note,
+      note: [note, invoice ? invoiceText(invoice) : "", disc ? `Kod rabatowy: ${disc.code} (−${(disc.discount / 100).toFixed(2)} zł)` : ""].filter(Boolean).join("\n"),
+      invoice,
       items: stored,
       total: totalGrosze / 100,
       status: "PENDING",
@@ -161,7 +164,7 @@ export default async function (req) {
     return Response.json({ redirectUri: data.redirectUri, orderId: extOrderId });
   } catch (error) {
     // Błąd walidacji formularza = 400 (wina danych), reszta = 500.
-    const bad = /^(Brak pola|Pole .* jest zbyt długie|Niepoprawny adres e-mail|Zaakceptuj|Zaznacz|Koszyk jest pusty|Jeden z produktów|Nieprawidłowy kod|Kod |Kwota zamówienia)/.test(String(error?.message || ""));
+    const bad = /^(Brak pola|Pole .* jest zbyt długie|Niepoprawny adres e-mail|Zaakceptuj|Zaznacz|Koszyk jest pusty|Jeden z produktów|Nieprawidłowy kod|Kod |Kwota zamówienia|Podaj |Niepoprawny NIP)/.test(String(error?.message || ""));
     return Response.json({ error: error.message }, { status: bad ? 400 : 500 });
   }
 }

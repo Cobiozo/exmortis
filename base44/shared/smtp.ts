@@ -105,7 +105,7 @@ const escHtml = (v) => String(v ?? "").replace(/[&<>"]/g, (c) => ({ "&": "&amp;"
 const zl = (n) => `${Number(n || 0).toFixed(2).replace(".", ",")} zł`;
 
 // Potwierdzenie zamówienia (trwały nośnik): pozycje, numer zamówienia, Regulamin i odstąpienie.
-export function orderEmailHtml(buyerName, items, total, orderId = "") {
+export function orderEmailHtml(buyerName, items, total, orderId = "", invoice = null) {
   const rows = items
     .map(
       (p) =>
@@ -123,6 +123,7 @@ export function orderEmailHtml(buyerName, items, total, orderId = "") {
       <tr><td style="padding-top:12px;border-top:1px solid #3D3D3F;color:#8A8A8C;">RAZEM</td>
       <td style="padding-top:12px;border-top:1px solid #3D3D3F;text-align:right;color:#C9A24A;font-size:18px;">${zl(total)}</td></tr>
     </table>
+    ${invoice && invoice.nip ? `<p style="color:#8A8A8C;font-size:13px;line-height:1.6;">Dane do faktury: <span style="color:#E2E2E2;">${escHtml(invoice.company)}, NIP ${escHtml(invoice.nip)}, ${escHtml(invoice.address)}</span><br>Fakturę wyślę osobno na ten adres e-mail.</p>` : ""}
     <p style="color:#8A8A8C;font-size:13px;line-height:1.6;"><a href="${APP_URL}/regulamin" style="color:#C9A24A;">Regulamin</a> · <a href="${APP_URL}/odstapienie" style="color:#C9A24A;">Odstąpienie od umowy (formularz)</a></p>
     <p style="color:#5C5C5E;font-size:12px;letter-spacing:2px;">WRACAM Z SIEBIE · UCZĘ WRACAĆ</p>
   </div>`;

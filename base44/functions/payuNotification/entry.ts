@@ -135,7 +135,7 @@ export default async function (req) {
           kind: "zamowienie", ref: stored.id,
           to: stored.buyer_email,
           subject: "EXMORTIS — płatność przyjęta",
-          html: orderEmailHtml(stored.buyer_name || "", items, stored.total, stored.id) + accessEmailHtml(granted, !!stored.digital_consent_text),
+          html: orderEmailHtml(stored.buyer_name || "", items, stored.total, stored.id, stored.invoice || null) + accessEmailHtml(granted, !!stored.digital_consent_text),
         });
       } catch {
         // e-mail potwierdzenia jest opcjonalny — nie blokuj ack dla PayU
@@ -149,7 +149,7 @@ export default async function (req) {
         await sendMail(base44, {
           kind: "zamowienie_admin", ref: stored.id, to: admin,
           subject: `Nowe zamówienie: ${Number(stored.total || 0).toFixed(2).replace(".", ",")} zł`,
-          html: `<p>${String(stored.buyer_name || "").replace(/</g, "&lt;")} (${String(stored.buyer_email || "").replace(/</g, "&lt;")})</p><p>${list}</p><p>Numer: ${String(stored.id).slice(0, 8).toUpperCase()}</p>`,
+          html: `<p>${String(stored.buyer_name || "").replace(/</g, "&lt;")} (${String(stored.buyer_email || "").replace(/</g, "&lt;")})</p><p>${list}</p><p>Numer: ${String(stored.id).slice(0, 8).toUpperCase()}</p>${stored.invoice?.nip ? `<p><b>Faktura</b>: ${String(stored.invoice.company).replace(/</g, "&lt;")}, NIP ${String(stored.invoice.nip)}, ${String(stored.invoice.address).replace(/</g, "&lt;")}</p>` : ""}<p>Panel: Zamówienia.</p>`,
         });
       }
     } catch {
