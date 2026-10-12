@@ -13,7 +13,7 @@ export const HOME_BLOCKS = [
       { etykieta: "Która śmierć jest Twoja?", link: "/test?src=home-hero", styl: "zloty", strzalka: true },
       { etykieta: "KIM JEST EXMORTIS?", link: "#historia", styl: "obrys" },
     ],
-    dopisek: "TEST · 3 MINUTY · BEZPŁATNIE",
+    dopisek: "TEST · 5 MINUT · BEZPŁATNIE",
     tlo: { url: "https://media.base44.com/images/public/6aa08bc6318b0f886cc3b9a3/b1f31269c_generated_f9afed1e.jpg", alt: "" },
     przyciemnienie: 60 } },
   { id: "home-manifest", typ: "linie", widoczny: true, uklad: { ...LAYOUT_DEFAULT, szerokosc: "waska", odstep: "xl" }, dane: {
