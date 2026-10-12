@@ -73,7 +73,8 @@ export default function StoryEditor({ id, onClose }) {
     setD(x);
     setF({ title: x.story.title, slug: x.story.slug, summary: x.story.summary, category: x.story.category, estimated_minutes: x.story.estimated_minutes || "",
       content_warning: x.story.content_warning, start_scene_key: x.story.start_scene_key || "", sort_order: x.story.sort_order ?? 0,
-      cover_portrait_url: x.story.cover_portrait_url, cover_landscape_url: x.story.cover_landscape_url });
+      cover_portrait_url: x.story.cover_portrait_url, cover_landscape_url: x.story.cover_landscape_url,
+      reading_time: x.story.reading_time || "", visual_notes: x.story.visual_notes || "", image_style: x.story.image_style || "" });
   }).catch((e) => setErr(e.message));
   useEffect(() => { load(); }, [id]);
 
@@ -133,15 +134,27 @@ export default function StoryEditor({ id, onClose }) {
             <select className={inp} value={f.category || ""} onChange={(e) => set("category", e.target.value)}>
               <option value="">—</option><option value="mentalna">Śmierć mentalna</option><option value="duchowa">Śmierć duchowa</option><option value="zyciowa">Śmierć życiowa</option>
             </select></label>
-          <label className="block"><span className={lab}>CZAS CZYTANIA (MIN)</span><input type="number" min="0" className={inp} value={f.estimated_minutes} onChange={(e) => set("estimated_minutes", e.target.value)} /></label>
+          <label className="block"><span className={lab}>CZAS CZYTANIA (MIN, LICZBA)</span><input type="number" min="0" className={inp} value={f.estimated_minutes} onChange={(e) => set("estimated_minutes", e.target.value)} /></label>
+          <label className="block"><span className={lab}>CZAS CZYTANIA — NAPIS (NP. 12–16 MIN)</span><input className={inp} value={f.reading_time} onChange={(e) => set("reading_time", e.target.value)} /></label>
           <label className="block"><span className={lab}>SCENA STARTOWA</span>
             <select className={inp} value={f.start_scene_key} onChange={(e) => set("start_scene_key", e.target.value)}>
               {d.scenes.map((s) => <option key={s.id} value={s.scene_key}>{s.scene_key} — {s.title || "bez tytułu"}</option>)}
             </select></label>
           <label className="block"><span className={lab}>KOLEJNOŚĆ W BIBLIOTECE</span><input type="number" className={inp} value={f.sort_order} onChange={(e) => set("sort_order", e.target.value)} /></label>
           <label className="block md:col-span-2"><span className={lab}>OSTRZEŻENIE O TRUDNYCH TREŚCIACH (OPCJONALNIE)</span><textarea rows={2} className={inp} value={f.content_warning} onChange={(e) => set("content_warning", e.target.value)} /></label>
-          <div><p className={lab}>OKŁADKA PIONOWA 2:3 (BIBLIOTEKA)</p><ImageField noAlt value={f.cover_portrait_url ? { url: f.cover_portrait_url } : null} onChange={(v) => set("cover_portrait_url", v?.url || "")} /></div>
-          <div><p className={lab}>OKŁADKA POZIOMA 16:9 (KARTA HISTORII)</p><ImageField noAlt value={f.cover_landscape_url ? { url: f.cover_landscape_url } : null} onChange={(v) => set("cover_landscape_url", v?.url || "")} /></div>
+          <div className="space-y-4 min-w-0"><p className={lab}>OKŁADKA PIONOWA 2:3 (BIBLIOTEKA)</p><ImageField noAlt value={f.cover_portrait_url ? { url: f.cover_portrait_url } : null} onChange={(v) => set("cover_portrait_url", v?.url || "")} />
+            <GenBlock kind="cover_portrait" id={id} url={d.story.cover_portrait_url} candidate={d.story.cover_portrait_candidate} prompt={d.story.cover_portrait_prompt} story={d.story}
+              onSavePrompt={(v) => rz("update_story", { id, fields: { cover_portrait_prompt: v } })} onChanged={load} /></div>
+          <div className="space-y-4 min-w-0"><p className={lab}>OKŁADKA POZIOMA 16:9 (KARTA HISTORII)</p><ImageField noAlt value={f.cover_landscape_url ? { url: f.cover_landscape_url } : null} onChange={(v) => set("cover_landscape_url", v?.url || "")} />
+            <GenBlock kind="cover_landscape" id={id} url={d.story.cover_landscape_url} candidate={d.story.cover_landscape_candidate} prompt={d.story.cover_landscape_prompt} story={d.story}
+              onSavePrompt={(v) => rz("update_story", { id, fields: { cover_landscape_prompt: v } })} onChanged={load} /></div>
+          <details className="md:col-span-2 border hairline p-4">
+            <summary className="cursor-pointer technical text-[10px] text-foreground/60">POSTACIE I STYL ZDJĘĆ (DO GENEROWANIA I KOPIOWANIA PROMPTÓW)</summary>
+            <div className="grid gap-4 mt-4">
+              <label className="block"><span className={lab}>CIĄGŁOŚĆ POSTACI</span><textarea rows={3} className={inp} value={f.visual_notes} onChange={(e) => set("visual_notes", e.target.value)} /></label>
+              <label className="block"><span className={lab}>WSPÓLNY STYL (PUSTE = DOMYŚLNY STYL EXMORTIS)</span><textarea rows={3} className={inp} value={f.image_style} onChange={(e) => set("image_style", e.target.value)} /></label>
+            </div>
+          </details>
         </div>
         <button type="button" onClick={() => run("update_story", { fields: { ...f, estimated_minutes: f.estimated_minutes === "" ? 0 : Number(f.estimated_minutes) } }, "Zapisano. Klienci zobaczą zmiany po ponownej publikacji.")} disabled={!!busy} className="btn-relic">
           {busy === "update_story" && <Loader2 className="h-4 w-4 animate-spin" />} ZAPISZ DANE
@@ -151,7 +164,7 @@ export default function StoryEditor({ id, onClose }) {
       <section className="space-y-4">
         <h3 className="shop-heading text-xl text-[#F5EFE1]">Sceny ({d.scenes.length})</h3>
         <ul className="space-y-2">
-          {d.scenes.map((s) => <SceneRow key={s.id} s={s} choices={byScene(s.scene_key)} titleOf={titleOf} onSaved={load} />)}
+          {d.scenes.map((s) => <SceneRow key={s.id} s={s} story={d.story} choices={byScene(s.scene_key)} titleOf={titleOf} onSaved={load} />)}
         </ul>
       </section>
     </div>
