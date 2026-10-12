@@ -2,6 +2,7 @@ import React from "react";
 import { Link } from "react-router-dom";
 import { ArrowRight } from "lucide-react";
 import { Image } from "@/components/ui/image";
+import { isPromoActive, priceOnRequest, regularPrice, unitPrice } from "@/lib/productPrice";
 
 // Karta produktu na stronie głównej (Skarbiec).
 export default function ProductCard({ product, index = 0 }) {
@@ -47,7 +48,12 @@ export default function ProductCard({ product, index = 0 }) {
           )}
           <div className="flex items-center justify-between pt-4 border-t hairline">
             <span className="font-mono text-lg text-foreground">
-              {!Number(product.price) ? (product.is_free === false ? "PO ROZMOWIE" : "DARMOWE") : `${product.price} zł`}
+              {product.status === "wkrótce" ? "WKRÓTCE"
+                : product.is_free ? "DARMOWE"
+                : priceOnRequest(product) ? "PO ROZMOWIE"
+                : isPromoActive(product)
+                  ? <><s className="text-foreground/40 text-sm mr-2">{regularPrice(product)} zł</s>{unitPrice(product)} zł</>
+                  : `${unitPrice(product)} zł`}
             </span>
             <span className="technical text-[10px] text-foreground/50 group-hover:gold-text flex items-center gap-1 transition-colors">
               ZOBACZ <ArrowRight className="h-3 w-3" />
