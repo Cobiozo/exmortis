@@ -34,14 +34,21 @@ export default async function (req) {
     if (me.role === "zablokowane") return Response.json({ error: "Konto nieaktywne." }, { status: 403 });
     const body = await req.json().catch(() => ({}));
 
+    // Podgląd administratora „jak klient”: te same dane i widok, plus historie zaplanowane (z datą publikacji).
+    const adminPreview = body.preview === true && me.role === "admin";
+
     if (body.action === "list") {
-      return Response.json(visible(await published(base44)));
+      const rows = await published(base44);
+      if (!adminPreview) return Response.json(visible(rows));
+      const now = Date.now();
+      const v = visible(rows);
+      return Response.json({ ...v, items: rows.map((r) => ({ ...r.p.meta, ...(r.from > now ? { scheduled_at: new Date(r.from).toISOString() } : r.from && now - r.from < WEEK ? { is_new: true } : {}) })) });
     }
 
     if (body.action === "story") {
       const slug = String(body.slug || "").slice(0, 80);
       const r = (await published(base44)).find((x) => x.p.meta.slug === slug);
-      if (!r || r.from > Date.now()) return Response.json({ error: "Ta historia nie jest dostępna." }, { status: 404 });
+      if (!r || (r.from > Date.now() && !adminPreview)) return Response.json({ error: "Ta historia nie jest dostępna." }, { status: 404 });
       const p = r.p;
       // Czytnik ma już tę wersję w pamięci przeglądarki → bez ponownego przesyłania tekstu.
       if (Number(body.have) && Number(body.have) === Number(p.meta.version)) return Response.json({ meta: p.meta, same: true });
