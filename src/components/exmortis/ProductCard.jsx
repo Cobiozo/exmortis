@@ -59,6 +59,9 @@ export default function ProductCard({ product, index = 0 }) {
               ZOBACZ <ArrowRight className="h-3 w-3" />
             </span>
           </div>
+          {product.status !== "wkrótce" && !product.is_free && isPromoActive(product) && (
+            <p className="text-[11px] text-foreground/45 -mt-2">Najniższa cena z 30 dni przed obniżką: {zl(lowestPrice30(product))}</p>
+          )}
         </div>
       </Link>
 
