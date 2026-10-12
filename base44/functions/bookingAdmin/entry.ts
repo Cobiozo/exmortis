@@ -188,11 +188,13 @@ export default async function (req) {
     }
 
     if (a === "packages") {
+      await ensureTypes(base44);
+      const types = await runSql(base44, `SELECT id, slug, name, active FROM public.bk_types WHERE access = 'PAKIET' ORDER BY sort, name`, true);
       const rows = await runSql(base44, `SELECT pk.id, t.name AS type, t.id AS type_id, pk.email_display AS email, pk.sessions_total, pk.sessions_used,
           pk.valid_until, pk.min_gap_days, pk.payment_status, pk.source, pk.order_id, pk.created_at,
           (SELECT max(k.starts_at) FROM public.bk_bookings k WHERE k.package_id = pk.id AND k.status IN ('POTWIERDZONA','ODBYLA_SIE')) AS last_start
         FROM public.bk_packages pk JOIN public.bk_types t ON t.id = pk.type_id ORDER BY pk.created_at DESC LIMIT 500`, true);
-      return Response.json({ packages: rows || [], defaults: await powrotDefaults(base44) });
+      return Response.json({ packages: rows || [], types: types || [], defaults: await powrotDefaults(base44) });
     }
 
     // Domyślne parametry dostępu POWRÓT (rodzaj spotkania, liczba spotkań, odstęp, ważność).
