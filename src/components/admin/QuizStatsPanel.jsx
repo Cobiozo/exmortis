@@ -3,7 +3,7 @@ import { logAccess } from "@/lib/auditLog";
 import { Download } from "lucide-react";
 import { base44 } from "@/api/base44Client";
 
-const DOMINANTS = ["Mentalna", "Duchowa", "Życiowa", "Mieszana"];
+const DOMINANTS = ["Mentalna", "Duchowa", "Życiowa", "Mieszana", "Żadna"];
 const STAGES = ["Śmierć", "Próg", "Powrót", "Inny"];
 const FORMS = ["Mężczyzna", "Kobieta"];
 
@@ -55,12 +55,12 @@ export default function QuizStatsPanel() {
     logAccess("eksport", "Wyniki testu (CSV)");
     const header = [
       "data", "imię", "e-mail", "forma", "mentalna", "duchowa", "życiowa",
-      "dominanta", "etap", "źródło", "newsletter", "odpowiedź otwarta",
+      "skala (max)", "dominanta", "etap", "źródło", "newsletter", "odpowiedź otwarta",
     ];
     const lines = rows.map((r) =>
       [
         r.created_at, r.first_name, r.email, r.form_of_address,
-        r.score_mental, r.score_spiritual, r.score_life,
+        r.score_mental, r.score_spiritual, r.score_life, r.score_max || 12,
         r.dominant, r.stage, r.source, r.newsletter_consent ? "tak" : "nie", r.open_answer,
       ].map(csvCell).join(";")
     );
@@ -170,7 +170,7 @@ export default function QuizStatsPanel() {
                     {r.form_of_address === "Kobieta" ? "K" : "M"}
                   </span>
                   <span className="technical text-[9px] text-foreground/40">
-                    M {r.score_mental} · D {r.score_spiritual} · Ż {r.score_life}
+                    M {r.score_mental} · D {r.score_spiritual} · Ż {r.score_life} /{r.score_max || 12}
                   </span>
                   <span className="technical text-[9px] gold-text">{(r.dominant || "").toUpperCase()}</span>
                   <span className="technical text-[9px] text-[#F5EFE1]/60">ETAP: {r.stage || "—"}</span>

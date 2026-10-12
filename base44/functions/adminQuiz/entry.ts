@@ -37,7 +37,7 @@ export default async function (req) {
     }
 
     if (body.action === "list") {
-      const DOMINANTS = ["Mentalna", "Duchowa", "Życiowa", "Mieszana"];
+      const DOMINANTS = ["Mentalna", "Duchowa", "Życiowa", "Mieszana", "Żadna"];
       const STAGES = ["Śmierć", "Próg", "Powrót", "Inny"];
       const FORMS = ["Mężczyzna", "Kobieta"];
       const dateRe = /^\d{4}-\d{2}-\d{2}$/;
@@ -66,8 +66,9 @@ export default async function (req) {
       const rows = await runSql(
         base44,
         `SELECT id, created_at, first_name, email, form_of_address, score_mental, score_spiritual, score_life,
-                dominant, stage, source, newsletter_consent, open_answer
-         FROM public.quiz_result${whereSql}
+                dominant, stage, source, newsletter_consent, open_answer,
+                COALESCE((to_jsonb(q)->>'score_max')::int, 12) AS score_max
+         FROM public.quiz_result q${whereSql}
          ORDER BY created_at DESC
          LIMIT 1000`,
         true
