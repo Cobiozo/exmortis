@@ -219,6 +219,18 @@ export default async function (req) {
     // --- Tick: higiena danych (zapisy 90 dni po spotkaniu) + przypomnienia
     //     24 h / 1 h przed oraz podziękowania z nagraniem ---
     if (body.action === "tick") {
+      // Najwyżej jeden przebieg na minutę — zadanie jest publiczne (wywołuje je workflow),
+      // więc ponowne wywołania z zewnątrz nie mogą mnożyć pracy ani wysyłek.
+      const lock = await runSql(
+        base44,
+        `INSERT INTO public.app_settings (key, value, updated_date)
+           VALUES ('events_tick', jsonb_build_object('at', now()), now())
+         ON CONFLICT (key) DO UPDATE SET value = EXCLUDED.value, updated_date = now()
+           WHERE public.app_settings.updated_date < now() - interval '60 seconds'
+         RETURNING key`
+      ).catch(() => [{ key: "events_tick" }]);
+      if (!lock || !lock.length) return Response.json({ ok: true, skipped: true });
+
       await ensureTzColumn(base44);
       const queue = await flushQueue(base44).catch((e) => ({ error: e.message }));
       const retention = await (await import("../../shared/retention.ts")).runRetention(base44).catch((e) => ({ error: e.message }));
@@ -231,57 +243,57 @@ export default async function (req) {
          RETURNING r.id`
       );
       const evCols = `e.id, e.title, e.slug, e.subtitle, e.event_type, e.format,
-        e.start_datetime, e.duration_minutes, e.location, e.join_link, e.external_url, e.recording_url, e.short_path`;
-      const [due24, due1, dueRec] = await Promise.all([
-        runSql(
-          base44,
-          `SELECT r.id, r.first_name, r.email, r.cancel_token, r.tz, ${evCols}
-           FROM public.registrations r JOIN public.events e ON e.id = r.event_id
-           WHERE r.status IN ('Zapisany','Obecny') AND e.status = 'Opublikowane'
-             AND e.start_datetime IS NOT NULL
-             AND e.start_datetime > now() AND e.start_datetime <= now() + interval '24 hours'
-             AND r.reminder_24h_sent = FALSE
-           LIMIT 100`,
-          true
-        ),
-        runSql(
-          base44,
-          `SELECT r.id, r.first_name, r.email, r.cancel_token, r.tz, ${evCols}
-           FROM public.registrations r JOIN public.events e ON e.id = r.event_id
-           WHERE r.status IN ('Zapisany','Obecny') AND e.status = 'Opublikowane'
-             AND e.start_datetime IS NOT NULL
-             AND e.start_datetime > now() AND e.start_datetime <= now() + interval '1 hour'
-             AND r.reminder_1h_sent = FALSE
-           LIMIT 100`,
-          true
-        ),
-        runSql(
-          base44,
-          `SELECT r.id, r.first_name, r.email, ${evCols}
-           FROM public.registrations r JOIN public.events e ON e.id = r.event_id
-           WHERE r.status IN ('Zapisany','Obecny') AND e.status = 'Opublikowane'
-             AND e.recording_url IS NOT NULL AND e.start_datetime IS NOT NULL
-             AND e.start_datetime + (COALESCE(e.duration_minutes,60) * interval '1 minute') < now() - interval '12 hours'
-             AND r.recording_sent = FALSE
-           LIMIT 100`,
-          true
-        ),
-      ]);
+        e.start_datetime, e.duration_minutes, e.location, e.join_link, e.external_url, e.recording_url, e.short_path, e.recording_until`;
+
+      // Wiersze są PRZEJMOWANE atomowo (flaga ustawiana przed wysyłką, SKIP LOCKED), więc dwa
+      // równoległe przebiegi nigdy nie wyślą tego samego przypomnienia. Identyfikator zapisu idzie
+      // jako reg_id — wcześniej r.id i e.id miały tę samą nazwę kolumny i nadpisywały się w wyniku.
+      const claim = (flag, where, extraSet = "") => runSql(
+        base44,
+        `WITH c AS (
+           SELECT r.id FROM public.registrations r JOIN public.events e ON e.id = r.event_id
+            WHERE r.status IN ('Zapisany','Obecny') AND e.status = 'Opublikowane'
+              AND e.start_datetime IS NOT NULL AND r.${flag} = FALSE AND ${where}
+            ORDER BY e.start_datetime
+            LIMIT 100
+            FOR UPDATE OF r SKIP LOCKED
+         ), u AS (
+           UPDATE public.registrations r SET ${flag} = TRUE${extraSet}
+             FROM c WHERE r.id = c.id
+           RETURNING r.id AS reg_id, r.first_name, r.email, r.cancel_token, r.tz, r.event_id
+         )
+         SELECT u.reg_id, u.first_name, u.email, u.cancel_token, u.tz, ${evCols}
+           FROM u JOIN public.events e ON e.id = u.event_id`
+      );
+      // 24 h: tylko spotkania dalej niż godzinę stąd (bliższe dostaną od razu przypomnienie 1 h, bez dubla).
+      const due24 = await claim("reminder_24h_sent",
+        `e.start_datetime > now() + interval '1 hour' AND e.start_datetime <= now() + interval '24 hours'`);
+      const due1 = await claim("reminder_1h_sent",
+        `e.start_datetime > now() AND e.start_datetime <= now() + interval '1 hour'`, ", reminder_24h_sent = TRUE");
+      const dueRec = await claim("recording_sent",
+        `e.recording_url IS NOT NULL
+           AND e.start_datetime + (COALESCE(e.duration_minutes,60) * interval '1 minute') < now() - interval '12 hours'`);
+
+      const regOf = (row) => ({ id: row.reg_id, first_name: row.first_name, email: row.email, cancel_token: row.cancel_token, tz: row.tz });
+      // Nieudana wysyłka oddaje wiersz do kolejnego przebiegu.
+      const release = (flag, row) => runSql(base44,
+        `UPDATE public.registrations SET ${flag} = FALSE WHERE id = ${escStr(row.reg_id)}`).catch(() => {});
+      // Kilka wysyłek naraz — przed spotkaniem liczy się czas.
+      const pool = async (rows, fn, n = 5) => {
+        let i = 0;
+        await Promise.all(Array.from({ length: Math.min(n, rows.length) }, async () => {
+          while (i < rows.length) { const row = rows[i++]; await fn(row); }
+        }));
+      };
 
       waitUntil(
         (async () => {
-          for (const row of due24) {
-            try {
-              await sendReminderMail(base44, row, row, "24h");
-              await runSql(base44, `UPDATE public.registrations SET reminder_24h_sent = TRUE WHERE id = ${escStr(row.id)}`);
-            } catch {}
-          }
-          for (const row of due1) {
-            try {
-              await sendReminderMail(base44, row, row, "1h");
-              await runSql(base44, `UPDATE public.registrations SET reminder_1h_sent = TRUE WHERE id = ${escStr(row.id)}`);
-            } catch {}
-          }
+          await pool(due1, async (row) => {
+            try { await sendReminderMail(base44, row, regOf(row), "1h"); } catch { await release("reminder_1h_sent", row); }
+          });
+          await pool(due24, async (row) => {
+            try { await sendReminderMail(base44, row, regOf(row), "24h"); } catch { await release("reminder_24h_sent", row); }
+          });
           if (dueRec.length > 0) {
             const next = await runSql(
               base44,
@@ -289,16 +301,13 @@ export default async function (req) {
                WHERE status = 'Opublikowane' AND start_datetime > now()
                ORDER BY start_datetime ASC LIMIT 1`,
               true
-            );
+            ).catch(() => []);
             const inviteHtml = (next && next[0])
               ? `<p style="margin-top:24px;color:#8A8A8C;">Najbliższe spotkanie: «${next[0].title}» — ${plWhen(next[0].start_datetime)}. <a href="${APP_URL}/spotkania/${next[0].slug}" style="color:#C9A24A;">Zobacz i zapisz się</a>.</p>`
               : `<p style="margin-top:24px;color:#8A8A8C;">Jeśli chcesz porozmawiać o własnym powrocie — <a href="${APP_URL}/powrot" style="color:#C9A24A;">umów rozmowę kwalifikacyjną POWRÓT</a>.</p>`;
-            for (const row of dueRec) {
-              try {
-                await sendRecordingMail(base44, row, row, inviteHtml);
-                await runSql(base44, `UPDATE public.registrations SET recording_sent = TRUE WHERE id = ${escStr(row.id)}`);
-              } catch {}
-            }
+            await pool(dueRec, async (row) => {
+              try { await sendRecordingMail(base44, row, regOf(row), inviteHtml); } catch { await release("recording_sent", row); }
+            });
           }
         })()
       );

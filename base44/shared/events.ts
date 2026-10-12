@@ -210,7 +210,7 @@ export async function sendRecordingMail(base44, ev, reg, inviteHtml) {
   return sendMail(base44, {
     kind: "nagranie", ref: reg.id, waznyDo: ev.recording_until || undefined,
     to: reg.email,
-    subject: `EXMORTIS · Dziękuję, że byłeś/byłaś — ${ev.title}`,
+    subject: `EXMORTIS · Dziękuję za obecność — ${ev.title}`,
     html: shell(ev, 
       `<h1 style="font-size:24px;">Dziękuję, że byłeś/byłaś</h1>` +
         `<p style="line-height:1.7;">${escHtml(reg.first_name)}, nagranie ze spotkania «${escHtml(ev.title)}» czeka na Ciebie:</p>` +
