@@ -11,6 +11,12 @@ import FreeOrderForm from "@/components/exmortis/shop/FreeOrderForm";
 // Zmienione adresy produktów: stary → nowy.
 const OLD_SLUGS = { "krag-mezczyzn-rzeszow": "krag-mezczyzn" };
 
+// Porównanie tekstów bez znaczników, wielkości liter i odstępów — żeby to samo zdanie nie stało trzy razy pod sobą.
+const sameText = (a, b) => {
+  const n = (x) => String(x || "").replace(/<[^>]*>/g, " ").replace(/\s+/g, " ").trim().toLowerCase();
+  return !!n(a) && n(a) === n(b);
+};
+
 export default function ProductDetail() {
   const { slug } = useParams();
   const navigate = useNavigate();
@@ -105,9 +111,11 @@ export default function ProductDetail() {
               )}
             </div>
 
-            <p className="text-foreground/70 leading-relaxed text-lg mb-8">{product.description}</p>
+            {product.description && !sameText(product.description, product.subtitle) && (
+              <p className="text-foreground/70 leading-relaxed text-lg mb-8">{product.description}</p>
+            )}
 
-            {product.long_description &&
+            {product.long_description && !sameText(product.long_description, product.description) && !sameText(product.long_description, product.subtitle) &&
               (product.long_description.includes("<") ? (
                 <div
                   className="rich-content text-foreground/60 leading-relaxed mb-8"
@@ -120,26 +128,20 @@ export default function ProductDetail() {
               ))}
 
             {/* Meta */}
-            <div className="grid grid-cols-2 gap-px bg-[#3D3D3F]/40 mb-8">
-              {product.format && (
-                <div className="bg-[#0A0A0B] p-4">
-                  <p className="technical text-[9px] text-foreground/40 mb-1">FORMAT</p>
-                  <p className="text-sm">{product.format}</p>
+            {(() => {
+              const meta = [["FORMAT", product.format], ["CZAS", product.duration], ["MIEJSCA", product.spots]].filter(([, v]) => v);
+              if (!meta.length) return null;
+              return (
+                <div className="grid grid-cols-2 gap-px bg-[#3D3D3F]/40 mb-8">
+                  {meta.map(([k, v], i) => (
+                    <div key={k} className={`bg-[#0A0A0B] p-4 ${meta.length % 2 === 1 && i === meta.length - 1 ? "col-span-2" : ""}`}>
+                      <p className="technical text-[9px] text-foreground/40 mb-1">{k}</p>
+                      <p className="text-sm">{v}</p>
+                    </div>
+                  ))}
                 </div>
-              )}
-              {product.duration && (
-                <div className="bg-[#0A0A0B] p-4">
-                  <p className="technical text-[9px] text-foreground/40 mb-1">CZAS</p>
-                  <p className="text-sm">{product.duration}</p>
-                </div>
-              )}
-              {product.spots && (
-                <div className="bg-[#0A0A0B] p-4">
-                  <p className="technical text-[9px] text-foreground/40 mb-1">MIEJSCA</p>
-                  <p className="text-sm">{product.spots}</p>
-                </div>
-              )}
-            </div>
+              );
+            })()}
 
             {/* Details */}
             {product.details?.length > 0 && (
