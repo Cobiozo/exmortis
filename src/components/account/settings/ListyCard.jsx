@@ -32,7 +32,7 @@ export default function ListyCard() {
   return (
     <SettingsCard title="Listy powrotu">
       {state === null && failed ? (
-        <p className="text-sm text-[#E2E2E2]/70">Nie udało się wczytać ustawienia. <button type="button" onClick={loadState} disabled={busy} className={`${LINK} text-sm`}>Spróbuj ponownie</button></p>
+        <p className="text-sm text-[#E2E2E2]/70">Nie udało się wczytać tego ustawienia. <button type="button" onClick={loadState} disabled={busy} className={`${LINK} text-sm`}>Spróbuj ponownie</button></p>
       ) : state === null ? <Loader2 className="h-5 w-5 animate-spin text-[#C9A24A]" aria-label="Wczytywanie" /> : (
         <button type="button" role="switch" aria-checked={on} onClick={toggle} disabled={busy}
           className={`w-full flex items-center gap-4 min-h-[44px] py-2 text-left cursor-pointer group ${FOCUS}`}>
