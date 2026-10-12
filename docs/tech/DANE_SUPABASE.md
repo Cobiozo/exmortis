@@ -48,13 +48,14 @@ Tabele i funkcje SQL wykryte w kodzie serwera. Dostęp: funkcje Base44 łączą 
 | page_content | base44/functions/adminContent, base44/shared/publicData.ts |
 | podcast_applications | base44/functions/adminDashboard |
 | powrot_applications | base44/functions/adminDashboard, base44/functions/createPowrotApplication, base44/functions/gdprPerson, base44/shared/retention.ts |
-| products | base44/functions/adminClients, base44/functions/adminDashboard, base44/functions/adminProducts, base44/functions/bookingAdmin, base44/functions/checkDiscount, base44/functions/libraryAdmin, base44/functions/myAccount, base44/functions/orderFree, base44/functions/payuCreateOrder, base44/functions/payuNotification, base44/functions/shopProducts, base44/functions/shopQuizSubmit, base44/functions/sitemap |
+| product_price_daily | base44/shared/productPrice.ts |
+| products | base44/functions/adminClients, base44/functions/adminDashboard, base44/functions/adminOrders, base44/functions/adminProducts, base44/functions/bookingAdmin, base44/functions/checkDiscount, base44/functions/libraryAdmin, base44/functions/myAccount, base44/functions/orderFree, base44/functions/payuCreateOrder, base44/functions/payuNotification, base44/functions/shopProducts, base44/functions/shopQuizSubmit, base44/functions/shopWaitlist, base44/functions/sitemap, base44/shared/productPrice.ts |
 | quiz_result | base44/functions/adminQuiz, base44/functions/shopQuizSubmit, base44/shared/retention.ts |
 | registrations | base44/functions/adminDashboard, base44/functions/announcements, base44/functions/eventsAdmin, base44/functions/eventsCancel, base44/functions/eventsPublic, base44/functions/myEvents, base44/shared/publicData.ts, base44/shared/registrations.ts |
 | silence_sessions | base44/functions/adminDashboard, base44/functions/silenceAdmin, base44/functions/silenceSession |
 | silence_settings | base44/functions/adminDashboard, base44/functions/silenceAdmin |
 | subscribers | base44/functions/adminDashboard, base44/functions/adminNewsletter, base44/functions/adminSubscribers, base44/functions/mySettings, base44/shared/newsletter.ts, base44/shared/smtp.ts |
-| waitlist | base44/functions/adminDashboard, base44/functions/adminProducts, base44/functions/shopWaitlist |
+| waitlist | base44/functions/adminDashboard, base44/functions/adminOrders, base44/functions/adminProducts, base44/functions/cmsScheduled, base44/functions/shopWaitlist |
 | webinar_1_11 | base44/functions/webinarSignup |
 
 ## Funkcje SQL (RPC)

@@ -10,8 +10,8 @@ Adres: `https://exmortis.pl/functions/<nazwa>` (POST, JSON; z przeglądarki prze
 | adminContent | Panel: treści stron (CMS) — lista, zapis, usuwanie bloków. | admin | list, save, delete | 2 plików front |
 | adminDashboard | Pulpit panelu: liczniki (spotkania, zapisy, produkty, zamówienia, faktury) i baza kontaktów. | admin | contacts | 2 plików front |
 | adminNewsletter | Moduł newslettera: grupy odbiorców, kampanie i wysyłki przez SMTP. | admin |  | 3 plików front |
-| adminOrders | Panel admina: zamówienia ze Skarbca (lista, podsumowanie, oznaczanie wystawionych faktur). | admin | list, invoice_issued | 1 plików front |
-| adminProducts | Panel: produkty Skarbca (Supabase products) — lista z liczbą osób na liście oczekujących, zapis, usuwanie. | admin | list, save, delete | 4 plików front |
+| adminOrders | Panel admina: zamówienia ze Skarbca (lista, podsumowanie, oznaczanie wystawionych faktur). | admin | list, stats, invoice_issued | 2 plików front |
+| adminProducts | Panel: produkty Skarbca (Supabase products) — lista z liczbą osób na liście oczekujących, zapis, usuwanie. | admin | list, save, waitlist, waitlist_notify, delete | 5 plików front |
 | adminQuiz | Wyniki testu "Która śmierć jest Twoja?" dla panelu administratora: | admin | stats, list | 1 plików front |
 | adminSettings | Panel: ustawienia strony (dane firmy, premiera, Zoom, ochrona filmów, PayU, dokumenty). | admin | get, save, zoom_get, zoom_save, video_get, video_save, video_new_key, video_sign_preview, delete | 10 plików front |
 | adminSubscribers | Panel: subskrybenci newslettera. | admin | list, save, delete | 1 plików front |
@@ -20,7 +20,7 @@ Adres: `https://exmortis.pl/functions/<nazwa>` (POST, JSON; z przeglądarki prze
 | bookingPublic | Publiczne rezerwacje 1:1. Zwraca wyłącznie godziny i dane potrzebne formularzowi — nigdy linku Zoom ani cudzych danych. | admin / zalogowany |  | 9 plików front, 2 zad. cykl. |
 | bootstrap | Jedno wywołanie startowe gościa: ustawienia + treści + strona z edytora + spotkanie. | publiczna |  | 1 plików front, 1 zad. cykl. |
 | checkDiscount | Podgląd rabatu w kasie (ostateczne wyliczenie i tak robi payuCreateOrder). | publiczna |  | 1 plików front |
-| cmsScheduled | Publikuje strony zaplanowane na termin, który już minął (wywoływane cyklicznie). | publiczna |  | 0 plików front, 1 zad. cykl. |
+| cmsScheduled | Higiena listy oczekujących (raz na dobę na instancję): 90 dni po powiadomieniu, a bez powiadomienia po 12 miesiącach. | publiczna |  | 0 plików front, 1 zad. cykl. |
 | course | Kurs klienta: spis lekcji, podpisany link do wideo (po sprawdzeniu dostępu), postęp. | zalogowany | outline, play, violation, progress | 2 plików front |
 | createContactMessage | Publiczny formularz kontaktowy (pole-pułapka na boty). | publiczna |  | 2 plików front |
 | createPodcastApplication | Publiczne zgłoszenie gościa podcastu (limit 3/h z IP). | publiczna |  | 1 plików front |
@@ -48,7 +48,7 @@ Adres: `https://exmortis.pl/functions/<nazwa>` (POST, JSON; z przeglądarki prze
 | rozdrozaAdmin | ROZDROŻA — administracja (tylko rola admin): import z JSON, okładki i obrazy scen, | admin |  | 2 plików front |
 | shopProducts | Publiczny katalog Skarbca: produkty dostępne i "wkrótce", posortowane po poziomie drabiny. | publiczna | curriculum | 6 plików front |
 | shopQuizSubmit | Publiczne przesłanie testu "Która śmierć jest Twoja?": zapis pełnego wyniku, | publiczna |  | 1 plików front |
-| shopWaitlist | Publiczny zapis na listę oczekujących przy produkcie "wkrótce". | publiczna |  | 1 plików front |
+| shopWaitlist | Publiczny zapis na listę oczekujących przy produkcie "wkrótce" (limit 10 zapisów na godzinę z jednego IP). | publiczna |  | 1 plików front |
 | silenceAdmin | Administracja Minutnikiem ciszy: pliki audio (ustawienia) i anonimowe statystyki. | admin | get, save, stats30, stats | 2 plików front |
 | silenceSession | Publiczny, anonimowy zapis zdarzenia ciszy: cisza_start / cisza_ukonczona (bez danych osobowych). | publiczna |  | 1 plików front |
 | siteContent | Publiczne odczyty treści stron — z kopii w bazie aplikacji, odświeżanej z Supabase w tle. | publiczna |  | 1 plików front |
