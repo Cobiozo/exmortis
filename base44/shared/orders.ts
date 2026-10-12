@@ -61,11 +61,38 @@ export async function getOrderByPayuId(base44, payuOrderId) {
   return rows && rows.length > 0 ? rows[0] : null;
 }
 
+// COMPLETED i CANCELED są końcowe — spóźnione powiadomienie (np. PENDING po COMPLETED) ich nie cofa.
 export async function updateOrderStatus(base44, payuOrderId, status) {
   await runSql(
     base44,
     `UPDATE public.orders
      SET status = ${escStr(status)}, updated_date = now()
-     WHERE payu_order_id = ${escStr(payuOrderId)}`
+     WHERE payu_order_id = ${escStr(payuOrderId)} AND status NOT IN ('COMPLETED', 'CANCELED')`
   );
+}
+
+// Atomowe przejęcie pierwszego COMPLETED: tylko jedno wywołanie dostaje wiersz (równoległe i ponowione powiadomienia — nic).
+export async function claimCompletion(base44, payuOrderId) {
+  const rows = await runSql(
+    base44,
+    `UPDATE public.orders
+     SET status = 'COMPLETED', updated_date = now()
+     WHERE payu_order_id = ${escStr(payuOrderId)} AND status NOT IN ('COMPLETED', 'CANCELED')
+     RETURNING id`
+  );
+  return Array.isArray(rows) && rows.length > 0;
+}
+
+// Cofnięcie przejęcia, gdy obsługa się nie udała — PayU ponówi powiadomienie.
+export async function releaseCompletion(base44, payuOrderId, previous) {
+  await runSql(
+    base44,
+    `UPDATE public.orders SET status = ${escStr(previous || "PENDING")}, updated_date = now()
+     WHERE payu_order_id = ${escStr(payuOrderId)} AND status = 'COMPLETED'`
+  );
+}
+
+export async function getOrderStatus(base44, id) {
+  const rows = await runSql(base44, `SELECT status FROM public.orders WHERE id = ${escStr(id)} LIMIT 1`, true);
+  return rows && rows.length ? String(rows[0].status || "") : null;
 }
