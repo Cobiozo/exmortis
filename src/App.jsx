@@ -11,6 +11,7 @@ import Layout from '@/components/exmortis/Layout';
 import HomeSwitch from '@/components/prelaunch/HomeSwitch';
 import PrelaunchGate from '@/components/prelaunch/PrelaunchGate';
 const About = lazyPage(() => import('@/pages/About'));
+const Rozdroza = lazyPage(() => import('@/pages/Rozdroza'));
 const ShopPage = lazyPage(() => import('@/pages/ShopPage'));
 const Checkout = lazyPage(() => import('@/pages/Checkout'));
 const Powrot = lazyPage(() => import('@/pages/Powrot'));
@@ -103,6 +104,7 @@ const AuthenticatedApp = () => {
           <Route element={<Layout />}>
             <Route path="/konto" element={<Account />} />
             <Route path="/konto/kurs/:accessId" element={<CoursePlayer />} />
+            <Route path="/konto/rozdroza/*" element={<Rozdroza />} />
           </Route>
         </Route>
         <Route path="/cisza" element={<Cisza />} />
