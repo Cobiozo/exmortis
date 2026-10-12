@@ -5,6 +5,7 @@ import { base44 } from "@/api/base44Client";
 // Lista oczekujących produktu: kto czeka, eksport CSV i jednorazowe powiadomienie „już dostępne”.
 // Wysyłka partiami po 20 (serwer), każda osoba najwyżej raz; bez działającej wysyłki e-mail serwer odmawia.
 const call = (body) => base44.functions.invoke("adminProducts", body).then((r) => r.data);
+const osob = (n) => (n === 1 ? "osoba" : [2, 3, 4].includes(n % 10) && ![12, 13, 14].includes(n % 100) ? "osoby" : "osób");
 const when = (s) => (s ? new Date(s).toLocaleString("pl-PL", { timeZone: "Europe/Warsaw", dateStyle: "short", timeStyle: "short" }) : "");
 
 export default function WaitlistPanel({ product, onClose }) {
@@ -54,7 +55,7 @@ export default function WaitlistPanel({ product, onClose }) {
         <p className="technical text-[9px] gold-text mb-2">LISTA OCZEKUJĄCYCH</p>
         <h3 className="relic-heading text-2xl mb-1">{product.name}</h3>
         <p className="text-sm text-foreground/60 mb-6">
-          {rows ? `${rows.length} ${rows.length === 1 ? "osoba" : "osób"} · czeka na powiadomienie: ${pending}` : "Wczytuję…"}
+          {rows ? `${rows.length} ${osob(rows.length)} · czeka na powiadomienie: ${pending}` : "Wczytuję…"}
         </p>
 
         {rows && rows.length > 0 && (
