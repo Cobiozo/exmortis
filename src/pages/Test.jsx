@@ -167,7 +167,7 @@ export default function Test({ d = {} }) {
                   czasem przez stratę, po której nic nie jest takie jak wcześniej.
                 </p>
                 <p>
-                  Piętnaście stwierdzeń o ostatnich czterech tygodniach, około pięciu minut. Na końcu zobaczysz, ile jest
+                  Piętnaście stwierdzeń o ostatnich czterech tygodniach, kilka minut. Na końcu zobaczysz, ile jest
                   w Tobie dziś śmierci mentalnej, duchowej i życiowej — albo że żadna z nich nie dominuje — oraz na którym
                   etapie drogi jesteś. Odpowiadaj szczerze, pierwszą myślą. Nie ma dobrych ani złych odpowiedzi.
                 </p>
