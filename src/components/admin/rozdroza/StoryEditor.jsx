@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { ArrowLeft, Loader2, Eye, ChevronDown } from "lucide-react";
 import ImageField from "@/components/admin/cms/ImageField";
-import { rz, statusBadge } from "./RozdrozaAdmin";
+import { rz, statusBadge } from "./rzApi";
 
 const inp = "w-full bg-[#0A0A0B] border hairline px-3 py-2.5 text-sm text-foreground focus:border-[#C9A24A] focus:outline-none";
 const lab = "technical text-[10px] text-foreground/55 block mb-1.5";

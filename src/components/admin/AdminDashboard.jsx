@@ -78,6 +78,7 @@ export default function AdminDashboard() {
           { to: "/admin/cisza", title: "Cisza", lines: [`Utwory: ${sound ? sound.length : "…"}`, `Ostrzeżenia: ${sound ? countWarnings(sound) : "…"}`, `Rozpoczęcia (30 dni): ${v("silence_30")}`] },
           { to: "/admin/glos", title: "Głos", lines: ["Utwory i podcasty"] },
           { to: "/admin/podcast", title: "Podcast", lines: ["Odcinki, playlisty, goście, ustawienia"] },
+          { to: "/admin/rozdroza", title: "Rozdroża", lines: ["Interaktywne historie w koncie klienta", "Import, obrazy scen, publikacja"] },
           { to: "/admin/newsletter", title: "Newsletter", lines: ["Subskrybenci, grupy, kampanie"] },
         ]],
         ["DANE I WYNIKI", [

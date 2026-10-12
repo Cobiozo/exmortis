@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { Suspense, lazy, useEffect, useState } from "react";
 import { Link, useParams } from "react-router-dom";
 import { base44 } from "@/api/base44Client";
 import Logo from "@/components/exmortis/Logo";
@@ -32,6 +32,7 @@ import GroupsTab from "@/components/admin/library/GroupsTab";
 import MessagesPanel from "@/components/admin/library/MessagesPanel";
 import HistoryPanel from "@/components/admin/library/HistoryPanel";
 import OrdersPanel from "@/components/admin/orders/OrdersPanel";
+const RozdrozaAdmin = lazy(() => import("@/components/admin/rozdroza/RozdrozaAdmin"));
 
 const SECTIONS = {
   spotkania: ["Spotkania", () => <EventsManager />],
@@ -45,6 +46,7 @@ const SECTIONS = {
   kontakty: ["Baza kontaktów", () => <ContactsTabs />],
   podcast: ["Podcast", () => <PodcastAdmin />],
   obok: ["Obok", () => <ObokAdmin />],
+  rozdroza: ["Rozdroża", () => <Suspense fallback={<div className="w-6 h-6 border-2 border-[#3D3D3F] border-t-[#C9A24A] rounded-full animate-spin" />}><RozdrozaAdmin /></Suspense>],
   klienci: ["Klienci i dostępy", () => <ClientsPanel />],
   biblioteka: ["Biblioteka", () => <LibraryPanel />],
   grupy: ["Grupy", () => <GroupsTab />],

@@ -1,11 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { Loader2, Upload } from "lucide-react";
-import { base44 } from "@/api/base44Client";
 import StoryEditor from "./StoryEditor";
-
-export const rz = (action, p = {}) => base44.functions.invoke("rozdrozaAdmin", { action, ...p })
-  .then((r) => r.data)
-  .catch((e) => { const err = new Error(e?.response?.data?.error || "Nie udało się."); err.report = e?.response?.data?.report; throw err; });
+import { rz, statusBadge } from "./rzApi";
 
 const EXAMPLE = `{
   "story": {
@@ -25,10 +21,6 @@ const EXAMPLE = `{
     { "source_scene_key": "s02", "target_scene_key": "…", "label": "…", "sort_order": 1 }
   ]
 }`;
-
-export const statusBadge = (s) => s.status === "published"
-  ? <span className={`technical text-[9px] px-2 py-1 border ${s.changed ? "border-[#E8C547]/60 text-[#E8C547]" : "border-[#9FD3A0]/50 text-[#9FD3A0]"}`}>{s.changed ? `OPUBLIKOWANA v${s.version} · ZMIANY CZEKAJĄ` : `OPUBLIKOWANA v${s.version}`}</span>
-  : <span className="technical text-[9px] px-2 py-1 border hairline text-foreground/55">SZKIC</span>;
 
 // Panel → ROZDROŻA: import historii (JSON), lista, edycja okładek i obrazów, publikacja sprawdzonych wersji.
 export default function RozdrozaAdmin() {
