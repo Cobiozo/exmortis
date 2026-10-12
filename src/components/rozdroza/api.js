@@ -14,11 +14,20 @@ const status = (e) => e?.response?.status || e?.status || 0;
 const message = (e, fb) => e?.response?.data?.error || fb;
 
 let list = null;
+let pvList = null; // lista w podglądzie administratora (z historiami zaplanowanymi) — tylko w pamięci
 const snaps = new Map();
 
 const call = (p) => base44.functions.invoke("rozdroza", p).then((r) => r.data);
 
-export const cachedList = () => list?.items || store.get(LIST_KEY)?.items || null;
+// Podgląd administratora „jak klient” (włączany linkiem z panelu, trzyma się do zamknięcia karty).
+// Serwer i tak sprawdza rolę — u klienta flaga nic nie zmienia.
+const PV_KEY = "exm_rz_admin_pv";
+export const adminPreview = {
+  on() { try { return sessionStorage.getItem(PV_KEY) === "1"; } catch { return false; } },
+  set(v) { try { if (v) sessionStorage.setItem(PV_KEY, "1"); else sessionStorage.removeItem(PV_KEY); } catch { /* */ } pvList = null; },
+};
+
+export const cachedList = () => (adminPreview.on() ? pvList?.items || null : list?.items || store.get(LIST_KEY)?.items || null);
 // „w sobotę, 17 października, o 20:00” (czas polski).
 const DAYS = ["w niedzielę", "w poniedziałek", "we wtorek", "w środę", "w czwartek", "w piątek", "w sobotę"];
 export function plWhen(iso) {
@@ -29,9 +38,17 @@ export function plWhen(iso) {
   return `${DAYS[wd]}, ${day}, o ${p.hour}:${p.minute}`;
 }
 // Data najbliższej zaplanowanej historii (bez tytułu) — tylko jeśli wciąż w przyszłości.
-export const nextAt = () => { const v = (list || store.get(LIST_KEY))?.next_at; return v && Date.parse(v) > Date.now() ? v : null; };
+export const nextAt = () => { const v = (adminPreview.on() ? pvList : list || store.get(LIST_KEY))?.next_at; return v && Date.parse(v) > Date.now() ? v : null; };
 
 export async function listStories({ fresh = false } = {}) {
+  if (adminPreview.on()) {
+    if (!fresh && pvList && Date.now() - pvList.at < 60000) return pvList.items;
+    try {
+      const d = await call({ action: "list", preview: true });
+      pvList = { at: Date.now(), items: d.items || [], next_at: d.next_at || null };
+      return pvList.items;
+    } catch (e) { throw new Error(message(e, "Nie udało się wczytać biblioteki.")); }
+  }
   if (!fresh && list && Date.now() - list.at < 300000) return list.items;
   try {
     const d = await call({ action: "list" });
@@ -49,7 +66,7 @@ export async function listStories({ fresh = false } = {}) {
 export async function loadStory(slug) {
   const local = snaps.get(slug) || store.get(snapKey(slug));
   try {
-    const d = await call({ action: "story", slug, have: local?.meta?.version || 0 });
+    const d = await call({ action: "story", slug, have: local?.meta?.version || 0, ...(adminPreview.on() ? { preview: true } : {}) });
     const out = d.same && local?.snapshot ? { meta: d.meta, snapshot: local.snapshot } : { meta: d.meta, snapshot: d.snapshot };
     snaps.set(slug, out);
     store.set(snapKey(slug), out);
