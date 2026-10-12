@@ -40,7 +40,7 @@ export default function BulkImages({ id, story, scenes, onChanged }) {
     for (const t of list) {
       if (stop.current) break;
       st.current = t.label; setRun({ ...st });
-      try { await rz("generate", { kind: t.kind, id: t.id }); }
+      try { await rz("generate", { kind: t.kind, id: t.id }); onChanged?.(); } // kadr od razu w „Czekają na zatwierdzenie”
       catch (e) {
         st.errors.push(`${t.label}: ${e.message}`);
         if (FATAL.test(e.message)) { st.done++; setRun({ ...st }); break; }
