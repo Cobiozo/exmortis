@@ -9,6 +9,7 @@ export default function ListyCard() {
   const [state, setState] = useState(null);
   const [busy, setBusy] = useState(false);
   const [msg, setMsg] = useState("");
+  const [failed, setFailed] = useState(false);
   const call = async (action) => {
     setBusy(true); setMsg("");
     const r = await base44.functions.invoke("mySettings", { action }).catch((e) => ({ data: e.response?.data || {} }));
@@ -16,7 +17,9 @@ export default function ListyCard() {
     if (r.data.state) setState(r.data.state);
     return r.data;
   };
-  useEffect(() => { call("listy"); }, []);
+  // Błąd odczytu → komunikat z ponowieniem zamiast nieskończonego kółka.
+  const loadState = () => { setFailed(false); call("listy").then((d) => { if (!d.state) setFailed(true); }); };
+  useEffect(loadState, []);
 
   const toggle = async () => {
     if (busy || state === null) return;
@@ -28,7 +31,9 @@ export default function ListyCard() {
 
   return (
     <SettingsCard title="Listy powrotu">
-      {state === null ? <Loader2 className="h-5 w-5 animate-spin text-[#C9A24A]" /> : (
+      {state === null && failed ? (
+        <p className="text-sm text-[#E2E2E2]/70">Nie udało się wczytać ustawienia. <button type="button" onClick={loadState} disabled={busy} className={`${LINK} text-sm`}>Spróbuj ponownie</button></p>
+      ) : state === null ? <Loader2 className="h-5 w-5 animate-spin text-[#C9A24A]" aria-label="Wczytywanie" /> : (
         <button type="button" role="switch" aria-checked={on} onClick={toggle} disabled={busy}
           className={`w-full flex items-center gap-4 min-h-[44px] py-2 text-left cursor-pointer group ${FOCUS}`}>
           <span className={`relative shrink-0 w-12 h-7 rounded-full transition-colors ${state === "on" ? "bg-[#C9A24A]" : state === "pending" ? "bg-[#C9A24A]/50" : "bg-[#5A5A5C]"}`}>
