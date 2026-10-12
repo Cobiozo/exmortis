@@ -55,31 +55,58 @@ export default function AdminDashboard() {
     <MailWarning />
     <ZoomWarning items={s?.zoom_missing} />
     <FallbackWarning />
-    <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
-      <Tile to="/admin/ogloszenia" label="19" title="Ogłoszenia" lines={["Na koncie klienta, bez e-maili"]} />
-      <Tile to="/admin/rezerwacje" label="20" title="Rezerwacje 1:1" lines={["Rodzaje, godziny, blokady, święta"]} />
-      <Tile to="/admin/obok" label="17" title="Obok" lines={["Serie, nagrania, uczestnicy"]} />
-      <Tile to="/admin/ustawienia" label="16" title="Ustawienia strony" lines={["Dane firmy", "Tryb przedpremierowy", "Wysyłka e-mail"]} />
-      <Tile to="/admin/spotkania" label="01" title="Spotkania" lines={[`Nadchodzące: ${v("upcoming_events")}`, `Zapisani: ${v("upcoming_registrations")}`, `Szkice: ${v("draft_events")}`]} />
-      <Tile to="/admin/cisza" label="02" title="Cisza" lines={[`Utwory: ${sound ? sound.length : "…"}`, `Ostrzeżenia: ${sound ? countWarnings(sound) : "…"}`, `Rozpoczęcia (30 dni): ${v("silence_30")}`]} />
-      <Tile to="/admin/skarbiec" label="03" title="Skarbiec" lines={[`Dostępne: ${v("products_available")}`, `Wkrótce: ${v("products_soon")}`, `Ukryte: ${v("products_hidden")}`]} />
-      <Tile to="/admin/statystyki" label="04" title="Statystyki" lines={["Ostatnie 30 dni:", `Zapisy: ${v("reg_30")}`, `Pobrania: ${v("downloads_30")}`, `Rozpoczęcia ciszy: ${v("silence_30")}`]} />
-      <Tile to="/admin/glos" label="05" title="Głos" lines={["Utwory i podcasty"]} />
-      <Tile to="/admin/kontakty" label="06" title="Baza kontaktów" lines={["Wszystkie formularze w jednym miejscu", `Nowe zgłoszenia do podcastu: ${newApps ?? "…"}`]} />
-      <Tile to="/admin/podcast" label="15" title="Podcast" lines={["Odcinki, playlisty, goście, ustawienia"]} />
-      <Tile to="/admin/newsletter" label="07" title="Newsletter" lines={["Subskrybenci, grupy, kampanie"]} />
-      <Tile to="/admin/tresci" label="08" title="Treści stron" lines={["Edycja tekstów"]} />
-      <Tile to="/admin/integracje" label="09" title="Integracje" lines={["Płatności, adres aplikacji"]} />
-      <Tile to="/admin/testy" label="10" title="Wyniki testu" lines={["Odpowiedzi z testu"]} />
-      <Tile to="/admin/klienci" label="11" title="Klienci i dostępy" lines={["Nadawanie, przedłużenia, dziennik odtworzeń"]} />
-      {libOn && <Tile to="/admin/biblioteka" label="21" title="Biblioteka" lines={["Materiały, kolekcje, przydziały"]} />}
-      {libOn && <Tile to="/admin/grupy" label="22" title="Grupy" lines={["Ręczne i automatyczne, znaczniki"]} />}
-      {libOn && <DashboardLibraryTile />}
-      <Tile to="/admin/rabaty" label="12" title="Kody rabatowe" lines={["Procent lub kwota, limity, terminy"]} />
-      <Tile to="/admin/bezpieczenstwo" label="13" title="Bezpieczeństwo" lines={["Alerty, blokady, znajdź właściciela kopii"]} />
-      <Tile to="/admin/dane-osoby" label="18" title="Dane osoby (RODO)" lines={["Znajdź / usuń / wyeksportuj po e-mailu", "Obie bazy naraz"]} />
-      <Tile to="/" onClick={() => setMode("admin")} label="14" title="Podgląd strony" lines={["Otwórz stronę z paskiem admina"]} />
-    </div>
+    {(() => {
+      // Kafelki w czterech grupach; numeracja liczona po kolei, więc ukryte kafelki nie robią dziur.
+      const groups = [
+        ["CODZIENNA PRACA", [
+          { to: "/admin/spotkania", title: "Spotkania", lines: [`Nadchodzące: ${v("upcoming_events")}`, `Zapisani: ${v("upcoming_registrations")}`, `Szkice: ${v("draft_events")}`] },
+          { to: "/admin/rezerwacje", title: "Rezerwacje 1:1", lines: ["Rodzaje, godziny, blokady, święta"] },
+          { to: "/admin/klienci", title: "Klienci i dostępy", lines: ["Nadawanie, przedłużenia, dziennik odtworzeń"] },
+          libOn && { to: "/admin/wiadomosci", lib: true },
+          libOn && { to: "/admin/biblioteka", title: "Biblioteka", lines: ["Materiały, kolekcje, przydziały"] },
+          libOn && { to: "/admin/grupy", title: "Grupy", lines: ["Ręczne i automatyczne, znaczniki"] },
+          { to: "/admin/ogloszenia", title: "Ogłoszenia", lines: ["Na koncie klienta, bez e-maili"] },
+          { to: "/admin/obok", title: "Obok", lines: ["Serie, nagrania, uczestnicy"] },
+        ]],
+        ["SKLEP I TREŚCI", [
+          { to: "/admin/skarbiec", title: "Skarbiec", lines: [`Dostępne: ${v("products_available")}`, `Wkrótce: ${v("products_soon")}`, `Ukryte: ${v("products_hidden")}`] },
+          { to: "/admin/rabaty", title: "Kody rabatowe", lines: ["Procent lub kwota, limity, terminy"] },
+          { to: "/admin/tresci", title: "Treści stron", lines: ["Edycja tekstów"] },
+          { to: "/admin/cisza", title: "Cisza", lines: [`Utwory: ${sound ? sound.length : "…"}`, `Ostrzeżenia: ${sound ? countWarnings(sound) : "…"}`, `Rozpoczęcia (30 dni): ${v("silence_30")}`] },
+          { to: "/admin/glos", title: "Głos", lines: ["Utwory i podcasty"] },
+          { to: "/admin/podcast", title: "Podcast", lines: ["Odcinki, playlisty, goście, ustawienia"] },
+          { to: "/admin/newsletter", title: "Newsletter", lines: ["Subskrybenci, grupy, kampanie"] },
+        ]],
+        ["DANE I WYNIKI", [
+          { to: "/admin/statystyki", title: "Statystyki", lines: ["Ostatnie 30 dni:", `Zapisy: ${v("reg_30")}`, `Pobrania: ${v("downloads_30")}`, `Rozpoczęcia ciszy: ${v("silence_30")}`] },
+          { to: "/admin/kontakty", title: "Baza kontaktów", lines: ["Wszystkie formularze w jednym miejscu", `Nowe zgłoszenia do podcastu: ${newApps ?? "…"}`] },
+          { to: "/admin/testy", title: "Wyniki testu", lines: ["Odpowiedzi z testu"] },
+        ]],
+        ["USTAWIENIA I BEZPIECZEŃSTWO", [
+          { to: "/admin/ustawienia", title: "Ustawienia strony", lines: ["Dane firmy", "Tryb przedpremierowy", "Wysyłka e-mail"] },
+          { to: "/admin/integracje", title: "Integracje", lines: ["Płatności, adres aplikacji"] },
+          { to: "/admin/bezpieczenstwo", title: "Bezpieczeństwo", lines: ["Alerty, blokady, znajdź właściciela kopii"] },
+          { to: "/admin/dane-osoby", title: "Dane osoby (RODO)", lines: ["Znajdź / usuń / wyeksportuj po e-mailu", "Obie bazy naraz"] },
+          { to: "/", title: "Podgląd strony", lines: ["Otwórz stronę z paskiem admina"], onClick: () => setMode("admin") },
+        ]],
+      ];
+      let n = 0;
+      const num = () => String(++n).padStart(2, "0");
+      return (
+        <div className="space-y-12">
+          {groups.map(([name, items]) => (
+            <section key={name}>
+              <p className="technical text-[10px] text-foreground/45 mb-4">{name}</p>
+              <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
+                {items.filter(Boolean).map((t) => (t.lib
+                  ? <DashboardLibraryTile key={t.to} label={num()} />
+                  : <Tile key={t.to} to={t.to} label={num()} title={t.title} lines={t.lines} onClick={t.onClick} />))}
+              </div>
+            </section>
+          ))}
+        </div>
+      );
+    })()}
     </>
   );
 }
