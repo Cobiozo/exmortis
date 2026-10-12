@@ -47,7 +47,7 @@ export default function ProductCard({ product, index = 0 }) {
           )}
           <div className="flex items-center justify-between pt-4 border-t hairline">
             <span className="font-mono text-lg text-foreground">
-              {product.price === 0 ? "DARMOWE" : `${product.price} zł`}
+              {!Number(product.price) ? (product.is_free === false ? "PO ROZMOWIE" : "DARMOWE") : `${product.price} zł`}
             </span>
             <span className="technical text-[10px] text-foreground/50 group-hover:gold-text flex items-center gap-1 transition-colors">
               ZOBACZ <ArrowRight className="h-3 w-3" />

@@ -102,7 +102,7 @@ export default function ProductDetail() {
 
             <div className="flex items-baseline gap-4 mb-8">
               <span className="font-mono text-4xl gold-text">
-                {product.price === 0 ? "0 zł" : `${product.price} zł`}
+                {!Number(product.price) ? (product.is_free === false ? "Cena po rozmowie" : "Bezpłatnie") : `${product.price} zł`}
               </span>
               {product.old_price && (
                 <span className="font-mono text-xl text-foreground/30 line-through">
