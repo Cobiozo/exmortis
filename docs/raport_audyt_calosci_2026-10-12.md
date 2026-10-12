@@ -74,3 +74,9 @@ Testy: funkcje płatności uruchomione lokalnie (Deno) z atrapą bazy i PayU; ka
 - Moje produkty: postęp kursu (lekcje x / y, pasek), przycisk „Kontynuuj”.
 - Dostęp do kursów i filmów: 12 miesięcy (domyślnie w edytorze produktu, zgodnie z Regulaminem §8 ust. 2 lit. b). PDF i audio — bez ograniczenia (Regulamin §8 ust. 2 lit. a).
 - Strona /1-listopada: „Kto prowadzi” ze zdjęciem z posługi kapłańskiej i tekstami z „O mnie” + blok „Dziś” ze zdjęciem obecnym i przyciskiem „Moja historia”. Strona korzysta z treści domyślnych (brak opublikowanej wersji w CMS) — po publikacji aplikacji zmiany są widoczne.
+
+## Etap 5 — 1 listopada, ochrona materiałów (opublikowane 12.10 ok. 05:20 na prośbę Dawida)
+- /1-listopada: baner „Złota Brama” (biblioteka mediów, wersje WebP) pod nagłówkiem; grafika udostępniania public/exmortis-og-1-listopada-v2.jpg (1200×630, z „Mroczny plakat”). Blok „Zdjęcie” pobiera większą wersję obrazu (sizes 1400px).
+- PDF: oprócz napisu u góry — stopka i znak wodny po przekątnej przez środek każdej strony z e-mailem zamawiającego i numerem zamówienia (WM_VERSION=wm2 wymusza ponowne wygenerowanie zapisanych kopii).
+- Filmy kursu z własnego serwera: Ustawienia strony → „Ochrona filmów kursu”: klucz (pokazywany raz), ważność linku 2–24 h, pliki stream.php + .htaccess do pobrania. Link /v/<plik>?e=…&t=HMAC-SHA256; pliki w _wideo/ bez dostępu z zewnątrz; obsługa przewijania (Range). Sprawdzone: podpis z aplikacji akceptowany przez PHP, zły/wygasły podpis 403, „../” 404, Range 206.
+- Odtwarzacz odświeża podpisany link 10 min przed końcem ważności; podgląd w panelu też dostaje podpisany link.
