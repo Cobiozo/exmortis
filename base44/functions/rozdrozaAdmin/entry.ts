@@ -138,6 +138,15 @@ async function generateImage(base44, prompt, aspect, story) {
   return file_url;
 }
 
+// Poprzednia scena (przez „Dalej” albo wybór) z zatwierdzonym obrazem — pierwsza w kolejności scen.
+function previousWithImage(sc, scenes, choices) {
+  const keys = new Set([...scenes.filter((x) => x.next_scene_key === sc.scene_key).map((x) => x.scene_key),
+    ...choices.filter((c) => c.target_scene_key === sc.scene_key).map((c) => c.source_scene_key)]);
+  return scenes.filter((x) => keys.has(x.scene_key) && x.image_url).sort((x, y) => x.sort_order - y.sort_order)[0] || null;
+}
+// Scena, której zdjęcie faktycznie widać (przy łańcuchu pożyczeń — źródło pierwotne).
+const originOf = (prev) => prev.image_from || prev.scene_key;
+
 async function load(sr, id) {
   const story = await sr.RozdrozaStory.get(String(id || "")).catch(() => null);
   if (!story) throw new Error("Nie ma takiej historii.");
@@ -185,7 +194,7 @@ export default async function (req) {
         return Response.json({ meta: { ...storyMeta(story), version: 0 }, snapshot: buildSnapshot(story, scenes, choices, 0), report });
       }
       const extra = {};
-      for (const k of ["cover_portrait_prompt", "cover_landscape_prompt", "cover_portrait_candidate", "cover_landscape_candidate", "visual_notes", "image_style"]) extra[k] = story[k] || "";
+      for (const k of ["cover_portrait_prompt", "cover_landscape_prompt", "cover_portrait_candidate", "cover_landscape_candidate", "visual_notes", "image_style", "visual_notes_en", "cover_visual_notes_en", "reference_image_url"]) extra[k] = story[k] || "";
       return Response.json({ story: { ...listRow(story), ...storyMeta(story), ...extra, start_scene_key: story.start_scene_key }, scenes, choices, report });
     }
 
@@ -229,6 +238,7 @@ export default async function (req) {
       const s = (k, max) => { if (typeof f[k] === "string") patch[k] = f[k].trim().slice(0, max); };
       s("title", 200); s("summary", 2000); s("content_warning", 1000); s("cover_portrait_url", 1000); s("cover_landscape_url", 1000); s("start_scene_key", 80);
       s("reading_time", 40); s("cover_portrait_prompt", 3000); s("cover_landscape_prompt", 3000); s("visual_notes", 3000); s("image_style", 2000);
+      s("visual_notes_en", 3000); s("cover_visual_notes_en", 3000); s("reference_image_url", 1500);
       if (typeof f.category === "string") patch.category = normCategory(f.category) || undefined;
       if (f.estimated_minutes !== undefined) patch.estimated_minutes = Math.max(0, Math.min(600, Number(f.estimated_minutes) || 0)) || null;
       if (f.sort_order !== undefined) patch.sort_order = Number(f.sort_order) || 0;
@@ -249,7 +259,10 @@ export default async function (req) {
       const sc = await sr.RozdrozaScene.get(String(body.id || "")).catch(() => null);
       if (!sc) throw new Error("Nie ma takiej sceny.");
       const patch = {};
-      if (body.image_url !== undefined) patch.image_url = String(body.image_url || "").trim().slice(0, 1000);
+      if (body.image_url !== undefined) {
+        patch.image_url = String(body.image_url || "").trim().slice(0, 1000);
+        if (patch.image_url !== (sc.image_url || "")) patch.image_from = ""; // własne zdjęcie albo usunięcie
+      }
       if (body.alt_text !== undefined) patch.alt_text = String(body.alt_text || "").trim().slice(0, 500);
       if (body.image_prompt !== undefined) patch.image_prompt = String(body.image_prompt || "").trim().slice(0, 3000);
       await sr.RozdrozaScene.update(sc.id, patch);
@@ -295,7 +308,7 @@ export default async function (req) {
       } else story = (await load(sr, body.id)).story;
       const base = kind === "scene" ? scene.image_prompt : kind === "cover_portrait" ? story.cover_portrait_prompt : story.cover_landscape_prompt;
       if (!String(base || "").trim()) throw new Error("Brak opisu kadru (promptu) — uzupełnij go przed generowaniem.");
-      const url = await generateImage(base44, composePrompt(kind, base, story), aspectOf(kind));
+      const url = await generateImage(base44, composePrompt(kind, base, story), aspectOf(kind), story);
       // Wynik czeka na akceptację — nie podmienia zatwierdzonego obrazu.
       if (kind === "scene") await sr.RozdrozaScene.update(scene.id, { image_candidate_url: url });
       else await sr.RozdrozaStory.update(story.id, { [kind === "cover_portrait" ? "cover_portrait_candidate" : "cover_landscape_candidate"]: url });
@@ -309,7 +322,7 @@ export default async function (req) {
       if (kind === "scene") {
         const sc = await sr.RozdrozaScene.get(String(body.id || "")).catch(() => null);
         if (!sc?.image_candidate_url) throw new Error("Brak kadru do zatwierdzenia.");
-        await sr.RozdrozaScene.update(sc.id, accept ? { image_url: sc.image_candidate_url, image_candidate_url: "", alt_text: sc.alt_text || "" } : { image_candidate_url: "" });
+        await sr.RozdrozaScene.update(sc.id, accept ? { image_url: sc.image_candidate_url, image_candidate_url: "", image_from: "" } : { image_candidate_url: "" });
         if (accept) await sr.RozdrozaStory.update(sc.story_id, { draft_changed_at: now }).catch(() => {});
       } else {
         const { story } = await load(sr, body.id);
@@ -324,16 +337,55 @@ export default async function (req) {
     if (a === "use_previous") {
       const sc = await sr.RozdrozaScene.get(String(body.id || "")).catch(() => null);
       if (!sc) throw new Error("Nie ma takiej sceny.");
+      // Zatwierdzone zdjęcie zastępujemy tylko po wyraźnym potwierdzeniu administratora.
+      if (sc.image_url && body.replace !== true) return Response.json({ error: "Scena ma już zatwierdzone zdjęcie — potwierdź zastąpienie.", needs_confirm: true }, { status: 409 });
       const [scenes, choices] = await Promise.all([
         sr.RozdrozaScene.filter({ story_id: sc.story_id }, "sort_order", MAX_SCENES + 50),
-        sr.RozdrozaChoice.filter({ story_id: sc.story_id, target_scene_key: sc.scene_key }, "sort_order", 50),
+        sr.RozdrozaChoice.filter({ story_id: sc.story_id }, "sort_order", MAX_CHOICES + 50),
       ]);
-      const prevKeys = [...scenes.filter((x) => x.next_scene_key === sc.scene_key).map((x) => x.scene_key), ...choices.map((c) => c.source_scene_key)];
-      const prev = scenes.filter((x) => prevKeys.includes(x.scene_key) && x.image_url).sort((x, y) => x.sort_order - y.sort_order)[0];
+      const prev = previousWithImage(sc, scenes, choices);
       if (!prev) throw new Error("Poprzednia scena nie ma jeszcze obrazu.");
-      await sr.RozdrozaScene.update(sc.id, { image_url: prev.image_url, alt_text: sc.alt_text || prev.alt_text || "" });
+      await sr.RozdrozaScene.update(sc.id, { image_url: prev.image_url, image_from: originOf(prev) });
       await sr.RozdrozaStory.update(sc.story_id, { draft_changed_at: new Date().toISOString() }).catch(() => {});
       return Response.json({ ok: true, from: prev.scene_key });
+    }
+
+    // Pkt 3 pakietu: sceny spoza zestawu startowego bez obrazu dostają obraz z poprzedniej sceny (łańcuchowo).
+    // Pomija sceny z obrazem, z kadrem czekającym na zatwierdzenie i sceny startowe (te generujemy).
+    if (a === "fill_previous") {
+      const { story, scenes, choices } = await load(sr, body.id);
+      const cur = new Map(scenes.map((s) => [s.scene_key, { ...s }]));
+      const filled = [];
+      for (let pass = 0, again = true; again && pass < 50; pass++) {
+        again = false;
+        for (const s of [...cur.values()].sort((x, y) => x.sort_order - y.sort_order)) {
+          if (s.image_url || s.image_candidate_url || isStartScene(s.scene_key)) continue;
+          const prev = previousWithImage(s, [...cur.values()], choices);
+          if (!prev) continue;
+          s.image_url = prev.image_url; s.image_from = originOf(prev);
+          filled.push(s); again = true;
+        }
+      }
+      for (const s of filled) await sr.RozdrozaScene.update(s.id, { image_url: s.image_url, image_from: s.image_from });
+      if (filled.length) await sr.RozdrozaStory.update(story.id, { draft_changed_at: new Date().toISOString() });
+      const missing = [...cur.values()].filter((s) => !s.image_url).map((s) => s.scene_key);
+      return Response.json({ ok: true, filled: filled.map((s) => ({ key: s.scene_key, from: s.image_from })), missing });
+    }
+
+    // ---- Ustawienia usługi obrazów (klucz OpenAI tylko zapisywany; do przeglądarki wraca wyłącznie końcówka) ----
+    if (a === "ai_get") return Response.json(aiPublic((await getSetting(base44, AI_SETTING).catch(() => null)) || {}));
+    if (a === "ai_save") {
+      const prev = (await getSetting(base44, AI_SETTING).catch(() => null)) || {};
+      const next = { provider: body.provider === "openai" ? "openai" : "base44", model: cleanModel(body.model), quality: QUALITY.includes(body.quality) ? body.quality : "medium", openai_key: prev.openai_key || "" };
+      const key = String(body.openai_key || "").trim();
+      if (body.remove_key === true) next.openai_key = "";
+      else if (key && key !== MASK) {
+        if (!/^sk-[A-Za-z0-9_-]{20,250}$/.test(key)) throw new Error("To nie wygląda na klucz API OpenAI (zaczyna się od sk-).");
+        next.openai_key = key;
+      }
+      if (next.provider === "openai" && !next.openai_key) throw new Error("Aby używać OpenAI, wklej klucz API.");
+      await saveSetting(base44, AI_SETTING, next);
+      return Response.json(aiPublic(next));
     }
 
     return Response.json({ error: "Nieznana akcja" }, { status: 400 });
