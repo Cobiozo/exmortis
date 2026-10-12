@@ -22,10 +22,17 @@ export default async function (req) {
     const received_at = new Date().toISOString();
     const ip = clientIp(req);
     // Ochrona przed masowym wysyłaniem potwierdzeń na cudze adresy: 5 zgłoszeń na godzinę z jednego IP.
-    const L = base44.asServiceRole.entities.SecurityLog;
-    const recent = await L.filter({ type: "odstapienie", ip, created_date: { $gte: new Date(Date.now() - 3600000).toISOString() } }, "-created_date", 6);
-    if (recent.length >= 5) return Response.json({ error: "Zbyt wiele zgłoszeń. Spróbuj za godzinę albo napisz na adres kontaktowy." }, { status: 429 });
-    await L.create({ type: "odstapienie", ip, details: data.email.slice(0, 80) });
+    // Licznik nigdy nie blokuje prawa do odstąpienia przy błędzie technicznym (fail-open).
+    let tooMany = false;
+    try {
+      const L = base44.asServiceRole.entities.SecurityLog;
+      const recent = await L.filter({ type: "odstapienie", ip, created_date: { $gte: new Date(Date.now() - 3600000).toISOString() } }, "-created_date", 6);
+      tooMany = recent.length >= 5;
+      if (!tooMany) await L.create({ type: "odstapienie", ip, details: data.email.slice(0, 80) });
+    } catch {
+      tooMany = false;
+    }
+    if (tooMany) return Response.json({ error: "Zbyt wiele zgłoszeń z tego połączenia. Spróbuj za godzinę albo napisz na adres kontaktowy." }, { status: 429 });
     await base44.asServiceRole.entities.Withdrawal.create({ ...data, received_at, ip, status: "odstąpienie zgłoszone" });
 
     const when = new Date(received_at).toLocaleString("pl-PL", { timeZone: "Europe/Warsaw" });
