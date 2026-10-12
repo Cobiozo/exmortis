@@ -29,7 +29,7 @@ export function TestLink({ small }) {
   const on = isActive(pathname, TEST.to);
   return (
     <Link to={TEST.to} aria-current={on ? "page" : undefined}
-      className={`technical gold-text border border-[#C9A24A]/70 hover:border-[#C9A24A] hover:text-[#E2C170] whitespace-nowrap transition-colors ${small ? "text-[10px] px-2.5 py-1" : "text-[11px] !tracking-[0.12em] xl:!tracking-[0.18em] px-3 py-1.5"} ${on ? "bg-[#C9A24A]/10" : ""}`}>
+      className={`relative after:absolute after:-inset-2 after:content-[''] technical gold-text border border-[#C9A24A]/70 hover:border-[#C9A24A] hover:text-[#E2C170] whitespace-nowrap transition-colors ${small ? "text-[10px] px-2.5 py-1" : "text-[11px] !tracking-[0.12em] xl:!tracking-[0.18em] px-3 py-1.5"} ${on ? "bg-[#C9A24A]/10" : ""}`}>
       {TEST.label}
     </Link>
   );
