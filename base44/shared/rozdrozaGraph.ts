@@ -48,6 +48,8 @@ export function readStory(raw) {
     cover_portrait_prompt: str(st.cover_portrait_prompt, 3000),
     cover_landscape_prompt: str(st.cover_landscape_prompt, 3000),
     visual_notes: str(st.visual_notes, 3000),
+    visual_notes_en: str(st.visual_notes_en, 3000),
+    cover_visual_notes_en: str(st.cover_visual_notes_en, 3000),
     image_style: str(st.image_style ?? raw?.style, 2000),
     sort_order: num(st.sort_order),
   };
