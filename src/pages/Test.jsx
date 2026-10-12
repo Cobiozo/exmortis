@@ -6,7 +6,7 @@ import { sanitizeHtml } from "@/lib/sanitizeHtml";
 import useSystemText from "@/content/useSystemText";
 import ShopProductCard from "@/components/exmortis/shop/ShopProductCard";
 
-const SHARE_URL = "https://exmortis-return-path.base44.app/test?src=polecenie";
+const SHARE_URL = "https://exmortis.pl/test?src=polecenie";
 
 // Stwierdzenia w przemieszanej kolejności; f = forma kobieca (brak = ta sama).
 const QUESTIONS = [

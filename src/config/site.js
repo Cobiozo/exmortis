@@ -1,6 +1,6 @@
 // JEDYNE miejsce na adres strony i tryb nagłówka dla robotów (Facebook, Google).
-// Po podpięciu domeny: SITE_URL = "https://exmortis.pl" i ponowna publikacja.
-export const SITE_URL = "https://exmortis-return-path.base44.app";
+// Domena podpięta 12.10.2026.
+export const SITE_URL = "https://exmortis.pl";
 
 // Tryb nagłówka: "auto" (spotkanie do MARKA_OD, potem marka), "spotkanie" albo "marka".
 // Wspólny nagłówek HTML powstaje przy publikacji, więc w trybie "auto" wystarczy kliknąć „Publikuj” 2.11 rano.

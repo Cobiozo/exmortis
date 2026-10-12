@@ -117,7 +117,7 @@ export default function EventsManager() {
 
   const copyLink = (ev) =>
     run(async () => {
-      const url = `https://exmortis-return-path.base44.app/spotkania/${ev.slug}`;
+      const url = `https://exmortis.pl/spotkania/${ev.slug}`;
       try {
         await navigator.clipboard.writeText(url);
         setInfo(`Skopiowano link: ${url}`);
