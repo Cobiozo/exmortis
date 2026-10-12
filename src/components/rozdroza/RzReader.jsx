@@ -100,6 +100,7 @@ export default function RzReader({ previewId = null }) {
   if (err) return <RzProblem text={err} onRetry={open} />;
   if (!data) return (
     <div className="max-w-[720px] mx-auto" aria-busy="true">
+      <div className="h-11 mb-6" />
       <div className="aspect-video bg-[#141416] animate-pulse motion-reduce:animate-none" />
       <div className="h-8 w-2/3 bg-[#141416] mt-8" /><div className="h-4 w-full bg-[#141416] mt-6" /><div className="h-4 w-5/6 bg-[#141416] mt-3" />
     </div>
