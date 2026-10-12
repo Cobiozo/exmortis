@@ -1,5 +1,6 @@
 import { createClientFromRequest } from "npm:@base44/sdk@0.8.44";
-import { runSql, escStr, textField, emailField } from "../../shared/supabase.ts";
+import { runSql, escStr, textField, emailField, clientIp } from "../../shared/supabase.ts";
+import { ipAllowed, TOO_MANY } from "../../shared/rateLimit.ts";
 import { insertOrder } from "../../shared/orders.ts";
 import { addSubscriber } from "../../shared/newsletter.ts";
 import { getSetting } from "../../shared/settings.ts";
@@ -45,6 +46,9 @@ export default async function (req) {
     ) {
       throw new Error("Ten materiał nie jest już dostępny");
     }
+
+    // Materiał idzie e-mailem na podany adres — limit chroni przed wysyłką na cudze adresy seriami.
+    if (!(await ipAllowed(base44, clientIp(req), "darmowy", 5, 3600000, slug))) return Response.json({ error: TOO_MANY }, { status: 429 });
 
     const firstName = name.split(" ")[0] || name;
     await insertOrder(base44, {
@@ -99,6 +103,8 @@ export default async function (req) {
 
     return Response.json({ ok: true });
   } catch (error) {
-    return Response.json({ error: error.message }, { status: 500 });
+    // Błąd danych z formularza = 400, reszta = 500.
+    const bad = /^(Brak pola|Pole .* jest zbyt długie|Niepoprawny adres e-mail|Brak produktu|Ten materiał)/.test(String(error?.message || ""));
+    return Response.json({ error: error.message }, { status: bad ? 400 : 500 });
   }
 }

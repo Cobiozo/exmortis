@@ -2,6 +2,8 @@ import { createClientFromRequest } from "npm:@base44/sdk@0.8.52";
 import { waitUntil } from "base44:runtime";
 import { getSetting, loadAppUrl, APP_URL as APP } from "../../shared/settings.ts";
 import { sendMail as gate, adminTo } from "../../shared/smtp.ts";
+import { clientIp } from "../../shared/supabase.ts";
+import { ipAllowed, TOO_MANY } from "../../shared/rateLimit.ts";
 const sendMail = (b, m) => gate(b, { kind: "podcast", ...m });
 
 const CRISIS = [/nie chc[eę] (już )?żyć/i, /skończyć ze sobą/i, /samob[oó]j/i, /zabić si[eę]/i, /samookalecz/i, /odebrać sobie życie/i];
@@ -30,6 +32,7 @@ export default async function (req) {
     const today = str(b.today, 500, true);
     const now = new Date().toISOString();
     const pilne = CRISIS.some((r) => r.test(`${story} ${today}`));
+    if (!(await ipAllowed(base44, clientIp(req), "podcast", 3, 3600000))) return Response.json({ error: TOO_MANY }, { status: 429 });
 
     const rec = await base44.asServiceRole.entities.PodcastApplication.create({
       name: str(b.name, 120, true), email, phone: str(b.phone, 40), smierc: b.smierc, story, today,

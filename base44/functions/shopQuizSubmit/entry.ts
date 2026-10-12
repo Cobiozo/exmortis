@@ -1,5 +1,8 @@
 import { createClientFromRequest } from "npm:@base44/sdk@0.8.44";
-import { runSql, escStr, emailField, textField } from "../../shared/supabase.ts";
+import { runSql, escStr, emailField, textField, clientIp } from "../../shared/supabase.ts";
+import { ipAllowed, TOO_MANY } from "../../shared/rateLimit.ts";
+
+const escHtml = (s) => String(s ?? "").replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
 import { getSetting, loadAppUrl, APP_URL as SITE_URL } from "../../shared/settings.ts";
 import { sendMail } from "../../shared/smtp.ts";
 
@@ -71,7 +74,7 @@ function resultEmailHtml({ name, dominantText, stage, sText, recommended }) {
   return `
   <div style="background:#0A0A0B;padding:32px;font-family:Georgia,serif;color:#E2E2E2;">
     <p style="letter-spacing:4px;color:#C9A24A;font-size:13px;">EXMORTIS</p>
-    <p style="color:#8A8A8C;">${name},</p>
+    <p style="color:#8A8A8C;">${escHtml(name)},</p>
     <p style="line-height:1.7;color:#E2E2E2;">${dominantText}</p>
     <p style="color:#C9A24A;margin-top:24px;">Twój etap: ${stage}</p>
     <p style="line-height:1.7;color:#E2E2E2;">${sText}</p>
@@ -103,6 +106,8 @@ export default async function (req) {
     const openAnswer = textField(body, "open_answer", { max: 2000, required: false });
     const source = textField(body, "source", { max: 50, required: false });
     const isF = formOfAddress === "Kobieta";
+    // Wynik idzie e-mailem na podany adres — limit chroni przed wysyłką na cudze adresy seriami.
+    if (!(await ipAllowed(base44, clientIp(req), "test", 10, 3600000))) return Response.json({ error: TOO_MANY }, { status: 429 });
 
     const answers = body.answers;
     if (

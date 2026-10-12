@@ -131,7 +131,7 @@ export function orderEmailHtml(buyerName, items, total, orderId = "", invoice = 
 
 // Treść kampanii newslettera opakowana w ciemną oprawę marki.
 export function campaignEmailHtml(content, name) {
-  const greeting = name ? `<p style="color:#8A8A8C;">${name},</p>` : "";
+  const greeting = name ? `<p style="color:#8A8A8C;">${escHtml(name)},</p>` : "";
   return `
   <div style="background:#0A0A0B;padding:32px;font-family:Georgia,serif;color:#E2E2E2;">
     <p style="letter-spacing:4px;color:#C9A24A;font-size:13px;">EXMORTIS</p>
