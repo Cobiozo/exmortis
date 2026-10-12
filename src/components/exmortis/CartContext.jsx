@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useEffect, useState, useCallback } from "react";
+import React, { createContext, useContext, useEffect, useState, useCallback, useRef } from "react";
 import { unitPrice, priceOnRequest } from "@/lib/productPrice";
 
 const MAX_QTY = 20; // tyle przyjmuje kasa na serwerze
@@ -61,20 +61,20 @@ export function CartProvider({ children }) {
   }, []);
 
   // Aktualne ceny i dostępność z serwera (np. koniec promocji, produkt wycofany) — zwraca true, gdy coś się zmieniło.
+  const itemsRef = useRef(items);
+  itemsRef.current = items;
   const refresh = useCallback((products) => {
     const byId = new Map((products || []).map((p) => [String(p.id), p]));
     let changed = false;
-    setItems((prev) => {
-      const next = [];
-      for (const i of prev) {
-        const p = byId.get(String(i.id));
-        if (!p || p.status === "wkrótce" || p.status === "ukryty" || p.is_free || priceOnRequest(p)) { changed = true; continue; }
-        const price = unitPrice(p);
-        if (price !== i.price || p.name !== i.name) changed = true;
-        next.push({ ...i, price, name: p.name, image_url: p.image_url, product_type: p.product_type, access_months: p.access_months });
-      }
-      return changed ? next : prev;
-    });
+    const next = [];
+    for (const i of itemsRef.current) {
+      const p = byId.get(String(i.id));
+      if (!p || p.status === "wkrótce" || p.status === "ukryty" || p.is_free || priceOnRequest(p)) { changed = true; continue; }
+      const price = unitPrice(p);
+      if (price !== i.price || p.name !== i.name) changed = true;
+      next.push({ ...i, price, name: p.name, image_url: p.image_url, product_type: p.product_type, access_months: p.access_months });
+    }
+    if (changed) setItems(next);
     return changed;
   }, []);
 

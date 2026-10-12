@@ -13,7 +13,8 @@ import ChooseTermButton from "@/components/exmortis/shop/ChooseTermButton";
 const ORDER_KEY = "exm_payu_order";
 
 export default function Checkout() {
-  const { items, total, clear } = useCart();
+  const { items, total, clear, refresh } = useCart();
+  const [cartNote, setCartNote] = useState("");
   const navigate = useNavigate();
   const [payuDone] = useState(() => new URLSearchParams(window.location.search).get("payu") === "done");
   // PayU dopisuje ?error=… do adresu powrotu, gdy płatność przerwano lub odrzucono.
@@ -30,6 +31,17 @@ export default function Checkout() {
   useEffect(() => {
     if (user) setForm((f) => ({ ...f, name: f.name || user.imie || user.full_name || "", email: f.email || user.email }));
   }, [user]);
+
+  // Przed płatnością: aktualne ceny i dostępność (np. koniec promocji) — kasa liczy tak samo na serwerze.
+  useEffect(() => {
+    if (payuDone) return;
+    let live = true;
+    base44.functions.invoke("shopProducts", {})
+      .then((r) => { if (live && refresh(r.data?.products || [])) setCartNote("Zaktualizowałem koszyk: ceny lub dostępność zmieniły się od dodania produktu."); })
+      .catch(() => {});
+    return () => { live = false; };
+    // jednorazowo przy wejściu do kasy
+  }, []);
 
   // Powrót z PayU: sprawdzam stan zamówienia (powiadomienie PayU bywa o kilka sekund później niż powrót).
   useEffect(() => {
@@ -182,7 +194,8 @@ export default function Checkout() {
               <span>Akceptuję <Link to="/regulamin" className="underline">Regulamin</Link>. Znam <Link to="/polityka-prywatnosci" className="underline">Politykę prywatności</Link>.</span>
             </label>
             <DigitalConsent items={items} checked={digitalConsent} onChange={setDigitalConsent} />
-            {payError && <p className="text-sm text-[#E8C547]">{payError}</p>}
+            {cartNote && <p className="text-sm text-foreground/70" role="status">{cartNote}</p>}
+            {payError && <p className="text-sm text-[#E8C547]" role="alert">{payError}</p>}
             <button type="submit" disabled={submitting} className="btn-relic w-full disabled:opacity-60">
               {submitting ? "PRZYGOTOWUJĘ PŁATNOŚĆ..." : "Zamawiam z obowiązkiem zapłaty"}{" "}
               {!submitting && <ArrowRight className="h-4 w-4" />}
