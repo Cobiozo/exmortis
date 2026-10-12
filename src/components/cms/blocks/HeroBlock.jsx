@@ -37,7 +37,8 @@ export default function HeroBlock({ d }) {
   );
 
   return (
-    <section className="relative min-h-[70vh] flex items-end overflow-hidden grain px-5 md:px-10 pt-40 pb-20">
+    // Bez zdjęcia w tle na telefonie niższy nagłówek — inaczej nad tytułem zostaje pusty ekran.
+    <section className={`relative ${d.tlo?.url ? "min-h-[70vh] pt-40" : "min-h-[50svh] md:min-h-[70vh] pt-32 md:pt-40"} flex items-end overflow-hidden grain px-5 md:px-10 pb-16 md:pb-20`}>
       <Bg d={d} />
       <div className="relative z-10 mx-auto max-w-[1400px] w-full">
         {d.etykieta && <p className="technical text-[11px] gold-text mb-6">{d.etykieta}</p>}
