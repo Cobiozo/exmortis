@@ -29,7 +29,7 @@ const listRow = (s) => ({
   published_at: s.published_at || null, updated_date: s.updated_date, sort_order: s.sort_order ?? 0,
   cover_portrait_url: s.cover_portrait_url || "",
   // Szkic zmieniony po publikacji → klient widzi jeszcze poprzednią wersję.
-  changed: !!(s.published_at && s.updated_date && new Date(s.updated_date).getTime() - new Date(s.published_at).getTime() > 5000),
+  changed: !!(s.status === "published" && s.published_at && s.draft_changed_at && s.draft_changed_at > s.published_at),
 });
 
 async function replaceGraph(sr, storyId, scenes, choices) {
@@ -84,7 +84,7 @@ export default async function (req) {
         Object.keys(fields).forEach((k) => (fields[k] === "" || fields[k] === null || fields[k] === undefined) && delete fields[k]);
         if (old) {
           // Zastąpienie szkicu: opublikowana kopia zostaje bez zmian do ponownej publikacji.
-          await sr.RozdrozaStory.update(old.id, fields);
+          await sr.RozdrozaStory.update(old.id, { ...fields, draft_changed_at: new Date().toISOString() });
           await replaceGraph(sr, old.id, scenes, choices);
           res.status = "zastąpiono szkic"; res.id = old.id;
         } else {
@@ -113,7 +113,7 @@ export default async function (req) {
         patch.slug = slug;
       }
       if (patch.title === "") throw new Error("Tytuł nie może być pusty.");
-      await sr.RozdrozaStory.update(story.id, patch);
+      await sr.RozdrozaStory.update(story.id, { ...patch, draft_changed_at: new Date().toISOString() });
       return Response.json({ ok: true });
     }
 
@@ -124,7 +124,7 @@ export default async function (req) {
       await sr.RozdrozaScene.update(sc.id, {
         image_url: String(body.image_url || "").trim().slice(0, 1000), alt_text: String(body.alt_text || "").trim().slice(0, 500),
       });
-      await sr.RozdrozaStory.update(sc.story_id, { updated_marker: Date.now() }).catch(() => {});
+      await sr.RozdrozaStory.update(sc.story_id, { draft_changed_at: new Date().toISOString() }).catch(() => {});
       return Response.json({ ok: true });
     }
 

@@ -63,6 +63,10 @@
     },
     "sort_order": {
       "type": "number"
+    },
+    "draft_changed_at": {
+      "type": "string",
+      "description": "Ostatnia zmiana szkicu (do oznaczenia „zmiany czekają na publikację”)"
     }
   },
   "required": [
