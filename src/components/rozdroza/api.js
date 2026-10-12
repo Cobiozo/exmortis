@@ -80,10 +80,16 @@ export async function loadStory(slug) {
 }
 
 // Podgląd szkicu — tylko administrator (bez zapisywania w pamięci przeglądarki).
-export async function loadPreview(id) {
+// Kopia w pamięci na minutę: karta podglądu i czytnik nie pobierają szkicu dwa razy.
+const previews = new Map();
+export async function loadPreview(id, { fresh = false } = {}) {
+  const hit = previews.get(id);
+  if (!fresh && hit && Date.now() - hit.at < 60000) return hit.data;
   try {
     const r = await base44.functions.invoke("rozdrozaAdmin", { action: "preview", id });
-    return { meta: r.data.meta, snapshot: r.data.snapshot, preview: true };
+    const data = { meta: r.data.meta, snapshot: r.data.snapshot, preview: true };
+    previews.set(id, { at: Date.now(), data });
+    return data;
   } catch (e) { throw new Error(message(e, "Podgląd niedostępny.")); }
 }
 
