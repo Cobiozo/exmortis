@@ -159,9 +159,12 @@ export function buildSnapshot(story, scenes, choices, version) {
   const out = new Map();
   for (const c of choices) { if (!out.has(c.source_scene_key)) out.set(c.source_scene_key, []); out.get(c.source_scene_key).push(c); }
   const sc = {};
+  const byKey = new Map(scenes.map((s) => [s.scene_key, s]));
   for (const s of scenes) {
     const e = { t: s.title || "", b: s.body || "", y: s.scene_type };
-    if (s.image_url) { e.i = s.image_url; e.a = s.alt_text || ""; }
+    // Obraz pożyczony z innej sceny → alt tekst tamtej sceny (opisuje to, co widać na zdjęciu).
+    const src = s.image_from ? byKey.get(s.image_from) : null;
+    if (s.image_url) { e.i = s.image_url; e.a = (src && src.image_url === s.image_url ? src.alt_text : s.alt_text) || s.alt_text || ""; }
     if (s.scene_type === "narrative") e.n = s.next_scene_key;
     if (s.scene_type === "decision") e.c = (out.get(s.scene_key) || []).slice().sort((a, b) => a.sort_order - b.sort_order).map((c) => ({ l: c.label, to: c.target_scene_key }));
     if (s.scene_type === "ending" && s.reflection_question) e.q = s.reflection_question;
