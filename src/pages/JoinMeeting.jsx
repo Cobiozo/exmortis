@@ -85,7 +85,12 @@ export default function JoinMeeting() {
         {data.state === "po" && !data.need && (
           <>
             <p className="text-foreground/80 mt-8 leading-relaxed">{t("po")}</p>
-            {data.recording_url && <a href={data.recording_url} target="_blank" rel="noreferrer" className="btn-ghost mt-6">OBEJRZYJ NAGRANIE</a>}
+            {data.recording_in_account && (
+              <div className="mt-6 border hairline p-5">
+                <p className="text-foreground/75 leading-relaxed text-sm">Nagranie jest w koncie osób zapisanych na to spotkanie. Zaloguj się adresem e-mail podanym przy zapisie.</p>
+                <Link to="/konto?tab=spotkania" className="btn-relic mt-4">OBEJRZYJ W KONCIE</Link>
+              </div>
+            )}
           </>
         )}
         {data.state === "odwolane" && (
