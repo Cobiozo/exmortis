@@ -1,0 +1,50 @@
+{
+  "name": "RozdrozaChoice",
+  "type": "object",
+  "description": "ROZDROŻA — decyzja (szkic). Tylko administrator.",
+  "properties": {
+    "story_id": {
+      "type": "string"
+    },
+    "source_scene_key": {
+      "type": "string"
+    },
+    "target_scene_key": {
+      "type": "string"
+    },
+    "label": {
+      "type": "string"
+    },
+    "sort_order": {
+      "type": "number"
+    }
+  },
+  "required": [
+    "story_id",
+    "source_scene_key",
+    "target_scene_key",
+    "label"
+  ],
+  "rls": {
+    "read": {
+      "user_condition": {
+        "role": "admin"
+      }
+    },
+    "create": {
+      "user_condition": {
+        "role": "admin"
+      }
+    },
+    "update": {
+      "user_condition": {
+        "role": "admin"
+      }
+    },
+    "delete": {
+      "user_condition": {
+        "role": "admin"
+      }
+    }
+  }
+}

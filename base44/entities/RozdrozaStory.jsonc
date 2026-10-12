@@ -1,0 +1,94 @@
+{
+  "name": "RozdrozaStory",
+  "type": "object",
+  "description": "ROZDROŻA — historia (szkic + opublikowana kopia). Tylko administrator; klient czyta opublikowaną kopię przez funkcję rozdroza.",
+  "properties": {
+    "slug": {
+      "type": "string",
+      "description": "Stały adres historii (małe litery, cyfry, myślniki)"
+    },
+    "title": {
+      "type": "string"
+    },
+    "summary": {
+      "type": "string",
+      "description": "Krótki opis do biblioteki"
+    },
+    "category": {
+      "type": "string",
+      "enum": [
+        "mentalna",
+        "duchowa",
+        "zyciowa"
+      ],
+      "description": "Śmierć mentalna / duchowa / życiowa"
+    },
+    "cover_portrait_url": {
+      "type": "string",
+      "description": "Okładka pionowa 2:3 (biblioteka)"
+    },
+    "cover_landscape_url": {
+      "type": "string",
+      "description": "Okładka pozioma 16:9 (karta historii)"
+    },
+    "estimated_minutes": {
+      "type": "number",
+      "description": "Orientacyjny czas czytania"
+    },
+    "content_warning": {
+      "type": "string",
+      "description": "Ostrzeżenie o trudnych treściach (opcjonalnie)"
+    },
+    "start_scene_key": {
+      "type": "string"
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "draft",
+        "published"
+      ],
+      "default": "draft"
+    },
+    "version": {
+      "type": "number",
+      "description": "Wersja opublikowanej kopii (rośnie przy każdej publikacji)"
+    },
+    "published": {
+      "type": "object",
+      "description": "Opublikowana, sprawdzona kopia historii (to widzi klient). Zmiany scen działają dopiero po ponownej publikacji."
+    },
+    "published_at": {
+      "type": "string"
+    },
+    "sort_order": {
+      "type": "number"
+    }
+  },
+  "required": [
+    "slug",
+    "title"
+  ],
+  "rls": {
+    "read": {
+      "user_condition": {
+        "role": "admin"
+      }
+    },
+    "create": {
+      "user_condition": {
+        "role": "admin"
+      }
+    },
+    "update": {
+      "user_condition": {
+        "role": "admin"
+      }
+    },
+    "delete": {
+      "user_condition": {
+        "role": "admin"
+      }
+    }
+  }
+}
