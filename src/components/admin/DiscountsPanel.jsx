@@ -12,6 +12,7 @@ export default function DiscountsPanel() {
   useEffect(() => { load(); }, []);
 
   const toggle = async (c) => { await E.update(c.id, { active: !c.active }); load(); };
+  const togglePublic = async (c) => { await E.update(c.id, { w_powiadomieniach: !c.w_powiadomieniach }); load(); };
   const remove = async (c) => { await E.delete(c.id); setConfirm(null); load(); };
 
   return (
@@ -28,8 +29,12 @@ export default function DiscountsPanel() {
                 <p className="text-xs text-foreground/50">
                   −{c.value}{c.kind === "procent" ? "%" : " zł"} · użyto {c.uses || 0}{c.max_uses ? `/${c.max_uses}` : ""}
                   {c.valid_until ? ` · do ${c.valid_until}` : ""} · {c.product_ids?.length ? `${c.product_ids.length} prod.` : "wszystkie produkty"}
+                  {c.w_powiadomieniach ? " · widoczny w powiadomieniach klientów" : ""}
                 </p>
               </div>
+              <button onClick={() => togglePublic(c)} className="btn-ghost !px-3 !py-1.5 text-[10px]" title="Pokaż / ukryj kod w powiadomieniach (dzwoneczek) zalogowanych klientów">
+                {c.w_powiadomieniach ? "UKRYJ Z POWIADOMIEŃ" : "POKAŻ W POWIADOMIENIACH"}
+              </button>
               <button onClick={() => toggle(c)} className="btn-ghost !px-3 !py-1.5 text-[10px]">{c.active ? "WYŁĄCZ" : "WŁĄCZ"}</button>
               {confirm === c.id
                 ? <button onClick={() => remove(c)} className="btn-blood !px-3 !py-1.5 text-[10px]">NA PEWNO USUŃ</button>
