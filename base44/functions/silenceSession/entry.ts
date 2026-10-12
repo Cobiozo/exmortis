@@ -1,5 +1,5 @@
 import { createClientFromRequest } from "npm:@base44/sdk@0.8.44";
-import { runSql, escStr, esc } from "../../shared/supabase.ts";
+import { runSql, escStr, esc, clientIp } from "../../shared/supabase.ts";
 
 const MINUTES = [5, 10, 15, 30, 45, 60];
 // Anonimowe statystyki: najwyżej 60 zdarzeń na godzinę z jednego połączenia (licznik w pamięci instancji).
@@ -17,7 +17,7 @@ export default async function (req) {
     const base44 = createClientFromRequest(req);
     const body = await req.json().catch(() => ({}));
 
-    const ip = req.headers.get("x-forwarded-for")?.split(",")[0]?.trim() || "brak";
+    const ip = clientIp(req);
     if (ip !== "brak" && tooMany(ip)) return Response.json({ ok: true, skipped: true });
     const minutes = Number(body.duration_minutes);
     if (!MINUTES.includes(minutes)) {
