@@ -216,19 +216,23 @@ export async function sendReminderMail(base44, ev, reg, kind) {
   });
 }
 
-// Podziękowanie dzień po spotkaniu, z linkiem do nagrania.
+// Nagranie udostępnione w koncie: tylko po zalogowaniu (Moje konto → Spotkania), do „dostępne do”.
+// Mail nie zawiera adresu pliku — wyłącznie link do konta.
 export async function sendRecordingMail(base44, ev, reg, inviteHtml) {
-  // Spotkania online: osobisty link do strony dołączenia (nagranie tylko dla zapisanych, do „dostępne do”).
-  const link = isOnline(ev) && joinUrl(ev, await joinToken(reg.cancel_token)) || ev.recording_url;
+  const konto = `${APP_URL}/konto?tab=spotkania`;
+  const rejestracja = `${APP_URL}/register?returnTo=${encodeURIComponent("/konto?tab=spotkania")}`;
+  const until = ev.recording_until ? escHtml(plWhen(ev.recording_until)) : "";
   return sendMail(base44, {
     kind: "nagranie", ref: reg.id, waznyDo: ev.recording_until || undefined,
     to: reg.email,
-    subject: `EXMORTIS · Dziękuję za obecność — ${ev.title}`,
-    html: shell(ev, 
-      `<h1 style="font-size:24px;">Dziękuję za obecność</h1>` +
-        `<p style="line-height:1.7;">${escHtml(reg.first_name)}, nagranie ze spotkania «${escHtml(ev.title)}» czeka na Ciebie:</p>` +
-        `<p><a href="${escHtml(link)}" style="color:#C9A24A;">Obejrzyj nagranie</a></p>` +
-        (ev.recording_until ? `<p style="color:#8A8A8C;font-size:13px;">Nagranie jest dostępne do ${escHtml(plWhen(ev.recording_until))} (czasu polskiego). Link jest osobisty — nie przekazuj go dalej.</p>` : "") +
+    subject: `EXMORTIS · Nagranie czeka w Twoim koncie — ${ev.title}`,
+    html: shell(ev,
+      `<h1 style="font-size:24px;">Nagranie czeka w Twoim koncie</h1>` +
+        `<p style="line-height:1.7;">${escHtml(reg.first_name)}, nagranie ze spotkania «${escHtml(ev.title)}» jest w Twoim koncie na exmortis.pl` +
+        (until ? ` — do <strong>${until}</strong> (czasu polskiego). Potem zniknie.` : ".") + `</p>` +
+        `<p><a href="${escHtml(konto)}" style="display:inline-block;background:#C9A24A;color:#0A0A0B;text-decoration:none;padding:12px 22px;font-weight:bold;">Obejrzyj w koncie</a></p>` +
+        `<p style="color:#8A8A8C;font-size:13px;line-height:1.6;">Zaloguj się adresem <strong>${escHtml(reg.email)}</strong> — tym, którym zapisałeś/zapisałaś się na spotkanie. ` +
+        `Nie masz jeszcze konta? <a href="${escHtml(rejestracja)}" style="color:#C9A24A;">Załóż je na ten sam adres</a> — nagranie pojawi się od razu.</p>` +
         inviteHtml
     ),
   });
