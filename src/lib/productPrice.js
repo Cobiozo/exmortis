@@ -18,6 +18,13 @@ export function unitPrice(p) {
 // Omnibus: najniższa cena z 30 dni przed obniżką (pole omnibus_price, jeśli kiedyś powstanie; inaczej cena regularna —
 // prawdziwa, dopóki w ostatnich 30 dniach przed promocją nie było innej obniżki).
 export const lowestPrice30 = (p) => (p?.omnibus_price != null ? Number(p.omnibus_price) : regularPrice(p));
+// Drabinka cen (przedsprzedaż): serwer podaje następny próg { od: "RRRR-MM-DD", cena } → „Od 23 listopada: 77 zł”.
+export function nextPriceText(p) {
+  const n = p?.next_price;
+  if (!n || !n.od || !(Number(n.cena) > 0) || !isPromoActive(p)) return "";
+  const d = new Date(`${String(n.od).slice(0, 10)}T12:00:00`).toLocaleDateString("pl-PL", { day: "numeric", month: "long" });
+  return `Od ${d}: ${zl(n.cena)}`;
+}
 export const zl = (n) => `${Number(n || 0).toFixed(2).replace(".", ",").replace(",00", "")} zł`;
 
 // Produkt płatny bez ceny (np. mentoring „po rozmowie”) — nie trafia do koszyka.
