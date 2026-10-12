@@ -70,6 +70,11 @@ export async function deletePerson(base44, email, { sbData, appData, account }) 
   let konto = "brak";
   for (const u of account) {
     if (u.role === "admin") { konto = "konto administratora — nie usuwam"; continue; }
+    // Stan powiadomień i „widziane ogłoszenia” są przypisane do id konta, nie do e-maila.
+    for (const e of ["NotificationState", "AnnouncementSeen"]) {
+      const n = await sr[e].filter({ user_id: u.id }, "-created_date", 1000).catch(() => []);
+      if (n.length) { await sr[e].deleteMany({ id: { $in: n.map((x) => x.id) } }).catch(() => {}); removed[`Aplikacja: ${e}`] = n.length; }
+    }
     konto = await sr.User.delete(u.id).then(() => "usunięte").catch(() => "usuń ręcznie w panelu: Użytkownicy aplikacji");
   }
   return { removed, konto, total: Object.values(removed).reduce((a, b) => a + b, 0) };
