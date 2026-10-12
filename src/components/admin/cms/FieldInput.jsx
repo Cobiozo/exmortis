@@ -19,6 +19,12 @@ export default function FieldInput({ f, value, onChange, extra }) {
   let input;
   if (f.typ === "text") input = <input className={inputCls} value={value || ""} onChange={(e) => onChange(e.target.value)} />;
   else if (f.typ === "textarea") input = <textarea rows={3} className={`${inputCls} py-3`} value={value || ""} onChange={(e) => onChange(e.target.value)} />;
+  else if (f.typ === "datetime") input = (
+    <div className="flex gap-2">
+      <input type="datetime-local" className={inputCls} value={String(value || "").slice(0, 16)} onChange={(e) => onChange(e.target.value)} />
+      {value && <button type="button" onClick={() => onChange("")} className="technical text-[10px] text-foreground/50 hover:text-foreground px-2">WYCZYŚĆ</button>}
+    </div>
+  );
   else if (f.typ === "number") input = <input type="number" min={f.min} max={f.max} className={inputCls} value={value ?? ""} onChange={(e) => onChange(e.target.value === "" ? null : Number(e.target.value))} />;
   else if (f.typ === "select") input = (
     <select className={inputCls} value={value || f.opcje[0][0]} onChange={(e) => onChange(e.target.value)}>
