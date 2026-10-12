@@ -15,7 +15,10 @@ const DAY = 864e5;
 const NEW_DAYS = 30;          // ile dni „nowość” jest nowością
 const DEFAULT_PREFS = { nowosci: true, promocje: true, spotkania: true };
 const CAT = { ogloszenie: "zawsze", produkt: "nowosci", wkrotce: "nowosci", historia: "nowosci", promocja: "promocje", kod: "promocje",
-  spotkanie: "spotkania", moje_spotkanie: "moje", nagranie: "moje", dostep: "moje", wiadomosc: "moje", obok: "moje" };
+  spotkanie: "spotkania", moje_spotkanie: "moje", nagranie: "moje", dostep: "moje", wiadomosc: "moje", obok: "moje",
+  lista: "moje", zamowienie: "moje", platnosc: "moje", lekcja: "moje" };
+const PENDING = ["NEW", "PENDING", "WAITING_FOR_CONFIRMATION"];
+const names = (items) => { const n = (Array.isArray(items) ? items : []).map((i) => i?.name).filter(Boolean); return n.length > 2 ? `${n.slice(0, 2).join(", ")} i ${n.length - 2} więcej` : n.join(", "); };
 
 const iso = (v) => { const t = v ? new Date(v).getTime() : NaN; return Number.isFinite(t) ? new Date(t).toISOString() : null; };
 const zl = (n) => `${Number(n || 0).toFixed(2).replace(".", ",").replace(",00", "")} zł`;
@@ -74,7 +77,7 @@ async function buildFeed(base44, me) {
   const out = [];
   const push = (x) => { if (x.at) out.push(x); };
 
-  const [anns, regs, access, msgs, obok] = await Promise.all([
+  const [anns, regs, access, msgs, obok, waits, orders] = await Promise.all([
     myAnnouncements(base44.asServiceRole, base44, me).catch(() => ({ items: [], seen: {} })),
     runSql(base44, `SELECT e.id::text AS id, e.title, e.slug, e.start_datetime, r.status AS reg_status, e.recording_until,
         (e.recording_url IS NOT NULL AND e.recording_until IS NOT NULL AND e.recording_until > now()
@@ -100,6 +103,11 @@ async function buildFeed(base44, me) {
       const slug = Object.fromEntries(series.map((s) => [s.id, s.slug]));
       return recs.filter((r) => recent(r.publikacja, 14) && slug[r.seria_id]).map((r) => ({ ...r, seria_slug: slug[r.seria_id] }));
     })().catch(() => []),
+    // Moja lista oczekujących i zamówienia z ostatnich 14 dni (płatne).
+    runSql(base44, `SELECT DISTINCT product_id::text AS id FROM public.waitlist WHERE lower(email) = ${escStr(email)}`, true).catch(() => []),
+    runSql(base44, `SELECT id, status, total::float8 AS total, items, created_date::timestamptz AS created, updated_date::timestamptz AS updated
+      FROM public.orders WHERE lower(buyer_email) = ${escStr(email)} AND COALESCE(total, 0) > 0 AND created_date::timestamptz > now() - interval '14 days'
+      ORDER BY created_date DESC LIMIT 10`, true).catch(() => []),
   ]);
 
   // Ogłoszenia od Dawida (zawsze).
@@ -110,9 +118,40 @@ async function buildFeed(base44, me) {
 
   const today = warsawToday();
   const owned = new Set(access.filter((x) => !x.revoked).map((x) => String(x.product_id)));
+  // Z mojej listy oczekujących: premiera (osobiste, ważne) — zamiast ogólnej „nowości” dla tego produktu.
+  const waiting = new Set((waits || []).map((w) => String(w.id)));
+  for (const p of g.products) {
+    if (!waiting.has(p.id) || owned.has(p.id) || p.status !== "dostępny" || !recent(p.since)) continue;
+    push({ key: `wl:${p.id}`, kind: "lista", title: `Już dostępne: ${p.name}`, body: "Ten adres był na liście oczekujących — premiera właśnie się odbyła.",
+      link: `/skarbiec/${p.slug}`, at: iso(p.since), important: true });
+  }
+  // Zamówienia: opłacone (7 dni) i niedokończona płatność (20 min – 48 h, jeśli później nic nie opłacono).
+  const paidAfter = (t) => (orders || []).some((o) => o.status === "COMPLETED" && new Date(o.created).getTime() > t);
+  for (const o of orders || []) {
+    const created = new Date(o.created).getTime();
+    const what = names(o.items);
+    if (o.status === "COMPLETED" && recent(o.updated || o.created, 7)) {
+      push({ key: `order:${o.id}`, kind: "zamowienie", title: `Płatność przyjęta${what ? `: ${what}` : ""}`, body: `${zl(o.total)} · materiały są w zakładce „Moje produkty”. Potwierdzenie wysłałem mailem.`,
+        link: "/konto?tab=produkty", at: iso(o.updated || o.created) });
+    } else if (PENDING.includes(o.status) && now - created > 20 * 60000 && now - created < 2 * DAY && !paidAfter(created)) {
+      push({ key: `pay:${o.id}`, kind: "platnosc", title: `Płatność niedokończona${what ? `: ${what}` : ""}`, body: "Jeśli to nie było celowe, możesz złożyć zamówienie jeszcze raz w Skarbcu. Gdy PayU potwierdzi wcześniejszą płatność, ta informacja zniknie.",
+        link: "/skarbiec", at: new Date(created + 20 * 60000).toISOString(), important: true });
+    }
+  }
+  // Nowe lekcje w moich kursach (dodane po zakupie, 14 dni) — jedno powiadomienie na kurs.
+  const courses = access.filter((x) => !x.revoked && ["kurs", "wideo"].includes(x.product_type) && (!x.valid_until || x.valid_until >= today));
+  if (courses.length) {
+    const lessons = await sr.CourseLesson.filter({ product_id: { $in: courses.map((c) => String(c.product_id)) }, published: true }, "-created_date", 100).catch(() => []);
+    for (const c of courses) {
+      const fresh = lessons.filter((l) => String(l.product_id) === String(c.product_id) && recent(l.created_date, 14) && new Date(l.created_date) > new Date(c.created_date));
+      if (!fresh.length) continue;
+      push({ key: `lesson:${c.product_id}:${fresh[0].id}`, kind: "lekcja", title: fresh.length === 1 ? `Nowa lekcja w „${c.product_name || "kursie"}”: ${fresh[0].title}` : `${fresh.length} nowe lekcje w „${c.product_name || "kursie"}”`,
+        body: "", link: `/konto/kurs/${c.id}`, at: iso(fresh[0].created_date) });
+    }
+  }
   // Nowości w Skarbcu i zapowiedzi.
   for (const p of g.products) {
-    if (owned.has(p.id)) continue;
+    if (owned.has(p.id) || waiting.has(p.id) && p.status === "dostępny") continue;
     if (p.status === "dostępny" && recent(p.since)) {
       push({ key: `prod:${p.id}`, kind: "produkt", title: `${p.is_free ? "Nowy bezpłatny materiał" : "Nowe w Skarbcu"}: ${p.name}`,
         body: p.promise || p.subtitle || "", link: `/skarbiec/${p.slug}`, at: iso(p.since) });
