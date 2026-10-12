@@ -1,5 +1,6 @@
 import { createClientFromRequest } from "npm:@base44/sdk@0.8.44";
-import { runSql, escStr, textField, emailField } from "../../shared/supabase.ts";
+import { runSql, escStr, textField, emailField, clientIp } from "../../shared/supabase.ts";
+import { ipAllowed, TOO_MANY } from "../../shared/rateLimit.ts";
 import { addSubscriber } from "../../shared/newsletter.ts";
 
 // Publiczne zapisy na webinar 1 listopada („Ze śmierci").
@@ -14,6 +15,7 @@ export default async function (req) {
     const email = emailField(body);
     const listy = body.listy === true;
     const source = textField(body, "source", { max: 200, required: false }) || null;
+    if (!(await ipAllowed(base44, clientIp(req), "webinar", 5, 3600000))) return Response.json({ error: TOO_MANY }, { status: 429 });
 
 
     const inserted = await runSql(

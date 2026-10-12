@@ -2,6 +2,7 @@ import { createClientFromRequest } from "npm:@base44/sdk@0.8.44";
 import { emailField, clientIp } from "../../shared/supabase.ts";
 import { addSubscriber, confirmSubscriber } from "../../shared/newsletter.ts";
 import { LISTY_TEXT } from "../../shared/registrations.ts";
+import { ipAllowed, TOO_MANY } from "../../shared/rateLimit.ts";
 
 // Publiczne zapisy do newslettera „Listy powrotu" + potwierdzenie z linku (double opt-in).
 export default async function (req) {
@@ -19,6 +20,8 @@ export default async function (req) {
       return Response.json({ ok: true });
     }
     const email = emailField(body);
+    // Zapis wysyła mail z potwierdzeniem na podany adres — limit 5 na godzinę z jednego połączenia.
+    if (!(await ipAllowed(base44, clientIp(req), "listy", 5, 3600000))) return Response.json({ error: TOO_MANY }, { status: 429 });
     await addSubscriber(base44, { email, name: body.name });
     return Response.json({ ok: true });
   } catch (error) {

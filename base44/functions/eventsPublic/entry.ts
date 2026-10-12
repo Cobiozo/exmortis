@@ -6,6 +6,7 @@ import { getSnap, clearSnap } from "../../shared/snapshot.ts";
 import { rpcRegister, RPC_ERRORS, saveConsents, afterSaved, enqueue, flushQueue, snapEvent, ensureTzColumn } from "../../shared/registrations.ts";
 import { sendConfirmationMail, sendReminderMail, sendRecordingMail, plWhen, APP_URL, buildIcs, joinState, joinToken } from "../../shared/events.ts";
 import { sendMail, adminTo } from "../../shared/smtp.ts";
+import { ipAllowed, TOO_MANY } from "../../shared/rateLimit.ts";
 
 const ensureJoinColumns = (base44) => runSql(base44,
   `ALTER TABLE public.events ADD COLUMN IF NOT EXISTS open_minutes int DEFAULT 15,
@@ -129,6 +130,8 @@ export default async function (req) {
       }
       const source = typeof body.source === "string" && body.source.trim() !== "" ? body.source.trim().slice(0, 100) : null;
       const ip = clientIp(req);
+      // Zapis wysyła e-mail na podany adres — limit 8 zapisów na godzinę z jednego połączenia (przy błędzie licznika przepuszcza).
+      if (!(await ipAllowed(base44, ip, "zapis", 8, 3600000, slug))) return Response.json({ error: TOO_MANY }, { status: 429 });
       const tz = typeof body.tz === "string" ? body.tz.slice(0, 64) : null;
       const d = { slug, first_name: firstName, email, question, listy: body.listy === true, source, ip, tz, at: new Date().toISOString() };
       // Symulacja awarii Supabase — tylko dla administratora (test kolejki).

@@ -2,6 +2,14 @@ import { createClientFromRequest } from "npm:@base44/sdk@0.8.44";
 import { runSql, escStr, esc } from "../../shared/supabase.ts";
 
 const MINUTES = [5, 10, 15, 30, 45, 60];
+// Anonimowe statystyki: najwyżej 60 zdarzeń na godzinę z jednego połączenia (licznik w pamięci instancji).
+const HITS = new Map<string, number[]>();
+function tooMany(ip: string) {
+  const now = Date.now(), arr = (HITS.get(ip) || []).filter((t) => now - t < 3600000);
+  arr.push(now); HITS.set(ip, arr);
+  if (HITS.size > 5000) HITS.clear();
+  return arr.length > 60;
+}
 
 // Publiczny, anonimowy zapis zdarzenia ciszy: cisza_start / cisza_ukonczona (bez danych osobowych).
 export default async function (req) {
@@ -9,6 +17,8 @@ export default async function (req) {
     const base44 = createClientFromRequest(req);
     const body = await req.json().catch(() => ({}));
 
+    const ip = req.headers.get("x-forwarded-for")?.split(",")[0]?.trim() || "brak";
+    if (ip !== "brak" && tooMany(ip)) return Response.json({ ok: true, skipped: true });
     const minutes = Number(body.duration_minutes);
     if (!MINUTES.includes(minutes)) {
       return Response.json({ error: "Niepoprawny czas" }, { status: 400 });
