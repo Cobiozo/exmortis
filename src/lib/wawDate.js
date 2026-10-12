@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import useSiteSettings from "@/lib/useSiteSettings";
 
 // Daty wpisywane w panelu („2026-10-16T00:00” lub „2026-10-16 00:00”) = czas polski, niezależnie od strefy widza.
 const WAW = new Intl.DateTimeFormat("en-GB", { timeZone: "Europe/Warsaw", hourCycle: "h23", year: "numeric", month: "2-digit", day: "2-digit", hour: "2-digit", minute: "2-digit" });
@@ -20,15 +21,17 @@ export function parseWaw(s) {
 export const plDay = (d) => d ? new Intl.DateTimeFormat("pl-PL", { timeZone: "Europe/Warsaw", day: "numeric", month: "long" }).format(d) : "";
 
 // true do podanej chwili; przełącza się sam, gdy strona jest otwarta w momencie zmiany.
+// Liczone wg zegara serwera (poprawka z ustawień strony), nie zegara urządzenia gościa.
 export function useBefore(s) {
+  const off = useSiteSettings()?.offset || 0;
   const at = parseWaw(s)?.getTime() ?? null;
   const [, tick] = useState(0);
   useEffect(() => {
     if (at === null) return;
-    const left = at - Date.now();
+    const left = at - (Date.now() + off);
     if (left <= 0 || left > 2 ** 31 - 1) return;
     const id = setTimeout(() => tick((x) => x + 1), left + 500);
     return () => clearTimeout(id);
-  }, [at]);
-  return at !== null && Date.now() < at;
+  }, [at, off]);
+  return at !== null && Date.now() + off < at;
 }
