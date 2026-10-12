@@ -28,11 +28,13 @@ export default function SchedulePlan({ items, onDone }) {
   const [res, setRes] = useState(null);
   const [err, setErr] = useState("");
 
-  // Domyślnie: kolejność z biblioteki; zaznaczone historie, których klienci jeszcze nie widzą.
+  // Domyślnie: kolejność z biblioteki; zaznaczone historie, których klienci jeszcze nie widzą
+  // (gdy żadna nie ma jeszcze terminu — wszystkie).
   useEffect(() => {
     if (!items) return;
+    const none = !items.some((s) => s.visible_from);
     setOrder((o) => { const ids = items.map((s) => s.id); return [...o.filter((id) => ids.includes(id)), ...ids.filter((id) => !o.includes(id))]; });
-    setOn((o) => Object.fromEntries(items.map((s) => [s.id, o[s.id] ?? (s.status !== "published" || isScheduled(s))])));
+    setOn((o) => Object.fromEntries(items.map((s) => [s.id, o[s.id] ?? (none || s.status !== "published" || isScheduled(s))])));
   }, [items]);
   if (!items?.length) return null;
 
