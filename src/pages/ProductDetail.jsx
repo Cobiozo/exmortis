@@ -7,6 +7,7 @@ import { base44 } from "@/api/base44Client";
 import { useCart } from "@/components/exmortis/CartContext";
 import { Image } from "@/components/ui/image";
 import FreeOrderForm from "@/components/exmortis/shop/FreeOrderForm";
+import { useDocMeta } from "@/lib/useDocMeta";
 
 // Zmienione adresy produktów: stary → nowy.
 const OLD_SLUGS = { "krag-mezczyzn-rzeszow": "krag-mezczyzn" };
@@ -25,6 +26,7 @@ export default function ProductDetail() {
   const [loading, setLoading] = useState(true);
   const [qty, setQty] = useState(1);
   const [added, setAdded] = useState(false);
+  useDocMeta(product?.name ? `${product.name} — Skarbiec | exmortis` : "", product?.subtitle || product?.description);
 
   useEffect(() => {
     if (OLD_SLUGS[slug]) { navigate(`/skarbiec/${OLD_SLUGS[slug]}`, { replace: true }); return; }
