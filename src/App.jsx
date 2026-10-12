@@ -22,7 +22,7 @@ import RegisterGate from '@/components/prelaunch/RegisterGate';
 import SeoMeta from '@/components/seo/SeoMeta';
 const ForgotPassword = lazyPage(() => import('@/pages/ForgotPassword'));
 const ResetPassword = lazyPage(() => import('@/pages/ResetPassword'));
-import { lazy, Suspense } from 'react';
+import { Suspense } from 'react';
 import lazyPage from '@/lib/lazyPage';
 const Admin = lazyPage(() => import('@/pages/admin/Admin'));
 const CmsPreview = lazyPage(() => import('@/pages/CmsPreview'));
