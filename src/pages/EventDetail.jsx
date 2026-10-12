@@ -4,6 +4,7 @@ import { sanitizeHtml } from "@/lib/sanitizeHtml";
 import { Link, useParams } from "react-router-dom";
 import { ArrowLeft, ArrowRight, Clock, MapPin } from "lucide-react";
 import { usePageMeta } from "@/lib/usePageMeta";
+import { useDocMeta } from "@/lib/useDocMeta";
 import { LISTOPAD_EVENT } from "@/components/cms/defaults/listopadDefault";
 
 // Spotkania z własną stroną zapisu: karta zostaje, zapis i adres kanoniczny prowadzą tam.
@@ -24,6 +25,7 @@ export default function EventDetail() {
   const [error, setError] = useState("");
   const landing = LANDINGS[slug];
   usePageMeta({ canonical: landing });
+  useDocMeta(event?.title ? `${event.title} — Spotkania | exmortis` : "", event?.subtitle || event?.description);
 
   useEffect(() => {
     setEvent(undefined);
