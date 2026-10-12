@@ -14,10 +14,10 @@ export default function MyOrders() {
     <div className="divide-y divide-[#3D3D3F]/60 border-y hairline">
       {list.map((o) => (
         <div key={o.id} className="py-5 grid sm:grid-cols-4 gap-2 sm:gap-6 text-sm">
-          <span className="text-foreground/50">{plDate(o.created_date)}</span>
+          <span className="text-foreground/50">{plDate(o.created_date)}<span className="block technical text-[9px] text-foreground/35 mt-1">NR {String(o.id).slice(0, 8).toUpperCase()}</span></span>
           <span className="sm:col-span-2 text-[#F5EFE1]">{(o.items || []).map((i) => i.name).join(", ")}</span>
           <span className="sm:text-right">
-            <span className="font-mono gold-text">{Number(o.total).toFixed(2)} zł</span>
+            <span className="font-mono gold-text">{Number(o.total).toFixed(2).replace(".", ",")} zł</span>
             <span className="block technical text-[9px] text-foreground/45 mt-1">{STATUS_LABEL[o.status] || o.status}</span>
           </span>
         </div>

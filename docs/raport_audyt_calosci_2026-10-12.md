@@ -57,3 +57,13 @@ Testy: funkcje płatności uruchomione lokalnie (Deno) z atrapą bazy i PayU; ka
 ### Do decyzji (Dawid / księgowość)
 - Faktury: aplikacja ich nie wystawia ani nie zbiera NIP. Do ustalenia z księgową (KSeF, faktura na żądanie), ewentualnie pole „NIP do faktury” w kasie.
 - PayU: klucze produkcyjne + test w sandboxie przed 16.11 (adres powiadomień: https://exmortis.pl/functions/payuNotification).
+
+## Etap 3 — faktury, panel zamówień, kursy wideo
+- Kasa: „Potrzebuję faktury na firmę (NIP)” — nazwa firmy, NIP (suma kontrolna w przeglądarce i na serwerze), adres. Dane w zamówieniu (kolumna `invoice`, zakładana przy pierwszym zamówieniu z fakturą) i w notatce; w mailu do klienta i do prowadzącego.
+- Panel → Zamówienia (nowy kafelek w „Sklep i treści”): przychód w miesiącu, opłacone, faktury do wystawienia; filtry (status, „tylko faktury do wystawienia”), wyszukiwarka, szczegóły zamówienia, „Oznacz jako wystawioną” z numerem faktury, eksport CSV dla księgowości (Excel, średnik). SQL sprawdzony na Postgresie (PGlite) — także zanim powstanie kolumna invoice.
+- Kursy wideo: kupujący dostaje dostęp po płatności (Moje konto → Moje produkty → Otwórz kurs) — sprawdzone. Nowe:
+  - lekcja może mieć wideo z adresu: własny serwer (mp4/webm, domena z listy „Ustawienia strony → Biblioteka”), Vimeo, YouTube, Bunny — pliki w aplikacji mają limit 100 MB, kursy zwykle więcej;
+  - pasek postępu kursu, data końca dostępu, przycisk „Dalej: następna lekcja”, poprawka szerokości odtwarzacza na telefonie;
+  - program kursu (moduły, lekcje, czas) na stronie produktu w Skarbcu;
+  - w panelu podpowiedzi przy lekcjach, licznik widocznych lekcji, usuwanie wgranego pliku.
+- Mail po zakupie dla nowego konta: jak wejść (Google albo „Nie pamiętam hasła”). Moje konto → Zakupy: numer zamówienia.
