@@ -42,6 +42,12 @@ export default function ProductTile({ p }) {
         <p className="flex items-center gap-2 technical text-[9px] gold-text"><Icon className="h-3.5 w-3.5" strokeWidth={1.25} /> {TYPE_LABEL[p.type]}</p>
         <h3 className="shop-heading text-xl text-[#F5EFE1] leading-tight">{p.name}</h3>
         <AccessLine p={p} />
+        {p.active && p.lessons_total > 0 && (
+          <div>
+            <div className="flex justify-between technical text-[9px] text-foreground/45"><span>{p.lessons_done >= p.lessons_total ? "UKOŃCZONY" : `LEKCJE ${p.lessons_done} / ${p.lessons_total}`}</span><span>{Math.round((p.lessons_done / p.lessons_total) * 100)}%</span></div>
+            <div className="mt-1.5 h-1 bg-[#26262A]" aria-hidden="true"><div className="h-full bg-[#C9A24A]" style={{ width: `${Math.round((p.lessons_done / p.lessons_total) * 100)}%` }} /></div>
+          </div>
+        )}
         <div className="mt-auto pt-3 space-y-3">
           {!p.active ? null : !p.has_file && (p.type === "pdf" || p.type === "audio") ? (
             <p className="text-xs text-foreground/40">Materiał jest przygotowywany. Dam znać mailem.</p>
@@ -55,7 +61,7 @@ export default function ProductTile({ p }) {
               <button onClick={async () => setAudio(await getUrl())} disabled={busy} className="btn-relic !px-4 !py-2.5">{busy ? <Loader2 className={`${ico} animate-spin`} /> : <Play className={ico} strokeWidth={1.25} />} SŁUCHAJ</button>
             )
           ) : (
-            <Link to={`/konto/kurs/${p.access_id}`} className="btn-relic !px-4 !py-2.5"><Play className={ico} strokeWidth={1.25} /> {p.type === "kurs" ? "OTWÓRZ KURS" : "OGLĄDAJ"}</Link>
+            <Link to={`/konto/kurs/${p.access_id}`} className="btn-relic !px-4 !py-2.5"><Play className={ico} strokeWidth={1.25} /> {p.lessons_done > 0 && p.lessons_done < p.lessons_total ? "KONTYNUUJ" : p.type === "kurs" ? "OTWÓRZ KURS" : "OGLĄDAJ"}</Link>
           )}
           {err && <p className="text-xs text-[#E8C547]">{err}</p>}
         </div>

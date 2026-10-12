@@ -39,6 +39,19 @@ export default async function (req) {
           has_file: !!p.has_file,
         };
       });
+      // Postęp kursów: ukończone / widoczne lekcje (bez wpływu na resztę listy przy błędzie).
+      await Promise.all(products.filter((p) => (p.type === "kurs" || p.type === "wideo") && p.active).map(async (p) => {
+        try {
+          const a = list.find((x) => x.id === p.access_id);
+          const [lessons, prog] = await Promise.all([
+            base44.asServiceRole.entities.CourseLesson.filter({ product_id: a.product_id, published: true }, "order", 300),
+            base44.asServiceRole.entities.LessonProgress.filter({ user_email: email, product_id: a.product_id, completed: true }, "-updated_date", 300),
+          ]);
+          const ids = new Set(lessons.map((l) => l.id));
+          p.lessons_total = lessons.length;
+          p.lessons_done = prog.filter((x) => ids.has(x.lesson_id)).length;
+        } catch { /* bez postępu */ }
+      }));
       return Response.json({ products });
     }
 
