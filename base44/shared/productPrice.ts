@@ -63,7 +63,7 @@ async function ensureHistory(base44) {
 }
 
 export const PRICE_COLS = `id, price::float8 AS price, price_regular::float8 AS price_regular, price_start::float8 AS price_start,
-  promo_end_date::text AS promo_end_date, price_steps, is_free`;
+  promo_end_date::text AS promo_end_date, to_jsonb(p)->'price_steps' AS price_steps, is_free`;
 
 // Zapis dzisiejszej ceny wszystkich aktywnych, płatnych produktów (wołane z zadania co 5 min i po zapisie w panelu).
 let lastRecord = "";
@@ -72,7 +72,7 @@ export async function recordPrices(base44, force = false) {
   if (!force && lastRecord === stamp) return 0; // najwyżej raz na godzinę na instancję
   await ensureHistory(base44);
   await runSql(base44, `ALTER TABLE public.products ADD COLUMN IF NOT EXISTS price_steps jsonb`);
-  const rows = await runSql(base44, `SELECT ${PRICE_COLS} FROM public.products WHERE active = TRUE AND COALESCE(is_free, FALSE) = FALSE AND COALESCE(status, 'dostępny') = 'dostępny'`, true);
+  const rows = await runSql(base44, `SELECT ${PRICE_COLS} FROM public.products p WHERE active = TRUE AND COALESCE(is_free, FALSE) = FALSE AND COALESCE(status, 'dostępny') = 'dostępny'`, true);
   const day = warsawToday();
   const vals = (rows || []).map((r) => ({ id: String(r.id), price: unitPrice(r) })).filter((r) => Number.isFinite(r.price) && r.price > 0);
   if (vals.length) {
