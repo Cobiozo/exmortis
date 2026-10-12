@@ -60,7 +60,8 @@ export default function RzLibrary() {
                   <div className="relative">
                     <RzImage url={s.cover_portrait_url} alt="" ratio="aspect-[2/3]" eager={i < 2} sizes="(min-width: 1024px) 280px, (min-width: 768px) 30vw, 46vw" className="border hairline group-hover:border-[#C9A24A]/60 transition-colors" />
                     {ended && <span className="absolute top-2 left-2 technical text-[9px] bg-[#0A0A0B]/80 text-foreground/70 px-2 py-1 flex items-center gap-1"><Check className="h-3 w-3" /> UKOŃCZONO</span>}
-                    {!ended && s.is_new && <span className="absolute top-2 left-2 technical text-[9px] bg-[#0A0A0B]/85 gold-text border border-[#C9A24A]/50 px-2 py-1">NOWA</span>}
+                    {s.scheduled_at && <span className="absolute bottom-2 left-2 right-2 technical text-[9px] bg-[#0A0A0B]/90 text-[#E8C547] border border-[#E8C547]/50 px-2 py-1" title="Widzi to tylko administrator">ZAPLANOWANA · {plWhen(s.scheduled_at).toUpperCase()}</span>}
+                    {!ended && s.is_new && !s.scheduled_at && <span className="absolute top-2 left-2 technical text-[9px] bg-[#0A0A0B]/85 gold-text border border-[#C9A24A]/50 px-2 py-1">NOWA</span>}
                   </div>
                   {s.category && <p className="technical text-[9px] text-[#E8676A]/90 mt-3">{(CATEGORY_LABEL[s.category] || "").toUpperCase()}</p>}
                   <h2 className="shop-heading text-xl text-[#F5EFE1] mt-1 leading-tight group-hover:text-[#C9A24A]">{s.title}</h2>
