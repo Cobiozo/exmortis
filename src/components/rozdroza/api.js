@@ -19,6 +19,15 @@ const snaps = new Map();
 const call = (p) => base44.functions.invoke("rozdroza", p).then((r) => r.data);
 
 export const cachedList = () => list?.items || store.get(LIST_KEY)?.items || null;
+// „w sobotę, 17 października, o 20:00” (czas polski).
+const DAYS = ["w niedzielę", "w poniedziałek", "we wtorek", "w środę", "w czwartek", "w piątek", "w sobotę"];
+export function plWhen(iso) {
+  const d = new Date(iso);
+  const p = Object.fromEntries(new Intl.DateTimeFormat("en-GB", { timeZone: "Europe/Warsaw", weekday: "short", hour: "2-digit", minute: "2-digit", hourCycle: "h23" }).formatToParts(d).map((x) => [x.type, x.value]));
+  const wd = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"].indexOf(p.weekday);
+  const day = new Intl.DateTimeFormat("pl-PL", { timeZone: "Europe/Warsaw", day: "numeric", month: "long" }).format(d);
+  return `${DAYS[wd]}, ${day}, o ${p.hour}:${p.minute}`;
+}
 // Data najbliższej zaplanowanej historii (bez tytułu) — tylko jeśli wciąż w przyszłości.
 export const nextAt = () => { const v = (list || store.get(LIST_KEY))?.next_at; return v && Date.parse(v) > Date.now() ? v : null; };
 
