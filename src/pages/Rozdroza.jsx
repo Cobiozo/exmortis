@@ -1,13 +1,13 @@
 import React from "react";
-import { Link, Route, Routes, useLocation } from "react-router-dom";
+import { Link, Route, Routes, useLocation, useNavigate } from "react-router-dom";
 import { useNoIndex } from "@/lib/useNoIndex";
 import { useAuth } from "@/lib/AuthContext";
 import RzIntro from "@/components/rozdroza/RzIntro";
 import RzLibrary from "@/components/rozdroza/RzLibrary";
-import RzPreview from "@/components/rozdroza/RzPreview";
+import RzPreview, { StoryCard } from "@/components/rozdroza/RzPreview";
 import RzReader from "@/components/rozdroza/RzReader";
 import RzProblem from "@/components/rozdroza/RzProblem";
-import { adminPreview } from "@/components/rozdroza/api";
+import { adminPreview, loadPreview } from "@/components/rozdroza/api";
 
 // Izolacja błędów modułu: awaria czytnika nie wywraca reszty konta ani strony.
 class RzBoundary extends React.Component {
@@ -20,11 +20,30 @@ class RzBoundary extends React.Component {
   }
 }
 
+// Podgląd szkicu jak u klienta: najpierw karta historii (okładka, opis, ostrzeżenie), potem czytnik.
+// /konto/rozdroza/podglad?id=… → karta; …&czytaj=1 → czytnik. Tylko administrator (serwer też to sprawdza).
 function AdminPreview() {
-  const id = new URLSearchParams(useLocation().search).get("id");
+  const loc = useLocation();
+  const nav = useNavigate();
+  const q = new URLSearchParams(loc.search);
+  const id = q.get("id") || "";
+  const reading = q.get("czytaj") === "1";
   const { user } = useAuth();
-  if (user?.role !== "admin") return <RzProblem text="Podgląd szkicu jest dostępny tylko dla administratora." />;
-  return <RzReader previewId={id} />;
+  const [d, setD] = React.useState(null);
+  const [err, setErr] = React.useState("");
+  const isAdmin = user?.role === "admin";
+  const load = React.useCallback(() => { setErr(""); setD(null); loadPreview(id).then(setD).catch((e) => setErr(e.message)); }, [id]);
+  React.useEffect(() => { if (isAdmin && !reading && id) load(); }, [isAdmin, reading, id, load]);
+  if (!isAdmin) return <RzProblem text="Podgląd szkicu jest dostępny tylko dla administratora." />;
+  if (!id) return <RzProblem text="Brak historii do podglądu — otwórz ją z panelu." />;
+  if (reading) return <RzReader previewId={id} />;
+  if (err) return <RzProblem text={err} onRetry={load} />;
+  if (!d) return <div className="max-w-[720px] mx-auto aspect-video bg-[#141416] animate-pulse motion-reduce:animate-none" aria-busy="true" />;
+  return (
+    <StoryCard meta={d.meta} backTo={`/admin/rozdroza?historia=${encodeURIComponent(id)}`} backLabel="WRÓĆ DO EDYCJI"
+      note={<p className="text-xs text-[#E8C547] border border-[#E8C547]/30 px-3 py-2 mb-6" role="status">PODGLĄD SZKICU — tak tę historię zobaczy klient po publikacji (karta, potem czytanie). Widzisz to tylko Ty.</p>}
+      onStart={() => nav(`/konto/rozdroza/podglad?id=${encodeURIComponent(id)}&czytaj=1`)} />
+  );
 }
 
 // Pasek administratora: „Podgląd jak klient” pokazuje też historie zaplanowane (z datą). Klient tego paska nie widzi.
