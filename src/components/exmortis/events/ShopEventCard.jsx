@@ -2,7 +2,7 @@ import React from "react";
 import { Link } from "react-router-dom";
 import { ArrowRight } from "lucide-react";
 import { CoverTile } from "./cover";
-import { dateParts, timeText, durationText, priceText } from "./time";
+import { dateParts, timeText, priceText } from "./time";
 
 // Karta płatnego wydarzenia w sekcjach Skarbca (Praktyka, Krąg) — z datą,
 // prowadząca do strony wydarzenia.

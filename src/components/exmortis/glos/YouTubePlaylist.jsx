@@ -2,7 +2,6 @@ import React, { useEffect, useRef, useState } from "react";
 import { base44 } from "@/api/base44Client";
 import { extractVideoId, thumbUrl } from "./youtube";
 import GlosPlayer from "./GlosPlayer";
-import { useAuth } from "@/lib/AuthContext";
 
 // Publiczna playlista utworów z encji „Utwor" (tylko widoczne, wg kolejności).
 // Pusta lista → komponent nie renderuje nic.

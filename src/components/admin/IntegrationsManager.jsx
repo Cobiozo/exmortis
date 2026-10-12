@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { base44 } from "@/api/base44Client";
-import { Save, Send, Trash2, CreditCard, Mail } from "lucide-react";
+import { Save, Trash2, CreditCard, Mail } from "lucide-react";
 import AppUrlSettings from "./AppUrlSettings";
 
 const inputCls =

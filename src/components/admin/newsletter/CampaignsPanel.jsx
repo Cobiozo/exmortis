@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { base44 } from "@/api/base44Client";
-import { Plus, Trash2, X, Check, Pencil, Send } from "lucide-react";
+import { Plus, Trash2, X, Pencil, Send } from "lucide-react";
 import RichTextEditor from "@/components/admin/RichTextEditor";
 import useMailStatus, { MAIL_REQUIRED } from "@/lib/useMailStatus";
 
