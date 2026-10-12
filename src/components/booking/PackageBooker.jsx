@@ -11,6 +11,7 @@ const inp = "w-full bg-[#0A0A0B] border hairline px-4 py-3 focus:border-[#C9A24A
 export default function PackageBooker({ packageId, token, purchasedAt, consent, firstName = "", onDone }) {
   const key = token ? { token } : { package_id: packageId };
   const [slots, setSlots] = useState(null);
+  const [earliest, setEarliest] = useState(null);
   const [pick, setPick] = useState(null);
   const [name, setName] = useState(firstName);
   const [agree, setAgree] = useState(false);
@@ -19,7 +20,7 @@ export default function PackageBooker({ packageId, token, purchasedAt, consent, 
   const [busy, setBusy] = useState(false);
 
   const load = useCallback(() => {
-    call({ action: "slots", ...key }).then((d) => setSlots(d.slots)).catch(() => setSlots([]));
+    call({ action: "slots", ...key }).then((d) => { setSlots(d.slots || []); setEarliest(d.earliest || null); }).catch(() => setSlots([]));
   }, [token, packageId]);
   useEffect(() => { load(); }, [load]);
 
@@ -49,6 +50,11 @@ export default function PackageBooker({ packageId, token, purchasedAt, consent, 
     return (
       <>
         {notice && <p className="mb-4 text-sm text-[#E8C547]" role="alert">{notice}</p>}
+        {earliest && new Date(earliest).getTime() > Date.now() && (
+          <p className="mb-4 text-sm text-foreground/60">
+            Kolejne spotkanie możesz umówić najwcześniej {new Date(earliest).toLocaleDateString("pl-PL", { day: "numeric", month: "long" })} — między spotkaniami jest czas na pracę własną.
+          </p>
+        )}
         <SlotPicker slots={slots} value={pick} onPick={(s) => { setNotice(""); setPick(s); }} />
       </>
     );
