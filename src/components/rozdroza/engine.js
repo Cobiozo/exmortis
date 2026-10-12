@@ -68,9 +68,9 @@ export function otherPath(snap, st) {
   if (!d) return st;
   const prev = [...st.picks].reverse().find((p) => p.at === d.key);
   const stack = st.stack.slice(0, d.index + 1);
-  const picks = st.picks.slice();
-  const pi = picks.map((p) => p.at).lastIndexOf(d.key);
-  if (pi >= 0) picks.splice(pi, 1);
+  // Wybory zapisywane po kolei: odcinamy ostatni wybór w tej decyzji i wszystkie późniejsze.
+  const pi = st.picks.map((p) => p.at).lastIndexOf(d.key);
+  const picks = pi >= 0 ? st.picks.slice(0, pi) : st.picks.slice();
   return { scene: d.key, stack, picks, done: false, previous: prev ? { at: d.key, idx: prev.idx } : null };
 }
 
