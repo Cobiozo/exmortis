@@ -30,8 +30,18 @@ export default function RzPreview() {
   const going = p?.stack?.length > 1 && !p.done;
 
   return (
+    <StoryCard meta={meta} going={going} backTo="/konto/rozdroza/biblioteka" backLabel="BIBLIOTEKA"
+      onStart={() => nav(`/konto/rozdroza/${slug}/czytaj`)}
+      onRestart={going ? () => { clearProgress(uid, meta.id); nav(`/konto/rozdroza/${slug}/czytaj`); } : null} />
+  );
+}
+
+// Karta historii (to samo dla klienta i dla podglądu szkicu w panelu): okładka, opis, czas, ostrzeżenie, start.
+export function StoryCard({ meta, going = false, backTo, backLabel, onStart, onRestart = null, note = null }) {
+  return (
     <article className="max-w-[720px] mx-auto">
-      <Link to="/konto/rozdroza/biblioteka" className="technical text-[10px] text-foreground/55 hover:text-foreground inline-flex items-center gap-2 mb-6"><ArrowLeft className="h-3.5 w-3.5" /> BIBLIOTEKA</Link>
+      <Link to={backTo} className="technical text-[10px] text-foreground/55 hover:text-foreground inline-flex items-center gap-2 mb-6"><ArrowLeft className="h-3.5 w-3.5" /> {backLabel}</Link>
+      {note}
       {(meta.cover_landscape_url || meta.cover_portrait_url) && (
         <RzImage url={meta.cover_landscape_url || meta.cover_portrait_url} alt="" eager className="border hairline" />
       )}
@@ -48,9 +58,9 @@ export default function RzPreview() {
           </div>
         )}
         <div className="mt-10 flex flex-wrap items-center gap-4">
-          <button type="button" onClick={() => nav(`/konto/rozdroza/${slug}/czytaj`)} className="btn-relic focus-visible:ring-2 focus-visible:ring-[#C9A24A]/60">{going ? "KONTYNUUJ" : "ROZPOCZNIJ HISTORIĘ"}</button>
-          {going && (
-            <button type="button" onClick={() => { clearProgress(uid, meta.id); nav(`/konto/rozdroza/${slug}/czytaj`); }} className="technical text-[10px] text-foreground/55 hover:text-foreground underline underline-offset-4 min-h-[44px] px-2">OD POCZĄTKU</button>
+          <button type="button" onClick={onStart} className="btn-relic focus-visible:ring-2 focus-visible:ring-[#C9A24A]/60">{going ? "KONTYNUUJ" : "ROZPOCZNIJ HISTORIĘ"}</button>
+          {going && onRestart && (
+            <button type="button" onClick={onRestart} className="technical text-[10px] text-foreground/55 hover:text-foreground underline underline-offset-4 min-h-[44px] px-2">OD POCZĄTKU</button>
           )}
         </div>
       </div>
