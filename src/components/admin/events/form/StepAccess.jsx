@@ -2,6 +2,13 @@ import React from "react";
 import { Field, Input, Group, Chips, Toggle, inputCls } from "./ui";
 import { REG_TYPES } from "./eventForm";
 import JoinPreviewLinks from "./JoinPreviewLinks";
+import ZoomChoice from "@/components/admin/zoom/ZoomChoice";
+
+// Szybkie terminy dostępności nagrania (od teraz, czas polski).
+const untilFromNow = (h) => {
+  const p = {}; for (const x of new Intl.DateTimeFormat("en-GB", { timeZone: "Europe/Warsaw", hourCycle: "h23", year: "numeric", month: "2-digit", day: "2-digit", hour: "2-digit", minute: "2-digit" }).formatToParts(new Date(Date.now() + h * 3600000))) p[x.type] = x.value;
+  return `${p.year}-${p.month}-${p.day}T${p.hour}:${p.minute}`;
+};
 
 export default function StepAccess(p) {
   const { form: f, set } = p;
@@ -15,11 +22,15 @@ export default function StepAccess(p) {
           <Input id="location" label="Adres (widzą go tylko zapisani) *" {...p} />
         ) : (
           <div className="space-y-5">
-            <Input id="join_link" type="url" inputMode="url" label="Link do Zoom Webinar (dla uczestników, z wbudowanym hasłem)" hint="Możesz dodać później, nawet w dniu spotkania. Zapisani dostają stały adres strony dołączenia, nie ten link." {...p} />
-            <div className="grid md:grid-cols-2 gap-5">
-              <Input id="join_password" label="Hasło do pokoju (opcjonalnie)" hint="Gdy link nie ma wbudowanego hasła" {...p} />
-              <Input id="open_minutes" type="number" min="0" max="120" inputMode="numeric" label="Otwarcie pokoju: minut przed startem" {...p} />
-            </div>
+            <Field id="join_choice" label="Link do pokoju" error={p.errors?.join_link}>
+              <ZoomChoice link={f.join_link} withPassword onSet={({ link, haslo }) => set({ join_link: link, join_password: haslo })}>
+                <div className="grid md:grid-cols-2 gap-5">
+                  <Input id="join_link" type="url" inputMode="url" label="Link do Zoom (dla uczestników, z wbudowanym hasłem)" hint="Możesz dodać później, nawet w dniu spotkania. Zapisani dostają osobisty adres strony dołączenia, nie ten link." {...p} />
+                  <Input id="join_password" label="Hasło do pokoju (opcjonalnie)" hint="Gdy link nie ma wbudowanego hasła" {...p} />
+                </div>
+              </ZoomChoice>
+            </Field>
+            <Input id="open_minutes" type="number" min="0" max="120" inputMode="numeric" label="Otwarcie pokoju: minut przed startem" {...p} />
             <Input id="short_path" label="Krótki adres (opcjonalnie)" hint={f.short_path ? `Także /${f.short_path}/dolacz` : "np. 1-listopada"} {...p} />
             <Toggle id="zoom_faq" label="Pokaż pytania o Zoom na stronie spotkania" checked={f.zoom_faq !== false} onChange={(v) => set({ zoom_faq: v })} />
             <JoinPreviewLinks slug={f.id ? f.slug : ""} />
@@ -59,8 +70,16 @@ export default function StepAccess(p) {
       <Group title="Po spotkaniu">
         <div className="grid md:grid-cols-2 gap-5">
           <Input id="recording_url" type="url" inputMode="url" label="Link do nagrania" {...p} />
-          <Input id="recording_until" type="datetime-local" label="Nagranie dostępne do" hint="Puste = bez terminu" {...p} />
+          <div className="min-w-0">
+            <Input id="recording_until" type="datetime-local" label="Nagranie dostępne do" hint="Puste = bez terminu" {...p} />
+            <div className="flex flex-wrap gap-2 mt-2">
+              {[[24, "24 H OD TERAZ"], [48, "48 H"], [168, "7 DNI"]].map(([h, l]) => (
+                <button key={h} type="button" onClick={() => set({ recording_until: untilFromNow(h) })} className="technical text-[10px] border hairline px-3 py-2 text-foreground/60 hover:text-[#C9A24A] hover:border-[#C9A24A]">{l}</button>
+              ))}
+            </div>
+          </div>
         </div>
+        <p className="text-xs text-foreground/45">Nagranie widzą tylko osoby zapisane (osobisty link z e-maila albo e-mail z zapisu), do wpisanej godziny. Maila z nagraniem wysyłasz sam przyciskiem przy spotkaniu — bez tego nic nie wychodzi.</p>
       </Group>
       <Group title="Adres strony">
         <Field id="slug" label="Adres (slug)" hint={`/spotkania/${f.slug || "tworzony-z-tytulu"}`}>
