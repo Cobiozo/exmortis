@@ -1,5 +1,6 @@
 import { createClientFromRequest } from "npm:@base44/sdk@0.8.44";
 import { runSql, escStr } from "../../shared/supabase.ts";
+import { withSteps, unitPrice, omnibusPrices, omnibusFrom, warsawToday } from "../../shared/productPrice.ts";
 
 // Publiczny katalog Skarbca: produkty dostępne i "wkrótce", posortowane po poziomie drabiny.
 export default async function (req) {
@@ -30,16 +31,26 @@ export default async function (req) {
               price_start::float8 AS price_start, price_regular::float8 AS price_regular,
               is_free, status, promo_end_date::text AS promo_end_date,
               button_label, checkout_url, next_step, is_featured, sort_order, cover_image,
-              product_type, access_months,
+              product_type, access_months, to_jsonb(p)->'price_steps' AS price_steps,
               created_date, updated_date
-       FROM public.products
+       FROM public.products p
        WHERE ${where}
        ORDER BY level ASC NULLS LAST, sort_order ASC NULLS LAST, created_date ASC
        LIMIT 200`,
       true
     );
 
-    return Response.json({ products });
+    // Drabinka cen → bieżący próg jako zwykła promocja (+ next_price: od kiedy i ile). Omnibus z historii cen.
+    const today = warsawToday();
+    const out = (products || []).map((p) => withSteps(p));
+    const promo = out.filter((p) => p.price_start != null && p.promo_end_date && String(p.promo_end_date).slice(0, 10) >= today);
+    const hist = await omnibusPrices(base44, promo.map((p) => String(p.id)));
+    for (const p of promo) {
+      const low = omnibusFrom(hist.get(String(p.id)) || [], unitPrice(p), today);
+      if (low != null) p.omnibus_price = low;
+    }
+    for (const p of out) delete p.price_steps; // klient dostaje tylko bieżący i następny próg
+    return Response.json({ products: out });
   } catch (error) {
     return Response.json({ error: error.message }, { status: 500 });
   }
