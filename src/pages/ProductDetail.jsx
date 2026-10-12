@@ -11,7 +11,7 @@ import { useDocMeta } from "@/lib/useDocMeta";
 import Logo from "@/components/exmortis/Logo";
 import WaitlistDialog from "@/components/exmortis/shop/WaitlistDialog";
 import Curriculum from "@/components/exmortis/shop/Curriculum";
-import { isPromoActive, priceOnRequest, regularPrice, unitPrice } from "@/lib/productPrice";
+import { isPromoActive, priceOnRequest, regularPrice, unitPrice, lowestPrice30, zl } from "@/lib/productPrice";
 
 // Zmienione adresy produktów: stary → nowy.
 const OLD_SLUGS = { "krag-mezczyzn-rzeszow": "krag-mezczyzn" };
@@ -135,6 +135,10 @@ export default function ProductDetail() {
                 </span>
               )}
             </div>
+
+            {promo && (
+              <p className="text-xs text-foreground/50 -mt-6 mb-8">Najniższa cena z 30 dni przed obniżką: {zl(lowestPrice30(product))}</p>
+            )}
 
             {product.description && !sameText(product.description, product.subtitle) && (
               <p className="text-foreground/70 leading-relaxed text-lg mb-8">{product.description}</p>

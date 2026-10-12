@@ -15,5 +15,10 @@ export function unitPrice(p) {
   return isPromoActive(p) ? Number(p.price_start) : regularPrice(p);
 }
 
+// Omnibus: najniższa cena z 30 dni przed obniżką (pole omnibus_price, jeśli kiedyś powstanie; inaczej cena regularna —
+// prawdziwa, dopóki w ostatnich 30 dniach przed promocją nie było innej obniżki).
+export const lowestPrice30 = (p) => (p?.omnibus_price != null ? Number(p.omnibus_price) : regularPrice(p));
+export const zl = (n) => `${Number(n || 0).toFixed(2).replace(".", ",").replace(",00", "")} zł`;
+
 // Produkt płatny bez ceny (np. mentoring „po rozmowie”) — nie trafia do koszyka.
 export const priceOnRequest = (p) => !p?.is_free && !(unitPrice(p) > 0);

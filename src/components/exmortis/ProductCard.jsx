@@ -2,7 +2,7 @@ import React from "react";
 import { Link } from "react-router-dom";
 import { ArrowRight } from "lucide-react";
 import { Image } from "@/components/ui/image";
-import { isPromoActive, priceOnRequest, regularPrice, unitPrice } from "@/lib/productPrice";
+import { isPromoActive, priceOnRequest, regularPrice, unitPrice, lowestPrice30, zl } from "@/lib/productPrice";
 
 // Karta produktu na stronie głównej (Skarbiec).
 export default function ProductCard({ product, index = 0 }) {
