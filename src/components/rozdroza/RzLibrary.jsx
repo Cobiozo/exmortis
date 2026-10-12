@@ -63,7 +63,7 @@ export default function RzLibrary() {
                   <h2 className="shop-heading text-xl text-[#F5EFE1] mt-1 leading-tight group-hover:text-[#C9A24A]">{s.title}</h2>
                   {s.summary && <p className="text-sm text-foreground/60 mt-2 leading-relaxed line-clamp-3">{s.summary}</p>}
                   <div className="flex flex-wrap items-center justify-between gap-2 mt-3">
-                    {s.estimated_minutes ? <span className="text-xs text-foreground/45 flex items-center gap-1"><Clock className="h-3.5 w-3.5" /> ok. {s.estimated_minutes} min</span> : <span />}
+                    {s.reading_time || s.estimated_minutes ? <span className="text-xs text-foreground/45 flex items-center gap-1"><Clock className="h-3.5 w-3.5" /> {s.reading_time || `ok. ${s.estimated_minutes} min`}</span> : <span />}
                     <span className="technical text-[10px] gold-text">{going ? "KONTYNUUJ →" : "ROZPOCZNIJ →"}</span>
                   </div>
                 </Link>

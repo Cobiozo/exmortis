@@ -143,7 +143,7 @@ export default function RzReader({ previewId = null }) {
       <div key={`${st.scene}-${st.stack.length}`} className="motion-safe:animate-[rzIn_.35s_ease-out]">
         {prefs.images && scene.i && <RzImage url={scene.i} alt={scene.a || ""} eager className="border hairline mb-8" />}
         {scene.y === "ending" && <p className="technical text-[10px] text-[#E8676A] mb-2">ZAKOŃCZENIE</p>}
-        {scene.t && <h1 ref={head} tabIndex={-1} className="shop-heading text-3xl md:text-4xl text-[#F5EFE1] leading-tight outline-none">{scene.t}</h1>}
+        {scene.t && <h1 ref={head} tabIndex={-1} className={`outline-none text-[#F5EFE1] leading-tight ${scene.t === scene.t.toUpperCase() ? "relic-heading text-xl md:text-2xl tracking-[0.14em]" : "shop-heading text-3xl md:text-4xl"}`}>{scene.t}</h1>}
         {!scene.t && <span ref={head} tabIndex={-1} className="sr-only">Scena</span>}
         <Body text={scene.b} className="mt-6 text-foreground/85" />
 
