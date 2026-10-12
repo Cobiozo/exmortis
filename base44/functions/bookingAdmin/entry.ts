@@ -1,7 +1,7 @@
 import { createClientFromRequest } from "npm:@base44/sdk@0.8.52";
 import { runSql, rpc, esc, escStr, requireAdmin, emailField, textField } from "../../shared/supabase.ts";
 import { loadKeys, getMode, safeErr, KEYS_MSG, randomToken } from "../../shared/booking.ts";
-import { loadAppUrl } from "../../shared/settings.ts";
+import { loadAppUrl, getSetting, saveSetting } from "../../shared/settings.ts";
 import { onBookingCreated, onBookingMoved, loadBooking, sendBookingMail, mailTexts, DEFAULT_TEXTS } from "../../shared/bookingNotify.ts";
 import { decryptHealth } from "../../shared/bookingCrypto.ts";
 import { SCHEMA_SQL, SEED_SQL } from "../../shared/bookingSchema.ts";
@@ -14,6 +14,23 @@ const iso = (v) => { const d = new Date(v); if (isNaN(d.getTime())) throw new Er
 const uuidOrNull = (v) => { const s = String(v || "").trim(); return /^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$/.test(s) ? s : null; };
 const log = (base44, actor, action, type, id, summary) => runSql(base44,
   `INSERT INTO public.bk_log (actor, action, object_type, object_id, summary) VALUES (${escStr(actor)}, ${escStr(action)}, ${esc(type)}, ${esc(id)}, ${esc(summary)})`);
+
+// Dostęp do spotkań indywidualnych w programie POWRÓT — domyślne parametry (zmieniane w panelu, także dla każdej osoby osobno).
+const POWROT_KEY = "powrot_sesje";
+const POWROT_DEFAULTS = { type_slug: "sesja-powrot", sessions: 8, gap_days: 14, valid_months: 6 };
+async function powrotDefaults(base44) {
+  const s = await getSetting(base44, POWROT_KEY).catch(() => null);
+  return { ...POWROT_DEFAULTS, ...(s && typeof s === "object" ? s : {}) };
+}
+// Nowe rodzaje spotkań dodawane raz (nieaktywne — Dawid ustawia godziny i włącza w „Rodzaje i godziny”).
+let typesEnsured = false;
+async function ensureTypes(base44) {
+  if (typesEnsured) return;
+  await runSql(base44, `INSERT INTO public.bk_types (slug, name, description, duration_min, buffer_before, buffer_after, step_min, horizon_days, access, monthly_limit, sort, questions, active)
+    VALUES ('indywidualne-konsultacje', 'Indywidualne konsultacje', 'Spotkanie jeden na jeden: rozmowa o tym, z czym przychodzisz, i o najbliższym kroku.', 60, 15, 15, 30, 60, 'PAKIET', NULL, 5, '[]', false)
+    ON CONFLICT (slug) DO NOTHING`).catch(() => {});
+  typesEnsured = true;
+}
 
 export default async function (req) {
   try {
@@ -34,6 +51,7 @@ export default async function (req) {
     }
 
     if (a === "get") {
+      await ensureTypes(base44);
       const [s, types, hours, blocks, hol] = await Promise.all([
         runSql(base44, `SELECT mode, min_notice_h, daily_limit, weekly_limit, late_cancel_policy, threshold_product_id, threshold_type_id, threshold_sessions, threshold_valid_days, service_consent_version, service_consent_text FROM public.bk_settings WHERE id = 1`, true),
         runSql(base44, `SELECT id, slug, name, description, duration_min, buffer_before, buffer_after, step_min, horizon_days, access, zoom_link, questions, change_window_h, monthly_limit, active FROM public.bk_types ORDER BY sort, name`, true),
@@ -170,8 +188,58 @@ export default async function (req) {
     }
 
     if (a === "packages") {
-      const r = await rpc(base44, "bk_admin_packages");
-      return Response.json({ packages: r || [] });
+      const rows = await runSql(base44, `SELECT pk.id, t.name AS type, t.id AS type_id, pk.email_display AS email, pk.sessions_total, pk.sessions_used,
+          pk.valid_until, pk.min_gap_days, pk.payment_status, pk.source, pk.order_id, pk.created_at,
+          (SELECT max(k.starts_at) FROM public.bk_bookings k WHERE k.package_id = pk.id AND k.status IN ('POTWIERDZONA','ODBYLA_SIE')) AS last_start
+        FROM public.bk_packages pk JOIN public.bk_types t ON t.id = pk.type_id ORDER BY pk.created_at DESC LIMIT 500`, true);
+      return Response.json({ packages: rows || [], defaults: await powrotDefaults(base44) });
+    }
+
+    // Domyślne parametry dostępu POWRÓT (rodzaj spotkania, liczba spotkań, odstęp, ważność).
+    if (a === "powrot_defaults") {
+      const cur = await powrotDefaults(base44);
+      const slug = /^[a-z0-9-]{2,60}$/.test(String(body.type_slug || "")) ? String(body.type_slug) : cur.type_slug;
+      const next = { type_slug: slug, sessions: int(body.sessions, 1, 100, cur.sessions), gap_days: int(body.gap_days, 0, 90, cur.gap_days), valid_months: int(body.valid_months, 1, 36, cur.valid_months) };
+      await saveSetting(base44, POWROT_KEY, next);
+      await log(base44, me.email, "powrot_domyslne", "settings", POWROT_KEY, `${next.sessions} spotkań, co ${next.gap_days} dni, ${next.valid_months} mies.`);
+      return Response.json({ ok: true, defaults: next });
+    }
+
+    // Potwierdzenie uczestnictwa: nadanie dostępu do umawiania spotkań (pakiet ręczny, opłacony).
+    if (a === "grant_package") {
+      const email = emailField(body).toLowerCase();
+      const d = await powrotDefaults(base44);
+      const typeId = uuidOrNull(body.type_id) || (await runSql(base44, `SELECT id FROM public.bk_types WHERE slug = ${escStr(d.type_slug)}`, true))?.[0]?.id;
+      if (!typeId) throw new Error("Brak rodzaju spotkania — wybierz go albo ustaw w parametrach domyślnych.");
+      const sessions = int(body.sessions_total, 1, 100, d.sessions), gap = int(body.min_gap_days, 0, 90, d.gap_days);
+      const until = body.valid_until ? iso(`${String(body.valid_until).slice(0, 10)}T21:59:59Z`) : new Date(Date.now() + d.valid_months * 30.5 * 864e5).toISOString();
+      if (new Date(until).getTime() < Date.now()) throw new Error("Data ważności jest w przeszłości.");
+      const users = await base44.asServiceRole.entities.User.filter({ email }, "-created_date", 1).catch(() => []);
+      const uid = users?.[0]?.id || `email:${email}`;
+      const dup = await runSql(base44, `SELECT id FROM public.bk_packages WHERE type_id = ${escStr(typeId)}::uuid AND lower(email_display) = ${escStr(email)}
+        AND valid_until > now() AND sessions_used < sessions_total AND payment_status = 'oplacony' LIMIT 1`, true);
+      if (dup?.length && body.force !== true) return Response.json({ error: "Ta osoba ma już aktywny dostęp do tego rodzaju spotkań — zmień jego parametry na liście poniżej.", duplicate: dup[0].id }, { status: 409 });
+      const [row] = await runSql(base44, `INSERT INTO public.bk_packages (user_id, email_display, type_id, sessions_total, valid_until, min_gap_days, source, payment_status)
+        VALUES (${escStr(uid)}, ${escStr(email)}, ${escStr(typeId)}::uuid, ${sessions}, ${escStr(until)}::timestamptz, ${gap}, 'reczny', 'oplacony') RETURNING id`);
+      await log(base44, me.email, "pakiet_nadany", "package", row?.id, `${email}: ${sessions} spotkań, co ${gap} dni, do ${until.slice(0, 10)}${users?.[0] ? "" : " (bez konta — dopasowanie po e-mailu)"}`);
+      return Response.json({ ok: true, id: row?.id, has_account: !!users?.[0] });
+    }
+
+    // Zmiana parametrów dostępu jednej osoby (liczba spotkań, odstęp, ważność) albo zakończenie dostępu.
+    if (a === "update_package") {
+      const id = uuidOrNull(body.package_id);
+      if (!id) throw new Error("Brak pakietu");
+      const [p] = await runSql(base44, `SELECT sessions_used FROM public.bk_packages WHERE id = ${escStr(id)}::uuid`, true);
+      if (!p) return Response.json({ error: "Nie znaleziono pakietu" }, { status: 404 });
+      const sets = [];
+      if (body.sessions_total !== undefined) sets.push(`sessions_total = ${Math.max(int(body.sessions_total, 1, 100, 1), Number(p.sessions_used) || 0, 1)}`);
+      if (body.min_gap_days !== undefined) sets.push(`min_gap_days = ${int(body.min_gap_days, 0, 90, 0)}`);
+      if (body.end_now === true) sets.push(`valid_until = now()`);
+      else if (body.valid_until) sets.push(`valid_until = ${escStr(iso(`${String(body.valid_until).slice(0, 10)}T21:59:59Z`))}::timestamptz`);
+      if (!sets.length) return Response.json({ ok: true });
+      await runSql(base44, `UPDATE public.bk_packages SET ${sets.join(", ")} WHERE id = ${escStr(id)}::uuid`);
+      await log(base44, me.email, "pakiet_zmiana", "package", id, sets.join("; ").slice(0, 300));
+      return Response.json({ ok: true });
     }
 
     // Polityka „decyduje admin”: ręczne oddanie sesji do pakietu.
