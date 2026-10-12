@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from "react";
-import { Loader2, Upload } from "lucide-react";
+import { Loader2, Upload, Eye } from "lucide-react";
+import { Link, useLocation, useNavigate } from "react-router-dom";
 import StoryEditor from "./StoryEditor";
 import AiSettings from "./AiSettings";
 import SchedulePlan from "./SchedulePlan";
@@ -28,7 +29,11 @@ const EXAMPLE = `{
 export default function RozdrozaAdmin() {
   const [items, setItems] = useState(null);
   const [err, setErr] = useState("");
-  const [open, setOpen] = useState(null);
+  // ?historia=ID otwiera edytor tej historii (powrót z podglądu „jak klient”).
+  const loc = useLocation();
+  const navigate = useNavigate();
+  const [open, setOpenState] = useState(() => new URLSearchParams(loc.search).get("historia"));
+  const setOpen = (v) => { setOpenState(v); if (!v && new URLSearchParams(loc.search).get("historia")) navigate("/admin/rozdroza", { replace: true }); };
   const [replace, setReplace] = useState(false);
   const [busy, setBusy] = useState(false);
   const [results, setResults] = useState(null);
@@ -55,6 +60,10 @@ export default function RozdrozaAdmin() {
         <p className="technical text-[10px] gold-text mb-2">MODUŁ PANELU KLIENTA</p>
         <h2 className="relic-heading text-2xl">ROZDROŻA</h2>
         <p className="text-sm text-foreground/55 mt-3 max-w-3xl leading-relaxed">Interaktywne historie w Moim koncie (zakładka „Rozdroża”, widoczna dla klientów, gdy opublikujesz co najmniej jedną historię). Klienci widzą tylko opublikowane, sprawdzone wersje. Zmiany w szkicu działają po ponownej publikacji. Teksty scen i decyzji zmieniasz ponownym importem pliku — tutaj ustawiasz okładki, obrazy scen i publikację.</p>
+        <div className="flex flex-wrap gap-3 mt-4">
+          <Link to="/konto/rozdroza/biblioteka?jak_klient=0" className="btn-ghost !px-4 !py-2 text-[10px]" title="Dokładnie to, co klient widzi w tej chwili"><Eye className="h-4 w-4" /> BIBLIOTEKA JAK KLIENT</Link>
+          <Link to="/konto/rozdroza/biblioteka?jak_klient=1" className="btn-ghost !px-4 !py-2 text-[10px]" title="Jak klient, plus historie zaplanowane z datą"><Eye className="h-4 w-4" /> BIBLIOTEKA + ZAPLANOWANE</Link>
+        </div>
       </div>
 
       <section className="border hairline p-5 md:p-6 space-y-4">
