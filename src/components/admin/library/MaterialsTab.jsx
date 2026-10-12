@@ -15,7 +15,7 @@ export default function MaterialsTab() {
   const [form, setForm] = useState(null);      // { item } — null = zamknięte
   const [assign, setAssign] = useState(null);  // material do przydziału
   const [sel, setSel] = useState(() => new Set()); // zaznaczone do przydziału zbiorczego
-  const [assignMany, setAssignMany] = useState(false);
+  const [assignMany, setAssignMany] = useState(null); // lista id zamrożona przy otwarciu okna
   const toggle = (id) => setSel((s0) => { const n = new Set(s0); if (n.has(id)) n.delete(id); else n.add(id); return n; });
 
   const load = () => {
@@ -52,7 +52,7 @@ export default function MaterialsTab() {
           <span className="text-sm">Zaznaczone: {sel.size}</span>
           <div className="flex flex-wrap gap-2">
             <button className="btn-ghost !px-3 !py-2" onClick={() => setSel(new Set())}>WYCZYŚĆ</button>
-            <button className="btn-relic !px-3 !py-2" onClick={() => setAssignMany(true)}>PRZYDZIEL ZAZNACZONE ({sel.size})</button>
+            <button className="btn-relic !px-3 !py-2" onClick={() => setAssignMany([...sel])}>PRZYDZIEL ZAZNACZONE ({sel.size})</button>
           </div>
         </div>
       )}
@@ -78,9 +78,9 @@ export default function MaterialsTab() {
       {assignMany && (
         <AssignDialog
           open
-          onClose={() => setAssignMany(false)}
-          materialIds={[...sel]}
-          label={`Materiały: ${(items || []).filter((m) => sel.has(m.id)).map((m) => m.title).join(", ")}`}
+          onClose={() => setAssignMany(null)}
+          materialIds={assignMany}
+          label={`Materiały: ${(items || []).filter((m) => assignMany.includes(m.id)).map((m) => m.title).join(", ")}`}
           onDone={() => { setSel(new Set()); load(); }}
         />
       )}
