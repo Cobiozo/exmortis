@@ -1,15 +1,18 @@
 import React, { useEffect, useState } from "react";
 import { ArrowLeft, Loader2, Eye, ChevronDown } from "lucide-react";
 import ImageField from "@/components/admin/cms/ImageField";
-import { rz, statusBadge } from "./rzApi";
+import { rz, statusBadge, thumb } from "./rzApi";
+import GenBlock from "./GenBlock";
 
 const inp = "w-full bg-[#0A0A0B] border hairline px-3 py-2.5 text-sm text-foreground focus:border-[#C9A24A] focus:outline-none";
 const lab = "technical text-[10px] text-foreground/55 block mb-1.5";
 const TYPE = { narrative: "NARRACJA", decision: "DECYZJA", ending: "ZAKOŃCZENIE" };
 
-function SceneRow({ s, choices, titleOf, onSaved }) {
+function SceneRow({ s, choices, titleOf, onSaved, story }) {
   const [open, setOpen] = useState(false);
   const [img, setImg] = useState(s.image_url ? { url: s.image_url, alt: s.alt_text || "" } : null);
+  // Po zatwierdzeniu kadru / użyciu poprzedniego obrazu pole pokazuje aktualny stan z serwera.
+  useEffect(() => { setImg(s.image_url ? { url: s.image_url, alt: s.alt_text || "" } : null); }, [s.image_url, s.alt_text]);
   const [busy, setBusy] = useState(false);
   const [msg, setMsg] = useState("");
   const dirty = (img?.url || "") !== (s.image_url || "") || (img?.alt || "") !== (s.alt_text || "");
@@ -23,10 +26,10 @@ function SceneRow({ s, choices, titleOf, onSaved }) {
   return (
     <li className="border hairline">
       <button type="button" onClick={() => setOpen((o) => !o)} aria-expanded={open} className="w-full text-left flex items-center gap-3 p-3 hover:bg-white/[0.02]">
-        <div className="w-16 aspect-video bg-[#141416] shrink-0 overflow-hidden">{s.image_url && <img src={s.image_url.startsWith("/functions/media") ? `${s.image_url}&w=480` : s.image_url} alt="" className="w-full h-full object-cover" loading="lazy" />}</div>
+        <div className="w-16 aspect-video bg-[#141416] shrink-0 overflow-hidden">{s.image_url && <img src={thumb(s.image_url)} alt="" className="w-full h-full object-cover" loading="lazy" />}</div>
         <div className="min-w-0 flex-1">
           <p className="text-sm text-[#F5EFE1] truncate"><span className="technical text-[9px] text-foreground/45 mr-2">{s.scene_key}</span>{s.title || "(bez tytułu)"}</p>
-          <p className="text-xs text-foreground/45 truncate">{TYPE[s.scene_type] || s.scene_type}{out.length ? " → " + out.map(([l, k]) => `${l}: ${k}`).join(" · ") : ""}</p>
+          <p className="text-xs text-foreground/45 truncate">{s.image_candidate_url && <span className="gold-text mr-2">NOWY KADR ·</span>}{TYPE[s.scene_type] || s.scene_type}{out.length ? " → " + out.map(([l, k]) => `${l}: ${k}`).join(" · ") : ""}</p>
         </div>
         <ChevronDown className={`h-4 w-4 text-foreground/40 transition-transform ${open ? "rotate-180" : ""}`} />
       </button>
@@ -49,6 +52,8 @@ function SceneRow({ s, choices, titleOf, onSaved }) {
               <button type="button" onClick={save} disabled={!dirty || busy} className="btn-relic !px-4 !py-2 text-[10px] disabled:opacity-40">{busy ? <Loader2 className="h-4 w-4 animate-spin" /> : null} ZAPISZ OBRAZ</button>
               {msg && <span className="text-xs text-foreground/60">{msg}</span>}
             </div>
+            <GenBlock kind="scene" id={s.id} url={s.image_url} candidate={s.image_candidate_url} prompt={s.image_prompt} story={story}
+              allowPrevious={s.sort_order > 0} onSavePrompt={(v) => rz("update_scene", { id: s.id, image_prompt: v })} onChanged={onSaved} />
           </div>
         </div>
       )}
