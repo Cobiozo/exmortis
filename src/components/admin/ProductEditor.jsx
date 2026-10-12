@@ -54,6 +54,7 @@ export default function ProductEditor({ product, onSaved, onCancel }) {
     price_start: product?.price_start != null ? String(product.price_start) : "",
     price_regular: product?.price_regular != null ? String(product.price_regular) : "",
     promo_end_date: product?.promo_end_date || "",
+    price_steps: Array.isArray(product?.price_steps) ? product.price_steps.map((s) => ({ do: s.do || "", cena: s.cena != null ? String(s.cena) : "" })) : [],
     is_free: !!product?.is_free,
     // Pola klasyczne (strona produktu, koszyk)
     price: product != null && product.price != null ? String(product.price) : "0",
@@ -144,6 +145,7 @@ export default function ProductEditor({ product, onSaved, onCancel }) {
           old_price: form.old_price === "" ? null : Number(form.old_price),
           price_start: form.price_start === "" ? null : Number(form.price_start),
           price_regular: form.price_regular === "" ? null : Number(form.price_regular),
+          price_steps: form.price_steps.filter((s) => s.do || s.cena !== "").map((s) => ({ do: s.do, cena: s.cena === "" ? null : Number(s.cena) })),
           level: form.level === "" ? null : Number(form.level),
           sort_order: form.sort_order === "" ? null : Number(form.sort_order),
         },
@@ -288,7 +290,7 @@ export default function ProductEditor({ product, onSaved, onCancel }) {
           />
         </div>
         <div>
-          <label className={labelCls}>NASTĘPN KROK („Następny krok: …")</label>
+          <label className={labelCls}>NASTĘPNY KROK („Następny krok: …")</label>
           <input value={form.next_step} onChange={(e) => set("next_step", e.target.value)} className={inputCls} />
         </div>
         <div>
@@ -359,6 +361,7 @@ export default function ProductEditor({ product, onSaved, onCancel }) {
           />
         </div>
       </div>
+      <PriceSteps value={form.price_steps} onChange={(v) => set("price_steps", v)} regular={form.price_regular} inputCls={inputCls} labelCls={labelCls} />
       <div className="flex flex-col sm:flex-row gap-6 mb-10">
         <label className="flex items-center gap-3 cursor-pointer">
           <input
