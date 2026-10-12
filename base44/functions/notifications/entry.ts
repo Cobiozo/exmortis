@@ -131,7 +131,7 @@ async function buildFeed(base44, me) {
     const created = new Date(o.created).getTime();
     const what = names(o.items);
     if (o.status === "COMPLETED" && recent(o.updated || o.created, 7)) {
-      push({ key: `order:${o.id}`, kind: "zamowienie", title: `Płatność przyjęta${what ? `: ${what}` : ""}`, body: `${zl(o.total)} · materiały są w zakładce „Moje produkty”. Potwierdzenie wysłałem mailem.`,
+      push({ key: `order:${o.id}`, kind: "zamowienie", title: `Płatność przyjęta${what ? `: ${what}` : ""}`, body: `${zl(o.total)} · materiały są w zakładce „Moje produkty”.`,
         link: "/konto?tab=produkty", at: iso(o.updated || o.created) });
     } else if (PENDING.includes(o.status) && now - created > 20 * 60000 && now - created < 2 * DAY && !paidAfter(created)) {
       push({ key: `pay:${o.id}`, kind: "platnosc", title: `Płatność niedokończona${what ? `: ${what}` : ""}`, body: "Jeśli to nie było celowe, możesz złożyć zamówienie jeszcze raz w Skarbcu. Gdy PayU potwierdzi wcześniejszą płatność, ta informacja zniknie.",
@@ -145,7 +145,7 @@ async function buildFeed(base44, me) {
     for (const c of courses) {
       const fresh = lessons.filter((l) => String(l.product_id) === String(c.product_id) && recent(l.created_date, 14) && new Date(l.created_date) > new Date(c.created_date));
       if (!fresh.length) continue;
-      push({ key: `lesson:${c.product_id}:${fresh[0].id}`, kind: "lekcja", title: fresh.length === 1 ? `Nowa lekcja w „${c.product_name || "kursie"}”: ${fresh[0].title}` : `${fresh.length} nowe lekcje w „${c.product_name || "kursie"}”`,
+      push({ key: `lesson:${c.product_id}:${fresh[0].id}`, kind: "lekcja", title: fresh.length === 1 ? `Nowa lekcja w „${c.product_name || "kursie"}”: ${fresh[0].title}` : `${fresh.length} ${[2, 3, 4].includes(fresh.length % 10) && ![12, 13, 14].includes(fresh.length % 100) ? "nowe lekcje" : "nowych lekcji"} w „${c.product_name || "kursie"}”`,
         body: "", link: `/konto/kurs/${c.id}`, at: iso(fresh[0].created_date) });
     }
   }
@@ -157,7 +157,7 @@ async function buildFeed(base44, me) {
         body: p.promise || p.subtitle || "", link: `/skarbiec/${p.slug}`, at: iso(p.since) });
     } else if (p.status === "wkrótce" && recent(p.created)) {
       push({ key: `soon:${p.id}`, kind: "wkrotce", title: `Wkrótce: ${p.name}`,
-        body: "Zapisz się na listę oczekujących — dam znać w dniu premiery.", link: `/skarbiec/${p.slug}`, at: iso(p.created) });
+        body: waiting.has(p.id) ? "Ten adres jest już na liście oczekujących — dam znać w dniu premiery." : "Zapisz się na listę oczekujących — dam znać w dniu premiery.", link: `/skarbiec/${p.slug}`, at: iso(p.created) });
     }
   }
   // Promocje i przedsprzedaże (+ jedno przypomnienie na 2 dni przed końcem ceny).
