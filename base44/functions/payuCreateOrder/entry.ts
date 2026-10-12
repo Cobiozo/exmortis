@@ -46,8 +46,9 @@ export default async function (req) {
     const rows = await runSql(
       base44,
       `SELECT id, name, price::float8 AS price, price_regular::float8 AS price_regular, price_start::float8 AS price_start,
-              promo_end_date::text AS promo_end_date, active, is_free, COALESCE(status, 'dostępny') AS status, product_type
-       FROM public.products WHERE id IN (${idList})`,
+              promo_end_date::text AS promo_end_date, to_jsonb(p)->'price_steps' AS price_steps,
+              active, is_free, COALESCE(status, 'dostępny') AS status, product_type
+       FROM public.products p WHERE id IN (${idList})`,
       true
     );
     const byId = new Map(rows.map((r) => [String(r.id), r]));
