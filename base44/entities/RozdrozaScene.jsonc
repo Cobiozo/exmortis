@@ -37,6 +37,14 @@
     },
     "sort_order": {
       "type": "number"
+    },
+    "image_prompt": {
+      "type": "string",
+      "description": "Opis kadru (KADR) do generowania — nie jest pokazywany czytelnikom"
+    },
+    "image_candidate_url": {
+      "type": "string",
+      "description": "Wygenerowany kadr czekający na zatwierdzenie (nie zastępuje zatwierdzonego obrazu bez akceptacji)"
     }
   },
   "required": [

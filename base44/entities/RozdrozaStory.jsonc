@@ -67,6 +67,34 @@
     "draft_changed_at": {
       "type": "string",
       "description": "Ostatnia zmiana szkicu (do oznaczenia „zmiany czekają na publikację”)"
+    },
+    "reading_time": {
+      "type": "string",
+      "description": "Czas czytania do wyświetlenia, np. „12–16 min”"
+    },
+    "cover_portrait_prompt": {
+      "type": "string",
+      "description": "Opis okładki 2:3 do generowania (nie jest pokazywany czytelnikom)"
+    },
+    "cover_landscape_prompt": {
+      "type": "string",
+      "description": "Opis okładki 16:9 do generowania (nie jest pokazywany czytelnikom)"
+    },
+    "cover_portrait_candidate": {
+      "type": "string",
+      "description": "Wygenerowana okładka 2:3 czekająca na zatwierdzenie"
+    },
+    "cover_landscape_candidate": {
+      "type": "string",
+      "description": "Wygenerowana okładka 16:9 czekająca na zatwierdzenie"
+    },
+    "visual_notes": {
+      "type": "string",
+      "description": "Ciągłość postaci do promptów graficznych (wiek, wygląd, strój)"
+    },
+    "image_style": {
+      "type": "string",
+      "description": "Wspólny styl zdjęć do promptów graficznych"
     }
   },
   "required": [
