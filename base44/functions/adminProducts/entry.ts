@@ -196,7 +196,7 @@ export default async function (req) {
 
       await runSql(
         base44,
-        `ALTER TABLE public.products ADD COLUMN IF NOT EXISTS file_url text, ADD COLUMN IF NOT EXISTS price_steps jsonb`
+        `ALTER TABLE public.products ADD COLUMN IF NOT EXISTS file_url text, ADD COLUMN IF NOT EXISTS price_steps jsonb, ADD COLUMN IF NOT EXISTS available_at timestamptz`
       );
 
       if (p.id) {
@@ -218,6 +218,8 @@ export default async function (req) {
              product_type = ${v.product_type}, access_months = ${v.access_months},
              private_file_uri = ${v.private_file_uri}, private_file_name = ${v.private_file_name},
              price_steps = ${v.price_steps},
+             -- chwila premiery („wkrótce”/ukryty → „dostępny”) — dla powiadomień klientów o nowościach
+             available_at = CASE WHEN ${v.status} = 'dostępny' AND COALESCE(status, 'dostępny') <> 'dostępny' THEN now() ELSE available_at END,
              updated_date = now()
            WHERE id = ${escStr(String(p.id))}`
         );
@@ -234,6 +236,10 @@ export default async function (req) {
                    ${v.button_label}, ${v.checkout_url}, ${v.next_step}, ${v.is_featured}, ${v.sort_order}, ${v.cover_image},
                    ${v.file_url}, ${v.product_type}, ${v.access_months}, ${v.private_file_uri}, ${v.private_file_name},
                    ${v.price_steps}, ${escStr(user.id)})`
+        );
+        await runSql(
+          base44,
+          `UPDATE public.products SET available_at = now() WHERE slug = ${v.slug} AND available_at IS NULL AND COALESCE(status, 'dostępny') = 'dostępny' AND active = TRUE`
         );
       }
       await recordPrices(base44, true).catch(() => {}); // historia cen (Omnibus) od razu po zmianie
