@@ -6,6 +6,7 @@ import Logo from "./Logo";
 import { useAdminMode } from "@/components/admin/AdminModeContext";
 import DesktopNav, { TestLink } from "./nav/DesktopNav";
 import AccountMenu from "./nav/AccountMenu";
+import NotificationBell from "./nav/NotificationBell";
 import MobileMenu from "./nav/MobileMenu";
 import usePrelaunch from "@/lib/usePrelaunch";
 import PrelaunchNav from "@/components/prelaunch/PrelaunchNav";
@@ -64,6 +65,7 @@ export default function Navbar() {
 
             <div ref={rightRef} className="flex items-center gap-1 sm:gap-2 shrink-0">
               {collapsed && <TestLink small />}
+              <NotificationBell />
               <AccountMenu />
               <button onClick={() => setOpen(true)} className="relative p-2 text-foreground/80 hover:gold-text transition-colors" aria-label="Koszyk">
                 <ShoppingBag className="h-5 w-5" strokeWidth={1.25} />
