@@ -5,6 +5,7 @@ import { ArrowLeft, Plus, Trash2, Upload } from "lucide-react";
 import RichTextEditor from "./RichTextEditor";
 import ProductAccessFields from "./ProductAccessFields";
 import LessonsManager from "./course/LessonsManager";
+import PriceSteps from "./PriceSteps";
 
 const CATEGORIES = ["ebook", "warsztat", "mentoring", "mastermind", "retreat", "darmowe"];
 const LEVELS = [
