@@ -138,6 +138,33 @@ async function generateImage(base44, prompt, aspect, story) {
   return file_url;
 }
 
+async function publishStory(sr, story, scenes, choices) {
+  const report = validateGraph(story, scenes, choices);
+  if (!report.ok) return { ok: false, report };
+  const version = (Number(story.version) || 0) + 1;
+  const snapshot = buildSnapshot(story, scenes, choices, version);
+  const meta = { ...storyMeta(story), version };
+  await sr.RozdrozaStory.update(story.id, { status: "published", version, published: { meta, snapshot }, published_at: new Date().toISOString() });
+  return { ok: true, version, report };
+}
+
+function cleanDate(v) {
+  const t = Date.parse(String(v || ""));
+  if (!Number.isFinite(t) || !/[zZ]|[+-]\d\d:?\d\d$/.test(String(v))) throw new Error("Nieprawidłowa data publikacji.");
+  if (t < Date.parse("2020-01-01") || t > Date.now() + 3 * 365 * 864e5) throw new Error("Data publikacji poza zakresem.");
+  return new Date(t).toISOString();
+}
+
+// +N dni z zachowaniem godziny w czasie polskim (zmiana czasu letni/zimowy nie przesuwa godziny publikacji).
+function addDaysWarsaw(t, days) {
+  const f = new Intl.DateTimeFormat("en-GB", { timeZone: "Europe/Warsaw", hourCycle: "h23", year: "numeric", month: "2-digit", day: "2-digit", hour: "2-digit", minute: "2-digit" });
+  const p = Object.fromEntries(f.formatToParts(new Date(t)).map((x) => [x.type, x.value]));
+  const local = Date.UTC(+p.year, +p.month - 1, +p.day + days, +p.hour, +p.minute);
+  const off = (u) => { const q = Object.fromEntries(f.formatToParts(new Date(u)).map((x) => [x.type, x.value])); return Date.UTC(+q.year, +q.month - 1, +q.day, +q.hour, +q.minute) - u; };
+  let u = local - off(local); u = local - off(u);
+  return u;
+}
+
 // Poprzednia scena (przez „Dalej” albo wybór) z zatwierdzonym obrazem — pierwsza w kolejności scen.
 function previousWithImage(sc, scenes, choices) {
   const keys = new Set([...scenes.filter((x) => x.next_scene_key === sc.scene_key).map((x) => x.scene_key),
@@ -161,6 +188,7 @@ const listRow = (s) => ({
   id: s.id, slug: s.slug, title: s.title, category: s.category || "", status: s.status || "draft", version: s.version || 0,
   published_at: s.published_at || null, updated_date: s.updated_date, sort_order: s.sort_order ?? 0,
   cover_portrait_url: s.cover_portrait_url || "",
+  visible_from: s.visible_from || "",
   // Szkic zmieniony po publikacji → klient widzi jeszcze poprzednią wersję.
   changed: !!(s.status === "published" && s.published_at && s.draft_changed_at && s.draft_changed_at > s.published_at),
 });
@@ -272,14 +300,41 @@ export default async function (req) {
 
     if (a === "publish") {
       const { story, scenes, choices } = await load(sr, body.id);
-      const report = validateGraph(story, scenes, choices);
-      if (!report.ok) return Response.json({ error: "Historia ma błędy — popraw je przed publikacją.", report }, { status: 400 });
-      const version = (Number(story.version) || 0) + 1;
-      const snapshot = buildSnapshot(story, scenes, choices, version);
-      const meta = { ...storyMeta(story), version };
-      const at = new Date().toISOString();
-      await sr.RozdrozaStory.update(story.id, { status: "published", version, published: { meta, snapshot }, published_at: at });
-      return Response.json({ ok: true, version, report });
+      const r = await publishStory(sr, story, scenes, choices);
+      if (!r.ok) return Response.json({ error: "Historia ma błędy — popraw je przed publikacją.", report: r.report }, { status: 400 });
+      return Response.json(r);
+    }
+
+    // ---- Harmonogram: opublikowana historia jest widoczna dla klientów dopiero od visible_from ----
+    if (a === "schedule") {
+      const { story } = await load(sr, body.id);
+      const when = body.visible_from ? cleanDate(body.visible_from) : "";
+      await sr.RozdrozaStory.update(story.id, { visible_from: when });
+      return Response.json({ ok: true, visible_from: when });
+    }
+
+    // Plan: historie w podanej kolejności, pierwsza od `start`, kolejne co `every_days` dni.
+    // Szkic bez błędów zostaje opublikowany (ukryty do swojej daty); szkic z błędami — pominięty.
+    if (a === "schedule_plan") {
+      const ids = Array.isArray(body.ids) ? body.ids.map(String).slice(0, 100) : [];
+      if (!ids.length) throw new Error("Zaznacz historie do harmonogramu.");
+      const start = Date.parse(cleanDate(body.start));
+      const every = Math.round(Number(body.every_days));
+      if (!(every >= 1 && every <= 90)) throw new Error("Odstęp musi wynosić od 1 do 90 dni.");
+      const results = [];
+      let n = 0;
+      for (const id of ids) {
+        const { story, scenes, choices } = await load(sr, id);
+        const when = new Date(addDaysWarsaw(start, every * n)).toISOString();
+        if (story.status !== "published") {
+          const r = await publishStory(sr, story, scenes, choices);
+          if (!r.ok) { results.push({ id, title: story.title, skipped: "ma błędy — pominięta" }); continue; }
+        }
+        await sr.RozdrozaStory.update(story.id, { visible_from: when });
+        results.push({ id, title: story.title, visible_from: when });
+        n++;
+      }
+      return Response.json({ ok: true, results });
     }
 
     if (a === "unpublish") {
