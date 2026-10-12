@@ -6,6 +6,8 @@ import { warsawLocalToIso } from "@/lib/warsawTime";
 const inp = "bg-[#0A0A0B] border hairline px-3 py-2.5 text-sm text-foreground focus:border-[#C9A24A] focus:outline-none";
 const lab = "technical text-[10px] text-foreground/55 block mb-1.5";
 
+const plural = (n) => (n === 1 ? "historię" : n % 10 >= 2 && n % 10 <= 4 && (n % 100 < 12 || n % 100 > 14) ? "historie" : "historii");
+
 // Te same daty co na serwerze: kolejne co N dni o tej samej godzinie czasu polskiego.
 function addDaysLocal(local, days) {
   const [d, t] = local.split("T");
@@ -90,7 +92,7 @@ export default function SchedulePlan({ items, onDone }) {
           </button>
         ) : (
           <div className="flex flex-wrap items-center gap-2 border border-[#E8C547]/60 p-3">
-            <span className="text-sm text-[#E8C547]">Zaplanować {chosen.length} {chosen.length === 1 ? "historię" : "historii"}? Historie widoczne teraz znikną z biblioteki do swojej daty.</span>
+            <span className="text-sm text-[#E8C547]">Zaplanować {chosen.length} {plural(chosen.length)}? Historie widoczne teraz znikną z biblioteki do swojej daty.</span>
             <button type="button" className="btn-relic !px-3 !py-1.5 text-[10px]" onClick={apply}>TAK, ZAPLANUJ</button>
             <button type="button" className="btn-ghost !px-3 !py-1.5 text-[10px]" onClick={() => setConfirm(false)}>ANULUJ</button>
           </div>
