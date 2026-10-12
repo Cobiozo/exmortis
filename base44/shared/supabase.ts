@@ -56,10 +56,12 @@ export async function rpc(base44, fn, args) {
 }
 
 // Bezpieczne opakowanie wartości w dollar-quoting (ogranicznik unikalny względem treści).
+// Tekst w cudzysłowie dolarowym: znacznik, którego nie ma w treści ($q$, $q1$, $q2$…).
+// (Wcześniej .replace("$", "$$") nic nie zmieniało — tekst z „$q$” zapętlał funkcję.)
 export function escStr(value) {
   const s = String(value);
   let d = "$q$";
-  while (s.includes(d)) d = d.replace("$", "$$");
+  for (let n = 1; s.includes(d); n++) d = `$q${n}$`;
   return `${d}${s}${d}`;
 }
 
