@@ -1,6 +1,7 @@
 import { createClientFromRequest } from "npm:@base44/sdk@0.8.53";
 import { requireAdmin } from "../../shared/supabase.ts";
-import { readStory, validateGraph, buildSnapshot, storyMeta, normCategory, slugify, composePrompt, aspectOf } from "../../shared/rozdrozaGraph.ts";
+import { readStory, validateGraph, buildSnapshot, storyMeta, normCategory, slugify, composePrompt, aspectOf, isStartScene } from "../../shared/rozdrozaGraph.ts";
+import { getSetting, saveSetting } from "../../shared/settings.ts";
 
 // ROZDROŻA — administracja (tylko rola admin): import z JSON, okładki i obrazy scen,
 // raport połączeń, podgląd szkicu i publikacja sprawdzonej kopii. Teksty historii zmienia się ponownym importem.
@@ -15,8 +16,29 @@ const toEdit = (s) => ({
 const toChoice = (c) => ({ source_scene_key: c.source_scene_key, target_scene_key: c.target_scene_key, label: c.label || "", sort_order: Number(c.sort_order) || 0 });
 
 
-// Obraz z Base44 AI w proporcjach kadru (16:9 / 2:3), zapisany w plikach aplikacji (publiczny adres media.base44.com).
-async function generateImage(base44, prompt, aspect) {
+// ---- Usługa obrazów: Base44 AI (kredyty aplikacji) albo OpenAI (klucz API wklejony w panelu, nigdy nie wraca do przeglądarki) ----
+const AI_SETTING = "obrazy_ai";
+const MASK = "********";
+const QUALITY = ["low", "medium", "high"];
+const cleanModel = (m) => (/^[a-z0-9][a-z0-9._-]{1,60}$/i.test(String(m || "").trim()) ? String(m).trim() : "gpt-image-2");
+const aiPublic = (c) => ({
+  provider: c.provider === "openai" ? "openai" : "base44", model: cleanModel(c.model), quality: QUALITY.includes(c.quality) ? c.quality : "medium",
+  has_key: !!c.openai_key, key_hint: c.openai_key ? `…${String(c.openai_key).slice(-4)}` : "",
+});
+
+const b64Bytes = (b64) => Uint8Array.from(atob(b64), (c) => c.charCodeAt(0));
+async function pickImage(j) {
+  const item = j?.data?.[0] || {};
+  if (item.b64_json) return { bytes: b64Bytes(item.b64_json), type: "image/png" };
+  if (item.url) {
+    const im = await fetch(item.url, { signal: AbortSignal.timeout(60000) });
+    if (!im.ok) throw new Error("Nie udało się pobrać wygenerowanego obrazu.");
+    return { bytes: new Uint8Array(await im.arrayBuffer()), type: im.headers.get("content-type") || "image/png" };
+  }
+  throw new Error("Usługa nie zwróciła obrazu.");
+}
+
+async function genBase44(base44, prompt, aspect) {
   const { baseURL, token, headers } = base44.asServiceRole.aiGateway.connection();
   const r = await fetch(`${baseURL}/images/generations`, {
     method: "POST",
@@ -31,11 +53,69 @@ async function generateImage(base44, prompt, aspect) {
     throw new Error(`Generowanie nie powiodło się (${r.status}).`);
   }
   let j; try { j = JSON.parse(txt); } catch { throw new Error("Nieczytelna odpowiedź usługi generowania."); }
-  const item = j?.data?.[0] || {};
-  let bytes, type = "image/png";
-  if (item.b64_json) bytes = Uint8Array.from(atob(item.b64_json), (c) => c.charCodeAt(0));
-  else if (item.url) { const im = await fetch(item.url); if (!im.ok) throw new Error("Nie udało się pobrać wygenerowanego obrazu."); type = im.headers.get("content-type") || type; bytes = new Uint8Array(await im.arrayBuffer()); }
-  else throw new Error("Usługa nie zwróciła obrazu.");
+  return pickImage(j);
+}
+
+// OpenAI: 2:3 → 1024x1536; 16:9 → 2048x1152 (gdy model nie obsługuje — 1536x1024, czytnik kadruje do 16:9).
+// Z wzorem postaci (obrazy referencyjne) → /images/edits.
+const OA = "https://api.openai.com/v1/images";
+const OA_SIZES = { "2:3": ["1024x1536"], "16:9": ["2048x1152", "1536x1024"] };
+function oaError(status, txt, model) {
+  if (status === 401) return "OpenAI: klucz API jest nieprawidłowy albo został unieważniony — wklej nowy w ustawieniach generowania.";
+  if (/insufficient_quota|billing|exceeded your current quota/i.test(txt)) return "OpenAI: brak środków na koncie API (platform.openai.com → Billing).";
+  if (status === 429) return "OpenAI: chwilowy limit zapytań — spróbuj za minutę.";
+  if (/verif/i.test(txt) && status === 403) return "OpenAI: ten model wymaga weryfikacji organizacji na platform.openai.com (Settings → Organization → Verify).";
+  if (/model_not_found|does not exist|invalid model|not have access to model/i.test(txt)) return `OpenAI: model „${model}” jest niedostępny dla tego klucza — zmień model w ustawieniach (np. gpt-image-1).`;
+  if (/safety|moderation|policy/i.test(txt)) return "OpenAI odrzuciło opis kadru (zasady treści). Zmień prompt i spróbuj ponownie.";
+  return `OpenAI: generowanie nie powiodło się (${status}).`;
+}
+async function genOpenAI(cfg, prompt, aspect, refs) {
+  const model = cleanModel(cfg.model);
+  const quality = QUALITY.includes(cfg.quality) ? cfg.quality : "medium";
+  const auth = { Authorization: `Bearer ${cfg.openai_key}` };
+  const refFiles = [];
+  for (const [i, u] of refs.entries()) {
+    const r = await fetch(u, { signal: AbortSignal.timeout(30000) }).catch(() => null);
+    if (!r?.ok) throw new Error("Nie udało się pobrać wzoru postaci — wgraj go ponownie.");
+    const type = r.headers.get("content-type") || "image/png";
+    if (!/^image\/(png|jpe?g|webp)/.test(type)) throw new Error("Wzór postaci musi być obrazem PNG, JPG albo WEBP.");
+    refFiles.push(new File([new Uint8Array(await r.arrayBuffer())], `wzor-${i + 1}.${type.includes("png") ? "png" : type.includes("webp") ? "webp" : "jpg"}`, { type }));
+  }
+  let fidelity = true;
+  const sizes = [...OA_SIZES[aspect] || OA_SIZES["16:9"]];
+  for (let attempt = 0; attempt < 4; attempt++) {
+    const size = sizes[0];
+    let r;
+    if (refFiles.length) {
+      const fd = new FormData();
+      fd.append("model", model); fd.append("prompt", prompt); fd.append("n", "1"); fd.append("size", size); fd.append("quality", quality);
+      if (fidelity) fd.append("input_fidelity", "high");
+      for (const f of refFiles) fd.append("image[]", f);
+      r = await fetch(`${OA}/edits`, { method: "POST", headers: auth, body: fd, signal: AbortSignal.timeout(170000) });
+    } else {
+      r = await fetch(`${OA}/generations`, {
+        method: "POST", headers: { ...auth, "Content-Type": "application/json" },
+        body: JSON.stringify({ model, prompt, n: 1, size, quality }), signal: AbortSignal.timeout(170000),
+      });
+    }
+    const txt = await r.text();
+    if (r.ok) { let j; try { j = JSON.parse(txt); } catch { throw new Error("Nieczytelna odpowiedź OpenAI."); } return pickImage(j); }
+    // Model nie zna rozmiaru albo parametru wierności wzoru → jedna próba z bezpieczniejszymi ustawieniami.
+    if (r.status === 400 && /size/i.test(txt) && sizes.length > 1) { sizes.shift(); continue; }
+    if (r.status === 400 && /input_fidelity/i.test(txt) && fidelity) { fidelity = false; continue; }
+    throw new Error(oaError(r.status, txt, model));
+  }
+  throw new Error("OpenAI: generowanie nie powiodło się.");
+}
+
+const refList = (story) => String(story?.reference_image_url || "").split(/\s+/).filter((u) => /^https:\/\/\S+$/.test(u)).slice(0, 3);
+
+// Obraz w proporcjach kadru (16:9 / 2:3), zapisany w plikach aplikacji (publiczny adres media.base44.com).
+async function generateImage(base44, prompt, aspect, story) {
+  const cfg = (await getSetting(base44, AI_SETTING).catch(() => null)) || {};
+  const useOpenAI = cfg.provider === "openai";
+  if (useOpenAI && !cfg.openai_key) throw new Error("Wybrano OpenAI, ale nie wklejono klucza API — uzupełnij ustawienia generowania.");
+  const { bytes, type } = useOpenAI ? await genOpenAI(cfg, prompt, aspect, refList(story)) : await genBase44(base44, prompt, aspect);
   const ext = type.includes("jpeg") ? "jpg" : type.includes("webp") ? "webp" : "png";
   const file = new File([bytes], `rozdroza-${Date.now()}.${ext}`, { type });
   const { file_url } = await base44.asServiceRole.integrations.Core.UploadFile({ file });
