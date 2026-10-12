@@ -26,9 +26,8 @@ export default function RzImage({ url, alt = "", ratio = "aspect-video", eager =
   return (
     <div className={`relative overflow-hidden ${ratio} ${className}`} style={{ background: "radial-gradient(120% 90% at 50% 20%, #2a1f12 0%, #14100c 45%, #0A0A0B 100%)" }}>
       {s && (
-        // eslint-disable-next-line react/no-unknown-property -- React 18: atrybut HTML małymi literami (jak w SafeImg)
         <img src={s.src} srcSet={s.srcSet} sizes={s.srcSet ? sizes : undefined} alt={alt} loading={eager ? "eager" : "lazy"}
-          fetchpriority={eager ? "high" : undefined} decoding="async" draggable={false} onError={() => setBad(true)}
+          {...(eager ? { fetchpriority: "high" } : {})} decoding="async" draggable={false} onError={() => setBad(true)}
           className="absolute inset-0 w-full h-full object-cover" />
       )}
       {shade && <div className="absolute inset-0 bg-gradient-to-b from-transparent via-transparent to-[#0A0A0B]/80 pointer-events-none" aria-hidden="true" />}
