@@ -9,13 +9,14 @@ import AccountSettings from "@/components/account/AccountSettings";
 import DailyThought from "@/components/account/DailyThought";
 import AccountAnnouncements from "@/components/account/announce/AccountAnnouncements";
 import MySessions from "@/components/account/sessions/MySessions";
+import MyEvents from "@/components/account/events/MyEvents";
 import { obok } from "@/components/obok/obokApi";
 import { libBundle } from "@/components/account/library/libApi";
 import MyLibrary from "@/components/account/library/MyLibrary";
 import MyMessages from "@/components/account/messages/MyMessages";
 import AccountUnreadMessage from "@/components/account/messages/AccountUnreadMessage";
 
-const HEAD = [["produkty", "Moje produkty"], ["sesje", "Moje sesje"]];
+const HEAD = [["produkty", "Moje produkty"], ["spotkania", "Spotkania"], ["sesje", "Moje sesje"]];
 const TAIL = [["obok", "Obok"], ["zakupy", "Zakupy"], ["ustawienia", "Ustawienia"]];
 
 // /konto — tylko dla zalogowanych (ProtectedRoute). Zakładki biblioteki i wiadomości
@@ -85,6 +86,7 @@ export default function Account() {
           ))}
         </div>
         {active === "produkty" && <MyProducts />}
+        {active === "spotkania" && <MyEvents />}
         {active === "sesje" && <MySessions />}
         {active === "biblioteka" && <MyLibrary initial={cfg?.library_data} onGoToOrders={() => setTab("zakupy")} />}
         {active === "wiadomosci" && <MyMessages initial={cfg?.messages_data} footer={cfg?.footer} />}
