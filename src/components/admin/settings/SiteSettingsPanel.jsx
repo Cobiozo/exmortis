@@ -7,6 +7,7 @@ import MailSettings from "@/components/admin/mail/MailSettings";
 import EmailChangeToggle from "./EmailChangeToggle";
 import LegalDocsSettings from "./LegalDocsSettings";
 import LibrarySettingsPanel from "@/components/admin/library/LibrarySettingsPanel";
+import VideoProtectionSettings from "./VideoProtectionSettings";
 
 // Ustawienia strony: dane firmy i tryb przedpremierowy.
 export default function SiteSettingsPanel() {
@@ -21,6 +22,7 @@ export default function SiteSettingsPanel() {
       <LegalDocsSettings initial={s.dokumenty} />
       <MailSettings />
       <LibrarySettingsPanel />
+      <VideoProtectionSettings />
       <EmailChangeToggle />
     </div>
   );
