@@ -2,7 +2,7 @@ import React, { useEffect, useState } from "react";
 import { base44 } from "@/api/base44Client";
 
 const inp = "w-full bg-[#0A0A0B] border hairline px-3 py-2 text-sm focus:border-[#C9A24A] focus:outline-none";
-const EMPTY = { code: "", kind: "procent", value: "", valid_until: "", max_uses: "", product_ids: [] };
+const EMPTY = { code: "", kind: "procent", value: "", valid_until: "", max_uses: "", product_ids: [], w_powiadomieniach: false, opis: "" };
 
 export default function DiscountForm({ onDone }) {
   const [f, setF] = useState(EMPTY);
@@ -21,6 +21,7 @@ export default function DiscountForm({ onDone }) {
     const data = { code, kind: f.kind, value: Number(f.value), product_ids: f.product_ids, uses: 0, active: true };
     if (f.valid_until) data.valid_until = f.valid_until;
     if (f.max_uses) data.max_uses = Number(f.max_uses);
+    if (f.w_powiadomieniach) { data.w_powiadomieniach = true; data.opis = f.opis.trim().slice(0, 120); }
     await base44.entities.DiscountCode.create(data);
     setF(EMPTY); setMsg("Kod dodany."); onDone();
   };
@@ -41,6 +42,9 @@ export default function DiscountForm({ onDone }) {
           <label key={p.id} className="flex gap-2 text-xs items-center"><input type="checkbox" checked={f.product_ids.includes(String(p.id))} onChange={() => toggleP(String(p.id))} />{p.name}</label>
         ))}
       </div>
+      <label className="flex gap-2 text-xs items-start cursor-pointer"><input type="checkbox" checked={f.w_powiadomieniach} onChange={(e) => setF({ ...f, w_powiadomieniach: e.target.checked })} className="mt-0.5" />
+        <span>Pokaż kod zalogowanym klientom w powiadomieniach (dzwoneczek). Bez zaznaczenia kod zna tylko ten, komu go dasz.</span></label>
+      {f.w_powiadomieniach && <input value={f.opis} onChange={set("opis")} maxLength={120} placeholder="Krótki opis dla klienta (np. Na otwarcie Skarbca)" className={inp} />}
       <button className="btn-relic w-full !py-2.5">DODAJ KOD</button>
       {msg && <p className="text-xs gold-text">{msg}</p>}
     </form>
