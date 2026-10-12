@@ -120,7 +120,7 @@ export default async function (req) {
 
     // Kod rabatowy liczony jako użyty dopiero po opłaceniu (porzucona płatność nie zużywa kodu).
     try {
-      const m = [...String(stored.note || "").matchAll(/Kod rabatowy: ([A-Z0-9_-]+) \(−/g)].pop();
+      const m = [...String(stored.note || "").matchAll(/Kod rabatowy: (\S+) \(−/g)].pop();
       if (m) {
         const rec = (await base44.asServiceRole.entities.DiscountCode.filter({ code: m[1] }))[0];
         if (rec) await base44.asServiceRole.entities.DiscountCode.update(rec.id, { uses: (rec.uses || 0) + 1 });
