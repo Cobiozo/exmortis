@@ -2,7 +2,7 @@ import React, { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { Check, Clock } from "lucide-react";
 import { useAuth } from "@/lib/AuthContext";
-import { listStories, cachedList, nextAt, CATEGORY_LABEL } from "./api";
+import { listStories, cachedList, nextAt, plWhen, CATEGORY_LABEL } from "./api";
 import { readProgress } from "./engine";
 import RzImage from "./RzImage";
 import RzProblem from "./RzProblem";
@@ -24,7 +24,7 @@ export default function RzLibrary() {
   const shown = (items || []).filter((s) => !cat || s.category === cat);
   const cats = new Set((items || []).map((s) => s.category));
   const next = items ? nextAt() : null;
-  const nextLine = next && <p className="text-sm text-foreground/55 mt-10 border-t hairline pt-6">Kolejna historia pojawi się {new Date(next).toLocaleString("pl-PL", { timeZone: "Europe/Warsaw", weekday: "long", day: "numeric", month: "long" })}.</p>;
+  const nextLine = next && <p className="text-sm text-foreground/55 mt-10 border-t hairline pt-6">Kolejna historia pojawi się {plWhen(next)}.</p>;
 
   return (
     <div>
@@ -47,7 +47,7 @@ export default function RzLibrary() {
           {[0, 1, 2, 3].map((i) => <div key={i} className="aspect-[2/3] bg-[#141416] animate-pulse motion-reduce:animate-none" />)}
         </div>
       ) : !items.length ? (
-        <p className="border hairline p-8 text-foreground/65 max-w-xl">{next ? <>Pierwsza historia pojawi się tu {new Date(next).toLocaleString("pl-PL", { timeZone: "Europe/Warsaw", weekday: "long", day: "numeric", month: "long" })}.</> : "Pierwsze historie pojawią się tu wkrótce."}</p>
+        <p className="border hairline p-8 text-foreground/65 max-w-xl">{next ? <>Pierwsza historia pojawi się tu {plWhen(next)}.</> : "Pierwsze historie pojawią się tu wkrótce."}</p>
       ) : (
         <ul className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-x-4 gap-y-10 md:gap-x-6">
           {shown.map((s, i) => {
