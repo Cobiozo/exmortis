@@ -17,7 +17,7 @@ export default function Layout() {
       <main className="flex-1">
         <ErrorBoundary>
           {/* Menu i stopka zostają na miejscu, gdy kolejna strona dociąga się z serwera. */}
-          <Suspense fallback={<div className="min-h-[70vh] flex items-center justify-center"><div className="w-7 h-7 border-2 border-[#3D3D3F] border-t-[#C9A24A] rounded-full animate-spin" /></div>}>
+          <Suspense fallback={<div className="min-h-[100svh] flex items-center justify-center"><div className="w-7 h-7 border-2 border-[#3D3D3F] border-t-[#C9A24A] rounded-full animate-spin" /></div>}>
             <Outlet />
           </Suspense>
         </ErrorBoundary>
