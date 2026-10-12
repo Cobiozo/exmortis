@@ -2,6 +2,7 @@ import React, { useEffect, useRef, useState } from "react";
 import { Loader2, Download, Search, ChevronDown, FileText, Check } from "lucide-react";
 import { base44 } from "@/api/base44Client";
 import { STATUS_LABEL } from "@/components/account/accountUtils";
+import SalesStats from "./SalesStats";
 
 const zl = (n) => `${Number(n || 0).toFixed(2).replace(".", ",")} zł`;
 const when = (iso) => (iso ? new Date(iso).toLocaleString("pl-PL", { timeZone: "Europe/Warsaw", day: "numeric", month: "short", year: "numeric", hour: "2-digit", minute: "2-digit" }) : "");
@@ -96,6 +97,8 @@ export default function OrdersPanel() {
           </div>
         ))}
       </div>
+
+      <SalesStats />
 
       <div className="flex flex-wrap items-center gap-3">
         <div className="grid grid-cols-2 sm:flex border hairline w-full sm:w-auto" role="tablist" aria-label="Status">
