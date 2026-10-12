@@ -10,6 +10,8 @@ import DailyThought from "@/components/account/DailyThought";
 import AccountAnnouncements from "@/components/account/announce/AccountAnnouncements";
 import MySessions from "@/components/account/sessions/MySessions";
 import MyEvents from "@/components/account/events/MyEvents";
+import { useNavigate } from "react-router-dom";
+import { listStories, cachedList } from "@/components/rozdroza/api";
 import { obok } from "@/components/obok/obokApi";
 import { libBundle } from "@/components/account/library/libApi";
 import MyLibrary from "@/components/account/library/MyLibrary";
@@ -27,12 +29,17 @@ export default function Account() {
   const [me, setMe] = useState(null);
   const [hasObok, setHasObok] = useState(false);
   const [cfg, setCfg] = useState(null);
+  const navigate = useNavigate();
+  // ROZDROŻA: zakładka, gdy są opublikowane historie (admin widzi ją zawsze). Lekki odczyt w tle — bez tekstów.
+  const [rz, setRz] = useState(() => !!cachedList()?.length);
 
   useEffect(() => {
     // Wszystko równolegle: konto, Obok i jedno wejście do modułu (przełączniki + biblioteka + wiadomości).
     base44.auth.me().then(setMe);
     obok("home").then((d) => setHasObok(!!d.tiles?.length)).catch(() => {});
     libBundle().then(setCfg).catch(() => setCfg({ library: false, messages: false }));
+    const t = setTimeout(() => listStories().then((l) => l.length && setRz(true)).catch(() => {}), 600);
+    return () => clearTimeout(t);
   }, []);
 
   if (me?.role === "zablokowane") {
@@ -45,7 +52,9 @@ export default function Account() {
   }
 
   const TABS = [
-    ...HEAD,
+    ...HEAD.slice(0, 2),
+    ...(rz || me?.role === "admin" ? [["rozdroza", "Rozdroża"]] : []),
+    ...HEAD.slice(2),
     ...(cfg?.library ? [["biblioteka", "Moja biblioteka"]] : []),
     ...(cfg?.messages ? [["wiadomosci", "Wiadomości"]] : []),
     ...TAIL,
@@ -78,7 +87,7 @@ export default function Account() {
           {TABS.map(([k, l]) => (
             <button
               key={k}
-              onClick={() => setTab(k)}
+              onClick={() => (k === "rozdroza" ? navigate("/konto/rozdroza") : setTab(k))}
               className={`pb-4 -mb-px technical text-[10px] whitespace-nowrap border-b ${active === k ? "border-[#C9A24A] gold-text" : "border-transparent text-foreground/45 hover:text-[#F5EFE1]"}`}
             >
               {l}
