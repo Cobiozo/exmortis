@@ -1,0 +1,45 @@
+import { createClientFromRequest } from "npm:@base44/sdk@0.8.44";
+import { runSql } from "../../shared/supabase.ts";
+
+// Mapa strony dla wyszukiwarek (https://exmortis.pl/functions/sitemap, wpisana w robots.txt).
+// Strony stałe + produkty Skarbca + opublikowane spotkania + opublikowane odcinki podcastu. Pamięć 1 h w instancji.
+const SITE = "https://exmortis.pl";
+const STATIC = [
+  ["/", "weekly", "1.0"], ["/1-listopada", "daily", "0.9"], ["/o-mnie", "monthly", "0.8"], ["/powrot", "monthly", "0.8"],
+  ["/skarbiec", "weekly", "0.8"], ["/spotkania", "weekly", "0.7"], ["/glos", "weekly", "0.6"], ["/test", "monthly", "0.6"],
+  ["/obok", "monthly", "0.5"], ["/cisza", "monthly", "0.5"], ["/kontakt", "yearly", "0.4"],
+  ["/regulamin", "yearly", "0.2"], ["/polityka-prywatnosci", "yearly", "0.2"], ["/polityka-cookies", "yearly", "0.2"], ["/odstapienie", "yearly", "0.2"],
+];
+const esc = (s) => String(s).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+const day = (d) => (d ? new Date(d).toISOString().slice(0, 10) : null);
+let CACHE: { xml: string; at: number } | null = null;
+
+export default async function (req) {
+  try {
+    if (CACHE && Date.now() - CACHE.at < 3600000) return xmlResponse(CACHE.xml);
+    const base44 = createClientFromRequest(req);
+    const [products, events, episodes] = await Promise.all([
+      runSql(base44, `SELECT slug, updated_date FROM public.products WHERE active = TRUE AND COALESCE(status, 'dostępny') <> 'ukryty' AND slug IS NOT NULL AND COALESCE(checkout_url, '') = '' ORDER BY sort_order NULLS LAST LIMIT 300`, true).catch(() => []),
+      runSql(base44, `SELECT slug, updated_at FROM public.events WHERE status = 'Opublikowane' AND slug IS NOT NULL AND start_datetime > now() - interval '30 days' LIMIT 200`, true).catch(() => []),
+      base44.asServiceRole.entities.PodcastEpisode.filter({ status: "opublikowany" }, "-publikacja", 300).catch(() => []),
+    ]);
+    const urls = [
+      ...STATIC.map(([p, f, pr]) => ({ loc: SITE + p, changefreq: f, priority: pr })),
+      ...products.map((p) => ({ loc: `${SITE}/skarbiec/${p.slug}`, lastmod: day(p.updated_date), changefreq: "weekly", priority: "0.6" })),
+      ...events.filter((e) => e.slug !== "ze-smierci-o-powrotach-o-ktorych-swiat-nie-mowi")
+        .map((e) => ({ loc: `${SITE}/spotkania/${e.slug}`, lastmod: day(e.updated_at), changefreq: "weekly", priority: "0.5" })),
+      ...episodes.filter((e) => e.slug).map((e) => ({ loc: `${SITE}/glos/${e.slug}`, lastmod: day(e.updated_date || e.publikacja), changefreq: "monthly", priority: "0.5" })),
+    ];
+    const xml = `<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n${urls.map((u) =>
+      `  <url><loc>${esc(u.loc)}</loc>${u.lastmod ? `<lastmod>${u.lastmod}</lastmod>` : ""}<changefreq>${u.changefreq}</changefreq><priority>${u.priority}</priority></url>`).join("\n")}\n</urlset>\n`;
+    CACHE = { xml, at: Date.now() };
+    return xmlResponse(xml);
+  } catch (e) {
+    console.error(e);
+    return new Response("<?xml version=\"1.0\"?><urlset xmlns=\"http://www.sitemaps.org/schemas/sitemap/0.9\"></urlset>", { status: 200, headers: { "Content-Type": "application/xml; charset=utf-8" } });
+  }
+}
+
+function xmlResponse(xml) {
+  return new Response(xml, { status: 200, headers: { "Content-Type": "application/xml; charset=utf-8", "Cache-Control": "public, max-age=3600" } });
+}
