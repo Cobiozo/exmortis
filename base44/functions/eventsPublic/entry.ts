@@ -4,7 +4,7 @@ import { runSql, escStr, textField, emailField, clientIp } from "../../shared/su
 import { getSetting, loadAppUrl } from "../../shared/settings.ts";
 import { getSnap, clearSnap } from "../../shared/snapshot.ts";
 import { rpcRegister, RPC_ERRORS, saveConsents, afterSaved, enqueue, flushQueue, snapEvent, ensureTzColumn } from "../../shared/registrations.ts";
-import { sendConfirmationMail, sendReminderMail, sendRecordingMail, plWhen, APP_URL, buildIcs, joinState } from "../../shared/events.ts";
+import { sendConfirmationMail, sendReminderMail, sendRecordingMail, plWhen, APP_URL, buildIcs, joinState, joinToken } from "../../shared/events.ts";
 import { sendMail, adminTo } from "../../shared/smtp.ts";
 
 const ensureJoinColumns = (base44) => runSql(base44,
@@ -12,6 +12,32 @@ const ensureJoinColumns = (base44) => runSql(base44,
      ADD COLUMN IF NOT EXISTS zoom_faq boolean DEFAULT true, ADD COLUMN IF NOT EXISTS short_path text`);
 
 const JOIN_CACHE = new Map();
+
+// Kto może zobaczyć link / nagranie: zapisani (status Zapisany/Obecny). Lista w pamięci instancji (60 s),
+// więc w szczycie każde wejście nie odpytuje bazy. Klucz: e-mail (małe litery) albo osobisty klucz z maila.
+const REG_CACHE = new Map();
+async function regAccess(base44, eventId, fresh = false) {
+  const hit = REG_CACHE.get(eventId);
+  if (hit && !fresh && Date.now() - hit.at < 60000) return hit;
+  const rows = await runSql(base44,
+    `SELECT lower(email) AS email, cancel_token FROM public.registrations
+     WHERE event_id = ${escStr(String(eventId))} AND status IN ('Zapisany', 'Obecny')`, true);
+  const emails = new Set(rows.map((r) => String(r.email || "")));
+  const tokens = new Set((await Promise.all(rows.map((r) => joinToken(r.cancel_token)))).filter(Boolean));
+  const out = { at: Date.now(), emails, tokens };
+  REG_CACHE.set(eventId, out);
+  return out;
+}
+// Prosty limit prób wpisania e-maila: 12 nietrafionych na 10 min z jednego IP (w pamięci instancji).
+const MISSES = new Map();
+function tooManyMisses(ip) {
+  const m = MISSES.get(ip);
+  return !!m && Date.now() - m.at < 600000 && m.n >= 12;
+}
+function addMiss(ip) {
+  const m = MISSES.get(ip);
+  if (!m || Date.now() - m.at > 600000) MISSES.set(ip, { at: Date.now(), n: 1 }); else m.n++;
+}
 let joinColsReady = false;
 
 // Pokój otwarty, a linku brak — jeden alarm na spotkanie (kolejka maili = widoczny w panelu).
@@ -138,7 +164,8 @@ export default async function (req) {
         status: regRow.status,
         first_name: regRow.first_name,
         checkout_url: Number(ev.price) > 0 ? ev.checkout_url : null,
-        join_url: regRow.status === "Zapisany" && ev.format === "Online" ? (sp ? `/${sp}/dolacz` : `/spotkania/${slug}/dolacz`) : null,
+        join_url: regRow.status === "Zapisany" && ev.format === "Online"
+          ? `${sp ? `/${sp}/dolacz` : `/spotkania/${slug}/dolacz`}?t=${await joinToken(regRow.cancel_token)}` : null,
       });
     }
 
@@ -166,15 +193,36 @@ export default async function (req) {
       const base = { title: ev.title, slug: ev.slug, start_datetime: ev.start_datetime, duration_minutes: ev.duration_minutes, open_minutes: Number(ev.open_minutes) || 15 };
       if (ev.format !== "Online") return Response.json({ ...base, state: "stacjonarne" });
       const state = admin && ["przed", "otwarte", "po"].includes(body.preview) ? body.preview : joinState(ev);
+      // Link do pokoju i nagranie tylko dla zapisanych: osobisty klucz z maila albo e-mail podany przy zapisie.
+      let okToken = null;
+      if ((state === "otwarte" || state === "po") && !admin) {
+        const ip = clientIp(req);
+        const t = String(body.t || "").trim().toLowerCase();
+        const email = String(body.email || "").trim().toLowerCase().slice(0, 200);
+        if (!t && !email) return Response.json({ ...base, state, need: true });
+        if (tooManyMisses(ip)) return Response.json({ ...base, state, need: true, error: "Zbyt wiele prób. Spróbuj za kilka minut." });
+        let acc = await regAccess(base44, ev.id);
+        let ok = (t && acc.tokens.has(t)) || (email && acc.emails.has(email));
+        if (!ok && Date.now() - acc.at > 10000) { acc = await regAccess(base44, ev.id, true); ok = (t && acc.tokens.has(t)) || (email && acc.emails.has(email)); }
+        if (!ok) {
+          addMiss(ip);
+          return Response.json({ ...base, state, need: true, error: email ? "Nie znajduję zapisu na ten adres. Sprawdź pisownię albo użyj linku z e-maila." : "Ten link jest nieaktualny. Wpisz e-mail podany przy zapisie." });
+        }
+        okToken = t && acc.tokens.has(t) ? t : null;
+        if (!okToken && email) {
+          const r = (await runSql(base44, `SELECT cancel_token FROM public.registrations WHERE event_id = ${escStr(String(ev.id))} AND lower(email) = ${escStr(email)} AND status IN ('Zapisany', 'Obecny') LIMIT 1`, true).catch(() => []))[0];
+          okToken = r ? await joinToken(r.cancel_token) : null;
+        }
+      }
       if (state === "otwarte") {
         if (!ev.join_link) {
           if (!admin) waitUntil(zoomAlarm(base44, ev).catch((e) => console.error("Alarm Zoom", e.message)));
           return Response.json({ ...base, state, missing: true });
         }
-        return Response.json({ ...base, state, join_link: ev.join_link, join_password: ev.join_password || null });
+        return Response.json({ ...base, state, join_link: ev.join_link, join_password: ev.join_password || null, ok_token: okToken });
       }
       const rec = state === "po" && ev.recording_url && (!ev.recording_until || new Date(ev.recording_until) > new Date()) ? ev.recording_url : null;
-      return Response.json({ ...base, state, recording_url: rec });
+      return Response.json({ ...base, state, recording_url: rec, ok_token: okToken });
     }
 
     // --- Ręczne przeniesienie kolejki (administrator; opcjonalnie z symulacją awarii) ---
