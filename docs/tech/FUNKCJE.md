@@ -40,6 +40,7 @@ Adres: `https://exmortis.pl/functions/<nazwa>` (POST, JSON; z przeglądarki prze
 | myAccount | Konto klienta: moje produkty, zakupy, podpisany link do pliku (po sprawdzeniu dostępu). | zalogowany | products, orders, file | 3 plików front |
 | myEvents | Moje konto → Spotkania: zapisy zalogowanej osoby (po adresie e-mail) i nagrania. | admin / zalogowany | list, play, violation | 2 plików front |
 | mySettings | Ustawienia konta klienta: Listy powrotu (stan z bazy), eksport i usunięcie własnych danych. | admin / zalogowany | listy, listy_on, listy_resend, listy_off, export, delete | 3 plików front |
+| notifications | Powiadomienia zalogowanego klienta (dzwoneczek w nagłówku). | zalogowany |  | 1 plików front |
 | obok | Strefa Obok: dostęp, harmonogram i pliki sprawdzane na serwerze. | admin / zalogowany | unsub, public, home, join, notify, leave, seria, nagranie, progress | 3 plików front |
 | orderFree | Zamówienie bezpłatnego materiału: zgody, dostęp, e-mail (limit 5/h z IP). | publiczna |  | 1 plików front |
 | payuCreateOrder | Kasa: wyliczenie ceny i rabatu na serwerze, utworzenie zamówienia w PayU, status po powrocie. | publiczna | status | 1 plików front |
