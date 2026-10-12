@@ -20,7 +20,7 @@ export default async function (req) {
     const base44 = createClientFromRequest(req);
     const [products, events, episodes] = await Promise.all([
       runSql(base44, `SELECT slug, updated_date FROM public.products WHERE active = TRUE AND COALESCE(status, 'dostępny') <> 'ukryty' AND slug IS NOT NULL AND COALESCE(checkout_url, '') = '' ORDER BY sort_order NULLS LAST LIMIT 300`, true).catch(() => []),
-      runSql(base44, `SELECT slug, updated_at FROM public.events WHERE status = 'Opublikowane' AND slug IS NOT NULL AND start_datetime > now() - interval '30 days' LIMIT 200`, true).catch(() => []),
+      runSql(base44, `SELECT e.slug, COALESCE(to_jsonb(e)->>'updated_at', to_jsonb(e)->>'updated_date', to_jsonb(e)->>'created_at') AS updated_at FROM public.events e WHERE e.status = 'Opublikowane' AND e.slug IS NOT NULL AND e.start_datetime > now() - interval '30 days' LIMIT 200`, true).catch(() => []),
       base44.asServiceRole.entities.PodcastEpisode.filter({ status: "opublikowany" }, "-publikacja", 300).catch(() => []),
     ]);
     const urls = [
