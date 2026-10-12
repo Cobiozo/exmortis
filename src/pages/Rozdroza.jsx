@@ -47,15 +47,16 @@ function AdminPreview() {
 }
 
 // Pasek administratora: „Podgląd jak klient” pokazuje też historie zaplanowane (z datą). Klient tego paska nie widzi.
-function AdminPreviewBar() {
+function AdminPreviewBar({ onChange }) {
   const { user } = useAuth();
   const loc = useLocation();
   const q = new URLSearchParams(loc.search).get("jak_klient");
   const [on, setOn] = React.useState(() => adminPreview.on());
   React.useEffect(() => {
     if (user?.role !== "admin" || q === null) return;
-    adminPreview.set(q === "1"); setOn(q === "1");
-  }, [q, user?.role]);
+    if (adminPreview.on() === (q === "1")) return;
+    adminPreview.set(q === "1"); setOn(q === "1"); onChange(q === "1"); // przeładowuje widok biblioteki z właściwą listą
+  }, [q, user?.role, onChange]);
   if (user?.role !== "admin" || loc.pathname.startsWith("/konto/rozdroza/podglad")) return null;
   const toggle = () => { adminPreview.set(!on); setOn(!on); window.location.replace(loc.pathname); };
   return (
@@ -73,6 +74,7 @@ function AdminPreviewBar() {
 export default function Rozdroza() {
   useNoIndex();
   const { pathname } = useLocation();
+  const [pv, setPv] = React.useState(false);
   return (
     <div className="bg-[#0A0A0B] pt-24 md:pt-28 pb-24 min-h-[100svh]">
       <div className="mx-auto max-w-[1200px] px-4 sm:px-5 md:px-10">
@@ -81,8 +83,8 @@ export default function Rozdroza() {
           <span aria-hidden="true">/</span>
           {pathname.replace(/\/+$/, "") === "/konto/rozdroza" ? <span className="gold-text">ROZDROŻA</span> : <Link to="/konto/rozdroza" className="hover:text-foreground min-h-[32px] inline-flex items-center">ROZDROŻA</Link>}
         </nav>
-        <AdminPreviewBar />
-        <RzBoundary key={pathname}>
+        <AdminPreviewBar onChange={setPv} />
+        <RzBoundary key={`${pathname}|${pv}`}>
           <Routes>
             <Route index element={<RzIntro />} />
             <Route path="biblioteka" element={<RzLibrary />} />
