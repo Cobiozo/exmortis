@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { Loader2, Sparkles, Copy, Check, X, CornerLeftUp } from "lucide-react";
+import { Loader2, Sparkles, Copy, Check, X, CornerLeftUp, UserSquare } from "lucide-react";
 import { rz, composePrompt, thumb } from "./rzApi";
 
 const inp = "w-full bg-[#0A0A0B] border hairline px-3 py-2 text-xs text-foreground/85 focus:border-[#C9A24A] focus:outline-none leading-relaxed";
@@ -20,6 +20,10 @@ export default function GenBlock({ kind, id, url, candidate, prompt, story, onSa
     setConfirmPrev(false);
     act("prev", () => rz("use_previous", { id, replace: !!url }), "Użyto obrazu z poprzedniej sceny.");
   };
+  // Zatwierdzony kadr sceny jako wzór postaci (do 3; najstarszy wypada) — używany przy generowaniu przez OpenAI.
+  const refs = String(story?.reference_image_url || "").split(/\s+/).filter(Boolean);
+  const isRef = !!url && refs.includes(url);
+  const addRef = () => act("ref", () => rz("update_story", { id: story.id, fields: { reference_image_url: [...refs, url].slice(-3).join("\n") } }), "Dodano jako wzór postaci.");
   const act = async (name, fn, ok) => {
     setBusy(name); setErr(""); setMsg("");
     try { await fn(); if (ok) setMsg(ok); await onChanged?.(); } catch (e) { setErr(e.message); }
@@ -42,6 +46,7 @@ export default function GenBlock({ kind, id, url, candidate, prompt, story, onSa
         <button type="button" className={btn} onClick={copy} disabled={!p.trim()}>{copied ? <Check className="h-3.5 w-3.5" /> : <Copy className="h-3.5 w-3.5" />} {copied ? "SKOPIOWANO" : "KOPIUJ PROMPT"}</button>
         {allowPrevious && <button type="button" className={`${btn} ${confirmPrev ? "!border-[#E8C547] !text-[#E8C547]" : ""}`} disabled={!!busy} onClick={usePrev} onBlur={() => setConfirmPrev(false)}>
           <CornerLeftUp className="h-3.5 w-3.5" /> {confirmPrev ? "NA PEWNO ZASTĄPIĆ OBECNE ZDJĘCIE?" : "UŻYJ ZDJĘCIA Z POPRZEDNIEJ SCENY"}</button>}
+        {kind === "scene" && url && story?.id && !isRef && <button type="button" className={btn} disabled={!!busy} onClick={addRef}><UserSquare className="h-3.5 w-3.5" /> DODAJ JAKO WZÓR POSTACI</button>}
       </div>
       {candidate && (
         <div className="border border-[#C9A24A]/50 p-3 space-y-2">
