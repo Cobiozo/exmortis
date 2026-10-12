@@ -11,7 +11,10 @@
         "znak_wodny",
         "rabat",
         "drugie_urzadzenie",
-        "odstapienie"
+        "odstapienie",
+        "darmowy",
+        "podcast",
+        "test"
       ]
     },
     "user_email": {
