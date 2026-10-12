@@ -46,9 +46,18 @@ function icsStamp(date) {
 
 // Stały adres strony dołączenia (spotkania online) — nigdy surowy link do Zooma.
 export const isOnline = (ev) => ev.format === "Online";
-export function joinUrl(ev) {
-  if (ev.short_path) return `${APP_URL}/${ev.short_path}/dolacz`;
-  return ev.slug ? `${APP_URL}/spotkania/${ev.slug}/dolacz` : null;
+export function joinUrl(ev, token = null) {
+  const q = token ? `?t=${token}` : "";
+  if (ev.short_path) return `${APP_URL}/${ev.short_path}/dolacz${q}`;
+  return ev.slug ? `${APP_URL}/spotkania/${ev.slug}/dolacz${q}` : null;
+}
+
+// Osobisty klucz dołączenia: skrót z tokenu zapisu (nie ujawnia tokenu rezygnacji).
+// Link z kluczem otwiera pokój bez wpisywania e-maila; bez klucza strona prosi o e-mail podany przy zapisie.
+export async function joinToken(cancelToken) {
+  if (!cancelToken) return null;
+  const buf = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(`join:${cancelToken}`));
+  return Array.from(new Uint8Array(buf), (b) => b.toString(16).padStart(2, "0")).join("").slice(0, 24);
 }
 
 // Stan pokoju liczony na serwerze: przed / otwarte / po / odwolane.
@@ -68,11 +77,11 @@ function icsLocal(d) {
 }
 
 // UID stały dla spotkania → ponowny import aktualizuje wydarzenie; SEQUENCE rośnie z każdą wersją.
-export function buildIcs(ev) {
+export function buildIcs(ev, token = null) {
   const start = new Date(ev.start_datetime);
   const end = new Date(start.getTime() + (Number(ev.duration_minutes) || 60) * 60000);
   const esc = (s) => String(s || "").replace(/\\/g, "\\\\").replace(/;/g, "\\;").replace(/,/g, "\\,").replace(/\r?\n/g, "\\n");
-  const url = isOnline(ev) ? joinUrl(ev) : null;
+  const url = isOnline(ev) ? joinUrl(ev, token) : null;
   const place = url || ev.location || "";
   const desc = [ev.subtitle || "", url ? `Dołącz: ${url}` : ""].filter(Boolean).join("\n\n");
   return [
@@ -101,10 +110,10 @@ export function buildIcs(ev) {
   ].join("\r\n");
 }
 
-export function icsAttachment(ev) {
+export function icsAttachment(ev, token = null) {
   return {
     filename: "exmortis-spotkanie.ics",
-    content: buildIcs(ev),
+    content: buildIcs(ev, token),
     contentType: "text/calendar; charset=utf-8",
   };
 }
@@ -138,10 +147,10 @@ function meetingLine(ev, reg) {
     <p style="color:#8A8A8C;">${escHtml(ev.location || "")}</p>`;
 }
 
-function joinBlock(ev) {
-  const url = isOnline(ev) && joinUrl(ev);
+function joinBlock(ev, token = null) {
+  const url = isOnline(ev) && joinUrl(ev, token);
   if (url) {
-    return `<p style="margin-top:20px;">Link do dołączenia (zapisz go albo dodaj spotkanie do kalendarza):<br /><a href="${url}" style="color:#C9A24A;">${url}</a></p>`;
+    return `<p style="margin-top:20px;">Twój osobisty link do dołączenia (zapisz go albo dodaj spotkanie do kalendarza):<br /><a href="${url}" style="color:#C9A24A;">${url}</a></p><p style="color:#8A8A8C;font-size:12px;">Link jest przypisany do Twojego zapisu — nie przekazuj go dalej. Na stronie spotkania wejdziesz też, wpisując adres e-mail podany przy zapisie.</p>`;
   }
   if (ev.format === "Online" && ev.external_url) {
     return `<p style="margin-top:20px;"><a href="${escHtml(ev.external_url)}" style="color:#C9A24A;">Dołącz do spotkania tutaj</a></p>`;
@@ -151,6 +160,7 @@ function joinBlock(ev) {
 
 // Potwierdzenie zapisu (z załączonym plikiem .ics).
 export async function sendConfirmationMail(base44, ev, reg) {
+  const jt = await joinToken(reg.cancel_token);
   const waitlist = reg.status === "Lista rezerwowa";
   const lead = waitlist
     ? `${escHtml(reg.first_name)}, wszystkie miejsca na «${escHtml(ev.title)}» są już zajęte. Zapisałem Cię na listę rezerwową — dam znać, jeśli ktoś zrezygnuje.`
@@ -160,14 +170,14 @@ export async function sendConfirmationMail(base44, ev, reg) {
     to: reg.email,
     subject: `EXMORTIS · ${waitlist ? "Lista rezerwowa" : "Zapis potwierdzony"} — ${ev.title}`,
     html: shell(ev, 
-      `<h1 style="font-size:24px;">${waitlist ? "Jesteś na liście rezerwowej" : "Jesteś zapisany/a"}</h1>${meetingLine(ev, reg)}` +
+      `<h1 style="font-size:24px;">${waitlist ? "Lista rezerwowa" : "Zapis potwierdzony"}</h1>${meetingLine(ev, reg)}` +
         `<p style="line-height:1.7;">${lead}</p>` +
         (ev.what_registered ? `<p style="color:#8A8A8C;font-size:13px;">Co dostają zapisani: ${escHtml(ev.what_registered)}</p>` : "") +
-        (waitlist ? "" : joinBlock(ev)) +
+        (waitlist ? "" : joinBlock(ev, jt)) +
         `<p style="color:#8A8A8C;font-size:13px;">Spotkanie masz w załączonym pliku kalendarza (.ics).</p>` +
         cancelLink(reg.cancel_token)
     ),
-    attachments: [icsAttachment(ev)],
+    attachments: [icsAttachment(ev, waitlist ? null : jt)],
   });
 }
 
@@ -190,6 +200,7 @@ export async function sendCancelledMail(base44, ev, reg, reason) {
 // Przypomnienie 24 h lub 1 h przed spotkaniem (z linkiem dołączania) —
 // albo wysyłane ręcznie z panelu (kind === "now").
 export async function sendReminderMail(base44, ev, reg, kind) {
+  const jt = await joinToken(reg.cancel_token);
   const head = kind === "1h" ? "Za godzinę się widzimy" : kind === "now" ? "Do zobaczenia wkrótce" : "Jutro się widzimy";
   const lead =
     kind === "1h"
@@ -201,7 +212,7 @@ export async function sendReminderMail(base44, ev, reg, kind) {
     kind: "przypomnienie", ref: reg.id, waznyDo: ev.start_datetime,
     to: reg.email,
     subject: `EXMORTIS · ${head} — ${ev.title}`,
-    html: shell(ev, `<h1 style="font-size:24px;">${head}</h1>${meetingLine(ev, reg)}<p style="line-height:1.7;">${lead}</p>${joinBlock(ev)}${cancelLink(reg.cancel_token)}`),
+    html: shell(ev, `<h1 style="font-size:24px;">${head}</h1>${meetingLine(ev, reg)}<p style="line-height:1.7;">${lead}</p>${joinBlock(ev, jt)}${cancelLink(reg.cancel_token)}`),
   });
 }
 
@@ -222,6 +233,7 @@ export async function sendRecordingMail(base44, ev, reg, inviteHtml) {
 
 // Awans z listy rezerwowej po zwolnieniu miejsca.
 export async function sendSpotFreedMail(base44, ev, reg) {
+  const jt = await joinToken(reg.cancel_token);
   return sendMail(base44, {
     kind: "miejsce", ref: reg.id, waznyDo: ev.start_datetime,
     to: reg.email,
@@ -229,7 +241,7 @@ export async function sendSpotFreedMail(base44, ev, reg) {
     html: shell(ev, 
       `<h1 style="font-size:24px;">Zwolniło się miejsce</h1>${meetingLine(ev, reg)}` +
         `<p style="line-height:1.7;">${escHtml(reg.first_name)}, ktoś zrezygnował — miejsce na «${escHtml(ev.title)}» jest Twoje. Do zobaczenia na spotkaniu.</p>` +
-        joinBlock(ev) +
+        joinBlock(ev, jt) +
         cancelLink(reg.cancel_token)
     ),
   });
@@ -237,6 +249,7 @@ export async function sendSpotFreedMail(base44, ev, reg) {
 
 // Zmiana terminu — nowy plik .ics (ten sam UID aktualizuje wydarzenie w kalendarzu).
 export async function sendRescheduleMail(base44, ev, reg) {
+  const jt = await joinToken(reg.cancel_token);
   return sendMail(base44, {
     kind: "zmiana_terminu", ref: reg.id, waznyDo: ev.start_datetime,
     to: reg.email,
@@ -244,9 +257,9 @@ export async function sendRescheduleMail(base44, ev, reg) {
     html: shell(ev,
       `<h1 style="font-size:24px;">Nowy termin spotkania</h1>${meetingLine(ev, reg)}` +
         `<p style="line-height:1.7;">${escHtml(reg.first_name)}, termin spotkania «${escHtml(ev.title)}» się zmienił. Twój zapis jest aktualny. W załączniku nowy plik kalendarza — po otwarciu zaktualizuje wydarzenie.</p>` +
-        joinBlock(ev) + cancelLink(reg.cancel_token)
+        joinBlock(ev, jt) + cancelLink(reg.cancel_token)
     ),
-    attachments: [icsAttachment(ev)],
+    attachments: [icsAttachment(ev, jt)],
   });
 }
 
