@@ -48,8 +48,9 @@ function exmJoinFallback() {
       const saved = `export { FALLBACK_AT, FALLBACK_EVENTS } from "/src/content/joinFallbackData.js";`;
       if (!build || process.env.EXM_FALLBACK_OFFLINE === "1") return saved;
       try {
-        const r = await fetch(`${SITE_URL}/functions/eventsPublic`, { method: "POST", headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ action: "list" }), signal: AbortSignal.timeout(6000) });
+        const get = () => fetch(`${SITE_URL}/functions/eventsPublic`, { method: "POST", headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ action: "list" }), signal: AbortSignal.timeout(10000) });
+        const r = await get().catch(() => get()); // drugie podejście po zimnym starcie funkcji
         if (!r.ok) throw new Error(String(r.status));
         const d = await r.json();
         const events = (d.upcoming || []).filter((e) => e.format === "Online" && ["Opublikowane", "Odwołane"].includes(e.status) && e.slug && e.start_datetime)
