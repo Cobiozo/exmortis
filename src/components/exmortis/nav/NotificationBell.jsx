@@ -41,7 +41,7 @@ export default function NotificationBell() {
     notif("feed").then(setData).catch(() => {});
   }, [user]);
 
-  useEffect(() => { if (user) load(true); else setData(null); }, [user?.id]); // eslint-disable-line react-hooks/exhaustive-deps
+  useEffect(() => { if (user) load(true); else setData(null); }, [user?.id]);
   useEffect(() => { load(false); }, [pathname, load]);
   useEffect(() => {
     if (!user) return undefined;
