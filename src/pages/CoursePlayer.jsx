@@ -53,7 +53,7 @@ export default function CoursePlayer() {
       {data.lessons.length === 0 ? (
         <p className="mt-10 text-foreground/50">Lekcje są przygotowywane. Dam znać mailem, kiedy będą gotowe.</p>
       ) : (
-        <div className="mt-10 grid lg:grid-cols-[1fr_340px] gap-10">
+        <div className="mt-10 grid grid-cols-1 lg:grid-cols-[minmax(0,1fr)_340px] gap-10">
           {lesson && (consented ? <LessonPlayer key={lesson.id} accessId={accessId} lesson={lesson} onDone={markDone} onNext={next ? () => pick(next.id) : null} nextTitle={next?.title} /> : <LicenseConsent onAccept={() => setConsented(true)} />)}
           <LessonList lessons={data.lessons} current={current} onPick={pick} />
         </div>

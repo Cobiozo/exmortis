@@ -74,7 +74,7 @@ export default function LessonPlayer({ accessId, lesson, onDone, onNext, nextTit
   const fakeFull = full && !document.fullscreenElement;
 
   return (
-    <div>
+    <div className="min-w-0">
       <div ref={box} className={`relative bg-black border hairline overflow-hidden ${fakeFull ? "fixed inset-0 z-[100]" : full ? "" : "aspect-video"}`} onContextMenu={(e) => e.preventDefault()}>
         {!lesson.has_video ? (
           <p className="absolute inset-0 flex items-center justify-center text-sm text-foreground/50">Wideo jest przygotowywane.</p>
