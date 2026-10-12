@@ -60,7 +60,7 @@ export default function RzLibrary() {
                     {ended && <span className="absolute top-2 left-2 technical text-[9px] bg-[#0A0A0B]/80 text-foreground/70 px-2 py-1 flex items-center gap-1"><Check className="h-3 w-3" /> UKOŃCZONO</span>}
                   </div>
                   {s.category && <p className="technical text-[9px] text-[#E8676A]/90 mt-3">{(CATEGORY_LABEL[s.category] || "").toUpperCase()}</p>}
-                  <h2 className="shop-heading text-xl text-[#F5EFE1] mt-1 leading-tight group-hover:gold-text">{s.title}</h2>
+                  <h2 className="shop-heading text-xl text-[#F5EFE1] mt-1 leading-tight group-hover:text-[#C9A24A]">{s.title}</h2>
                   {s.summary && <p className="text-sm text-foreground/60 mt-2 leading-relaxed line-clamp-3">{s.summary}</p>}
                   <div className="flex flex-wrap items-center justify-between gap-2 mt-3">
                     {s.estimated_minutes ? <span className="text-xs text-foreground/45 flex items-center gap-1"><Clock className="h-3.5 w-3.5" /> ok. {s.estimated_minutes} min</span> : <span />}
