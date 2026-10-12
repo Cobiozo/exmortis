@@ -44,6 +44,12 @@ export function readStory(raw) {
     estimated_minutes: num(st.estimated_minutes),
     content_warning: str(st.content_warning, 1000),
     start_scene_key: str(st.start_scene_key, 80),
+    reading_time: str(st.reading_time, 40),
+    cover_portrait_prompt: str(st.cover_portrait_prompt, 3000),
+    cover_landscape_prompt: str(st.cover_landscape_prompt, 3000),
+    visual_notes: str(st.visual_notes, 3000),
+    image_style: str(st.image_style ?? raw?.style, 2000),
+    sort_order: num(st.sort_order),
   };
   const scenes = scenesIn.map((s, i) => ({
     scene_key: str(s?.scene_key ?? s?.key, 80),
@@ -54,6 +60,7 @@ export function readStory(raw) {
     alt_text: str(s?.alt_text ?? s?.alt, 500),
     next_scene_key: str(s?.next_scene_key ?? s?.next, 80),
     reflection_question: str(s?.reflection_question, 1000),
+    image_prompt: str(s?.image_prompt ?? s?.kadr, 3000),
     sort_order: num(s?.sort_order) ?? i,
   }));
   const choices = [];
@@ -168,6 +175,19 @@ export function storyMeta(s) {
   return {
     id: s.id, slug: s.slug, title: s.title, summary: s.summary || "", category: s.category || "",
     cover_portrait_url: s.cover_portrait_url || "", cover_landscape_url: s.cover_landscape_url || "",
-    estimated_minutes: s.estimated_minutes || null, content_warning: s.content_warning || "", version: s.version || 0,
+    estimated_minutes: s.estimated_minutes || null, reading_time: s.reading_time || "", content_warning: s.content_warning || "", version: s.version || 0,
   };
 }
+
+// ---- Prompty graficzne (tylko panel; czytelnik ich nie widzi) ----
+export const DEFAULT_STYLE = "cinematic photorealism, contemporary Poland, sophisticated arthouse film still, 35mm lens, human imperfect realism, rich shadow detail, muted warm gold highlights, near-black palette, natural skin, authentic interiors, no fantasy, no religious symbols, no blood, no text, no logos, no watermarks, no AI-looking faces, 16:9, no cinematic black bars";
+
+// kind: "scene" (16:9) | "cover_portrait" (2:3) | "cover_landscape" (16:9)
+export function composePrompt(kind, base, story) {
+  const style = String(story?.image_style || DEFAULT_STYLE);
+  const st = kind === "cover_portrait" ? style.replace(/\b16:9\b/g, "vertical 2:3").replace(/,?\s*no cinematic black bars/i, "") : style;
+  const people = story?.visual_notes ? ` Characters (keep exactly consistent between shots): ${story.visual_notes}.` : "";
+  const extra = " Natural, non-idealised people, subtle film grain, no HDR, no stock-photo look, no text or letters anywhere in the image.";
+  return `${String(base || "").trim()}${people} Style: ${st}.${extra}`.replace(/\s+/g, " ").trim();
+}
+export const aspectOf = (kind) => (kind === "cover_portrait" ? "2:3" : "16:9");
