@@ -46,7 +46,7 @@ function Grant({ types, defaults, onDone }) {
     setBusy(true); setMsg("");
     try {
       const r = await bk("grant_package", f);
-      setMsg(r.has_account ? "Dostęp nadany. Osoba zobaczy go w koncie → Umów spotkanie." : "Dostęp nadany. Tej osoby nie ma jeszcze kontem — zobaczy dostęp po założeniu konta na ten sam adres e-mail.");
+      setMsg(r.has_account ? "Dostęp nadany. Osoba zobaczy go w koncie → Umów spotkanie." : "Dostęp nadany. Ta osoba nie ma jeszcze konta — zobaczy dostęp po założeniu konta na ten sam adres e-mail.");
       setF((x) => ({ ...x, email: "" }));
       onDone();
     } catch (e2) { setMsg(e2.message); }
@@ -116,6 +116,7 @@ function Row({ p, onChanged }) {
   const [edit, setEdit] = useState(false);
   const [f, setF] = useState({ sessions_total: p.sessions_total, min_gap_days: p.min_gap_days, valid_until: dateOnly(p.valid_until) });
   const [ending, setEnding] = useState(false);
+  useEffect(() => setF({ sessions_total: p.sessions_total, min_gap_days: p.min_gap_days, valid_until: dateOnly(p.valid_until) }), [p.sessions_total, p.min_gap_days, p.valid_until]);
   const [busy, setBusy] = useState("");
   const [err, setErr] = useState("");
   const [label, cls] = statusOf(p);
