@@ -29,8 +29,8 @@ const CmsPreview = lazyPage(() => import('@/pages/CmsPreview'));
 const CoursePlayer = lazyPage(() => import('@/pages/CoursePlayer'));
 const Cisza = lazyPage(() => import('@/pages/Cisza'));
 import ProtectedRoute from '@/components/ProtectedRoute';
+import LoginRedirect from '@/components/LoginRedirect';
 import { SiteContentProvider } from '@/components/exmortis/SiteContentProvider';
-import { Navigate } from 'react-router-dom';
 const PrivacyPolicy = lazyPage(() => import('@/pages/PrivacyPolicy'));
 import { AdminModeProvider } from '@/components/admin/AdminModeContext';
 import AdminBar from '@/components/admin/AdminBar';
@@ -96,7 +96,7 @@ const AuthenticatedApp = () => {
         <Route path="/register" element={<RegisterGate />} />
         <Route path="/forgot-password" element={<ForgotPassword />} />
         <Route path="/reset-password" element={<ResetPassword />} />
-        <Route element={<ProtectedRoute unauthenticatedElement={<Navigate to="/login" replace />} />}>
+        <Route element={<ProtectedRoute unauthenticatedElement={<LoginRedirect />} />}>
           <Route path="/admin/podglad-strony" element={<CmsPreview />} />
           <Route path="/admin" element={<Admin />} />
           <Route path="/admin/:section" element={<Admin />} />
