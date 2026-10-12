@@ -1,5 +1,6 @@
 import React from "react";
 import { Outlet } from "react-router-dom";
+import { Suspense } from "react";
 import Navbar from "@/components/exmortis/Navbar";
 import Footer from "@/components/exmortis/Footer";
 import CartDrawer from "@/components/exmortis/CartDrawer";
@@ -14,7 +15,12 @@ export default function Layout() {
     <div className="min-h-screen flex flex-col bg-[#0A0A0B]">
       <Navbar />
       <main className="flex-1">
-        <ErrorBoundary><Outlet /></ErrorBoundary>
+        <ErrorBoundary>
+          {/* Menu i stopka zostają na miejscu, gdy kolejna strona dociąga się z serwera. */}
+          <Suspense fallback={<div className="min-h-[70vh] flex items-center justify-center"><div className="w-7 h-7 border-2 border-[#3D3D3F] border-t-[#C9A24A] rounded-full animate-spin" /></div>}>
+            <Outlet />
+          </Suspense>
+        </ErrorBoundary>
       </main>
       <Footer />
       {!gated && <CartDrawer />}
