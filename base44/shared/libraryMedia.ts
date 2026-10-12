@@ -46,6 +46,8 @@ export function normalizeServerVideo(raw, domains) {
   if (!/^https:\/\//i.test(s) || s.length > 500) return null;
   let u;
   try { u = new URL(s); } catch { return null; }
+  // Bez danych logowania w adresie i bez niestandardowego portu.
+  if (u.username || u.password || u.port) return null;
   const host = validHost(u.hostname);
   if (!host) return null;
   const allowed = videoDomains(domains);
