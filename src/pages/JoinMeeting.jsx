@@ -41,7 +41,7 @@ export default function JoinMeeting() {
     new Promise((_, rej) => setTimeout(() => rej(new Error("timeout")), 3000)),
   ]).then((r) => {
     setData(r.data); setWaiting(false);
-    if (r.data?.slug && r.data?.start_datetime) rememberJoinEvent({ ...r.data, format: "Online" });
+    if (r.data?.slug && r.data?.start_datetime) rememberJoinEvent({ ...r.data, format: "Online", short_path: r.data.short_path || short || null });
     if (r.data?.ok_token) { try { localStorage.setItem(tKey, r.data.ok_token); } catch { /* */ } setCred({ t: r.data.ok_token }); }
     if (r.data?.need && credRef.current.t && !credRef.current.email) { try { localStorage.removeItem(tKey); } catch { /* */ } }
     try { localStorage.setItem(metaKey, JSON.stringify({ s: r.data.start_datetime, o: r.data.open_minutes, d: r.data.duration_minutes })); } catch {}

@@ -15,7 +15,7 @@ export default function FallbackWarning() {
   }, []);
   if (!stale.length) return null;
   return (
-    <div className="border border-[#C9A24A] p-5 mb-8 space-y-2">
+    <div className="border hairline p-5 mb-8 space-y-2">
       {stale.map((e) => (
         <p key={e.id} className="flex items-start gap-3 text-sm">
           <AlertTriangle className="h-4 w-4 gold-text shrink-0 mt-0.5" />
