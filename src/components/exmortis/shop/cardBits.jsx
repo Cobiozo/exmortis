@@ -2,6 +2,7 @@ import React from "react";
 import { Link } from "react-router-dom";
 import { ArrowRight } from "lucide-react";
 import { useCart } from "../CartContext";
+import { isPromoActive, priceOnRequest } from "@/lib/productPrice";
 
 // Wspólne elementy kart Skarbca: znaczki, cena, przycisk.
 
@@ -45,9 +46,7 @@ export function CardTopBadge({ p, index }) {
   return <StageBadge stage={p.stage} />;
 }
 
-export function isPromoActive(p) {
-  return !!(p.promo_end_date && new Date(`${p.promo_end_date}T23:59:59`) > new Date());
-}
+export { isPromoActive } from "@/lib/productPrice";
 
 export function PriceBlock({ p }) {
   if (p.status === "wkrótce") {

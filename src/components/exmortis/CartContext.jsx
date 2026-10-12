@@ -1,4 +1,5 @@
 import React, { createContext, useContext, useEffect, useState, useCallback } from "react";
+import { unitPrice } from "@/lib/productPrice";
 
 const CartContext = createContext(null);
 
@@ -36,7 +37,7 @@ export function CartProvider({ children }) {
         {
           id: product.id,
           name: product.name,
-          price: product.price,
+          price: unitPrice(product),
           image_url: product.image_url,
           slug: product.slug,
           product_type: product.product_type,
