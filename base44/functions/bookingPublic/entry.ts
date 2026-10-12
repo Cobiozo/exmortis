@@ -47,6 +47,25 @@ async function resolvePackage(base44, body, me, admin) {
   return null;
 }
 
+// Najwcześniejszy dozwolony termin w pakiecie: ostatnia sesja + odstęp (min_gap_days).
+// Ta sama reguła co w bk_book_package — tu tylko po to, by nie pokazywać terminów, których i tak nie da się zarezerwować.
+async function packageEarliest(base44, packageIds) {
+  const ids = (packageIds || []).filter((x) => /^[0-9a-f-]{36}$/i.test(String(x)));
+  if (!ids.length) return {};
+  const rows = await runSql(base44,
+    `SELECT pk.id, pk.min_gap_days, (SELECT max(k.starts_at) FROM public.bk_bookings k WHERE k.package_id = pk.id AND k.status IN ('POTWIERDZONA','ODBYLA_SIE')) AS last_start
+     FROM public.bk_packages pk WHERE pk.id IN (${ids.map((x) => `${escStr(x)}::uuid`).join(",")})`, true);
+  const out = {};
+  for (const r of rows || []) {
+    const gap = Number(r.min_gap_days) || 0;
+    out[r.id] = {
+      last_start: r.last_start || null,
+      earliest: r.last_start && gap > 0 ? new Date(new Date(r.last_start).getTime() + gap * 864e5).toISOString() : null,
+    };
+  }
+  return out;
+}
+
 export default async function (req) {
   try {
     const base44 = createClientFromRequest(req);
@@ -81,6 +100,13 @@ export default async function (req) {
     const mode = await getMode(base44);
     const visible = mode === "on" || (mode === "admin" && admin);
     if (a === "config") return Response.json({ enabled: visible });
+    // „Umów indywidualne spotkanie” w koncie działa zawsze: przy wyłączonym module zwraca tylko
+    // informację, czy osoba ma przyznany dostęp (bez terminów i bez możliwości rezerwacji).
+    if (a === "my_sessions" && !visible) {
+      if (!me) return bad("Zaloguj się, aby zobaczyć swoje sesje.", 401);
+      const r = await rpc(base44, "bk_my_sessions", { p: { user_id: me.id, email: String(me.email || "").toLowerCase() } }).catch(() => null);
+      return Response.json({ off: true, has_access: (r?.packages || []).some((p) => p.sessions_left > 0), packages: [], bookings: [] });
+    }
     if (!visible) return bad("Nie znaleziono", 404);
 
     if (a === "type") {
@@ -91,7 +117,7 @@ export default async function (req) {
     }
 
     if (a === "slots") {
-      let t = null;
+      let t = null, earliest = null;
       if (body.slug) t = await getType(base44, textField(body, "slug", { max: 60 }), admin);
       else if (body.manage_token) {
         const tok = typeof body.manage_token === "string" && /^[A-Za-z0-9_-]{20,100}$/.test(body.manage_token) ? body.manage_token : null;
@@ -105,16 +131,20 @@ export default async function (req) {
         const pk = await resolvePackage(base44, body, me, admin);
         if (pk) {
           t = (await runSql(base44, `SELECT id, slug, name, duration_min FROM public.bk_types WHERE id = ${escStr(pk.type_id)} AND (active OR ${admin ? "TRUE" : "FALSE"})`, true))?.[0] || null;
+          earliest = (await packageEarliest(base44, [pk.package_id]))[pk.package_id]?.earliest || null;
         }
       }
       if (!t) return bad("Nie znaleziono", 404);
-      const from = new Date(body.from || Date.now());
+      let from = new Date(body.from || Date.now());
+      if (earliest && new Date(earliest) > from) from = new Date(earliest);
       const to = new Date(Math.min(new Date(body.to || Date.now() + 31 * 864e5).getTime(), from.getTime() + 62 * 864e5));
       if (isNaN(from.getTime()) || isNaN(to.getTime())) return bad("Niepoprawny zakres");
+      if (to <= from) return Response.json({ slots: [], earliest });
       const rows = await rpc(base44, "bk_free_slots", { p_type: t.id, p_from: from.toISOString(), p_to: to.toISOString() });
-      const slots = (rows || []).map((r) => ({ start: r.slot_start, end: r.slot_end }));
+      const slots = (rows || []).map((r) => ({ start: r.slot_start, end: r.slot_end }))
+        .filter((s) => !earliest || new Date(s.start) >= new Date(earliest));
       // Zajętość z kalendarza głównego działa jak ręczna blokada; brak odpowiedzi Google nic nie blokuje.
-      return Response.json({ slots: await dropBusy(base44, slots, from.toISOString(), to.toISOString()) });
+      return Response.json({ slots: await dropBusy(base44, slots, from.toISOString(), to.toISOString()), earliest });
     }
 
     if (a === "book") {
@@ -187,7 +217,11 @@ export default async function (req) {
     if (a === "my_sessions") {
       if (!me) return bad("Zaloguj się, aby zobaczyć swoje sesje.", 401);
       const r = await rpc(base44, "bk_my_sessions", { p: { user_id: me.id, email: String(me.email || "").toLowerCase() } });
-      return Response.json(r || { packages: [], bookings: [] });
+      const out = r || { packages: [], bookings: [] };
+      const early = await packageEarliest(base44, (out.packages || []).map((p) => p.id)).catch(() => ({}));
+      out.packages = (out.packages || []).map((p) => ({ ...p, next_possible: early[p.id]?.earliest || null }));
+      out.has_access = out.packages.some((p) => p.sessions_left > 0);
+      return Response.json(out);
     }
 
     if (a === "book_package") {
