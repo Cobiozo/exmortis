@@ -1,8 +1,9 @@
 import React, { useEffect, useState } from "react";
 import { ArrowLeft, Loader2, Eye, ChevronDown } from "lucide-react";
 import ImageField from "@/components/admin/cms/ImageField";
-import { rz, statusBadge, thumb } from "./rzApi";
+import { rz, statusBadge, thumb, isStartScene } from "./rzApi";
 import GenBlock from "./GenBlock";
+import BulkImages from "./BulkImages";
 
 const inp = "w-full bg-[#0A0A0B] border hairline px-3 py-2.5 text-sm text-foreground focus:border-[#C9A24A] focus:outline-none";
 const lab = "technical text-[10px] text-foreground/55 block mb-1.5";
@@ -28,8 +29,8 @@ function SceneRow({ s, choices, titleOf, onSaved, story }) {
       <button type="button" onClick={() => setOpen((o) => !o)} aria-expanded={open} className="w-full text-left flex items-center gap-3 p-3 hover:bg-white/[0.02]">
         <div className="w-16 aspect-video bg-[#141416] shrink-0 overflow-hidden">{s.image_url && <img src={thumb(s.image_url)} alt="" className="w-full h-full object-cover" loading="lazy" />}</div>
         <div className="min-w-0 flex-1">
-          <p className="text-sm text-[#F5EFE1] truncate"><span className="technical text-[9px] text-foreground/45 mr-2">{s.scene_key}</span>{s.title || "(bez tytułu)"}</p>
-          <p className="text-xs text-foreground/45 truncate">{s.image_candidate_url && <span className="gold-text mr-2">NOWY KADR ·</span>}{TYPE[s.scene_type] || s.scene_type}{out.length ? " → " + out.map(([l, k]) => `${l}: ${k}`).join(" · ") : ""}</p>
+          <p className="text-sm text-[#F5EFE1] truncate"><span className="technical text-[9px] text-foreground/45 mr-2">{s.scene_key}</span>{isStartScene(s.scene_key) && <span className="technical text-[8px] border hairline px-1 mr-2 text-foreground/55">START</span>}{s.title || "(bez tytułu)"}</p>
+          <p className="text-xs text-foreground/45 truncate">{s.image_candidate_url && <span className="gold-text mr-2">NOWY KADR ·</span>}{s.image_url && s.image_from && <span className="mr-2">OBRAZ Z {s.image_from} ·</span>}{TYPE[s.scene_type] || s.scene_type}{out.length ? " → " + out.map(([l, k]) => `${l}: ${k}`).join(" · ") : ""}</p>
         </div>
         <ChevronDown className={`h-4 w-4 text-foreground/40 transition-transform ${open ? "rotate-180" : ""}`} />
       </button>
@@ -61,6 +62,23 @@ function SceneRow({ s, choices, titleOf, onSaved, story }) {
   );
 }
 
+// Wzór postaci: do 3 zdjęć referencyjnych (używane tylko przy generowaniu przez OpenAI). Zapis: adresy oddzielone nową linią.
+function RefImages({ value, onChange }) {
+  const list = String(value || "").split(/\s+/).filter(Boolean).slice(0, 3);
+  const put = (i, v) => { const n = [...list]; if (v?.url) n[i] = v.url; else n.splice(i, 1); onChange(n.filter(Boolean).join("\n")); };
+  return (
+    <div className="space-y-2">
+      <p className={lab}>WZÓR POSTACI (OPCJONALNIE, DO 3 ZDJĘĆ — DZIAŁA TYLKO Z OPENAI)</p>
+      <p className="text-xs text-foreground/45">Np. zatwierdzony kadr z bohaterką/bohaterem. Generator dostaje go jako wzór twarzy i stroju.</p>
+      <div className="grid sm:grid-cols-3 gap-3">
+        {[...list, ...(list.length < 3 ? [""] : [])].map((u, i) => (
+          <div key={`${i}:${u}`} className="min-w-0"><ImageField noAlt value={u ? { url: u } : null} onChange={(v) => put(i, v)} /></div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
 // Jedna historia: dane do biblioteki, okładki, obrazy scen, raport połączeń, podgląd i publikacja.
 export default function StoryEditor({ id, onClose }) {
   const [d, setD] = useState(null);
@@ -74,7 +92,8 @@ export default function StoryEditor({ id, onClose }) {
     setF({ title: x.story.title, slug: x.story.slug, summary: x.story.summary, category: x.story.category, estimated_minutes: x.story.estimated_minutes || "",
       content_warning: x.story.content_warning, start_scene_key: x.story.start_scene_key || "", sort_order: x.story.sort_order ?? 0,
       cover_portrait_url: x.story.cover_portrait_url, cover_landscape_url: x.story.cover_landscape_url,
-      reading_time: x.story.reading_time || "", visual_notes: x.story.visual_notes || "", image_style: x.story.image_style || "" });
+      reading_time: x.story.reading_time || "", visual_notes: x.story.visual_notes || "", image_style: x.story.image_style || "",
+      visual_notes_en: x.story.visual_notes_en || "", cover_visual_notes_en: x.story.cover_visual_notes_en || "", reference_image_url: x.story.reference_image_url || "" });
   }).catch((e) => setErr(e.message));
   useEffect(() => { load(); }, [id]);
 
@@ -124,6 +143,8 @@ export default function StoryEditor({ id, onClose }) {
         {err && <p className="text-sm text-[#E8676A]" role="alert">{err}</p>}
       </section>
 
+      <BulkImages id={id} story={d.story} scenes={d.scenes} onChanged={load} />
+
       <section className="space-y-5">
         <h3 className="shop-heading text-xl text-[#F5EFE1]">Dane w bibliotece</h3>
         <div className="grid md:grid-cols-2 gap-5">
@@ -151,7 +172,11 @@ export default function StoryEditor({ id, onClose }) {
           <details className="md:col-span-2 border hairline p-4">
             <summary className="cursor-pointer technical text-[10px] text-foreground/60">POSTACIE I STYL ZDJĘĆ (DO GENEROWANIA I KOPIOWANIA PROMPTÓW)</summary>
             <div className="grid gap-4 mt-4">
-              <label className="block"><span className={lab}>CIĄGŁOŚĆ POSTACI</span><textarea rows={3} className={inp} value={f.visual_notes} onChange={(e) => set("visual_notes", e.target.value)} /></label>
+              <label className="block"><span className={lab}>CIĄGŁOŚĆ POSTACI (Z PAKIETU)</span><textarea rows={3} className={inp} value={f.visual_notes} onChange={(e) => set("visual_notes", e.target.value)} /></label>
+              <label className="block"><span className={lab}>POSTACIE PO ANGIELSKU — TRAFIA DO PROMPTÓW SCEN (PUSTE = WERSJA POLSKA)</span><textarea rows={3} className={inp} value={f.visual_notes_en} onChange={(e) => set("visual_notes_en", e.target.value)} /></label>
+              <label className="block"><span className={lab}>POSTACIE NA OKŁADKACH (PO ANGIELSKU; KOGO NIE EKSPONUJEMY — POMIŃ)</span><textarea rows={2} className={inp} value={f.cover_visual_notes_en} onChange={(e) => set("cover_visual_notes_en", e.target.value)} /></label>
+              <RefImages value={f.reference_image_url} onChange={(v) => set("reference_image_url", v)} />
+              <p className="text-xs text-foreground/45">Gdy generator nie utrzymuje twarzy, zmień prompt sceny na ujęcie dłoni, rekwizytu albo sylwetki.</p>
               <label className="block"><span className={lab}>WSPÓLNY STYL (PUSTE = DOMYŚLNY STYL EXMORTIS)</span><textarea rows={3} className={inp} value={f.image_style} onChange={(e) => set("image_style", e.target.value)} /></label>
             </div>
           </details>
