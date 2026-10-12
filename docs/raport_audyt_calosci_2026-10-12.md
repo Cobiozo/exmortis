@@ -67,3 +67,10 @@ Testy: funkcje płatności uruchomione lokalnie (Deno) z atrapą bazy i PayU; ka
   - program kursu (moduły, lekcje, czas) na stronie produktu w Skarbcu;
   - w panelu podpowiedzi przy lekcjach, licznik widocznych lekcji, usuwanie wgranego pliku.
 - Mail po zakupie dla nowego konta: jak wejść (Google albo „Nie pamiętam hasła”). Moje konto → Zakupy: numer zamówienia.
+
+## Etap 4 — kurs z własnego serwera, strona 1.11
+- Lekcja kursu: adres filmu z własnego serwera (https, .mp4/.webm). W panelu: „Sprawdź odtwarzanie” (podgląd + automatyczny czas trwania), ostrzeżenie, gdy domena nie jest zaufana, i przycisk „Dodaj domenę” (nowa akcja libraryAdmin add_video_domain — reszta ustawień biblioteki bez zmian).
+- Odtwarzacz klienta: link z serwera bez zbędnego odświeżania, „Spróbuj ponownie” po błędzie, jedno ponowienie podpisanego linku, „Oglądaj tutaj” po przejęciu przez inne urządzenie.
+- Moje produkty: postęp kursu (lekcje x / y, pasek), przycisk „Kontynuuj”.
+- Dostęp do kursów i filmów: 12 miesięcy (domyślnie w edytorze produktu, zgodnie z Regulaminem §8 ust. 2 lit. b). PDF i audio — bez ograniczenia (Regulamin §8 ust. 2 lit. a).
+- Strona /1-listopada: „Kto prowadzi” ze zdjęciem z posługi kapłańskiej i tekstami z „O mnie” + blok „Dziś” ze zdjęciem obecnym i przyciskiem „Moja historia”. Strona korzysta z treści domyślnych (brak opublikowanej wersji w CMS) — po publikacji aplikacji zmiany są widoczne.
