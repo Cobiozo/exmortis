@@ -163,6 +163,7 @@ export function buildSnapshot(story, scenes, choices, version) {
   return { v: version, start: story.start_scene_key, scenes: sc };
 }
 
+// Metadane do biblioteki (zapisywane w opublikowanej kopii — zmiany w panelu działają po ponownej publikacji).
 export function storyMeta(s) {
   return {
     id: s.id, slug: s.slug, title: s.title, summary: s.summary || "", category: s.category || "",
