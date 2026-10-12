@@ -23,7 +23,9 @@ const COLUMNS = [
   ["contact_pref", "text"],
   ["consent_rodo", "boolean"],
   ["consent_paid", "boolean"],
+  ["consent_adult", "boolean"],
 ];
+let adultCol = false;
 
 const num1to10 = (v) => {
   const n = Number(v);
@@ -63,6 +65,10 @@ export default async function (req) {
     const affectedAreas = list(body.affected_areas);
     const consentRodo = body.consent_rodo === true;
     const consentPaid = body.consent_paid === true;
+    const consentAdult = body.consent_adult === true;
+    // Zgody wymagane także po stronie serwera (formularz w przeglądarce można obejść).
+    if (!consentRodo || !consentPaid || !consentAdult) return Response.json({ error: "Zaznacz wymagane zgody (w tym potwierdzenie ukończenia 18 lat)." }, { status: 400 });
+    if (!adultCol) { await runSql(base44, `ALTER TABLE public.powrot_applications ADD COLUMN IF NOT EXISTS consent_adult boolean`); adultCol = true; }
 
     // Limit zgłoszeń z jednego połączenia (ochrona przed zasypaniem formularza).
     if (!(await ipAllowed(base44, clientIp(req), "powrot", 5, 3600000))) return Response.json({ error: TOO_MANY }, { status: 429 });
@@ -73,14 +79,14 @@ export default async function (req) {
          (id, full_name, phone, email, age, return_from, return_from_other, situation,
           duration, affected_areas, tried_before, therapy_support, goal, obstacle,
           readiness, weekly_time, work_form, investment, anything_else, source,
-          contact_pref, consent_rodo, consent_paid, created_date, updated_date)
+          contact_pref, consent_rodo, consent_paid, consent_adult, created_date, updated_date)
        VALUES
          (gen_random_uuid()::text, ${esc(fullName)}, ${esc(phone)}, ${esc(email)}, ${esc(age)},
           ${jsonb(returnFrom)}, ${esc(returnOther)}, ${esc(situation)}, ${esc(duration)},
           ${jsonb(affectedAreas)}, ${esc(triedBefore)}, ${esc(therapySupport)}, ${esc(goal)},
           ${esc(obstacle)}, ${esc(readiness)}, ${esc(weeklyTime)}, ${esc(workForm)},
           ${esc(investment)}, ${esc(anythingElse)}, ${esc(source)}, ${esc(contactPref)},
-          ${consentRodo}, ${consentPaid}, now(), now())
+          ${consentRodo}, ${consentPaid}, ${consentAdult}, now(), now())
        RETURNING id`
     );
 
