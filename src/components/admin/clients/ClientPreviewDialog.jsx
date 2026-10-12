@@ -47,6 +47,11 @@ export default function ClientPreviewDialog({ email, onClose }) {
                     <p className="text-sm truncate">{m.title || "(bez tytułu)"}</p>
                     <p className="text-[11px] text-foreground/45">{plDateTime(m.sent_at)}</p>
                     <div className="rich-content text-xs text-foreground/60 mt-2" dangerouslySetInnerHTML={{ __html: m.text }} />
+                    {Array.isArray(m.attachments) && m.attachments.length > 0 && (
+                      <ul className="mt-2 text-[11px] text-foreground/50 list-disc pl-5">
+                        {m.attachments.map((x, i) => <li key={i}>{x.material_title || (x.collection_title ? `Kolekcja · ${x.collection_title}` : "Materiał")}</li>)}
+                      </ul>
+                    )}
                   </div>
                 ))}
               </div>

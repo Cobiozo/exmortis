@@ -16,7 +16,7 @@ export default function VideoPlayer({ src, expiresIn, onRefresh, allowDownload, 
     if (v) pos.current = v.currentTime || 0;
     if (!onRefresh) { setFailed(true); return; }
     const next = await onRefresh().catch(() => null);
-    if (next) setUrl(next);
+    if (next && next !== url) setUrl(next);
     else setFailed(true);
   };
 

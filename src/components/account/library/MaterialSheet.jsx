@@ -4,6 +4,7 @@ import { openMaterial, refreshLink, markCompleted, KIND, mmss } from "./libApi";
 import { sanitizeHtml } from "@/lib/sanitizeHtml";
 import AudioPlayer from "./AudioPlayer";
 import VideoFacade from "./VideoFacade";
+import VideoPlayer from "./VideoPlayer";
 import LeaveDialog from "./LeaveDialog";
 
 const FOCUS = "focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#C9A24A]";
@@ -84,7 +85,11 @@ export default function MaterialSheet({ material, completed, onClose, onComplete
             </div>
           )}
 
-          {d && material.kind === "WIDEO" && <VideoFacade embed={d.embed} title={material.title} />}
+          {d && material.kind === "WIDEO" && (d.file || d.server
+            ? (d.url
+                ? <VideoPlayer src={d.url} expiresIn={d.expires_in} onRefresh={renew} allowDownload={d.allow_download} title={material.title} />
+                : <p className="font-body text-[15px] text-[#F5EFE1]/70">Film jest chwilowo niedostępny.</p>)
+            : <VideoFacade embed={d.embed} title={material.title} />)}
 
           {d && material.kind === "TEKST" && (
             <div className="rich-content font-body text-[15px] leading-relaxed text-[#F5EFE1]/85"
