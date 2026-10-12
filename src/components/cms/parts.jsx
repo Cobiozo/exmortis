@@ -15,9 +15,11 @@ export function CmsButton({ b }) {
   return <Link to={link} className={cls} {...tab}>{inner}</Link>;
 }
 
-export function Buttons({ list, className = "" }) {
+// pion = przyciski jeden pod drugim (na komputerze o równej szerokości, na telefonie na całą szerokość).
+export function Buttons({ list, className = "", pion = false }) {
   if (!list?.length) return null;
-  return <div className={`flex flex-col sm:flex-row flex-wrap gap-4 ${className}`}>{list.map((b, i) => <CmsButton key={i} b={b} />)}</div>;
+  const lay = pion ? "flex sm:inline-flex flex-col gap-3" : "flex flex-col sm:flex-row flex-wrap gap-4";
+  return <div className={`${lay} ${className}`}>{list.map((b, i) => <CmsButton key={i} b={b} />)}</div>;
 }
 
 export function Rich({ html, className = "" }) {
