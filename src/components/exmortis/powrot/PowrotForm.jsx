@@ -155,7 +155,7 @@ export default function PowrotForm() {
             Formularz<br /><span className="gold-text">kwalifikacyjny</span>
           </h2>
           <p className="text-foreground/60 leading-relaxed max-w-md">
-            Kilka pytań zadasz sobie sam. Zgłoszenia rozpatruję
+            Kilka pytań, które warto sobie zadać. Zgłoszenia rozpatruję
             w kolejności napływania — odezwę się osobiście.
           </p>
           <p className="technical text-[10px] text-foreground/40 mt-8">
