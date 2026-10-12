@@ -1,15 +1,17 @@
 import React, { useCallback, useEffect, useRef, useState } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
-import { Bell, X, Megaphone, Sparkles, Hourglass, Tag, Ticket, CalendarDays, CalendarClock, PlayCircle, Clock, Mail, Compass, Headphones, Copy, Check, Settings } from "lucide-react";
+import { Bell, X, Megaphone, Sparkles, Hourglass, Tag, Ticket, CalendarDays, CalendarClock, PlayCircle, Clock, Mail, Compass, Headphones, Copy, Check, Settings, BellRing, Receipt, CreditCard, GraduationCap } from "lucide-react";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { useViewer } from "@/lib/useViewer";
 import { ANN_SEEN } from "@/components/account/announce/annApi";
 import { notif, ago, NOTIF_REFRESH } from "./notifApi";
 
 const ICON = { ogloszenie: Megaphone, produkt: Sparkles, wkrotce: Hourglass, promocja: Tag, kod: Ticket, spotkanie: CalendarDays,
-  moje_spotkanie: CalendarClock, nagranie: PlayCircle, dostep: Clock, wiadomosc: Mail, historia: Compass, obok: Headphones };
+  moje_spotkanie: CalendarClock, nagranie: PlayCircle, dostep: Clock, wiadomosc: Mail, historia: Compass, obok: Headphones,
+  lista: BellRing, zamowienie: Receipt, platnosc: CreditCard, lekcja: GraduationCap };
 const LABEL = { ogloszenie: "Ogłoszenie", produkt: "Nowość", wkrotce: "Zapowiedź", promocja: "Promocja", kod: "Kod rabatowy", spotkanie: "Spotkanie",
-  moje_spotkanie: "Twoje spotkanie", nagranie: "Nagranie", dostep: "Dostęp", wiadomosc: "Wiadomość", historia: "ROZDROŻA", obok: "Obok" };
+  moje_spotkanie: "Twoje spotkanie", nagranie: "Nagranie", dostep: "Dostęp", wiadomosc: "Wiadomość", historia: "ROZDROŻA", obok: "Obok",
+  lista: "Lista oczekujących", zamowienie: "Zamówienie", platnosc: "Płatność", lekcja: "Kurs" };
 const POLL = 5 * 60 * 1000;
 
 function CodeCopy({ code }) {
