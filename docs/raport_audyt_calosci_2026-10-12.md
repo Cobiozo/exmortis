@@ -80,3 +80,9 @@ Testy: funkcje płatności uruchomione lokalnie (Deno) z atrapą bazy i PayU; ka
 - PDF: oprócz napisu u góry — stopka i znak wodny po przekątnej przez środek każdej strony z e-mailem zamawiającego i numerem zamówienia (WM_VERSION=wm2 wymusza ponowne wygenerowanie zapisanych kopii).
 - Filmy kursu z własnego serwera: Ustawienia strony → „Ochrona filmów kursu”: klucz (pokazywany raz), ważność linku 2–24 h, pliki stream.php + .htaccess do pobrania. Link /v/<plik>?e=…&t=HMAC-SHA256; pliki w _wideo/ bez dostępu z zewnątrz; obsługa przewijania (Range). Sprawdzone: podpis z aplikacji akceptowany przez PHP, zły/wygasły podpis 403, „../” 404, Range 206.
 - Odtwarzacz odświeża podpisany link 10 min przed końcem ważności; podgląd w panelu też dostaje podpisany link.
+
+## Etap 6 — szybkość, SEO, Omnibus (12.10, przed południem)
+- Strony poza stroną główną, 1.11, kontaktem, logowaniem i dołączaniem ładują się na żądanie (lazyPage z jednorazowym przeładowaniem po nowej publikacji). Początkowy JS: ~903 KB → ~768 KB (gzip ~251 KB). Menu i stopka zostają przy przejściu między stronami.
+- Omnibus: przy promocji „Najniższa cena z 30 dni przed obniżką: X zł” (karta w Skarbcu, strona produktu, kafelek na stronie głównej). X = cena regularna (pole omnibus_price ma pierwszeństwo, gdyby powstało).
+- Mapa strony: https://exmortis.pl/functions/sitemap (strony stałe, produkty, spotkania, odcinki podcastu), wpisana w robots.txt; robots blokuje też /kasa i strony rezerwacji z tokenem.
+- Kasa: etykiety pól połączone z polami (czytniki ekranu, autouzupełnianie: imię i nazwisko, e-mail).
