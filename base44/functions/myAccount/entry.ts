@@ -1,7 +1,7 @@
 import { createClientFromRequest } from "npm:@base44/sdk@0.8.44";
 import { runSql, escStr, clientIp } from "../../shared/supabase.ts";
 import { isActive } from "../../shared/access.ts";
-import { personalizePdf, newLicenseId } from "../../shared/pdfLicense.ts";
+import { personalizePdf, newLicenseId, WM_VERSION } from "../../shared/pdfLicense.ts";
 
 // Konto klienta: moje produkty, zakupy, podpisany link do pliku (po sprawdzeniu dostępu).
 export default async function (req) {
@@ -82,7 +82,8 @@ export default async function (req) {
         const sr = base44.asServiceRole;
         const orderNo = a.order_id ? String(a.order_id).slice(0, 8).toUpperCase() : "R-" + a.id.slice(-6).toUpperCase();
         let lic = (await sr.entities.License.filter({ access_id: a.id }))[0];
-        if (!lic || lic.source_uri !== p.private_file_uri || !lic.file_uri) {
+        const srcKey = `${p.private_file_uri}#${WM_VERSION}`;
+        if (!lic || lic.source_uri !== srcKey || !lic.file_uri) {
           const { signed_url } = await sr.integrations.Core.CreateFileSignedUrl({ file_uri: p.private_file_uri, expires_in: 120 });
           const orig = new Uint8Array(await (await fetch(signed_url)).arrayBuffer());
           const licenseId = lic?.license_id || newLicenseId();
@@ -93,7 +94,7 @@ export default async function (req) {
           const { file_uri } = await sr.integrations.Core.UploadPrivateFile({
             file: new File([out], `${crypto.randomUUID()}.pdf`, { type: "application/pdf" }),
           });
-          const data = { license_id: licenseId, access_id: a.id, user_email: a.user_email, product_id: a.product_id, product_name: p.name, order_id: a.order_id || "", file_uri, source_uri: p.private_file_uri };
+          const data = { license_id: licenseId, access_id: a.id, user_email: a.user_email, product_id: a.product_id, product_name: p.name, order_id: a.order_id || "", file_uri, source_uri: srcKey };
           if (lic) { await sr.entities.License.update(lic.id, data); lic = { ...lic, ...data }; }
           else lic = await sr.entities.License.create({ ...data, downloads: 0 });
         }
