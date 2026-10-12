@@ -39,8 +39,8 @@ export default function EventTile({ event: ev, compact = false, past = false }) 
     }
     if (past) {
       return (
-        <Link to={ev.short_path ? `/${ev.short_path}/dolacz` : `/spotkania/${ev.slug}/dolacz`} onClick={stop} className={OUTLINE_GOLD}>
-          OBEJRZYJ NAGRANIE
+        <Link to="/konto?tab=spotkania" onClick={stop} className={OUTLINE_GOLD} title="Nagranie jest w koncie osób zapisanych na to spotkanie">
+          NAGRANIE DLA ZAPISANYCH
         </Link>
       );
     }
