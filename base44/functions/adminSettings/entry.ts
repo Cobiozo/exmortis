@@ -3,6 +3,7 @@ import { requireStaff } from "../../shared/supabase.ts";
 import { getSetting, saveSetting, deleteSetting, cleanAppUrl, DEFAULT_APP_URL } from "../../shared/settings.ts";
 import { cleanFirma, cleanPremiera, PREMIERA_DEFAULT } from "../../shared/firma.ts";
 import { syncDocs, publicDocs } from "../../shared/legalDocs.ts";
+import { VIDEO_SETTING, signServerVideo, newVideoKey, ttlHours } from "../../shared/videoSign.ts";
 
 const MASK = "********";
 
@@ -94,6 +95,31 @@ export default async function (req) {
       }
       await saveSetting(base44, target, next);
       return Response.json({ ok: true });
+    }
+
+    // ---- Ochrona filmów kursu (tylko administrator; klucz pokazywany wyłącznie przy generowaniu) ----
+    if (String(body.action || "").startsWith("video_")) {
+      if (tech) return Response.json({ error: "Brak dostępu" }, { status: 403 });
+      const cur = (await getSetting(base44, VIDEO_SETTING)) || {};
+      if (body.action === "video_get") {
+        return Response.json({ enabled: !!cur.enabled, ttl_h: ttlHours(cur), has_key: !!cur.key, key_created: cur.key_created || null });
+      }
+      if (body.action === "video_save") {
+        if (body.enabled === true && !cur.key) throw new Error("Najpierw wygeneruj klucz i wgraj skrypt na serwer.");
+        await saveSetting(base44, VIDEO_SETTING, { ...cur, enabled: body.enabled === true, ttl_h: ttlHours({ ttl_h: body.ttl_h }) });
+        return Response.json({ ok: true });
+      }
+      if (body.action === "video_new_key") {
+        const key = newVideoKey();
+        // Nowy klucz unieważnia stare linki — ochrona wyłączona do czasu wgrania nowego skryptu.
+        await saveSetting(base44, VIDEO_SETTING, { ...cur, key, key_created: new Date().toISOString(), enabled: false });
+        return Response.json({ key });
+      }
+      if (body.action === "video_sign_preview") {
+        const r = await signServerVideo(base44, String(body.url || ""), { ...cur, enabled: !!cur.key });
+        return Response.json({ url: r?.url || null });
+      }
+      return Response.json({ error: "Nieznana akcja" }, { status: 400 });
     }
 
     if (body.action === "delete") {
