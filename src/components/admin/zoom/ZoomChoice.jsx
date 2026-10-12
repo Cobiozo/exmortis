@@ -5,7 +5,7 @@ import { useFixedZoom } from "./fixedZoom";
 
 // Wybór linku do pokoju: „Mój stały link” (z Ustawień strony) albo „Inny link” (pola przekazane jako children).
 // Wybranie stałego linku wpisuje go do spotkania/rodzaju konsultacji — tak jak wpisany ręcznie.
-export default function ZoomChoice({ link, withPassword = false, onSet, children }) {
+export default function ZoomChoice({ link, withPassword = false, onSet, error, children }) {
   const z = useFixedZoom();
   const [other, setOther] = useState(false);
   if (!z) return children;
@@ -28,6 +28,7 @@ export default function ZoomChoice({ link, withPassword = false, onSet, children
           <p className="truncate text-foreground/80">{z.link}</p>
           {withPassword && z.haslo && <p className="text-foreground/50 mt-1">Hasło: {z.haslo}</p>}
           <p className="text-xs text-foreground/45 mt-1">Stały link z Ustawień strony.</p>
+          {error && <p role="alert" className="text-sm text-[#E5484D] mt-1.5">{error}</p>}
         </div>
       ) : children}
     </div>

@@ -22,8 +22,8 @@ export default function StepAccess(p) {
           <Input id="location" label="Adres (widzą go tylko zapisani) *" {...p} />
         ) : (
           <div className="space-y-5">
-            <Field id="join_choice" label="Link do pokoju" error={p.errors?.join_link}>
-              <ZoomChoice link={f.join_link} withPassword onSet={({ link, haslo }) => set({ join_link: link, join_password: haslo })}>
+            <Field id="join_link_choice" label="Link do pokoju">
+              <ZoomChoice link={f.join_link} withPassword error={p.errors?.join_link} onSet={({ link, haslo }) => set({ join_link: link, join_password: haslo })}>
                 <div className="grid md:grid-cols-2 gap-5">
                   <Input id="join_link" type="url" inputMode="url" label="Link do Zoom (dla uczestników, z wbudowanym hasłem)" hint="Możesz dodać później, nawet w dniu spotkania. Zapisani dostają osobisty adres strony dołączenia, nie ten link." {...p} />
                   <Input id="join_password" label="Hasło do pokoju (opcjonalnie)" hint="Gdy link nie ma wbudowanego hasła" {...p} />
