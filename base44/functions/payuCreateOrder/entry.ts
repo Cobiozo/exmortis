@@ -6,6 +6,7 @@ import { insertOrder } from "../../shared/orders.ts";
 import { addSubscriber } from "../../shared/newsletter.ts";
 import { DIGITAL } from "../../shared/access.ts";
 import { regulaminVersion } from "../../shared/legalDocs.ts";
+import { unitPrice } from "../../shared/productPrice.ts";
 
 const DIGITAL_CONSENT =
   "Żądam dostarczenia treści cyfrowych przed upływem 14 dni od zawarcia umowy i przyjmuję do wiadomości, że z chwilą rozpoczęcia ich dostarczania tracę prawo odstąpienia od umowy.";
@@ -35,7 +36,8 @@ export default async function (req) {
     const idList = ids.map((id) => escStr(id)).join(",");
     const rows = await runSql(
       base44,
-      `SELECT id, name, price::float8 AS price, active, product_type
+      `SELECT id, name, price::float8 AS price, price_regular::float8 AS price_regular, price_start::float8 AS price_start,
+              promo_end_date::text AS promo_end_date, active, is_free, COALESCE(status, 'dostępny') AS status, product_type
        FROM public.products WHERE id IN (${idList})`,
       true
     );
@@ -50,9 +52,12 @@ export default async function (req) {
     let totalGrosze = 0;
     for (const it of items) {
       const p = byId.get(String((it || {}).id));
-      if (!p || p.active === false) throw new Error("Jeden z produktów nie jest już dostępny");
+      // Produkty „wkrótce”, ukryte i darmowe nie są sprzedawane przez kasę.
+      if (!p || p.active === false || p.status === "wkrótce" || p.status === "ukryty" || p.is_free === true) {
+        throw new Error("Jeden z produktów nie jest już dostępny");
+      }
       const qty = Math.max(1, Math.min(20, Math.floor(Number((it || {}).qty) || 1)));
-      const unit = Math.round(Number(p.price) * 100);
+      const unit = Math.round(unitPrice(p) * 100);
       if (!Number.isFinite(unit) || unit <= 0) throw new Error("Niepoprawna cena produktu");
       totalGrosze += unit * qty;
       products.push({ name: String(p.name).slice(0, 150), unitPrice: String(unit), quantity: qty });
