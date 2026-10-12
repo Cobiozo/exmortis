@@ -13,7 +13,7 @@ export function readSteps(p: Record<string, unknown>): Step[] {
   if (typeof raw === "string") { try { raw = JSON.parse(raw); } catch { raw = null; } }
   if (!Array.isArray(raw)) return [];
   return raw
-    .map((s) => ({ do: String(s?.do || "").slice(0, 10), cena: Number(s?.cena) }))
+    .map((s) => ({ do: String(s?.do || "").slice(0, 10), cena: s?.cena === null || s?.cena === undefined || s?.cena === "" ? NaN : Number(s.cena) }))
     .filter((s) => /^\d{4}-\d{2}-\d{2}$/.test(s.do) && Number.isFinite(s.cena) && s.cena >= 0)
     .sort((a, b) => a.do.localeCompare(b.do));
 }
