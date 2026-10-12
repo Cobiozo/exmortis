@@ -218,6 +218,8 @@ export async function sendReminderMail(base44, ev, reg, kind) {
 
 // Podziękowanie dzień po spotkaniu, z linkiem do nagrania.
 export async function sendRecordingMail(base44, ev, reg, inviteHtml) {
+  // Spotkania online: osobisty link do strony dołączenia (nagranie tylko dla zapisanych, do „dostępne do”).
+  const link = isOnline(ev) && joinUrl(ev, await joinToken(reg.cancel_token)) || ev.recording_url;
   return sendMail(base44, {
     kind: "nagranie", ref: reg.id, waznyDo: ev.recording_until || undefined,
     to: reg.email,
@@ -225,7 +227,8 @@ export async function sendRecordingMail(base44, ev, reg, inviteHtml) {
     html: shell(ev, 
       `<h1 style="font-size:24px;">Dziękuję za obecność</h1>` +
         `<p style="line-height:1.7;">${escHtml(reg.first_name)}, nagranie ze spotkania «${escHtml(ev.title)}» czeka na Ciebie:</p>` +
-        `<p><a href="${escHtml(ev.recording_url)}" style="color:#C9A24A;">Obejrzyj nagranie</a></p>` +
+        `<p><a href="${escHtml(link)}" style="color:#C9A24A;">Obejrzyj nagranie</a></p>` +
+        (ev.recording_until ? `<p style="color:#8A8A8C;font-size:13px;">Nagranie jest dostępne do ${escHtml(plWhen(ev.recording_until))} (czasu polskiego). Link jest osobisty — nie przekazuj go dalej.</p>` : "") +
         inviteHtml
     ),
   });

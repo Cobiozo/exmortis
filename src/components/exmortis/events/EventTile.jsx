@@ -39,9 +39,9 @@ export default function EventTile({ event: ev, compact = false, past = false }) 
     }
     if (past) {
       return (
-        <a href={ev.recording_url} target="_blank" rel="noreferrer" onClick={stop} className={OUTLINE_GOLD}>
+        <Link to={ev.short_path ? `/${ev.short_path}/dolacz` : `/spotkania/${ev.slug}/dolacz`} onClick={stop} className={OUTLINE_GOLD}>
           OBEJRZYJ NAGRANIE
-        </a>
+        </Link>
       );
     }
     if (external) {

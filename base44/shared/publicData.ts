@@ -6,9 +6,10 @@ import { publicDocs } from "./legalDocs.ts";
 
 // Publiczne dane wspólne dla siteSettings, siteContent, eventsPublic i bootstrap.
 // Bez e.location, join_link i join_password — to dane prywatne.
+// Link do nagrania nie wychodzi publicznie (tylko has_recording) — nagranie widzą zapisani na /dolacz.
 export const PUB_COLS = `e.id, e.title, e.slug, e.subtitle, e.event_type, e.format, e.start_datetime,
   e.duration_minutes, e.description, e.for_whom, e.price, e.checkout_url,
-  e.capacity, e.registration_type, e.external_url, e.recording_url, e.recording_until, e.stage,
+  e.capacity, e.registration_type, e.external_url, (e.recording_url IS NOT NULL) AS has_recording, e.recording_until, e.stage,
   e.cover_image, e.cover, e.status, e.cancel_reason, e.registration_deadline, e.what_registered,
   e.open_minutes, e.zoom_faq, e.short_path`;
 export const REG_COUNT = `(SELECT COUNT(*) FROM public.registrations r
