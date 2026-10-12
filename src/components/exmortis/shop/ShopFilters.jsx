@@ -4,6 +4,7 @@ import { SlidersHorizontal, X } from "lucide-react";
 const STAGES = ["Śmierć", "Próg", "Powrót", "Inny"];
 export const FORM_OPTIONS = ["Czytam", "Słucham", "Oglądam", "Uczestniczę", "Idę głęboko"];
 export const AUDIENCE_OPTIONS = ["Mężczyzna", "Kobieta", "Ojciec", "Matka", "Mąż", "Żona", "Lider"];
+export const AVAIL_OPTIONS = ["Dostępne", "Oczekujące"];
 
 function Group({ label, options, value, onToggle, allowAll = false }) {
   return (
@@ -44,12 +45,13 @@ function Group({ label, options, value, onToggle, allowAll = false }) {
 export default function ShopFilters({ filters, setFilters, available }) {
   const [open, setOpen] = useState(false);
   const a = available || { stages: STAGES, forms: FORM_OPTIONS, audiences: AUDIENCE_OPTIONS };
-  const hasAny = filters.stage || filters.form || filters.audience;
+  const hasAny = filters.stage || filters.form || filters.audience || filters.avail;
   const toggle = (key) => (v) => setFilters((f) => ({ ...f, [key]: f[key] === v ? null : v }));
-  const clear = () => setFilters({ stage: null, form: null, audience: null });
+  const clear = () => setFilters({ stage: null, form: null, audience: null, avail: null });
 
   const panel = (
     <div className="space-y-3 py-5">
+      {(a.avail || []).length > 1 && <Group label="DOSTĘPNOŚĆ" options={a.avail} value={filters.avail} onToggle={toggle("avail")} />}
       <Group label="ETAP" options={a.stages} value={filters.stage} onToggle={toggle("stage")} allowAll />
       <Group label="FORMA" options={a.forms} value={filters.form} onToggle={toggle("form")} />
       <Group label="DLA KOGO" options={a.audiences} value={filters.audience} onToggle={toggle("audience")} />

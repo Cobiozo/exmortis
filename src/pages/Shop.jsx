@@ -1,6 +1,6 @@
 import React, { useEffect, useMemo, useState } from "react";
 import { base44 } from "@/api/base44Client";
-import ShopFilters, { FORM_OPTIONS, AUDIENCE_OPTIONS } from "@/components/exmortis/shop/ShopFilters";
+import ShopFilters, { FORM_OPTIONS, AUDIENCE_OPTIONS, AVAIL_OPTIONS } from "@/components/exmortis/shop/ShopFilters";
 import ShopLevelSection from "@/components/exmortis/shop/ShopLevelSection";
 import MusicSection from "@/components/exmortis/shop/MusicSection";
 import TrustFooter from "@/components/exmortis/shop/TrustFooter";
@@ -16,12 +16,14 @@ const LEVELS = [
 ];
 
 const STAGE_WORDS = ["Śmierć", "Próg", "Powrót", "Inny"];
+// Dostępne = można kupić / pobrać teraz; Oczekujące = zapowiedź z listą oczekujących.
+const availOf = (p) => ((p.status || "dostępny") === "wkrótce" ? "Oczekujące" : "Dostępne");
 
 // Moduł katalogu Skarbca; nagłówek i zachęta do testu są blokami w edytorze stron.
 export default function Shop() {
   const [products, setProducts] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [filters, setFilters] = useState({ stage: null, form: null, audience: null });
+  const [filters, setFilters] = useState({ stage: null, form: null, audience: null, avail: null });
   const [waitlistProduct, setWaitlistProduct] = useState(null);
   const [events, setEvents] = useState([]);
 
@@ -58,6 +60,7 @@ export default function Shop() {
   // Filtry bez pustych opcji.
   const available = useMemo(
     () => ({
+      avail: AVAIL_OPTIONS.filter((v) => visible.some((p) => availOf(p) === v)),
       stages: STAGE_WORDS.filter((s) => visible.some((p) => p.stage === s)),
       forms: FORM_OPTIONS.filter((f) => visible.some((p) => p.form === f)),
       audiences: AUDIENCE_OPTIONS.filter((a) =>
@@ -70,6 +73,7 @@ export default function Shop() {
   const filtered = useMemo(() => {
     return visible.filter((p) => {
       if (filters.stage && p.stage !== "Wszystkie" && p.stage !== filters.stage) return false;
+      if (filters.avail && availOf(p) !== filters.avail) return false;
       if (filters.form && p.form !== filters.form) return false;
       if (filters.audience) {
         const tags = Array.isArray(p.audience_tags) ? p.audience_tags : [];
@@ -131,7 +135,7 @@ export default function Shop() {
           <p className="text-foreground/40 mt-4 mb-8">
             Spróbuj innych filtrów albo wyczyść wybór.
           </p>
-          <button onClick={() => setFilters({ stage: null, form: null, audience: null })} className="btn-ghost">
+          <button onClick={() => setFilters({ stage: null, form: null, audience: null, avail: null })} className="btn-ghost">
             WYCZYŚĆ FILTRY
           </button>
         </div>

@@ -7,12 +7,13 @@ import { isPromoActive, priceOnRequest, lowestPrice30, zl, nextPriceText } from 
 // Wspólne elementy kart Skarbca: znaczki, cena, przycisk.
 
 // Produkty wyłączone z katalogu Skarbca (mają własne podstrony).
-export const EXCLUDED_SLUGS = ["listy-powrotu", "test-ktorej-smierci", "minutnik-ciszy"];
+// „Soundtrack powrotu” wycofany z katalogu (12.10, decyzja Dawida) — produkt można też ukryć w panelu.
+export const EXCLUDED_SLUGS = ["listy-powrotu", "test-ktorej-smierci", "minutnik-ciszy", "soundtrack-powrotu"];
 
 // Podcasty i muzyka — bez koszyka; karta otwiera nagranie.
 export function isListenProduct(p) {
   return (
-    p.form === "Słucham" &&
+    p.form === "Słucham" && p.status !== "wkrótce" &&
     (p.is_free || p.slug === "soundtrack-powrotu") &&
     p.slug !== "kanal-whatsapp"
   );
