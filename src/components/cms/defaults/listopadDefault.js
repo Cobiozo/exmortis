@@ -14,8 +14,10 @@ export const LISTOPAD_BLOCKS = [
     przyciski: [{ etykieta: "ZAPISZ SIĘ", link: "#zapis", styl: "zloty", strzalka: true }], dopisek: "Bezpłatnie. Link do spotkania przyjdzie e-mailem.",
     tlo: { url: LISTOPAD_COVER }, przyciemnienie: 55 }),
   b("lis-tekst", "tekst", { etykieta: "O SPOTKANIU", tytul: "Wieczór Wszystkich Świętych",
-    tresc: "<p>TWÓJ FRAGMENT — o spotkaniu (2–4 zdania)</p>" }),
-  b("lis-kto", "tekst_zdjecie", { etykieta: "KTO PROWADZI", tytul: "Kto prowadzi", tresc: "<p>TWÓJ FRAGMENT — kto prowadzi (zdjęcie + 3–5 zdań)</p>", strona: "lewo", kolumny: "40-60" }),
+    tresc: "<p>To spotkanie dla tych, w których coś umarło — sens, wiara, dawne życie — i którzy chcą zrozumieć, jak się z tego wraca. Opowiem o trzech śmierciach, przez które przechodzi człowiek, i o czterech etapach powrotu: Śmierć, Próg, Powrót, Inny.</p><p>Bez gotowych recept i bez pośpiechu. Na końcu zostaje czas na Twoje pytania — możesz zadać je już przy zapisie.</p>" }),
+  b("lis-kto", "tekst_zdjecie", { etykieta: "KTO PROWADZI", tytul: "Kto prowadzi", tresc: "<p>Nazywam się Dawid. Byłem księdzem — prowadziłem ludzi, aż sam znalazłem się w miejscu, którego nie było na mapie: w odrzuceniu, w depresji, bez perspektyw.</p><p>Odszedłem z kapłaństwa i straciłem pozycję, pracę i wielu bliskich. Wracałem krok po kroku, bez skrótów. Dziś jestem mężem, ojcem i mentorem powrotu.</p><p>Nie jestem coachem ani terapeutą. Idę kawałek obok, bo szedłem tą drogą wcześniej.</p>", strona: "lewo", kolumny: "40-60",
+    zdjecie: { url: "https://media.base44.com/images/public/6aa08bc6318b0f886cc3b9a3/76a96cdf4_686174507_17893800810460401_1310148896120990981_n.jpg", alt: "Dawid — exmortis" }, proporcja: "4:5", mobile: "gora",
+    przyciski: [{ etykieta: "MOJA HISTORIA", link: "/o-mnie", styl: "obrys", strzalka: true }] }),
   b("lis-dla-kogo", "karty", { etykieta: "DLA KOGO", tytul: "Dla kogo jest ten wieczór", kolumny: "3", numerowane: true, karty: [
     { tytul: "Śmierć mentalna", opis: "Dla tych, którym wypalenie, lęk albo pustka odebrały siebie." },
     { tytul: "Śmierć duchowa", opis: "Dla tych, którzy stracili sens, wiarę albo kierunek." },
