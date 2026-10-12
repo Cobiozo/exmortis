@@ -1,5 +1,17 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.52';
 import { recordPrices } from "../../shared/productPrice.ts";
+import { runSql } from "../../shared/supabase.ts";
+
+// Higiena listy oczekujących (raz na dobę na instancję): 90 dni po powiadomieniu, a bez powiadomienia po 12 miesiącach.
+let lastHygiene = "";
+async function waitlistHygiene(base44) {
+  const day = new Date().toISOString().slice(0, 10);
+  if (lastHygiene === day) return;
+  lastHygiene = day;
+  await runSql(base44, `ALTER TABLE public.waitlist ADD COLUMN IF NOT EXISTS notified_at timestamptz`);
+  await runSql(base44, `DELETE FROM public.waitlist WHERE (notified_at IS NOT NULL AND notified_at < now() - interval '90 days')
+    OR (notified_at IS NULL AND created_at < now() - interval '12 months')`);
+}
 
 // Publikuje strony zaplanowane na termin, który już minął (wywoływane cyklicznie).
 // Działa tylko na tym, co admin zaplanował — bezpieczne do wywołania bez logowania.
@@ -24,6 +36,7 @@ export default async function(req) {
     }
     // Przy okazji (najwyżej raz na godzinę): dzisiejsze ceny produktów do historii — podstawa informacji Omnibus.
     const prices = await recordPrices(base44).catch(() => -1);
+    await waitlistHygiene(base44).catch(() => {});
     return Response.json({ ok: true, published: done, prices });
   } catch (error) {
     return Response.json({ error: error.message }, { status: 500 });
