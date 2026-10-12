@@ -61,6 +61,7 @@ const INITIAL = {
   contact_pref: "",
   consent_rodo: false,
   consent_paid: false,
+  consent_adult: false,
 };
 
 export default function PowrotForm() {
@@ -128,6 +129,7 @@ export default function PowrotForm() {
     if (!form.investment) errs.investment = "Wybierz jedną odpowiedź.";
     if (!form.consent_rodo) errs.consent_rodo = "Ta zgoda jest wymagana.";
     if (!form.consent_paid) errs.consent_paid = "Ta zgoda jest wymagana.";
+    if (!form.consent_adult) errs.consent_adult = "Program jest dla osób pełnoletnich.";
     setErrors(errs);
     if (Object.keys(errs).length > 0) {
       setError("Uzupełnij zaznaczone pola.");
@@ -138,8 +140,8 @@ export default function PowrotForm() {
     try {
       await base44.functions.invoke("createPowrotApplication", form);
       setSent(true);
-    } catch {
-      setError("Nie udało się wysłać zgłoszenia. Spróbuj ponownie.");
+    } catch (err) {
+      setError(err?.response?.status === 400 || err?.response?.status === 429 ? err.response.data?.error || "Sprawdź formularz." : "Nie udało się wysłać zgłoszenia. Spróbuj ponownie.");
     } finally {
       setSending(false);
     }
@@ -148,8 +150,8 @@ export default function PowrotForm() {
   return (
     <Section dark id="formularz" label="ZGŁOSZENIE">
       <div className="grid md:grid-cols-2 gap-12 md:gap-20">
-        <div>
-          <h2 className="relic-heading text-4xl md:text-6xl leading-[0.95] mb-6">
+        <div className="min-w-0">
+          <h2 lang="pl" className="relic-heading text-[clamp(2rem,8vw,2.75rem)] md:text-[clamp(2.25rem,4.2vw,3.75rem)] leading-[0.95] mb-6 break-words hyphens-auto">
             Formularz<br /><span className="gold-text">kwalifikacyjny</span>
           </h2>
           <p className="text-foreground/60 leading-relaxed max-w-md">
@@ -160,7 +162,7 @@ export default function PowrotForm() {
             ROZMOWA KWALIFIKACYJNA · BEZPŁATNA · BEZ ZOBOWIĄZAŃ
           </p>
         </div>
-        <div>
+        <div className="min-w-0">
           <p className="text-foreground/50 text-sm mb-8">
             Nie wiesz, czy to dla Ciebie? Zacznij od{" "}
             <Link to="/test?src=powrot" className="gold-text hover:underline">
@@ -314,6 +316,9 @@ export default function PowrotForm() {
                 <CheckRow {...check("consent_rodo")}>
                   Wyrażam zgodę na przetwarzanie moich danych osobowych w celu kontaktu w sprawie
                   programu POWRÓT (RODO). <span className="gold-text">*</span>
+                </CheckRow>
+                <CheckRow {...check("consent_adult")}>
+                  Oświadczam, że mam ukończone 18 lat. <span className="gold-text">*</span>
                 </CheckRow>
                 <CheckRow {...check("consent_paid")}>
                   Rozumiem, że program jest płatny, a o udziale decydujemy wspólnie po rozmowie.{" "}
