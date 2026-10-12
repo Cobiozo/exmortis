@@ -56,6 +56,11 @@ export default function RegistrationForm({ event: ev }) {
         source: src,
         tz: Intl.DateTimeFormat().resolvedOptions().timeZone || "",
       });
+      // Osobisty klucz dołączenia zapamiętany na tym urządzeniu — w dniu spotkania strona /dolacz wpuści bez wpisywania e-maila.
+      try {
+        const tk = new URL(data?.join_url || "", window.location.origin).searchParams.get("t");
+        if (tk) [ev.slug, ev.short_path].filter(Boolean).forEach((k) => localStorage.setItem(`exm_join_t:${k}`, tk));
+      } catch { /* bez pamięci przeglądarki */ }
       setResult(data.queued ? { ok: true, status: "Zapisany", first_name: firstName, pending: true,
         join_url: ev.format === "Online" ? (ev.short_path ? `/${ev.short_path}/dolacz` : `/spotkania/${ev.slug}/dolacz`) : null } : data);
     } catch (err) {
@@ -90,9 +95,9 @@ export default function RegistrationForm({ event: ev }) {
         )}
         {result.join_url ? (
           <p className="text-foreground/70 mt-4 leading-relaxed break-all">
-            Link do dołączenia:{" "}
+            Twój osobisty link do dołączenia:{" "}
             <a href={result.join_url} className="gold-text underline">{SITE_URL}{result.join_url}</a>
-            {" "}— zapisz go albo dodaj spotkanie do kalendarza.
+            {" "}— zapisz go albo dodaj spotkanie do kalendarza. Nie przekazuj go dalej; na stronie spotkania wejdziesz też, wpisując e-mail podany przy zapisie.
           </p>
         ) : ev.format !== "Online" ? null : (
           <p className="text-foreground/60 mt-4 leading-relaxed">Link do spotkania wyślę Ci e-mailem.</p>
