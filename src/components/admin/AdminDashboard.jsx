@@ -70,6 +70,7 @@ export default function AdminDashboard() {
           { to: "/admin/obok", title: "Obok", lines: ["Serie, nagrania, uczestnicy"] },
         ]],
         ["SKLEP I TREŚCI", [
+          { to: "/admin/zamowienia", title: "Zamówienia", lines: [`Opłacone (30 dni): ${v("paid_30")}`, `Faktury do wystawienia: ${v("invoices_todo")}`] },
           { to: "/admin/skarbiec", title: "Skarbiec", lines: [`Dostępne: ${v("products_available")}`, `Wkrótce: ${v("products_soon")}`, `Ukryte: ${v("products_hidden")}`] },
           { to: "/admin/rabaty", title: "Kody rabatowe", lines: ["Procent lub kwota, limity, terminy"] },
           { to: "/admin/tresci", title: "Treści stron", lines: ["Edycja tekstów"] },

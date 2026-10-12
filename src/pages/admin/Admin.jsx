@@ -31,6 +31,7 @@ import LibraryPanel from "@/components/admin/library/LibraryPanel";
 import GroupsTab from "@/components/admin/library/GroupsTab";
 import MessagesPanel from "@/components/admin/library/MessagesPanel";
 import HistoryPanel from "@/components/admin/library/HistoryPanel";
+import OrdersPanel from "@/components/admin/orders/OrdersPanel";
 
 const SECTIONS = {
   spotkania: ["Spotkania", () => <EventsManager />],
@@ -38,6 +39,7 @@ const SECTIONS = {
   ogloszenia: ["Ogłoszenia", () => <AnnouncementsAdmin />],
   cisza: ["Cisza", () => <SilencePanel />],
   skarbiec: ["Skarbiec", () => <ProductsManager />],
+  zamowienia: ["Zamówienia", () => <OrdersPanel />],
   statystyki: ["Statystyki", () => <div className="space-y-16"><SilenceStatsPanel /><QuizStatsPanel /></div>],
   glos: ["Głos", () => <PlaylistManager onMutate={() => {}} />],
   kontakty: ["Baza kontaktów", () => <ContactsTabs />],

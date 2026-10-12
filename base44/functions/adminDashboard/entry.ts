@@ -15,7 +15,10 @@ const STATS_SQL = `SELECT
   (SELECT COUNT(*)::int FROM public.products WHERE active = FALSE OR status = 'ukryty') AS products_hidden,
   (SELECT COUNT(*)::int FROM public.registrations WHERE created_at > now() - interval '30 days') AS reg_30,
   (SELECT COUNT(*)::int FROM public.orders WHERE COALESCE(total, 0) = 0 AND created_date > now() - interval '30 days') AS downloads_30,
-  (SELECT COUNT(*)::int FROM public.silence_sessions WHERE created_at > now() - interval '30 days') AS silence_30`;
+  (SELECT COUNT(*)::int FROM public.silence_sessions WHERE created_at > now() - interval '30 days') AS silence_30,
+  (SELECT COUNT(*)::int FROM public.orders WHERE status = 'COMPLETED' AND COALESCE(total, 0) > 0 AND created_date > now() - interval '30 days') AS paid_30,
+  (SELECT COUNT(*)::int FROM public.orders o WHERE o.status = 'COMPLETED' AND jsonb_typeof(to_jsonb(o)->'invoice') = 'object'
+     AND COALESCE((to_jsonb(o)->'invoice'->>'wystawiona')::boolean, false) = false) AS invoices_todo`;
 
 const CONTACTS_SQL = `SELECT * FROM (
   SELECT 'Kontakt' AS source, name, email, NULL::text AS phone, created_date::timestamptz AS at FROM public.contact_messages
