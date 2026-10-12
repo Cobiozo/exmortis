@@ -9,6 +9,7 @@ import NewsletterConsent from "@/components/exmortis/shop/NewsletterConsent";
 import DiscountField from "@/components/exmortis/shop/DiscountField";
 import OrderSummaryInfo from "@/components/exmortis/shop/OrderSummaryInfo";
 import ChooseTermButton from "@/components/exmortis/shop/ChooseTermButton";
+import InvoiceFields, { validNip } from "@/components/exmortis/shop/InvoiceFields";
 
 const ORDER_KEY = "exm_payu_order";
 
@@ -27,6 +28,7 @@ export default function Checkout() {
   const [termsConsent, setTermsConsent] = useState(false);
   const [payError, setPayError] = useState("");
   const [discount, setDiscount] = useState(null);
+  const [invoice, setInvoice] = useState({ want: false, company: "", nip: "", address: "" });
   const { user } = useAuth();
   useEffect(() => {
     if (user) setForm((f) => ({ ...f, name: f.name || user.imie || user.full_name || "", email: f.email || user.email }));
@@ -69,6 +71,8 @@ export default function Checkout() {
   const submit = async (e) => {
     e.preventDefault();
     if (submitting) return;
+    if (invoice.want && !validNip(invoice.nip)) { setPayError("Sprawdź NIP do faktury — powinien mieć 10 cyfr."); return; }
+    setPayError("");
     setSubmitting(true);
     try {
       const res = await base44.functions.invoke("payuCreateOrder", {
@@ -80,6 +84,7 @@ export default function Checkout() {
         terms_consent: termsConsent,
         items: items.map((it) => ({ id: it.id, qty: it.qty })),
         code: discount?.code || "",
+        invoice: invoice.want ? { want: true, company: invoice.company, nip: invoice.nip, address: invoice.address } : null,
       });
       // Koszyk czyszczę dopiero po potwierdzeniu płatności — przerwana płatność go nie traci.
       try { sessionStorage.setItem(ORDER_KEY, res.data.orderId || ""); } catch { /* bez pamięci karty */ }
@@ -187,6 +192,8 @@ export default function Checkout() {
                 className="w-full bg-transparent border hairline px-5 py-4 focus:border-[#C9A24A] focus:outline-none transition-colors resize-none"
               />
             </div>
+
+            <InvoiceFields value={invoice} onChange={setInvoice} />
 
             <OrderSummaryInfo items={items} total={discount ? (total - discount.discount).toFixed(2) : total} />
             <label className="flex gap-3 text-sm text-foreground/65 leading-relaxed">
