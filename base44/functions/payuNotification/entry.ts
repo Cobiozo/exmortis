@@ -41,7 +41,7 @@ async function grantThresholdPackage(base44, stored) {
 const PL_DATE = (ymd) =>
   new Date(`${ymd}T12:00:00Z`).toLocaleDateString("pl-PL", { day: "numeric", month: "long", year: "numeric" });
 
-function accessEmailHtml(granted, consent) {
+function accessEmailHtml(granted, consent, newAccount = false, email = "") {
   if (!granted.length) return "";
   const rows = granted
     .map((g) => `<p style="color:#E2E2E2;margin:0 0 6px;">${String(g.name).replace(/</g, "&lt;")} · Dostęp ${g.until ? `do ${PL_DATE(g.until)}` : "bezterminowo"}</p>`)
@@ -49,6 +49,7 @@ function accessEmailHtml(granted, consent) {
   return `<div style="background:#0A0A0B;padding:0 32px 32px;font-family:Georgia,serif;">
     ${rows}
     <p style="margin:20px 0;"><a href="${APP_URL}/konto" style="color:#C9A24A;">Otwórz w Moich produktach</a></p>
+    ${newAccount ? `<p style="color:#8A8A8C;font-size:13px;line-height:1.6;">Konto założyłem na adres ${String(email).replace(/</g, "&lt;")}. Wejdź przez „Zaloguj przez Google” (jeśli to adres Gmail) albo ustaw hasło: na stronie logowania kliknij „Nie pamiętam hasła” i podaj ten adres.</p>` : ""}
     ${consent ? `<p style="color:#8A8A8C;font-size:13px;line-height:1.6;">Potwierdzam Twoje żądanie dostarczenia treści cyfrowych przed upływem 14 dni od zawarcia umowy oraz przyjęcie do wiadomości utraty prawa odstąpienia od umowy z chwilą rozpoczęcia dostarczania.</p>` : ""}
     <p style="color:#5C5C5E;font-size:12px;line-height:1.6;">exmortis to mentoring, nie terapia. Jeśli jest Ci bardzo ciężko: 116 123 · 800 70 2222 · w zagrożeniu życia 112.</p>
   </div>`;
@@ -97,6 +98,7 @@ export default async function (req) {
 
     const items = Array.isArray(stored.items) ? stored.items : [];
     const granted = [];
+    let newAccount = false;
     try {
       // Dostęp nadawany dopiero po potwierdzeniu płatności przez PayU (idempotentnie po numerze zamówienia).
       const ids = items.map((i) => i.product_id).filter(Boolean);
@@ -110,7 +112,7 @@ export default async function (req) {
           const until = await grantAccess(base44, { email: stored.buyer_email, product: p, source: "zakup", orderId: stored.id });
           granted.push({ name: p.name, until });
         }
-        if (granted.length) await ensureAccount(base44, stored.buyer_email);
+        if (granted.length) newAccount = await ensureAccount(base44, stored.buyer_email);
       }
     } catch (e) {
       // Bez dostępu nie potwierdzamy — cofamy przejęcie, PayU ponowi powiadomienie.
@@ -135,7 +137,7 @@ export default async function (req) {
           kind: "zamowienie", ref: stored.id,
           to: stored.buyer_email,
           subject: "EXMORTIS — płatność przyjęta",
-          html: orderEmailHtml(stored.buyer_name || "", items, stored.total, stored.id, stored.invoice || null) + accessEmailHtml(granted, !!stored.digital_consent_text),
+          html: orderEmailHtml(stored.buyer_name || "", items, stored.total, stored.id, stored.invoice || null) + accessEmailHtml(granted, !!stored.digital_consent_text, newAccount, stored.buyer_email),
         });
       } catch {
         // e-mail potwierdzenia jest opcjonalny — nie blokuj ack dla PayU
