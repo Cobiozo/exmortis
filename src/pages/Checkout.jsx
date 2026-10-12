@@ -10,13 +10,15 @@ import DiscountField from "@/components/exmortis/shop/DiscountField";
 import OrderSummaryInfo from "@/components/exmortis/shop/OrderSummaryInfo";
 import ChooseTermButton from "@/components/exmortis/shop/ChooseTermButton";
 
+const ORDER_KEY = "exm_payu_order";
+
 export default function Checkout() {
   const { items, total, clear } = useCart();
   const navigate = useNavigate();
-  const [payuDone, setPayuDone] = useState(
-    () => new URLSearchParams(window.location.search).get("payu") === "done"
-  );
-  const [done, setDone] = useState(false);
+  const [payuDone] = useState(() => new URLSearchParams(window.location.search).get("payu") === "done");
+  // PayU dopisuje ?error=… do adresu powrotu, gdy płatność przerwano lub odrzucono.
+  const [payuError] = useState(() => !!new URLSearchParams(window.location.search).get("error"));
+  const [payState, setPayState] = useState("check"); // check | ok | wait | fail
   const [submitting, setSubmitting] = useState(false);
   const [form, setForm] = useState({ name: "", email: "", note: "" });
   const [newsletterConsent, setNewsletterConsent] = useState(false);
@@ -28,6 +30,29 @@ export default function Checkout() {
   useEffect(() => {
     if (user) setForm((f) => ({ ...f, name: f.name || user.imie || user.full_name || "", email: f.email || user.email }));
   }, [user]);
+
+  // Powrót z PayU: sprawdzam stan zamówienia (powiadomienie PayU bywa o kilka sekund później niż powrót).
+  useEffect(() => {
+    if (!payuDone) return undefined;
+    if (payuError) { setPayState("fail"); return undefined; }
+    let orderId = "";
+    try { orderId = sessionStorage.getItem(ORDER_KEY) || ""; } catch { /* brak */ }
+    if (!orderId) { clear(); setPayState("ok"); return undefined; }
+    let stop = false, tries = 0;
+    const tick = async () => {
+      if (stop) return;
+      tries++;
+      const st = await base44.functions.invoke("payuCreateOrder", { action: "status", orderId })
+        .then((r) => r.data?.status).catch(() => null);
+      if (stop) return;
+      if (st === "COMPLETED") { clear(); try { sessionStorage.removeItem(ORDER_KEY); } catch { /* */ } setPayState("ok"); return; }
+      if (st === "CANCELED") { setPayState("fail"); return; }
+      if (tries >= 20) { clear(); setPayState("wait"); return; }
+      setTimeout(tick, 3000);
+    };
+    tick();
+    return () => { stop = true; };
+  }, [payuDone, payuError, clear]);
 
   const submit = async (e) => {
     e.preventDefault();
@@ -44,14 +69,16 @@ export default function Checkout() {
         items: items.map((it) => ({ id: it.id, qty: it.qty })),
         code: discount?.code || "",
       });
-      clear();
+      // Koszyk czyszczę dopiero po potwierdzeniu płatności — przerwana płatność go nie traci.
+      try { sessionStorage.setItem(ORDER_KEY, res.data.orderId || ""); } catch { /* bez pamięci karty */ }
       window.location.href = res.data.redirectUri;
     } catch (err) {
       const msg = err?.response?.data?.error || "";
       if (msg === "PAYU_NOT_CONFIGURED") {
-        // PayU nieaktywne — potwierdzenie trybu ręcznego
-        clear();
-        setDone(true);
+        // Płatności nieaktywne — zamówienie NIE powstało, więc nie udajemy, że przyjęte.
+        setPayError("Płatności online jeszcze nie działają. Nic nie zostało pobrane, koszyk zostaje. Napisz do mnie przez formularz kontaktowy, a odezwę się z płatnością.");
+      } else if (msg && !/^PayU|Supabase|fetch/i.test(msg)) {
+        setPayError(msg);
       } else {
         setPayError("Płatność się nie udała. Nic nie zostało pobrane — spróbuj jeszcze raz.");
       }
@@ -61,33 +88,37 @@ export default function Checkout() {
   };
 
   if (payuDone) {
+    const fail = payState === "fail";
     return (
       <div className="min-h-screen flex flex-col items-center justify-center bg-[#0A0A0B] pt-20 px-6 text-center gap-8">
-        <div className="w-16 h-16 border-2 border-[#C9A24A] rounded-full flex items-center justify-center">
-          <Check className="h-8 w-8 gold-text" />
-        </div>
-        <h1 className="relic-heading text-4xl md:text-6xl gold-text">Próg przekroczony</h1>
-        <p className="text-foreground/60 text-lg max-w-md leading-relaxed">
-          Płatność dotarła. Dostęp i szczegóły wyślę na Twój mail — pierwszy ruch jest już za Tobą.
-        </p>
-        <ChooseTermButton />
-        <Link to="/" className="btn-ghost">WRÓĆ NA POCZĄTEK</Link>
-      </div>
-    );
-  }
-
-  if (done) {
-    return (
-      <div className="min-h-screen flex flex-col items-center justify-center bg-[#0A0A0B] pt-20 px-6 text-center gap-8">
-        <div className="w-16 h-16 border-2 border-[#C9A24A] rounded-full flex items-center justify-center">
-          <Check className="h-8 w-8 gold-text" />
-        </div>
-        <h1 className="relic-heading text-4xl md:text-6xl gold-text">Przyjęte</h1>
-        <p className="text-foreground/60 text-lg max-w-md leading-relaxed">
-          Pierwszy ruch zrobiony. Dostęp i szczegóły wyślę na Twój mail.
-          Powrót nie kończy się na jednym kroku — dopiero się nim zaczyna.
-        </p>
-        <Link to="/" className="btn-ghost">WRÓĆ NA POCZĄTEK</Link>
+        {payState === "check" ? (
+          <>
+            <div className="w-8 h-8 border-4 border-[#3D3D3F] border-t-[#C9A24A] rounded-full animate-spin" />
+            <p className="text-foreground/60 text-lg max-w-md leading-relaxed" role="status">Sprawdzam płatność w PayU…</p>
+          </>
+        ) : fail ? (
+          <>
+            <h1 className="relic-heading text-4xl md:text-6xl">Płatność nie doszła do skutku</h1>
+            <p className="text-foreground/60 text-lg max-w-md leading-relaxed">
+              Nic nie zostało pobrane albo PayU zwróci środki. Koszyk na Ciebie czeka.
+            </p>
+            <a href="/kasa" className="btn-relic">WRÓĆ DO KASY <ArrowRight className="h-4 w-4" /></a>
+          </>
+        ) : (
+          <>
+            <div className="w-16 h-16 border-2 border-[#C9A24A] rounded-full flex items-center justify-center">
+              <Check className="h-8 w-8 gold-text" />
+            </div>
+            <h1 className="relic-heading text-4xl md:text-6xl gold-text">Próg przekroczony</h1>
+            <p className="text-foreground/60 text-lg max-w-md leading-relaxed">
+              {payState === "wait"
+                ? "PayU jeszcze potwierdza płatność. Gdy dotrze, dostaniesz maila z dostępem — zwykle w kilka minut."
+                : "Płatność dotarła. Dostęp i szczegóły są już w drodze na Twój mail — pierwszy ruch jest już za Tobą."}
+            </p>
+            <ChooseTermButton />
+            <Link to="/konto" className="btn-ghost">MOJE PRODUKTY</Link>
+          </>
+        )}
       </div>
     );
   }
