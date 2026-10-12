@@ -47,7 +47,7 @@ export const LISTOPAD_BLOCKS = [
     { pytanie: "Czy muszę włączać kamerę?", odpowiedz: "Nie. Możesz po prostu słuchać." },
     { pytanie: "Ile trwa spotkanie?", odpowiedz: "Około dwóch godzin: 90 minut spotkania i 30 minut na Twoje pytania." },
     { pytanie: "Na jakiej platformie odbywa się spotkanie?", odpowiedz: "Na Zoomie, w trybie webinaru. Nie musisz zakładać konta w Zoom." },
-    { pytanie: "Czy spotkanie będzie nagrywane?", odpowiedz: "Tak. Nagranie będzie dostępne dla zapisanych przez 7 dni." }] }, { tlo: "grafit" }),
+    { pytanie: "Czy spotkanie będzie nagrywane?", odpowiedz: "To spotkanie na żywo — warto być o 20:00. Nagrania nie obiecuję. Jeśli je udostępnię, dostaną je tylko osoby zapisane, na 24 godziny." }] }, { tlo: "grafit" }),
   b("lis-ramka", "ramka", { tytul: "JEŚLI JEST CI BARDZO CIĘŻKO",
     tresc: "<p>To spotkanie nie zastępuje pomocy specjalistycznej. Jeśli myślisz o odebraniu sobie życia, zadzwoń pod <strong>116 123</strong> (Telefon Zaufania dla Dorosłych) lub <strong>800 70 2222</strong> (całą dobę, bezpłatnie). W zagrożeniu życia: <strong>112</strong>.</p>", rozmiar: "mala" }, { odstep: "maly" }),
   b("lis-zapis", "zapis_spotkanie", { etykieta: "ZAPIS", tytul: "Zapisz się na 1 listopada", spotkanie: LISTOPAD_EVENT, zapisy_od: LISTOPAD_ZAPISY_OD }),
