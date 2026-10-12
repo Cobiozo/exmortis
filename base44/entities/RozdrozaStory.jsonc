@@ -1,18 +1,18 @@
 {
   "name": "RozdrozaStory",
   "type": "object",
-  "description": "ROZDROŻA — historia (szkic + opublikowana kopia). Tylko administrator; klient czyta opublikowaną kopię przez funkcję rozdroza.",
+  "description": "ROZDRO\u017bA \u2014 historia (szkic + opublikowana kopia). Tylko administrator; klient czyta opublikowan\u0105 kopi\u0119 przez funkcj\u0119 rozdroza.",
   "properties": {
     "slug": {
       "type": "string",
-      "description": "Stały adres historii (małe litery, cyfry, myślniki)"
+      "description": "Sta\u0142y adres historii (ma\u0142e litery, cyfry, my\u015blniki)"
     },
     "title": {
       "type": "string"
     },
     "summary": {
       "type": "string",
-      "description": "Krótki opis do biblioteki"
+      "description": "Kr\u00f3tki opis do biblioteki"
     },
     "category": {
       "type": "string",
@@ -21,15 +21,15 @@
         "duchowa",
         "zyciowa"
       ],
-      "description": "Śmierć mentalna / duchowa / życiowa"
+      "description": "\u015amier\u0107 mentalna / duchowa / \u017cyciowa"
     },
     "cover_portrait_url": {
       "type": "string",
-      "description": "Okładka pionowa 2:3 (biblioteka)"
+      "description": "Ok\u0142adka pionowa 2:3 (biblioteka)"
     },
     "cover_landscape_url": {
       "type": "string",
-      "description": "Okładka pozioma 16:9 (karta historii)"
+      "description": "Ok\u0142adka pozioma 16:9 (karta historii)"
     },
     "estimated_minutes": {
       "type": "number",
@@ -37,7 +37,7 @@
     },
     "content_warning": {
       "type": "string",
-      "description": "Ostrzeżenie o trudnych treściach (opcjonalnie)"
+      "description": "Ostrze\u017cenie o trudnych tre\u015bciach (opcjonalnie)"
     },
     "start_scene_key": {
       "type": "string"
@@ -52,11 +52,11 @@
     },
     "version": {
       "type": "number",
-      "description": "Wersja opublikowanej kopii (rośnie przy każdej publikacji)"
+      "description": "Wersja opublikowanej kopii (ro\u015bnie przy ka\u017cdej publikacji)"
     },
     "published": {
       "type": "object",
-      "description": "Opublikowana, sprawdzona kopia historii (to widzi klient). Zmiany scen działają dopiero po ponownej publikacji."
+      "description": "Opublikowana, sprawdzona kopia historii (to widzi klient). Zmiany scen dzia\u0142aj\u0105 dopiero po ponownej publikacji."
     },
     "published_at": {
       "type": "string"
@@ -66,35 +66,47 @@
     },
     "draft_changed_at": {
       "type": "string",
-      "description": "Ostatnia zmiana szkicu (do oznaczenia „zmiany czekają na publikację”)"
+      "description": "Ostatnia zmiana szkicu (do oznaczenia \u201ezmiany czekaj\u0105 na publikacj\u0119\u201d)"
     },
     "reading_time": {
       "type": "string",
-      "description": "Czas czytania do wyświetlenia, np. „12–16 min”"
+      "description": "Czas czytania do wy\u015bwietlenia, np. \u201e12\u201316 min\u201d"
     },
     "cover_portrait_prompt": {
       "type": "string",
-      "description": "Opis okładki 2:3 do generowania (nie jest pokazywany czytelnikom)"
+      "description": "Opis ok\u0142adki 2:3 do generowania (nie jest pokazywany czytelnikom)"
     },
     "cover_landscape_prompt": {
       "type": "string",
-      "description": "Opis okładki 16:9 do generowania (nie jest pokazywany czytelnikom)"
+      "description": "Opis ok\u0142adki 16:9 do generowania (nie jest pokazywany czytelnikom)"
     },
     "cover_portrait_candidate": {
       "type": "string",
-      "description": "Wygenerowana okładka 2:3 czekająca na zatwierdzenie"
+      "description": "Wygenerowana ok\u0142adka 2:3 czekaj\u0105ca na zatwierdzenie"
     },
     "cover_landscape_candidate": {
       "type": "string",
-      "description": "Wygenerowana okładka 16:9 czekająca na zatwierdzenie"
+      "description": "Wygenerowana ok\u0142adka 16:9 czekaj\u0105ca na zatwierdzenie"
     },
     "visual_notes": {
       "type": "string",
-      "description": "Ciągłość postaci do promptów graficznych (wiek, wygląd, strój)"
+      "description": "Ci\u0105g\u0142o\u015b\u0107 postaci do prompt\u00f3w graficznych (wiek, wygl\u0105d, str\u00f3j)"
     },
     "image_style": {
       "type": "string",
-      "description": "Wspólny styl zdjęć do promptów graficznych"
+      "description": "Wsp\u00f3lny styl zdj\u0119\u0107 do prompt\u00f3w graficznych"
+    },
+    "visual_notes_en": {
+      "type": "string",
+      "description": "Ci\u0105g\u0142o\u015b\u0107 postaci po angielsku (do prompt\u00f3w)"
+    },
+    "cover_visual_notes_en": {
+      "type": "string",
+      "description": "Postacie dozwolone na ok\u0142adkach (po angielsku)"
+    },
+    "reference_image_url": {
+      "type": "string",
+      "description": "Wz\u00f3r postaci (obraz referencyjny, tylko dostawca OpenAI)"
     }
   },
   "required": [
