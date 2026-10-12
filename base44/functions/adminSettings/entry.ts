@@ -100,12 +100,12 @@ export default async function (req) {
     // ---- Mój stały link Zoom (do wyboru przy spotkaniach i konsultacjach 1:1) ----
     if (body.action === "zoom_get") {
       const z = (await getSetting(base44, "zoom_staly")) || {};
-      return Response.json({ link: z.link || "", haslo: z.haslo || "", nazwa: z.nazwa || "" });
+      return Response.json({ link: z.link || "", haslo: z.haslo || "" });
     }
     if (body.action === "zoom_save") {
       const link = String(body.link || "").trim().slice(0, 500);
       if (link && !/^https:\/\/\S+$/.test(link)) throw new Error("Link musi zaczynać się od https:// i nie mieć spacji.");
-      const value = { link, haslo: String(body.haslo || "").trim().slice(0, 50), nazwa: String(body.nazwa || "").trim().slice(0, 60) };
+      const value = { link, haslo: String(body.haslo || "").trim().slice(0, 50) };
       if (!link) await deleteSetting(base44, "zoom_staly"); else await saveSetting(base44, "zoom_staly", value);
       return Response.json({ ok: true, ...value });
     }
