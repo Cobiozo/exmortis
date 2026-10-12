@@ -4,10 +4,10 @@ import SafeImg from "../SafeImg";
 
 import { ratioClass } from "../ratios";
 
-export function Img({ img, ratio, className = "" }) {
+export function Img({ img, ratio, className = "", sizes = "(min-width: 768px) 50vw, 100vw" }) {
   if (!img?.url) return <div className={`${ratioClass(null, ratio)} bg-[#0F0F10] border hairline ${className}`} />;
   return (
-    <SafeImg img={img} sizes="(min-width: 768px) 50vw, 100vw" className={`w-full ${ratioClass(img, ratio)} ${className}`} />
+    <SafeImg img={img} sizes={sizes} className={`w-full ${ratioClass(img, ratio)} ${className}`} />
   );
 }
 
@@ -30,7 +30,7 @@ export function TextBlock({ d, label, center }) {
 export function ImageBlock({ d }) {
   return (
     <figure>
-      <Img img={d.zdjecie} ratio={d.proporcja} />
+      <Img img={d.zdjecie} ratio={d.proporcja} sizes="(min-width: 1440px) 1400px, 100vw" />
       {d.podpis && <figcaption className="technical text-[10px] text-foreground/40 mt-3 px-5 md:px-0">{d.podpis}</figcaption>}
     </figure>
   );
