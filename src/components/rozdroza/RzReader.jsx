@@ -114,7 +114,8 @@ export default function RzReader({ previewId = null }) {
       extra={st?.error ? <button type="button" onClick={() => setSt((s) => { const { error, ...rest } = s; void error; return rest; })} className="btn-relic">WRÓĆ DO SCENY</button> : <button type="button" onClick={restart} className="btn-relic">OD POCZĄTKU</button>} />
   );
 
-  const libraryHref = data.preview ? "/admin/rozdroza" : "/konto/rozdroza/biblioteka";
+  // Podgląd szkicu: powrót na kartę historii w podglądzie (tak jak klient wraca do karty/biblioteki).
+  const libraryHref = data.preview ? `/konto/rozdroza/podglad?id=${encodeURIComponent(previewId || "")}` : "/konto/rozdroza/biblioteka";
   const ctrl = "h-11 min-w-[44px] px-2.5 inline-flex items-center justify-center gap-1.5 border hairline text-foreground/70 hover:text-foreground hover:border-[#C9A24A]/60 disabled:opacity-30 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#C9A24A]/60";
 
   return (
@@ -122,7 +123,7 @@ export default function RzReader({ previewId = null }) {
       <div ref={top} className="scroll-mt-28" />
       <div className="flex items-center justify-between gap-3 mb-6">
         <Link to={libraryHref} className="technical text-[10px] text-foreground/55 hover:text-foreground inline-flex items-center gap-2 min-h-[44px] min-w-0">
-          <ArrowLeft className="h-3.5 w-3.5 shrink-0" /> <span className="truncate">{data.preview ? "PANEL" : "BIBLIOTEKA"}</span>
+          <ArrowLeft className="h-3.5 w-3.5 shrink-0" /> <span className="truncate">{data.preview ? "KARTA HISTORII" : "BIBLIOTEKA"}</span>
         </Link>
         <div className="flex items-center gap-1.5" role="toolbar" aria-label="Ustawienia czytnika">
           <button type="button" className={ctrl} onClick={() => act(E.back)} disabled={st.stack.length < 2} aria-label="Cofnij do poprzedniej sceny"><Undo2 className="h-4 w-4" /><span className="hidden sm:inline technical text-[10px]">COFNIJ</span></button>
@@ -136,7 +137,7 @@ export default function RzReader({ previewId = null }) {
 
       {(note || data.preview || !saveOk) && (
         <p className="text-xs text-[#E8C547] border border-[#E8C547]/30 px-3 py-2 mb-6" role="status">
-          {data.preview ? "PODGLĄD SZKICU (tylko administrator) — postęp nie jest zapisywany." : !saveOk ? "Postęp nie zapisuje się w tej przeglądarce — możesz czytać dalej w tej sesji." : note}
+          {data.preview ? "PODGLĄD SZKICU (tylko administrator) — tak zobaczy to klient po publikacji; postęp nie jest zapisywany." : !saveOk ? "Postęp nie zapisuje się w tej przeglądarce — możesz czytać dalej w tej sesji." : note}
         </p>
       )}
 
