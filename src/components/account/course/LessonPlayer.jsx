@@ -1,5 +1,5 @@
 import React, { useEffect, useRef, useState } from "react";
-import { Loader2, Check, Maximize, Minimize } from "lucide-react";
+import { Loader2, Check, Maximize, Minimize, ArrowRight } from "lucide-react";
 import { base44 } from "@/api/base44Client";
 import { useAuth } from "@/lib/AuthContext";
 import Watermark from "./Watermark";
@@ -8,7 +8,7 @@ import { watermarkOk } from "./watermarkGuard";
 const SESSION = crypto.randomUUID();
 
 // Odtwarzacz lekcji: link 60 min (odświeżany), znak wodny z kontrolą integralności, jedno odtwarzanie naraz.
-export default function LessonPlayer({ accessId, lesson, onDone }) {
+export default function LessonPlayer({ accessId, lesson, onDone, onNext, nextTitle }) {
   const { user } = useAuth();
   const ref = useRef(null);
   const box = useRef(null);
@@ -30,7 +30,7 @@ export default function LessonPlayer({ accessId, lesson, onDone }) {
 
   // Link wygasa po 60 min — odświeżamy co 50 min, zachowując pozycję.
   useEffect(() => {
-    if (!src) return;
+    if (!src || src.embed) return;
     const t = setTimeout(() => { resumeAt.current = ref.current?.currentTime || 0; loadUrl(); }, 50 * 60000);
     return () => clearTimeout(t);
   }, [src]);
@@ -82,6 +82,9 @@ export default function LessonPlayer({ accessId, lesson, onDone }) {
           <p className="absolute inset-0 flex items-center justify-center text-sm text-[#E8C547] px-6 text-center">{err}</p>
         ) : !src ? (
           <Loader2 className="absolute inset-0 m-auto h-6 w-6 animate-spin gold-text" />
+        ) : src.embed ? (
+          // Vimeo / YouTube / Bunny: odtwarzacz dostawcy; ukończenie oznaczasz przyciskiem pod filmem.
+          <iframe src={src.embed} title={lesson.title} className="absolute inset-0 w-full h-full" allow="autoplay; fullscreen; picture-in-picture; encrypted-media" allowFullScreen referrerPolicy="strict-origin-when-cross-origin" />
         ) : (
           <video ref={ref} src={src.url} controls controlsList="nodownload nofullscreen noremoteplayback noplaybackrate" disablePictureInPicture disableRemotePlayback playsInline className="w-full h-full"
             onLoadedMetadata={(e) => {
@@ -92,18 +95,23 @@ export default function LessonPlayer({ accessId, lesson, onDone }) {
             onTimeUpdate={onTime} onPause={() => send()} />
         )}
         {src && !err && <Watermark text={`${user?.email || ""} · ${src.license} · ${stamp}`} />}
-        {src && !err && (
+        {src && !err && !src.embed && (
           <button onClick={toggleFull} aria-label={full ? "Zamknij pełny ekran" : "Pełny ekran"} className="absolute top-3 right-3 z-30 p-2 bg-black/50 text-white/80 hover:text-white">
             {full ? <Minimize className="h-4 w-4" /> : <Maximize className="h-4 w-4" />}
           </button>
         )}
       </div>
-      <div className="mt-6 flex items-start justify-between gap-6">
+      <div className="mt-6 flex flex-wrap sm:flex-nowrap items-start justify-between gap-4 sm:gap-6">
         <h2 className="shop-heading text-2xl text-[#F5EFE1]">{lesson.title}</h2>
-        {done ? <span className="technical text-[10px] gold-text flex items-center gap-1"><Check className="h-4 w-4" /> UKOŃCZONA</span> : (
+        {done ? <span className="technical text-[10px] gold-text flex items-center gap-1 shrink-0"><Check className="h-4 w-4" /> UKOŃCZONA</span> : (
           <button onClick={() => { setDone(true); onDone(lesson.id); send({ completed: true }); }} className="btn-ghost !px-4 !py-2 text-[10px] shrink-0">OZNACZ JAKO UKOŃCZONĄ</button>
         )}
       </div>
+      {onNext && (
+        <button onClick={onNext} className={`mt-5 ${done ? "btn-relic" : "btn-ghost"} !px-5 !py-3 text-[10px] max-w-full`}>
+          <span className="truncate">DALEJ: {String(nextTitle || "").toUpperCase()}</span> <ArrowRight className="h-4 w-4 shrink-0" />
+        </button>
+      )}
       {lesson.description && <p className="mt-4 text-foreground/65 leading-relaxed whitespace-pre-line">{lesson.description}</p>}
     </div>
   );
