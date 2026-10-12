@@ -7,7 +7,7 @@ import Logo from "@/components/exmortis/Logo";
 // Na stronie spotkania przycisk prowadzi od razu do formularza zapisu.
 export default function PrelaunchNav({ top }) {
   const { pathname } = useLocation();
-  const onEvent = pathname === "/1-listopada";
+  const onEvent = pathname === "/1-listopada" || pathname === "/"; // strona główna = strona spotkania do premiery
   const cls = "btn-relic !py-2.5 !px-4 sm:!px-5 whitespace-nowrap";
   return (
     <header className={`fixed ${top} inset-x-0 z-50 bg-[#0A0A0B]/90 backdrop-blur-md border-b hairline`}>

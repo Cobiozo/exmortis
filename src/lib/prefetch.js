@@ -10,8 +10,10 @@ import { LISTOPAD_COVER, LISTOPAD_EVENT } from "@/components/cms/defaults/listop
 const PRE_END = new Date("2026-11-01T20:30:00.000Z").getTime();
 const FRESH = 5 * 60000;
 const path = window.location.pathname;
-const SLUG = { "/1-listopada": "1-listopada", "/kontakt": "kontakt", ...(Date.now() < PRE_END ? { "/": "zapowiedz" } : {}) }[path];
-const EVENT = path === "/1-listopada" ? LISTOPAD_EVENT : null;
+// Do premiery strona główna pokazuje stronę spotkania 1 listopada (te same bloki i formularz).
+const IS_LIS = path === "/1-listopada" || (path === "/" && Date.now() < PRE_END);
+const SLUG = IS_LIS ? "1-listopada" : { "/kontakt": "kontakt" }[path];
+const EVENT = IS_LIS ? LISTOPAD_EVENT : null;
 const KEY = "boot_" + path;
 
 // Wbudowane zabezpieczenie: tryb przedpremierowy włączony do 1.11, 21:30.
@@ -46,7 +48,7 @@ export const takeEvent = (slug) => (slug === EVENT && !usedE ? ((usedE = true), 
   b.event !== undefined ? b.event : readCache("events")?.[slug] || Promise.reject(new Error("brak")))) : null);
 
 // Najważniejszy obraz /1-listopada (świeca): preload w WebP, rozmiar wg ekranu.
-if (path === "/1-listopada") {
+if (IS_LIS) {
   const s = mediaSrcSet(LISTOPAD_COVER);
   if (s) {
     const l = document.createElement("link");
