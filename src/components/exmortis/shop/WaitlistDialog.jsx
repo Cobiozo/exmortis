@@ -26,8 +26,8 @@ export default function WaitlistDialog({ product, onClose }) {
         product_id: product.id,
       });
       setSent(true);
-    } catch {
-      setError("Nie udało się zapisać. Spróbuj ponownie.");
+    } catch (err) {
+      setError(err?.response?.data?.error && err.response.status < 500 ? err.response.data.error : "Nie udało się zapisać. Spróbuj ponownie.");
     } finally {
       setSending(false);
     }
