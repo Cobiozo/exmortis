@@ -179,8 +179,8 @@ export default function ProductDetail() {
               </ul>
             )}
 
-            {product.category === "mentoring" && (
-              <Link to="/powrot" className="btn-ghost w-full">
+            {product.category === "mentoring" && linkUrl !== "/powrot" && (
+              <Link to="/powrot" className="btn-ghost w-full mb-4">
                 POZNAJ PROGRAM POWRÓT <ArrowRight className="h-4 w-4" />
               </Link>
             )}
