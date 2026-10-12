@@ -20,6 +20,8 @@ export async function grantAccess(base44, { email, product, source, orderId = nu
   const mail = String(email).toLowerCase();
   const existing = (await E.filter({ user_email: mail, product_id: String(product.id) }))[0];
   if (existing && source === "darmowy" && !existing.revoked) return;
+  // To samo zamówienie nie wydłuża dostępu drugi raz (ponowione powiadomienie PayU).
+  if (existing && orderId && (existing.history || []).some((h) => h && h.order_id === orderId)) return existing.valid_until || null;
 
   const today = warsawToday();
   const months = product.access_months ? Number(product.access_months) : null;
