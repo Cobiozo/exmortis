@@ -9,6 +9,8 @@ import { Image } from "@/components/ui/image";
 import FreeOrderForm from "@/components/exmortis/shop/FreeOrderForm";
 import { useDocMeta } from "@/lib/useDocMeta";
 import Logo from "@/components/exmortis/Logo";
+import WaitlistDialog from "@/components/exmortis/shop/WaitlistDialog";
+import { isPromoActive, priceOnRequest, regularPrice, unitPrice } from "@/lib/productPrice";
 
 // Zmienione adresy produktów: stary → nowy.
 const OLD_SLUGS = { "krag-mezczyzn-rzeszow": "krag-mezczyzn" };
@@ -27,6 +29,7 @@ export default function ProductDetail() {
   const [loading, setLoading] = useState(true);
   const [qty, setQty] = useState(1);
   const [added, setAdded] = useState(false);
+  const [waitlist, setWaitlist] = useState(false);
   useDocMeta(product?.name ? `${product.name} — Skarbiec | exmortis` : "", product?.subtitle || product?.description);
 
   useEffect(() => {
@@ -62,6 +65,11 @@ export default function ProductDetail() {
       </div>
     );
   }
+
+  const soon = product.status === "wkrótce";
+  const promo = !soon && !product.is_free && isPromoActive(product);
+  const onRequest = !soon && priceOnRequest(product);
+  const linkUrl = (product.checkout_url || "").trim();
 
   return (
     <div className="bg-[#0A0A0B] pt-20">
@@ -108,11 +116,19 @@ export default function ProductDetail() {
               <p className="text-xl text-foreground/50 mb-8">{product.subtitle}</p>
             )}
 
-            <div className="flex items-baseline gap-4 mb-8">
+            <div className="flex items-baseline flex-wrap gap-x-4 gap-y-1 mb-8">
               <span className="font-mono text-4xl gold-text">
-                {!Number(product.price) ? (product.is_free === false ? "Po rozmowie" : "Bezpłatnie") : `${product.price} zł`}
+                {soon ? "Wkrótce" : product.is_free ? "Bezpłatnie" : onRequest ? "Po rozmowie" : `${unitPrice(product)} zł`}
               </span>
-              {product.old_price && (
+              {promo && (
+                <span className="font-mono text-xl text-foreground/40 line-through">{regularPrice(product)} zł</span>
+              )}
+              {promo && (
+                <span className="technical text-[10px] text-foreground/50">
+                  DO {new Date(`${String(product.promo_end_date).slice(0, 10)}T12:00:00`).toLocaleDateString("pl-PL", { day: "numeric", month: "long" }).toUpperCase()}
+                </span>
+              )}
+              {!promo && !soon && Number(product.old_price) > 0 && (
                 <span className="font-mono text-xl text-foreground/30 line-through">
                   {product.old_price} zł
                 </span>
@@ -169,10 +185,29 @@ export default function ProductDetail() {
               </Link>
             )}
 
-            {/* Darmowe: formularz zamówienia. Płatne: koszyk. */}
-            {product.is_free && !(product.checkout_url || "").trim() && product.status !== "wkrótce" ? (
+            {/* Wkrótce: lista oczekujących. Z linkiem: przycisk. Darmowe: formularz. Po rozmowie: kontakt. Płatne: koszyk. */}
+            {soon ? (
+              <div className="mt-auto space-y-3">
+                <button onClick={() => setWaitlist(true)} className="btn-relic w-full">
+                  ZAPISZ SIĘ NA LISTĘ OCZEKUJĄCYCH <ArrowRight className="h-4 w-4" />
+                </button>
+                <p className="text-sm text-foreground/55">Ten materiał jeszcze powstaje. Napiszę, kiedy będzie gotowy.</p>
+              </div>
+            ) : linkUrl && (product.is_free || onRequest) ? (
+              <div className="mt-auto">
+                {linkUrl.startsWith("/") ? (
+                  <Link to={linkUrl} className="btn-relic w-full">{(product.button_label || (onRequest ? "Umów rozmowę" : "Zobacz")).toUpperCase()} <ArrowRight className="h-4 w-4" /></Link>
+                ) : (
+                  <a href={linkUrl} target="_blank" rel="noreferrer" className="btn-relic w-full">{(product.button_label || (onRequest ? "Umów rozmowę" : "Zobacz")).toUpperCase()} <ArrowRight className="h-4 w-4" /></a>
+                )}
+              </div>
+            ) : product.is_free ? (
               <div className="mt-auto">
                 <FreeOrderForm product={product} />
+              </div>
+            ) : onRequest ? (
+              <div className="mt-auto">
+                <Link to="/kontakt" className="btn-relic w-full">NAPISZ DO MNIE <ArrowRight className="h-4 w-4" /></Link>
               </div>
             ) : (
               <div className="mt-auto space-y-4">
@@ -181,11 +216,11 @@ export default function ProductDetail() {
                 )}
                 <div className="flex items-center gap-4">
                   <div className="flex items-center border hairline">
-                    <button onClick={() => setQty((q) => Math.max(1, q - 1))} className="p-3 text-foreground/60 hover:gold-text">
+                    <button onClick={() => setQty((q) => Math.max(1, q - 1))} aria-label="Mniej" className="p-3 text-foreground/60 hover:gold-text">
                       <Minus className="h-4 w-4" />
                     </button>
-                    <span className="px-5 font-mono">{qty}</span>
-                    <button onClick={() => setQty((q) => q + 1)} className="p-3 text-foreground/60 hover:gold-text">
+                    <span className="px-5 font-mono" aria-live="polite">{qty}</span>
+                    <button onClick={() => setQty((q) => Math.min(20, q + 1))} aria-label="Więcej" className="p-3 text-foreground/60 hover:gold-text">
                       <Plus className="h-4 w-4" />
                     </button>
                   </div>
@@ -202,6 +237,7 @@ export default function ProductDetail() {
           </div>
         </div>
       </section>
+      {waitlist && <WaitlistDialog product={product} onClose={() => setWaitlist(false)} />}
     </div>
   );
 }
