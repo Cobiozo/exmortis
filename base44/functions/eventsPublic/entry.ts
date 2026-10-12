@@ -194,8 +194,9 @@ export default async function (req) {
       if (ev.format !== "Online") return Response.json({ ...base, state: "stacjonarne" });
       const state = admin && ["przed", "otwarte", "po"].includes(body.preview) ? body.preview : joinState(ev);
       // Link do pokoju i nagranie tylko dla zapisanych: osobisty klucz z maila albo e-mail podany przy zapisie.
+      const rec = state === "po" && ev.recording_url && (!ev.recording_until || new Date(ev.recording_until) > new Date()) ? ev.recording_url : null;
       let okToken = null;
-      if ((state === "otwarte" || state === "po") && !admin) {
+      if (((state === "otwarte" && ev.join_link) || rec) && !admin) {
         const ip = clientIp(req);
         const t = String(body.t || "").trim().toLowerCase();
         const email = String(body.email || "").trim().toLowerCase().slice(0, 200);
@@ -221,7 +222,6 @@ export default async function (req) {
         }
         return Response.json({ ...base, state, join_link: ev.join_link, join_password: ev.join_password || null, ok_token: okToken });
       }
-      const rec = state === "po" && ev.recording_url && (!ev.recording_until || new Date(ev.recording_until) > new Date()) ? ev.recording_url : null;
       return Response.json({ ...base, state, recording_url: rec, ok_token: okToken });
     }
 
