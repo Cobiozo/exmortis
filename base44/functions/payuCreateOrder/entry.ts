@@ -2,7 +2,7 @@ import { createClientFromRequest } from "npm:@base44/sdk@0.8.44";
 import { applyDiscount } from "../../shared/discounts.ts";
 import { runSql, escStr, textField, emailField, clientIp } from "../../shared/supabase.ts";
 import { getSetting, loadAppUrl, APP_URL } from "../../shared/settings.ts";
-import { insertOrder } from "../../shared/orders.ts";
+import { insertOrder, getOrderStatus } from "../../shared/orders.ts";
 import { addSubscriber } from "../../shared/newsletter.ts";
 import { DIGITAL } from "../../shared/access.ts";
 import { regulaminVersion } from "../../shared/legalDocs.ts";
@@ -21,6 +21,13 @@ export default async function (req) {
     const base44 = createClientFromRequest(req);
     await loadAppUrl(base44);
     const body = await req.json().catch(() => ({}));
+
+    // Strona powrotu z PayU pyta o stan: tylko status, po losowym numerze zamówienia (UUID), bez danych osobowych.
+    if (body.action === "status") {
+      const id = String(body.orderId || "");
+      if (!/^[0-9a-f-]{36}$/i.test(id)) return Response.json({ status: null });
+      return Response.json({ status: await getOrderStatus(base44, id) });
+    }
 
     const buyerName = textField(body, "name", { max: 100 });
     const buyerEmail = emailField(body);
@@ -145,9 +152,7 @@ export default async function (req) {
     if (newsletterConsent) consents.push({ ...cBase, kind: "newsletter", text: "Chcę otrzymywać Listy powrotu — newsletter exmortis z treściami oraz informacjami o produktach i wydarzeniach — na podany adres e-mail. Zgodę mogę wycofać w każdej chwili." });
     await base44.asServiceRole.entities.Consent.bulkCreate(consents);
 
-    if (disc) {
-      await base44.asServiceRole.entities.DiscountCode.update(disc.record.id, { uses: (disc.record.uses || 0) + 1 });
-    }
+    // Licznik użyć kodu rośnie dopiero po opłaceniu (payuNotification).
 
     if (newsletterConsent) {
       await addSubscriber(base44, { email: buyerEmail, name: buyerName, consentGiven: true });

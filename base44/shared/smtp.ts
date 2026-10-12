@@ -1,5 +1,5 @@
 import nodemailer from "npm:nodemailer@6.9.13";
-import { FIRMA, getSetting } from "./settings.ts";
+import { FIRMA, getSetting, APP_URL } from "./settings.ts";
 import { firmaFooter } from "./firma.ts";
 import { runSql, escStr } from "./supabase.ts";
 
@@ -101,23 +101,29 @@ export async function flushMailQueue(base44) {
   return { sent, skipped, failed, more: left.length > 0 };
 }
 
-export function orderEmailHtml(buyerName, items, total) {
+const escHtml = (v) => String(v ?? "").replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
+const zl = (n) => `${Number(n || 0).toFixed(2).replace(".", ",")} zł`;
+
+// Potwierdzenie zamówienia (trwały nośnik): pozycje, numer zamówienia, Regulamin i odstąpienie.
+export function orderEmailHtml(buyerName, items, total, orderId = "") {
   const rows = items
     .map(
       (p) =>
-        `<tr><td style="padding:8px 0;color:#E2E2E2;">${p.name} × ${p.quantity}</td><td style="padding:8px 0;text-align:right;color:#C9A24A;">${p.quantity * p.unitPrice / 100} zł</td></tr>`
+        `<tr><td style="padding:8px 0;color:#E2E2E2;">${escHtml(p.name)} × ${Number(p.quantity) || 1}</td><td style="padding:8px 0;text-align:right;color:#C9A24A;">${zl((Number(p.quantity) || 1) * Number(p.unitPrice) / 100)}</td></tr>`
     )
     .join("");
+  const nr = orderId ? String(orderId).slice(0, 8).toUpperCase() : "";
   return `
   <div style="background:#0A0A0B;padding:32px;font-family:Georgia,serif;color:#E2E2E2;">
     <p style="letter-spacing:4px;color:#C9A24A;font-size:13px;">EXMORTIS</p>
     <h1 style="font-size:26px;letter-spacing:1px;">Próg przekroczony</h1>
-    <p style="color:#8A8A8C;line-height:1.7;">${buyerName}, Twoja płatność została przyjęta.
-    Dostęp i szczegóły wyślę w kolejnej wiadomości — pierwszy ruch jest już za Tobą.</p>
+    <p style="color:#8A8A8C;line-height:1.7;">${escHtml(buyerName)}, Twoja płatność została przyjęta. Szczegóły poniżej — pierwszy ruch jest już za Tobą.</p>
+    ${nr ? `<p style="color:#8A8A8C;font-size:13px;">Numer zamówienia: <span style="color:#E2E2E2;">${nr}</span> (pełny: ${escHtml(orderId)})</p>` : ""}
     <table style="width:100%;border-collapse:collapse;margin:16px 0;font-size:14px;">${rows}
       <tr><td style="padding-top:12px;border-top:1px solid #3D3D3F;color:#8A8A8C;">RAZEM</td>
-      <td style="padding-top:12px;border-top:1px solid #3D3D3F;text-align:right;color:#C9A24A;font-size:18px;">${total} zł</td></tr>
+      <td style="padding-top:12px;border-top:1px solid #3D3D3F;text-align:right;color:#C9A24A;font-size:18px;">${zl(total)}</td></tr>
     </table>
+    <p style="color:#8A8A8C;font-size:13px;line-height:1.6;"><a href="${APP_URL}/regulamin" style="color:#C9A24A;">Regulamin</a> · <a href="${APP_URL}/odstapienie" style="color:#C9A24A;">Odstąpienie od umowy (formularz)</a></p>
     <p style="color:#5C5C5E;font-size:12px;letter-spacing:2px;">WRACAM Z SIEBIE · UCZĘ WRACAĆ</p>
   </div>`;
 }
