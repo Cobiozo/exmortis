@@ -1,4 +1,5 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.52';
+import { recordPrices } from "../../shared/productPrice.ts";
 
 // Publikuje strony zaplanowane na termin, który już minął (wywoływane cyklicznie).
 // Działa tylko na tym, co admin zaplanował — bezpieczne do wywołania bez logowania.
@@ -21,7 +22,9 @@ export default async function(req) {
       await db.ContentLog.create({ page_slug: page.slug, akcja: "publikacja", wersja, kto, opis });
       done.push(page.slug);
     }
-    return Response.json({ ok: true, published: done });
+    // Przy okazji (najwyżej raz na godzinę): dzisiejsze ceny produktów do historii — podstawa informacji Omnibus.
+    const prices = await recordPrices(base44).catch(() => -1);
+    return Response.json({ ok: true, published: done, prices });
   } catch (error) {
     return Response.json({ error: error.message }, { status: 500 });
   }
