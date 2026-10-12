@@ -35,7 +35,8 @@ DNS i poczta: Simply.com (MX, SPF `-all`, DMARC `p=reject`). A `@` → 216.24.57
 | Cisza (minutnik), Głos (muzyka), Podcast, Obok (nagrania) | `pages/Cisza.jsx`, `Glos.jsx`, `Obok*.jsx`, `PodcastEpisode.jsx` | `silenceSession`, `silenceAdmin`, `obok` | Silence*, Utwor, Podcast*, Obok* |
 | ROZDROŻA (interaktywne historie) | `pages/Rozdroza.jsx`, `components/rozdroza`, `admin/rozdroza` | `rozdroza`, `rozdrozaAdmin` | RozdrozaStory/Scene/Choice |
 | Test „Która śmierć jest Twoja?” | `pages/Test*.jsx` | `shopQuizSubmit`, `adminQuiz` | Supabase `quiz_result` |
-| Ogłoszenia na koncie | `components/account/AccountAnnouncements` | `announcements` | Announcement* |
+| Ogłoszenia na koncie | `components/account/AccountAnnouncements` | `announcements` | Announcement* (wspólna logika: `base44/shared/announce.ts`) |
+| Powiadomienia klienta (dzwoneczek w nagłówku, ustawienia w Moje konto → Ustawienia) | `components/exmortis/nav/NotificationBell.jsx`, `account/settings/NotificationsCard.jsx` | `notifications` (feed, read, read_all, hide, prefs) | Liczone na bieżąco z: produktów (`available_at`, drabinka cen), kodów rabatowych (`w_powiadomieniach`), spotkań i zapisów, dostępów, wiadomości, ogłoszeń, ROZDROŻY, Obok. Zapisywany tylko stan czytania: NotificationState |
 | Bezpieczeństwo, dzienniki, RODO, zgody, odstąpienie | `admin/security`, `admin/gdpr`, `pages/Odstapienie.jsx` | `gdprPerson`, `withdrawal` | SecurityLog, ClientError, DataAccessLog, Consent, ConsentNote, Withdrawal, LegalDocVersion |
 | Poczta (SMTP, kolejka, dziennik, DNS) | `admin/mail` | `mailAdmin` | MailQueue, `app_settings.smtp` |
 | Zmiana adresu e-mail konta | `pages/ZmianaAdresu.jsx` | `emailChange` | EmailChange |
