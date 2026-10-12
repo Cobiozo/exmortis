@@ -15,7 +15,7 @@ function NoAccess({ closed }) {
     <div className="border hairline p-6 md:p-8 space-y-5 max-w-[720px]">
       {closed ? (
         <>
-          <p className="relic-heading text-2xl text-[#F5EFE1]">Kalendarz jest jeszcze zamknięty</p>
+          <p className="relic-heading text-xl md:text-2xl text-[#F5EFE1] break-words">Kalendarz jest jeszcze zamknięty</p>
           <p className="text-sm text-foreground/70 leading-relaxed">
             Masz dostęp do indywidualnych spotkań w programie POWRÓT. Terminy pojawią się tutaj, gdy kalendarz zostanie otwarty.
             Jeśli sprawa jest pilna, napisz do exmortis.
@@ -23,7 +23,7 @@ function NoAccess({ closed }) {
         </>
       ) : (
         <>
-          <p className="relic-heading text-2xl text-[#F5EFE1]">Indywidualne spotkania są dla uczestników programu POWRÓT</p>
+          <p className="relic-heading text-xl md:text-2xl text-[#F5EFE1] break-words">Indywidualne spotkania są dla uczestników programu POWRÓT</p>
           <p className="text-sm text-foreground/70 leading-relaxed">
             Na tym koncie nie ma dostępu do umawiania spotkań — nie jesteś uczestnikiem programu POWRÓT albo dostęp nie został jeszcze włączony.
             Jeśli jesteś w programie, napisz do exmortis z adresu, na który założone jest to konto. Możesz też dołączyć do spotkań ogólnych.
