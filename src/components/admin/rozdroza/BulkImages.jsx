@@ -1,6 +1,6 @@
 import React, { useEffect, useRef, useState } from "react";
-import { Loader2, Sparkles, Square, Check, X, CornerLeftUp } from "lucide-react";
-import { rz, isStartScene, thumb } from "./rzApi";
+import { Loader2, Sparkles, Square, Check, X, CornerLeftUp, Copy } from "lucide-react";
+import { rz, isStartScene, thumb, composePrompt } from "./rzApi";
 
 const btn = "inline-flex items-center gap-1.5 border hairline px-3 py-2 technical text-[9px] text-foreground/70 hover:text-[#C9A24A] hover:border-[#C9A24A] disabled:opacity-40";
 // Błędy, po których nie ma sensu generować kolejnych kadrów (brak środków, klucz, weryfikacja).
@@ -69,6 +69,20 @@ export default function BulkImages({ id, story, scenes, onChanged }) {
     setBusy("");
   };
 
+  // Lista promptów startowych do jednej rozmowy w ChatGPT (subskrypcja): kolejne obrazy w tym samym wątku trzymają te same postacie.
+  const [copied, setCopied] = useState(false);
+  const copyAll = async () => {
+    const items = [
+      ["Okładka pionowa 2:3", composePrompt("cover_portrait", story.cover_portrait_prompt, story), story.cover_portrait_prompt],
+      ["Okładka pozioma 16:9", composePrompt("cover_landscape", story.cover_landscape_prompt, story), story.cover_landscape_prompt],
+      ...scenes.filter((s) => isStartScene(s.scene_key)).map((s) => [`Scena ${s.scene_key} (16:9)`, composePrompt("scene", s.image_prompt, story), s.image_prompt]),
+    ].filter(([, , base]) => String(base || "").trim());
+    const text = `Wygeneruj po kolei ${items.length} obrazów do historii „${story.title}”. Jeden obraz na odpowiedź — po każdym poczekaj, aż napiszę „dalej”. We wszystkich obrazach zachowaj te same postacie (twarze, wiek, fryzury, stroje). Żadnego tekstu na obrazach.\n\n`
+      + items.map(([label, p], i) => `${i + 1}) ${label}:\n${p}`).join("\n\n");
+    try { await navigator.clipboard.writeText(text); setCopied(true); setTimeout(() => setCopied(false), 2500); }
+    catch { setMsg("Nie udało się skopiować — użyj „Kopiuj prompt” przy każdej scenie."); }
+  };
+
   const running = run && !run.finished;
   const provider = ai?.provider === "openai" ? `OpenAI (${ai.model}, jakość ${ai.quality}${String(story.reference_image_url || "").trim() ? ", ze wzorem postaci" : ""})` : "Base44 AI (kredyty aplikacji)";
 
@@ -98,6 +112,7 @@ export default function BulkImages({ id, story, scenes, onChanged }) {
         <button type="button" className={btn} disabled={running || !!busy || !noImage} onClick={fill}>
           {busy === "fill" ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <CornerLeftUp className="h-3.5 w-3.5" />} UZUPEŁNIJ RESZTĘ Z POPRZEDNICH SCEN
         </button>
+        <button type="button" className={btn} onClick={copyAll}>{copied ? <Check className="h-3.5 w-3.5" /> : <Copy className="h-3.5 w-3.5" />} {copied ? "SKOPIOWANO" : "KOPIUJ PROMPTY STARTOWE (DO CHATGPT)"}</button>
       </div>
       {run && (
         <div className="text-sm space-y-1" role="status" aria-live="polite">
