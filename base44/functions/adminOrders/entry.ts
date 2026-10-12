@@ -44,7 +44,7 @@ SELECT
     GROUP BY 1) x) AS products,
   (SELECT COALESCE(json_agg(c ORDER BY c.uses DESC), '[]'::json) FROM (
     SELECT substring(note from 'Kod rabatowy: ([^ ]+)') AS code, COUNT(*)::int AS uses,
-      COALESCE(SUM(replace(substring(note from '\(−([0-9.,]+) zł\)'), ',', '.')::numeric), 0)::float8 AS discount
+      COALESCE(SUM(replace(substring(note from '\\(−([0-9.,]+) zł\\)'), ',', '.')::numeric), 0)::float8 AS discount
     FROM o WHERE note LIKE '%Kod rabatowy:%' GROUP BY 1) c) AS codes,
   (SELECT COALESCE(json_agg(w ORDER BY w.total DESC), '[]'::json) FROM (
     SELECT w.product_id::text AS id, MAX(p.name) AS name, COUNT(*)::int AS total,
