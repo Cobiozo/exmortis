@@ -109,7 +109,7 @@ export default function RzReader({ previewId = null }) {
       extra={<button type="button" onClick={restart} className="btn-relic">ZACZNIJ OD NOWA</button>} />
   );
   if (!st || !scene || st.error) return (
-    <RzProblem text={st?.error ? "W tej historii brakuje kolejnej sceny. Możesz cofnąć się o krok albo wrócić do biblioteki." : "Nie udało się otworzyć sceny."}
+    <RzProblem text={st?.error ? "W tej historii brakuje kolejnej sceny. Możesz wrócić do poprzedniej sceny albo do biblioteki." : "Nie udało się otworzyć sceny."}
       extra={st?.error ? <button type="button" onClick={() => setSt((s) => { const { error, ...rest } = s; void error; return rest; })} className="btn-relic">WRÓĆ DO SCENY</button> : <button type="button" onClick={restart} className="btn-relic">OD POCZĄTKU</button>} />
   );
 
