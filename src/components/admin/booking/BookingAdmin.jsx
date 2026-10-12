@@ -13,7 +13,7 @@ import IcalPanel from "./IcalPanel";
 import MailTextsPanel from "./MailTextsPanel";
 import GooglePanel from "./GooglePanel";
 
-const TABS = [["pulpit", "Pulpit"], ["kalendarz", "Kalendarz"], ["rezerwacje", "Rezerwacje"], ["pakiety", "Pakiety"],
+const TABS = [["pulpit", "Pulpit"], ["kalendarz", "Kalendarz"], ["rezerwacje", "Rezerwacje"], ["pakiety", "Dostęp POWRÓT"],
   ["rodzaje", "Rodzaje i godziny"], ["blokady", "Blokady"], ["swieta", "Święta"], ["emaile", "E-maile"], ["ustawienia", "Ustawienia"]];
 
 export default function BookingAdmin() {
