@@ -8,6 +8,7 @@ import { useCart } from "@/components/exmortis/CartContext";
 import { Image } from "@/components/ui/image";
 import FreeOrderForm from "@/components/exmortis/shop/FreeOrderForm";
 import { useDocMeta } from "@/lib/useDocMeta";
+import Logo from "@/components/exmortis/Logo";
 
 // Zmienione adresy produktów: stary → nowy.
 const OLD_SLUGS = { "krag-mezczyzn-rzeszow": "krag-mezczyzn" };
@@ -78,14 +79,19 @@ export default function ProductDetail() {
       <section className="mx-auto max-w-[1400px] px-5 md:px-10 pb-24">
         <div className="grid md:grid-cols-2 gap-10 md:gap-16">
           {/* Image */}
-          <div className="relative aspect-square bg-card border hairline overflow-hidden">
-            {product.image_url && (
+          <div className={`relative ${product.image_url ? "aspect-square" : "aspect-[16/9] md:aspect-square"} bg-card border hairline overflow-hidden`}>
+            {product.image_url ? (
               <Image
                 src={product.image_url}
                 alt={product.name}
                 className="w-full h-full"
                 fittingType="fill"
               />
+            ) : (
+              // Bez zdjęcia: znak exmortis zamiast pustego pola.
+              <div className="absolute inset-0 flex items-center justify-center" aria-hidden="true">
+                <Logo className="h-20 w-20 md:h-28 md:w-28 opacity-40" glow={false} />
+              </div>
             )}
             <div className="absolute top-4 left-4">
               <span className="technical text-[9px] text-foreground/50 bg-[#0A0A0B]/70 px-2 py-1 border hairline">
