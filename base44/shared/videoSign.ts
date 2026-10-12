@@ -14,14 +14,15 @@ async function hmacHex(key: string, msg: string) {
 export const ttlHours = (s) => Math.max(1, Math.min(24, Math.round(Number(s?.ttl_h) || 4)));
 
 // Zwraca podpisany adres albo null (ochrona wyłączona / adres bez /v/).
-export async function signServerVideo(base44, rawUrl: string, settings = null) {
+// maxTtl (sekundy) skraca ważność linku, np. do końca okna udostępnienia nagrania.
+export async function signServerVideo(base44, rawUrl: string, settings = null, maxTtl: number | null = null) {
   const s = settings || (await getSetting(base44, VIDEO_SETTING).catch(() => null));
   if (!s?.enabled || !s?.key) return null;
   let u: URL;
   try { u = new URL(rawUrl); } catch { return null; }
   if (!u.pathname.startsWith("/v/")) return null;
   const f = decodeURIComponent(u.pathname.slice(3));
-  const ttl = ttlHours(s) * 3600;
+  const ttl = Math.max(60, Math.min(ttlHours(s) * 3600, maxTtl ?? Infinity));
   const e = Math.floor(Date.now() / 1000) + ttl;
   u.search = "";
   u.searchParams.set("e", String(e));
