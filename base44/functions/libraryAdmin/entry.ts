@@ -175,6 +175,21 @@ export default async function (req) {
       return Response.json({ ok: true, video_domains: dom, odrzucone });
     }
 
+    // Dopisanie jednej domeny wideo (np. z edytora lekcji kursu) — reszta ustawień bez zmian.
+    if (a === "add_video_domain") {
+      const host = videoDomains([body.domain])[0];
+      if (!host) throw new Error("Podaj samą nazwę domeny, np. wideo.exmortis.pl");
+      const cur = await libSettings(base44, true);
+      const dom = videoDomains([...(cur.video_domains || []), host]);
+      await rpc(base44, "mb_admin_settings_save", { p: {
+        library_mode: cur.library_mode, messages_mode: cur.messages_mode, email_notify: cur.email_notify === true,
+        whatsapp: cur.whatsapp || "", space_limit_mb: cur.space_limit_mb || 5120, video_domains: dom,
+      } });
+      await libLog(base44, me.email, "ustawienia", "settings", "1", `dodana domena wideo: ${host}`);
+      resetLibSettings();
+      return Response.json({ ok: true, video_domains: dom });
+    }
+
     // Token zadania — pokazywany administratorowi raz do wklejenia w automatyzacji.
     if (a === "tick_token") {
       const t = await runSql(base44, `SELECT tick_token FROM public.mb_settings WHERE id = 1`, true);
