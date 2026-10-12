@@ -88,7 +88,9 @@ export default async function (req) {
         if (!scenes.some((s) => s.scene_key === story.start_scene_key)) return Response.json({ error: "Szkic nie ma sceny startowej — podgląd niemożliwy.", report }, { status: 400 });
         return Response.json({ meta: { ...storyMeta(story), version: 0 }, snapshot: buildSnapshot(story, scenes, choices, 0), report });
       }
-      return Response.json({ story: { ...listRow(story), ...storyMeta(story), start_scene_key: story.start_scene_key }, scenes, choices, report });
+      const extra = {};
+      for (const k of ["cover_portrait_prompt", "cover_landscape_prompt", "cover_portrait_candidate", "cover_landscape_candidate", "visual_notes", "image_style"]) extra[k] = story[k] || "";
+      return Response.json({ story: { ...listRow(story), ...storyMeta(story), ...extra, start_scene_key: story.start_scene_key }, scenes, choices, report });
     }
 
     if (a === "import") {
