@@ -229,7 +229,7 @@ export async function sendRecordingMail(base44, ev, reg, inviteHtml) {
     html: shell(ev,
       `<h1 style="font-size:24px;">Nagranie czeka w Twoim koncie</h1>` +
         `<p style="line-height:1.7;">${escHtml(reg.first_name)}, nagranie ze spotkania «${escHtml(ev.title)}» jest w Twoim koncie na exmortis.pl` +
-        (until ? ` — do <strong>${until}</strong> (czasu polskiego). Potem zniknie.` : ".") + `</p>` +
+        (until ? `. Dostępne do: <strong>${until}</strong> (czasu polskiego) — potem zniknie.` : ".") + `</p>` +
         `<p><a href="${escHtml(konto)}" style="display:inline-block;background:#C9A24A;color:#0A0A0B;text-decoration:none;padding:12px 22px;font-weight:bold;">Obejrzyj w koncie</a></p>` +
         `<p style="color:#8A8A8C;font-size:13px;line-height:1.6;">Zaloguj się adresem <strong>${escHtml(reg.email)}</strong> — tym samym, który był podany przy zapisie. ` +
         `Nie masz jeszcze konta? <a href="${escHtml(rejestracja)}" style="color:#C9A24A;">Załóż je na ten sam adres</a> — nagranie pojawi się od razu.</p>` +
