@@ -10,6 +10,7 @@ import FreeOrderForm from "@/components/exmortis/shop/FreeOrderForm";
 import { useDocMeta } from "@/lib/useDocMeta";
 import Logo from "@/components/exmortis/Logo";
 import WaitlistDialog from "@/components/exmortis/shop/WaitlistDialog";
+import Curriculum from "@/components/exmortis/shop/Curriculum";
 import { isPromoActive, priceOnRequest, regularPrice, unitPrice } from "@/lib/productPrice";
 
 // Zmienione adresy produktów: stary → nowy.
@@ -166,6 +167,8 @@ export default function ProductDetail() {
                 </div>
               );
             })()}
+
+            {(product.product_type === "kurs" || product.product_type === "wideo") && <Curriculum productId={product.id} />}
 
             {/* Details */}
             {product.details?.length > 0 && (
