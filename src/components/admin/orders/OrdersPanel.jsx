@@ -54,7 +54,7 @@ function InvoiceBox({ o, onSaved }) {
         </div>
       ) : (
         <div className="flex flex-wrap items-center gap-3">
-          <input value={num} onChange={(e) => setNum(e.target.value)} placeholder="Nr faktury (opcjonalnie)" className="bg-transparent border hairline px-3 py-2 text-sm min-w-0 flex-1 focus:border-[#C9A24A] focus:outline-none" />
+          <input value={num} onChange={(e) => setNum(e.target.value)} placeholder="Nr faktury (opcjonalnie)" className="bg-transparent border hairline px-3 py-2 text-sm min-w-0 basis-full sm:basis-auto flex-1 focus:border-[#C9A24A] focus:outline-none" />
           <button onClick={() => save(true)} disabled={busy} className="btn-relic !px-4 !py-2 text-[10px]">{busy ? <Loader2 className="h-4 w-4 animate-spin" /> : "OZNACZ JAKO WYSTAWIONĄ"}</button>
         </div>
       )}
@@ -92,13 +92,13 @@ export default function OrdersPanel() {
           ["Faktury do wystawienia", data ? s.invoices_todo ?? 0 : "…"], ["Przychód łącznie", data ? zl(s.revenue_all) : "…"]].map(([k, v]) => (
           <div key={k} className="bg-[#0A0A0B] p-5">
             <p className="technical text-[9px] text-foreground/45">{k.toUpperCase()}</p>
-            <p className="font-mono text-2xl gold-text mt-2">{v}</p>
+            <p className="font-mono text-xl sm:text-2xl gold-text mt-2 whitespace-nowrap">{v}</p>
           </div>
         ))}
       </div>
 
       <div className="flex flex-wrap items-center gap-3">
-        <div className="flex flex-wrap border hairline" role="tablist" aria-label="Status">
+        <div className="grid grid-cols-2 sm:flex border hairline w-full sm:w-auto" role="tablist" aria-label="Status">
           {FILTERS.map(([k, l]) => (
             <button key={k} role="tab" aria-selected={status === k} onClick={() => setStatus(k)}
               className={`px-4 py-2.5 technical text-[10px] ${status === k ? "bg-[#C9A24A] text-[#0A0A0B]" : "text-foreground/60 hover:text-foreground"}`}>{l.toUpperCase()}</button>
@@ -126,7 +126,7 @@ export default function OrdersPanel() {
             return (
               <div key={o.id}>
                 <button onClick={() => setOpen(isOpen ? null : o.id)} aria-expanded={isOpen}
-                  className="w-full text-left p-4 grid grid-cols-[1fr_auto] md:grid-cols-[150px_1fr_1fr_120px_110px_20px] gap-x-4 gap-y-1 items-center hover:bg-[#0F0F10]">
+                  className="w-full text-left p-4 grid grid-cols-[1fr_auto] md:grid-cols-[150px_1fr_1fr_110px_140px_20px] gap-x-4 gap-y-1 items-center hover:bg-[#0F0F10]">
                   <span className="text-xs text-foreground/50 order-3 md:order-none">{when(o.created_date)}</span>
                   <span className="min-w-0">
                     <span className="block text-sm text-[#F5EFE1] truncate">{o.buyer_name || "—"}</span>
