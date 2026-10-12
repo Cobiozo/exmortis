@@ -2,7 +2,8 @@ import React from "react";
 import { Link } from "react-router-dom";
 import { useSiteNav } from "@/components/exmortis/nav/useSiteNav";
 
-const cls = "text-foreground/70 hover:gold-text transition-colors";
+// inline-block + py-2: wygodny cel dotyku na telefonie (ok. 36 px), bez zmiany wyglądu.
+const cls = "inline-block py-2 text-foreground/70 hover:gold-text transition-colors";
 
 export default function FooterColumns({ mobile }) {
   const { kolumny } = useSiteNav();
@@ -10,8 +11,8 @@ export default function FooterColumns({ mobile }) {
     <div className={`grid grid-cols-2 ${mobile ? "" : "sm:grid-cols-4"} gap-x-6 gap-y-10`}>
       {kolumny.map((col, i) => (
         <nav key={i} aria-label={col.title}>
-          <p className="technical text-[10px] gold-text mb-5">{col.title}</p>
-          <ul className="space-y-3 text-sm">
+          <p className="technical text-[10px] gold-text mb-3">{col.title}</p>
+          <ul className="text-sm">
             {(col.links || []).map(({ label, to }, j) => (
               <li key={j}>
                 {to.startsWith("/") ? <Link to={to} className={cls}>{label}</Link>
