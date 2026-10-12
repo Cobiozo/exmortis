@@ -87,8 +87,11 @@ export default function StoryEditor({ id, onClose }) {
   const [err, setErr] = useState("");
   const [busy, setBusy] = useState("");
   const [confirmDel, setConfirmDel] = useState(false);
-  const load = () => rz("get", { id }).then((x) => {
+  // reset=false (po generowaniu / zatwierdzeniu kadru): niezapisane pola formularza zostają, synchronizujemy tylko to, co zmienia serwer.
+  const load = (reset = true) => rz("get", { id }).then((x) => {
     setD(x);
+    const sync = { cover_portrait_url: x.story.cover_portrait_url, cover_landscape_url: x.story.cover_landscape_url, reference_image_url: x.story.reference_image_url || "" };
+    if (reset !== true) { setF((p) => (p ? { ...p, ...sync } : p)); return; }
     setF({ title: x.story.title, slug: x.story.slug, summary: x.story.summary, category: x.story.category, estimated_minutes: x.story.estimated_minutes || "",
       content_warning: x.story.content_warning, start_scene_key: x.story.start_scene_key || "", sort_order: x.story.sort_order ?? 0,
       cover_portrait_url: x.story.cover_portrait_url, cover_landscape_url: x.story.cover_landscape_url,
@@ -143,7 +146,7 @@ export default function StoryEditor({ id, onClose }) {
         {err && <p className="text-sm text-[#E8676A]" role="alert">{err}</p>}
       </section>
 
-      <BulkImages id={id} story={d.story} scenes={d.scenes} onChanged={load} />
+      <BulkImages id={id} story={d.story} scenes={d.scenes} onChanged={() => load(false)} />
 
       <section className="space-y-5">
         <h3 className="shop-heading text-xl text-[#F5EFE1]">Dane w bibliotece</h3>
@@ -165,10 +168,10 @@ export default function StoryEditor({ id, onClose }) {
           <label className="block md:col-span-2"><span className={lab}>OSTRZEŻENIE O TRUDNYCH TREŚCIACH (OPCJONALNIE)</span><textarea rows={2} className={inp} value={f.content_warning} onChange={(e) => set("content_warning", e.target.value)} /></label>
           <div className="space-y-4 min-w-0"><p className={lab}>OKŁADKA PIONOWA 2:3 (BIBLIOTEKA)</p><ImageField noAlt value={f.cover_portrait_url ? { url: f.cover_portrait_url } : null} onChange={(v) => set("cover_portrait_url", v?.url || "")} />
             <GenBlock kind="cover_portrait" id={id} url={d.story.cover_portrait_url} candidate={d.story.cover_portrait_candidate} prompt={d.story.cover_portrait_prompt} story={d.story}
-              onSavePrompt={(v) => rz("update_story", { id, fields: { cover_portrait_prompt: v } })} onChanged={load} /></div>
+              onSavePrompt={(v) => rz("update_story", { id, fields: { cover_portrait_prompt: v } })} onChanged={() => load(false)} /></div>
           <div className="space-y-4 min-w-0"><p className={lab}>OKŁADKA POZIOMA 16:9 (KARTA HISTORII)</p><ImageField noAlt value={f.cover_landscape_url ? { url: f.cover_landscape_url } : null} onChange={(v) => set("cover_landscape_url", v?.url || "")} />
             <GenBlock kind="cover_landscape" id={id} url={d.story.cover_landscape_url} candidate={d.story.cover_landscape_candidate} prompt={d.story.cover_landscape_prompt} story={d.story}
-              onSavePrompt={(v) => rz("update_story", { id, fields: { cover_landscape_prompt: v } })} onChanged={load} /></div>
+              onSavePrompt={(v) => rz("update_story", { id, fields: { cover_landscape_prompt: v } })} onChanged={() => load(false)} /></div>
           <details className="md:col-span-2 border hairline p-4">
             <summary className="cursor-pointer technical text-[10px] text-foreground/60">POSTACIE I STYL ZDJĘĆ (DO GENEROWANIA I KOPIOWANIA PROMPTÓW)</summary>
             <div className="grid gap-4 mt-4">
@@ -189,7 +192,7 @@ export default function StoryEditor({ id, onClose }) {
       <section className="space-y-4">
         <h3 className="shop-heading text-xl text-[#F5EFE1]">Sceny ({d.scenes.length})</h3>
         <ul className="space-y-2">
-          {d.scenes.map((s) => <SceneRow key={s.id} s={s} story={d.story} choices={byScene(s.scene_key)} titleOf={titleOf} onSaved={load} />)}
+          {d.scenes.map((s) => <SceneRow key={s.id} s={s} story={d.story} choices={byScene(s.scene_key)} titleOf={titleOf} onSaved={() => load(false)} />)}
         </ul>
       </section>
     </div>
