@@ -77,7 +77,7 @@ export default function RzReader({ previewId = null }) {
     }
     first.current = false;
     if (prefs.images) prefetchImages(E.targets(snap, st.scene).map((k) => E.sceneOf(snap, k)?.i));
-  }, [st?.scene, st?.stack?.length]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [st?.scene, st?.stack?.length]);
 
   useEffect(() => { E.writePrefs(uid, prefs); }, [prefs, uid]);
 
