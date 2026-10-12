@@ -13,11 +13,12 @@ const b = (id, typ, dane, uklad = {}) => ({ id, typ, widoczny: true, dane, uklad
 export const LISTOPAD_BLOCKS = [
   b("lis-hero", "hero", { wariant: "standard", etykieta: "1 LISTOPADA · 20:00 (CZASU PL) · ONLINE", linia1: "Ze śmierci —", linia2: "o powrotach, o których świat nie mówi",
     lead: "Wieczór Wszystkich Świętych. Dwie godziny o trzech śmierciach i czterech etapach powrotu — z czasem na Twoje pytania.",
-    przyciski: [{ etykieta: "ZAPISZ SIĘ", link: "#zapis", styl: "zloty", strzalka: true }], dopisek: "Bezpłatnie. Link do spotkania przyjdzie e-mailem.",
+    przyciski: [{ etykieta: "ZAPISZ SIĘ", link: "#zapis", styl: "zloty", strzalka: true },
+      { etykieta: "DOWIEDZ SIĘ WIĘCEJ", link: "#o-spotkaniu", styl: "obrys" }], przyciski_pion: true, dopisek: "Bezpłatnie. Link do spotkania przyjdzie e-mailem.",
     tlo: { url: LISTOPAD_COVER }, przyciemnienie: 55 }),
   b("lis-baner", "zdjecie", { zdjecie: { url: LISTOPAD_BANNER, alt: "exmortis — ze śmierci", fx: 50, fy: 42 }, proporcja: "21:9" }, { odstep: "maly" }),
   b("lis-tekst", "tekst", { etykieta: "O SPOTKANIU", tytul: "Wieczór Wszystkich Świętych",
-    tresc: "<p>To spotkanie dla tych, w których coś umarło — sens, wiara, dawne życie — i którzy chcą zrozumieć, jak się z tego wraca. Opowiem o trzech śmierciach, przez które przechodzi człowiek, i o czterech etapach powrotu: Śmierć, Próg, Powrót, Inny.</p><p>Bez gotowych recept i bez pośpiechu. Na końcu zostaje czas na Twoje pytania — możesz zadać je już przy zapisie.</p>" }),
+    tresc: "<p>To spotkanie dla tych, w których coś umarło — sens, wiara, dawne życie — i którzy chcą zrozumieć, jak się z tego wraca. Opowiem o trzech śmierciach, przez które przechodzi człowiek, i o czterech etapach powrotu: Śmierć, Próg, Powrót, Inny.</p><p>Bez gotowych recept i bez pośpiechu. Na końcu zostaje czas na Twoje pytania — możesz zadać je już przy zapisie.</p>" }, { kotwica: "o-spotkaniu" }),
   // „Kto prowadzi” — wyłącznie teksty i zdjęcia z zakładki „O mnie”.
   b("lis-kto", "tekst_zdjecie", { etykieta: "KTO PROWADZI", tytul: "Byłem tam. I wróciłem. Inny.", strona: "lewo", kolumny: "40-60", proporcja: "4:5", mobile: "gora",
     podpis: "POSŁUGA · WCZEŚNIEJSZE ŻYCIE",
@@ -45,6 +46,6 @@ export const LISTOPAD_BLOCKS = [
     { pytanie: "Na jakiej platformie odbywa się spotkanie?", odpowiedz: "Na Zoomie, w trybie webinaru. Nie musisz zakładać konta w Zoom." },
     { pytanie: "Czy spotkanie będzie nagrywane?", odpowiedz: "Tak. Nagranie będzie dostępne dla zapisanych przez 7 dni." }] }, { tlo: "grafit" }),
   b("lis-ramka", "ramka", { tytul: "JEŚLI JEST CI BARDZO CIĘŻKO",
-    tresc: "<p>To spotkanie nie zastępuje pomocy specjalistycznej. Jeśli myślisz o odebraniu sobie życia, zadzwoń pod <strong>116 123</strong> (Telefon Zaufania dla Dorosłych) lub <strong>800 70 2222</strong> (całą dobę, bezpłatnie). W zagrożeniu życia: <strong>112</strong>.</p>" }, { odstep: "maly" }),
+    tresc: "<p>To spotkanie nie zastępuje pomocy specjalistycznej. Jeśli myślisz o odebraniu sobie życia, zadzwoń pod <strong>116 123</strong> (Telefon Zaufania dla Dorosłych) lub <strong>800 70 2222</strong> (całą dobę, bezpłatnie). W zagrożeniu życia: <strong>112</strong>.</p>", rozmiar: "mala" }, { odstep: "maly" }),
   b("lis-zapis", "zapis_spotkanie", { etykieta: "ZAPIS", tytul: "Zapisz się na 1 listopada", spotkanie: LISTOPAD_EVENT }),
 ];
