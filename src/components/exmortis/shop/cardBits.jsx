@@ -2,7 +2,7 @@ import React from "react";
 import { Link } from "react-router-dom";
 import { ArrowRight } from "lucide-react";
 import { useCart } from "../CartContext";
-import { isPromoActive, priceOnRequest, lowestPrice30, zl } from "@/lib/productPrice";
+import { isPromoActive, priceOnRequest, lowestPrice30, zl, nextPriceText } from "@/lib/productPrice";
 
 // Wspólne elementy kart Skarbca: znaczki, cena, przycisk.
 
@@ -65,6 +65,7 @@ export function PriceBlock({ p }) {
         <s className="text-foreground/40">{p.price_regular} zł</s>
         <span className="text-[#C9A24A] text-lg">{p.price_start} zł</span>
         <span className="technical text-[9px] text-foreground/40">DO {until.toUpperCase()}</span>
+        {nextPriceText(p) && <span className="basis-full text-[11px] text-[#C9A24A]/80">{nextPriceText(p)}</span>}
         <span className="basis-full text-[11px] text-foreground/45">Najniższa cena z 30 dni przed obniżką: {zl(lowestPrice30(p))}</span>
       </span>
     );
