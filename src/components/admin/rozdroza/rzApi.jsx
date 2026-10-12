@@ -12,9 +12,17 @@ export const rz = (action, p = {}) => base44.functions.invoke("rozdrozaAdmin", {
   });
 
 
-export const statusBadge = (s) => s.status === "published"
-  ? <span className={`technical text-[9px] px-2 py-1 border ${s.changed ? "border-[#E8C547]/60 text-[#E8C547]" : "border-[#9FD3A0]/50 text-[#9FD3A0]"}`}>{s.changed ? `OPUBLIKOWANA v${s.version} · ZMIANY CZEKAJĄ` : `OPUBLIKOWANA v${s.version}`}</span>
-  : <span className="technical text-[9px] px-2 py-1 border hairline text-foreground/55">SZKIC</span>;
+// Zaplanowana = opublikowana, ale z datą „widoczna od” w przyszłości (klienci jej jeszcze nie widzą).
+export const isScheduled = (s) => !!s.visible_from && Date.parse(s.visible_from) > Date.now();
+export const fmtWhen = (iso) => new Date(iso).toLocaleString("pl-PL", { timeZone: "Europe/Warsaw", weekday: "short", day: "numeric", month: "long", hour: "2-digit", minute: "2-digit" });
+
+export const statusBadge = (s) => {
+  if (s.status !== "published") return <span className="technical text-[9px] px-2 py-1 border hairline text-foreground/55">{s.visible_from ? `SZKIC · TERMIN ${fmtWhen(s.visible_from).toUpperCase()}` : "SZKIC"}</span>;
+  const sched = isScheduled(s);
+  const cls = s.changed ? "border-[#E8C547]/60 text-[#E8C547]" : sched ? "border-[#C9A24A]/60 gold-text" : "border-[#9FD3A0]/50 text-[#9FD3A0]";
+  const label = sched ? `ZAPLANOWANA · ${fmtWhen(s.visible_from).toUpperCase()}` : `OPUBLIKOWANA v${s.version}`;
+  return <span className={`technical text-[9px] px-2 py-1 border ${cls}`}>{label}{s.changed ? " · ZMIANY CZEKAJĄ" : ""}</span>;
+};
 
 
 // Ten sam opis kadru co przy generowaniu na serwerze (base44/shared/rozdrozaGraph.ts) — do skopiowania np. do ChatGPT.
