@@ -6,8 +6,9 @@ import { KEEP, collectPerson, deletePerson, maskEmail } from "../../shared/gdpr.
 export default async function (req) {
   try {
     const base44 = createClientFromRequest(req);
-    const me = await base44.auth.me();
-    if (me?.role !== "admin") return Response.json({ error: "Forbidden" }, { status: 403 });
+    const me = await base44.auth.me().catch(() => null);
+    if (!me) return Response.json({ error: "Zaloguj się" }, { status: 401 });
+    if (me.role !== "admin") return Response.json({ error: "Forbidden" }, { status: 403 });
     const body = await req.json().catch(() => ({}));
     const email = emailField(body).toLowerCase();
     const sr = base44.asServiceRole.entities;
