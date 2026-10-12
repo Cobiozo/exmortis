@@ -1,7 +1,7 @@
 import { createHash } from "node:crypto";
 import { createClientFromRequest } from "npm:@base44/sdk@0.8.44";
 import { getSetting, loadAppUrl, APP_URL } from "../../shared/settings.ts";
-import { getOrderByPayuId, updateOrderStatus } from "../../shared/orders.ts";
+import { getOrderByPayuId, updateOrderStatus, claimCompletion, releaseCompletion } from "../../shared/orders.ts";
 import { sendMail, orderEmailHtml } from "../../shared/smtp.ts";
 import { runSql, rpc, escStr } from "../../shared/supabase.ts";
 import { DIGITAL, grantAccess, ensureAccount } from "../../shared/access.ts";
@@ -72,8 +72,11 @@ export default async function (req) {
     const parts = Object.fromEntries(
       sigHeader.split(";").map((p) => p.split("=")).filter((p) => p.length === 2)
     );
-    const expected = createHash("md5").update(raw + payu.secondKey).digest("hex");
-    if (!parts.signature || parts.signature !== expected) {
+    // Algorytm z nagłówka (MD5 domyślnie; PayU może podpisywać też SHA-256).
+    const algo = String(parts.algorithm || "MD5").toUpperCase().replace("-", "");
+    const hashName = algo === "SHA256" ? "sha256" : algo === "SHA1" || algo === "SHA" ? "sha1" : "md5";
+    const expected = createHash(hashName).update(raw + payu.secondKey).digest("hex");
+    if (!parts.signature || parts.signature.toLowerCase() !== expected) {
       return new Response("Invalid signature", { status: 400 });
     }
 
@@ -84,43 +87,65 @@ export default async function (req) {
     if (!payuOrderId || !status) return Response.json({ ok: true });
 
     const stored = await getOrderByPayuId(base44, payuOrderId);
-    if (stored) {
-      const firstCompletion = status === "COMPLETED" && stored.status !== "COMPLETED";
+    if (!stored) return Response.json({ ok: true });
+    if (status !== "COMPLETED") {
       await updateOrderStatus(base44, payuOrderId, status);
-      if (firstCompletion && stored.buyer_email) {
-        const items = Array.isArray(stored.items) ? stored.items : [];
-        // Dostęp nadawany dopiero po potwierdzeniu płatności przez PayU.
-        const ids = items.map((i) => i.product_id).filter(Boolean);
-        const granted = [];
-        if (ids.length) {
-          const rows = await runSql(
-            base44,
-            `SELECT id, name, product_type, access_months FROM public.products WHERE id::text IN (${ids.map(escStr).join(",")})`,
-            true
-          );
-          for (const p of rows.filter((r) => DIGITAL.includes(r.product_type))) {
-            const until = await grantAccess(base44, { email: stored.buyer_email, product: p, source: "zakup", orderId: stored.id });
-            granted.push({ name: p.name, until });
-          }
-          if (granted.length) await ensureAccount(base44, stored.buyer_email);
+      return Response.json({ ok: true });
+    }
+    // Pierwsze COMPLETED przejmuje dokładnie jedno wywołanie — powtórki PayU nie dublują dostępu ani maili.
+    if (!(await claimCompletion(base44, payuOrderId))) return Response.json({ ok: true });
+
+    const items = Array.isArray(stored.items) ? stored.items : [];
+    const granted = [];
+    try {
+      // Dostęp nadawany dopiero po potwierdzeniu płatności przez PayU (idempotentnie po numerze zamówienia).
+      const ids = items.map((i) => i.product_id).filter(Boolean);
+      if (ids.length && stored.buyer_email) {
+        const rows = await runSql(
+          base44,
+          `SELECT id, name, product_type, access_months FROM public.products WHERE id::text IN (${ids.map(escStr).join(",")})`,
+          true
+        );
+        for (const p of rows.filter((r) => DIGITAL.includes(r.product_type))) {
+          const until = await grantAccess(base44, { email: stored.buyer_email, product: p, source: "zakup", orderId: stored.id });
+          granted.push({ name: p.name, until });
         }
-        try {
-          await sendMail(base44, {
-            kind: "zamowienie", ref: stored.id,
-            to: stored.buyer_email,
-            subject: "EXMORTIS — płatność przyjęta",
-            html: orderEmailHtml(stored.buyer_name || "", items, stored.total) + accessEmailHtml(granted, !!stored.digital_consent_text),
-          });
-        } catch {
-          // e-mail potwierdzenia jest opcjonalny — nie blokuj ack dla PayU
-        }
-        // KROK 2: pakiet „Rozmowa na progu” — po obecnej logice, w try/catch.
-        try {
-          await grantThresholdPackage(base44, stored);
-        } catch {
-          // pakiet założymy ręcznie — zamówienie i tak jest obsłużone
-        }
+        if (granted.length) await ensureAccount(base44, stored.buyer_email);
       }
+    } catch (e) {
+      // Bez dostępu nie potwierdzamy — cofamy przejęcie, PayU ponowi powiadomienie.
+      await releaseCompletion(base44, payuOrderId, stored.status).catch(() => {});
+      throw e;
+    }
+
+    // Kod rabatowy liczony jako użyty dopiero po opłaceniu (porzucona płatność nie zużywa kodu).
+    try {
+      const m = [...String(stored.note || "").matchAll(/Kod rabatowy: ([A-Z0-9_-]+) \(−/g)].pop();
+      if (m) {
+        const rec = (await base44.asServiceRole.entities.DiscountCode.filter({ code: m[1] }))[0];
+        if (rec) await base44.asServiceRole.entities.DiscountCode.update(rec.id, { uses: (rec.uses || 0) + 1 });
+      }
+    } catch {
+      // licznik kodu nie blokuje zamówienia
+    }
+
+    if (stored.buyer_email) {
+      try {
+        await sendMail(base44, {
+          kind: "zamowienie", ref: stored.id,
+          to: stored.buyer_email,
+          subject: "EXMORTIS — płatność przyjęta",
+          html: orderEmailHtml(stored.buyer_name || "", items, stored.total, stored.id) + accessEmailHtml(granted, !!stored.digital_consent_text),
+        });
+      } catch {
+        // e-mail potwierdzenia jest opcjonalny — nie blokuj ack dla PayU
+      }
+    }
+    // KROK 2: pakiet „Rozmowa na progu” — po obecnej logice, w try/catch.
+    try {
+      await grantThresholdPackage(base44, stored);
+    } catch {
+      // pakiet założymy ręcznie — zamówienie i tak jest obsłużone
     }
     return Response.json({ ok: true });
   } catch (error) {
