@@ -108,14 +108,30 @@ async function genOpenAI(cfg, prompt, aspect, refs) {
   throw new Error("OpenAI: generowanie nie powiodło się.");
 }
 
-const refList = (story) => String(story?.reference_image_url || "").split(/\s+/).filter((u) => /^https:\/\/\S+$/.test(u)).slice(0, 3);
+// Wzory postaci: zdjęcia z biblioteki mediów (/functions/media?id=… → krótki podpisany link do wersji WebP) albo adresy https.
+async function resolveRefs(base44, story) {
+  const list = String(story?.reference_image_url || "").split(/\s+/).filter(Boolean).slice(0, 3);
+  const out = [];
+  for (const u of list) {
+    const m = /^\/functions\/media\?id=([A-Za-z0-9_-]{6,64})/.exec(u);
+    if (m) {
+      const [a] = await base44.asServiceRole.entities.MediaAsset.filter({ pub_id: m[1] }, null, 1).catch(() => []);
+      const w = a?.warianty || {};
+      const uri = w[1600] || w["1600"] || w[960] || w["960"] || a?.oryginal_uri;
+      if (!uri) throw new Error("Nie znaleziono wzoru postaci w bibliotece mediów — wgraj go ponownie.");
+      const { signed_url } = await base44.asServiceRole.integrations.Core.CreateFileSignedUrl({ file_uri: uri, expires_in: 300 });
+      out.push(signed_url);
+    } else if (/^https:\/\/\S+$/.test(u)) out.push(u);
+  }
+  return out;
+}
 
 // Obraz w proporcjach kadru (16:9 / 2:3), zapisany w plikach aplikacji (publiczny adres media.base44.com).
 async function generateImage(base44, prompt, aspect, story) {
   const cfg = (await getSetting(base44, AI_SETTING).catch(() => null)) || {};
   const useOpenAI = cfg.provider === "openai";
   if (useOpenAI && !cfg.openai_key) throw new Error("Wybrano OpenAI, ale nie wklejono klucza API — uzupełnij ustawienia generowania.");
-  const { bytes, type } = useOpenAI ? await genOpenAI(cfg, prompt, aspect, refList(story)) : await genBase44(base44, prompt, aspect);
+  const { bytes, type } = useOpenAI ? await genOpenAI(cfg, prompt, aspect, await resolveRefs(base44, story)) : await genBase44(base44, prompt, aspect);
   const ext = type.includes("jpeg") ? "jpg" : type.includes("webp") ? "webp" : "png";
   const file = new File([bytes], `rozdroza-${Date.now()}.${ext}`, { type });
   const { file_url } = await base44.asServiceRole.integrations.Core.UploadFile({ file });
