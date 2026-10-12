@@ -79,7 +79,7 @@ export default function StepAccess(p) {
             </div>
           </div>
         </div>
-        <p className="text-xs text-foreground/45">Nagranie widzą tylko osoby zapisane (osobisty link z e-maila albo e-mail z zapisu), do wpisanej godziny. Maila z nagraniem wysyłasz sam przyciskiem przy spotkaniu — bez tego nic nie wychodzi.</p>
+        <p className="text-xs text-foreground/45">Nagranie widzą tylko osoby zapisane (osobisty link z e-maila albo e-mail z zapisu), do wpisanej godziny. Mail z nagraniem wychodzi tylko po kliknięciu „Wyślij nagranie zapisanym” w Uczestnikach.</p>
       </Group>
       <Group title="Adres strony">
         <Field id="slug" label="Adres (slug)" hint={`/spotkania/${f.slug || "tworzony-z-tytulu"}`}>
