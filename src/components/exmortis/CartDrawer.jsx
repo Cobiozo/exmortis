@@ -59,21 +59,24 @@ export default function CartDrawer() {
                         <div className="flex items-center border hairline">
                           <button
                             onClick={() => updateQty(item.id, item.qty - 1)}
-                            className="p-1.5 text-foreground/60 hover:gold-text"
+                            aria-label="Mniej"
+                            className="p-2.5 text-foreground/60 hover:gold-text"
                           >
                             <Minus className="h-3 w-3" />
                           </button>
-                          <span className="px-3 font-mono text-xs">{item.qty}</span>
+                          <span className="px-3 font-mono text-xs" aria-live="polite">{item.qty}</span>
                           <button
                             onClick={() => updateQty(item.id, item.qty + 1)}
-                            className="p-1.5 text-foreground/60 hover:gold-text"
+                            aria-label="Więcej"
+                            className="p-2.5 text-foreground/60 hover:gold-text"
                           >
                             <Plus className="h-3 w-3" />
                           </button>
                         </div>
                         <button
                           onClick={() => removeItem(item.id)}
-                          className="text-foreground/40 hover:blood-text"
+                          aria-label={`Usuń z koszyka: ${item.name}`}
+                          className="p-2.5 -m-1 text-foreground/40 hover:blood-text"
                         >
                           <Trash2 className="h-4 w-4" />
                         </button>
