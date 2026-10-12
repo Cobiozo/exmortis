@@ -22,7 +22,7 @@ export default function ObokSeria() {
         <Link to="/obok" className="technical text-[10px] gold-text">← OBOK</Link>
         <h1 className="relic-heading text-4xl text-[#F5EFE1] mt-6 mb-4">{d.seria.nazwa}</h1>
         {d.seria.opis && <p className="text-foreground/65 mb-10 whitespace-pre-line">{d.seria.opis}</p>}
-        {d.seria.typ === "cotygodniowa" && <label className="flex gap-2 items-center text-sm text-foreground/60 mb-6"><input type="checkbox" checked={tylkoNowe} onChange={(e) => setTylkoNowe(e.target.checked)} className="accent-[#C9A24A]" />Tylko nieodsłuchane</label>}
+        {d.seria.typ === "cotygodniowa" && <label className="flex gap-2 items-center text-sm text-foreground/60 mb-6 min-h-[40px] cursor-pointer"><input type="checkbox" checked={tylkoNowe} onChange={(e) => setTylkoNowe(e.target.checked)} className="h-5 w-5 shrink-0 accent-[#C9A24A]" />Tylko nieodsłuchane</label>}
         <ul className="border-t hairline">
           {list.map((n) => n.open ? (
             <li key={n.numer}><Link to={`/obok/${d.seria.slug}/${n.numer}`} className="flex items-center gap-4 py-5 border-b hairline hover:text-[#C9A24A]">

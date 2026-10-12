@@ -38,7 +38,7 @@ export default function Login() {
         <AuthField
           id="password" label={t("pole.haslo")} type="password" autoComplete="current-password"
           value={password} onChange={(e) => setPassword(e.target.value)} required
-          aside={<Link to="/forgot-password" className="text-xs text-foreground/45 hover:text-[#C9A24A]">{t("nie_pamietam")}</Link>}
+          aside={<Link to="/forgot-password" className="inline-block py-2 -my-2 text-xs text-foreground/55 hover:text-[#C9A24A]">{t("nie_pamietam")}</Link>}
         />
         <button type="submit" disabled={loading} className="btn-relic w-full disabled:opacity-60">
           {loading && <Loader2 className="h-4 w-4 animate-spin" />} {t("przycisk")}

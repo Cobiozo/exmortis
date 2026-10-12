@@ -68,7 +68,7 @@ export default function ProductDetail() {
       <div className="mx-auto max-w-[1400px] px-5 md:px-10 py-6">
         <button
           onClick={() => navigate("/skarbiec")}
-          className="technical text-[10px] text-foreground/40 hover:gold-text flex items-center gap-2 transition-colors"
+          className="py-3 -my-3 technical text-[10px] text-foreground/50 hover:gold-text flex items-center gap-2 transition-colors"
         >
           <ArrowLeft className="h-3 w-3" /> SKLEP / {product.category.toUpperCase()}
         </button>

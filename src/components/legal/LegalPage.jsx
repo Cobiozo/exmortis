@@ -26,8 +26,8 @@ export default function LegalPage({ doc, docKey, extra = [], children }) {
         <button onClick={() => window.print()} className="btn-ghost !px-4 !py-2 text-[10px] mb-10 print:hidden"><Download className="h-4 w-4" /> POBIERZ PDF</button>
         <nav aria-label="Spis treści" className="border hairline p-5 mb-12 print:hidden">
           <p className="technical text-[10px] gold-text mb-3">SPIS TREŚCI</p>
-          <ol className="space-y-1.5 text-sm">
-            {content.sections.map((x) => <li key={x.id}><a href={`#${x.id}`} className="text-foreground/70 hover:gold-text">{x.title}</a></li>)}
+          <ol className="text-sm">
+            {content.sections.map((x) => <li key={x.id}><a href={`#${x.id}`} className="inline-block py-1.5 text-foreground/70 hover:gold-text">{x.title}</a></li>)}
           </ol>
         </nav>
         {children}

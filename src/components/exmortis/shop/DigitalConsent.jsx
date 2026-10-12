@@ -22,7 +22,7 @@ export default function DigitalConsent({ items, checked, onChange }) {
         </p>
       ))}
       <label className="flex gap-3 text-sm text-foreground/65 leading-relaxed">
-        <input type="checkbox" required className="mt-1 accent-[#C9A24A]" checked={checked} onChange={(e) => onChange(e.target.checked)} />
+        <input type="checkbox" required className="mt-0.5 h-5 w-5 shrink-0 accent-[#C9A24A]" checked={checked} onChange={(e) => onChange(e.target.checked)} />
         <span>{CONSENT_TEXT}</span>
       </label>
     </div>

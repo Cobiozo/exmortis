@@ -22,7 +22,7 @@ export default function CiszaChoose({ minutes, setMinutes, onStart, onLogo, view
           <ViewSwitch value={view} onChange={onView} />
           {view !== "pasek" && (
             <label className="inline-flex items-center gap-2 text-xs text-foreground/55 cursor-pointer min-h-[32px]">
-              <input type="checkbox" checked={minutesOnly} onChange={(e) => onMinutesOnly(e.target.checked)} className="accent-[#C9A24A]" />
+              <input type="checkbox" checked={minutesOnly} onChange={(e) => onMinutesOnly(e.target.checked)} className="h-5 w-5 shrink-0 accent-[#C9A24A]" />
               Same minuty
             </label>
           )}

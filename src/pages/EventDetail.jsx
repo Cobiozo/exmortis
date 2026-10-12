@@ -73,7 +73,7 @@ export default function EventDetail() {
       )}
       <div className="mx-auto max-w-[1200px] px-5 md:px-10 pt-10 md:pt-14 pb-24 lg:grid lg:grid-cols-[minmax(0,1fr)_380px] lg:gap-14">
        <div className="min-w-0">
-        <Link to="/spotkania" className="technical text-[10px] text-foreground/40 hover:gold-text transition-colors">
+        <Link to="/spotkania" className="inline-block py-3 -my-3 technical text-[10px] text-foreground/50 hover:gold-text transition-colors">
           <ArrowLeft className="h-3.5 w-3.5 inline mr-2 -mt-0.5" /> SPOTKANIA
         </Link>
 

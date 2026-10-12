@@ -147,7 +147,7 @@ export default function Checkout() {
 
             <OrderSummaryInfo items={items} total={discount ? (total - discount.discount).toFixed(2) : total} />
             <label className="flex gap-3 text-sm text-foreground/65 leading-relaxed">
-              <input type="checkbox" required className="mt-1 accent-[#C9A24A]" checked={termsConsent} onChange={(e) => setTermsConsent(e.target.checked)} />
+              <input type="checkbox" required className="mt-0.5 h-5 w-5 shrink-0 accent-[#C9A24A]" checked={termsConsent} onChange={(e) => setTermsConsent(e.target.checked)} />
               <span>Akceptuję <Link to="/regulamin" className="underline">Regulamin</Link>. Znam <Link to="/polityka-prywatnosci" className="underline">Politykę prywatności</Link>.</span>
             </label>
             <DigitalConsent items={items} checked={digitalConsent} onChange={setDigitalConsent} />

@@ -9,7 +9,7 @@ import GoogleButton from "@/components/auth/GoogleButton";
 import PasswordStrength from "@/components/auth/PasswordStrength";
 import { afterLoginTarget, providerReturnTo } from "@/lib/afterLogin";
 
-const check = "mt-1 accent-[#C9A24A]";
+const check = "mt-0.5 h-5 w-5 shrink-0 accent-[#C9A24A]";
 
 export default function Register() {
   const [name, setName] = useState("");
