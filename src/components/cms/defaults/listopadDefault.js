@@ -7,6 +7,8 @@ export const LISTOPAD_OG = "https://exmortis.pl/exmortis-og-1-listopada-v2.jpg";
 // Baner pod nagłówkiem: „Złota Brama” z biblioteki mediów (wersje WebP przez /functions/media).
 export const LISTOPAD_BANNER = "/functions/media?id=0c90920dcc1c8fe2c4162b9ac7a8cf3b";
 export const LISTOPAD_INDEX_FROM = "2026-10-16T00:00:00+02:00";
+// Start zapisów (czas polski): do tej chwili informacja w nagłówku i komunikat zamiast formularza.
+export const LISTOPAD_ZAPISY_OD = "2026-10-16T00:00";
 
 const b = (id, typ, dane, uklad = {}) => ({ id, typ, widoczny: true, dane, uklad: { ...L, numer: "brak", ...uklad } });
 
@@ -14,7 +16,8 @@ export const LISTOPAD_BLOCKS = [
   b("lis-hero", "hero", { wariant: "standard", etykieta: "1 LISTOPADA · 20:00 (CZASU PL) · ONLINE", linia1: "Ze śmierci —", linia2: "o powrotach, o których świat nie mówi",
     lead: "Wieczór Wszystkich Świętych. Dwie godziny o trzech śmierciach i czterech etapach powrotu — z czasem na Twoje pytania.",
     przyciski: [{ etykieta: "ZAPISZ SIĘ", link: "#zapis", styl: "zloty", strzalka: true },
-      { etykieta: "DOWIEDZ SIĘ WIĘCEJ", link: "#o-spotkaniu", styl: "obrys" }], przyciski_pion: true, dopisek: "Bezpłatnie. Link do spotkania przyjdzie e-mailem.",
+      { etykieta: "DOWIEDZ SIĘ WIĘCEJ", link: "#o-spotkaniu", styl: "obrys" }], przyciski_pion: true,
+    zapowiedz: "ZAPISY RUSZAJĄ 16 PAŹDZIERNIKA", zapowiedz_do: LISTOPAD_ZAPISY_OD, dopisek: "Bezpłatnie. Link do spotkania przyjdzie e-mailem.",
     tlo: { url: LISTOPAD_COVER }, przyciemnienie: 55 }),
   b("lis-baner", "zdjecie", { zdjecie: { url: LISTOPAD_BANNER, alt: "exmortis — ze śmierci", fx: 50, fy: 42 }, proporcja: "21:9" }, { odstep: "maly" }),
   b("lis-tekst", "tekst", { etykieta: "O SPOTKANIU", tytul: "Wieczór Wszystkich Świętych",
@@ -47,5 +50,5 @@ export const LISTOPAD_BLOCKS = [
     { pytanie: "Czy spotkanie będzie nagrywane?", odpowiedz: "Tak. Nagranie będzie dostępne dla zapisanych przez 7 dni." }] }, { tlo: "grafit" }),
   b("lis-ramka", "ramka", { tytul: "JEŚLI JEST CI BARDZO CIĘŻKO",
     tresc: "<p>To spotkanie nie zastępuje pomocy specjalistycznej. Jeśli myślisz o odebraniu sobie życia, zadzwoń pod <strong>116 123</strong> (Telefon Zaufania dla Dorosłych) lub <strong>800 70 2222</strong> (całą dobę, bezpłatnie). W zagrożeniu życia: <strong>112</strong>.</p>", rozmiar: "mala" }, { odstep: "maly" }),
-  b("lis-zapis", "zapis_spotkanie", { etykieta: "ZAPIS", tytul: "Zapisz się na 1 listopada", spotkanie: LISTOPAD_EVENT }),
+  b("lis-zapis", "zapis_spotkanie", { etykieta: "ZAPIS", tytul: "Zapisz się na 1 listopada", spotkanie: LISTOPAD_EVENT, zapisy_od: LISTOPAD_ZAPISY_OD }),
 ];
