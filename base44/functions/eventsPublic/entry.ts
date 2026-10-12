@@ -86,7 +86,7 @@ export default async function (req) {
              AND e.recording_url IS NOT NULL
              AND e.start_datetime IS NOT NULL
              AND e.start_datetime + (COALESCE(e.duration_minutes,60) * interval '1 minute') < now()
-           AND (e.recording_until IS NULL OR e.recording_until > now())
+           AND e.recording_until IS NOT NULL AND e.recording_until > now()
            ORDER BY e.start_datetime DESC
            LIMIT 20`,
           true
@@ -193,10 +193,11 @@ export default async function (req) {
       const base = { title: ev.title, slug: ev.slug, start_datetime: ev.start_datetime, duration_minutes: ev.duration_minutes, open_minutes: Number(ev.open_minutes) || 15 };
       if (ev.format !== "Online") return Response.json({ ...base, state: "stacjonarne" });
       const state = admin && ["przed", "otwarte", "po"].includes(body.preview) ? body.preview : joinState(ev);
-      // Link do pokoju i nagranie tylko dla zapisanych: osobisty klucz z maila albo e-mail podany przy zapisie.
-      const rec = state === "po" && ev.recording_url && (!ev.recording_until || new Date(ev.recording_until) > new Date()) ? ev.recording_url : null;
+      // Link do pokoju tylko dla zapisanych: osobisty klucz z maila albo e-mail podany przy zapisie.
+      // Nagranie nie wychodzi stąd nigdy — jest w koncie zapisanych (Moje konto → Spotkania), w oknie udostępnienia.
+      const rec = state === "po" && !!ev.recording_url && !!ev.recording_until && new Date(ev.recording_until) > new Date();
       let okToken = null;
-      if (((state === "otwarte" && ev.join_link) || rec) && !admin) {
+      if (state === "otwarte" && ev.join_link && !admin) {
         const ip = clientIp(req);
         const t = String(body.t || "").trim().toLowerCase();
         const email = String(body.email || "").trim().toLowerCase().slice(0, 200);
@@ -222,7 +223,7 @@ export default async function (req) {
         }
         return Response.json({ ...base, state, join_link: ev.join_link, join_password: ev.join_password || null, ok_token: okToken });
       }
-      return Response.json({ ...base, state, recording_url: rec, ok_token: okToken });
+      return Response.json({ ...base, state, recording_in_account: rec, ok_token: okToken });
     }
 
     // --- Ręczne przeniesienie kolejki (administrator; opcjonalnie z symulacją awarii) ---
@@ -318,9 +319,10 @@ export default async function (req) {
         `e.start_datetime > now() + interval '1 hour' AND e.start_datetime <= now() + interval '24 hours'`);
       const due1 = await claim("reminder_1h_sent",
         `e.start_datetime > now() AND e.start_datetime <= now() + interval '1 hour'`, ", reminder_24h_sent = TRUE");
+      // Powiadomienie o nagraniu: gdy admin udostępni je w kontach (recording_until w przyszłości), po zakończeniu spotkania.
       const dueRec = await claim("recording_sent",
-        `e.recording_url IS NOT NULL
-           AND e.start_datetime + (COALESCE(e.duration_minutes,60) * interval '1 minute') < now() - interval '12 hours'`);
+        `e.recording_url IS NOT NULL AND e.recording_until IS NOT NULL AND e.recording_until > now() + interval '30 minutes'
+           AND e.start_datetime + (COALESCE(e.duration_minutes,60) * interval '1 minute') < now()`);
 
       const regOf = (row) => ({ id: row.reg_id, first_name: row.first_name, email: row.email, cancel_token: row.cancel_token, tz: row.tz });
       // Nieudana wysyłka oddaje wiersz do kolejnego przebiegu.
