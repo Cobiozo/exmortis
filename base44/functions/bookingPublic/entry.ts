@@ -137,7 +137,7 @@ export default async function (req) {
       if (!t) return bad("Nie znaleziono", 404);
       let from = new Date(body.from || Date.now());
       if (earliest && new Date(earliest) > from) from = new Date(earliest);
-      const to = new Date(Math.min(new Date(body.to || Date.now() + 31 * 864e5).getTime(), from.getTime() + 62 * 864e5));
+      const to = new Date(Math.min(new Date(body.to || from.getTime() + 31 * 864e5).getTime(), from.getTime() + 62 * 864e5));
       if (isNaN(from.getTime()) || isNaN(to.getTime())) return bad("Niepoprawny zakres");
       if (to <= from) return Response.json({ slots: [], earliest });
       const rows = await rpc(base44, "bk_free_slots", { p_type: t.id, p_from: from.toISOString(), p_to: to.toISOString() });
