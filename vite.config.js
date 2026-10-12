@@ -34,6 +34,37 @@ function exmMeta() {
   };
 }
 
+// Dane awaryjne strony /dolacz: przy budowaniu (publikacji) pobierane z bazy przez publiczną listę spotkań,
+// więc każda publikacja ma aktualną kopię bez ręcznej edycji. Brak sieci / błąd → zapisana kopia z src/content/joinFallbackData.js.
+const FB_ID = "virtual:exm-join-fallback";
+function exmJoinFallback() {
+  let build = false;
+  return {
+    name: "exm-join-fallback",
+    configResolved(c) { build = c.command === "build"; },
+    resolveId(id) { return id === FB_ID ? "\0" + FB_ID : null; },
+    async load(id) {
+      if (id !== "\0" + FB_ID) return null;
+      const saved = `export { FALLBACK_AT, FALLBACK_EVENTS } from "/src/content/joinFallbackData.js";`;
+      if (!build || process.env.EXM_FALLBACK_OFFLINE === "1") return saved;
+      try {
+        const r = await fetch(`${SITE_URL}/functions/eventsPublic`, { method: "POST", headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ action: "list" }), signal: AbortSignal.timeout(6000) });
+        if (!r.ok) throw new Error(String(r.status));
+        const d = await r.json();
+        const events = (d.upcoming || []).filter((e) => e.format === "Online" && ["Opublikowane", "Odwołane"].includes(e.status) && e.slug && e.start_datetime)
+          .map((e) => ({ slug: e.slug, short_path: e.short_path || null, title: e.title, start_datetime: e.start_datetime,
+            duration_minutes: Number(e.duration_minutes) || 60, open_minutes: Number(e.open_minutes) || 15 }));
+        if (!Array.isArray(d.upcoming)) throw new Error("brak listy");
+        return `export const FALLBACK_AT = ${JSON.stringify(new Date().toISOString())};\nexport const FALLBACK_EVENTS = ${JSON.stringify(events)};`;
+      } catch (e) {
+        this.warn(`Dane awaryjne /dolacz: użyta zapisana kopia (${e.message})`);
+        return saved;
+      }
+    },
+  };
+}
+
 // https://vite.dev/config/
 export default defineConfig({
   plugins: [
@@ -48,5 +79,6 @@ export default defineConfig({
     }),
     react(),
     exmMeta(),
+    exmJoinFallback(),
   ]
 });
