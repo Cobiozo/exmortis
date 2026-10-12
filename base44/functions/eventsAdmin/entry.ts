@@ -444,6 +444,7 @@ export default async function (req) {
       const ev = evRows && evRows[0];
       if (!ev) throw new Error("Nie znaleziono wydarzenia");
       if (!ev.recording_url) throw new Error("Najpierw wpisz link do nagrania.");
+      if (!ev.recording_until || new Date(ev.recording_until) <= new Date()) throw new Error("Najpierw udostępnij nagranie w kontach (np. „24 h od teraz”) i zapisz spotkanie.");
       const recs = await runSql(
         base44,
         `SELECT id, first_name, email, cancel_token FROM public.registrations
