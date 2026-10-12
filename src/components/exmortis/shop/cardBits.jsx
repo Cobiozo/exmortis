@@ -74,7 +74,7 @@ export function PriceBlock({ p }) {
   if (p.price_regular != null) {
     return <span>{p.price_regular} zł</span>;
   }
-  return <span>{p.price} zł</span>;
+  return Number(p.price) > 0 ? <span>{p.price} zł</span> : null;
 }
 
 export function productHref(p) {
