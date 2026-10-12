@@ -3,6 +3,7 @@ import { isActive } from "../../shared/access.ts";
 import { checkVideoAbuse } from "../../shared/videoGuard.ts";
 import { normalizeServerVideo, normalizeVideo } from "../../shared/libraryMedia.ts";
 import { libSettings } from "../../shared/libraryAccess.ts";
+import { signServerVideo } from "../../shared/videoSign.ts";
 
 // Kurs klienta: spis lekcji, podpisany link do wideo (po sprawdzeniu dostępu), postęp.
 export default async function (req) {
@@ -49,7 +50,11 @@ export default async function (req) {
         const server = normalizeServerVideo(lesson.video_url, s?.video_domains || []);
         const embed = server ? null : normalizeVideo(lesson.video_url);
         if (!server && !embed) return Response.json({ error: "Wideo tej lekcji jest chwilowo niedostępne." }, { status: 502 });
-        external = server ? { url: server, server: true } : { embed: embed.embed, provider: embed.provider };
+        if (server) {
+          // Ochrona włączona i adres /v/… → link z podpisem i terminem (skrypt na serwerze wpuszcza tylko taki).
+          const signed = await signServerVideo(base44, server).catch(() => null);
+          external = signed ? { url: signed.url, server: true, expires_in: signed.expires_in } : { url: server, server: true };
+        } else external = { embed: embed.embed, provider: embed.provider };
       }
       const ip = (req.headers.get("x-forwarded-for") || "").split(",")[0].trim();
       const blocked = await checkVideoAbuse(base44, email, ip);

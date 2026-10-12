@@ -27,6 +27,7 @@ export default function LessonRow({ lesson, onChange, domains, onAddDomain }) {
   const set = (k, v) => setF((x) => ({ ...x, [k]: v }));
   const [test, setTest] = useState(null); // null | "load" | "ok" | "err"
   const [testInfo, setTestInfo] = useState("");
+  const [testUrl, setTestUrl] = useState("");
   const serverHost = (() => {
     try { const u = new URL(String(f.video_url || "").trim()); return /\.(mp4|m4v|webm)$/i.test(u.pathname) ? u.hostname.toLowerCase() : null; } catch { return null; }
   })();
@@ -81,12 +82,19 @@ export default function LessonRow({ lesson, onChange, domains, onAddDomain }) {
                 <button type="button" onClick={() => onAddDomain(serverHost)} className="btn-ghost !px-3 !py-1.5 text-[10px]">DODAJ {serverHost.toUpperCase()}</button>
               </>
             ) : domains ? <span className="text-xs text-[#9FD3A0]">Twój serwer ({serverHost}) — domena zaufana.</span> : null}
-            <button type="button" onClick={() => { setTest(test ? null : "load"); setTestInfo(""); }} className="btn-ghost !px-3 !py-1.5 text-[10px]">{test ? "ZAMKNIJ PODGLĄD" : "SPRAWDŹ ODTWARZANIE"}</button>
+            <button type="button" onClick={async () => {
+              if (test) { setTest(null); return; }
+              setTestInfo(""); setTestUrl(String(f.video_url).trim());
+              // Przy włączonej ochronie podgląd dostaje podpisany link (jak klient).
+              const r = await base44.functions.invoke("adminSettings", { action: "video_sign_preview", url: String(f.video_url).trim() }).catch(() => null);
+              if (r?.data?.url) setTestUrl(r.data.url);
+              setTest("load");
+            }} className="btn-ghost !px-3 !py-1.5 text-[10px]">{test ? "ZAMKNIJ PODGLĄD" : "SPRAWDŹ ODTWARZANIE"}</button>
           </div>
         )}
         {serverHost && test && (
           <div className="pt-2 space-y-2">
-            <video src={String(f.video_url).trim()} controls preload="metadata" playsInline className="w-full max-w-md bg-black aspect-video"
+            <video src={testUrl} controls preload="metadata" playsInline className="w-full max-w-md bg-black aspect-video"
               onLoadedMetadata={(e) => {
                 const d = e.currentTarget.duration;
                 const min = Number.isFinite(d) ? Math.max(1, Math.round(d / 60)) : null;

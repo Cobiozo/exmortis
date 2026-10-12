@@ -31,8 +31,10 @@ export default function LessonPlayer({ accessId, lesson, onDone, onNext, nextTit
 
   // Link wygasa po 60 min — odświeżamy co 50 min, zachowując pozycję.
   useEffect(() => {
-    if (!src || src.embed || src.server) return; // link z serwera nie wygasa
-    const t = setTimeout(() => { resumeAt.current = ref.current?.currentTime || 0; loadUrl(); }, 50 * 60000);
+    if (!src || src.embed || (src.server && !src.expires_in)) return; // zwykły link z serwera nie wygasa
+    // Podpisany link (plik w aplikacji: 60 min, własny serwer: wg ustawień) — odświeżamy 10 min przed końcem.
+    const ms = src.expires_in ? Math.max(5 * 60, src.expires_in - 10 * 60) * 1000 : 50 * 60000;
+    const t = setTimeout(() => { resumeAt.current = ref.current?.currentTime || 0; loadUrl(); }, ms);
     return () => clearTimeout(t);
   }, [src]);
 
@@ -104,7 +106,7 @@ export default function LessonPlayer({ accessId, lesson, onDone, onNext, nextTit
             onTimeUpdate={onTime} onPause={() => send()} preload="metadata"
             onError={() => {
               // Podpisany link mógł wygasnąć — jedna próba odświeżenia z zachowaniem pozycji; potem komunikat.
-              if (!src.server && !retried.current) { retried.current = true; resumeAt.current = ref.current?.currentTime || 0; loadUrl(); return; }
+              if ((!src.server || src.expires_in) && !retried.current) { retried.current = true; resumeAt.current = ref.current?.currentTime || 0; loadUrl(); return; }
               setErr("Film nie chce się wczytać. Sprawdź połączenie i spróbuj ponownie.");
             }} />
         )}
