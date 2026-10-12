@@ -39,7 +39,7 @@ export default function PriceSteps({ value, onChange, regular, inputCls, labelCl
       )}
       {sorted.length > 0 && (
         <p className="text-xs text-foreground/60 mt-4">
-          {sorted.map((s, i) => `${s.cena} zł do ${fmt(s.do)}`).join(" → ")} → {regular !== "" ? `${regular} zł` : "cena regularna (uzupełnij)"}
+          {sorted.map((s) => `${s.cena} zł do ${fmt(s.do)}`).join(" → ")} → {regular !== "" ? `${regular} zł` : "cena regularna (uzupełnij)"}
         </p>
       )}
       {warn && <p className="text-xs text-[#E8C547] mt-2">Któryś próg jest równy albo wyższy od ceny regularnej — klient zobaczy przekreśloną cenę niższą od bieżącej.</p>}

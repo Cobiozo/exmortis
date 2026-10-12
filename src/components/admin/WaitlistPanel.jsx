@@ -17,7 +17,7 @@ export default function WaitlistPanel({ product, onClose }) {
   const stop = useRef(false);
 
   const load = () => call({ action: "waitlist", id: product.id }).then((d) => setRows(d.rows || [])).catch((e) => setErr(e?.response?.data?.error || "Nie udało się wczytać listy."));
-  useEffect(() => { load(); }, []); // eslint-disable-line react-hooks/exhaustive-deps
+  useEffect(() => { load(); }, []);
 
   const pending = (rows || []).filter((r) => !r.notified_at).length;
   const ready = product.active && (product.status || "dostępny") === "dostępny";
