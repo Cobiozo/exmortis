@@ -1,10 +1,10 @@
 import { createClientFromRequest } from "npm:@base44/sdk@0.8.44";
-import { runSql, requireStaff as requireAdmin } from "../../shared/supabase.ts";
+import { runSql, escStr, requireStaff as requireAdmin } from "../../shared/supabase.ts";
 
 // Administracja Minutnikiem ciszy: pliki audio (ustawienia) i anonimowe statystyki.
 function uriVal(v) {
   if (typeof v !== "string" || v.trim() === "") return "NULL";
-  return `$q$${v.trim().slice(0, 1000)}$q$`;
+  return escStr(v.trim().slice(0, 1000));
 }
 
 export default async function (req) {
