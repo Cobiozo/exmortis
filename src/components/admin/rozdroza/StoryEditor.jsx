@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from "react";
+import { Link } from "react-router-dom";
 import { ArrowLeft, Loader2, Eye, ChevronDown } from "lucide-react";
 import ImageField from "@/components/admin/cms/ImageField";
 import { rz, statusBadge, thumb, isStartScene, isScheduled, fmtWhen } from "./rzApi";
@@ -156,7 +157,7 @@ export default function StoryEditor({ id, onClose }) {
             <ul className="list-disc pl-5 mt-2 space-y-1">{r.warnings.map((w, i) => <li key={i}>{w}</li>)}</ul></details>
         )}
         <div className="flex flex-wrap items-center gap-3 pt-2">
-          <a href={`/konto/rozdroza/podglad?id=${encodeURIComponent(id)}`} target="_blank" rel="noreferrer" className="btn-ghost !px-4 !py-2 text-[10px]"><Eye className="h-4 w-4" /> PODGLĄD SZKICU</a>
+          <Link to={`/konto/rozdroza/podglad?id=${encodeURIComponent(id)}`} className="btn-ghost !px-4 !py-2 text-[10px]" title="Karta historii i czytanie tak jak u klienta (bez publikacji)"><Eye className="h-4 w-4" /> PODGLĄD JAK KLIENT</Link>
           <button type="button" onClick={() => run("publish", {}, isScheduled(d.story) ? `Opublikowano — klienci zobaczą historię ${fmtWhen(d.story.visible_from)}.` : "Opublikowano — klienci widzą nową wersję w ciągu minuty.")} disabled={!!busy || r.errors.length > 0} className="btn-relic !px-4 !py-2 text-[10px] disabled:opacity-40">
             {busy === "publish" && <Loader2 className="h-4 w-4 animate-spin" />}{d.story.status === "published" ? "OPUBLIKUJ PONOWNIE" : "OPUBLIKUJ"}
           </button>
