@@ -61,7 +61,8 @@ export async function rpc(base44, fn, args) {
 export function escStr(value) {
   const s = String(value);
   let d = "$q$";
-  for (let n = 1; s.includes(d); n++) d = `$q${n}$`;
+  // Znacznik zamykający musi wystąpić dopiero na końcu (także gdy treść kończy się np. na „$q”).
+  for (let n = 1; (s + d).indexOf(d) !== s.length; n++) d = `$q${n}$`;
   return `${d}${s}${d}`;
 }
 
