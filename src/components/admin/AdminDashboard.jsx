@@ -72,6 +72,7 @@ export default function AdminDashboard() {
           { to: "/admin/skarbiec", title: "Skarbiec", lines: [`Dostępne: ${v("products_available")}`, `Wkrótce: ${v("products_soon")}`, `Ukryte: ${v("products_hidden")}`] },
           { to: "/admin/rabaty", title: "Kody rabatowe", lines: ["Procent lub kwota, limity, terminy"] },
           { to: "/admin/tresci", title: "Treści stron", lines: ["Edycja tekstów"] },
+          { to: "/admin/menu", title: "Menu i stopka", lines: ["Nawigacja i linki w stopce"] },
           { to: "/admin/cisza", title: "Cisza", lines: [`Utwory: ${sound ? sound.length : "…"}`, `Ostrzeżenia: ${sound ? countWarnings(sound) : "…"}`, `Rozpoczęcia (30 dni): ${v("silence_30")}`] },
           { to: "/admin/glos", title: "Głos", lines: ["Utwory i podcasty"] },
           { to: "/admin/podcast", title: "Podcast", lines: ["Odcinki, playlisty, goście, ustawienia"] },
@@ -87,6 +88,7 @@ export default function AdminDashboard() {
           { to: "/admin/integracje", title: "Integracje", lines: ["Płatności, adres aplikacji"] },
           { to: "/admin/bezpieczenstwo", title: "Bezpieczeństwo", lines: ["Alerty, blokady, znajdź właściciela kopii"] },
           { to: "/admin/dane-osoby", title: "Dane osoby (RODO)", lines: ["Znajdź / usuń / wyeksportuj po e-mailu", "Obie bazy naraz"] },
+          libOn && { to: "/admin/historia", title: "Historia zmian", lines: ["Biblioteka, grupy, wiadomości"] },
           { to: "/", title: "Podgląd strony", lines: ["Otwórz stronę z paskiem admina"], onClick: () => setMode("admin") },
         ]],
       ];
