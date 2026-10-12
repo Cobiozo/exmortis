@@ -102,7 +102,7 @@ export default function FreeOrderForm({ product }) {
               type="checkbox"
               checked={form.phoneConsent}
               onChange={(e) => setForm({ ...form, phoneConsent: e.target.checked })}
-              className="accent-[#C9A24A] w-4 h-4 mt-0.5"
+              className="accent-[#C9A24A] w-5 h-5 shrink-0 mt-0.5"
             />
             <span className="text-xs text-foreground/50 leading-relaxed">
               Zgadzam się na kontakt telefoniczny w sprawie moich materiałów i programu POWRÓT.
