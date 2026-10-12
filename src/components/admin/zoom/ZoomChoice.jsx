@@ -27,6 +27,7 @@ export default function ZoomChoice({ link, withPassword = false, onSet, error, c
         <div className="border hairline px-4 py-3 text-sm min-w-0">
           <p className="truncate text-foreground/80">{z.link}</p>
           {withPassword && z.haslo && <p className="text-foreground/50 mt-1">Hasło: {z.haslo}</p>}
+          {!withPassword && z.haslo && !/[?&]pwd=/.test(z.link) && <p className="text-[#E8676A] text-xs mt-1">Tutaj klient dostaje sam link, bez osobnego hasła — w Ustawieniach wklej link z wbudowanym hasłem (…?pwd=…).</p>}
           <p className="text-xs text-foreground/45 mt-1">Stały link z Ustawień strony.</p>
           {error && <p role="alert" className="text-sm text-[#E5484D] mt-1.5">{error}</p>}
         </div>
