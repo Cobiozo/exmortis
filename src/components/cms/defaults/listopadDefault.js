@@ -10,7 +10,7 @@ const b = (id, typ, dane, uklad = {}) => ({ id, typ, widoczny: true, dane, uklad
 
 export const LISTOPAD_BLOCKS = [
   b("lis-hero", "hero", { wariant: "standard", etykieta: "1 LISTOPADA · 20:00 (CZASU PL) · ONLINE", linia1: "Ze śmierci —", linia2: "o powrotach, o których świat nie mówi",
-    lead: "Wieczór Wszystkich Świętych. 90 minut o trzech śmierciach i czterech etapach powrotu.",
+    lead: "Wieczór Wszystkich Świętych. Dwie godziny o trzech śmierciach i czterech etapach powrotu — z czasem na Twoje pytania.",
     przyciski: [{ etykieta: "ZAPISZ SIĘ", link: "#zapis", styl: "zloty", strzalka: true }], dopisek: "Bezpłatnie. Link do spotkania przyjdzie e-mailem.",
     tlo: { url: LISTOPAD_COVER }, przyciemnienie: 55 }),
   b("lis-tekst", "tekst", { etykieta: "O SPOTKANIU", tytul: "Wieczór Wszystkich Świętych",
@@ -28,10 +28,10 @@ export const LISTOPAD_BLOCKS = [
     { pytanie: "Ile kosztuje udział?", odpowiedz: "Udział jest bezpłatny." },
     { pytanie: "Gdzie odbywa się spotkanie?", odpowiedz: "Online. Link do spotkania dostaniesz e-mailem po zapisie, razem z plikiem do kalendarza." },
     { pytanie: "Czy muszę włączać kamerę?", odpowiedz: "Nie. Możesz po prostu słuchać." },
-    { pytanie: "Ile trwa spotkanie?", odpowiedz: "Około 90 minut." },
-    { pytanie: "Na jakiej platformie odbywa się spotkanie?", odpowiedz: "TWÓJ FRAGMENT" },
-    { pytanie: "Czy spotkanie będzie nagrywane?", odpowiedz: "TWÓJ FRAGMENT" },
-    { pytanie: "Czy inni uczestnicy zobaczą moje imię lub pytanie?", odpowiedz: "TWÓJ FRAGMENT" }] }, { tlo: "grafit" }),
+    { pytanie: "Ile trwa spotkanie?", odpowiedz: "Około dwóch godzin: 90 minut spotkania i 30 minut na Twoje pytania." },
+    { pytanie: "Na jakiej platformie odbywa się spotkanie?", odpowiedz: "Na Zoomie. Wystarczy przeglądarka albo aplikacja Zoom — nie musisz zakładać konta." },
+    { pytanie: "Czy spotkanie będzie nagrywane?", odpowiedz: "Tak. Nagranie będzie dostępne dla zapisanych przez 7 dni." },
+    { pytanie: "Czy inni uczestnicy zobaczą moje imię lub pytanie?", odpowiedz: "Nie. To spotkanie w trybie webinaru — uczestnicy nie widzą siebie nawzajem. Pytania trafiają tylko do mnie, a jeśli przeczytam któreś na głos, nie podam imienia." }] }, { tlo: "grafit" }),
   b("lis-ramka", "ramka", { tytul: "JEŚLI JEST CI BARDZO CIĘŻKO",
     tresc: "<p>To spotkanie nie zastępuje pomocy specjalistycznej. Jeśli myślisz o odebraniu sobie życia, zadzwoń pod <strong>116 123</strong> (Telefon Zaufania dla Dorosłych) lub <strong>800 70 2222</strong> (całą dobę, bezpłatnie). W zagrożeniu życia: <strong>112</strong>.</p>" }, { odstep: "maly" }),
   b("lis-zapis", "zapis_spotkanie", { etykieta: "ZAPIS", tytul: "Zapisz się na 1 listopada", spotkanie: LISTOPAD_EVENT }),

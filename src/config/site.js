@@ -10,7 +10,7 @@ export const MARKA_OD = "2026-11-02T06:00:00+01:00";
 export const OG_SPOTKANIE = {
   title: "1 listopada, 20:00 — Ze śmierci. O powrotach, o których świat nie mówi",
   pageTitle: "1 listopada, 20:00 — Ze śmierci | exmortis",
-  d: "Bezpłatne spotkanie online w Wieczór Wszystkich Świętych. 90 minut o trzech śmierciach i czterech etapach powrotu. Zapisz się.",
+  d: "Bezpłatne spotkanie online w Wieczór Wszystkich Świętych. Dwie godziny o trzech śmierciach i czterech etapach powrotu. Zapisz się.",
   img: "/exmortis-og-1-listopada-1200x630.png",
   alt: "1 listopada, 20:00 — Ze śmierci. O powrotach, o których świat nie mówi",
 };

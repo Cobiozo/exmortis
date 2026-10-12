@@ -1,7 +1,7 @@
 export const PRE_UNTIL = new Date("2026-11-01T21:30:00+01:00").getTime();
 export const PRE = {
   title: "1 listopada, 20:00 — Ze śmierci. O powrotach, o których świat nie mówi",
-  d: "Bezpłatne spotkanie online w Wieczór Wszystkich Świętych. 90 minut o trzech śmierciach i czterech etapach powrotu. Zapisz się.",
+  d: "Bezpłatne spotkanie online w Wieczór Wszystkich Świętych. Dwie godziny o trzech śmierciach i czterech etapach powrotu. Zapisz się.",
 };
 
 export const PAGES = {
