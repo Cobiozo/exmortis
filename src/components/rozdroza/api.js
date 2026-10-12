@@ -19,12 +19,14 @@ const snaps = new Map();
 const call = (p) => base44.functions.invoke("rozdroza", p).then((r) => r.data);
 
 export const cachedList = () => list?.items || store.get(LIST_KEY)?.items || null;
+// Data najbliższej zaplanowanej historii (bez tytułu) — tylko jeśli wciąż w przyszłości.
+export const nextAt = () => { const v = (list || store.get(LIST_KEY))?.next_at; return v && Date.parse(v) > Date.now() ? v : null; };
 
 export async function listStories({ fresh = false } = {}) {
   if (!fresh && list && Date.now() - list.at < 300000) return list.items;
   try {
     const d = await call({ action: "list" });
-    list = { at: Date.now(), items: d.items || [] };
+    list = { at: Date.now(), items: d.items || [], next_at: d.next_at || null };
     store.set(LIST_KEY, list);
     return list.items;
   } catch (e) {
