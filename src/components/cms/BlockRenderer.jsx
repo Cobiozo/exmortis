@@ -33,7 +33,7 @@ export default function BlockRenderer({ blocks = [], editable, selectedId, onSel
         );
         return (
           <div key={b.id} data-block={b.id} id={u.kotwica || undefined}
-            className={`${DEVICE[u.urzadzenia] || ""} ${editable ? `relative cursor-pointer outline-offset-[-2px] hover:outline hover:outline-1 hover:outline-[#C9A24A]/60 ${selectedId === b.id ? "outline outline-2 outline-[#C9A24A]" : ""}` : ""}`}
+            className={`${DEVICE[u.urzadzenia] || ""} ${u.kotwica ? "scroll-mt-20" : ""} ${editable ? `relative cursor-pointer outline-offset-[-2px] hover:outline hover:outline-1 hover:outline-[#C9A24A]/60 ${selectedId === b.id ? "outline outline-2 outline-[#C9A24A]" : ""}` : ""}`}
             onClickCapture={editable ? (e) => { if (e.target.closest("[data-tools]")) return; e.preventDefault(); e.stopPropagation(); onSelect?.(b.id); } : undefined}>
             {editable && selectedId === b.id && tools?.(b)}
             {warn}
