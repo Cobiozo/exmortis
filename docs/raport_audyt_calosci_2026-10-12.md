@@ -36,3 +36,24 @@ Metoda: Playwright + Chromium w sandboxie, lokalny build z bieżącego kodu, ż�
 - Nazwy produktów z cudzysłowem zamkniętym apostrofem lub prostym: „Wracam inny', „30 dni ciszy', „Cztery etapy powrotu', „Próg', „Bieszczady…', Audiobook — poprawnie „…”.
 - Karta podarunkowa ma kategorię „ebook”.
 - Promocja z przekreśloną ceną: przepisy (Omnibus) wymagają podania najniższej ceny z 30 dni przed obniżką — do decyzji prawnej.
+
+## Etap 2 — kasa i płatności (przed sprzedażą od 16.11)
+Testy: funkcje płatności uruchomione lokalnie (Deno) z atrapą bazy i PayU; kasa w przeglądarce z atrapą odpowiedzi.
+
+### Naprawione
+- Powiadomienia PayU: pierwsze COMPLETED przejmowane atomowo (UPDATE … RETURNING) — równoległe i ponowione powiadomienia nie dublują dostępu, maili ani pakietu sesji. Wcześniej: dwa COMPLETED naraz = dwa razy wydłużony dostęp i dwa maile.
+- Spóźnione PENDING nie cofa już COMPLETED/CANCELED (wcześniej cofało i kolejne COMPLETED nadawało dostęp drugi raz).
+- Błąd przy nadawaniu dostępu cofa przejęcie i zwraca 500 → PayU ponawia; nadawanie dostępu idempotentne po numerze zamówienia.
+- Podpis PayU: obsługa MD5, SHA-1 i SHA-256 (wg nagłówka).
+- Kod rabatowy zużywany dopiero po opłaceniu (porzucona płatność nie zabiera użycia). Podgląd rabatu liczy od ceny promocyjnej, jak kasa.
+- Kasa przy niedziałającym PayU pokazywała „Przyjęte — dostęp wyślę mailem” i czyściła koszyk, choć zamówienie nie powstawało. Teraz jasny komunikat, koszyk zostaje.
+- Powrót z PayU: strona sprawdza stan zamówienia (do 60 s); przerwana/odrzucona płatność = „Płatność nie doszła do skutku” + powrót do kasy z koszykiem. Koszyk czyszczony dopiero po potwierdzeniu.
+- Kasa odświeża ceny i dostępność przy wejściu (koniec promocji, produkt „wkrótce”) i informuje o zmianie. Ilość maks. 20 jak na serwerze.
+- Mail potwierdzenia: numer zamówienia, kwoty w formacie „77,00 zł”, linki do Regulaminu i formularza odstąpienia, zabezpieczenie imienia/nazw przed wstrzyknięciem HTML. Usunięte „wyślę w kolejnej wiadomości” (dostęp jest w tym samym mailu).
+- Mail do prowadzącego o każdym opłaconym zamówieniu (adres z Danych firmy / SMTP).
+- Formularz odstąpienia: limit 5 zgłoszeń/h z jednego IP (ochrona przed wysyłką potwierdzeń na cudze adresy), bez blokowania przy błędzie technicznym. Nowy typ „odstapienie” w SecurityLog.
+- Koszyk: większe przyciski +/−/usuń z etykietami.
+
+### Do decyzji (Dawid / księgowość)
+- Faktury: aplikacja ich nie wystawia ani nie zbiera NIP. Do ustalenia z księgową (KSeF, faktura na żądanie), ewentualnie pole „NIP do faktury” w kasie.
+- PayU: klucze produkcyjne + test w sandboxie przed 16.11 (adres powiadomień: https://exmortis.pl/functions/payuNotification).
