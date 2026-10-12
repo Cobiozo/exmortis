@@ -1,0 +1,58 @@
+{
+  "name": "NotificationState",
+  "type": "object",
+  "properties": {
+    "user_id": {
+      "type": "string",
+      "description": "Id konta (User)"
+    },
+    "seen_at": {
+      "type": "string",
+      "format": "date-time",
+      "description": "Do tej chwili wszystko uznane za przeczytane (\u201eOznacz wszystkie\u201d)"
+    },
+    "read": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "Klucze pojedynczo przeczytanych powiadomie\u0144 (najnowsze 200)"
+    },
+    "hidden": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "Klucze ukrytych powiadomie\u0144 (najnowsze 200)"
+    },
+    "prefs": {
+      "type": "object",
+      "description": "Kategorie: nowosci, promocje, spotkania (true/false); moje sprawy i og\u0142oszenia zawsze w\u0142\u0105czone"
+    }
+  },
+  "required": [
+    "user_id"
+  ],
+  "rls": {
+    "read": {
+      "user_condition": {
+        "role": "admin"
+      }
+    },
+    "create": {
+      "user_condition": {
+        "role": "admin"
+      }
+    },
+    "update": {
+      "user_condition": {
+        "role": "admin"
+      }
+    },
+    "delete": {
+      "user_condition": {
+        "role": "admin"
+      }
+    }
+  }
+}
