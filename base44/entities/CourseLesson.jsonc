@@ -24,6 +24,10 @@
     "video_name": {
       "type": "string"
     },
+    "video_url": {
+      "type": "string",
+      "description": "Adres wideo spoza aplikacji: własny serwer (https, plik mp4/webm, domena z listy w ustawieniach biblioteki), Vimeo, YouTube albo Bunny Stream"
+    },
     "duration_min": {
       "type": "number"
     },

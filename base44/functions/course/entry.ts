@@ -1,6 +1,8 @@
 import { createClientFromRequest } from "npm:@base44/sdk@0.8.44";
 import { isActive } from "../../shared/access.ts";
 import { checkVideoAbuse } from "../../shared/videoGuard.ts";
+import { normalizeServerVideo, normalizeVideo } from "../../shared/libraryMedia.ts";
+import { libSettings } from "../../shared/libraryAccess.ts";
 
 // Kurs klienta: spis lekcji, podpisany link do wideo (po sprawdzeniu dostępu), postęp.
 export default async function (req) {
@@ -27,7 +29,7 @@ export default async function (req) {
         valid_until: a.valid_until || null,
         lessons: lessons.map((l) => ({
           id: l.id, module: l.module || "", title: l.title, description: l.description || "",
-          duration_min: l.duration_min || null, has_video: !!l.video_uri,
+          duration_min: l.duration_min || null, has_video: !!(l.video_uri || l.video_url),
           position_s: byL.get(l.id)?.position_s || 0, completed: !!byL.get(l.id)?.completed,
         })),
       });
@@ -39,7 +41,16 @@ export default async function (req) {
     }
 
     if (body.action === "play") {
-      if (!lesson.video_uri) return Response.json({ error: "Wideo jest przygotowywane" }, { status: 404 });
+      if (!lesson.video_uri && !lesson.video_url) return Response.json({ error: "Wideo jest przygotowywane" }, { status: 404 });
+      // Adres zewnętrzny sprawdzany przy każdym odtworzeniu (zmiana listy domen działa od razu).
+      let external = null;
+      if (!lesson.video_uri) {
+        const s = await libSettings(base44).catch(() => null);
+        const server = normalizeServerVideo(lesson.video_url, s?.video_domains || []);
+        const embed = server ? null : normalizeVideo(lesson.video_url);
+        if (!server && !embed) return Response.json({ error: "Wideo tej lekcji jest chwilowo niedostępne." }, { status: 502 });
+        external = server ? { url: server } : { embed: embed.embed, provider: embed.provider };
+      }
       const ip = (req.headers.get("x-forwarded-for") || "").split(",")[0].trim();
       const blocked = await checkVideoAbuse(base44, email, ip);
       if (blocked) return Response.json({ error: blocked }, { status: 429 });
@@ -52,6 +63,7 @@ export default async function (req) {
         user_email: email, product_id: pid, lesson_id: lesson.id, lesson_title: lesson.title,
         ip, user_agent: (req.headers.get("user-agent") || "").slice(0, 300),
       });
+      if (external) return Response.json({ ...external, license: a.id.slice(-8).toUpperCase() });
       const { signed_url } = await base44.asServiceRole.integrations.Core.CreateFileSignedUrl({
         file_uri: lesson.video_uri, expires_in: 3600,
       });
