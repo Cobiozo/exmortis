@@ -30,7 +30,7 @@ export default function HeroBlock({ d }) {
         </h1>
         {d.lead && <p className="no-hyph mt-8 text-lg md:text-2xl text-foreground/75 font-light">{nbsp(d.lead)}</p>}
         {d.podlead && <p className="no-hyph mt-2 text-sm md:text-base text-foreground/50 font-light">{d.podlead}</p>}
-        <Buttons list={d.przyciski} className="mt-12 justify-center" />
+        <Buttons list={d.przyciski} className="mt-12 justify-center" pion={d.przyciski_pion} />
         <Dopisek t={d.dopisek} />
       </div>
     </section>
@@ -48,7 +48,7 @@ export default function HeroBlock({ d }) {
         </h1>
         {d.lead && <p className="no-hyph mt-8 text-lg md:text-xl text-foreground/70 max-w-2xl leading-relaxed">{nbsp(d.lead)}</p>}
         {d.podlead && <p className="no-hyph mt-3 text-foreground/50 max-w-2xl">{d.podlead}</p>}
-        <Buttons list={d.przyciski} className="mt-10" />
+        <Buttons list={d.przyciski} className="mt-10" pion={d.przyciski_pion} />
         <Dopisek t={d.dopisek} />
       </div>
     </section>
