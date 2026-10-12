@@ -2,7 +2,7 @@ import React, { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { Check, Clock } from "lucide-react";
 import { useAuth } from "@/lib/AuthContext";
-import { listStories, cachedList, CATEGORY_LABEL } from "./api";
+import { listStories, cachedList, nextAt, CATEGORY_LABEL } from "./api";
 import { readProgress } from "./engine";
 import RzImage from "./RzImage";
 import RzProblem from "./RzProblem";
@@ -23,6 +23,8 @@ export default function RzLibrary() {
   if (err) return <RzProblem text={err} onRetry={load} />;
   const shown = (items || []).filter((s) => !cat || s.category === cat);
   const cats = new Set((items || []).map((s) => s.category));
+  const next = items ? nextAt() : null;
+  const nextLine = next && <p className="text-sm text-foreground/55 mt-10 border-t hairline pt-6">Kolejna historia pojawi się {new Date(next).toLocaleString("pl-PL", { timeZone: "Europe/Warsaw", weekday: "long", day: "numeric", month: "long" })}.</p>;
 
   return (
     <div>
@@ -45,7 +47,7 @@ export default function RzLibrary() {
           {[0, 1, 2, 3].map((i) => <div key={i} className="aspect-[2/3] bg-[#141416] animate-pulse motion-reduce:animate-none" />)}
         </div>
       ) : !items.length ? (
-        <p className="border hairline p-8 text-foreground/65 max-w-xl">Pierwsze historie pojawią się tu wkrótce.</p>
+        <p className="border hairline p-8 text-foreground/65 max-w-xl">{next ? <>Pierwsza historia pojawi się tu {new Date(next).toLocaleString("pl-PL", { timeZone: "Europe/Warsaw", weekday: "long", day: "numeric", month: "long" })}.</> : "Pierwsze historie pojawią się tu wkrótce."}</p>
       ) : (
         <ul className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-x-4 gap-y-10 md:gap-x-6">
           {shown.map((s, i) => {
@@ -58,6 +60,7 @@ export default function RzLibrary() {
                   <div className="relative">
                     <RzImage url={s.cover_portrait_url} alt="" ratio="aspect-[2/3]" eager={i < 2} sizes="(min-width: 1024px) 280px, (min-width: 768px) 30vw, 46vw" className="border hairline group-hover:border-[#C9A24A]/60 transition-colors" />
                     {ended && <span className="absolute top-2 left-2 technical text-[9px] bg-[#0A0A0B]/80 text-foreground/70 px-2 py-1 flex items-center gap-1"><Check className="h-3 w-3" /> UKOŃCZONO</span>}
+                    {!ended && s.is_new && <span className="absolute top-2 left-2 technical text-[9px] bg-[#0A0A0B]/85 gold-text border border-[#C9A24A]/50 px-2 py-1">NOWA</span>}
                   </div>
                   {s.category && <p className="technical text-[9px] text-[#E8676A]/90 mt-3">{(CATEGORY_LABEL[s.category] || "").toUpperCase()}</p>}
                   <h2 className="shop-heading text-xl text-[#F5EFE1] mt-1 leading-tight group-hover:text-[#C9A24A]">{s.title}</h2>
@@ -72,6 +75,7 @@ export default function RzLibrary() {
           })}
         </ul>
       )}
+      {items && items.length > 0 && nextLine}
     </div>
   );
 }
