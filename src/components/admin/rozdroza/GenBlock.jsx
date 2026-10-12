@@ -13,6 +13,13 @@ export default function GenBlock({ kind, id, url, candidate, prompt, story, onSa
   const [msg, setMsg] = useState("");
   const [err, setErr] = useState("");
   const [copied, setCopied] = useState(false);
+  const [confirmPrev, setConfirmPrev] = useState(false);
+  // Zastąpienie zatwierdzonego zdjęcia obrazem z poprzedniej sceny — tylko po drugim kliknięciu.
+  const usePrev = () => {
+    if (url && !confirmPrev) { setConfirmPrev(true); return; }
+    setConfirmPrev(false);
+    act("prev", () => rz("use_previous", { id, replace: !!url }), "Użyto obrazu z poprzedniej sceny.");
+  };
   const act = async (name, fn, ok) => {
     setBusy(name); setErr(""); setMsg("");
     try { await fn(); if (ok) setMsg(ok); await onChanged?.(); } catch (e) { setErr(e.message); }
@@ -33,7 +40,8 @@ export default function GenBlock({ kind, id, url, candidate, prompt, story, onSa
           {busy === "gen" ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Sparkles className="h-3.5 w-3.5" />} {busy === "gen" ? "GENERUJĘ… (DO MINUTY)" : "GENERUJ KADR"}
         </button>
         <button type="button" className={btn} onClick={copy} disabled={!p.trim()}>{copied ? <Check className="h-3.5 w-3.5" /> : <Copy className="h-3.5 w-3.5" />} {copied ? "SKOPIOWANO" : "KOPIUJ PROMPT"}</button>
-        {allowPrevious && <button type="button" className={btn} disabled={!!busy} onClick={() => act("prev", () => rz("use_previous", { id }), "Użyto obrazu z poprzedniej sceny.")}><CornerLeftUp className="h-3.5 w-3.5" /> UŻYJ ZDJĘCIA Z POPRZEDNIEJ SCENY</button>}
+        {allowPrevious && <button type="button" className={`${btn} ${confirmPrev ? "!border-[#E8C547] !text-[#E8C547]" : ""}`} disabled={!!busy} onClick={usePrev} onBlur={() => setConfirmPrev(false)}>
+          <CornerLeftUp className="h-3.5 w-3.5" /> {confirmPrev ? "NA PEWNO ZASTĄPIĆ OBECNE ZDJĘCIE?" : "UŻYJ ZDJĘCIA Z POPRZEDNIEJ SCENY"}</button>}
       </div>
       {candidate && (
         <div className="border border-[#C9A24A]/50 p-3 space-y-2">
