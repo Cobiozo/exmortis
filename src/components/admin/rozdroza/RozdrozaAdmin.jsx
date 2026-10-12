@@ -2,6 +2,7 @@ import React, { useEffect, useState } from "react";
 import { Loader2, Upload } from "lucide-react";
 import StoryEditor from "./StoryEditor";
 import AiSettings from "./AiSettings";
+import SchedulePlan from "./SchedulePlan";
 import { rz, statusBadge } from "./rzApi";
 
 const EXAMPLE = `{
@@ -90,6 +91,8 @@ export default function RozdrozaAdmin() {
       </section>
 
       <AiSettings />
+
+      <SchedulePlan items={items} onDone={load} />
 
       <section>
         <h3 className="shop-heading text-xl text-[#F5EFE1] mb-4">Historie</h3>
