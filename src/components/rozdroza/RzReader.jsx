@@ -7,6 +7,7 @@ import { loadStory, loadPreview } from "./api";
 import * as E from "./engine";
 import RzImage, { prefetchImages } from "./RzImage";
 import RzProblem from "./RzProblem";
+import "./rozdroza.css";
 
 const reduced = () => typeof window !== "undefined" && window.matchMedia?.("(prefers-reduced-motion: reduce)").matches;
 const HTML_RE = /<\/?(p|br|em|strong|i|b|blockquote|span)\b/i;
@@ -109,7 +110,7 @@ export default function RzReader({ previewId = null }) {
   );
   if (!st || !scene || st.error) return (
     <RzProblem text={st?.error ? "W tej historii brakuje kolejnej sceny. Możesz cofnąć się o krok albo wrócić do biblioteki." : "Nie udało się otworzyć sceny."}
-      extra={st && st.stack.length > 1 ? <button type="button" onClick={() => setSt((s) => E.back(snap, { ...s, error: undefined }))} className="btn-relic">COFNIJ</button> : <button type="button" onClick={restart} className="btn-relic">OD POCZĄTKU</button>} />
+      extra={st?.error ? <button type="button" onClick={() => setSt((s) => { const { error, ...rest } = s; void error; return rest; })} className="btn-relic">WRÓĆ DO SCENY</button> : <button type="button" onClick={restart} className="btn-relic">OD POCZĄTKU</button>} />
   );
 
   const libraryHref = data.preview ? "/admin/rozdroza" : "/konto/rozdroza/biblioteka";
