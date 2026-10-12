@@ -2,19 +2,28 @@ import { createClientFromRequest } from "npm:@base44/sdk@0.8.44";
 
 // ROZDROŻA dla zalogowanego klienta: tylko opublikowane, sprawdzone kopie historii (nigdy szkice).
 // Biblioteka dostaje same metadane; pełny tekst — dopiero po otwarciu konkretnej historii.
+// Historia z zaplanowaną datą (visible_from) jest niewidoczna do tej chwili — liczone zegarem serwera przy każdym zapytaniu.
 // Wybory czytelnika nie trafiają na serwer.
-let LIST = { at: 0, items: [], full: new Map() };
+let LIST = { at: 0, rows: [] };
+const WEEK = 7 * 24 * 3600 * 1000;
 
 async function published(base44) {
-  if (Date.now() - LIST.at < 60000) return LIST;
+  if (Date.now() - LIST.at < 60000) return LIST.rows;
   const rows = await base44.asServiceRole.entities.RozdrozaStory.filter({ status: "published" }, "sort_order", 200);
-  const ok = rows.filter((r) => r?.published?.meta && r?.published?.snapshot?.scenes && r.published.snapshot.start);
   LIST = {
     at: Date.now(),
-    items: ok.map((r) => r.published.meta),
-    full: new Map(ok.map((r) => [r.published.meta.slug, r.published])),
+    rows: rows.filter((r) => r?.published?.meta && r?.published?.snapshot?.scenes && r.published.snapshot.start)
+      .map((r) => ({ p: r.published, from: r.visible_from ? Date.parse(r.visible_from) || 0 : 0 })),
   };
-  return LIST;
+  return LIST.rows;
+}
+
+// Widoczne teraz + data najbliższej zaplanowanej (bez tytułu — zapowiedź nie zdradza, co to będzie).
+function visible(rows) {
+  const now = Date.now();
+  const items = rows.filter((r) => r.from <= now).map((r) => ({ ...r.p.meta, ...(r.from && now - r.from < WEEK ? { is_new: true } : {}) }));
+  const next = rows.filter((r) => r.from > now).map((r) => r.from).sort((a, b) => a - b)[0];
+  return { items, next_at: next ? new Date(next).toISOString() : null };
 }
 
 export default async function (req) {
@@ -26,15 +35,14 @@ export default async function (req) {
     const body = await req.json().catch(() => ({}));
 
     if (body.action === "list") {
-      const l = await published(base44);
-      return Response.json({ items: l.items });
+      return Response.json(visible(await published(base44)));
     }
 
     if (body.action === "story") {
       const slug = String(body.slug || "").slice(0, 80);
-      const l = await published(base44);
-      const p = l.full.get(slug);
-      if (!p) return Response.json({ error: "Ta historia nie jest dostępna." }, { status: 404 });
+      const r = (await published(base44)).find((x) => x.p.meta.slug === slug);
+      if (!r || r.from > Date.now()) return Response.json({ error: "Ta historia nie jest dostępna." }, { status: 404 });
+      const p = r.p;
       // Czytnik ma już tę wersję w pamięci przeglądarki → bez ponownego przesyłania tekstu.
       if (Number(body.have) && Number(body.have) === Number(p.meta.version)) return Response.json({ meta: p.meta, same: true });
       return Response.json({ meta: p.meta, snapshot: p.snapshot });
