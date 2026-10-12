@@ -19,16 +19,16 @@ export default function TrustFooter() {
           </a>
           .
         </p>
-        <div className="flex items-center justify-center gap-4 technical text-[9px] text-foreground/30 flex-wrap">
-          <a href="#" className="hover:text-foreground/60 transition-colors">
+        <div className="flex items-center justify-center gap-x-3 technical text-[10px] text-foreground/45 flex-wrap">
+          <Link to="/regulamin" className="inline-block py-2.5 hover:text-foreground/75 transition-colors">
             REGULAMIN
-          </a>
-          <span>·</span>
-          <a href="#" className="hover:text-foreground/60 transition-colors">
-            POLITYKA ZWROTÓW
-          </a>
-          <span>·</span>
-          <Link to="/skarbiec/karta-podarunkowa" className="hover:text-foreground/60 transition-colors">
+          </Link>
+          <span aria-hidden="true">·</span>
+          <Link to="/odstapienie" className="inline-block py-2.5 hover:text-foreground/75 transition-colors">
+            ZWROTY I ODSTĄPIENIE
+          </Link>
+          <span aria-hidden="true">·</span>
+          <Link to="/skarbiec/karta-podarunkowa" className="inline-block py-2.5 hover:text-foreground/75 transition-colors">
             KARTY PODARUNKOWE
           </Link>
         </div>
