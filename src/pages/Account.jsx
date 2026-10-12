@@ -10,7 +10,7 @@ import DailyThought from "@/components/account/DailyThought";
 import AccountAnnouncements from "@/components/account/announce/AccountAnnouncements";
 import MySessions from "@/components/account/sessions/MySessions";
 import MyEvents from "@/components/account/events/MyEvents";
-import { useNavigate } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
 import { listStories, cachedList } from "@/components/rozdroza/api";
 import { obok } from "@/components/obok/obokApi";
 import { libBundle } from "@/components/account/library/libApi";
@@ -26,6 +26,9 @@ const TAIL = [["obok", "Obok"], ["zakupy", "Zakupy"], ["ustawienia", "Ustawienia
 export default function Account() {
   useNoIndex();
   const [tab, setTab] = useState(() => new URLSearchParams(window.location.search).get("tab") || "produkty");
+  // Link z dzwoneczka (/konto?tab=…) zmienia zakładkę także wtedy, gdy konto jest już otwarte.
+  const { search } = useLocation();
+  useEffect(() => { const t = new URLSearchParams(search).get("tab"); if (t) setTab(t); }, [search]);
   const [me, setMe] = useState(null);
   const [hasObok, setHasObok] = useState(false);
   const [cfg, setCfg] = useState(null);
