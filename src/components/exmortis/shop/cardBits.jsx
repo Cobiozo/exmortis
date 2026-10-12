@@ -68,10 +68,13 @@ export function PriceBlock({ p }) {
       </span>
     );
   }
+  if (priceOnRequest(p)) {
+    return <span className="technical text-[10px] text-foreground/60">PO ROZMOWIE</span>;
+  }
   if (p.price_regular != null) {
     return <span>{p.price_regular} zł</span>;
   }
-  return null;
+  return <span>{p.price} zł</span>;
 }
 
 export function productHref(p) {
@@ -123,6 +126,14 @@ export function ProductButton({ p, onWaitlist }) {
     return (
       <Link to={`/skarbiec/${p.slug}`} className={cls}>
         Pobierz <ArrowRight className="h-3.5 w-3.5" />
+      </Link>
+    );
+  }
+
+  if (priceOnRequest(p)) {
+    return (
+      <Link to={`/skarbiec/${p.slug}`} className={cls}>
+        Zobacz <ArrowRight className="h-3.5 w-3.5" />
       </Link>
     );
   }
