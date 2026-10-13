@@ -1,6 +1,10 @@
 import base44 from "@base44/vite-plugin"
 import react from '@vitejs/plugin-react'
 import { defineConfig } from 'vite'
+import fs from "fs"
+import path from "path"
+import { fileURLToPath } from "url"
+const __dirname = path.dirname(fileURLToPath(import.meta.url))
 import { SITE_URL, OG_SPOTKANIE, OG_MARKA, metaMode } from './src/config/site.js'
 
 // Wspólny nagłówek dla robotów: wstawiany przy publikacji wg src/config/site.js (bez og:url).
@@ -67,6 +71,34 @@ function exmJoinFallback() {
 }
 
 // https://vite.dev/config/
+// Szybki start strony (wydajność — PageSpeed):
+// 1) czcionki (@font-face) w środku HTML zamiast osobnego pliku blokującego wyświetlanie,
+// 2) wcześniejsze połączenie z serwerem zdjęć,
+// 3) do premiery: na „/” i „/1-listopada” gość od razu widzi nagłówek strony i główne zdjęcie (gotowy HTML
+//    z src/content/landingShell.html), zanim załaduje się aplikacja — React podmienia go identyczną treścią.
+//    Po dacie premiery (PRE_END z src/lib/usePrelaunch.js) mechanizm wyłącza się sam.
+//    Po zmianie nagłówka strony 1 listopada: odśwież plik poleceniem z docs/tech/landing-shell.mjs.
+function exmFastStart() {
+  const read = (f) => { try { return fs.readFileSync(path.resolve(__dirname, f), "utf8"); } catch { return ""; } };
+  return {
+    name: "exm-fast-start",
+    transformIndexHtml(html) {
+      let out = html;
+      const fonts = read("public/fonts/fonts.css");
+      if (fonts) out = out.replace('<link rel="stylesheet" href="/fonts/fonts.css" />', `<style>${fonts.replace(/\/\*[^*]*\*\//g, "").replace(/\s+/g, " ")}</style>`);
+      out = out.replace("<!--EXM_META-->", '<!--EXM_META-->\n    <link rel="preconnect" href="https://media.base44.com" />');
+      const shell = read("src/content/landingShell.html").trim();
+      const end = (read("src/lib/usePrelaunch.js").match(/PRE_END = new Date\("([^"]+)"\)/) || [])[1];
+      if (!shell || !end || !/<img /.test(shell)) return out;
+      const attr = (n) => (shell.match(new RegExp(`<img [^>]*?${n}="([^"]+)"`)) || [])[1] || "";
+      const cond = `(location.pathname==="/"||location.pathname==="/1-listopada")&&Date.now()<${Date.parse(end)}&&!localStorage.getItem("base44_access_token")`;
+      const head = `<script>try{if(${cond}){var l=document.createElement("link");l.rel="preload";l.as="image";l.href=${JSON.stringify(attr("src"))};l.setAttribute("imagesrcset",${JSON.stringify(attr("srcset"))});l.setAttribute("imagesizes",${JSON.stringify(attr("sizes") || "100vw")});l.setAttribute("fetchpriority","high");document.head.appendChild(l)}}catch(e){}</script>`;
+      const body = `<template id="exm-shell">${shell}</template>\n    <script>try{if(${cond}){var r=document.getElementById("root");r.appendChild(document.getElementById("exm-shell").content.cloneNode(true));r.querySelectorAll("[data-shell-until]").forEach(function(e){var t=e.getAttribute("data-shell-until");if(Date.now()>=Date.parse(/[zZ+]|-\\d\\d:\\d\\d$/.test(t)?t:t+"+02:00"))e.remove()})}}catch(e){}</script>`;
+      return out.replace("</head>", `  ${head}\n  </head>`).replace('<div id="root"></div>', `<div id="root"></div>\n    ${body}`);
+    },
+  };
+}
+
 export default defineConfig({
   plugins: [
     base44({
@@ -80,6 +112,7 @@ export default defineConfig({
     }),
     react(),
     exmMeta(),
+    exmFastStart(),
     exmJoinFallback(),
   ]
 });
