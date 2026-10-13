@@ -1,6 +1,6 @@
 import React, { useEffect, useRef, useState } from "react";
 import { Loader2, Sparkles, Square, Check, X, CornerLeftUp, Copy } from "lucide-react";
-import { rz, isStartScene, thumb, composePrompt } from "./rzApi";
+import { rz, thumb, composePrompt } from "./rzApi";
 
 const btn = "inline-flex items-center gap-1.5 border hairline px-3 py-2 technical text-[9px] text-foreground/70 hover:text-[#C9A24A] hover:border-[#C9A24A] disabled:opacity-40";
 // Błędy, po których nie ma sensu generować kolejnych kadrów (brak środków, klucz, weryfikacja).
@@ -22,7 +22,7 @@ export default function BulkImages({ id, story, scenes, onChanged }) {
       ["cover_landscape", "okładka 16:9", story.cover_landscape_url, story.cover_landscape_candidate, story.cover_landscape_prompt]]
       .filter(([, , url, cand, p]) => !url && !cand && String(p || "").trim())
       .map(([kind, label]) => ({ kind, id, label })),
-    ...scenes.filter((s) => isStartScene(s.scene_key) && !s.image_url && !s.image_candidate_url && String(s.image_prompt || "").trim())
+    ...scenes.filter((s) => !s.image_url && !s.image_candidate_url && String(s.image_prompt || "").trim())
       .map((s) => ({ kind: "scene", id: s.id, label: s.scene_key })),
   ];
   const pending = [
@@ -75,7 +75,7 @@ export default function BulkImages({ id, story, scenes, onChanged }) {
     const items = [
       ["Okładka pionowa 2:3", composePrompt("cover_portrait", story.cover_portrait_prompt, story), story.cover_portrait_prompt],
       ["Okładka pozioma 16:9", composePrompt("cover_landscape", story.cover_landscape_prompt, story), story.cover_landscape_prompt],
-      ...scenes.filter((s) => isStartScene(s.scene_key)).map((s) => [`Scena ${s.scene_key} (16:9)`, composePrompt("scene", s.image_prompt, story), s.image_prompt]),
+      ...scenes.map((s) => [`Scena ${s.scene_key} (16:9)`, composePrompt("scene", s.image_prompt, story), s.image_prompt]),
     ].filter(([, , base]) => String(base || "").trim());
     const text = `Wygeneruj po kolei ${items.length} obrazów do historii „${story.title}”. Jeden obraz na odpowiedź — po każdym poczekaj, aż napiszę „dalej”. We wszystkich obrazach zachowaj te same postacie (twarze, wiek, fryzury, stroje). Żadnego tekstu na obrazach.\n\n`
       + items.map(([label, p], i) => `${i + 1}) ${label}:\n${p}`).join("\n\n");
