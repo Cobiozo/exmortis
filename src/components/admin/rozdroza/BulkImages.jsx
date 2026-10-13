@@ -31,10 +31,20 @@ export default function BulkImages({ id, story, scenes, onChanged }) {
     ...scenes.filter((s) => s.image_candidate_url).map((s) => ({ kind: "scene", id: s.id, label: `${s.scene_key} · ${s.title || ""}`, url: s.image_candidate_url, has: !!s.image_url })),
   ];
   const noImage = scenes.filter((s) => !s.image_url).length;
+  const [count, setCount] = useState(9);
+  const n = Math.max(1, Math.min(count || 1, targets.length));
+  // Najpierw okładki, potem sceny rozłożone równomiernie — reszta dostaje obraz z najbliższej poprzedniej sceny.
+  const pick = () => {
+    const covers = targets.filter((t) => t.kind !== "scene").slice(0, n);
+    const sc = targets.filter((t) => t.kind === "scene");
+    const k = Math.min(n - covers.length, sc.length);
+    const chosen = k <= 0 ? [] : Array.from({ length: k }, (_, i) => sc[Math.floor((i * sc.length) / k)]);
+    return [...covers, ...chosen];
+  };
 
   const generateAll = async () => {
     setConfirm(false); setMsg(""); stop.current = false;
-    const list = targets.slice();
+    const list = pick();
     const st = { done: 0, total: list.length, current: "", errors: [] };
     setRun({ ...st });
     for (const t of list) {
@@ -94,14 +104,23 @@ export default function BulkImages({ id, story, scenes, onChanged }) {
         Każdy kadr czeka na Twoje zatwierdzenie. Generuje: <span className="text-foreground/85">{ai ? provider : "…"}</span>.
       </p>
       <div className="flex flex-wrap items-center gap-3">
+        {!running && !confirm && targets.length > 0 && (
+          <label className="flex items-center gap-2 text-xs text-foreground/60">Ile kadrów:
+            <input type="number" min={1} max={targets.length} value={count} onChange={(e) => setCount(Number(e.target.value))}
+              className="w-16 bg-transparent border hairline px-2 py-1 text-foreground" />
+            <span className="flex gap-1">{[3, 6, 9, targets.length].filter((v, i, a) => v <= targets.length && a.indexOf(v) === i).map((v) => (
+              <button key={v} type="button" onClick={() => setCount(v)} className={`border hairline px-2 py-1 technical text-[9px] ${n === v ? "text-[#C9A24A] border-[#C9A24A]" : ""}`}>{v === targets.length ? `WSZYSTKIE ${v}` : v}</button>
+            ))}</span>
+          </label>
+        )}
         {!running && !confirm && (
           <button type="button" className="btn-relic !px-4 !py-2 text-[10px] disabled:opacity-40" disabled={!targets.length || !!busy} onClick={() => setConfirm(true)}>
-            <Sparkles className="h-4 w-4" /> GENERUJ KADRY STARTOWE ({targets.length})
+            <Sparkles className="h-4 w-4" /> GENERUJ {n} Z {targets.length}
           </button>
         )}
         {confirm && (
           <span className="flex flex-wrap items-center gap-2 border border-[#E8C547]/60 p-2">
-            <span className="text-xs text-[#E8C547]">{targets.length} generowań ({ai?.provider === "openai" ? "płatne z konta OpenAI" : "z kredytów AI Base44"}). Potwierdzasz?</span>
+            <span className="text-xs text-[#E8C547]">{n} generowań ({ai?.provider === "openai" ? "płatne z konta OpenAI" : "z kredytów AI Base44"}). Potwierdzasz?</span>
             <button type="button" className="btn-relic !px-3 !py-1.5 text-[10px]" onClick={generateAll}>TAK, GENERUJ</button>
             <button type="button" className="btn-ghost !px-3 !py-1.5 text-[10px]" onClick={() => setConfirm(false)}>ANULUJ</button>
           </span>
