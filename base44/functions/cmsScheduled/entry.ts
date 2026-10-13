@@ -4,6 +4,7 @@ import { runSql, escStr } from "../../shared/supabase.ts";
 import { ensureWaitlistCols, notifyBatch } from "../../shared/waitlist.ts";
 import { requireMail } from "../../shared/smtp.ts";
 import { clearSnap } from "../../shared/snapshot.ts";
+import { unpaidReminders } from "../../shared/unpaidReminder.ts";
 
 // Higiena listy oczekujących (raz na dobę na instancję): 90 dni po powiadomieniu, a bez powiadomienia po 12 miesiącach.
 let lastHygiene = "";
@@ -63,7 +64,9 @@ export default async function(req) {
     const prices = await recordPrices(base44).catch(() => -1);
     await waitlistHygiene(base44).catch(() => {});
     const released = await releaseDue(base44).catch((e) => { console.error("premiera:", e.message); return []; });
-    return Response.json({ ok: true, published: done, prices, released });
+    const ready = await requireMail(base44).then(() => true).catch(() => false);
+    const reminded = ready ? await unpaidReminders(base44).catch((e) => { console.error("przypomnienia:", e.message); return 0; }) : 0;
+    return Response.json({ ok: true, published: done, prices, released, reminded });
   } catch (error) {
     return Response.json({ error: error.message }, { status: 500 });
   }
