@@ -39,6 +39,15 @@ async function pickImage(j) {
 }
 
 async function genBase44(base44, prompt, aspect) {
+  try { return await genBase44Once(base44, prompt, aspect); }
+  catch (e) {
+    // 400 (zwykle zbyt długi / nieprzyjęty opis) → jedna próba z krótszym promptem.
+    if (!/\(400\)/.test(e.message) || prompt.length <= 1200) throw e;
+    return await genBase44Once(base44, prompt.slice(0, 1200), aspect);
+  }
+}
+
+async function genBase44Once(base44, prompt, aspect) {
   const { baseURL, token, headers } = base44.asServiceRole.aiGateway.connection();
   const r = await fetch(`${baseURL}/images/generations`, {
     method: "POST",
@@ -50,7 +59,8 @@ async function genBase44(base44, prompt, aspect) {
   if (!r.ok) {
     if (r.status === 402 || r.status === 429 || /credit|quota|limit/i.test(txt)) throw new Error("Brak kredytów AI w aplikacji Base44 (albo limit chwilowo wyczerpany).");
     if (/policy|safety|moderat/i.test(txt)) throw new Error("Usługa odrzuciła opis kadru (zasady treści). Zmień prompt i spróbuj ponownie.");
-    throw new Error(`Generowanie nie powiodło się (${r.status}).`);
+    let why = ""; try { const j = JSON.parse(txt); why = String(j?.error?.message || j?.detail || j?.message || "").slice(0, 200); } catch { why = txt.slice(0, 200); }
+    throw new Error(`Generowanie nie powiodło się (${r.status})${why ? `: ${why}` : ""}.`);
   }
   let j; try { j = JSON.parse(txt); } catch { throw new Error("Nieczytelna odpowiedź usługi generowania."); }
   return pickImage(j);
