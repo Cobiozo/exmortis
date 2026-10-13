@@ -6,6 +6,7 @@ import { getSnap } from "../../shared/snapshot.ts";
 // Katalog z kopii (PublicSnapshot, odświeżanej w tle co minutę) — bez czekania na Supabase przy każdym wejściu.
 // Klucz zawiera dzisiejszą datę (czas polski), więc po północy ceny z drabinki nigdy nie są wczorajsze.
 // Zapis produktu w panelu oznacza kopie jako stare (clearSnap "products:").
+// Strona produktu korzysta z tej samej kopii (filtr po adresie) — jedna kopia na dzień, bez wpisów dla dowolnych adresów.
 async function loadCatalog(base44, slug: string, today: string) {
   let where = "active = TRUE AND COALESCE(status, 'dostępny') <> 'ukryty'";
   if (slug) where += ` AND slug = ${escStr(slug)}`;
@@ -57,12 +58,12 @@ export default async function (req) {
     const raw = typeof body.slug === "string" ? body.slug.trim() : "";
     const slug = raw && /^[a-z0-9-]{1,120}$/.test(raw) ? raw : "";
     const today = warsawToday();
-    const loader = () => loadCatalog(base44, slug, today);
     let out;
     try {
-      out = await getSnap(base44, `products:${today}:${slug || "*"}`, loader);
+      out = await getSnap(base44, `products:${today}`, () => loadCatalog(base44, "", today));
+      if (slug) out = (out || []).filter((p) => p.slug === slug);
     } catch {
-      out = await loader(); // pierwsze wejście dnia przy wolnym Supabase — wolniej, ale zawsze z odpowiedzią
+      out = await loadCatalog(base44, slug, today); // pierwsze wejście dnia przy wolnym Supabase — wolniej, ale zawsze z odpowiedzią
     }
     return Response.json({ products: out || [] });
   } catch (error) {
