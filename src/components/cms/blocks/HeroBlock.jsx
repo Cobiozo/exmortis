@@ -22,7 +22,7 @@ function Zapowiedz({ d, center }) {
   const before = useBefore(d.zapowiedz_do);
   if (!d.zapowiedz || (d.zapowiedz_do && !before)) return null;
   return (
-    <p className={`technical text-[11px] gold-text flex items-center gap-2.5 mt-10 -mb-6 ${center ? "justify-center" : ""}`}>
+    <p data-shell-until={d.zapowiedz_do || undefined} className={`technical text-[11px] gold-text flex items-center gap-2.5 mt-10 -mb-6 ${center ? "justify-center" : ""}`}>
       <span className="h-1.5 w-1.5 rounded-full bg-[#C9A24A] animate-pulse shrink-0" aria-hidden="true" />{d.zapowiedz}
     </p>
   );
