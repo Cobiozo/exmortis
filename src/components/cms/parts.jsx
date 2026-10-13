@@ -34,14 +34,14 @@ export function SectionHead({ label, title, intro, introHtml, center }) {
   const head = (
     <>
       {label && <p className="technical text-[11px] gold-text mb-4">{label}</p>}
-      {title && <h2 className="relic-heading text-4xl md:text-5xl lg:text-6xl leading-[0.95]"><Lines text={nbsp(title)} /></h2>}
+      {title && <h2 className="relic-heading text-4xl md:text-5xl lg:text-6xl leading-[0.95] [overflow-wrap:break-word]"><Lines text={nbsp(title)} /></h2>}
     </>
   );
   if (center || (!intro && !introHtml)) return <div className="mb-12 md:mb-16">{head}</div>;
   return (
-    <div className="grid md:grid-cols-12 gap-10 mb-16">
-      <div className="md:col-span-4">{head}</div>
-      <div className="md:col-span-8 flex items-end">
+    <div className="grid lg:grid-cols-12 gap-6 lg:gap-10 mb-16">
+      <div className="lg:col-span-5 min-w-0">{head}</div>
+      <div className="lg:col-span-7 flex items-end">
         {introHtml ? <Rich html={introHtml} className="text-foreground/60 text-lg leading-relaxed max-w-xl" />
           : <p className="text-foreground/60 text-lg leading-relaxed max-w-xl">{intro}</p>}
       </div>

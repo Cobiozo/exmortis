@@ -42,14 +42,14 @@ export default function NewsletterSection() {
         </div>
         <div>
           <form onSubmit={submit} className="space-y-4">
-            <div className="flex flex-col sm:flex-row gap-3">
+            <div className="flex flex-col sm:flex-row md:flex-col lg:flex-row gap-3">
               <input
                 type="email"
                 required
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 placeholder="twój.mail@powrotu.pl"
-                className="flex-1 bg-transparent border hairline px-5 py-4 text-foreground placeholder:text-foreground/30 font-mono text-sm focus:border-[#C9A24A] focus:outline-none transition-colors"
+                className="flex-1 min-w-0 bg-transparent border hairline px-5 py-4 text-foreground placeholder:text-foreground/30 font-mono text-sm focus:border-[#C9A24A] focus:outline-none transition-colors"
               />
               <button type="submit" disabled={sending} className="btn-relic whitespace-nowrap disabled:opacity-60">
                 {sending ? "ZAPISUJĘ..." : "ZAPISZ"} {!sending && <ArrowRight className="h-4 w-4" />}

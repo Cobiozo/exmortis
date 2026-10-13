@@ -42,7 +42,7 @@ export default function ContactSection() {
         {/* Lewa kolumna — kanały kontaktu */}
         <div>
           <p className="technical text-[11px] gold-text mb-4">KONTAKT · 10</p>
-          <h2 className="relic-heading text-4xl md:text-5xl lg:text-6xl mb-6 leading-[0.95]" dangerouslySetInnerHTML={{ __html: heading }} />
+          <h2 className="relic-heading text-4xl lg:text-5xl xl:text-6xl mb-6 leading-[0.95] [overflow-wrap:break-word]" dangerouslySetInnerHTML={{ __html: heading }} />
           <div className="rich-content text-foreground/60 text-lg leading-relaxed max-w-md mb-12" dangerouslySetInnerHTML={{ __html: intro }} />
 
           <div className="space-y-6">
