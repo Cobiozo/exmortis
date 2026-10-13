@@ -86,7 +86,7 @@ function exmFastStart() {
       let out = html;
       const fonts = read("public/fonts/fonts.css");
       if (fonts) out = out.replace('<link rel="stylesheet" href="/fonts/fonts.css" />', `<style>${fonts.replace(/\/\*[^*]*\*\//g, "").replace(/\s+/g, " ")}</style>`);
-      out = out.replace("<!--EXM_META-->", '<!--EXM_META-->\n    <link rel="preconnect" href="https://media.base44.com" />');
+      out = out.replace('<link rel="preload" href="/fonts/cinzel-1.woff2"', '<link rel="preconnect" href="https://media.base44.com" />\n    <link rel="preload" href="/fonts/cinzel-1.woff2"');
       const shell = read("src/content/landingShell.html").trim();
       const end = (read("src/lib/usePrelaunch.js").match(/PRE_END = new Date\("([^"]+)"\)/) || [])[1];
       if (!shell || !end || !/<img /.test(shell)) return out;
