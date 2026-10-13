@@ -112,7 +112,7 @@ export default function ProductDetail() {
           {/* Info */}
           <div className="flex flex-col">
             <p className="technical text-[11px] gold-text mb-4">{product.category.toUpperCase()} · ARTEFAKT</p>
-            <h1 className="relic-heading text-4xl md:text-6xl leading-[0.95] mb-4">{product.name}</h1>
+            <h1 className="relic-heading text-4xl md:text-5xl lg:text-6xl leading-[0.95] mb-4 [overflow-wrap:break-word]">{product.name}</h1>
             {product.subtitle && (
               <p className="text-xl text-foreground/50 mb-8">{product.subtitle}</p>
             )}
