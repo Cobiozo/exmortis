@@ -89,8 +89,9 @@ function exmFastStart() {
       out = out.replace('<link rel="preload" href="/fonts/cinzel-1.woff2"', '<link rel="preconnect" href="https://media.base44.com" />\n    <link rel="preload" href="/fonts/cinzel-1.woff2"');
       const shell = read("src/content/landingShell.html").trim();
       const end = (read("src/lib/usePrelaunch.js").match(/PRE_END = new Date\("([^"]+)"\)/) || [])[1];
-      if (!shell || !end || !/<img /.test(shell)) return out;
-      const attr = (n) => (shell.match(new RegExp(`<img [^>]*?${n}="([^"]+)"`)) || [])[1] || "";
+      if (!shell || !end || !/<img [^>]*srcset=/.test(shell)) return out;
+      const hero = (shell.match(/<img [^>]*srcset="[^"]+"[^>]*>/) || [])[0] || ""; // główne zdjęcie (z wersjami), nie logo
+      const attr = (n) => (hero.match(new RegExp(` ${n}="([^"]+)"`)) || [])[1] || "";
       const cond = `(location.pathname==="/"||location.pathname==="/1-listopada")&&Date.now()<${Date.parse(end)}&&!localStorage.getItem("base44_access_token")`;
       const head = `<script>try{if(${cond}){var l=document.createElement("link");l.rel="preload";l.as="image";l.href=${JSON.stringify(attr("src"))};l.setAttribute("imagesrcset",${JSON.stringify(attr("srcset"))});l.setAttribute("imagesizes",${JSON.stringify(attr("sizes") || "100vw")});l.setAttribute("fetchpriority","high");document.head.appendChild(l)}}catch(e){}</script>`;
       const body = `<template id="exm-shell">${shell}</template>\n    <script>try{if(${cond}){var r=document.getElementById("root");r.appendChild(document.getElementById("exm-shell").content.cloneNode(true));r.querySelectorAll("[data-shell-until]").forEach(function(e){var t=e.getAttribute("data-shell-until");if(Date.now()>=Date.parse(/[zZ+]|-\\d\\d:\\d\\d$/.test(t)?t:t+"+02:00"))e.remove()})}}catch(e){}</script>`;
