@@ -2,7 +2,8 @@ import { createClientFromRequest } from "npm:@base44/sdk@0.8.44";
 import { applyDiscount } from "../../shared/discounts.ts";
 import { runSql, escStr, textField, emailField, clientIp } from "../../shared/supabase.ts";
 import { getSetting, loadAppUrl, APP_URL } from "../../shared/settings.ts";
-import { insertOrder, getOrderStatus } from "../../shared/orders.ts";
+import { insertOrder, getOrderStatus, getOrderByPayuId, claimCompletion } from "../../shared/orders.ts";
+import { fulfillOrder } from "../../shared/fulfillOrder.ts";
 import { addSubscriber } from "../../shared/newsletter.ts";
 import { DIGITAL } from "../../shared/access.ts";
 import { regulaminVersion } from "../../shared/legalDocs.ts";
@@ -11,6 +12,15 @@ import { cleanInvoice, invoiceText } from "../../shared/invoice.ts";
 
 const DIGITAL_CONSENT =
   "Żądam dostarczenia treści cyfrowych przed upływem 14 dni od zawarcia umowy i przyjmuję do wiadomości, że z chwilą rozpoczęcia ich dostarczania tracę prawo odstąpienia od umowy.";
+
+// Każda zgoda zapisana osobno, z wersją dokumentu.
+async function saveConsents(base44, req, orderId, email, hasDigital, newsletterConsent) {
+  const cBase = { email, source: "kasa", order_id: orderId, doc_version: `regulamin ${await regulaminVersion(base44)}`, ip: clientIp(req), status: "udzielona" };
+  const consents = [{ ...cBase, kind: "regulamin", text: "Akceptuję Regulamin. Znam Politykę prywatności." }];
+  if (hasDigital) consents.push({ ...cBase, kind: "tresci_cyfrowe", text: DIGITAL_CONSENT });
+  if (newsletterConsent) consents.push({ ...cBase, kind: "newsletter", text: "Chcę otrzymywać Listy powrotu — newsletter exmortis z treściami oraz informacjami o produktach i wydarzeniach — na podany adres e-mail. Zgodę mogę wycofać w każdej chwili." });
+  await base44.asServiceRole.entities.Consent.bulkCreate(consents);
+}
 
 const BASE_URLS = {
   secure: "https://secure.payu.com",
@@ -82,7 +92,25 @@ export default async function (req) {
       products.length = 0;
       products.push({ name: `EXMORTIS — zamówienie (kod ${disc.code})`, unitPrice: String(totalGrosze), quantity: 1 });
     }
-    if (totalGrosze < 100) throw new Error("Kwota zamówienia jest zbyt niska dla PayU");
+    if (totalGrosze < 0) totalGrosze = 0;
+    if (totalGrosze > 0 && totalGrosze < 100) throw new Error("Kwota zamówienia jest zbyt niska dla PayU");
+
+    // Zamówienie za 0 zł (np. całość pokryta kartą) — bez bramki PayU, od razu realizowane.
+    if (totalGrosze === 0) {
+      const id = crypto.randomUUID();
+      const freeId = `FREE-${id}`;
+      await insertOrder(base44, {
+        id, payuOrderId: freeId, buyerName, buyerEmail,
+        note: [note, invoice ? invoiceText(invoice) : "", disc ? `Kod rabatowy: ${disc.code} (−${(disc.discount / 100).toFixed(2)} zł)` : ""].filter(Boolean).join("\n"),
+        invoice, items: stored, total: 0, status: "PENDING", newsletterConsent,
+        digitalConsent: hasDigital ? DIGITAL_CONSENT : null,
+      });
+      await saveConsents(base44, req, id, buyerEmail, hasDigital, newsletterConsent);
+      if (newsletterConsent) await addSubscriber(base44, { email: buyerEmail, name: buyerName, consentGiven: true });
+      const order = await getOrderByPayuId(base44, freeId);
+      if (await claimCompletion(base44, freeId)) await fulfillOrder(base44, order, freeId);
+      return Response.json({ redirectUri: `${APP_URL}/kasa?payu=done`, orderId: id, free: true });
+    }
 
     const payu = await getSetting(base44, "payu");
     if (!payu || !payu.posId || !payu.clientId || !payu.clientSecret || !payu.secondKey) {
@@ -148,13 +176,7 @@ export default async function (req) {
       digitalConsent: hasDigital ? DIGITAL_CONSENT : null,
     });
 
-    // Każda zgoda zapisana osobno, z wersją dokumentu.
-    const ip = realIp;
-    const cBase = { email: buyerEmail, source: "kasa", order_id: extOrderId, doc_version: `regulamin ${await regulaminVersion(base44)}`, ip, status: "udzielona" };
-    const consents = [{ ...cBase, kind: "regulamin", text: "Akceptuję Regulamin. Znam Politykę prywatności." }];
-    if (hasDigital) consents.push({ ...cBase, kind: "tresci_cyfrowe", text: DIGITAL_CONSENT });
-    if (newsletterConsent) consents.push({ ...cBase, kind: "newsletter", text: "Chcę otrzymywać Listy powrotu — newsletter exmortis z treściami oraz informacjami o produktach i wydarzeniach — na podany adres e-mail. Zgodę mogę wycofać w każdej chwili." });
-    await base44.asServiceRole.entities.Consent.bulkCreate(consents);
+    await saveConsents(base44, req, extOrderId, buyerEmail, hasDigital, newsletterConsent);
 
     // Licznik użyć kodu rośnie dopiero po opłaceniu (payuNotification).
 
