@@ -5,6 +5,7 @@ import { ensureWaitlistCols, notifyBatch } from "../../shared/waitlist.ts";
 import { requireMail } from "../../shared/smtp.ts";
 import { clearSnap } from "../../shared/snapshot.ts";
 import { unpaidReminders } from "../../shared/unpaidReminder.ts";
+import { safeEqual } from "../../shared/libraryAccess.ts";
 
 // Higiena listy oczekujących (raz na dobę na instancję): 90 dni po powiadomieniu, a bez powiadomienia po 12 miesiącach.
 let lastHygiene = "";
@@ -44,6 +45,17 @@ async function releaseDue(base44) {
 export default async function(req) {
   try {
     const base44 = createClientFromRequest(req);
+    // Dostęp: administrator albo zadanie cykliczne z tokenem (mb_settings.tick_token).
+    const body = await req.json().catch(() => ({}));
+    const me = await base44.auth.me().catch(() => null);
+    let allowed = me?.role === "admin";
+    if (!allowed) {
+      const rows = await runSql(base44, `SELECT tick_token FROM public.mb_settings WHERE id = 1`, true).catch(() => null);
+      const stored = rows?.[0]?.tick_token;
+      const given = typeof body.tick_token === "string" ? body.tick_token : "";
+      allowed = !!stored && !!given && safeEqual(given, stored);
+    }
+    if (!allowed) return Response.json({ error: "Forbidden" }, { status: 403 });
     const db = base44.asServiceRole.entities;
     const now = new Date().toISOString();
     const due = await db.SitePage.filter({ status: "zaplanowana", publikacja: { $lte: now } }, { limit: 20 });
