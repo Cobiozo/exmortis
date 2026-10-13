@@ -7,6 +7,7 @@ import RichTextEditor from "./RichTextEditor";
 import ProductAccessFields from "./ProductAccessFields";
 import LessonsManager from "./course/LessonsManager";
 import PriceSteps from "./PriceSteps";
+import CoverAiButton from "./CoverAiButton";
 
 const CATEGORIES = ["ebook", "warsztat", "mentoring", "mastermind", "retreat", "darmowe"];
 const LEVELS = [
@@ -403,6 +404,7 @@ export default function ProductEditor({ product, onSaved, onCancel }) {
               <Upload className="h-3.5 w-3.5" /> {uploading ? "WGRAWAM..." : "WGRAW Z URZĄDZENIA"}
               <input type="file" accept="image/*" className="hidden" onChange={(e) => upload(e, "cover_image")} />
             </label>
+            {form.category !== "ebook" && <CoverAiButton form={form} onDone={(url) => set("cover_image", url)} />}
             {form.cover_image && (
               <button
                 onClick={() => set("cover_image", "")}

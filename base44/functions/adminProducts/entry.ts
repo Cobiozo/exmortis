@@ -248,6 +248,18 @@ export default async function (req) {
       return Response.json(await notifyBatch(base44, id, String(body.note || "").slice(0, 1500).trim()));
     }
 
+    // Okładka AI dla produktów bez własnej okładki (nie-ebooki) — styl marki, bez tekstu.
+    if (body.action === "cover_ai") {
+      const name = String(body.name || "").slice(0, 200).trim();
+      if (!name) throw new Error("Najpierw wpisz nazwę produktu");
+      const about = String(body.about || "").slice(0, 600);
+      const extra = String(body.hint || "").slice(0, 400);
+      const prompt = `Square cover artwork for a product called "${name}" (${String(body.category || "").slice(0, 40)}). ${about} ${extra}
+Style: brutalist sanctum — obsidian black, raw stone and concrete textures, dramatic chiaroscuro lighting, accents of aged gold (#C9A24A) and deep burgundy (#BC1E22). Symbolic, cinematic, minimal composition, theme of rebirth and returning to life. Absolutely no text, letters, logos or watermarks.`;
+      const r = await base44.asServiceRole.integrations.Core.GenerateImage({ prompt });
+      return Response.json({ url: r.url });
+    }
+
     if (body.action === "delete") {
       const id = String(body.id || "");
       if (!id) throw new Error("Brak id produktu");
