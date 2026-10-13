@@ -1,6 +1,9 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.52';
 import { recordPrices, warsawToday } from "../../shared/productPrice.ts";
-import { runSql } from "../../shared/supabase.ts";
+import { runSql, escStr } from "../../shared/supabase.ts";
+import { ensureWaitlistCols, notifyBatch } from "../../shared/waitlist.ts";
+import { requireMail } from "../../shared/smtp.ts";
+import { clearSnap } from "../../shared/snapshot.ts";
 
 // Higiena listy oczekujących (raz na dobę na instancję): 90 dni po powiadomieniu, a bez powiadomienia po 12 miesiącach.
 let lastHygiene = "";
@@ -16,6 +19,23 @@ async function waitlistHygiene(base44) {
   const old = await snaps.filter({ key: { $regex: "^products:" } }, "-refreshed_at", 200).catch(() => []);
   const keep = `products:${warsawToday()}`;
   await Promise.all(old.filter((r) => r.key !== keep).map((r) => snaps.delete(r.id).catch(() => {})));
+}
+
+// Premiera o czasie: „wkrótce” → „dostępny” po terminie, potem lista oczekujących partiami (gdy działa poczta).
+async function releaseDue(base44) {
+  await ensureWaitlistCols(base44);
+  const due = await runSql(base44, `UPDATE public.products SET status = 'dostępny', available_at = COALESCE(available_at, now()),
+      release_at = NULL, release_notify = TRUE
+    WHERE status = 'wkrótce' AND active = TRUE AND release_at IS NOT NULL AND release_at <= now() RETURNING slug`);
+  if (due.length) await clearSnap(base44, "products:").catch(() => {});
+  const ready = await requireMail(base44).then(() => true).catch(() => false);
+  if (!ready) return due.map((r) => r.slug);
+  const pend = await runSql(base44, `SELECT id, release_note FROM public.products WHERE release_notify = TRUE LIMIT 5`, true);
+  for (const p of pend) {
+    const r = await notifyBatch(base44, p.id, String(p.release_note || ""), 40).catch(() => ({ left: 0 }));
+    if (!r.left) await runSql(base44, `UPDATE public.products SET release_notify = FALSE WHERE id = ${escStr(p.id)}`);
+  }
+  return due.map((r) => r.slug);
 }
 
 // Publikuje strony zaplanowane na termin, który już minął (wywoływane cyklicznie).
@@ -42,7 +62,8 @@ export default async function(req) {
     // Przy okazji (najwyżej raz na godzinę): dzisiejsze ceny produktów do historii — podstawa informacji Omnibus.
     const prices = await recordPrices(base44).catch(() => -1);
     await waitlistHygiene(base44).catch(() => {});
-    return Response.json({ ok: true, published: done, prices });
+    const released = await releaseDue(base44).catch((e) => { console.error("premiera:", e.message); return []; });
+    return Response.json({ ok: true, published: done, prices, released });
   } catch (error) {
     return Response.json({ error: error.message }, { status: 500 });
   }

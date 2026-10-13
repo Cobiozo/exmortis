@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import { base44 } from "@/api/base44Client";
 import { Image } from "@/components/ui/image";
+import ReleaseFields from "@/components/admin/ReleaseFields";
 import { ArrowLeft, Plus, Trash2, Upload } from "lucide-react";
 import RichTextEditor from "./RichTextEditor";
 import ProductAccessFields from "./ProductAccessFields";
@@ -26,6 +27,11 @@ const inputCls =
 const selectCls = `${inputCls} bg-[#0A0A0B]`;
 const labelCls = "technical text-[10px] text-foreground/50 block mb-2";
 
+const toLocalInput = (iso) => {
+  const d = new Date(iso);
+  return new Date(d.getTime() - d.getTimezoneOffset() * 60000).toISOString().slice(0, 16);
+};
+
 export default function ProductEditor({ product, onSaved, onCancel }) {
   const [form, setForm] = useState({
     name: product?.name || "",
@@ -36,6 +42,8 @@ export default function ProductEditor({ product, onSaved, onCancel }) {
     form: product?.form || "",
     audience_tags: Array.isArray(product?.audience_tags) ? product.audience_tags : [],
     status: product?.status || "dostępny",
+    release_at: product?.release_at ? toLocalInput(product.release_at) : "",
+    release_note: product?.release_note || "",
     // Karta w Skarbcu
     promise: product?.promise || "",
     for_whom: product?.for_whom || "",
@@ -147,6 +155,7 @@ export default function ProductEditor({ product, onSaved, onCancel }) {
           price_start: form.price_start === "" ? null : Number(form.price_start),
           price_regular: form.price_regular === "" ? null : Number(form.price_regular),
           price_steps: form.price_steps.filter((s) => s.do || s.cena !== "").map((s) => ({ do: s.do, cena: s.cena === "" ? null : Number(s.cena) })),
+          release_at: form.release_at ? new Date(form.release_at).toISOString() : null,
           level: form.level === "" ? null : Number(form.level),
           sort_order: form.sort_order === "" ? null : Number(form.sort_order),
         },
@@ -212,6 +221,9 @@ export default function ProductEditor({ product, onSaved, onCancel }) {
             ))}
           </select>
         </div>
+        {form.status === "wkrótce" && (
+          <ReleaseFields form={form} set={set} labelCls={labelCls} inputCls={inputCls} />
+        )}
         <div>
           <label className={labelCls}>ETAP</label>
           <select value={form.stage} onChange={(e) => set("stage", e.target.value)} className={selectCls}>
