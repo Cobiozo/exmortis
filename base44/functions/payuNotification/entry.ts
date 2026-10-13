@@ -4,6 +4,7 @@ import { getSetting, loadAppUrl, APP_URL } from "../../shared/settings.ts";
 import { getOrderByPayuId, updateOrderStatus, claimCompletion, releaseCompletion } from "../../shared/orders.ts";
 import { sendMail, orderEmailHtml, adminTo } from "../../shared/smtp.ts";
 import { nextStep, nextStepHtml } from "../../shared/nextStep.ts";
+import { issueGiftCards, giftCardsHtml } from "../../shared/giftCard.ts";
 import { runSql, rpc, escStr } from "../../shared/supabase.ts";
 import { DIGITAL, grantAccess, ensureAccount } from "../../shared/access.ts";
 import { randomToken, sha256hex } from "../../shared/booking.ts";
@@ -134,12 +135,15 @@ export default async function (req) {
 
     if (stored.buyer_email) {
       try {
+        const ids = items.map((i) => i.product_id).filter(Boolean);
+        const cardRows = ids.length ? await runSql(base44, `SELECT id::text AS id FROM public.products WHERE product_type = 'karta' AND id::text IN (${ids.map(escStr).join(",")})`, true) : [];
+        const cards = cardRows.length ? giftCardsHtml(await issueGiftCards(base44, stored.id, items, cardRows.map((r) => r.id))) : "";
         const step = await nextStep(base44, items.map((i) => i.product_id)).then((s) => nextStepHtml(base44, s)).catch(() => "");
         await sendMail(base44, {
           kind: "zamowienie", ref: stored.id,
           to: stored.buyer_email,
           subject: "EXMORTIS — płatność przyjęta",
-          html: orderEmailHtml(stored.buyer_name || "", items, stored.total, stored.id, stored.invoice || null) + accessEmailHtml(granted, !!stored.digital_consent_text, newAccount, stored.buyer_email) + step,
+          html: orderEmailHtml(stored.buyer_name || "", items, stored.total, stored.id, stored.invoice || null) + accessEmailHtml(granted, !!stored.digital_consent_text, newAccount, stored.buyer_email) + cards + step,
         });
       } catch {
         // e-mail potwierdzenia jest opcjonalny — nie blokuj ack dla PayU

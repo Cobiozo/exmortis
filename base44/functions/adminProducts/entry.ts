@@ -9,7 +9,7 @@ const CATEGORIES = ["ebook", "warsztat", "mentoring", "mastermind", "retreat", "
 const STAGES = ["Śmierć", "Próg", "Powrót", "Inny", "Wszystkie"];
 const FORMS = ["Czytam", "Słucham", "Oglądam", "Uczestniczę", "Idę głęboko"];
 const STATUSES = ["dostępny", "wkrótce", "ukryty"];
-const TYPES = ["pdf", "audio", "wideo", "kurs", "usluga"];
+const TYPES = ["pdf", "audio", "wideo", "kurs", "usluga", "karta"];
 const AUDIENCES = ["Mężczyzna", "Kobieta", "Ojciec", "Matka", "Mąż", "Żona", "Lider"];
 
 // Tekst opcjonalny → NULL; obcięty do max.

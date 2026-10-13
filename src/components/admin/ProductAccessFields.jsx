@@ -8,6 +8,7 @@ const TYPES = [
   ["wideo", "Wideo"],
   ["kurs", "Kurs wideo"],
   ["usluga", "Usługa / spotkanie"],
+  ["karta", "Karta podarunkowa (kod na cenę, 6 mies.)"],
 ];
 const inputCls = "w-full bg-[#0A0A0B] border hairline px-4 py-3 focus:border-[#C9A24A] focus:outline-none";
 const labelCls = "technical text-[10px] text-foreground/50 block mb-2";
@@ -16,7 +17,7 @@ const labelCls = "technical text-[10px] text-foreground/50 block mb-2";
 export default function ProductAccessFields({ form, set }) {
   const [busy, setBusy] = useState(false);
   const [err, setErr] = useState("");
-  const digital = form.product_type !== "usluga";
+  const digital = form.product_type !== "usluga" && form.product_type !== "karta";
 
   const changeType = (t) => {
     set("product_type", t);
