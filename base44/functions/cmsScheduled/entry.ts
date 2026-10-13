@@ -1,5 +1,5 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.52';
-import { recordPrices } from "../../shared/productPrice.ts";
+import { recordPrices, warsawToday } from "../../shared/productPrice.ts";
 import { runSql } from "../../shared/supabase.ts";
 
 // Higiena listy oczekujących (raz na dobę na instancję): 90 dni po powiadomieniu, a bez powiadomienia po 12 miesiącach.
@@ -14,7 +14,7 @@ async function waitlistHygiene(base44) {
   // Kopie katalogu Skarbca z poprzednich dni (klucz products:RRRR-MM-DD) — to tylko pamięć podręczna.
   const snaps = base44.asServiceRole.entities.PublicSnapshot;
   const old = await snaps.filter({ key: { $regex: "^products:" } }, "-refreshed_at", 200).catch(() => []);
-  const keep = `products:${new Date(Date.now() + 864e5 * 0).toLocaleDateString("sv-SE", { timeZone: "Europe/Warsaw" })}`;
+  const keep = `products:${warsawToday()}`;
   await Promise.all(old.filter((r) => r.key !== keep).map((r) => snaps.delete(r.id).catch(() => {})));
 }
 
