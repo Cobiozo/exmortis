@@ -100,6 +100,26 @@ function exmFastStart() {
   };
 }
 
+// Główny arkusz stylów (ok. 22 KB po kompresji) w środku HTML zamiast osobnego pliku: na telefonie oszczędza
+// jedno pełne zapytanie przed pierwszym obrazem strony. Tylko przy publikacji (build); plik CSS zostaje w paczce.
+function exmInlineCss() {
+  return {
+    name: "exm-inline-css",
+    apply: "build",
+    transformIndexHtml: {
+      order: "post",
+      handler(html, ctx) {
+        if (!ctx?.bundle) return html;
+        return html.replace(/<link rel="stylesheet"(?: crossorigin)? href="\/(assets\/[^"]+\.css)">/g, (tag, file) => {
+          const asset = ctx.bundle[file];
+          const css = asset && asset.type === "asset" ? String(asset.source) : "";
+          return css && css.length < 200000 && !css.includes("</style") ? `<style>${css}</style>` : tag;
+        });
+      },
+    },
+  };
+}
+
 export default defineConfig({
   plugins: [
     base44({
@@ -114,6 +134,7 @@ export default defineConfig({
     react(),
     exmMeta(),
     exmFastStart(),
+    exmInlineCss(),
     exmJoinFallback(),
   ]
 });
