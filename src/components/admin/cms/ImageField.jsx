@@ -6,7 +6,7 @@ import { inputCls, labelCls, smallBtn } from "./ui";
 import CropPicker from "./media/CropPicker";
 
 // Wgranie zdjęcia (przeciągnij/upuść, na telefonie aparat/galeria), punkt skupienia i opis alt.
-export default function ImageField({ value, onChange, noAlt }) {
+export default function ImageField({ value, onChange, noAlt, defaultKadr = null }) {
   const [busy, setBusy] = useState(false);
   const [err, setErr] = useState("");
   const [pick, setPick] = useState(false);
@@ -17,13 +17,13 @@ export default function ImageField({ value, onChange, noAlt }) {
     if (file.size > 10 * 1024 * 1024) return setErr("Maksymalnie 10 MB.");
     setErr(""); setBusy(true);
     const m = await uploadMedia(file);
-    onChange({ ...v, url: m.url, fx: 50, fy: 50, kadr: v.kadr || null });
+    onChange({ ...v, url: m.url, fx: 50, fy: 50, kadr: v.kadr || defaultKadr });
     setBusy(false);
   };
   const lib = (
     <>
       <button type="button" onClick={() => setPick(true)} className={smallBtn}><FolderOpen className="h-4 w-4" /> Z biblioteki</button>
-      <MediaPickerDialog open={pick} onOpenChange={setPick} onPick={(m) => onChange({ ...v, url: m.url, alt: v.alt || m.alt || "", fx: 50, fy: 50 })} />
+      <MediaPickerDialog open={pick} onOpenChange={setPick} onPick={(m) => onChange({ ...v, url: m.url, alt: v.alt || m.alt || "", fx: 50, fy: 50, kadr: v.kadr || defaultKadr })} />
     </>
   );
   return (

@@ -13,9 +13,9 @@ const TYPE = { narrative: "NARRACJA", decision: "DECYZJA", ending: "ZAKOŃCZENIE
 
 function SceneRow({ s, choices, titleOf, onSaved, story }) {
   const [open, setOpen] = useState(false);
-  const [img, setImg] = useState(s.image_url ? { url: s.image_url, alt: s.alt_text || "" } : null);
+  const [img, setImg] = useState(s.image_url ? { url: s.image_url, alt: s.alt_text || "", kadr: "16:9" } : null);
   // Po zatwierdzeniu kadru / użyciu poprzedniego obrazu pole pokazuje aktualny stan z serwera.
-  useEffect(() => { setImg(s.image_url ? { url: s.image_url, alt: s.alt_text || "" } : null); }, [s.image_url, s.alt_text]);
+  useEffect(() => { setImg(s.image_url ? { url: s.image_url, alt: s.alt_text || "", kadr: "16:9" } : null); }, [s.image_url, s.alt_text]);
   const [busy, setBusy] = useState(false);
   const [msg, setMsg] = useState("");
   const dirty = (img?.url || "") !== (s.image_url || "") || (img?.alt || "") !== (s.alt_text || "");
@@ -50,7 +50,7 @@ function SceneRow({ s, choices, titleOf, onSaved, story }) {
           </div>
           <div className="space-y-3 min-w-0">
             <p className={lab}>OBRAZ SCENY (16:9)</p>
-            <ImageField value={img} onChange={setImg} />
+            <ImageField value={img} onChange={setImg} defaultKadr="16:9" />
             <div className="flex items-center gap-3">
               <button type="button" onClick={save} disabled={!dirty || busy} className="btn-relic !px-4 !py-2 text-[10px] disabled:opacity-40">{busy ? <Loader2 className="h-4 w-4 animate-spin" /> : null} ZAPISZ OBRAZ</button>
               {msg && <span className="text-xs text-foreground/60">{msg}</span>}
