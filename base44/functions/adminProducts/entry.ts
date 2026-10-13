@@ -3,6 +3,7 @@ import { runSql, escStr, requireAdmin } from "../../shared/supabase.ts";
 import { recordPrices, readSteps, unitPrice, withSteps } from "../../shared/productPrice.ts";
 import { requireMail, sendMail } from "../../shared/smtp.ts";
 import { loadAppUrl } from "../../shared/settings.ts";
+import { clearSnap } from "../../shared/snapshot.ts";
 
 const CATEGORIES = ["ebook", "warsztat", "mentoring", "mastermind", "retreat", "darmowe"];
 const STAGES = ["Śmierć", "Próg", "Powrót", "Inny", "Wszystkie"];
@@ -243,6 +244,7 @@ export default async function (req) {
         );
       }
       await recordPrices(base44, true).catch(() => {}); // historia cen (Omnibus) od razu po zmianie
+      await clearSnap(base44, "products:").catch(() => {}); // katalog w Skarbcu odświeży się przy najbliższym wejściu
       return Response.json({ ok: true });
     }
 
@@ -290,6 +292,7 @@ export default async function (req) {
       const id = String(body.id || "");
       if (!id) throw new Error("Brak id produktu");
       await runSql(base44, `DELETE FROM public.products WHERE id = ${escStr(id)}`);
+      await clearSnap(base44, "products:").catch(() => {});
       return Response.json({ ok: true });
     }
 

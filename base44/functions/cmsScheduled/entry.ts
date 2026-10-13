@@ -11,6 +11,11 @@ async function waitlistHygiene(base44) {
   await runSql(base44, `ALTER TABLE public.waitlist ADD COLUMN IF NOT EXISTS notified_at timestamptz`);
   await runSql(base44, `DELETE FROM public.waitlist WHERE (notified_at IS NOT NULL AND notified_at < now() - interval '90 days')
     OR (notified_at IS NULL AND created_at < now() - interval '12 months')`);
+  // Kopie katalogu Skarbca z poprzednich dni (klucz products:RRRR-MM-DD) — to tylko pamięć podręczna.
+  const snaps = base44.asServiceRole.entities.PublicSnapshot;
+  const old = await snaps.filter({ key: { $regex: "^products:" } }, "-refreshed_at", 200).catch(() => []);
+  const keep = `products:${new Date(Date.now() + 864e5 * 0).toLocaleDateString("sv-SE", { timeZone: "Europe/Warsaw" })}`;
+  await Promise.all(old.filter((r) => r.key !== keep).map((r) => snaps.delete(r.id).catch(() => {})));
 }
 
 // Publikuje strony zaplanowane na termin, który już minął (wywoływane cyklicznie).
