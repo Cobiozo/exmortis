@@ -3,6 +3,7 @@ import { createClientFromRequest } from "npm:@base44/sdk@0.8.44";
 import { getSetting, loadAppUrl, APP_URL } from "../../shared/settings.ts";
 import { getOrderByPayuId, updateOrderStatus, claimCompletion, releaseCompletion } from "../../shared/orders.ts";
 import { sendMail, orderEmailHtml, adminTo } from "../../shared/smtp.ts";
+import { nextStep, nextStepHtml } from "../../shared/nextStep.ts";
 import { runSql, rpc, escStr } from "../../shared/supabase.ts";
 import { DIGITAL, grantAccess, ensureAccount } from "../../shared/access.ts";
 import { randomToken, sha256hex } from "../../shared/booking.ts";
@@ -133,11 +134,12 @@ export default async function (req) {
 
     if (stored.buyer_email) {
       try {
+        const step = await nextStep(base44, items.map((i) => i.product_id)).then((s) => nextStepHtml(base44, s)).catch(() => "");
         await sendMail(base44, {
           kind: "zamowienie", ref: stored.id,
           to: stored.buyer_email,
           subject: "EXMORTIS — płatność przyjęta",
-          html: orderEmailHtml(stored.buyer_name || "", items, stored.total, stored.id, stored.invoice || null) + accessEmailHtml(granted, !!stored.digital_consent_text, newAccount, stored.buyer_email),
+          html: orderEmailHtml(stored.buyer_name || "", items, stored.total, stored.id, stored.invoice || null) + accessEmailHtml(granted, !!stored.digital_consent_text, newAccount, stored.buyer_email) + step,
         });
       } catch {
         // e-mail potwierdzenia jest opcjonalny — nie blokuj ack dla PayU

@@ -1,6 +1,7 @@
 import { createClientFromRequest } from "npm:@base44/sdk@0.8.44";
 import { runSql, escStr, clientIp } from "../../shared/supabase.ts";
 import { isActive } from "../../shared/access.ts";
+import { nextStep } from "../../shared/nextStep.ts";
 import { personalizePdf, newLicenseId, WM_VERSION } from "../../shared/pdfLicense.ts";
 
 // Konto klienta: moje produkty, zakupy, podpisany link do pliku (po sprawdzeniu dostępu).
@@ -52,7 +53,9 @@ export default async function (req) {
           p.lessons_done = prog.filter((x) => ids.has(x.lesson_id)).length;
         } catch { /* bez postępu */ }
       }));
-      return Response.json({ products });
+      const owned = list.map((a) => a.product_id);
+      const next = await nextStep(base44, owned, owned).catch(() => null);
+      return Response.json({ products, next });
     }
 
     if (body.action === "orders") {

@@ -2,11 +2,13 @@ import React, { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { base44 } from "@/api/base44Client";
 import ProductTile from "./ProductTile";
+import NextStepCard from "./NextStepCard";
 
 export default function MyProducts() {
   const [list, setList] = useState(null);
+  const [next, setNext] = useState(null);
   useEffect(() => {
-    base44.functions.invoke("myAccount", { action: "products" }).then((r) => setList(r.data.products));
+    base44.functions.invoke("myAccount", { action: "products" }).then((r) => { setList(r.data.products); setNext(r.data.next || null); });
   }, []);
 
   if (!list) return <p className="text-foreground/50">Ładowanie…</p>;
@@ -19,8 +21,11 @@ export default function MyProducts() {
     );
   }
   return (
-    <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
-      {list.map((p) => <ProductTile key={p.access_id} p={p} />)}
-    </div>
+    <>
+      <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
+        {list.map((p) => <ProductTile key={p.access_id} p={p} />)}
+      </div>
+      <NextStepCard step={next} />
+    </>
   );
 }
