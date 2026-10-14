@@ -299,3 +299,9 @@
 ::-webkit-scrollbar-track { background: #0A0A0B; }
 ::-webkit-scrollbar-thumb { background: #3D3D3F; }
 ::-webkit-scrollbar-thumb:hover { background: #C9A24A; }
+/* Numery pomocowe (116 123, 800 70 2222, 112) w tekście: większe pole dotyku na telefonie bez zmiany wyglądu linii. */
+a[href^="tel:"] {
+  display: inline-block;
+  padding: 0.5rem 0.25rem;
+  margin: -0.5rem -0.25rem;
+}
