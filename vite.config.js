@@ -2,6 +2,7 @@ import base44 from "@base44/vite-plugin"
 import react from '@vitejs/plugin-react'
 import { defineConfig } from 'vite'
 import fs from "fs"
+import crypto from "crypto"
 import path from "path"
 import { fileURLToPath } from "url"
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
@@ -66,6 +67,37 @@ function exmJoinFallback() {
         this.warn(`Dane awaryjne /dolacz: użyta zapisana kopia (${e.message})`);
         return saved;
       }
+    },
+  };
+}
+
+// Czcionki z nazwą zawierającą skrót treści (assets/…-hash.woff2): hosting trzyma pliki z /assets w pamięci
+// przeglądarki 7 dni zamiast 1 godziny dla /fonts. Tylko przy publikacji; w trybie deweloperskim zostaje /fonts.
+// Pliki w public/fonts zostają (m.in. fonts/ticket dla biletów PDF).
+function exmHashedFonts() {
+  let isBuild = false;
+  const map = {};
+  return {
+    name: "exm-hashed-fonts",
+    config(_, env) { isBuild = env.command === "build"; },
+    buildStart() {
+      if (!isBuild) return;
+      const dir = path.resolve(__dirname, "public/fonts");
+      for (const f of fs.readdirSync(dir)) {
+        if (!f.endsWith(".woff2")) continue;
+        const src = fs.readFileSync(path.join(dir, f));
+        const h = crypto.createHash("sha256").update(src).digest("hex").slice(0, 8);
+        const out = `assets/${f.replace(/\.woff2$/, "")}-${h}.woff2`;
+        this.emitFile({ type: "asset", fileName: out, source: src });
+        map[f] = out;
+      }
+    },
+    transformIndexHtml: {
+      order: "post",
+      handler(html) {
+        if (!isBuild) return html;
+        return html.replace(/\/fonts\/([a-z0-9-]+\.woff2)/g, (m, f) => (map[f] ? "/" + map[f] : m));
+      },
     },
   };
 }
@@ -135,6 +167,7 @@ export default defineConfig({
     exmMeta(),
     exmFastStart(),
     exmInlineCss(),
+    exmHashedFonts(),
     exmJoinFallback(),
   ]
 });
