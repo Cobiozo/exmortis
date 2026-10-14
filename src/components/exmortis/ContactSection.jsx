@@ -3,6 +3,7 @@ import { ArrowRight, Check, Mail, Instagram, Facebook, Youtube } from "lucide-re
 import { sendForm } from "@/lib/outbox";
 import { useSiteContent } from "@/components/exmortis/SiteContentProvider";
 import useSystemText from "@/content/useSystemText";
+import { track } from "@/lib/track";
 
 // Wklej tu linki do swoich profili
 const SOCIAL_LINKS = [
@@ -27,6 +28,7 @@ export default function ContactSection() {
     setError("");
     try {
       await sendForm("createContactMessage", form);
+      track("Lead", { content_name: "kontakt" });
       setSent(true);
       setForm({ name: "", email: "", message: "" });
     } catch {

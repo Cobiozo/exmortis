@@ -2,6 +2,7 @@ import React, { useState } from "react";
 import { Link } from "react-router-dom";
 import { ArrowRight, Check } from "lucide-react";
 import { base44 } from "@/api/base44Client";
+import { track } from "@/lib/track";
 import Section from "./Section";
 import {
   SectionHead,
@@ -139,6 +140,7 @@ export default function PowrotForm() {
     setError("");
     try {
       await base44.functions.invoke("createPowrotApplication", form);
+      track("Lead", { content_name: "powrot" });
       setSent(true);
     } catch (err) {
       setError(err?.response?.status === 400 || err?.response?.status === 429 ? err.response.data?.error || "Sprawdź formularz." : "Nie udało się wysłać zgłoszenia. Spróbuj ponownie.");

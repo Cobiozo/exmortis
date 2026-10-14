@@ -22,6 +22,7 @@ const Events = lazyPage(() => import('@/pages/Events'));
 import Login from '@/pages/Login';
 import RegisterGate from '@/components/prelaunch/RegisterGate';
 import SeoMeta from '@/components/seo/SeoMeta';
+import Analytics from '@/components/analytics/Analytics';
 const ForgotPassword = lazyPage(() => import('@/pages/ForgotPassword'));
 const ResetPassword = lazyPage(() => import('@/pages/ResetPassword'));
 import { Suspense } from 'react';
@@ -96,6 +97,7 @@ const AuthenticatedApp = () => {
       <PodcastPlayerProvider>
       <PrelaunchGate>
       <SeoMeta />
+      <Analytics />
       <ErrorBoundary full>
       <Suspense fallback={<div className="min-h-[100svh] bg-[#0A0A0B]" />}>
       <Routes>

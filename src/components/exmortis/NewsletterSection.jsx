@@ -3,6 +3,7 @@ import { ArrowRight } from "lucide-react";
 import { base44 } from "@/api/base44Client";
 import { useSiteContent } from "@/components/exmortis/SiteContentProvider";
 import useSystemText from "@/content/useSystemText";
+import { track } from "@/lib/track";
 
 // Sekcja „Listy powrotu" (newsletter) na stronie głównej — podpis pod kontakt.
 export default function NewsletterSection() {
@@ -22,6 +23,7 @@ export default function NewsletterSection() {
     setError("");
     try {
       await base44.functions.invoke("subscribeNewsletter", { email });
+      track("Lead", { content_name: "newsletter" });
       setSent(true);
       setEmail("");
       setTimeout(() => setSent(false), 5000);

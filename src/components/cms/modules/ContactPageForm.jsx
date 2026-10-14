@@ -6,6 +6,7 @@ import { clause } from "@/lib/firma";
 import { useFirma } from "@/lib/useSiteSettings";
 import CompanyLines from "@/components/legal/CompanyLines";
 import ContactField from "./ContactField";
+import { track } from "@/lib/track";
 
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 const check = (f) => ({
@@ -28,7 +29,7 @@ export default function ContactPageForm() {
     const er = check(f); setErrs(er);
     if (Object.values(er).some(Boolean)) return;
     setState("busy");
-    await sendForm("createContactMessage", f).then(() => setState("done"))
+    await sendForm("createContactMessage", f).then(() => { track("Lead", { content_name: "kontakt" }); setState("done"); })
       .catch((x) => { setMsg(x?.response?.data?.error || "Nie udało się wysłać. Spróbuj ponownie."); setState("error"); });
   };
   return (

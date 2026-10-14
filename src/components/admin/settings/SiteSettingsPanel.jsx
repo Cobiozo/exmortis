@@ -9,10 +9,13 @@ import LegalDocsSettings from "./LegalDocsSettings";
 import LibrarySettingsPanel from "@/components/admin/library/LibrarySettingsPanel";
 import VideoProtectionSettings from "./VideoProtectionSettings";
 import ZoomFixedSettings from "./ZoomFixedSettings";
+import PomiarSettings from "./PomiarSettings";
+import { useAdminMode } from "@/components/admin/AdminModeContext";
 
 // Ustawienia strony: dane firmy i tryb przedpremierowy.
 export default function SiteSettingsPanel() {
   const [s, setS] = useState(null);
+  const { isAdmin } = useAdminMode();
   useEffect(() => { base44.functions.invoke("adminSettings", { action: "get" }).then((r) => setS(r.data)); }, []);
   if (!s) return <p className="technical text-[10px] text-foreground/40">WCZYTUJĘ…</p>;
   return (
@@ -25,6 +28,7 @@ export default function SiteSettingsPanel() {
       <ZoomFixedSettings />
       <LibrarySettingsPanel />
       <VideoProtectionSettings />
+      {isAdmin && <PomiarSettings initial={s.pomiar} />}
       <EmailChangeToggle />
     </div>
   );

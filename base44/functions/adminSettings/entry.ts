@@ -2,6 +2,7 @@ import { createClientFromRequest } from "npm:@base44/sdk@0.8.44";
 import { requireStaff } from "../../shared/supabase.ts";
 import { getSetting, saveSetting, deleteSetting, cleanAppUrl, DEFAULT_APP_URL } from "../../shared/settings.ts";
 import { cleanFirma, cleanPremiera, PREMIERA_DEFAULT } from "../../shared/firma.ts";
+import { cleanPomiar, validatePomiar, POMIAR_DEFAULT } from "../../shared/tracking.ts";
 import { syncDocs, publicDocs } from "../../shared/legalDocs.ts";
 import { VIDEO_SETTING, signServerVideo, newVideoKey, ttlHours } from "../../shared/videoSign.ts";
 
@@ -29,7 +30,9 @@ export default async function (req) {
       const app = await getSetting(base44, "app");
       const firma = await getSetting(base44, "firma");
       const premiera = await getSetting(base44, "premiera");
+      const pomiar = await getSetting(base44, "pomiar");
       return Response.json({
+        pomiar: { ...POMIAR_DEFAULT, ...cleanPomiar(pomiar) },
         firma: cleanFirma(firma),
         dokumenty: publicDocs(await getSetting(base44, "dokumenty")),
         // Rola techniczna nie widzi listy adresów z dostępem przedpremierowym.
@@ -54,6 +57,15 @@ export default async function (req) {
     if (body.action === "save" && body.target === "premiera") {
       const data = tech ? { ...body.data, dostep: (await getSetting(base44, "premiera"))?.dostep || [] } : body.data;
       await saveSetting(base44, "premiera", cleanPremiera(data));
+      return Response.json({ ok: true });
+    }
+
+    // Pomiar kieruje dane odwiedzających do zewnętrznego narzędzia — zmienia to wyłącznie administrator.
+    if (body.action === "save" && body.target === "pomiar") {
+      if (tech) return Response.json({ error: "Brak dostępu" }, { status: 403 });
+      const value = validatePomiar(body.data);
+      if (!value.pixel_id && !value.ga4_id) value.wlaczony = false;
+      await saveSetting(base44, "pomiar", value);
       return Response.json({ ok: true });
     }
 

@@ -2,6 +2,7 @@ import React, { useState } from "react";
 import { Loader2 } from "lucide-react";
 import { base44 } from "@/api/base44Client";
 import useSystemText from "@/content/useSystemText";
+import { track } from "@/lib/track";
 
 // Cichy zapis e-mail (Listy powrotu) — bez wyskakujących okienek.
 export default function QuietSignup({ button, source, lead }) {
@@ -15,7 +16,7 @@ export default function QuietSignup({ button, source, lead }) {
   const submit = async (e) => {
     e.preventDefault();
     setBusy(true); setErr("");
-    try { await base44.functions.invoke("subscribeNewsletter", { email, source }); setOk(true); }
+    try { await base44.functions.invoke("subscribeNewsletter", { email, source }); track("Lead", { content_name: "newsletter" }); setOk(true); }
     catch { setErr("Nie udało się zapisać. Spróbuj ponownie."); }
     setBusy(false);
   };

@@ -2,6 +2,7 @@ import { runSql, escStr } from "./supabase.ts";
 import { getSettingsFast } from "./settings.ts";
 import { getSnap } from "./snapshot.ts";
 import { cleanFirma, PREMIERA_DEFAULT } from "./firma.ts";
+import { cleanPomiar } from "./tracking.ts";
 import { publicDocs } from "./legalDocs.ts";
 
 // Publiczne dane wspólne dla siteSettings, siteContent, eventsPublic i bootstrap.
@@ -18,13 +19,14 @@ export const REG_COUNT = `(SELECT COUNT(*) FROM public.registrations r
 export async function publicSettings(base44, req) {
   const hasToken = !!req.headers.get("authorization");
   const [s, me] = await Promise.all([
-    getSnap(base44, "settings:firma,premiera,dokumenty", () => getSettingsFast(base44, ["firma", "premiera", "dokumenty"])) as Promise<Record<string, any>>,
+    getSnap(base44, "settings:firma,premiera,dokumenty,pomiar", () => getSettingsFast(base44, ["firma", "premiera", "dokumenty", "pomiar"])) as Promise<Record<string, any>>,
     hasToken ? base44.auth.me().catch(() => null) : null,
   ]);
   const { dostep = [], ...p } = { ...PREMIERA_DEFAULT, ...(s.premiera || {}) };
   const email = String(me?.email || "").toLowerCase();
   const ja_dostep = !!email && dostep.some((x) => x.email === email && Date.parse(x.do) > Date.now());
-  return { firma: cleanFirma(s.firma), dokumenty: publicDocs(s.dokumenty), premiera: p, ja_dostep, now: new Date().toISOString() };
+  // Pomiar (Meta Pixel / GA4) — wartości publiczne, idą do gościa tym samym wywołaniem co reszta ustawień.
+  return { firma: cleanFirma(s.firma), dokumenty: publicDocs(s.dokumenty), pomiar: cleanPomiar(s.pomiar), premiera: p, ja_dostep, now: new Date().toISOString() };
 }
 
 export const publicContent = (base44) =>

@@ -5,6 +5,7 @@ import { base44 } from "@/api/base44Client";
 import { sanitizeHtml } from "@/lib/sanitizeHtml";
 import useSystemText from "@/content/useSystemText";
 import ShopProductCard from "@/components/exmortis/shop/ShopProductCard";
+import { track } from "@/lib/track";
 
 const SHARE_URL = "https://exmortis.pl/test?src=polecenie";
 const N = 15;
@@ -113,6 +114,7 @@ export default function Test({ d = {} }) {
         newsletter_consent: lead.newsletter,
         source: source || null,
       });
+      track("Lead", { content_name: "test" });
       setResult(res.data);
       setStep(S_RESULT);
     } catch (e2) {

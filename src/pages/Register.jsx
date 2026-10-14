@@ -8,6 +8,7 @@ import AuthField from "@/components/auth/AuthField";
 import GoogleButton from "@/components/auth/GoogleButton";
 import PasswordStrength from "@/components/auth/PasswordStrength";
 import { afterLoginTarget, providerReturnTo } from "@/lib/afterLogin";
+import { track } from "@/lib/track";
 
 const check = "mt-0.5 h-5 w-5 shrink-0 accent-[#C9A24A]";
 
@@ -46,7 +47,7 @@ export default function Register() {
       const result = await base44.auth.verifyOtp({ email, otpCode });
       if (result?.access_token) base44.auth.setToken(result.access_token);
       await base44.auth.updateMe({ imie: name.trim(), terms_accepted_at: new Date().toISOString() }).catch(() => {});
-      if (letters) await base44.functions.invoke("subscribeNewsletter", { email, name }).catch(() => {});
+      if (letters) await base44.functions.invoke("subscribeNewsletter", { email, name }).then(() => track("Lead", { content_name: "newsletter" })).catch(() => {});
       window.location.href = await afterLoginTarget();
     } catch (err) {
       setError(err.message || "Niepoprawny kod.");

@@ -7,6 +7,7 @@ import { clause } from "@/lib/firma";
 import { CalendarPlus } from "lucide-react";
 import { downloadIcs } from "./time";
 import { SITE_URL } from "@/config/site";
+import { track } from "@/lib/track";
 
 // Formularz zapisu na wydarzenie (strona wydarzenia): imię, e-mail, pytanie, zgoda.
 export default function RegistrationForm({ event: ev }) {
@@ -61,6 +62,7 @@ export default function RegistrationForm({ event: ev }) {
         const tk = new URL(data?.join_url || "", window.location.origin).searchParams.get("t");
         if (tk) [ev.slug, ev.short_path].filter(Boolean).forEach((k) => localStorage.setItem(`exm_join_t:${k}`, tk));
       } catch { /* bez pamięci przeglądarki */ }
+      if (!data?.already) track("CompleteRegistration", { content_name: "spotkanie" });
       setResult(data.queued ? { ok: true, status: "Zapisany", first_name: firstName, pending: true,
         join_url: ev.format === "Online" ? (ev.short_path ? `/${ev.short_path}/dolacz` : `/spotkania/${ev.slug}/dolacz`) : null } : data);
     } catch (err) {

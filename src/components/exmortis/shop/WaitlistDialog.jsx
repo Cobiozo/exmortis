@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import { X, Check } from "lucide-react";
 import { base44 } from "@/api/base44Client";
+import { track } from "@/lib/track";
 
 // Małe okno zapisu na listę oczekujących przy produktach „wkrótce".
 export default function WaitlistDialog({ product, onClose }) {
@@ -28,6 +29,7 @@ export default function WaitlistDialog({ product, onClose }) {
         email: form.email,
         product_id: product.id,
       });
+      track("Lead", { content_name: "lista_oczekujacych" });
       setSent(true);
     } catch (err) {
       setError(err?.response?.data?.error && err.response.status < 500 ? err.response.data.error : "Nie udało się zapisać. Spróbuj ponownie.");

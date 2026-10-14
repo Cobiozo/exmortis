@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { useAuth } from "@/lib/AuthContext";
 import DigitalConsent from "@/components/exmortis/shop/DigitalConsent";
 import { Link, useNavigate } from "react-router-dom";
@@ -12,8 +12,10 @@ import ChooseTermButton from "@/components/exmortis/shop/ChooseTermButton";
 import InvoiceFields, { validNip } from "@/components/exmortis/shop/InvoiceFields";
 import { GiftLine } from "@/components/exmortis/shop/GiftCard";
 import { TicketLine } from "@/components/exmortis/events/TicketBuy";
+import { track, trackPurchase } from "@/lib/track";
 
 const ORDER_KEY = "exm_payu_order";
+const ORDER_VALUE_KEY = "exm_payu_value";
 
 export default function Checkout() {
   const { items, total, clear, refresh } = useCart();
@@ -35,6 +37,14 @@ export default function Checkout() {
   useEffect(() => {
     if (user) setForm((f) => ({ ...f, name: f.name || user.imie || user.full_name || "", email: f.email || user.email }));
   }, [user]);
+
+  // Wejście do kasy z zawartością koszyka — raz na wizytę (powrót z płatności to nie nowy koszyk).
+  const checkoutFired = useRef(false);
+  useEffect(() => {
+    if (checkoutFired.current || payuDone || !items.length) return;
+    checkoutFired.current = true;
+    track("InitiateCheckout", { value: Math.round((Number(discount ? total - discount.discount : total) || 0) * 100) / 100, currency: "PLN", num_items: items.length });
+  }, [items.length]);
 
   // Przed płatnością: aktualne ceny i dostępność (np. koniec promocji) — kasa liczy tak samo na serwerze.
   useEffect(() => {
@@ -61,7 +71,15 @@ export default function Checkout() {
       const st = await base44.functions.invoke("payuCreateOrder", { action: "status", orderId })
         .then((r) => r.data?.status).catch(() => null);
       if (stop) return;
-      if (st === "COMPLETED") { clear(); try { sessionStorage.removeItem(ORDER_KEY); } catch { /* */ } setPayState("ok"); return; }
+      if (st === "COMPLETED") {
+        let value = 0;
+        try { value = Number(sessionStorage.getItem(ORDER_VALUE_KEY)) || 0; sessionStorage.removeItem(ORDER_VALUE_KEY); } catch { /* */ }
+        trackPurchase(orderId, value);
+        clear();
+        try { sessionStorage.removeItem(ORDER_KEY); } catch { /* */ }
+        setPayState("ok");
+        return;
+      }
       if (st === "CANCELED") { setPayState("fail"); return; }
       if (tries >= 20) { clear(); setPayState("wait"); return; }
       setTimeout(tick, 3000);
@@ -90,7 +108,10 @@ export default function Checkout() {
         invoice: invoice.want ? { want: true, company: invoice.company, nip: invoice.nip, address: invoice.address } : null,
       });
       // Koszyk czyszczę dopiero po potwierdzeniu płatności — przerwana płatność go nie traci.
-      try { sessionStorage.setItem(ORDER_KEY, res.data.orderId || ""); } catch { /* bez pamięci karty */ }
+      try {
+        sessionStorage.setItem(ORDER_KEY, res.data.orderId || "");
+        sessionStorage.setItem(ORDER_VALUE_KEY, String(Math.round((Number(discount ? total - discount.discount : total) || 0) * 100) / 100));
+      } catch { /* bez pamięci karty */ }
       window.location.href = res.data.redirectUri;
     } catch (err) {
       const msg = err?.response?.data?.error || "";
