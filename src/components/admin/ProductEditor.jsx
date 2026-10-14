@@ -59,6 +59,7 @@ export default function ProductEditor({ product, onSaved, onCancel }) {
     file_url: product?.file_url || "",
     product_type: product?.product_type || "pdf",
     access_months: product?.access_months != null ? String(product.access_months) : "",
+    capacity: product?.capacity != null ? String(product.capacity) : "",
     private_file_uri: product?.private_file_uri || "",
     private_file_name: product?.private_file_name || "",
     bundle_items: Array.isArray(product?.bundle_items) ? product.bundle_items : [],

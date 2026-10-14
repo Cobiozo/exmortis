@@ -34,6 +34,7 @@ export function CartProvider({ children }) {
   }, [items]);
 
   const addItem = useCallback((product, qty = 1, gift = null) => {
+    if (product.seats && product.seats.left <= 0) return; // limit miejsc wykorzystany (kasa i tak by odrzuciła)
     if (product.product_type === "karta" && gift) {
       const amount = Number(gift.amount);
       setItems((prev) => [...prev, {

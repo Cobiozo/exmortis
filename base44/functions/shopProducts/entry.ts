@@ -3,6 +3,7 @@ import { runSql, escStr } from "../../shared/supabase.ts";
 import { withSteps, unitPrice, omnibusPrices, omnibusFrom, warsawToday } from "../../shared/productPrice.ts";
 import { getSnap } from "../../shared/snapshot.ts";
 import { ratingMap } from "../../shared/reviews.ts";
+import { productSeats } from "../../shared/seats.ts";
 
 // Katalog z kopii (PublicSnapshot, odświeżanej w tle co minutę) — bez czekania na Supabase przy każdym wejściu.
 // Klucz zawiera dzisiejszą datę (czas polski), więc po północy ceny z drabinki nigdy nie są wczorajsze.
@@ -20,7 +21,7 @@ async function loadCatalog(base44, slug: string, today: string) {
             price_start::float8 AS price_start, price_regular::float8 AS price_regular,
             is_free, status, promo_end_date::text AS promo_end_date,
             button_label, checkout_url, next_step, is_featured, sort_order, cover_image,
-            product_type, access_months, to_jsonb(p)->'price_steps' AS price_steps, to_jsonb(p)->'price_options' AS price_options,
+            product_type, access_months, capacity, to_jsonb(p)->'price_steps' AS price_steps, to_jsonb(p)->'price_options' AS price_options,
             to_jsonb(p)->'bundle_items' AS bundle_items,
             created_date, updated_date
      FROM public.products p
@@ -43,6 +44,13 @@ async function loadCatalog(base44, slug: string, today: string) {
   for (const p of out) {
     const r = ratings.get(String(p.id));
     if (r) { p.rating_avg = r.avg; p.rating_count = r.count; }
+  }
+  // Miejsca (limit, sprzedane, w trakcie płatności) liczone w kopii katalogu — świeżość do minuty.
+  // Kasa i tak sprawdza limit przy zakupie, więc opóźnienie kopii niczego nie przepuszcza.
+  const seats = await productSeats(base44, out.filter((p) => p.capacity != null).map((p) => String(p.id))).catch(() => new Map());
+  for (const p of out) {
+    const s = seats.get(String(p.id));
+    if (s) p.seats = s;
   }
   // Pakiety: składniki (nazwa, typ, adres, cena) i odwrotne „taniej w pakiecie” — liczone w kopii katalogu.
   const catalogIds = new Set(out.map((p) => String(p.id)));

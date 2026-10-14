@@ -11,6 +11,8 @@ const TYPES = [
   ["karta", "Karta podarunkowa (kod na cenę, 6 mies.)"],
   ["pakiet", "Pakiet produktów (kilka w jednej cenie)"],
 ];
+// Typy, w których ma sens limit miejsc (kohorta, kurs na żywo, warsztat).
+const SEAT_TYPES = ["kurs", "wideo", "usluga"];
 const inputCls = "w-full bg-[#0A0A0B] border hairline px-4 py-3 focus:border-[#C9A24A] focus:outline-none";
 const labelCls = "technical text-[10px] text-foreground/50 block mb-2";
 
@@ -55,6 +57,22 @@ export default function ProductAccessFields({ form, set }) {
           <label>
             <span className={labelCls}>CZAS DOSTĘPU (MIESIĄCE, PUSTE = BEZTERMINOWO)</span>
             <input type="number" min="1" max="120" value={form.access_months} onChange={(e) => set("access_months", e.target.value)} className={inputCls} />
+          </label>
+        )}
+        {SEAT_TYPES.includes(form.product_type) && (
+          <label>
+            <span className={labelCls}>LIMIT MIEJSC (1–1000, PUSTE = BEZ LIMITU)</span>
+            <input
+              type="number"
+              min="1"
+              max="1000"
+              value={form.capacity ?? ""}
+              onChange={(e) => set("capacity", e.target.value)}
+              className={inputCls}
+            />
+            <span className="text-xs text-foreground/40 block mt-2">
+              Po wyczerpaniu limitu zakup się zamyka, a na stronie produktu pojawia się lista rezerwowa.
+            </span>
           </label>
         )}
       </div>

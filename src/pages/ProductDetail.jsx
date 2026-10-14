@@ -15,6 +15,7 @@ import ProductReviews from "@/components/exmortis/shop/ProductReviews";
 import { isPromoActive, priceOnRequest, regularPrice, unitPrice, lowestPrice30, zl, nextPriceText } from "@/lib/productPrice";
 import { GiftCardBuy } from "@/components/exmortis/shop/GiftCard";
 import BundleBox from "@/components/exmortis/shop/BundleBox";
+import { SeatsLine } from "@/components/exmortis/shop/cardBits";
 import InBundleLink from "@/components/exmortis/shop/InBundleLink";
 import { cardAmounts } from "@/components/exmortis/CartContext";
 
@@ -77,6 +78,7 @@ export default function ProductDetail() {
   const onRequest = !soon && priceOnRequest(product);
   const amounts = product.product_type === "karta" ? cardAmounts(product) : [];
   const linkUrl = (product.checkout_url || "").trim();
+  const soldOut = !!product.seats && product.seats.left <= 0;
 
   return (
     <div className="bg-[#0A0A0B] pt-20">
@@ -149,6 +151,8 @@ export default function ProductDetail() {
               </p>
             )}
 
+            {product.seats && <p className="mb-6"><SeatsLine p={product} /></p>}
+
             <InBundleLink product={product} />
 
             {product.description && !sameText(product.description, product.subtitle) && (
@@ -212,6 +216,16 @@ export default function ProductDetail() {
                   ZAPISZ SIĘ NA LISTĘ OCZEKUJĄCYCH <ArrowRight className="h-4 w-4" />
                 </button>
                 <p className="text-sm text-foreground/55">Ten materiał jeszcze powstaje. Napiszę, kiedy będzie gotowy.</p>
+              </div>
+            ) : soldOut ? (
+              <div className="mt-auto space-y-3">
+                <button disabled className="btn-relic w-full opacity-40 cursor-not-allowed">BRAK MIEJSC</button>
+                <button onClick={() => setWaitlist(true)} className="btn-ghost w-full">
+                  DAJ ZNAĆ, GDY ZWOLNI SIĘ MIEJSCE <ArrowRight className="h-4 w-4" />
+                </button>
+                <p className="text-sm text-foreground/55">
+                  Limit miejsc został wykorzystany. Zostaw kontakt — napiszę, gdy zwolni się miejsce.
+                </p>
               </div>
             ) : linkUrl && (product.is_free || onRequest) ? (
               <div className="mt-auto">

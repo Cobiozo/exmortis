@@ -5,12 +5,15 @@ import { DIGITAL } from "../../shared/access.ts";
 import { requireMail } from "../../shared/smtp.ts";
 import { ensureWaitlistCols, notifyBatch } from "../../shared/waitlist.ts";
 import { clearSnap } from "../../shared/snapshot.ts";
+import { productSeats } from "../../shared/seats.ts";
 
 const CATEGORIES = ["ebook", "warsztat", "mentoring", "mastermind", "retreat", "darmowe"];
 const STAGES = ["Śmierć", "Próg", "Powrót", "Inny", "Wszystkie"];
 const FORMS = ["Czytam", "Słucham", "Oglądam", "Uczestniczę", "Idę głęboko"];
 const STATUSES = ["dostępny", "wkrótce", "ukryty"];
 const TYPES = ["pdf", "audio", "wideo", "kurs", "usluga", "karta", "pakiet"];
+// Limit miejsc ma sens tylko dla typów, które mają „miejsca” (kohorta, kurs na żywo, warsztat).
+const SEAT_TYPES = ["kurs", "wideo", "usluga"];
 const AUDIENCES = ["Mężczyzna", "Kobieta", "Ojciec", "Matka", "Mąż", "Żona", "Lider"];
 
 // Tekst opcjonalny → NULL; obcięty do max.
@@ -90,6 +93,16 @@ function pickVal(v, allowed) {
   return allowed.includes(v) ? escStr(v) : "NULL";
 }
 
+// Limit miejsc: 1–1000 dla typów z miejscami; pusty albo inny typ → NULL (bez limitu).
+function capacityVal(p) {
+  if (!SEAT_TYPES.includes(p.product_type)) return "NULL";
+  const v = p.capacity;
+  if (v === "" || v === null || v === undefined) return "NULL";
+  const n = Number(v);
+  if (!Number.isInteger(n) || n < 1 || n > 1000) throw new Error("Limit miejsc: liczba od 1 do 1000.");
+  return String(n);
+}
+
 function buildValues(p, name, slug, price, oldPrice, category) {
   return {
     // Pola klasyczne (strona produktu, koszyk)
@@ -134,6 +147,7 @@ function buildValues(p, name, slug, price, oldPrice, category) {
     private_file_uri: textVal(p.private_file_uri, 1000),
     private_file_name: textVal(p.private_file_name, 300),
     price_steps: stepsVal(p.price_steps),
+    capacity: capacityVal(p),
   };
 }
 
@@ -142,7 +156,7 @@ const SHOP_COLUMNS = `name, slug, subtitle, description, long_description, price
   level, stage, form, audience_tags, promise, for_whom, format_details,
   price_start, price_regular, is_free, status, promo_end_date,
   button_label, checkout_url, next_step, is_featured, sort_order, cover_image, file_url,
-  product_type, access_months, private_file_uri, private_file_name, price_steps, bundle_items`;
+  product_type, access_months, private_file_uri, private_file_name, price_steps, bundle_items, capacity`;
 
 const SHOP_SELECT = `id, name, slug, subtitle, description, long_description,
   price::float8 AS price, old_price::float8 AS old_price, category, image_url, gallery,
@@ -170,7 +184,7 @@ export default async function (req) {
                 p.price_start::float8 AS price_start, p.price_regular::float8 AS price_regular,
                 p.is_free, p.status, p.promo_end_date::text AS promo_end_date,
                 p.button_label, p.checkout_url, p.next_step, p.is_featured, p.sort_order, p.cover_image, p.file_url,
-                p.product_type, p.access_months, p.private_file_uri, p.private_file_name,
+                p.product_type, p.access_months, p.private_file_uri, p.private_file_name, p.capacity,
                 to_jsonb(p)->'price_steps' AS price_steps, to_jsonb(p)->'price_options' AS price_options,
                 to_jsonb(p)->'bundle_items' AS bundle_items,
                 p.created_date, p.updated_date,
@@ -180,6 +194,12 @@ export default async function (req) {
          LIMIT 500`,
         true
       );
+      // Licznik „sprzedane / limit” dla produktów z limitem miejsc.
+      const seats = await productSeats(base44, (products || []).map((p) => p.id)).catch(() => new Map());
+      for (const p of products || []) {
+        const s = seats.get(String(p.id));
+        if (s) p.seats = s;
+      }
       return Response.json({ products });
     }
 
@@ -204,7 +224,7 @@ export default async function (req) {
 
       await runSql(
         base44,
-        `ALTER TABLE public.products ADD COLUMN IF NOT EXISTS file_url text, ADD COLUMN IF NOT EXISTS price_steps jsonb, ADD COLUMN IF NOT EXISTS available_at timestamptz, ADD COLUMN IF NOT EXISTS bundle_items jsonb DEFAULT '[]'`
+        `ALTER TABLE public.products ADD COLUMN IF NOT EXISTS file_url text, ADD COLUMN IF NOT EXISTS price_steps jsonb, ADD COLUMN IF NOT EXISTS available_at timestamptz, ADD COLUMN IF NOT EXISTS bundle_items jsonb DEFAULT '[]', ADD COLUMN IF NOT EXISTS capacity int`
       );
 
       if (p.id) {
@@ -227,6 +247,7 @@ export default async function (req) {
              private_file_uri = ${v.private_file_uri}, private_file_name = ${v.private_file_name},
              price_steps = ${v.price_steps},
              bundle_items = ${v.bundle_items},
+             capacity = ${v.capacity},
              -- chwila premiery („wkrótce”/ukryty → „dostępny”) — dla powiadomień klientów o nowościach
              available_at = CASE WHEN ${v.status} = 'dostępny' AND COALESCE(status, 'dostępny') <> 'dostępny' THEN now() ELSE available_at END,
              updated_date = now()
@@ -244,7 +265,7 @@ export default async function (req) {
                    ${v.price_start}, ${v.price_regular}, ${v.is_free}, ${v.status}, ${v.promo_end_date},
                    ${v.button_label}, ${v.checkout_url}, ${v.next_step}, ${v.is_featured}, ${v.sort_order}, ${v.cover_image},
                    ${v.file_url}, ${v.product_type}, ${v.access_months}, ${v.private_file_uri}, ${v.private_file_name},
-                   ${v.price_steps}, ${v.bundle_items}, ${escStr(user.id)})`
+                   ${v.price_steps}, ${v.bundle_items}, ${v.capacity}, ${escStr(user.id)})`
         );
         await runSql(
           base44,

@@ -97,11 +97,37 @@ export function productHref(p) {
   return url || `/skarbiec/${p.slug}`;
 }
 
+// Miejsca: „ZOSTAŁO X Z N MIEJSC” (przy 10 i mniej wyróżnione), „BRAK MIEJSC” przy zerze.
+export function SeatsLine({ p, className = "" }) {
+  const s = p?.seats;
+  if (!s || !s.capacity) return null;
+  if (s.left <= 0) {
+    return <span className={`technical text-[10px] blood-text ${className}`}>BRAK MIEJSC</span>;
+  }
+  return (
+    <span className={`technical text-[10px] ${s.left <= 10 ? "gold-text" : "text-foreground/45"} ${className}`}>
+      ZOSTAŁO {s.left} Z {s.capacity} MIEJSC
+    </span>
+  );
+}
+
 export function ProductButton({ p, onWaitlist }) {
   const { addItem } = useCart();
   const base =
     "inline-flex items-center justify-center gap-2 px-6 py-3 technical text-[10px] w-full transition-all duration-300";
   const cls = `${base} border border-[#C9A24A]/70 text-[#C9A24A] hover:bg-[#C9A24A]/10 hover:border-[#C9A24A]`;
+
+  // Limit miejsc wykorzystany: zamiast zakupu — lista rezerwowa (ten sam zapis co przy „wkrótce”).
+  if (p.seats && p.seats.left <= 0) {
+    return (
+      <button
+        onClick={() => onWaitlist && onWaitlist(p)}
+        className={`${base} border border-[#5C1A1B] text-[#E0B9B9] hover:bg-[#5C1A1B]/25`}
+      >
+        Brak miejsc — daj znać
+      </button>
+    );
+  }
 
   if (p.status === "wkrótce") {
     return (

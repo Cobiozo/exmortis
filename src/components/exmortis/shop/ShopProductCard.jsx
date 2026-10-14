@@ -1,7 +1,7 @@
 import React from "react";
 import { Link } from "react-router-dom";
 import { Image } from "@/components/ui/image";
-import { CardTopBadge, PriceBlock, ProductButton, isListenProduct, productHref } from "./cardBits";
+import { CardTopBadge, PriceBlock, ProductButton, SeatsLine, isListenProduct, productHref } from "./cardBits";
 import { RatingLine } from "./Stars";
 
 // Link wewnętrzny albo zewnętrzny (produkty z własnym adresem, np. POWRÓT → /powrot).
@@ -62,6 +62,7 @@ export default function ShopProductCard({ product: p, onWaitlist, index }) {
               <PriceBlock p={p} />
             </div>
           )}
+          <SeatsLine p={p} />
           <ProductButton p={p} onWaitlist={onWaitlist} />
           {p.next_step && !soon && <p className="text-[11px] text-foreground/40 line-clamp-2">{p.next_step}</p>}
           {p.slug === "powrot-mentoring" && (

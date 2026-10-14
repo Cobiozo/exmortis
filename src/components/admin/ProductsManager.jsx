@@ -127,6 +127,7 @@ export default function ProductsManager() {
                     : p.price === 0
                     ? "BEZPŁATNE"
                     : `${p.price} ZŁ`}
+                  {p.seats ? ` · ${p.seats.sold} / ${p.seats.capacity} MIEJSC` : ""}
                 </p>
               </div>
               {p.waitlist_count > 0 && (

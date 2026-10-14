@@ -11,6 +11,9 @@ export default function WaitlistDialog({ product, onClose }) {
 
   if (!product) return null;
 
+  // Limit miejsc wykorzystany: ten sam zapis, tylko inne słowa.
+  const soldOut = !!(product.seats && product.seats.left <= 0);
+
   const submit = async (e) => {
     e.preventDefault();
     setError("");
@@ -53,7 +56,7 @@ export default function WaitlistDialog({ product, onClose }) {
             <Check className="h-8 w-8 gold-text mx-auto" />
             <p className="shop-heading text-2xl text-[#F5EFE1]">Dziękuję.</p>
             <p className="text-sm text-foreground/60 leading-relaxed">
-              Napiszę do Ciebie, kiedy to będzie gotowe.
+              {soldOut ? "Napiszę do Ciebie, gdy zwolni się miejsce." : "Napiszę do Ciebie, kiedy to będzie gotowe."}
             </p>
             <button onClick={onClose} className="btn-ghost !px-5 !py-2.5 text-[10px]">
               ZAMKNIJ
@@ -62,7 +65,7 @@ export default function WaitlistDialog({ product, onClose }) {
         ) : (
           <form onSubmit={submit} className="space-y-5">
             <div>
-              <p className="technical text-[9px] gold-text mb-2">LISTA OCZEKUJĄCYCH</p>
+              <p className="technical text-[9px] gold-text mb-2">{soldOut ? "LISTA REZERWOWA" : "LISTA OCZEKUJĄCYCH"}</p>
               <h3 className="shop-heading text-2xl text-[#F5EFE1]">{product.name}</h3>
             </div>
             <div>
@@ -92,12 +95,14 @@ export default function WaitlistDialog({ product, onClose }) {
                 className="accent-[#C9A24A] w-5 h-5 shrink-0 mt-0.5"
               />
               <span className="text-xs text-foreground/50 leading-relaxed">
-                Wyrażam zgodę, żeby exmortis napisał do mnie, kiedy ten materiał będzie dostępny.
+                {soldOut
+                  ? "Wyrażam zgodę, żeby exmortis napisał do mnie, gdy zwolni się miejsce."
+                  : "Wyrażam zgodę, żeby exmortis napisał do mnie, kiedy ten materiał będzie dostępny."}
               </span>
             </label>
             {error && <p className="text-xs blood-text">{error}</p>}
             <button type="submit" disabled={sending} className="btn-relic w-full disabled:opacity-60">
-              {sending ? "ZAPISUJĘ..." : "ZAPISZ MNIE"}
+              {sending ? "ZAPISUJĘ..." : soldOut ? "DAJ ZNAĆ, GDY ZWOLNI SIĘ MIEJSCE" : "ZAPISZ MNIE"}
             </button>
           </form>
         )}
