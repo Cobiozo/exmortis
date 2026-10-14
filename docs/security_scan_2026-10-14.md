@@ -255,6 +255,8 @@ Zakres: `CmsPage`, `CmsPreview`, `About`, `Powrot`, `Kontakt`, `Listopad`, `site
 
 **Zmierzone.** Publikacja ładuje **44 pliki JavaScript (198 KB po kompresji)** zanim cokolwiek się pokaże, w tym cały moduł bloków CMS (`modules`, 47 KB gzip) — wciągany do pierwszej paczki przez `HomeSwitch` → `Home`/`Listopad` → `CmsRoutePage` → `BlockRenderer` i moduły. Do tego dochodzi `Admin` (872 KB surowo) w osobnej paczce — dobrze, że nie w pierwszej.
 
+**Po zmianie (leniwe moduły bloków, 2026-10-14).** Bloki „moduł” (Dla kogo, Skarbiec, Newsletter…) jadą w osobnym pliku (`ModuleSlot` → `ModuleLazy`) i wchodzą po załadowaniu strony; blok w pierwszym widoku i w edytorze — od razu. Pierwsza paczka: **30 plików / 140 KB gzip** (wpis `modulepreload`) wobec **44 plików / 201 KB** przed zmianą, a moduł bloków (43 KB gzip) wypadł z tej listy; całość startu (entry + wstępne pliki) **224 KB wobec 272 KB**.
+
 **Czego NIE zmieniano.** Mechanizm przedpremierowy i `src/content/landingShell.html` działają jak dotąd: do 1.11 21:30 gość na „/” dostaje gotowy HTML (nagłówek + główne zdjęcie) wstawiany skryptem z `vite.config.js`, a React podmienia go identyczną treścią. Warunek wyłącza się sam po dacie premiery.
 
 **Co trzeba zrobić po 1.11, żeby opublikowana strona „home” startowała równie szybko** (do wdrożenia dopiero po premierze, bo każda z tych zmian opóźnia dziś podmianę gotowego HTML):
