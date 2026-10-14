@@ -10,6 +10,7 @@ import { regulaminVersion } from "../../shared/legalDocs.ts";
 import { unitPrice } from "../../shared/productPrice.ts";
 import { cleanInvoice, invoiceText } from "../../shared/invoice.ts";
 import { giftLine } from "../../shared/giftCard.ts";
+import { ticketLines } from "../../shared/tickets.ts";
 
 const DIGITAL_CONSENT =
   "Żądam dostarczenia treści cyfrowych przed upływem 14 dni od zawarcia umowy i przyjmuję do wiadomości, że z chwilą rozpoczęcia ich dostarczania tracę prawo odstąpienia od umowy.";
@@ -50,11 +51,16 @@ export default async function (req) {
     const items = Array.isArray(body.items) ? body.items.slice(0, 20) : [];
     if (items.length === 0) throw new Error("Koszyk jest pusty");
 
+    // Bilety na wydarzenia (cena, miejsca i termin sprzedaży z serwera) — osobno od produktów Skarbca.
+    const ticketItems = items.filter((i) => i && i.kind === "bilet");
+    const productItems = items.filter((i) => !(i && i.kind === "bilet"));
+    const tickets = await ticketLines(base44, ticketItems);
+
     // Ceny liczone po stronie serwera — dane z koszyka nie są brane za pewnik.
-    const ids = [...new Set(items.map((i) => String((i || {}).id || "")).filter(Boolean))];
-    if (ids.length === 0) throw new Error("Koszyk jest pusty");
+    const ids = [...new Set(productItems.map((i) => String((i || {}).id || "")).filter(Boolean))];
+    if (ids.length === 0 && tickets.length === 0) throw new Error("Koszyk jest pusty");
     const idList = ids.map((id) => escStr(id)).join(",");
-    const rows = await runSql(
+    const rows = !ids.length ? [] : await runSql(
       base44,
       `SELECT id, name, price::float8 AS price, price_regular::float8 AS price_regular, price_start::float8 AS price_start,
               promo_end_date::text AS promo_end_date, to_jsonb(p)->'price_steps' AS price_steps,
@@ -71,7 +77,12 @@ export default async function (req) {
     const products = [];
     const stored = [];
     let totalGrosze = 0;
-    for (const it of items) {
+    for (const t of tickets) {
+      totalGrosze += Number(t.unitPrice) * t.quantity;
+      products.push({ name: t.name, unitPrice: t.unitPrice, quantity: t.quantity });
+      stored.push(t);
+    }
+    for (const it of productItems) {
       const p = byId.get(String((it || {}).id));
       // Produkty „wkrótce”, ukryte i darmowe nie są sprzedawane przez kasę.
       if (!p || p.active === false || p.status === "wkrótce" || p.status === "ukryty" || p.is_free === true) {
@@ -151,7 +162,7 @@ export default async function (req) {
         continueUrl: `${APP_URL}/kasa?payu=done`,
         customerIp,
         merchantPosId: String(payu.posId),
-        description: "EXMORTIS — skarbiec",
+        description: tickets.length ? "EXMORTIS — bilety" : "EXMORTIS — skarbiec",
         currencyCode: "PLN",
         totalAmount: String(totalGrosze),
         extOrderId,
@@ -191,7 +202,7 @@ export default async function (req) {
     return Response.json({ redirectUri: data.redirectUri, orderId: extOrderId });
   } catch (error) {
     // Błąd walidacji formularza = 400 (wina danych), reszta = 500.
-    const bad = /^(Brak pola|Pole .* jest zbyt długie|Niepoprawny adres e-mail|Zaakceptuj|Zaznacz|Koszyk jest pusty|Jeden z produktów|Nieprawidłowy kod|Kod |Kodem |Kwota zamówienia|Podaj |Niepoprawny NIP)/.test(String(error?.message || ""));
+    const bad = /^(Brak pola|Pole .* jest zbyt długie|Niepoprawny adres e-mail|Zaakceptuj|Zaznacz|Koszyk jest pusty|Jeden z produktów|Nieprawidłowy kod|Kod |Kodem |Kwota zamówienia|Podaj |Niepoprawny NIP|Bilet:|Brak wolnych)/.test(String(error?.message || ""));
     return Response.json({ error: error.message }, { status: bad ? 400 : 500 });
   }
 }

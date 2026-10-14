@@ -3,7 +3,7 @@ import { runSql, escStr, requireAdmin, emailField } from "../../shared/supabase.
 import { loadAppUrl, getSetting, saveSetting } from "../../shared/settings.ts";
 import { clearSnap } from "../../shared/snapshot.ts";
 import { sendMail } from "../../shared/smtp.ts";
-import { ensureTicketSchema, showCode, ticketUrl, ticketPdfUrl, loadEvent, eventCounts, checkTicket, cleanName, ticketsHtml, SCANNERS_KEY } from "../../shared/tickets.ts";
+import { ensureTicketSchema, newCode, newToken, showCode, ticketUrl, ticketPdfUrl, loadEvent, eventCounts, checkTicket, cleanName, ticketsHtml, SCANNERS_KEY } from "../../shared/tickets.ts";
 import { renderTicketsPdf, cleanLayout } from "../../shared/ticketPdf.ts";
 
 // Bilety — panel administratora: sprzedaż włącz/wyłącz, wzór PDF, lista biletów, ręczne bilety,
@@ -66,7 +66,6 @@ export default async function (req) {
       const name = cleanName(body.name);
       if (name.length < 3) return Response.json({ error: "Podaj imię i nazwisko" }, { status: 400 });
       const email = body.email ? emailField(body).toLowerCase() : null;
-      const { newCode, newToken } = await import("../../shared/tickets.ts");
       let row = null;
       for (let i = 0; i < 6 && !row; i++) {
         row = (await runSql(base44, `INSERT INTO public.event_tickets (code, token, event_id, holder_name, buyer_email, price, source)

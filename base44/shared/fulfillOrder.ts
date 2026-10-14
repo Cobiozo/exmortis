@@ -5,6 +5,7 @@ import { releaseCompletion } from "./orders.ts";
 import { sendMail, orderEmailHtml, adminTo } from "./smtp.ts";
 import { nextStep, nextStepHtml } from "./nextStep.ts";
 import { issueGiftCards, giftCardsHtml } from "./giftCard.ts";
+import { issueOrderTickets, ticketsHtml, loadEvent } from "./tickets.ts";
 import { runSql, rpc, escStr } from "./supabase.ts";
 import { DIGITAL, grantAccess, ensureAccount } from "./access.ts";
 import { randomToken, sha256hex } from "./booking.ts";
@@ -93,6 +94,17 @@ export async function fulfillOrder(base44, stored, payuOrderId) {
     if (cardIds.length) cards = giftCardsHtml(await issueGiftCards(base44, stored.id, items, cardIds, stored.buyer_email));
   } catch (e) { console.error("karta podarunkowa:", e?.message); }
 
+  // Bilety na wydarzenia: numery, kody QR i zapis kupującego (niezależnie od wysyłki maila — są też w koncie).
+  let tix = "";
+  try {
+    const issued = await issueOrderTickets(base44, stored, items);
+    if (issued.length) {
+      const evs = new Map();
+      for (const id of [...new Set(issued.map((t) => t.event_id))]) evs.set(id, await loadEvent(base44, id));
+      tix = ticketsHtml(issued, evs);
+    }
+  } catch (e) { console.error("bilety:", e?.message); }
+
   if (stored.buyer_email) {
     try {
       // „Następny krok” dotyczy tego, co osoba kupiła dla siebie — karta podarunkowa go nie wyznacza,
@@ -104,7 +116,7 @@ export async function fulfillOrder(base44, stored, payuOrderId) {
       await sendMail(base44, {
         kind: "zamowienie", ref: stored.id, to: stored.buyer_email,
         subject: Number(stored.total) > 0 ? "EXMORTIS — płatność przyjęta" : "EXMORTIS — zamówienie przyjęte",
-        html: orderEmailHtml(stored.buyer_name || "", items, stored.total, stored.id, stored.invoice || null) + accessEmailHtml(granted, !!stored.digital_consent_text, newAccount, stored.buyer_email) + cards + step,
+        html: orderEmailHtml(stored.buyer_name || "", items, stored.total, stored.id, stored.invoice || null) + accessEmailHtml(granted, !!stored.digital_consent_text, newAccount, stored.buyer_email) + tix + cards + step,
       });
     } catch { /* e-mail potwierdzenia jest opcjonalny */ }
   }
