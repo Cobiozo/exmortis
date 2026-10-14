@@ -5,6 +5,7 @@ import { releaseCompletion } from "./orders.ts";
 import { sendMail, orderEmailHtml, adminTo } from "./smtp.ts";
 import { nextStep, nextStepHtml } from "./nextStep.ts";
 import { issueGiftCards, giftCardsHtml } from "./giftCard.ts";
+import { markCodeUsed } from "./discounts.ts";
 import { issueOrderTickets, ticketsHtml, loadEvent } from "./tickets.ts";
 import { runSql, rpc, escStr } from "./supabase.ts";
 import { DIGITAL, grantAccess, ensureAccount } from "./access.ts";
@@ -84,6 +85,7 @@ export async function fulfillOrder(base44, stored, payuOrderId) {
     if (code) {
       const rec = (await base44.asServiceRole.entities.DiscountCode.filter({ code }))[0];
       if (rec) await base44.asServiceRole.entities.DiscountCode.update(rec.id, { uses: (rec.uses || 0) + 1 });
+      await markCodeUsed(base44, String(stored.id));
     }
   } catch { /* licznik kodu nie blokuje zamówienia */ }
 

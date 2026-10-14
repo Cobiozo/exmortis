@@ -31,9 +31,11 @@ const BASE_URLS = {
 };
 
 export default async function (req) {
+  let base44Ref = null;
   let reservedFor = null; // zamówienie, pod które zarezerwowano kod — zwalniane, gdy płatność się nie utworzy
   try {
     const base44 = createClientFromRequest(req);
+    base44Ref = base44;
     await loadAppUrl(base44);
     const body = await req.json().catch(() => ({}));
 
