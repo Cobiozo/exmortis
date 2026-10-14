@@ -60,6 +60,16 @@ function releaseVal(v) {
   return isNaN(d.getTime()) ? "NULL" : `${escStr(d.toISOString())}::timestamptz`;
 }
 
+// Karta podarunkowa: kwoty do wyboru, np. [97, 197, 497] — do 6, każda 10–5000 zł; dla innych typów NULL.
+function optionsVal(p) {
+  if (p.product_type !== "karta") return "NULL";
+  const raw = Array.isArray(p.price_options) ? p.price_options : String(p.price_options || "").split(/[,;\s]+/);
+  const nums = [...new Set(raw.map((x) => Math.round(Number(String(x).replace(",", ".")) * 100) / 100).filter((n) => Number.isFinite(n) && n > 0))].sort((a, b) => a - b);
+  if (nums.some((n) => n < 10 || n > 5000)) throw new Error("Kwoty karty: każda od 10 do 5000 zł.");
+  if (nums.length > 6) throw new Error("Kwoty karty: najwyżej 6.");
+  return nums.length ? `${escStr(JSON.stringify(nums))}::jsonb` : "NULL";
+}
+
 // Wartość z listy dozwolonych albo NULL.
 function pickVal(v, allowed) {
   return allowed.includes(v) ? escStr(v) : "NULL";
@@ -146,7 +156,7 @@ export default async function (req) {
                 p.is_free, p.status, p.promo_end_date::text AS promo_end_date,
                 p.button_label, p.checkout_url, p.next_step, p.is_featured, p.sort_order, p.cover_image, p.file_url,
                 p.product_type, p.access_months, p.private_file_uri, p.private_file_name,
-                to_jsonb(p)->'price_steps' AS price_steps,
+                to_jsonb(p)->'price_steps' AS price_steps, to_jsonb(p)->'price_options' AS price_options,
                 p.created_date, p.updated_date,
                 (SELECT COUNT(*)::int FROM public.waitlist w WHERE w.product_id = p.id) AS waitlist_count
          FROM public.products p
@@ -225,6 +235,8 @@ export default async function (req) {
       await ensureWaitlistCols(base44);
       const rel = p.status === "wkrótce" ? releaseVal(p.release_at) : "NULL";
       await runSql(base44, `UPDATE public.products SET release_at = ${rel}, release_note = ${rel === "NULL" ? "NULL" : textVal(p.release_note, 1500)} WHERE slug = ${v.slug}`);
+      await runSql(base44, `ALTER TABLE public.products ADD COLUMN IF NOT EXISTS price_options jsonb`);
+      await runSql(base44, `UPDATE public.products SET price_options = ${optionsVal(p)} WHERE slug = ${v.slug}`);
       await recordPrices(base44, true).catch(() => {}); // historia cen (Omnibus) od razu po zmianie
       await clearSnap(base44, "products:").catch(() => {}); // katalog w Skarbcu odświeży się przy najbliższym wejściu
       return Response.json({ ok: true });

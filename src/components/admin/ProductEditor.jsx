@@ -64,6 +64,7 @@ export default function ProductEditor({ product, onSaved, onCancel }) {
     price_start: product?.price_start != null ? String(product.price_start) : "",
     price_regular: product?.price_regular != null ? String(product.price_regular) : "",
     promo_end_date: product?.promo_end_date || "",
+    price_options: Array.isArray(product?.price_options) ? product.price_options.join(", ") : "",
     price_steps: Array.isArray(product?.price_steps) ? product.price_steps.map((s) => ({ do: s.do || "", cena: s.cena != null ? String(s.cena) : "" })) : [],
     is_free: !!product?.is_free,
     // Pola klasyczne (strona produktu, koszyk)
@@ -375,6 +376,13 @@ export default function ProductEditor({ product, onSaved, onCancel }) {
           />
         </div>
       </div>
+      {form.product_type === "karta" && (
+        <div className="mb-8">
+          <label className={labelCls}>KWOTY KARTY PODARUNKOWEJ (ZŁ, PO PRZECINKU)</label>
+          <input value={form.price_options} onChange={(e) => set("price_options", e.target.value)} placeholder="97, 197, 497" className={`${inputCls} font-mono`} />
+          <p className="text-[11px] text-foreground/50 mt-1">Klient wybiera kwotę na stronie karty i może dopisać imię obdarowanego oraz jedno zdanie. Puste pole = jedna kwota z ceny produktu.</p>
+        </div>
+      )}
       <PriceSteps value={form.price_steps} onChange={(v) => set("price_steps", v)} regular={form.price_regular} inputCls={inputCls} labelCls={labelCls} />
       <div className="flex flex-col sm:flex-row gap-6 mb-10">
         <label className="flex items-center gap-3 cursor-pointer">
