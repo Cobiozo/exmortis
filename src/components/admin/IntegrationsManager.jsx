@@ -2,6 +2,7 @@ import React, { useEffect, useState } from "react";
 import { base44 } from "@/api/base44Client";
 import { Save, Trash2, CreditCard, Mail } from "lucide-react";
 import AppUrlSettings from "./AppUrlSettings";
+import { useAuth } from "@/lib/AuthContext";
 
 const inputCls =
   "w-full bg-transparent border hairline px-4 py-2.5 focus:border-[#C9A24A] focus:outline-none transition-colors text-sm";
@@ -31,6 +32,9 @@ function Text({ label, value, onChange, placeholder = "", type = "text" }) {
 }
 
 export default function IntegrationsManager() {
+  const { user } = useAuth();
+  // Klucze PayU zmienia wyłącznie administrator — rola „techniczna" nie widzi tego formularza.
+  const isAdmin = user?.role === "admin";
   const [payu, setPayu] = useState(EMPTY_PAYU);
   const [smtp, setSmtp] = useState(EMPTY_SMTP);
   const [loading, setLoading] = useState(true);
@@ -111,6 +115,7 @@ export default function IntegrationsManager() {
     <div className="grid lg:grid-cols-2 gap-8 items-start">
       <AppUrlSettings initial={appUrl} />
       {/* ===== PAYU ===== */}
+      {isAdmin && (
       <section className="border hairline p-6 md:p-8">
         <div className="flex items-center gap-3 mb-2">
           <CreditCard className="h-5 w-5 gold-text" />
@@ -177,6 +182,7 @@ export default function IntegrationsManager() {
         </div>
         <Msg msg={payuMsg} />
       </section>
+      )}
 
       <section className="border hairline p-6 md:p-8">
         <div className="flex items-center gap-3 mb-2">

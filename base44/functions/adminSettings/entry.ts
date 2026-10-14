@@ -67,6 +67,9 @@ export default async function (req) {
       if (target !== "payu" && target !== "smtp") {
         throw new Error("Nieznana integracja");
       }
+      // Klucze płatności i poczty zmienia wyłącznie administrator. Przejęcie ich pozwoliłoby
+      // przekierować płatności na własne konto PayU albo całą wychodzącą pocztę na własny serwer.
+      if (tech) return Response.json({ error: "Brak dostępu" }, { status: 403 });
       const keys = target === "payu" ? PAYU_KEYS : SMTP_KEYS;
       const prev = (await getSetting(base44, target)) || {};
       const data = body.data && typeof body.data === "object" ? body.data : {};
@@ -140,6 +143,7 @@ export default async function (req) {
       if (target !== "payu" && target !== "smtp") {
         throw new Error("Nieznana integracja");
       }
+      if (tech) return Response.json({ error: "Brak dostępu" }, { status: 403 });
       await deleteSetting(base44, target);
       return Response.json({ ok: true });
     }

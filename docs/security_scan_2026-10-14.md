@@ -47,6 +47,26 @@ Sprawdzono wszystkie funkcje pod kątem tego, co da się wywołać bez logowania
 3. **payuNotification** — porównanie podpisu w czasie stałym (odporność na atak czasowy).
 4. **media** — mapa liczników czyszczona po przekroczeniu rozmiaru (brak nieograniczonego wzrostu pamięci instancji).
 
+## Panel administratora i funkcje `admin*` — przegląd (2026-10-14)
+
+Model ról: **admin** (wszystko) i **techniczna** (treści, menu, ustawienia, integracje, cisza — bez danych osobowych i bez sekretów).
+
+### Znalezione i naprawione (uprawnienia)
+- **`adminSettings` — klucze płatności i poczty były zapisywalne przez rolę „techniczna".** Akcje `save` i `delete` dla `payu` i `smtp` nie sprawdzały roli, więc użytkownik techniczny mógł podmienić dane merchantu PayU (POS ID, Client ID, Client Secret, drugi klucz) na własne konto — co przekierowałoby wszystkie płatności — albo wskazać własny serwer SMTP i przejąć całą wychodzącą pocztę (łącznie z linkami do resetu hasła). Odczyt był maskowany, ale zapis nie. Teraz `save`/`delete` dla `payu` i `smtp` wymagają roli `admin` (spójnie z akcjami `video_*`, które już tak działały).
+- **`mailAdmin` — ta sama dźwignia drugą drogą.** `save` (zapis hasła SMTP) i `test` (wysyłka na dowolny adres z serwera aplikacji) były dostępne dla całego personelu. Teraz wymagają roli `admin`; `status`, `dns` i `log` (adresy maskowane) zostają dostępne dla personelu.
+- **`IntegrationsManager` (sekcja „Integracje")** — formularz kluczy PayU pokazywał się roli technicznej. Teraz widzi go wyłącznie administrator.
+
+### Zweryfikowane jako poprawne
+- **Wejście do panelu**: `/admin` stoi za logowaniem, a sam panel sprawdza rolę i przy roli „techniczna" dopuszcza wyłącznie sekcje `tresci`, `menu`, `ustawienia`, `integracje`, `cisza`. To jednak tylko warstwa widoku — każde wywołanie funkcji jest sprawdzane osobno po stronie serwera, więc obejście adresu nic nie daje.
+- **Funkcje z danymi osobowymi**: `adminClients` (klienci, dostępy, blokady), `adminOrders`, `adminNewsletter`, `adminSubscribers`, `adminQuiz`, `adminProducts`, `adminDashboard`, `emailChange`, `gdprPerson` — wszystkie wymagają roli `admin`, a `adminClients` zwraca 403, gdy sprawdzenie się nie powiedzie.
+- **Moduły**: `bookingAdmin`, `libraryAdmin`, `eventsAdmin`, `rozdrozaAdmin`, `ticketsAdmin` — rola `admin`.
+- **`adminContent`** i **`silenceAdmin`** — celowo dla całego personelu (treści i ustawienia modułu Cisza, bez danych osobowych). Zapis treści przechodzi walidację klucza (`^[a-z0-9._-]+$`) i limitu rozmiaru bloku; wartości idą przez quoting SQL.
+- **Maskowanie**: `adminSettings.get` zwraca `clientSecret`, `secondKey` i hasło SMTP jako maskę; `mailAdmin.status` maskuje hasło, a `log` skraca adresy odbiorców do `xx***@domena`.
+- **Rola „techniczna" nie widzi** listy adresów z dostępem przedpremierowym (pole `dostep` odcinane przed odpowiedzią) ani sekretów integracji.
+
+### Uwaga do sprzątnięcia (bez wpływu na bezpieczeństwo)
+`IntegrationsManager` ma martwy fragment kodu: `sendTest` wywołuje funkcję `smtpTest`, której nie ma (przycisk testu przeniesiono do `MailSettings` → `mailAdmin`). Kod jest nieosiągalny z interfejsu — do usunięcia przy okazji.
+
 ## Ryzyka otwarte (bez zmian)
 1. Wylogowanie ze wszystkich urządzeń — ograniczenie platformy.
 2. Podpisane linki do plików działają do 1 godziny.

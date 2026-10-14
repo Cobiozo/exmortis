@@ -30,7 +30,10 @@ async function dnsCheck(domain) {
 export default async function (req) {
   try {
     const base44 = createClientFromRequest(req);
-    await requireStaff(base44);
+    const me = await requireStaff(base44);
+    // Rola „techniczna" widzi stan wysyłki, ale nie zmienia konfiguracji poczty
+    // ani nie wysyła nią na dowolny adres — to ta sama dźwignia co klucze PayU.
+    const tech = me.role !== "admin";
     const body = await req.json().catch(() => ({}));
     const Q = base44.asServiceRole.entities.MailQueue;
     const smtp = (await getSetting(base44, "smtp")) || {};
@@ -45,6 +48,7 @@ export default async function (req) {
     }
 
     if (body.action === "save") {
+      if (tech) return Response.json({ error: "Brak dostępu" }, { status: 403 });
       const d = body.data || {};
       const next = { ...smtp };
       for (const k of KEYS) {
@@ -62,6 +66,7 @@ export default async function (req) {
     }
 
     if (body.action === "test") {
+      if (tech) return Response.json({ error: "Brak dostępu" }, { status: 403 });
       const to = emailField(body, "to");
       try {
         await smtpSend(smtp, { to, subject: "exmortis: test wysyłki e-mail", html: "<p>Test wysyłki z panelu exmortis. Jeśli widzisz tę wiadomość, wysyłka działa.</p>" });
