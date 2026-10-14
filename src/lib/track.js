@@ -9,6 +9,15 @@ let gaOn = false;
 let fbOn = false;
 let lastPage = "";
 
+// Adres bez kluczy z linków (np. ?t= w wypisie, rezerwacji, karcie) — do narzędzi trafia ścieżka i tylko parametry utm_*.
+function cleanUrl() {
+  const u = new URL(window.location.href);
+  const keep = new URLSearchParams();
+  for (const [k, v] of u.searchParams) if (/^utm_/.test(k)) keep.set(k, v);
+  const q = keep.toString();
+  return { path: u.pathname + (q ? "?" + q : ""), href: u.origin + u.pathname + (q ? "?" + q : "") };
+}
+
 export function setTrackSettings(p) {
   cfg = {
     wlaczony: !!(p && p.wlaczony),
@@ -37,7 +46,7 @@ function loadGa() {
   document.head.appendChild(s);
   window.gtag("consent", "update", { analytics_storage: "granted" });
   window.gtag("js", new Date());
-  window.gtag("config", cfg.ga4_id, { anonymize_ip: true, send_page_view: false });
+  window.gtag("config", cfg.ga4_id, { anonymize_ip: true, send_page_view: false, page_location: cleanUrl().href });
 }
 
 function loadFb() {
@@ -71,10 +80,11 @@ export function track(name, params) {
 
 // PageView przy zmianie adresu — raz na dany adres (także wtedy, gdy zgoda przyszła w trakcie wizyty).
 export function trackPageView(key) {
-  const k = key || window.location.pathname + window.location.search;
+  const c = cleanUrl();
+  const k = key || c.path;
   if (k === lastPage || (!gaAllowed() && !fbAllowed())) return;
   lastPage = k;
-  if (gaAllowed()) { loadGa(); window.gtag("event", "page_view", { page_path: k, page_location: window.location.href, page_title: document.title }); }
+  if (gaAllowed()) { loadGa(); window.gtag("set", { page_location: c.href }); window.gtag("event", "page_view", { page_path: c.path, page_location: c.href, page_title: document.title }); }
   if (fbAllowed()) { loadFb(); window.fbq("track", "PageView"); }
 }
 
