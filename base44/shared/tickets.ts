@@ -159,6 +159,13 @@ export async function issueOrderTickets(base44, order, items) {
           WHERE public.registrations.status NOT IN ('Zapisany','Obecny')`).catch((e) => console.error("bilet: zapis", e?.message));
     }
   }
+  // Limit miejsc sprawdzany jest przy zamówieniu (z płatnościami w toku z 30 min). Płatność zakończona później
+  // może dać nadkomplet — bilet zostaje ważny (jest opłacony), a administrator dostaje ostrzeżenie.
+  const evIds = [...new Set(lines.map((l) => String(l.event_id)))];
+  out.overbooked = await runSql(base44, `SELECT e.id, e.title, e.capacity, COUNT(t.id)::int AS sold
+      FROM public.events e JOIN public.event_tickets t ON t.event_id = e.id AND t.status <> 'anulowany'
+     WHERE e.id IN (${evIds.map(escStr).join(",")}) AND COALESCE(e.capacity, 0) > 0
+     GROUP BY e.id, e.title, e.capacity HAVING COUNT(t.id) > e.capacity`, true).catch(() => []);
   return out;
 }
 

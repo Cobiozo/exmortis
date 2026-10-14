@@ -145,7 +145,7 @@ export async function fulfillOrder(base44, stored, payuOrderId) {
       await sendMail(base44, {
         kind: "zamowienie_admin", ref: stored.id, to: admin,
         subject: `Nowe zamówienie: ${Number(stored.total || 0).toFixed(2).replace(".", ",")} zł`,
-        html: `<p>${String(stored.buyer_name || "").replace(/</g, "&lt;")} (${String(stored.buyer_email || "").replace(/</g, "&lt;")})</p><p>${list}</p><p>Numer: ${String(stored.id).slice(0, 8).toUpperCase()}</p>${stored.invoice?.nip ? `<p><b>Faktura</b>: ${String(stored.invoice.company).replace(/</g, "&lt;")}, NIP ${String(stored.invoice.nip)}, ${String(stored.invoice.address).replace(/</g, "&lt;")}</p>` : ""}<p>Panel: Zamówienia.</p>`,
+        html: `<p>${String(stored.buyer_name || "").replace(/</g, "&lt;")} (${String(stored.buyer_email || "").replace(/</g, "&lt;")})</p><p>${list}</p><p>Numer: ${String(stored.id).slice(0, 8).toUpperCase()}</p>${stored.invoice?.nip ? `<p><b>Faktura</b>: ${String(stored.invoice.company).replace(/</g, "&lt;")}, NIP ${String(stored.invoice.nip)}, ${String(stored.invoice.address).replace(/</g, "&lt;")}</p>` : ""}<p>Panel: Zamówienia.</p>${(issued.overbooked || []).map((o) => `<p style="color:#b00;"><b>Uwaga — nadkomplet:</b> „${String(o.title).replace(/</g, "&lt;")}” ma ${o.sold} biletów przy limicie ${o.capacity}. Bilety z tego zamówienia są opłacone i ważne — zdecyduj: dodatkowe miejsce albo zwrot (Panel → Spotkania → BILETY).</p>`).join("")}`,
       });
     }
   } catch { /* informacja dla admina nie blokuje zamówienia */ }

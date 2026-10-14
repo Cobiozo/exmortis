@@ -323,14 +323,14 @@ export default async function (req) {
       // Wiersze są PRZEJMOWANE atomowo (flaga ustawiana przed wysyłką, SKIP LOCKED), więc dwa
       // równoległe przebiegi nigdy nie wyślą tego samego przypomnienia. Identyfikator zapisu idzie
       // jako reg_id — wcześniej r.id i e.id miały tę samą nazwę kolumny i nadpisywały się w wyniku.
-      const claim = (flag, where, extraSet = "") => runSql(
+      const claim = (flag, where, extraSet = "", limit = 100) => runSql(
         base44,
         `WITH c AS (
            SELECT r.id FROM public.registrations r JOIN public.events e ON e.id = r.event_id
             WHERE r.status IN ('Zapisany','Obecny') AND e.status = 'Opublikowane'
               AND e.start_datetime IS NOT NULL AND r.${flag} = FALSE AND ${where}
             ORDER BY e.start_datetime
-            LIMIT 100
+            LIMIT ${limit}
             FOR UPDATE OF r SKIP LOCKED
          ), u AS (
            UPDATE public.registrations r SET ${flag} = TRUE${extraSet}
@@ -342,9 +342,9 @@ export default async function (req) {
       );
       // 24 h: tylko spotkania dalej niż godzinę stąd (bliższe dostaną od razu przypomnienie 1 h, bez dubla).
       const due24 = await claim("reminder_24h_sent",
-        `e.start_datetime > now() + interval '1 hour' AND e.start_datetime <= now() + interval '24 hours'`);
+        `e.start_datetime > now() + interval '1 hour' AND e.start_datetime <= now() + interval '24 hours'`, "", 200);
       const due1 = await claim("reminder_1h_sent",
-        `e.start_datetime > now() AND e.start_datetime <= now() + interval '1 hour'`, ", reminder_24h_sent = TRUE");
+        `e.start_datetime > now() AND e.start_datetime <= now() + interval '1 hour'`, ", reminder_24h_sent = TRUE", 400);
       // Powiadomienie o nagraniu: gdy admin udostępni je w kontach (recording_until w przyszłości), po zakończeniu spotkania.
       const dueRec = await claim("recording_sent",
         `e.recording_url IS NOT NULL AND e.recording_until IS NOT NULL AND e.recording_until > now() + interval '30 minutes'
@@ -355,7 +355,7 @@ export default async function (req) {
       const release = (flag, row) => runSql(base44,
         `UPDATE public.registrations SET ${flag} = FALSE WHERE id = ${escStr(row.reg_id)}`).catch(() => {});
       // Kilka wysyłek naraz — przed spotkaniem liczy się czas.
-      const pool = async (rows, fn, n = 5) => {
+      const pool = async (rows, fn, n = 10) => {
         let i = 0;
         await Promise.all(Array.from({ length: Math.min(n, rows.length) }, async () => {
           while (i < rows.length) { const row = rows[i++]; await fn(row); }
