@@ -43,9 +43,11 @@ SELECT
     FROM o, jsonb_array_elements(CASE WHEN jsonb_typeof(o.items::jsonb) = 'array' THEN o.items::jsonb ELSE '[]'::jsonb END) it
     GROUP BY 1) x) AS products,
   (SELECT COALESCE(json_agg(c ORDER BY c.uses DESC), '[]'::json) FROM (
-    SELECT substring(note from 'Kod rabatowy: ([^ ]+)') AS code, COUNT(*)::int AS uses,
-      COALESCE(SUM(replace(substring(note from '\\(−([0-9.,]+) zł\\)'), ',', '.')::numeric), 0)::float8 AS discount
-    FROM o WHERE note LIKE '%Kod rabatowy:%' GROUP BY 1) c) AS codes,
+    SELECT COALESCE(to_jsonb(o)->>'discount_code', '') AS code, COUNT(*)::int AS uses,
+      COALESCE(SUM((SELECT COALESCE(SUM(COALESCE((it->>'unitPrice')::numeric, 0) * COALESCE((it->>'quantity')::int, 1)), 0)
+        FROM jsonb_array_elements(CASE WHEN jsonb_typeof(o.items::jsonb) = 'array' THEN o.items::jsonb ELSE '[]'::jsonb END) it)
+        - COALESCE(o.total, 0) * 100), 0)::float8 / 100 AS discount
+    FROM o WHERE COALESCE(to_jsonb(o)->>'discount_code', '') <> '' GROUP BY 1) c) AS codes,
   (SELECT COALESCE(json_agg(w ORDER BY w.total DESC), '[]'::json) FROM (
     SELECT w.product_id::text AS id, MAX(p.name) AS name, COUNT(*)::int AS total,
       COUNT(*) FILTER (WHERE to_jsonb(w)->>'notified_at' IS NOT NULL)::int AS notified,

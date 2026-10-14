@@ -111,6 +111,28 @@ Zakres: `library`, `libraryAdmin`, `libraryTick`, moduły `shared/library*.ts`, 
 - **Pliki:** sprawdzane rozszerzenie, sygnatura i rozmiar (limit 10 MB PDF, 100 MB audio i wideo); PDF z aktywną treścią dostaje ostrzeżenie, nie blokadę.
 - **Baza:** wszystkie tabele `mb_*` mają włączony RLS i nie mają żadnych uprawnień dla `anon`/`authenticated`; żadna funkcja `mb_*` ani `bk_*` nie jest wykonywalna przez role publiczne (sprawdzone w katalogu bazy).
 
+## Skarbiec i zamówienia — przegląd (2026-10-14)
+
+Zakres: kasa (`Checkout`), `payuCreateOrder`, `payuNotification`, `orderFree`, `checkDiscount`, `adminOrders`, `shopProducts`, `giftCardView`, moduły `shared/orders.ts`, `shared/fulfillOrder.ts`, `shared/discounts.ts`, `shared/giftCard.ts`, `shared/access.ts`, `shared/productPrice.ts`, panel Zamówień i Statystyk sprzedaży.
+
+### Znalezione i naprawione
+1. **Statystyki sprzedaży czytały kody rabatowe z notatki zamówienia.** Notatkę wpisuje kupujący, a to właśnie z niej liczony był raport „Kody rabatowe" w panelu. Wystarczyło wpisać w notatkę tekst „Kod rabatowy: COKOLWIEK (−999,99 zł)", żeby na liście pojawił się wymyślony kod z wymyśloną kwotą — a ponieważ odczyt brał pierwsze trafienie od początku, sfałszowany wpis przesłaniał prawdziwy kod. To ta sama pułapka, którą zamknięto wcześniej przy realizacji zamówienia; statystyki zostały wtedy z tyłu. Teraz kod pochodzi z kolumny zamówienia, a kwota rabatu jest liczona z pozycji i kwoty faktycznie zapłaconej (suma pozycji minus zapłata) — nie da się jej podrobić tekstem. Dwa historyczne zamówienia sprzed wprowadzenia tej kolumny uzupełnione jednorazowo, żeby raport się nie urwał.
+2. **Kasa nie miała żadnego limitu.** To publiczny adres bez logowania, a każde złożone zamówienie to dwa zapytania do PayU i wpis w bazie. Dodany limit 20 zamówień na godzinę z jednego połączenia. Sprawdzanie stanu zamówienia po powrocie z PayU celowo limit nie obejmuje — inaczej strona powrotu psułaby się po kilku odświeżeniach.
+
+### Zweryfikowane jako poprawne
+- **Ceny liczone wyłącznie na serwerze.** Dane z koszyka są tylko wskazówką, który produkt i ile sztuk; kwota, promocja i próg drabinki biorą się z bazy. Podmiana ceny w przeglądarce nic nie daje.
+- **Produkty ukryte, darmowe i „wkrótce" nie przechodzą przez kasę** — sprawdzane przy każdym zamówieniu, nie tylko na liście.
+- **Karty podarunkowe:** kwota wyłącznie z listy kwot ustawionej w produkcie; kod z karty nie obniża ceny innej karty, a zwykły kod rabatowy nie obniża ceny karty (karta ma wartość równą zapłaconej kwocie).
+- **Powiadomienie z PayU:** podpis weryfikowany kluczem drugim, porównanie w czasie stałym; bez poprawnego podpisu żądanie jest odrzucane.
+- **Płatność nie może zostać zaliczona dwa razy.** Pierwsze potwierdzenie z PayU przejmuje zamówienie atomowo — powtórzone i równoległe powiadomienia nie dublują dostępu, maili ani kart. Gdy realizacja się nie uda, przejęcie jest cofane, żeby PayU ponowiło.
+- **Statusu zamówienia nie da się ustawić z przeglądarki** — klient może tylko odpytać o stan po losowym numerze zamówienia, i to bez żadnych danych osobowych.
+- **Koszyk czyści się dopiero po potwierdzeniu płatności**, nie po kliknięciu „Zamawiam".
+- **Kod rabatowy liczy się jako użyty dopiero po opłaceniu**, a limit użyć jest sprawdzany przy składaniu zamówienia.
+- **Dostęp nadawany po zakupie nigdy nie skraca** już posiadanego, a to samo zamówienie nie wydłuża go drugi raz.
+- **Panel zamówień tylko dla administratora**; wyszukiwarka oczyszcza znaki specjalne, a eksport CSV nie pozwala wstawić formuły do arkusza.
+- **Karta podarunkowa z linku:** klucz 32 losowe znaki, 30 odczytów na godzinę z jednego połączenia, zwracana wyłącznie treść karty.
+- **Baza:** wszystkie tabele publiczne mają włączony RLS, brak jakichkolwiek uprawnień dla `anon`/`authenticated`, żadna funkcja nie jest wykonywalna publicznie (sprawdzone w katalogu bazy).
+
 ## Ryzyka otwarte (bez zmian)
 1. Wylogowanie ze wszystkich urządzeń — ograniczenie platformy.
 2. Podpisane linki do plików działają do 1 godziny.
@@ -123,4 +145,6 @@ Zakres: `library`, `libraryAdmin`, `libraryTick`, moduły `shared/library*.ts`, 
 9. **Limit „20 wiadomości na godzinę" liczy wysyłki, nie odbiorców.** Jedna wiadomość do 500 osób to jedno wysłanie — limit nie chroni więc przed jednorazowym obciążeniem serwera poczty. Świadomy wybór: to narzędzie obsługi, nie kanał masowy.
 10. **Wysyłka masowa jest wciąż synchroniczna.** Partie po 6 skracają czas kilkukrotnie, ale przy kilkuset odbiorcach i wolnej poczcie funkcja może się przerwać w połowie, a wiadomość jest już oznaczona jako wysłana. Docelowo: wrzucenie wysyłki do kolejki i rozłożenie jej na zadanie cykliczne.
 11. **`arr()` w `libraryAdmin` to martwy kod** (zdefiniowany, nigdzie nie używany) — do usunięcia przy okazji.
-12. **Lista klientów, statystyki wiadomości i podpowiedzi imion pobierają wszystkich użytkowników** (do 2000 rekordów) i zawężają wynik w przeglądarce. Działa, ale przy większej liczbie kont będzie to najwolniejsze miejsce panelu — warto przenieść filtrowanie do zapytania.
+13. **Karty podarunkowe powstają pojedynczo i przerwanie w połowie zostawia mniej kart, niż kupiono.** Powtórka nic nie dokończy, bo komplet rozpoznawany jest po numerze zamówienia („jest choć jedna — koniec"), a nie po liczbie i kwotach. Skutek: kupujący zapłacił za trzy karty, dostał jedną i żaden mail nie wyszedł. Karty widać w panelu, więc da się to naprawić ręcznie, ale docelowo trzeba rozpoznawać komplet po liczbie i kwotach, a nie po pierwszej napotkanej.
+14. **Sprawdzanie stanu zamówienia po powrocie z PayU nie ma limitu** (celowo, żeby strona powrotu działała). Odpytywanie idzie po losowym numerze zamówienia i zwraca wyłącznie status, więc nie da się z tego odczytać danych osobowych.
+15. **Rachunek „suma pozycji minus zapłata" w statystykach zakłada, że pozycje zamówienia są zapisane przed rabatem.** Tak jest dzisiaj i tak zostanie, dopóki nikt nie zmieni sposobu zapisu pozycji — przy takiej zmianie trzeba poprawić i ten wzór. (do 2000 rekordów) i zawężają wynik w przeglądarce. Działa, ale przy większej liczbie kont będzie to najwolniejsze miejsce panelu — warto przenieść filtrowanie do zapytania.

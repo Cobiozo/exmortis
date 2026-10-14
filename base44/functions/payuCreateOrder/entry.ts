@@ -1,6 +1,7 @@
 import { createClientFromRequest } from "npm:@base44/sdk@0.8.44";
 import { applyDiscount } from "../../shared/discounts.ts";
 import { runSql, escStr, textField, emailField, clientIp } from "../../shared/supabase.ts";
+import { ipAllowed, TOO_MANY } from "../../shared/rateLimit.ts";
 import { getSetting, loadAppUrl, APP_URL } from "../../shared/settings.ts";
 import { insertOrder, getOrderStatus, getOrderByPayuId, claimCompletion } from "../../shared/orders.ts";
 import { fulfillOrder } from "../../shared/fulfillOrder.ts";
@@ -40,6 +41,12 @@ export default async function (req) {
       const id = String(body.orderId || "");
       if (!/^[0-9a-f-]{36}$/i.test(id)) return Response.json({ status: null });
       return Response.json({ status: await getOrderStatus(base44, id) });
+    }
+
+    // Kasa jest publiczna, a każde zamówienie to dwa zapytania do PayU i wpis w bazie.
+    // Limit z jednego połączenia chroni konto PayU przed zalaniem (sprawdzanie stanu zamówienia wyżej go nie dotyczy).
+    if (!(await ipAllowed(base44, clientIp(req), "kasa", 20, 3600000))) {
+      return Response.json({ error: TOO_MANY }, { status: 429 });
     }
 
     const buyerName = textField(body, "name", { max: 100 });
