@@ -86,14 +86,21 @@ export async function fulfillOrder(base44, stored, payuOrderId) {
 
   // Karty podarunkowe powstają niezależnie od tego, czy mail wyjdzie (są też w zakładce Zamówienia).
   let cards = "";
+  let cardIds = [];
   try {
     const cardRows = ids.length ? await runSql(base44, `SELECT id::text AS id FROM public.products WHERE product_type = 'karta' AND id::text IN (${ids.map(escStr).join(",")})`, true) : [];
-    if (cardRows.length) cards = giftCardsHtml(await issueGiftCards(base44, stored.id, items, cardRows.map((r) => r.id), stored.buyer_email));
+    cardIds = cardRows.map((r) => String(r.id));
+    if (cardIds.length) cards = giftCardsHtml(await issueGiftCards(base44, stored.id, items, cardIds, stored.buyer_email));
   } catch (e) { console.error("karta podarunkowa:", e?.message); }
 
   if (stored.buyer_email) {
     try {
-      const step = await nextStep(base44, ids).then((s) => nextStepHtml(base44, s)).catch(() => "");
+      // „Następny krok” dotyczy tego, co osoba kupiła dla siebie — karta podarunkowa go nie wyznacza,
+      // a produkty, które już ma, są pomijane.
+      const own = ids.map(String).filter((id) => !cardIds.includes(id));
+      const owned = await base44.asServiceRole.entities.Access.filter({ user_email: String(stored.buyer_email).toLowerCase() }, "-created_date", 200)
+        .then((l) => l.filter((a) => !a.revoked).map((a) => String(a.product_id))).catch(() => []);
+      const step = own.length ? await nextStep(base44, own, owned).then((s) => nextStepHtml(base44, s)).catch(() => "") : "";
       await sendMail(base44, {
         kind: "zamowienie", ref: stored.id, to: stored.buyer_email,
         subject: Number(stored.total) > 0 ? "EXMORTIS — płatność przyjęta" : "EXMORTIS — zamówienie przyjęte",

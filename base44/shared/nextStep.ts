@@ -24,8 +24,9 @@ const esc = (v) => String(v ?? "").replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "
 export async function nextStepHtml(base44, step) {
   if (!step) return "";
   const url = `${await loadAppUrl(base44)}/skarbiec/${encodeURIComponent(step.slug)}`;
-  return `<div style="margin-top:28px;border-top:1px solid #3D3D3F;padding-top:20px;">
+  // Ciemna oprawa jak reszta maila — bez niej jasny tekst lądowałby na białym tle programu pocztowego.
+  return `<div style="background:#0A0A0B;padding:0 32px 32px;font-family:Georgia,serif;"><div style="border-top:1px solid #3D3D3F;padding-top:20px;">
     <p style="font-size:11px;letter-spacing:.18em;color:#C9A24A;margin:0 0 8px;">NASTĘPNY KROK</p>
     ${step.text ? `<p style="line-height:1.7;color:#E2E2E2;margin:0 0 8px;">${esc(step.text)}</p>` : ""}
-    <p style="margin:0;"><a href="${esc(url)}" style="color:#C9A24A;">${esc(step.name)} →</a></p></div>`;
+    <p style="margin:0;"><a href="${esc(url)}" style="color:#C9A24A;">${esc(step.name)} →</a></p></div></div>`;
 }
