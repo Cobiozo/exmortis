@@ -112,14 +112,29 @@ const zl2 = (n) => Number(n).toFixed(2);
 const today = () => new Date().toLocaleDateString("sv-SE", { timeZone: "Europe/Warsaw" });
 const clean = (v, n) => String(v ?? "").replace(/[\u0000-\u001f]/g, " ").replace(/\s+/g, " ").trim().slice(0, n);
 
+// Komunikat błędu bez adresu i tokenu: środowisko wykonawcze dokleja pełny adres żądania
+// do błędu fetch, a adres zawiera api_token — nie może trafić do bazy, panelu ani logów.
+export const safeErr = (e) =>
+  String(e?.message || e)
+    .replace(/api_token=[^\s&"'<>]*/gi, "api_token=***")
+    .replace(/https?:\/\/[^\s"']*fakturownia\.pl[^\s"']*/gi, "Fakturownia")
+    .replace(/\s+/g, " ")
+    .trim()
+    .slice(0, 300);
+
 async function api(url, path, token, { method = "GET", body } = {}) {
   const sep = path.includes("?") ? "&" : "?";
-  const res = await fetch(`${url}${path}${sep}api_token=${encodeURIComponent(token)}`, {
-    method,
-    headers: { "Content-Type": "application/json", Accept: "application/json" },
-    body: body ? JSON.stringify({ api_token: token, ...body }) : undefined,
-    signal: AbortSignal.timeout(15000),
-  });
+  let res;
+  try {
+    res = await fetch(`${url}${path}${sep}api_token=${encodeURIComponent(token)}`, {
+      method,
+      headers: { "Content-Type": "application/json", Accept: "application/json" },
+      body: body ? JSON.stringify({ api_token: token, ...body }) : undefined,
+      signal: AbortSignal.timeout(15000),
+    });
+  } catch (e) {
+    throw new Error(`Fakturownia: brak połączenia (${String(e?.name || "błąd")})`);
+  }
   const text = await res.text();
   let data = null;
   try {
@@ -129,11 +144,7 @@ async function api(url, path, token, { method = "GET", body } = {}) {
   }
   if (!res.ok) {
     const raw = data?.error?.message || data?.error || data?.message || text;
-    const msg = String(raw || "brak odpowiedzi")
-      .replace(/<[^>]*>/g, " ")
-      .replace(/\s+/g, " ")
-      .trim()
-      .slice(0, 300);
+    const msg = safeErr(String(raw || "brak odpowiedzi").replace(/<[^>]*>/g, " "));
     throw new Error(`Fakturownia (${res.status}): ${msg}`);
   }
   return data;
@@ -276,7 +287,7 @@ export async function issueInvoice(base44, order) {
     }
     return { ok: true, id: String(id), number, url: pdf };
   } catch (e) {
-    const msg = clean(String(e?.message || e), 300);
+    const msg = safeErr(e);
     await runSql(
       base44,
       `UPDATE public.orders SET invoice_error = ${escStr(msg)}, invoice_at = now() WHERE id = ${escStr(String(o.id))}`
@@ -350,7 +361,7 @@ export async function issueCorrection(base44, refund) {
     }
     return { ok: true, id: String(id), number, url: pdf };
   } catch (e) {
-    const msg = clean(String(e?.message || e), 300);
+    const msg = safeErr(e);
     await runSql(
       base44,
       `UPDATE public.order_refunds SET correction_error = ${escStr(msg)}, updated_at = now() WHERE id = ${escStr(refundId)}`

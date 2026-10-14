@@ -12,7 +12,8 @@ export async function productSeats(base44, ids) {
   const items = `jsonb_array_elements(CASE WHEN jsonb_typeof(o.items) = 'array' THEN o.items ELSE '[]'::jsonb END)`;
   const rows = await runSql(
     base44,
-    `SELECT p.id::text AS id, p.capacity,
+    // capacity czytane przez to_jsonb — działa także, zanim kolumna powstała (jak invoice w zamówieniach).
+    `SELECT p.id::text AS id, to_jsonb(p)->>'capacity' AS capacity,
         COALESCE(s.n, 0)::int AS sold,
         COALESCE(q.n, 0)::int AS pending
      FROM public.products p
@@ -20,6 +21,8 @@ export async function productSeats(base44, ids) {
        SELECT i->>'product_id' AS pid, SUM(COALESCE((i->>'quantity')::int, 1))::int AS n
        FROM public.orders o, ${items} i
        WHERE o.status = 'COMPLETED' AND i->>'product_id' IN (${inList})
+         -- Zamówienie zwrócone w całości nie zajmuje miejsca (częściowy zwrot zostaje — nie sprzedajemy nadkompletu).
+         AND COALESCE((to_jsonb(o)->>'refunded_total')::numeric, 0) < COALESCE(o.total, 0)
        GROUP BY 1
      ) s ON s.pid = p.id::text
      LEFT JOIN (
@@ -30,7 +33,7 @@ export async function productSeats(base44, ids) {
          AND i->>'product_id' IN (${inList})
        GROUP BY 1
      ) q ON q.pid = p.id::text
-     WHERE p.id::text IN (${inList}) AND p.capacity IS NOT NULL`,
+     WHERE p.id::text IN (${inList}) AND to_jsonb(p)->>'capacity' IS NOT NULL`,
     true
   );
   const out = new Map();

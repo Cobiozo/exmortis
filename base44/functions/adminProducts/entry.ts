@@ -184,7 +184,7 @@ export default async function (req) {
                 p.price_start::float8 AS price_start, p.price_regular::float8 AS price_regular,
                 p.is_free, p.status, p.promo_end_date::text AS promo_end_date,
                 p.button_label, p.checkout_url, p.next_step, p.is_featured, p.sort_order, p.cover_image, p.file_url,
-                p.product_type, p.access_months, p.private_file_uri, p.private_file_name, p.capacity,
+                p.product_type, p.access_months, p.private_file_uri, p.private_file_name, to_jsonb(p)->>'capacity' AS capacity,
                 to_jsonb(p)->'price_steps' AS price_steps, to_jsonb(p)->'price_options' AS price_options,
                 to_jsonb(p)->'bundle_items' AS bundle_items,
                 p.created_date, p.updated_date,
