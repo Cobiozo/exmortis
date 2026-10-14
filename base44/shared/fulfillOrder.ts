@@ -84,10 +84,15 @@ export async function fulfillOrder(base44, stored, payuOrderId) {
     }
   } catch { /* licznik kodu nie blokuje zamówienia */ }
 
+  // Karty podarunkowe powstają niezależnie od tego, czy mail wyjdzie (są też w zakładce Zamówienia).
+  let cards = "";
+  try {
+    const cardRows = ids.length ? await runSql(base44, `SELECT id::text AS id FROM public.products WHERE product_type = 'karta' AND id::text IN (${ids.map(escStr).join(",")})`, true) : [];
+    if (cardRows.length) cards = giftCardsHtml(await issueGiftCards(base44, stored.id, items, cardRows.map((r) => r.id), stored.buyer_email));
+  } catch (e) { console.error("karta podarunkowa:", e?.message); }
+
   if (stored.buyer_email) {
     try {
-      const cardRows = ids.length ? await runSql(base44, `SELECT id::text AS id FROM public.products WHERE product_type = 'karta' AND id::text IN (${ids.map(escStr).join(",")})`, true) : [];
-      const cards = cardRows.length ? giftCardsHtml(await issueGiftCards(base44, stored.id, items, cardRows.map((r) => r.id))) : "";
       const step = await nextStep(base44, ids).then((s) => nextStepHtml(base44, s)).catch(() => "");
       await sendMail(base44, {
         kind: "zamowienie", ref: stored.id, to: stored.buyer_email,

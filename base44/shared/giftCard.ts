@@ -1,36 +1,56 @@
 // Karta podarunkowa: po opłaceniu powstaje jednorazowy kod kwotowy do Skarbca, ważny 6 miesięcy.
-const esc = (v) => String(v ?? "").replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+// Każda karta dostaje też link do wersji do wydruku (/karta#t=…) z imieniem obdarowanego i słowami od darczyńcy.
+import { APP_URL } from "./settings.ts";
 
-function newCode() {
-  const abc = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
-  const b = crypto.getRandomValues(new Uint8Array(10));
-  return "PREZENT-" + [...b].map((x) => abc[x % abc.length]).join("");
+const esc = (v) => String(v ?? "").replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+const clip = (v, n) => String(v ?? "").replace(/[\u0000-\u001f<>]/g, " ").replace(/\s+/g, " ").trim().slice(0, n);
+
+function rand(abc, n) {
+  const b = crypto.getRandomValues(new Uint8Array(n));
+  return [...b].map((x) => abc[x % abc.length]).join("");
 }
+const newCode = () => "PREZENT-" + rand("ABCDEFGHJKLMNPQRSTUVWXYZ23456789", 10);
+const newToken = () => rand("abcdefghijkmnopqrstuvwxyzABCDEFGHJKLMNPQRSTUVWXYZ23456789", 32);
+
+const view = (r) => ({ code: r.code, value: r.value, until: r.valid_until, to_name: r.gift_to || "", message: r.gift_message || "", token: r.gift_token || "" });
 
 // items: pozycje zamówienia; cardIds: id produktów typu „karta”. Idempotentnie po numerze zamówienia.
-export async function issueGiftCards(base44, orderId, items, cardIds) {
+export async function issueGiftCards(base44, orderId, items, cardIds, buyerEmail = "") {
   const Dc = base44.asServiceRole.entities.DiscountCode;
   const tag = `zamówienie ${String(orderId).slice(0, 8).toUpperCase()}`;
   const had = await Dc.filter({ opis: { $regex: tag } }).catch(() => []);
-  if (had.length) return had.map((r) => ({ code: r.code, value: r.value, until: r.valid_until }));
+  if (had.length) return had.map(view);
   const until = new Date(Date.now() + 183 * 86400000).toLocaleDateString("sv-SE", { timeZone: "Europe/Warsaw" });
   const out = [];
   for (const it of items.filter((i) => cardIds.includes(String(i.product_id)))) {
     for (let k = 0; k < Math.min(20, Number(it.quantity) || 1); k++) {
       const value = Math.round(Number(it.unitPrice) || 0) / 100;
-      const code = newCode();
-      await Dc.create({ code, kind: "kwota", value, max_uses: 1, uses: 0, valid_until: until, active: true, opis: `Karta podarunkowa · ${tag}` });
-      out.push({ code, value, until });
+      const rec = await Dc.create({
+        code: newCode(), kind: "kwota", value, max_uses: 1, uses: 0, valid_until: until, active: true,
+        opis: `Karta podarunkowa · ${tag}`,
+        gift_to: clip(it.gift?.to_name, 60), gift_message: clip(it.gift?.message, 200),
+        gift_token: newToken(), buyer_email: String(buyerEmail || "").trim().toLowerCase(),
+      });
+      out.push(view(rec));
     }
   }
   return out;
 }
 
+export const cardLink = (token) => `${APP_URL}/karta#t=${token}`;
+
 export function giftCardsHtml(cards) {
   if (!cards.length) return "";
   const d = (s) => new Date(`${s}T12:00:00Z`).toLocaleDateString("pl-PL", { day: "numeric", month: "long", year: "numeric" });
-  return `<div style="margin-top:28px;border:1px solid #C9A24A;padding:20px;">
-    <p style="font-size:11px;letter-spacing:.18em;color:#C9A24A;margin:0 0 12px;">KARTA PODARUNKOWA</p>
-    ${cards.map((c) => `<p style="margin:0 0 10px;color:#E2E2E2;">Kod: <b style="color:#C9A24A;letter-spacing:2px;">${esc(c.code)}</b><br>Kwota: ${esc(String(c.value).replace(".", ","))} zł · ważna do ${esc(d(c.until))}</p>`).join("")}
-    <p style="margin:0;color:#8A8A8C;font-size:13px;line-height:1.6;">Kod wpisuje się w kasie Skarbca, w polu „kod rabatowy”. Działa jednorazowo — niewykorzystana część kwoty przepada.</p></div>`;
+  const one = (c) => `<div style="margin:0 0 16px;border:1px solid #C9A24A;background:#0A0A0B;padding:24px;">
+      <p style="font-size:11px;letter-spacing:.22em;color:#C9A24A;margin:0 0 16px;">EXMORTIS · KARTA PODARUNKOWA</p>
+      ${c.to_name ? `<p style="margin:0 0 6px;color:#8A8A8C;font-size:13px;">Dla</p><p style="margin:0 0 14px;color:#E2E2E2;font-size:20px;">${esc(c.to_name)}</p>` : ""}
+      ${c.message ? `<p style="margin:0 0 16px;color:#E2E2E2;font-style:italic;line-height:1.6;">„${esc(c.message)}”</p>` : ""}
+      <p style="margin:0 0 4px;color:#C9A24A;font-size:26px;">${esc(String(c.value).replace(".", ","))} zł</p>
+      <p style="margin:0 0 14px;color:#E2E2E2;">Kod: <b style="color:#C9A24A;letter-spacing:2px;">${esc(c.code)}</b> · ważna do ${esc(d(c.until))}</p>
+      ${c.token ? `<p style="margin:0;"><a href="${esc(cardLink(c.token))}" style="color:#C9A24A;">Otwórz kartę do wydruku lub zapisania jako PDF</a></p>` : ""}
+    </div>`;
+  return `<div style="background:#0A0A0B;padding:0 32px 32px;font-family:Georgia,serif;">
+    ${cards.map(one).join("")}
+    <p style="margin:0;color:#8A8A8C;font-size:13px;line-height:1.6;">Kod wpisuje się w kasie Skarbca, w polu „kod rabatowy”. Działa jednorazowo — niewykorzystana część kwoty przepada. Kartę możesz wydrukować albo przesłać link osobie obdarowanej. Wszystkie Twoje karty są też w zakładce Zamówienia na koncie.</p></div>`;
 }

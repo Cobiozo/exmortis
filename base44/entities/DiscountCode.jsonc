@@ -40,11 +40,27 @@
     "w_powiadomieniach": {
       "type": "boolean",
       "default": false,
-      "description": "Poka\u017c kod zalogowanym klientom w powiadomieniach (dzwoneczek)"
+      "description": "Pokaż kod zalogowanym klientom w powiadomieniach (dzwoneczek)"
     },
     "opis": {
       "type": "string",
-      "description": "Kr\u00f3tki opis dla klienta, np. 'Na start Skarbca'"
+      "description": "Krótki opis dla klienta, np. 'Na start Skarbca'"
+    },
+    "gift_to": {
+      "type": "string",
+      "description": "Karta podarunkowa: imię obdarowanego"
+    },
+    "gift_message": {
+      "type": "string",
+      "description": "Karta podarunkowa: słowa od darczyńcy"
+    },
+    "gift_token": {
+      "type": "string",
+      "description": "Karta podarunkowa: klucz linku do wydruku"
+    },
+    "buyer_email": {
+      "type": "string",
+      "description": "Karta podarunkowa: e-mail kupującego"
     }
   },
   "required": [
