@@ -131,7 +131,7 @@ export default function MyLibrary({ initial, onGoToOrders }) {
 
       {open && (
         <MaterialSheet material={open} completed={!!open.completed_at} onClose={() => setOpen(null)}
-          onCompleted={(id) => setOpened(id)} />
+          onOpened={setOpened} />
       )}
     </div>
   );

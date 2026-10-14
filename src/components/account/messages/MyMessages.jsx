@@ -57,7 +57,7 @@ export default function MyMessages({ initial, footer }) {
         <MessageCard key={m.id} m={m} footer={footer} onRead={read} onHide={hide} onOpenMaterial={openAttachment} />
       ))}
       {openMat && (
-        <MaterialSheet material={openMat} completed={false} onClose={() => setOpenMat(null)} onCompleted={() => {}} />
+        <MaterialSheet material={openMat} completed={false} onClose={() => setOpenMat(null)} />
       )}
     </div>
   );

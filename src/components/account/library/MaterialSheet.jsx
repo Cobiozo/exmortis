@@ -11,7 +11,7 @@ const FOCUS = "focus-visible:outline focus-visible:outline-2 focus-visible:outli
 const BTN = `inline-flex items-center justify-center gap-2 min-h-[44px] px-5 border border-[#C9A24A] text-[#C9A24A] font-mono text-xs tracking-[0.14em] uppercase hover:bg-[#C9A24A] hover:text-[#0A0A0B] transition-colors ${FOCUS}`;
 
 // Okno materiału: audio, PDF, wideo, tekst albo link zewnętrzny. Otwarcie = „Nowe" znika.
-export default function MaterialSheet({ material, completed, onClose, onCompleted }) {
+export default function MaterialSheet({ material, completed, onClose, onOpened }) {
   const [d, setD] = useState(null);
   const [err, setErr] = useState("");
   const [leave, setLeave] = useState(false);
@@ -21,7 +21,10 @@ export default function MaterialSheet({ material, completed, onClose, onComplete
   useEffect(() => {
     if (!id) return;
     setD(null); setErr("");
-    openMaterial(id).then(setD).catch(() => setErr("Ten materiał nie jest już dostępny."));
+    // Otwarty materiał przestaje być „Nowe" od razu, bez przeładowania strony.
+    openMaterial(id)
+      .then((r) => { setD(r); if (!material.opened_at && onOpened) onOpened(id); })
+      .catch(() => setErr("Ten materiał nie jest już dostępny."));
   }, [id]);
 
   useEffect(() => {
@@ -41,7 +44,6 @@ export default function MaterialSheet({ material, completed, onClose, onComplete
     const next = !done;
     setDone(next);
     await markCompleted(id, next).catch(() => setDone(!next));
-    onCompleted(id, next);
   };
 
   return (

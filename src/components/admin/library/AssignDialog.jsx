@@ -70,7 +70,7 @@ export default function AssignDialog({ open, onClose, materialId, materialIds, c
 
       <div>
         <label className="technical text-[10px] text-foreground/50 block mb-2">NOTATKA DLA OSOBY</label>
-        <textarea value={t.note} onChange={(e) => setT({ ...t, note: e.target.value })} rows={2} className={inputCls} />
+        <textarea value={t.note || ""} onChange={(e) => setT({ ...t, note: e.target.value })} rows={2} className={inputCls} />
       </div>
 
       <div className="grid sm:grid-cols-2 gap-4">

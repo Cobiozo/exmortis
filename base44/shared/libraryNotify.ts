@@ -3,11 +3,15 @@
 import { runSql, rpc, escStr } from "./supabase.ts";
 import { sendMail } from "./smtp.ts";
 import { loadAppUrl } from "./settings.ts";
-import { resolveRecipients, libSettings } from "./libraryAccess.ts";
+import { resolveRecipients, libSettings, inBatches } from "./libraryAccess.ts";
 import { sanitizeHtml } from "./librarySanitize.ts";
 
 export const FOOTER_REPLY = "Na tę wiadomość odpowiesz e-mailem lub na WhatsAppie.";
 export const FOOTER_CRISIS = "Jeśli jesteś w kryzysie: 116 123 · 800 70 2222 (całą dobę, bezpłatnie) · 112.";
+
+// Ile wiadomości leci naraz. Wcześniej szły jedna po drugiej: przy 500 odbiorcach
+// to kilkanaście minut i przerwanie zadania w połowie wysyłki.
+const SEND_BATCH = 6;
 
 // {imię} → imię. Brak imienia = zdanie bez pustego miejsca („Cześć {imię}," → „Cześć,").
 // {imię} → imię. Bez imienia znacznik znika razem z odstępem, a zdanie zaczyna się wielką literą
@@ -43,15 +47,11 @@ export async function sendMessageEmail(base44, message, emails) {
   const html = message.email_mode === "PELNA"
     ? wrap(title, `<div style="font-size:15px;line-height:1.7">${sanitizeHtml(message.body_html)}</div>`, appUrl)
     : wrap("Masz nową wiadomość na exmortis.pl", `<p style="font-size:15px;line-height:1.7">Zaloguj się, aby ją przeczytać.</p>`, appUrl);
-  let sent = 0;
-  for (const to of emails.slice(0, 500)) {
-    const r = await sendMail(base44, {
-      to, subject: message.email_mode === "PELNA" ? title : "Masz nową wiadomość na exmortis.pl",
-      html, kind: "biblioteka_wiadomosc", ref: String(message.id || ""),
-    }).catch(() => null);
-    if (r) sent++;
-  }
-  return { sent };
+  const subject = message.email_mode === "PELNA" ? title : "Masz nową wiadomość na exmortis.pl";
+  const results = await inBatches(emails.slice(0, 500), SEND_BATCH, (to) => sendMail(base44, {
+    to, subject, html, kind: "biblioteka_wiadomosc", ref: String(message.id || ""),
+  }).catch(() => null));
+  return { sent: results.filter(Boolean).length };
 }
 
 // Zbiorczy e-mail o nowych materiałach — jeden na osobę, bez tytułów i bez treści materiałów.
@@ -81,14 +81,13 @@ export async function sendAssignmentDigests(base44) {
     }
   }
   const appUrl = await loadAppUrl(base44);
-  let sent = 0;
-  for (const [email, count] of perPerson) {
+  const results = await inBatches([...perPerson], SEND_BATCH, ([email, count]) => {
     const html = wrap("Masz nowe materiały w bibliotece",
       `<p style="font-size:15px;line-height:1.7">W Twojej bibliotece ${count === 1 ? "pojawił się nowy materiał" : `pojawiły się nowe materiały (${count})`}.</p>`,
       appUrl);
-    const r = await sendMail(base44, { to: email, subject: "Nowe materiały w Twojej bibliotece", html, kind: "biblioteka_material" }).catch(() => null);
-    if (r) sent++;
-  }
+    return sendMail(base44, { to: email, subject: "Nowe materiały w Twojej bibliotece", html, kind: "biblioteka_material" }).catch(() => null);
+  });
+  const sent = results.filter(Boolean).length;
   if (ids.length) {
     await runSql(base44, `UPDATE public.mb_assignments SET notified_at = now()
       WHERE id IN (${ids.map((i) => escStr(i) + "::uuid").join(",")})`).catch(() => {});

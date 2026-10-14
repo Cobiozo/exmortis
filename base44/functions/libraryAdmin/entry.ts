@@ -3,7 +3,7 @@ import { runSql, rpc, esc, escStr, requireAdmin, textField } from "../../shared/
 import { SCHEMA_SQL, SEED_SQL, CHECKPOINT_TABLES_SQL, CHECKPOINT_FUNCS_SQL } from "../../shared/librarySchema.ts";
 import { LIBRARY_RPC_SQL, CHECKPOINT_RPC_SQL } from "../../shared/libraryRpcSql.ts";
 import { SCHEMA_2B_SQL, RPC_2B_SQL } from "../../shared/library2bSql.ts";
-import { libSettings, resetLibSettings, MODES, resolveRecipients, randomToken, footerData } from "../../shared/libraryAccess.ts";
+import { libSettings, resetLibSettings, MODES, resolveRecipients, randomToken, footerData, inBatches } from "../../shared/libraryAccess.ts";
 import { sanitizeHtml, plainText } from "../../shared/librarySanitize.ts";
 import { normalizeVideo, normalizeServerVideo, videoDomains, extOf, sniff, pdfHasJs, MAX_BYTES, ALLOWED_EXT, MAX_MB, SNIFF_BYTES, mb } from "../../shared/libraryMedia.ts";
 import { libLog, deliverMessage, sendMessageEmail, renderBody } from "../../shared/libraryNotify.ts";
@@ -614,14 +614,15 @@ export default async function (req) {
           });
           count = Number((rm && rm.osoby) || 0);
         } else {
-          for (const e of t.emails.slice(0, 500)) {
-            await rpc(base44, "mb_admin_assignment_save", { p: {
-              material_id: null, collection_id: collectionId, target_kind: "osoba", target_email: e,
-              group_id: null, group_mode: null, snapshot_emails: [], exceptions_add: [], exceptions_drop: [],
-              note, visible_from: iso(body.visible_from), visible_to: iso(body.visible_to), actor: me.email,
-            } });
-            count += 1;
-          }
+          // Kolekcja dla wielu osób: zapisy idą partiami, nie jeden po drugim.
+          // Wcześniej przy kilkuset osobach była to seria minut i przerwane zadanie w połowie.
+          const from = iso(body.visible_from), to = iso(body.visible_to);
+          const done = await inBatches(t.emails.slice(0, 500), 8, (e) => rpc(base44, "mb_admin_assignment_save", { p: {
+            material_id: null, collection_id: collectionId, target_kind: "osoba", target_email: e,
+            group_id: null, group_mode: null, snapshot_emails: [], exceptions_add: [], exceptions_drop: [],
+            note, visible_from: from, visible_to: to, actor: me.email,
+          } }));
+          count = done.length;
         }
         await libLog(base44, me.email, "przydzial", materialId ? "material" : "collection", materialId || collectionId,
           `osoby · odbiorcy: ${count}`);

@@ -56,6 +56,16 @@ export function safeEqual(a, b) {
   return d === 0;
 }
 
+// Wysyłka i zapis partiami: kolejność nie ma znaczenia, a równoległość skraca czas
+// z minut (jedno żądanie po drugim) do sekund. Rozmiar partii chroni bazę i serwer poczty.
+export async function inBatches(list, size, fn) {
+  const out = [];
+  for (let i = 0; i < list.length; i += size) {
+    out.push(...(await Promise.all(list.slice(i, i + size).map(fn))));
+  }
+  return out;
+}
+
 export function randomToken() {
   const b = new Uint8Array(32);
   crypto.getRandomValues(b);

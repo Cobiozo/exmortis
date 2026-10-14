@@ -86,6 +86,31 @@ Zakres: `payuCreateOrder`, `payuNotification`, `orderFree`, `shared/orders.ts`, 
 - **`libraryTick`**: wywołanie tylko przez administratora albo token zadania porównywany w czasie stałym; limit 20 wysłanych wiadomości na godzinę.
 - **`tickets` — mapa limitów skanera** czyszczona przy wielu różnych skanerach (brak nieograniczonego wzrostu pamięci instancji).
 
+## Biblioteka i wiadomości do klientów — przegląd (2026-10-14)
+
+Zakres: `library`, `libraryAdmin`, `libraryTick`, moduły `shared/library*.ts`, strony konta (`MyLibrary`, `MyMessages`, odtwarzacze, okno materiału) i panel (`LibraryPanel`, `MaterialsTab`, `MessagesPanel`, `MessageForm`, `MessageRow`, `AssignDialog`, `TargetPicker`).
+
+### Znalezione i naprawione
+1. **Szkic wiadomości do ponad 10 osób nie dawał się wysłać z listy.** Serwer słusznie wymaga potwierdzenia przy takiej wysyłce, ale przycisk „Wyślij teraz" w wierszu listy nie miał żadnej ścieżki potwierdzenia — pokazywał tylko komunikat „Potwierdź wysyłkę do ponad 10 osób" i nic więcej. Formularz nowej wiadomości miał okno potwierdzenia, lista nie. Dodano okno potwierdzenia z liczbą odbiorców (ten sam próg co przy nowej wiadomości).
+2. **Wysyłka masowa szła po jednej wiadomości.** Przy włączonej poczcie to do 500 kolejnych wysyłek jedna po drugiej — kilkanaście minut, po których zadanie jest przerywane w połowie, a wiadomość i tak jest już oznaczona jako wysłana. Teraz wiadomości lecą partiami po 6.
+3. **Zbiorcze powiadomienia o nowych materiałach — ta sama wada.** Jeden e-mail na osobę w pętli; teraz partiami po 6.
+4. **Przydział kolekcji wielu osobom: jedno zapytanie do bazy na osobę** (do 500 pod rząd). Teraz partiami po 8, a daty widoczności liczone raz zamiast przy każdej osobie.
+5. **Plakietka „Nowe" nie znikała po otwarciu materiału.** Znikała dopiero po oznaczeniu materiału jako ukończony albo po przeładowaniu strony, bo odświeżenie stanu było podpięte pod przycisk „Ukończone", a nie pod otwarcie. Teraz znika w chwili otwarcia.
+6. **Pole „Notatka dla osoby" przy przydziale było niekontrolowane** (puste na starcie, bez wartości początkowej) — React zgłaszał ostrzeżenie, a pole zachowywało się jak niekontrolowane. Ustawiona wartość początkowa.
+
+### Zweryfikowane jako poprawne
+- **Tożsamość wyłącznie z sesji.** Strona klienta nigdy nie przyjmuje adresu e-mail z żądania — bierze go z zalogowanego konta. Podstawienie cudzego adresu jest niemożliwe.
+- **Dostęp do materiału sprawdzany przy każdej operacji.** Otwarcie i oznaczenie jako ukończone przechodzą przez regułę widoczności w bazie (`mb_visible_materials`); brak wiersza = odmowa bez ujawniania, czy materiał istnieje.
+- **Klucz pliku nie opuszcza serwera.** Do przeglądarki trafia wyłącznie link podpisany na 10 minut (PDF) albo 60 minut (audio, wideo), odnawiany w tle przed wygaśnięciem i po błędzie odtwarzania, z zachowaniem miejsca odtwarzania.
+- **Adresy wideo z własnego serwera** sprawdzane ponownie przy każdym wydaniu — usunięcie domeny z ustawień zamyka dostęp natychmiast.
+- **Treść czyszczona dwa razy:** przy zapisie i przy wyświetleniu (biała lista znaczników, linki tylko `https:` i `mailto:`, encje rozkodowywane przed sprawdzeniem schematu).
+- **Wiadomości:** cudza wiadomość = brak wiersza odbiorcy = odmowa; oznaczenie jako przeczytane i ukrycie nie ujawniają, czy wiadomość istnieje.
+- **Panel wyłącznie dla roli „admin"** (`requireAdmin` na wejściu każdej akcji), nieznana akcja = 404, komunikat błędu nie zdradza szczegółów.
+- **Token zadania** porównywany w czasie stałym; limit 20 wysłanych wiadomości na godzinę obowiązuje i w zadaniu, i w panelu.
+- **Historia zmian:** adresy maskowane (`da***@domena`), bez treści wiadomości.
+- **Pliki:** sprawdzane rozszerzenie, sygnatura i rozmiar (limit 10 MB PDF, 100 MB audio i wideo); PDF z aktywną treścią dostaje ostrzeżenie, nie blokadę.
+- **Baza:** wszystkie tabele `mb_*` mają włączony RLS i nie mają żadnych uprawnień dla `anon`/`authenticated`; żadna funkcja `mb_*` ani `bk_*` nie jest wykonywalna przez role publiczne (sprawdzone w katalogu bazy).
+
 ## Ryzyka otwarte (bez zmian)
 1. Wylogowanie ze wszystkich urządzeń — ograniczenie platformy.
 2. Podpisane linki do plików działają do 1 godziny.
@@ -95,3 +120,7 @@ Zakres: `payuCreateOrder`, `payuNotification`, `orderFree`, `shared/orders.ts`, 
 6. **Licznik użycia kodu rośnie dopiero po opłaceniu, a limit `max_uses` sprawdzany jest przy tworzeniu zamówienia.** Dwa równoległe zamówienia z tym samym kodem jednorazowym (karta podarunkowa) mogą przejść oba — okno to kilka sekund, ale przy karcie oznacza podwójne wykorzystanie kwoty. Uszczelnienie wymaga atomowego „rezerwuję kod" po stronie bazy; encje Base44 nie mają warunkowego zapisu z potwierdzeniem, więc trzeba by przenieść licznik do tabeli w Supabase. Do rozważenia, gdy pojawi się realny ruch.
 7. **Zamówienie za 0 zł, którego realizacja się nie powiedzie, zostaje w stanie PENDING bez ponowienia** — nie ma powiadomienia PayU, które by je wywołało ponownie; wymaga dokończenia ręcznie w panelu.
 8. **`ensureOrdersTable` w `shared/orders.ts` ma martwy blok DDL** (zaraz po `return;`) — nie szkodzi, ale myli przy czytaniu kodu.
+9. **Limit „20 wiadomości na godzinę" liczy wysyłki, nie odbiorców.** Jedna wiadomość do 500 osób to jedno wysłanie — limit nie chroni więc przed jednorazowym obciążeniem serwera poczty. Świadomy wybór: to narzędzie obsługi, nie kanał masowy.
+10. **Wysyłka masowa jest wciąż synchroniczna.** Partie po 6 skracają czas kilkukrotnie, ale przy kilkuset odbiorcach i wolnej poczcie funkcja może się przerwać w połowie, a wiadomość jest już oznaczona jako wysłana. Docelowo: wrzucenie wysyłki do kolejki i rozłożenie jej na zadanie cykliczne.
+11. **`arr()` w `libraryAdmin` to martwy kod** (zdefiniowany, nigdzie nie używany) — do usunięcia przy okazji.
+12. **Lista klientów, statystyki wiadomości i podpowiedzi imion pobierają wszystkich użytkowników** (do 2000 rekordów) i zawężają wynik w przeglądarce. Działa, ale przy większej liczbie kont będzie to najwolniejsze miejsce panelu — warto przenieść filtrowanie do zapytania.

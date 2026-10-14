@@ -29,7 +29,7 @@ export default function MessageRow({ m, onChanged, onEdit }) {
       } else if (what === "cancel") {
         await lib("message_cancel", { id: m.id });
       } else if (what === "send") {
-        const r = await lib("message_send", { id: m.id, count: m.recipient_count || 0 });
+        const r = await lib("message_send", { id: m.id, count: m.recipient_count || 0, confirm: true });
         setNotice(`Wysłano do ${r.odbiorcy} osób.`);
       } else if (what === "delete") {
         await lib("message_delete", { id: m.id });
@@ -39,6 +39,12 @@ export default function MessageRow({ m, onChanged, onEdit }) {
   };
 
   const unread = Math.max(0, (m.dostarczone || 0) - (m.przeczytane || 0));
+
+  // Powyżej 10 odbiorców najpierw okno potwierdzenia — ten sam próg co przy nowej wiadomości.
+  const sendNow = () => {
+    if ((m.recipient_count || 0) > 10) { setAsk("send"); return; }
+    run("send");
+  };
 
   return (
     <div className="border hairline">
@@ -96,7 +102,7 @@ export default function MessageRow({ m, onChanged, onEdit }) {
             {m.status === "SZKIC" && (
               <>
                 <button className="btn-ghost !px-3 !py-2" onClick={() => onEdit(m)}><Pencil className="h-4 w-4" /> EDYTUJ</button>
-                <button className="btn-relic !px-3 !py-2" onClick={() => run("send")} disabled={!!busy}>
+                <button className="btn-relic !px-3 !py-2" onClick={sendNow} disabled={!!busy}>
                   {busy === "send" ? <Loader2 className="h-4 w-4 animate-spin" /> : "WYŚLIJ TERAZ"}
                 </button>
               </>
@@ -124,6 +130,16 @@ export default function MessageRow({ m, onChanged, onEdit }) {
           </div>
         </div>
       )}
+
+      <LibModal
+        open={ask === "send"} onClose={() => setAsk("")} title="Wysłać do ponad 10 osób?"
+        footer={<>
+          <button className="btn-ghost" onClick={() => setAsk("")}>ANULUJ</button>
+          <button className="btn-relic" onClick={() => run("send")}>WYŚLIJ</button>
+        </>}
+      >
+        <p className="text-sm text-foreground/70">Ta wiadomość trafi do {m.recipient_count || 0} osób i pojawi się na ich kontach.</p>
+      </LibModal>
 
       <LibModal
         open={ask === "withdraw"} onClose={() => setAsk("")} title="Wycofać wiadomość?"
