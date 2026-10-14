@@ -87,14 +87,19 @@ export async function fulfillOrder(base44, stored, payuOrderId) {
     }
   } catch { /* licznik kodu nie blokuje zamówienia */ }
 
-  // Karty podarunkowe powstają niezależnie od tego, czy mail wyjdzie (są też w zakładce Zamówienia).
+  // Karty podarunkowe: powstają przed mailem, a nieudane wystawienie przerywa realizację.
+  // Inaczej kupujący zapłaciłby za karty, których nie dostał, a powtórka nie miałaby czego dokończyć —
+  // przejęcie cofnięte, więc PayU ponowi powiadomienie i komplet się dopełni.
   let cards = "";
   let cardIds = [];
   try {
     const cardRows = ids.length ? await runSql(base44, `SELECT id::text AS id FROM public.products WHERE product_type = 'karta' AND id::text IN (${ids.map(escStr).join(",")})`, true) : [];
     cardIds = cardRows.map((r) => String(r.id));
     if (cardIds.length) cards = giftCardsHtml(await issueGiftCards(base44, stored.id, items, cardIds, stored.buyer_email));
-  } catch (e) { console.error("karta podarunkowa:", e?.message); }
+  } catch (e) {
+    await releaseCompletion(base44, payuOrderId, stored.status).catch(() => {});
+    throw e;
+  }
 
   // Bilety na wydarzenia: numery, kody QR i zapis kupującego (niezależnie od wysyłki maila — są też w koncie).
   let tix = "";
