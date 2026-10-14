@@ -70,7 +70,7 @@ export default function ProductDetail() {
   }
 
   const soon = product.status === "wkrótce";
-  const promo = !soon && !product.is_free && isPromoActive(product);
+  const promo = !soon && !product.is_free && product.product_type !== "karta" && isPromoActive(product);
   const onRequest = !soon && priceOnRequest(product);
   const amounts = product.product_type === "karta" ? cardAmounts(product) : [];
   const linkUrl = (product.checkout_url || "").trim();
