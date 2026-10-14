@@ -79,7 +79,7 @@ export default async function (req) {
       true
     );
     const byId = new Map(rows.map((r) => [String(r.id), r]));
-    const hasDigital = rows.some((r) => DIGITAL.includes(r.product_type));
+    const hasDigital = rows.some((r) => DIGITAL.includes(r.product_type) || r.product_type === "pakiet");
     if (hasDigital && body.digital_consent !== true) {
       throw new Error("Zaznacz zgodę na dostarczenie treści cyfrowych");
     }

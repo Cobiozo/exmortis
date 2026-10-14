@@ -22,4 +22,5 @@ export const STATUS_LABEL = {
 export const accessLabel = (p) =>
   p.access_months ? `Dostęp: ${p.access_months} ${p.access_months === 1 ? "miesiąc" : p.access_months < 5 ? "miesiące" : "miesięcy"} od zakupu` : "Dostęp: bezterminowy";
 
-export const isDigital = (p) => ["pdf", "audio", "wideo", "kurs"].includes(p?.product_type);
+// Pakiet składa się wyłącznie z treści cyfrowych — przy zakupie ta sama zgoda i informacja o dostępie.
+export const isDigital = (p) => ["pdf", "audio", "wideo", "kurs", "pakiet"].includes(p?.product_type);

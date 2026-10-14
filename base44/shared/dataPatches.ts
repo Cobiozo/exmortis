@@ -93,6 +93,12 @@ const PATCHES: { id: string; why: string; sql: string[] }[] = [
     why: "Bilety na wydarzenia: tabela event_tickets (numer, klucz QR, imię i nazwisko, status) i kolumny wydarzeń (sprzedaż, wzór)",
     sql: [TICKET_SCHEMA_SQL],
   },
+  {
+    id: "2026-10-14-test-pakiet-usun",
+    why: "Sprzątanie po teście pakietów: ukryty produkt „TEST pakiet (do usunięcia)” (nigdy niewidoczny, bez zamówień)",
+    sql: [`DELETE FROM public.products WHERE id::text = '62bb36ec-cc82-469f-9e6c-b94a28733df0' AND name LIKE 'TEST pakiet%'
+      AND NOT EXISTS (SELECT 1 FROM public.orders o WHERE o.items::text LIKE '%62bb36ec-cc82-469f-9e6c-b94a28733df0%')`],
+  },
 ];
 
 export async function applyDataPatches(base44): Promise<string[]> {

@@ -9,6 +9,7 @@ import { markCodeUsed } from "./discounts.ts";
 import { issueOrderTickets, ticketsHtml, loadEvent } from "./tickets.ts";
 import { runSql, rpc, escStr } from "./supabase.ts";
 import { DIGITAL, grantAccess, ensureAccount } from "./access.ts";
+import { expandBundles } from "./bundles.ts";
 import { randomToken, sha256hex } from "./booking.ts";
 
 function packageEmailHtml(token) {
@@ -66,7 +67,9 @@ export async function fulfillOrder(base44, stored, payuOrderId) {
     if (ids.length && stored.buyer_email) {
       const rows = await runSql(base44,
         `SELECT id, name, product_type, access_months FROM public.products WHERE id::text IN (${ids.map(escStr).join(",")})`, true);
-      for (const p of rows.filter((r) => DIGITAL.includes(r.product_type))) {
+      // Pakiet: dostęp do każdego składnika (sam pakiet nie ma pliku).
+      const toGrant = await expandBundles(base44, rows);
+      for (const p of toGrant.filter((r) => DIGITAL.includes(r.product_type))) {
         const until = await grantAccess(base44, { email: stored.buyer_email, product: p, source: "zakup", orderId: stored.id });
         granted.push({ name: p.name, until });
       }
