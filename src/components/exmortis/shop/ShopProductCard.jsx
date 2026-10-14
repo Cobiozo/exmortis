@@ -1,7 +1,12 @@
 import React from "react";
 import { Link } from "react-router-dom";
 import { Image } from "@/components/ui/image";
-import { CardTopBadge, PriceBlock, ProductButton, isListenProduct } from "./cardBits";
+import { CardTopBadge, PriceBlock, ProductButton, isListenProduct, productHref } from "./cardBits";
+
+// Link wewnętrzny albo zewnętrzny (produkty z własnym adresem, np. POWRÓT → /powrot).
+function To({ href, children, ...rest }) {
+  return href.startsWith("/") ? <Link to={href} {...rest}>{children}</Link> : <a href={href} target="_blank" rel="noreferrer" {...rest}>{children}</a>;
+}
 
 // Karta produktu w Skarbcu (zwarta): okładka 16:9, znaczek, nazwa (link do strony produktu),
 // obietnica w 3 linijkach, dla kogo, forma, cena, przycisk.
@@ -11,7 +16,7 @@ export default function ShopProductCard({ product: p, onWaitlist, index }) {
   const cover = p.cover_image || p.image_url;
   const listen = isListenProduct(p);
   const listenHref = listen ? (p.checkout_url || "").trim() || "/glos" : null;
-  const href = `/skarbiec/${p.slug}`;
+  const href = productHref(p);
 
   return (
     <article
@@ -19,7 +24,7 @@ export default function ShopProductCard({ product: p, onWaitlist, index }) {
         soon ? "opacity-80 hover:opacity-100" : ""
       }`}
     >
-      <Link to={href} tabIndex={-1} aria-hidden="true" className="relative block aspect-[16/9] overflow-hidden bg-[#0F0F10]">
+      <To href={href} tabIndex={-1} aria-hidden="true" className="relative block aspect-[16/9] overflow-hidden bg-[#0F0F10]">
         {cover ? (
           <div className="absolute inset-0 transition-transform duration-700 ease-out group-hover:scale-[1.03]">
             <Image src={cover} alt="" className="w-full h-full" fittingType="fill" />
@@ -35,11 +40,11 @@ export default function ShopProductCard({ product: p, onWaitlist, index }) {
           <CardTopBadge p={p} index={index} />
           {soon && <span className="technical text-[9px] px-2.5 py-1 bg-[#0A0A0B]/85 text-foreground/70 border hairline">WKRÓTCE</span>}
         </div>
-      </Link>
+      </To>
 
       <div className="flex flex-col flex-1 p-5 gap-2">
         <h3 className="shop-heading text-lg text-[#F5EFE1] leading-snug">
-          <Link to={href} className="hover:text-[#C9A24A] transition-colors">{p.name}</Link>
+          <To href={href} className="hover:text-[#C9A24A] transition-colors">{p.name}</To>
         </h3>
         {p.promise && <p className="italic text-foreground/70 text-sm leading-relaxed line-clamp-3">{p.promise}</p>}
         {p.for_whom && <p className="text-xs text-foreground/45 line-clamp-2">{p.for_whom}</p>}

@@ -14,12 +14,12 @@ export default function ShopLevelSection({ section, products, events, onWaitlist
   let n = 0;
 
   return (
-    <section id={`poziom-${section.level}`} className="py-24 md:py-32 px-5 md:px-10 border-t hairline">
+    <section id={`poziom-${section.level}`} className="py-14 md:py-20 px-5 md:px-10 border-t hairline">
       <div className="mx-auto max-w-[1400px]">
-        <div className="relative mb-12 md:mb-16">
+        <div className="relative mb-8 md:mb-10">
           <span
             aria-hidden="true"
-            className="hidden md:block absolute right-0 top-0 shop-heading text-[7rem] leading-none text-[#F5EFE1]/5 select-none pointer-events-none"
+            className="hidden md:block absolute right-0 top-0 shop-heading text-[5rem] leading-none text-[#F5EFE1]/5 select-none pointer-events-none"
           >
             {String(section.level).padStart(2, "0")}
           </span>
@@ -27,7 +27,7 @@ export default function ShopLevelSection({ section, products, events, onWaitlist
             <p className="technical text-[11px] gold-text mb-4">
               {section.label} · {String(section.level).padStart(2, "0")}
             </p>
-            <h2 className="shop-heading text-3xl md:text-5xl text-[#F5EFE1] mb-4">{section.title}</h2>
+            <h2 className="shop-heading text-3xl md:text-4xl text-[#F5EFE1] mb-3">{section.title}</h2>
             <p className="text-foreground/50">{section.line}</p>
           </div>
         </div>
@@ -38,12 +38,12 @@ export default function ShopLevelSection({ section, products, events, onWaitlist
             product={p}
             onWaitlist={onWaitlist}
             index={++n}
-            className="mb-6 md:mb-8"
+            className="mb-5"
           />
         ))}
 
         {rest.length > 0 && (
-          <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6 items-stretch">
+          <div className="grid sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 md:gap-5 items-stretch">
             {rest.map((p) => (
               <ShopProductCard key={p.id} product={p} onWaitlist={onWaitlist} index={++n} />
             ))}
@@ -51,7 +51,7 @@ export default function ShopLevelSection({ section, products, events, onWaitlist
         )}
 
         {eventList.length > 0 && (
-          <div className={`flex overflow-x-auto snap-x snap-mandatory -mx-5 px-5 pb-2 sm:mx-0 sm:px-0 sm:pb-0 sm:overflow-visible sm:grid sm:grid-cols-2 lg:grid-cols-3 gap-6 ${featured.length > 0 || rest.length > 0 ? "mt-6" : ""}`}>
+          <div className={`flex overflow-x-auto snap-x snap-mandatory -mx-5 px-5 pb-2 sm:mx-0 sm:px-0 sm:pb-0 sm:overflow-visible sm:grid sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 md:gap-5 ${featured.length > 0 || rest.length > 0 ? "mt-5" : ""}`}>
             {eventList.map((ev) => (
               <ShopEventCard key={ev.id} event={ev} />
             ))}

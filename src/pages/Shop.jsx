@@ -123,9 +123,9 @@ export default function Shop() {
       {/* ===== SEKCJE DRABINY ===== */}
       {loading ? (
         <div className="py-20 px-5 md:px-10">
-          <div className="mx-auto max-w-[1400px] grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
-            {[...Array(6)].map((_, i) => (
-              <div key={i} className="aspect-[3/4] bg-[#0D0D0E] border hairline animate-pulse" />
+          <div className="mx-auto max-w-[1400px] grid sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 md:gap-5">
+            {[...Array(8)].map((_, i) => (
+              <div key={i} className="h-[380px] bg-[#0D0D0E] border hairline animate-pulse" />
             ))}
           </div>
         </div>

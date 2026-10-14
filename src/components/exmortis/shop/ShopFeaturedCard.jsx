@@ -11,7 +11,7 @@ export default function ShopFeaturedCard({ product: p, onWaitlist, index, classN
     <article
       className={`group grid md:grid-cols-2 border border-[#C9A24A]/30 bg-[#0D0D0E] overflow-hidden ${className}`}
     >
-      <div className="relative min-h-[280px] bg-[#0F0F10]">
+      <div className="relative min-h-[200px] md:min-h-[240px] bg-[#0F0F10]">
         {cover ? (
           <div className="absolute inset-0 transition-transform duration-700 ease-out group-hover:scale-[1.03]">
             <Image src={cover} alt={p.name} className="w-full h-full" fittingType="fill" />
@@ -26,11 +26,11 @@ export default function ShopFeaturedCard({ product: p, onWaitlist, index, classN
         </div>
       </div>
 
-      <div className="p-8 md:p-14 flex flex-col gap-5">
+      <div className="p-6 md:p-10 flex flex-col gap-4">
         <p className="technical text-[9px] text-foreground/40">POLECANE</p>
-        <h3 className="shop-heading text-2xl md:text-4xl text-[#F5EFE1] leading-snug">{p.name}</h3>
+        <h3 className="shop-heading text-2xl md:text-3xl text-[#F5EFE1] leading-snug">{p.name}</h3>
         {p.promise && (
-          <p className="italic text-foreground/75 text-base md:text-lg leading-relaxed">{p.promise}</p>
+          <p className="italic text-foreground/75 text-base leading-relaxed">{p.promise}</p>
         )}
         {p.for_whom && <p className="text-sm text-foreground/40">{p.for_whom}</p>}
         {(p.form || p.format_details) && (
@@ -40,7 +40,7 @@ export default function ShopFeaturedCard({ product: p, onWaitlist, index, classN
           </p>
         )}
 
-        <div className="mt-auto pt-6 border-t hairline space-y-3">
+        <div className="mt-auto pt-5 border-t hairline space-y-3 md:max-w-sm">
           {!mentoring && (
             <div className="text-lg text-[#F5EFE1] min-h-[28px]">
               <PriceBlock p={p} />
