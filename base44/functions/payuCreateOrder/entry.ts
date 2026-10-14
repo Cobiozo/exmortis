@@ -7,6 +7,7 @@ import { insertOrder, getOrderStatus, getOrderByPayuId, claimCompletion } from "
 import { fulfillOrder } from "../../shared/fulfillOrder.ts";
 import { addSubscriber } from "../../shared/newsletter.ts";
 import { DIGITAL } from "../../shared/access.ts";
+import { productSeats } from "../../shared/seats.ts";
 import { regulaminVersion } from "../../shared/legalDocs.ts";
 import { unitPrice } from "../../shared/productPrice.ts";
 import { cleanInvoice, invoiceText } from "../../shared/invoice.ts";
@@ -107,6 +108,22 @@ export default async function (req) {
       const label = card ? `${String(p.name).slice(0, 120)} ${(unit / 100).toFixed(0)} zł` : String(p.name).slice(0, 150);
       products.push({ name: label, unitPrice: String(unit), quantity: qty });
       stored.push({ product_id: String(p.id), name: label, unitPrice: String(unit), quantity: qty, ...(card ? { gift: card.gift } : {}) });
+    }
+    // Limit miejsc (kohorta, warsztat): sprzedane + płatności w toku z ostatnich 30 min — sprawdzane na serwerze.
+    const need = new Map();
+    for (const s of stored) {
+      const pid = String(s.product_id || "");
+      if (pid && !pid.startsWith("bilet:")) need.set(pid, (need.get(pid) || 0) + (Number(s.quantity) || 1));
+    }
+    if (need.size) {
+      const seats = await productSeats(base44, [...need.keys()]);
+      for (const [pid, q] of need) {
+        const st = seats.get(pid);
+        if (st && st.left < q) {
+          const nm = String(byId.get(pid)?.name || "produkt");
+          throw new Error(st.left > 0 ? `Zostało tylko ${st.left} miejsc: ${nm}` : `Brak wolnych miejsc: ${nm}`);
+        }
+      }
     }
     const disc = await applyDiscount(base44, body.code, stored.map((s) => ({
       product_id: s.product_id, unit: Number(s.unitPrice), qty: s.quantity,
