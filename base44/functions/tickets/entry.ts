@@ -22,6 +22,8 @@ const HITS = new Map();
 function tooFast(key) {
   const now = Date.now(), h = (HITS.get(key) || []).filter((t) => now - t < 60000);
   h.push(now); HITS.set(key, h);
+  // Mapa nie rośnie bez końca: przy wielu różnych skanerach usuwamy wpisy bez świeżych sprawdzeń.
+  if (HITS.size > 500) for (const [k, v] of HITS) if (!v.some((t) => now - t < 60000)) HITS.delete(k);
   return h.length > 240;
 }
 

@@ -59,6 +59,16 @@ export async function insertOrder(base44, order) {
       // zostaje zapis w notatce
     }
   }
+  // Kod rabatowy zapisany wprost. Nie wolno go odczytywać z notatki: notatkę wpisuje kupujący,
+  // więc mógłby w niej podać cudzy kod karty podarunkowej i wypalić go bez zakupu.
+  if (order.discountCode) {
+    try {
+      await ensureDiscountColumn(base44);
+      await runSql(base44, `UPDATE public.orders SET discount_code = ${escStr(order.discountCode)} WHERE id = ${escStr(order.id)}`);
+    } catch {
+      // brak kolumny nie psuje zamówienia
+    }
+  }
 }
 
 // Kolumna „invoice” zakładana przy pierwszym zamówieniu z fakturą (sprawdzenie bez blokowania tabeli).
@@ -68,6 +78,16 @@ export async function ensureInvoiceColumn(base44) {
   const has = await runSql(base44, `SELECT 1 FROM information_schema.columns WHERE table_schema = 'public' AND table_name = 'orders' AND column_name = 'invoice'`, true);
   if (!(Array.isArray(has) && has.length)) await runSql(base44, `ALTER TABLE public.orders ADD COLUMN IF NOT EXISTS invoice jsonb`);
   INVOICE_COL = true;
+  return true;
+}
+
+// Kolumna „discount_code” zakładana przy pierwszym zamówieniu z kodem rabatowym.
+let DISCOUNT_COL = false;
+export async function ensureDiscountColumn(base44) {
+  if (DISCOUNT_COL) return true;
+  const has = await runSql(base44, `SELECT 1 FROM information_schema.columns WHERE table_schema = 'public' AND table_name = 'orders' AND column_name = 'discount_code'`, true);
+  if (!(Array.isArray(has) && has.length)) await runSql(base44, `ALTER TABLE public.orders ADD COLUMN IF NOT EXISTS discount_code text`);
+  DISCOUNT_COL = true;
   return true;
 }
 

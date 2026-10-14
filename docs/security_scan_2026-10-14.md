@@ -67,9 +67,31 @@ Model ról: **admin** (wszystko) i **techniczna** (treści, menu, ustawienia, in
 ### Uwaga do sprzątnięcia (bez wpływu na bezpieczeństwo)
 `IntegrationsManager` ma martwy fragment kodu: `sendTest` wywołuje funkcję `smtpTest`, której nie ma (przycisk testu przeniesiono do `MailSettings` → `mailAdmin`). Kod jest nieosiągalny z interfejsu — do usunięcia przy okazji.
 
+## Zakup, płatność i realizacja zamówień — przegląd (2026-10-14)
+
+Zakres: `payuCreateOrder`, `payuNotification`, `orderFree`, `shared/orders.ts`, `fulfillOrder.ts`, `discounts.ts`, `giftCard.ts`, `tickets.ts`, `access.ts`, `productPrice.ts`, `invoice.ts`, `functions/tickets`.
+
+### Znalezione i naprawione
+1. **Cudza karta podarunkowa do wypalenia z pola „uwagi".** Po opłaceniu `fulfillOrder` odczytywał użyty kod rabatowy z **notatki zamówienia** (`note`), a notatka zawiera tekst wpisany przez kupującego. Wystarczyło w polu uwag wpisać `Kod rabatowy: PREZENT-XXXXXXXX (−1 zł)`: przy zamówieniu **bez** realnego rabatu to ta linia była ostatnia w notatce, więc serwer zwiększał licznik użyć wskazanego kodu. Kod jednorazowy (karta podarunkowa) stawał się przez to bezużyteczny dla właściciela — bez zakupu i bez wiedzy obsługi. Teraz kod jest zapisywany wprost w kolumnie `discount_code` zamówienia i stamtąd czytany (ten sam wzorzec, co przy kolumnie `invoice`); notatka pozostaje wyłącznie informacją dla panelu i nie jest już nigdy parsowana. Kolumna dodana w bazie.
+
+### Zweryfikowane jako poprawne
+- **Ceny po stronie serwera**: kwoty, pozycje i rabat liczone z bazy — dane z koszyka nie są brane za pewnik. Produkty nieaktywne, „wkrótce", „ukryty" i darmowe nie przechodzą przez kasę; kwota karty podarunkowej musi być jedną z kwot zdefiniowanych w produkcie.
+- **Kody rabatowe**: nie obniżają ceny karty podarunkowej i nie łączą się z nią; karta nie może opłacić innej karty; zakres produktowy kodu jest respektowany.
+- **Karty podarunkowe**: kod `PREZENT-` + 10 znaków z 32-znakowego alfabetu (≈10^15 kombinacji), jednorazowy (`max_uses: 1`), ważny 6 miesięcy; powstają idempotentnie po numerze zamówienia, a dane na karcie są oczyszczane i escapowane.
+- **`payuNotification`**: autentyczność podpisem OpenPayU, atomowe przejęcie pierwszego `COMPLETED`, ponowienia nie dublują dostępu, kart ani biletów (idempotencja po numerze zamówienia i numerze pozycji), a nieudana realizacja cofa przejęcie, żeby PayU ponowił powiadomienie.
+- **Bilety**: cena, liczba miejsc i termin sprzedaży z serwera; zajętość = ważne bilety + niedokończone płatności z ostatnich 30 minut; numery losowane z ponowieniem przy kolizji; wejście to jedno atomowe przejście „ważny → wykorzystany"; cofnięcie i statystyki wyłącznie dla administratora albo osoby z nadanym uprawnieniem (także ograniczonym do jednego wydarzenia i do daty); PDF i podgląd biletu dostępne tylko po losowym kluczu, z nagłówkiem `no-store` i `noindex`.
+- **`orderFree`**: tylko produkt oznaczony jako darmowy, limit 5 wysyłek na godzinę na IP i materiał, treść maila escapowana.
+- **Maile**: nazwy produktów, imiona, adresy i dane do faktury escapowane (`escHtml`); pełny numer zamówienia w mailu, w panelu skrócony.
+- **Faktura**: NIP sprawdzany z sumą kontrolną, nazwa i adres z limitem długości.
+- **`libraryTick`**: wywołanie tylko przez administratora albo token zadania porównywany w czasie stałym; limit 20 wysłanych wiadomości na godzinę.
+- **`tickets` — mapa limitów skanera** czyszczona przy wielu różnych skanerach (brak nieograniczonego wzrostu pamięci instancji).
+
 ## Ryzyka otwarte (bez zmian)
 1. Wylogowanie ze wszystkich urządzeń — ograniczenie platformy.
 2. Podpisane linki do plików działają do 1 godziny.
 3. Klucz `service_role` Supabase trzymany w pamięci instancji (1 h), nigdy w logach ani odpowiedzi.
 4. Poczta: do czasu konfiguracji SMTP przypomnienia czekają w kolejce (bez utraty danych).
 5. Limity publicznych formularzy działają per IP; przy braku nagłówka adresu (rzadkie) przepuszczają — świadomy wybór, żeby formularz nigdy nie zniknął przez licznik.
+6. **Licznik użycia kodu rośnie dopiero po opłaceniu, a limit `max_uses` sprawdzany jest przy tworzeniu zamówienia.** Dwa równoległe zamówienia z tym samym kodem jednorazowym (karta podarunkowa) mogą przejść oba — okno to kilka sekund, ale przy karcie oznacza podwójne wykorzystanie kwoty. Uszczelnienie wymaga atomowego „rezerwuję kod" po stronie bazy; encje Base44 nie mają warunkowego zapisu z potwierdzeniem, więc trzeba by przenieść licznik do tabeli w Supabase. Do rozważenia, gdy pojawi się realny ruch.
+7. **Zamówienie za 0 zł, którego realizacja się nie powiedzie, zostaje w stanie PENDING bez ponowienia** — nie ma powiadomienia PayU, które by je wywołało ponownie; wymaga dokończenia ręcznie w panelu.
+8. **`ensureOrdersTable` w `shared/orders.ts` ma martwy blok DDL** (zaraz po `return;`) — nie szkodzi, ale myli przy czytaniu kodu.

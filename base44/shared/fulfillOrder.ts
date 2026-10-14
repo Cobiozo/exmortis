@@ -76,11 +76,13 @@ export async function fulfillOrder(base44, stored, payuOrderId) {
     throw e;
   }
 
-  // Kod rabatowy liczony jako użyty dopiero po opłaceniu.
+  // Kod rabatowy liczony jako użyty dopiero po opłaceniu. Bierzemy go z kolumny zamówienia, nigdy
+  // z notatki — notatkę wpisuje kupujący, więc mógłby w niej podać cudzy kod karty podarunkowej
+  // i wypalić go bez zakupu.
   try {
-    const m = [...String(stored.note || "").matchAll(/Kod rabatowy: (\S+) \(−/g)].pop();
-    if (m) {
-      const rec = (await base44.asServiceRole.entities.DiscountCode.filter({ code: m[1] }))[0];
+    const code = String(stored.discount_code || "").trim();
+    if (code) {
+      const rec = (await base44.asServiceRole.entities.DiscountCode.filter({ code }))[0];
       if (rec) await base44.asServiceRole.entities.DiscountCode.update(rec.id, { uses: (rec.uses || 0) + 1 });
     }
   } catch { /* licznik kodu nie blokuje zamówienia */ }

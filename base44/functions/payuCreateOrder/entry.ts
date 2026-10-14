@@ -119,6 +119,7 @@ export default async function (req) {
         note: [note, invoice ? invoiceText(invoice) : "", disc ? `Kod rabatowy: ${disc.code} (−${(disc.discount / 100).toFixed(2)} zł)` : ""].filter(Boolean).join("\n"),
         invoice, items: stored, total: 0, status: "PENDING", newsletterConsent,
         digitalConsent: hasDigital ? DIGITAL_CONSENT : null,
+        discountCode: disc ? disc.code : null,
       });
       await saveConsents(base44, req, id, buyerEmail, hasDigital, newsletterConsent);
       if (newsletterConsent) await addSubscriber(base44, { email: buyerEmail, name: buyerName, consentGiven: true });
@@ -189,6 +190,7 @@ export default async function (req) {
       status: "PENDING",
       newsletterConsent,
       digitalConsent: hasDigital ? DIGITAL_CONSENT : null,
+      discountCode: disc ? disc.code : null,
     });
 
     await saveConsents(base44, req, extOrderId, buyerEmail, hasDigital, newsletterConsent);
