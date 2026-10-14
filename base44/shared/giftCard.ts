@@ -15,21 +15,43 @@ const newToken = () => rand("abcdefghijkmnopqrstuvwxyzABCDEFGHJKLMNPQRSTUVWXYZ23
 
 const view = (r) => ({ code: r.code, value: r.value, until: r.valid_until, to_name: r.gift_to || "", message: r.gift_message || "", token: r.gift_token || "" });
 
-// items: pozycje zamówienia; cardIds: id produktów typu „karta”. Idempotentnie po numerze zamówienia.
+// Podpis karty: kwota + dedykacja. Rozpoznajemy po nim, ile kart z danej pozycji już powstało.
+const cardKey = (value, toName, message) => `${value}|${clip(toName, 60)}|${clip(message, 200)}`;
+
+// items: pozycje zamówienia; cardIds: id produktów typu „karta”.
+// Idempotentnie po numerze zamówienia I po liczbie: jeśli poprzednia próba przerwała się w połowie,
+// powtórka dokłada brakujące karty, a już wydanych nie dubluje.
 export async function issueGiftCards(base44, orderId, items, cardIds, buyerEmail = "") {
   const Dc = base44.asServiceRole.entities.DiscountCode;
   const tag = `zamówienie ${String(orderId).slice(0, 8).toUpperCase()}`;
-  const had = await Dc.filter({ opis: { $regex: tag } }).catch(() => []);
-  if (had.length) return had.map(view);
-  const until = new Date(Date.now() + 183 * 86400000).toLocaleDateString("sv-SE", { timeZone: "Europe/Warsaw" });
-  const out = [];
+  let existing = [];
+  try {
+    const found = await Dc.filter({ opis: { $regex: tag } }, { limit: 500 });
+    existing = Array.isArray(found) ? found : found?.items || [];
+  } catch { existing = []; }
+
+  // Ile kart już jest dla każdej pozycji (kwota + dedykacja).
+  const counts = new Map();
+  for (const r of existing) {
+    const k = cardKey(Math.round(Number(r.value) || 0), r.gift_to, r.gift_message);
+    counts.set(k, (counts.get(k) || 0) + 1);
+  }
+  // Cały komplet ma jedną datę ważności — powtórka nie przesuwa jej nowym kartom.
+  const until = existing[0]?.valid_until
+    || new Date(Date.now() + 183 * 86400000).toLocaleDateString("sv-SE", { timeZone: "Europe/Warsaw" });
+
+  const out = existing.map(view);
   for (const it of items.filter((i) => cardIds.includes(String(i.product_id)))) {
-    for (let k = 0; k < Math.min(20, Number(it.quantity) || 1); k++) {
-      const value = Math.round(Number(it.unitPrice) || 0) / 100;
+    const value = Math.round(Number(it.unitPrice) || 0) / 100;
+    const to = clip(it.gift?.to_name, 60);
+    const message = clip(it.gift?.message, 200);
+    const want = Math.min(20, Number(it.quantity) || 1);
+    const have = counts.get(cardKey(value, to, message)) || 0;
+    for (let k = have; k < want; k++) {
       const rec = await Dc.create({
         code: newCode(), kind: "kwota", value, max_uses: 1, uses: 0, valid_until: until, active: true,
         opis: `Karta podarunkowa · ${tag}`,
-        gift_to: clip(it.gift?.to_name, 60), gift_message: clip(it.gift?.message, 200),
+        gift_to: to, gift_message: message,
         gift_token: newToken(), buyer_email: String(buyerEmail || "").trim().toLowerCase(),
       });
       out.push(view(rec));
