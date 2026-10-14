@@ -5,6 +5,7 @@ import { base44 } from "@/api/base44Client";
 import { useAuth } from "@/lib/AuthContext";
 import { plWhenFull, whenText } from "@/components/exmortis/events/time";
 import RecordingPlayer, { leftText } from "./RecordingPlayer";
+import MyTickets from "./MyTickets";
 
 // Moje konto → Spotkania: nagrania (tylko zapisani, w oknie udostępnienia), nadchodzące spotkania z osobistym linkiem, historia.
 export default function MyEvents() {
@@ -35,6 +36,7 @@ export default function MyEvents() {
 
   return (
     <div className="space-y-14">
+      <MyTickets />
       {recs.length > 0 && (
         <section>
           <p className="technical text-[10px] gold-text mb-6">NAGRANIA · TYLKO DLA OSÓB ZAPISANYCH</p>
