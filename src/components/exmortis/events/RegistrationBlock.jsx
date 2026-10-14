@@ -2,6 +2,7 @@ import React, { useState } from "react";
 import { ArrowRight, Bell } from "lucide-react";
 import { base44 } from "@/api/base44Client";
 import RegistrationForm from "./RegistrationForm";
+import TicketBuy from "./TicketBuy";
 
 // Blok zapisu na stronie wydarzenia — zależnie od registration_type.
 export default function RegistrationBlock({ event: ev }) {
@@ -71,6 +72,9 @@ export default function RegistrationBlock({ event: ev }) {
       </div>
     );
   }
+
+  // Wydarzenie płatne z biletami na stronie: zakup biletu zamiast formularza zapisu.
+  if (ev.tickets && Number(ev.price) > 0) return <TicketBuy event={ev} />;
 
   return <RegistrationForm event={ev} />;
 }
