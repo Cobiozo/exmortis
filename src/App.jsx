@@ -54,6 +54,7 @@ const Obok = lazyPage(() => import('@/pages/Obok'));
 const ObokSeria = lazyPage(() => import('@/pages/ObokSeria'));
 const ObokNagranie = lazyPage(() => import('@/pages/ObokNagranie'));
 const ListyPotwierdz = lazyPage(() => import('@/pages/ListyPotwierdz'));
+const ListyWypis = lazyPage(() => import('@/pages/ListyWypis'));
 const ZmianaAdresu = lazyPage(() => import('@/pages/ZmianaAdresu'));
 import JoinMeeting from '@/pages/JoinMeeting';
 import ErrorBoundary from '@/components/errors/ErrorBoundary';
@@ -144,6 +145,7 @@ const AuthenticatedApp = () => {
           <Route path="/strona/:slug" element={<CmsPage />} />
           <Route path="/1-listopada" element={<Listopad />} />
           <Route path="/listy/potwierdz" element={<ListyPotwierdz />} />
+          <Route path="/listy/wypis" element={<ListyWypis />} />
           <Route path="/zmiana-adresu" element={<ZmianaAdresu />} />
           <Route path="/obok" element={<Obok />} />
           <Route path="/obok/:seria" element={<ObokSeria />} />

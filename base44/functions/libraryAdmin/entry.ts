@@ -898,8 +898,3 @@ export default async function (req) {
     return Response.json({ error: known ? msg : "Nie udało się zapisać." }, { status: 400 });
   }
 }
-
-function arr(v) {
-  const a = Array.isArray(v) ? v.map((x) => String(x || "").toLowerCase()).filter(Boolean) : [];
-  return a.length ? `ARRAY[${a.map(escStr).join(",")}]::text[]` : `'{}'::text[]`;
-}

@@ -1,6 +1,6 @@
 import { createClientFromRequest } from "npm:@base44/sdk@0.8.44";
 import { runSql, escStr, requireAdmin } from "../../shared/supabase.ts";
-import { getSetting } from "../../shared/settings.ts";
+import { loadAppUrl } from "../../shared/settings.ts";
 import { sendMail, campaignEmailHtml, requireMail } from "../../shared/smtp.ts";
 
 // Moduł newslettera: grupy odbiorców, kampanie i wysyłki przez SMTP.
@@ -23,6 +23,9 @@ async function ensureTables(base44) {
     base44,
     `ALTER TABLE public.subscribers ADD COLUMN IF NOT EXISTS groups jsonb NOT NULL DEFAULT '[]'::jsonb`
   );
+  // Klucz wypisu (link w mailu kampanii). Uzupełniany raz, także dla adresów zapisanych wcześniej.
+  await runSql(base44, `ALTER TABLE public.subscribers ADD COLUMN IF NOT EXISTS unsub_token text`);
+  await runSql(base44, `UPDATE public.subscribers SET unsub_token = replace(gen_random_uuid()::text, '-', '') WHERE unsub_token IS NULL`);
   await runSql(
     base44,
     `CREATE TABLE IF NOT EXISTS public.newsletter_groups (
@@ -231,7 +234,7 @@ export default async function (req) {
         : "";
       const batch = await runSql(
         base44,
-        `SELECT s.id, s.email, s.name FROM public.subscribers s
+        `SELECT s.id, s.email, s.name, s.unsub_token FROM public.subscribers s
          WHERE s.status = 'active'
            AND NOT EXISTS (
              SELECT 1 FROM public.campaign_recipients r
@@ -251,6 +254,7 @@ export default async function (req) {
       }
 
       await requireMail(base44);
+      const appUrl = await loadAppUrl(base44);
       const sentRows = [];
       const failures = [];
       for (const s of batch) {
@@ -259,7 +263,8 @@ export default async function (req) {
             kind: "listy", ref: id,
             to: s.email,
             subject: campaign.subject,
-            html: campaignEmailHtml(String(campaign.content || ""), s.name || ""),
+            html: campaignEmailHtml(String(campaign.content || ""), s.name || "",
+              s.unsub_token ? `${appUrl}/listy/wypis?t=${s.unsub_token}` : ""),
           });
           sentRows.push(s);
         } catch {

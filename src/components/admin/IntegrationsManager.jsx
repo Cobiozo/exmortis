@@ -43,10 +43,6 @@ export default function IntegrationsManager() {
   const [smtpBusy, setSmtpBusy] = useState(false);
   const [payuMsg, setPayuMsg] = useState(null);
   const [smtpMsg, setSmtpMsg] = useState(null);
-  const [testTo, setTestTo] = useState("");
-  const [testBusy, setTestBusy] = useState(false);
-  const [testMsg, setTestMsg] = useState(null);
-
   const load = () =>
     base44.functions
       .invoke("adminSettings", { action: "get" })
@@ -90,20 +86,6 @@ export default function IntegrationsManager() {
       setMsg({ ok: false, text: errText(err, "Nie udało się usunąć.") });
     } finally {
       setBusy(false);
-    }
-  };
-
-  const sendTest = async () => {
-    if (!testTo.trim() || testBusy) return;
-    setTestBusy(true);
-    setTestMsg(null);
-    try {
-      await base44.functions.invoke("smtpTest", { to: testTo.trim() });
-      setTestMsg({ ok: true, text: "Test wysłany — sprawdź skrzynkę." });
-    } catch (err) {
-      setTestMsg({ ok: false, text: errText(err, "Nie udało się wysłać testu.") });
-    } finally {
-      setTestBusy(false);
     }
   };
 

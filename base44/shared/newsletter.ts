@@ -12,11 +12,17 @@ const newToken = () => crypto.randomUUID().replace(/-/g, "") + crypto.randomUUID
 export async function addSubscriber(base44, { email, name }) {
   const nameVal = name === undefined || name === null || String(name).trim() === "" ? "NULL" : escStr(String(name).trim().slice(0, 200));
   const token = newToken();
+  // Adres już potwierdzony zostaje aktywny. Wracający (albo niepotwierdzony) dostaje świeży link —
+  // przy „nic nie rób" ponowny zapis po wypisie nie dawał żadnej odpowiedzi ani maila.
   const rows = await runSql(
     base44,
     `INSERT INTO public.subscribers (id, email, name, status, confirm_token, confirm_sent_at)
      VALUES (gen_random_uuid()::text, ${escStr(String(email).toLowerCase())}, ${nameVal}, 'pending', ${escStr(token)}, NULL)
-     ON CONFLICT (email) DO NOTHING RETURNING id`
+     ON CONFLICT (email) DO UPDATE SET
+       status = 'pending', confirm_token = EXCLUDED.confirm_token, confirm_sent_at = NULL,
+       name = COALESCE(EXCLUDED.name, public.subscribers.name), updated_date = now()
+     WHERE public.subscribers.status <> 'active'
+     RETURNING id`
   );
   // Błąd wysyłki nie może przerwać zamówienia ani zapisu na spotkanie.
   if (rows.length) await sendConfirmMail(base44, { email, name, token }).catch((e) => console.error("Listy: potwierdzenie", e.message));
@@ -49,6 +55,18 @@ export async function confirmSubscriber(base44, token) {
      WHERE confirm_token = ${escStr(token)} AND status = 'pending' RETURNING email, name, confirmed_at`
   );
   return rows[0] || null;
+}
+
+// Wypis z linku w mailu kampanii — bez logowania, sam token. Klucz zostaje, żeby link działał
+// również przy powtórnym kliknięciu (wypis jest idempotentny).
+export async function unsubscribeByToken(base44, token) {
+  if (!/^[a-f0-9]{32}$/.test(String(token || ""))) return null;
+  const rows = await runSql(
+    base44,
+    `UPDATE public.subscribers SET status = 'unsubscribed', updated_date = now()
+     WHERE unsub_token = ${escStr(token)} RETURNING email`
+  );
+  return rows[0]?.email || null;
 }
 
 export async function purgeUnconfirmed(base44) {
