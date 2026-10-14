@@ -1,6 +1,7 @@
 // Karta podarunkowa: po opłaceniu powstaje jednorazowy kod kwotowy do Skarbca, ważny 6 miesięcy.
 // Każda karta dostaje też link do wersji do wydruku (/karta#t=…) z imieniem obdarowanego i słowami od darczyńcy.
 import { APP_URL } from "./settings.ts";
+import { unitPrice } from "./productPrice.ts";
 
 const esc = (v) => String(v ?? "").replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
 const clip = (v, n) => String(v ?? "").replace(/[\u0000-\u001f<>]/g, " ").replace(/\s+/g, " ").trim().slice(0, n);
@@ -53,4 +54,16 @@ export function giftCardsHtml(cards) {
   return `<div style="background:#0A0A0B;padding:0 32px 32px;font-family:Georgia,serif;">
     ${cards.map(one).join("")}
     <p style="margin:0;color:#8A8A8C;font-size:13px;line-height:1.6;">Kod wpisuje się w kasie Skarbca, w polu „kod rabatowy”. Działa jednorazowo — niewykorzystana część kwoty przepada. Kartę możesz wydrukować albo przesłać link osobie obdarowanej. Wszystkie Twoje karty są też w zakładce Zamówienia na koncie.</p></div>`;
+}
+
+// Pozycja karty podarunkowej z koszyka → kwota w groszach i słowa na karcie (oczyszczone, z limitami).
+export function giftLine(p, it) {
+  if (p.product_type !== "karta") return null;
+  let opts = p.price_options;
+  if (typeof opts === "string") { try { opts = JSON.parse(opts); } catch { opts = null; } }
+  const amounts = Array.isArray(opts) ? opts.map(Number).filter((n) => n > 0) : [];
+  const want = Number((it || {}).amount);
+  const amount = amounts.length ? (amounts.includes(want) ? want : NaN) : unitPrice(p);
+  if (!Number.isFinite(amount) || amount <= 0) throw new Error("Jeden z produktów nie jest już dostępny — wybierz kwotę karty jeszcze raz");
+  return { unit: Math.round(amount * 100), gift: { to_name: clip(it?.to_name, 60), message: clip(it?.message, 200) } };
 }

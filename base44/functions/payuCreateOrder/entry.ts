@@ -9,6 +9,7 @@ import { DIGITAL } from "../../shared/access.ts";
 import { regulaminVersion } from "../../shared/legalDocs.ts";
 import { unitPrice } from "../../shared/productPrice.ts";
 import { cleanInvoice, invoiceText } from "../../shared/invoice.ts";
+import { giftLine } from "../../shared/giftCard.ts";
 
 const DIGITAL_CONSENT =
   "Żądam dostarczenia treści cyfrowych przed upływem 14 dni od zawarcia umowy i przyjmuję do wiadomości, że z chwilą rozpoczęcia ich dostarczania tracę prawo odstąpienia od umowy.";
@@ -20,19 +21,6 @@ async function saveConsents(base44, req, orderId, email, hasDigital, newsletterC
   if (hasDigital) consents.push({ ...cBase, kind: "tresci_cyfrowe", text: DIGITAL_CONSENT });
   if (newsletterConsent) consents.push({ ...cBase, kind: "newsletter", text: "Chcę otrzymywać Listy powrotu — newsletter exmortis z treściami oraz informacjami o produktach i wydarzeniach — na podany adres e-mail. Zgodę mogę wycofać w każdej chwili." });
   await base44.asServiceRole.entities.Consent.bulkCreate(consents);
-}
-
-// Pozycja karty podarunkowej z koszyka → kwota w groszach i słowa na karcie (oczyszczone, z limitami).
-const clip = (v, n) => String(v ?? "").replace(/[\u0000-\u001f<>]/g, " ").replace(/\s+/g, " ").trim().slice(0, n);
-function giftLine(p, it) {
-  if (p.product_type !== "karta") return null;
-  let opts = p.price_options;
-  if (typeof opts === "string") { try { opts = JSON.parse(opts); } catch { opts = null; } }
-  const amounts = Array.isArray(opts) ? opts.map(Number).filter((n) => n > 0) : [];
-  const want = Number((it || {}).amount);
-  const amount = amounts.length ? (amounts.includes(want) ? want : NaN) : unitPrice(p);
-  if (!Number.isFinite(amount) || amount <= 0) throw new Error("Jeden z produktów nie jest już dostępny — wybierz kwotę karty jeszcze raz");
-  return { unit: Math.round(amount * 100), gift: { to_name: clip(it?.to_name, 60), message: clip(it?.message, 200) } };
 }
 
 const BASE_URLS = {
