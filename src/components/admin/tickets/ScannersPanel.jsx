@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { Plus, Trash2, Save, ScanLine, Loader2 } from "lucide-react";
+import { Plus, Trash2, ScanLine, Loader2 } from "lucide-react";
 import { base44 } from "@/api/base44Client";
 import { SITE_URL } from "@/config/site";
 
@@ -77,7 +77,6 @@ export default function ScannersPanel({ event }) {
         </div>
       </form>
       {msg && <p className="technical text-[10px] gold-text break-all" role="status">{msg}</p>}
-      <span className="sr-only"><Save /></span>
     </div>
   );
 }

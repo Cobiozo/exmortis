@@ -1,9 +1,11 @@
 import React, { useEffect, useMemo, useState } from "react";
 import { base44 } from "@/api/base44Client";
 import FallbackBadge from "@/components/admin/events/FallbackBadge";
-import { Plus, Pencil, Copy, Trash2, Users, Ban, Link2, Repeat } from "lucide-react";
+import { Plus, Pencil, Copy, Trash2, Users, Ban, Link2, Repeat, Ticket, ScanLine, X } from "lucide-react";
 import EventEditor from "@/components/admin/events/EventEditor";
 import ParticipantsPanel from "@/components/admin/events/ParticipantsPanel";
+import TicketsPanel from "@/components/admin/tickets/TicketsPanel";
+import ScannersPanel from "@/components/admin/tickets/ScannersPanel";
 import { whenText } from "@/components/exmortis/events/time";
 
 const STATUS_STYLE = {
@@ -28,6 +30,8 @@ export default function EventsManager() {
   const [typeFilter, setTypeFilter] = useState("wszystkie");
   const [editor, setEditor] = useState(null); // null | {} (nowe) | event
   const [participants, setParticipants] = useState(null); // event | null
+  const [tickets, setTickets] = useState(null); // { event, tab } | null
+  const [scanners, setScanners] = useState(false);
   const [busy, setBusy] = useState(false);
   const [info, setInfo] = useState("");
 
@@ -142,9 +146,14 @@ export default function EventsManager() {
           <p className="technical text-[10px] gold-text mb-2">MODUŁ SPOTKAŃ</p>
           <h2 className="relic-heading text-2xl">Wydarzenia i zapisy</h2>
         </div>
-        <button onClick={() => setEditor({})} className="btn-relic !px-5 !py-3">
-          <Plus className="h-4 w-4" /> NOWE WYDARZENIE
-        </button>
+        <div className="flex flex-wrap gap-2">
+          <button onClick={() => setScanners(true)} className="btn-ghost !px-4 !py-3" title="Kto może sprawdzać bilety skanerem">
+            <ScanLine className="h-4 w-4" /> SKANOWANIE BILETÓW
+          </button>
+          <button onClick={() => setEditor({})} className="btn-relic !px-5 !py-3">
+            <Plus className="h-4 w-4" /> NOWE WYDARZENIE
+          </button>
+        </div>
       </div>
 
       <div className="flex flex-wrap items-center gap-3 mb-6">
@@ -210,6 +219,7 @@ export default function EventsManager() {
               </div>
 
               <div className="technical text-[10px] text-foreground/50 lg:text-right whitespace-nowrap">
+                {ev.tickets ? <>BILETY <span className="gold-text">{ev.tickets_sold || 0}</span>{ev.capacity ? ` / ${ev.capacity}` : ""} · WESZŁO <span className="gold-text">{ev.tickets_checked || 0}</span><br /></> : null}
                 ZAPISANI <span className="gold-text">{ev.registered}</span>
                 {ev.capacity ? ` / ${ev.capacity}` : ""}
                 {ev.waitlist > 0 && <> · REZERWA <span className="gold-text">{ev.waitlist}</span></>}
@@ -222,6 +232,11 @@ export default function EventsManager() {
                 <button onClick={() => setParticipants(ev)} className="btn-ghost !px-3 !py-2" title="Uczestnicy">
                   <Users className="h-3.5 w-3.5" /> UCZESTNICY
                 </button>
+                {(ev.tickets || ev.tickets_sold > 0) && (
+                  <button onClick={() => setTickets({ event: ev, tab: "bilety" })} className="btn-ghost !px-3 !py-2" title="Bilety: lista, wzór PDF, udostępnianie, skanowanie">
+                    <Ticket className="h-3.5 w-3.5" /> BILETY
+                  </button>
+                )}
                 <button
                   onClick={() => duplicate(ev.id)}
                   disabled={busy}
@@ -285,6 +300,16 @@ export default function EventsManager() {
       )}
       {participants && (
         <ParticipantsPanel event={participants} onClose={() => setParticipants(null)} />
+      )}
+      {tickets && <TicketsPanel event={tickets.event} initialTab={tickets.tab} onClose={() => { setTickets(null); load(); }} />}
+      {scanners && (
+        <div className="fixed inset-0 z-50 bg-[#0A0A0B] overflow-y-auto" role="dialog" aria-modal="true" aria-label="Skanowanie biletów">
+          <div className="sticky top-0 bg-[#0A0A0B]/95 border-b hairline px-4 sm:px-8 py-4 flex items-center gap-4">
+            <h2 className="shop-heading text-xl text-[#F5EFE1] flex-1">Skanowanie biletów — uprawnienia</h2>
+            <button type="button" onClick={() => setScanners(false)} className="h-11 w-11 flex items-center justify-center text-foreground/60 hover:text-foreground" aria-label="Zamknij"><X className="h-5 w-5" /></button>
+          </div>
+          <div className="mx-auto max-w-[1200px] px-4 sm:px-8 py-8"><ScannersPanel event={null} /></div>
+        </div>
       )}
     </div>
   );

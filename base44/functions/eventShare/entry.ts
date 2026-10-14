@@ -17,7 +17,9 @@ export default async function (req) {
         WHERE slug = ${escStr(slug)} AND status IN ('Opublikowane','Odwołane')`, true).catch(() => [])
     : [];
   const ev = rows?.[0];
-  const target = ev ? `${APP_URL}/spotkania/${encodeURIComponent(slug)}` : `${APP_URL}/spotkania`;
+  // Źródło (facebook, whatsapp, plakat…) przechodzi dalej — zapisy pokazują, skąd ktoś przyszedł.
+  const src = (new URL(req.url).searchParams.get("src") || "").toLowerCase().replace(/[^a-z0-9_-]/g, "").slice(0, 30);
+  const target = (ev ? `${APP_URL}/spotkania/${encodeURIComponent(slug)}` : `${APP_URL}/spotkania`) + (src ? `?src=${src}` : "");
   let c = ev?.cover;
   if (typeof c === "string") { try { c = JSON.parse(c); } catch { c = null; } }
   const title = ev ? `${ev.title} · exmortis` : "Spotkania · exmortis";
