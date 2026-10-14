@@ -32,7 +32,7 @@ export function initForm(ev) {
     location: "", description: "", for_whom: "", price: 0, checkout_url: "", capacity: "", registration_type: "Zapis na stronie",
     external_url: "", join_link: "", join_password: "", recording_url: "", recording_until: "", registration_deadline: "",
     what_registered: "", mailing_group: "", cancel_reason: "", stage: "Wszystkie", status: "Szkic", cover: null,
-    open_minutes: 15, zoom_faq: true, short_path: "",
+    open_minutes: 15, zoom_faq: true, short_path: "", tickets: false,
   };
   if (!ev) return { ...base, date: "", time: defaultTime(), paid: false };
   let cover = ev.cover;
@@ -73,7 +73,7 @@ export function stepErrors(f, step, publish = false) {
   if (step === 1 && f.cover?.src && !String(f.cover.alt || "").trim()) e.cover_alt = "Dodaj opis obrazu dla czytników ekranu";
   if (step === 2) {
     if (f.paid && !(Number(f.price) > 0)) e.price = "Podaj cenę spotkania";
-    if (f.paid && !f.checkout_url) e.checkout_url = "Podaj link płatności";
+    if (f.paid && !f.tickets && !f.checkout_url) e.checkout_url = "Podaj link płatności albo włącz sprzedaż biletów na stronie";
     if (f.format === "Stacjonarnie" && !f.location.trim()) e.location = "Podaj adres spotkania";
     if (f.registration_type === "Link zewnętrzny" && !f.external_url) e.external_url = "Podaj link do transmisji lub zapisu";
     if (f.format === "Online" && f.join_link && !ZOOM_RE.test(f.join_link.trim())) e.join_link = "To nie wygląda na link do Zoom";
@@ -88,7 +88,7 @@ export function toPayload(f, status) {
   const { date, time, paid, cover, deadline_manual, ...rest } = f; // eslint-disable-line no-unused-vars
   return {
     ...rest, id: f.id || null, status, start_datetime: startIso(f),
-    duration_minutes: Number(f.duration_minutes) || 60, price: paid ? Number(f.price) || 0 : 0, checkout_url: paid ? f.checkout_url : "",
+    duration_minutes: Number(f.duration_minutes) || 60, price: paid ? Number(f.price) || 0 : 0, checkout_url: paid && !f.tickets ? f.checkout_url : "", tickets: paid && f.tickets === true,
     location: f.format === "Online" ? f.location || "Online, Zoom" : f.location,
     capacity: f.capacity === "" || f.capacity === null ? null : Number(f.capacity),
     registration_deadline: iso(f.registration_deadline), recording_until: iso(f.recording_until),

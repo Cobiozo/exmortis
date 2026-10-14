@@ -35,9 +35,13 @@ export default function StepAccess(p) {
       <Group title="Cena">
         <Toggle id="paid" label="Spotkanie płatne" checked={f.paid} onChange={(v) => set({ paid: v })} />
         {f.paid && (
-          <div className="grid md:grid-cols-2 gap-5">
-            <Input id="price" type="number" min="0" step="0.01" inputMode="decimal" label="Cena (zł) *" {...p} />
-            <Input id="checkout_url" type="url" inputMode="url" label="Link płatności *" {...p} />
+          <div className="space-y-5">
+            <Toggle id="tickets" label="Bilety na stronie: płatność PayU, bilet PDF z kodem QR, skanowanie przy wejściu" checked={f.tickets === true} onChange={(v) => set({ tickets: v })} />
+            <div className="grid md:grid-cols-2 gap-5">
+              <Input id="price" type="number" min="0" step="0.01" inputMode="decimal" label="Cena biletu (zł) *" {...p} />
+              {!f.tickets && <Input id="checkout_url" type="url" inputMode="url" label="Link płatności (zewnętrzny) *" {...p} />}
+            </div>
+            {f.tickets && <p className="text-sm text-foreground/55 leading-relaxed">Wzór biletu, sprzedane bilety i osoby, które mogą je skanować, ustawisz po zapisaniu: lista spotkań → przycisk „BILETY”. Limit miejsc niżej działa też dla biletów.</p>}
           </div>
         )}
       </Group>

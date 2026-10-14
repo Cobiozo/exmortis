@@ -91,6 +91,8 @@ export async function ensureEventColumns(base44) {
        ADD COLUMN IF NOT EXISTS what_registered text,
        ADD COLUMN IF NOT EXISTS join_password text,
        ADD COLUMN IF NOT EXISTS cover jsonb,
+       ADD COLUMN IF NOT EXISTS tickets boolean DEFAULT false,
+       ADD COLUMN IF NOT EXISTS ticket_template jsonb,
        ADD COLUMN IF NOT EXISTS open_minutes int DEFAULT 15,
        ADD COLUMN IF NOT EXISTS zoom_faq boolean DEFAULT true,
        ADD COLUMN IF NOT EXISTS short_path text`
@@ -221,7 +223,7 @@ export default async function (req) {
       if (status === "Opublikowane") {
         if (!ev.start_datetime) throw new Error("Ustaw datę, zanim opublikujesz wydarzenie.");
         if (new Date(ev.start_datetime) < new Date()) throw new Error("Data nie może być w przeszłości.");
-        if (price > 0 && !checkout_url) {
+        if (price > 0 && !checkout_url && ev.tickets !== true) {
           throw new Error("Wydarzenie płatne wymaga ceny i linku płatności.");
         }
       }
@@ -230,7 +232,7 @@ export default async function (req) {
         location, description, for_whom, price, checkout_url, capacity, registration_type,
         external_url, join_link, join_password, recording_url, recording_until,
         registration_deadline, what_registered, mailing_group, stage, cover_image,
-        cancel_reason, status, cover, open_minutes, zoom_faq, short_path`;
+        cancel_reason, status, cover, open_minutes, zoom_faq, short_path, tickets`;
       const vals = `${escStr(title)}, ${escStr(slug)}, ${subtitle ? escStr(subtitle) : "NULL"},
         ${escStr(event_type)}, ${escStr(format)}, ${startSql}, ${duration},
         ${location ? escStr(location) : "NULL"}, ${description ? escStr(description) : "NULL"},
@@ -243,7 +245,7 @@ export default async function (req) {
         ${mailing_group ? escStr(mailing_group) : "NULL"}, ${escStr(stage)},
         ${cover_image ? escStr(cover_image) : "NULL"},
         ${cancel_reason ? escStr(cancel_reason) : "NULL"}, ${escStr(status)},
-        ${cover ? `${escStr(JSON.stringify(cover))}::jsonb` : "NULL"}, ${open_minutes}, ${zoom_faq}, ${short_path ? escStr(short_path) : "NULL"}`;
+        ${cover ? `${escStr(JSON.stringify(cover))}::jsonb` : "NULL"}, ${open_minutes}, ${zoom_faq}, ${short_path ? escStr(short_path) : "NULL"}, ${ev.tickets === true && price > 0 ? "TRUE" : "FALSE"}`;
 
       let rows;
       let rescheduled = 0;
