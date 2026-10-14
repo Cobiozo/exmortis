@@ -3,6 +3,7 @@ import { mediaSrcSet } from "@/lib/imgSrcSet";
 import "@/lib/outbox"; // dosyła zaległe formularze z poprzednich wizyt
 import { readCache, readCacheAge, writeCache } from "@/lib/swrCache";
 import { LISTOPAD_COVER, LISTOPAD_EVENT } from "@/components/cms/defaults/listopadDefault";
+import { HOME_BLOCKS } from "@/components/cms/homeDefault";
 
 // Jedno wywołanie startowe („bootstrap”): ustawienia + treści + strona z edytora + spotkanie.
 // Kopia młodsza niż 5 min → bez wywołania. Błąd lub brak odpowiedzi w 2 s → kopia albo treść wbudowana,
@@ -12,7 +13,8 @@ const FRESH = 5 * 60000;
 const path = window.location.pathname;
 // Do premiery strona główna pokazuje stronę spotkania 1 listopada (te same bloki i formularz).
 const IS_LIS = path === "/1-listopada" || (path === "/" && Date.now() < PRE_END);
-const SLUG = IS_LIS ? "1-listopada" : { "/kontakt": "kontakt" }[path];
+// Po premierze „/” pobiera opublikowaną stronę główną w tym samym wywołaniu startowym (bez drugiego zapytania).
+const SLUG = IS_LIS ? "1-listopada" : { "/": "home", "/kontakt": "kontakt" }[path];
 const EVENT = IS_LIS ? LISTOPAD_EVENT : null;
 const KEY = "boot_" + path;
 
@@ -58,4 +60,22 @@ if (IS_LIS) {
     l.setAttribute("fetchpriority", "high");
     document.head.appendChild(l);
   }
+}
+
+// Po premierze: główne zdjęcie strony głównej ładuje się razem z aplikacją, a nie dopiero po odpowiedzi serwera.
+// Adres z kopii poprzedniej wizyty (aktualna treść z edytora) albo z treści wbudowanej.
+if (path === "/" && !IS_LIS) {
+  try {
+    const blocks = readCache("page_home")?.bloki || HOME_BLOCKS;
+    const hero = (Array.isArray(blocks) ? blocks : []).find((b) => b?.typ === "hero" && b.widoczny !== false);
+    const s = mediaSrcSet(hero?.dane?.tlo?.url);
+    if (s) {
+      const l = document.createElement("link");
+      Object.assign(l, { rel: "preload", as: "image", href: s.src });
+      l.setAttribute("imagesrcset", s.srcSet);
+      l.setAttribute("imagesizes", "100vw");
+      l.setAttribute("fetchpriority", "high");
+      document.head.appendChild(l);
+    }
+  } catch { /* bez wstępnego ładowania */ }
 }
