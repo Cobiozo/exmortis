@@ -53,6 +53,26 @@ const PATCHES: { id: string; why: string; sql: string[] }[] = [
          (SELECT count(*) FROM public.bk_bookings) AS bookings`,
     ],
   },
+  {
+    id: "2026-10-14-rezerwacje-powrot-start",
+    why: "Rezerwacje POWRÓT: pn–pt 8:00–10:00 i 16:00–20:00 dla „Sesja POWRÓT” i „Indywidualne konsultacje”, oba rodzaje włączone, tryb „on” (decyzja Dawida 14.10; godziny zmienia w panelu)",
+    sql: [
+      `INSERT INTO public.bk_types (slug, name, description, duration_min, buffer_before, buffer_after, step_min, horizon_days, access, monthly_limit, sort, questions, active)
+         VALUES ('indywidualne-konsultacje', 'Indywidualne konsultacje', 'Spotkanie jeden na jeden: rozmowa o tym, z czym przychodzisz, i o najbliższym kroku.', 60, 15, 15, 30, 60, 'PAKIET', NULL, 5, '[]', false)
+         ON CONFLICT (slug) DO NOTHING`,
+      `DELETE FROM public.bk_hours WHERE type_id IN (SELECT id FROM public.bk_types WHERE slug IN ('sesja-powrot', 'indywidualne-konsultacje'))`,
+      `INSERT INTO public.bk_hours (type_id, weekday, start_local, end_local)
+         SELECT t.id, w, v.f, v.t FROM public.bk_types t, generate_series(1, 5) w,
+           (VALUES ('08:00'::time, '10:00'::time), ('16:00'::time, '20:00'::time)) v(f, t)
+         WHERE t.slug IN ('sesja-powrot', 'indywidualne-konsultacje')`,
+      `UPDATE public.bk_types SET active = TRUE WHERE slug IN ('sesja-powrot', 'indywidualne-konsultacje')`,
+      `UPDATE public.bk_settings SET mode = 'on', updated_at = now() WHERE id = 1`,
+      `INSERT INTO public.bk_log (actor, action, object_type, object_id, summary)
+         VALUES ('system (poprawka danych)', 'ustawienia', 'settings', '1', 'tryb=on; POWRÓT i konsultacje pn-pt 8-10, 16-20')`,
+      `SELECT (SELECT mode FROM public.bk_settings WHERE id = 1) AS mode,
+         (SELECT json_agg(json_build_object('slug', t.slug, 'active', t.active, 'n_hours', (SELECT count(*) FROM public.bk_hours h WHERE h.type_id = t.id)) ORDER BY t.sort) FROM public.bk_types t) AS types`,
+    ],
+  },
 ];
 
 export async function applyDataPatches(base44): Promise<string[]> {
