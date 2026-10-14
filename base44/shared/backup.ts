@@ -101,13 +101,12 @@ export async function createBackup(base44, { kto = "" } = {}) {
   for (const name of ENTITIES) {
     try {
       const rows = [];
-      let cursor = null;
+      // Stronicowanie (sort, limit, skip) — po 500 wierszy, do 50 stron.
       for (let i = 0; i < 50; i++) {
-        const page = await base44.asServiceRole.entities[name].list({ sort: "-created_date", limit: 200, cursor });
-        const items = Array.isArray(page) ? page : page.items || [];
+        const page = await base44.asServiceRole.entities[name].list("-created_date", 500, i * 500);
+        const items = Array.isArray(page) ? page : page?.items || [];
         rows.push(...items.map((r) => clean(r)));
-        cursor = page && page.next_cursor;
-        if (!(page && page.has_more) || !cursor) break;
+        if (items.length < 500) break;
       }
       data[name] = rows;
       tables.push({ table: name, rows: rows.length });
