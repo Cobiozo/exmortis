@@ -13,19 +13,41 @@ const MARK = [["ODBYLA_SIE", "ODBYŁA SIĘ"], ["NIEOBECNOSC", "NIEOBECNOŚĆ"], 
 const warsawDay = (iso) => new Date(iso).toLocaleDateString("sv-SE", { timeZone: "Europe/Warsaw" });
 const dayLabel = (ymd) => new Date(`${ymd}T12:00:00Z`).toLocaleDateString("pl-PL", { weekday: "long", day: "numeric", month: "long", timeZone: "Europe/Warsaw" });
 
+// Początek polskiej doby dla dnia przesuniętego o `off` dni. Liczony przez porównanie czasu polskiego,
+// więc poprawnie przechodzi przez zmianę czasu (wcześniej okno dnia startowało w godzinie otwarcia panelu,
+// przez co poranne terminy wypadały z widoku).
+function warsawDayStart(off) {
+  const ymd = new Date(Date.now() + off * 864e5).toLocaleDateString("sv-SE", { timeZone: "Europe/Warsaw" });
+  let t = new Date(`${ymd}T00:00:00Z`).getTime();
+  for (let i = 0; i < 2; i++) {
+    const local = new Date(t).toLocaleString("sv-SE", { timeZone: "Europe/Warsaw" });
+    if (local.slice(0, 10) === ymd && local.slice(11, 16) === "00:00") break;
+    const dayDiff = (local.slice(0, 10) < ymd ? -1 : local.slice(0, 10) > ymd ? 1 : 0) * 864e5;
+    const [hh, mm] = local.slice(11, 16).split(":").map(Number);
+    t -= dayDiff + (hh * 60 + mm) * 60000;
+  }
+  return t;
+}
+
 // MUSI 16: kalendarz dnia, tygodnia i listy. Rezerwacje (z oznaczeniem), spotkania grupowe (tylko odczyt), blokady.
 export default function BookingCalendar() {
   const [view, setView] = useState("dzien");
   const [off, setOff] = useState(0);
   const [d, setD] = useState(null);
   const [err, setErr] = useState("");
+  const [msg, setMsg] = useState("");
   const [move, setMove] = useState(null);      // {booking_id, type_id, slots, pick}
   const [busy, setBusy] = useState(false);
 
   const load = useCallback(async () => {
-    const step = view === "tydzien" ? 7 : 1;
-    const from = new Date(Date.now() + off * step * 864e5 - 12 * 3600e3);
-    const to = new Date(from.getTime() + (view === "tydzien" ? 8 : 1) * 864e5);
+    let from, to;
+    if (view === "tydzien") {
+      from = new Date(Date.now() + off * 7 * 864e5 - 12 * 3600e3);
+      to = new Date(from.getTime() + 8 * 864e5);
+    } else {
+      from = new Date(warsawDayStart(off));
+      to = new Date(from.getTime() + 864e5);
+    }
     try {
       setD(await bk("calendar", { from: from.toISOString(), to: to.toISOString() }));
     } catch (e) { setErr(e.message); setD({ bookings: [], events: [], blocks: [], unmarked: 0 }); }
@@ -51,8 +73,8 @@ export default function BookingCalendar() {
     try { await bk("mark_status", { booking_id: id, status }); await load(); } catch (e) { setErr(e.message); }
   };
   const resend = async (id) => {
-    setErr("");
-    try { await bk("send_mail", { booking_id: id, kind: "potwierdzenie" }); setErr(""); } catch (e) { setErr(e.message); }
+    setErr(""); setMsg("");
+    try { await bk("send_mail", { booking_id: id, kind: "potwierdzenie" }); setMsg("Potwierdzenie wysłane."); } catch (e) { setErr(e.message); }
   };
   const exportCsv = async () => {
     setErr("");
@@ -118,6 +140,7 @@ export default function BookingCalendar() {
       </div>
 
       {err && <p className="text-sm text-[#E8C547]" role="alert">{err}</p>}
+      {msg && <p className="text-sm gold-text" role="status">{msg}</p>}
       {!d && <p className="text-sm text-foreground/50">Ładowanie…</p>}
       {d && shown.length === 0 && <p className="text-sm text-foreground/40">Nic w tym zakresie.</p>}
 

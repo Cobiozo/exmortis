@@ -172,7 +172,8 @@ export default async function (req) {
       const keys = await loadKeys();
       if (!keys.ok) throw new Error(KEYS_MSG);
       const id = textField(body, "id", { max: 40 });
-      const [booking] = await runSql(base44, `SELECT k.id, t.name AS type, t.zoom_link, k.starts_at, k.first_name, k.email, k.status FROM public.bk_bookings k
+      // Pytania rodzaju spotkania wracają razem z rezerwacją — panel pokazuje treść pytania, nie samo „q1”.
+      const [booking] = await runSql(base44, `SELECT k.id, t.name AS type, t.zoom_link, t.questions, k.starts_at, k.first_name, k.email, k.status FROM public.bk_bookings k
         JOIN public.bk_types t ON t.id = k.type_id WHERE k.id = ${escStr(id)}::uuid`, true);
       if (!booking) return Response.json({ error: "Nie znaleziono" }, { status: 404 });
       const d = await rpc(base44, "bk_admin_detail", { p_id: id });

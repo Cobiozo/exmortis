@@ -1,6 +1,10 @@
 import React, { useEffect, useState } from "react";
 import { bk, plDateTime } from "./api";
 
+// Odpowiedzi przychodzą pod kluczami pytań (q1, q2…). Podmieniamy je na treść pytania, żeby panel był czytelny.
+const labelOf = (booking, id) => (booking?.questions || []).find((q) => q.id === id)?.label || id;
+const healthLabel = (booking) => (booking?.questions || []).find((q) => q.health)?.label || "Zdrowie (zgoda)";
+
 export default function BookingsList() {
   const [list, setList] = useState(null);
   const [open, setOpen] = useState(null);
@@ -24,8 +28,10 @@ export default function BookingsList() {
             <p>{open.booking.email}</p>
             {open.booking.zoom_link && <p>Zoom: {open.booking.zoom_link}</p>}
             {open.detail?.deleted_at && <p className="text-foreground/50">Odpowiedzi usunięte (60 dni po rozmowie).</p>}
-            {Object.entries(open.detail?.answers || {}).map(([k, v]) => <p key={k} className="whitespace-pre-wrap"><span className="gold-text">{k}:</span> {v}</p>)}
-            {open.detail?.health && <p className="whitespace-pre-wrap"><span className="blood-text">Zdrowie (zgoda):</span> {open.detail.health}</p>}
+            {Object.entries(open.detail?.answers || {}).map(([k, v]) => (
+              <p key={k} className="whitespace-pre-wrap"><span className="gold-text">{labelOf(open.booking, k)}:</span> {v}</p>
+            ))}
+            {open.detail?.health && <p className="whitespace-pre-wrap"><span className="blood-text">{healthLabel(open.booking)}:</span> {open.detail.health}</p>}
           </>}
         </div>
       )}

@@ -261,12 +261,15 @@ export async function onBookingCancelled(base44, bookingId) {
 
 // Przypomnienia wychodzą tylko dla aktualnego terminu, w oknie i nie spóźnione.
 export async function runReminders(base44) {
-  const due = await runSql(base44, `SELECT n.id AS nid, n.kind, n.send_at, k.id AS bid, k.starts_at, k.ends_at,
+  // Zapytanie zwraca już wszystkie pola potrzebne treści i plikowi .ics — dzięki temu nie ma
+  // osobnego odczytu na każdą wiadomość (wcześniej do 40 rund do bazy na jedno uruchomienie).
+  const due = await runSql(base44, `SELECT n.id AS nid, n.kind, n.send_at, k.id AS id, k.starts_at, k.ends_at,
       k.status, k.ics_uid, k.ics_sequence, k.first_name, k.email, k.client_tz, t.name AS type, t.zoom_link, t.slug
     FROM public.bk_notifications n JOIN public.bk_bookings k ON k.id = n.booking_id JOIN public.bk_types t ON t.id = k.type_id
     WHERE n.status = 'zaplanowane' AND n.kind IN ('przypomnienie24','przypomnienie1') AND n.send_at <= now() + interval '1 minute'
-    ORDER BY n.send_at LIMIT 40`).catch(() => []);
+    ORDER BY n.send_at LIMIT 40`, true).catch(() => []);
   let sent = 0, skipped = 0;
+  const organizer = due.length ? await adminTo(base44).catch(() => null) : null;   // adres nadawcy raz na partię
   for (const r of due) {
     const off = r.kind === "przypomnienie24" ? 24 * 3600e3 : 3600e3;
     const expected = new Date(r.starts_at).getTime() - off;
@@ -277,8 +280,10 @@ export async function runReminders(base44) {
       skipped++;
       continue;
     }
-    const b = await loadBooking(base44, r.bid);
-    const res = b ? await sendBookingMail(base44, { kind: r.kind, booking: b, token: null }) : "brak";
+    const b = { id: r.id, email: r.email, first_name: r.first_name, starts_at: r.starts_at, ends_at: r.ends_at,
+      status: r.status, client_tz: r.client_tz, ics_uid: r.ics_uid, ics_sequence: r.ics_sequence,
+      type: r.type, zoom_link: r.zoom_link, slug: r.slug, organizer };
+    const res = await sendBookingMail(base44, { kind: r.kind, booking: b, token: null });
     await runSql(base44, `UPDATE public.bk_notifications SET status = ${escStr(res === "wyslany" ? "wyslane" : "zaplanowane")}, sent_at = now() WHERE id = ${r.nid}`);
     sent++;
   }
