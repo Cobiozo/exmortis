@@ -3,6 +3,7 @@ import { Link } from "react-router-dom";
 import { Loader2 } from "lucide-react";
 import { base44 } from "@/api/base44Client";
 import { useFirma } from "@/lib/useSiteSettings";
+import { useCrisis } from "@/components/crisis/CrisisContext";
 
 const EMPTY = { name: "", email: "", phone: "", smierc: "", story: "", today: "", forma: "", social: "", consent_adult: false, consent_art9: false };
 const inp = "w-full bg-transparent border hairline px-5 py-4 focus:border-[#C9A24A] focus:outline-none transition-colors";
@@ -17,6 +18,7 @@ const L = ({ t, hint, children }) => (
 );
 
 export default function PodcastGuestForm() {
+  const { open: openCrisis } = useCrisis();
   const [f, setF] = useState(EMPTY);
   const [sending, setSending] = useState(false);
   const [sent, setSent] = useState(false);
@@ -29,8 +31,9 @@ export default function PodcastGuestForm() {
     if (f.story.trim().length < 200) return setError("Opowiedz swoją drogę w co najmniej 200 znakach.");
     setSending(true); setError("");
     try {
-      await base44.functions.invoke("createPodcastApplication", f);
+      const res = await base44.functions.invoke("createPodcastApplication", f);
       setSent(true);
+      if (res?.data?.pilne) openCrisis();
     } catch (x) {
       setError(x.response?.data?.error || "Nie udało się wysłać zgłoszenia. Spróbuj ponownie.");
     } finally { setSending(false); }

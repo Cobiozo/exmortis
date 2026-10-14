@@ -4,6 +4,7 @@ import { sendForm } from "@/lib/outbox";
 import { useSiteContent } from "@/components/exmortis/SiteContentProvider";
 import useSystemText from "@/content/useSystemText";
 import { track } from "@/lib/track";
+import { useCrisis } from "@/components/crisis/CrisisContext";
 
 // Wklej tu linki do swoich profili
 const SOCIAL_LINKS = [
@@ -16,6 +17,7 @@ export default function ContactSection() {
   const { rich } = useSiteContent();
   const heading = rich("contact", "heading", 'Napisz.<br /><span class="gold-text">Odpowiadam sam.</span>');
   const intro = rich("contact", "intro", "Nie ma botów i asystentów. Jeśli jesteś na progu — napisz pierwszy ruch, choćby jednym zdaniem.");
+  const { open: openCrisis } = useCrisis();
   const [form, setForm] = useState({ name: "", email: "", message: "" });
   const [sending, setSending] = useState(false);
   const [sent, setSent] = useState(false);
@@ -27,9 +29,10 @@ export default function ContactSection() {
     setSending(true);
     setError("");
     try {
-      await sendForm("createContactMessage", form);
+      const res = await sendForm("createContactMessage", form);
       track("Lead", { content_name: "kontakt" });
       setSent(true);
+      if (res?.pilne) openCrisis();
       setForm({ name: "", email: "", message: "" });
     } catch {
       setError("Nie udało się wysłać. Spróbuj ponownie albo napisz bezpośrednio na kontakt@exmortis.pl");

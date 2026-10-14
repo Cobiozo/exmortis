@@ -62,6 +62,10 @@ import ErrorBoundary from '@/components/errors/ErrorBoundary';
 const Rezerwacja = lazyPage(() => import('@/pages/Rezerwacja'));
 const RezerwacjaTermin = lazyPage(() => import('@/pages/RezerwacjaTermin'));
 const RezerwacjaZarzadzaj = lazyPage(() => import('@/pages/RezerwacjaZarzadzaj'));
+import { CrisisProvider } from '@/components/crisis/CrisisContext';
+import CrisisHelpButton from '@/components/crisis/CrisisHelpButton';
+import PwaSetup from '@/components/pwa/PwaSetup';
+import InstallHint from '@/components/pwa/InstallHint';
 // Add page imports here
 
 const AuthenticatedApp = () => {
@@ -99,6 +103,10 @@ const AuthenticatedApp = () => {
       <SeoMeta />
       <Analytics />
       <ErrorBoundary full>
+      <CrisisProvider>
+      <CrisisHelpButton />
+      <PwaSetup />
+      <InstallHint />
       <Suspense fallback={<div className="min-h-[100svh] bg-[#0A0A0B]" />}>
       <Routes>
         <Route path="/login" element={<Login />} />
@@ -156,6 +164,7 @@ const AuthenticatedApp = () => {
         </Route>
       </Routes>
       </Suspense>
+      </CrisisProvider>
       </ErrorBoundary>
       </PrelaunchGate>
       </PodcastPlayerProvider>

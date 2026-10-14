@@ -14,6 +14,8 @@ export default function ApplicationsTab() {
   const changed = (r) => { setOpen(r); load(); };
   const soon = (r) => ["nowe", "przeczytane", "odrzucone"].includes(r.status) && Date.now() - new Date(r.created_date) > SIX_M - 7 * 86400000;
   if (!rows) return <p className="text-sm text-foreground/50">Ładowanie…</p>;
+  // Pilne zgłoszenia zawsze na górze listy.
+  const shown = [...rows].sort((a, b) => (b.pilne ? 1 : 0) - (a.pilne ? 1 : 0));
   return (
     <div className="space-y-4">
       <div className="flex flex-wrap gap-2 items-center">
@@ -25,7 +27,7 @@ export default function ApplicationsTab() {
         <table className="w-full text-sm">
           <thead className="technical text-[9px] text-foreground/40 text-left"><tr><th className="p-3">DATA</th><th className="p-3">IMIĘ</th><th className="p-3">ŚMIERĆ</th><th className="p-3">FORMA</th><th className="p-3">STATUS</th><th className="p-3">OZNACZENIA</th></tr></thead>
           <tbody>
-            {rows.map((r) => (
+            {shown.map((r) => (
               <tr key={r.id} onClick={() => setOpen(r)} className="border-t hairline cursor-pointer hover:bg-[#121212]">
                 <td className="p-3 text-foreground/50">{new Date(r.created_date).toLocaleDateString("pl-PL")}</td>
                 <td className="p-3">{r.name}</td>
@@ -38,7 +40,7 @@ export default function ApplicationsTab() {
                 </td>
               </tr>
             ))}
-            {!rows.length && <tr><td colSpan={6} className="p-6 text-foreground/45">Brak zgłoszeń.</td></tr>}
+            {!shown.length && <tr><td colSpan={6} className="p-6 text-foreground/45">Brak zgłoszeń.</td></tr>}
           </tbody>
         </table>
       </div>

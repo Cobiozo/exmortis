@@ -26,7 +26,7 @@ export default function ContactsPanel() {
       <div className="overflow-x-auto border hairline">
         <table className="w-full text-sm">
           <thead className="technical text-[9px] text-foreground/40 text-left">
-            <tr><th className="p-3">ŹRÓDŁO</th><th className="p-3">IMIĘ</th><th className="p-3">E-MAIL</th><th className="p-3">TELEFON</th><th className="p-3">DATA</th></tr>
+            <tr><th className="p-3">ŹRÓDŁO</th><th className="p-3">IMIĘ</th><th className="p-3">E-MAIL</th><th className="p-3">TELEFON</th><th className="p-3">DATA</th><th className="p-3">OZNACZENIA</th></tr>
           </thead>
           <tbody>
             {shown.map((r, i) => (
@@ -36,6 +36,9 @@ export default function ContactsPanel() {
                 <td className="p-3">{r.email}</td>
                 <td className="p-3">{r.phone || "—"}</td>
                 <td className="p-3 text-foreground/50">{r.at ? new Date(r.at).toLocaleDateString("pl-PL") : "—"}</td>
+                <td className="p-3">
+                  {r.pilne && <span className="bg-[#BC1E22] text-[#F5EFE1] technical text-[9px] px-2 py-0.5">PILNE</span>}
+                </td>
               </tr>
             ))}
           </tbody>

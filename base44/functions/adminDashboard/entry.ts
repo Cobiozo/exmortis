@@ -24,14 +24,14 @@ const STATS_SQL = `SELECT
      AND COALESCE((to_jsonb(o)->'invoice'->>'wystawiona')::boolean, false) = false) AS invoices_todo`;
 
 const CONTACTS_SQL = `SELECT * FROM (
-  SELECT 'Kontakt' AS source, name, email, NULL::text AS phone, created_date::timestamptz AS at FROM public.contact_messages
-  UNION ALL SELECT 'Podcast', full_name, email, phone, created_date::timestamptz FROM public.podcast_applications
-  UNION ALL SELECT 'Powrót', full_name, email, phone, created_date::timestamptz FROM public.powrot_applications
-  UNION ALL SELECT 'Zamówienie', buyer_name, buyer_email, buyer_phone, created_date::timestamptz FROM public.orders
-  UNION ALL SELECT 'Spotkanie', first_name, email, NULL, created_at::timestamptz FROM public.registrations
-  UNION ALL SELECT 'Lista oczekujących', first_name, email, NULL, created_at::timestamptz FROM public.waitlist
-  UNION ALL SELECT 'Newsletter', name, email, NULL, created_date::timestamptz FROM public.subscribers
-) c ORDER BY at DESC NULLS LAST LIMIT 2000`;
+  SELECT 'Kontakt' AS source, cm.name, cm.email, NULL::text AS phone, cm.created_date::timestamptz AS at, COALESCE((to_jsonb(cm)->>'pilne')::boolean, false) AS pilne FROM public.contact_messages cm
+  UNION ALL SELECT 'Podcast', pa.full_name, pa.email, pa.phone, pa.created_date::timestamptz, COALESCE((to_jsonb(pa)->>'pilne')::boolean, false) FROM public.podcast_applications pa
+  UNION ALL SELECT 'Powrót', po.full_name, po.email, po.phone, po.created_date::timestamptz, COALESCE((to_jsonb(po)->>'pilne')::boolean, false) FROM public.powrot_applications po
+  UNION ALL SELECT 'Zamówienie', o.buyer_name, o.buyer_email, o.buyer_phone, o.created_date::timestamptz, false FROM public.orders o
+  UNION ALL SELECT 'Spotkanie', r.first_name, r.email, NULL, r.created_at::timestamptz, false FROM public.registrations r
+  UNION ALL SELECT 'Lista oczekujących', w.first_name, w.email, NULL, w.created_at::timestamptz, false FROM public.waitlist w
+  UNION ALL SELECT 'Newsletter', s.name, s.email, NULL, s.created_date::timestamptz, false FROM public.subscribers s
+) c ORDER BY pilne DESC, at DESC NULLS LAST LIMIT 2000`;
 
 // ============ Gotowość platformy ============
 // Lista kontrolna: co jeszcze trzeba ustawić, żeby sprzedaż, maile i spotkania działały.

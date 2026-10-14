@@ -3,6 +3,7 @@ import { base44 } from "@/api/base44Client";
 import CompanySettings from "./CompanySettings";
 import CompanyWarning from "./CompanyWarning";
 import PrelaunchSettings from "./PrelaunchSettings";
+import OfflineAppSettings from "./OfflineAppSettings";
 import MailSettings from "@/components/admin/mail/MailSettings";
 import EmailChangeToggle from "./EmailChangeToggle";
 import LegalDocsSettings from "./LegalDocsSettings";
@@ -24,6 +25,7 @@ export default function SiteSettingsPanel() {
     <div className="space-y-8">
       <CompanyWarning />
       <PrelaunchSettings initial={s.premiera} />
+      <OfflineAppSettings initial={s.aplikacja} />
       <CompanySettings initial={s.firma} />
       <LegalDocsSettings initial={s.dokumenty} />
       <MailSettings />

@@ -4,9 +4,9 @@ import { getSetting, loadAppUrl, APP_URL as APP } from "../../shared/settings.ts
 import { sendMail as gate, adminTo } from "../../shared/smtp.ts";
 import { clientIp } from "../../shared/supabase.ts";
 import { ipAllowed, TOO_MANY } from "../../shared/rateLimit.ts";
+import { isUrgent, notifyUrgent } from "../../shared/crisis.ts";
 const sendMail = (b, m) => gate(b, { kind: "podcast", ...m });
 
-const CRISIS = [/nie chc[eę] (już )?żyć/i, /skończyć ze sobą/i, /samob[oó]j/i, /zabić si[eę]/i, /samookalecz/i, /odebrać sobie życie/i];
 const HELP = `<p style="font-size:18px;color:#C9A24A;line-height:1.7"><b>116 123</b> · <b>800 70 2222</b> (całą dobę, bezpłatnie) · <b>112</b></p>`;
 const wrap = (body) => `<div style="background:#0A0A0B;color:#E2E2E2;font-family:Georgia,serif;padding:32px;max-width:560px">${body}<hr style="border:none;border-top:1px solid #3D3D3F;margin:28px 0"><p style="font-size:12px;color:#8A8A8C">W kryzysie: 116 123 · 800 70 2222 · 112</p></div>`;
 
@@ -31,7 +31,7 @@ export default async function (req) {
     if (b.consent_adult !== true || b.consent_art9 !== true) throw new Error("Zaznacz wymagane zgody.");
     const today = str(b.today, 500, true);
     const now = new Date().toISOString();
-    const pilne = CRISIS.some((r) => r.test(`${story} ${today}`));
+    const pilne = isUrgent(story, today);
     if (!(await ipAllowed(base44, clientIp(req), "podcast", 3, 3600000))) return Response.json({ error: TOO_MANY }, { status: 429 });
 
     const rec = await base44.asServiceRole.entities.PodcastApplication.create({
@@ -46,14 +46,14 @@ export default async function (req) {
       const link = `${APP}/admin/kontakty`;
       if (pilne) {
         await sendMail(smtp, { to: email, subject: "Dziękuję za Twoją wiadomość", html: wrap(`<p>Dziękuję za tę wiadomość. Przeczytam Twoje zgłoszenie osobiście.</p><p>Jeśli jest Ci teraz bardzo ciężko, nie czekaj na moją odpowiedź. Zadzwoń teraz:</p>${HELP}<p>Twoja historia poczeka. Ty jesteś ważniejszy(-a).</p><p>Dawid, exmortis</p>`) }).catch(() => {});
-        await sendMail(smtp, { to: admin, subject: "SPRAWDŹ PILNIE — zgłoszenie do podcastu", html: wrap(`<p>Nowe zgłoszenie zawiera słowa wskazujące na kryzys.</p><p><a style="color:#C9A24A" href="${link}">Otwórz panel</a></p>`) }).catch(() => {});
+        await notifyUrgent(base44);
       } else {
         await sendMail(smtp, { to: email, subject: "Twoje zgłoszenie do podcastu exmortis", html: wrap(`<p>Dziękuję. Przeczytam Twoją historię uważnie. Odpowiem w ciągu 14 dni.</p><p>Dawid, exmortis</p>`) }).catch(() => {});
         await sendMail(smtp, { to: admin, subject: "Nowe zgłoszenie do podcastu", html: wrap(`<p>Przyszło nowe zgłoszenie gościa.</p><p><a style="color:#C9A24A" href="${link}">Otwórz panel</a></p>`) }).catch(() => {});
       }
     })());
 
-    return Response.json({ ok: true, id: rec.id });
+    return Response.json({ ok: true, id: rec.id, pilne });
   } catch (error) {
     return Response.json({ error: error.message }, { status: 400 });
   }
