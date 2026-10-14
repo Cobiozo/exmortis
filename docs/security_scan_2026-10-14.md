@@ -170,6 +170,28 @@ Zakres: `tickets`, `ticketsAdmin`, moduły `shared/tickets.ts` i `shared/ticketP
 - **Skaner spoza swojego wydarzenia widzi numer biletu i nazwisko osoby** wraz z odmową — to personel obsługi, a komunikat „ten bilet jest na inne wydarzenie" jest przy wejściu potrzebny.
 - **Zajętość sprawdzana jest przy składaniu zamówienia, a nie przy wystawianiu biletów.** Dwie płatności zakończone ponad 30 minut po sobie mogłyby teoretycznie dać o jeden bilet za dużo — okno jest wąskie (niedokończone płatności blokują miejsce przez 30 minut), a uszczelnienie wymagałoby sprawdzenia limitu przy wystawianiu i obsługi zwrotu, gdy miejsc już nie ma. Do rozważenia przy realnym ruchu.
 
+## Kurs, dostęp do lekcji i licencje — przegląd (2026-10-14)
+
+Zakres: `course`, `myAccount` (moje produkty, pliki, kopie PDF), moduły `shared/access.ts`, `shared/pdfLicense.ts`, `shared/videoGuard.ts`, strona kursu i odtwarzacz lekcji.
+
+### Znalezione i naprawione
+1. **Dzienniki rosły bez końca, choć polityka obiecuje 90 dni.** Polityka prywatności (§3 pkt 9) mówi wprost: „dzienniki — 90 dni", i wymienia w tym punkcie adres IP, dane urządzenia i przeglądarki oraz dziennik odtworzeń. Tymczasem `PlaybackLog` (każde odtworzenie lekcji i nagrania) i `SecurityLog` (każde zgłoszenie z formularza, pobranie PDF, przekroczenie limitu) nie były usuwane przez nic — rosły bez ograniczenia, a to właśnie w nich leżą adresy IP. Teraz zadanie cykliczne (co 15 minut) czyści oba po 90 dniach, obok pozostałych danych objętych tym samym punktem polityki. Sprawdzone na bazie: zapytanie po dacie działa, obecnie nic nie jest starsze niż 90 dni, więc pierwsze czyszczenie nic nie usunie.
+
+### Zweryfikowane jako poprawne
+- **Dostęp sprawdzany od sesji, nigdy od żądania.** `course` i `myAccount` biorą adres e-mail z zalogowanego konta i porównują go z właścicielem dostępu — podstawienie cudzego identyfikatora dostępu kończy się odmową, podobnie jak dostęp odebrany albo wygasły (`isActive`).
+- **Lekcja musi należeć do opłaconego produktu** (inaczej 404), a spis lekcji pokazuje wyłącznie lekcje opublikowane.
+- **Wideo z prywatnego magazynu** wychodzi tylko podpisanym linkiem na godzinę; adresy zewnętrzne są sprawdzane przy każdym odtworzeniu, więc zdjęcie domeny z listy zamyka dostęp natychmiast.
+- **Znak wodny** zawiera adres, numer licencji i datę odtwarzania; odtwarzacz sprawdza co 3 sekundy, czy znacznik istnieje i jest widoczny — usunięcie go wstrzymuje film i zapisuje zdarzenie.
+- **Jedno odtwarzanie naraz** — nowa sesja przejmuje konto, a starsza dostaje zatrzymanie przy najbliższym zapisie postępu.
+- **Limity oglądania** — 60 odtworzeń na godzinę na konto; dziennik odtworzeń jest podstawą wykrywania współdzielenia konta i podlega teraz czyszczeniu po 90 dniach.
+- **Kopie PDF są imienne i powstają raz na dostęp** — napis licencji na każdej stronie, znak wodny przez środek, ukryty identyfikator i blokada edycji; kopia tworzy się od nowa tylko przy zmianie wersji oznaczeń, a plik wydawany jest podpisanym linkiem na 10 minut. Pobranie trafia do rejestru.
+- **Postęp lekcji** zapisywany wyłącznie dla zalogowanej osoby i tylko dla lekcji z jej produktu; zgoda licencyjna zapisywana na koncie z datą.
+- **Baza:** `Access` i `LessonProgress` czytelne dla właściciela (albo administratora) i zapisywalne wyłącznie po stronie serwera; `License`, `ActiveStream` i `PlaybackLog` dostępne tylko dla administratora.
+
+### Do rozważenia
+- **Blokada sieci jest bardzo czuła.** Czwarty różny adres IP w ciągu 24 godzin automatycznie blokuje odtwarzanie na 24 godziny i wysyła alarm do administratora. Przy telefonie z danymi komórkowymi (wielu operatorów zmienia adres w ciągu dnia) albo przy zmiennym adresie od dostawcy może to trafić w uczciwego klienta, a odblokowanie wymaga ręcznej decyzji w panelu. Warto rozważyć liczenie różnych adresów w krótszym oknie (np. godzinie) albo zamianę automatycznej blokady na samo powiadomienie.
+- **Konto do oglądania nie jest czyszczone z nieaktywnych wpisów** — jeden wiersz na osobę, która kiedykolwiek odtwarzała materiał; przy obecnej skali bez znaczenia.
+
 ## Ryzyka otwarte (bez zmian)
 1. Wylogowanie ze wszystkich urządzeń — ograniczenie platformy.
 2. Podpisane linki do plików działają do 1 godziny.
@@ -187,3 +209,4 @@ Zakres: `tickets`, `ticketsAdmin`, moduły `shared/tickets.ts` i `shared/ticketP
 15. **Rachunek „suma pozycji minus zapłata" w statystykach zakłada, że pozycje zamówienia są zapisane przed rabatem.** Tak jest dzisiaj i tak zostanie, dopóki nikt nie zmieni sposobu zapisu pozycji — przy takiej zmianie trzeba poprawić i ten wzór. (do 2000 rekordów) i zawężają wynik w przeglądarce. Działa, ale przy większej liczbie kont będzie to najwolniejsze miejsce panelu — warto przenieść filtrowanie do zapytania.
 16. **Bilety: limit miejsc sprawdzany przy składaniu zamówienia, nie przy wystawianiu.** Dwie płatności zakończone ponad 30 minut po sobie mogą teoretycznie dać o jeden bilet za dużo (niedokończone płatności blokują miejsce tylko przez 30 minut). Uszczelnienie wymaga sprawdzenia limitu przy wystawianiu i obsługi zwrotu, gdy miejsc już nie ma — do rozważenia przy realnym ruchu.
 17. **Pobranie PDF biletu zapisuje wpis w rejestrze bezpieczeństwa.** Limit 60 na godzinę chroni adres, ale przy dużym wydarzeniu (wielu kupujących za jednym adresem sieciowym) dziennik rośnie — jeśli zacznie przeszkadzać, limit trzeba przenieść na licznik w pamięci instancji.
+18. **Blokada odtwarzania po czwartym różnym adresie IP w 24 godzinach.** Automatyczna i na 24 godziny; przy danych komórkowych lub zmiennym adresie od dostawcy może zablokować uczciwego klienta. Do rozważenia: krótsze okno liczenia albo blokada zastąpiona powiadomieniem.
