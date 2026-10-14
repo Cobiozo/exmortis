@@ -134,7 +134,7 @@ export async function renderTicketsPdf(ev, template, tickets) {
       page.drawImage(bg, { x: 0, y: 0, width: W, height: H });
       const q = t.qr, qs = q.size * W;
       drawQr(page, k.qr, q.x * W, H - q.y * H, qs, q.dark, q.light);
-      const maxW = (o) => (o.align === "center" ? Math.min(o.x, 1 - o.x) * 2 : o.align === "right" ? o.x : 1 - o.x) * W - 8;
+      const maxW = (o) => Math.max(40, ((o.align === "center" ? Math.min(o.x, 1 - o.x) * 2 : o.align === "right" ? o.x : 1 - o.x) - 0.04) * W);
       drawFit(page, k.holder_name, await font(t.name.font), t.name, W, H, maxW(t.name));
       drawFit(page, k.code, await font(t.code.font), t.code, W, H, maxW(t.code));
       continue;
