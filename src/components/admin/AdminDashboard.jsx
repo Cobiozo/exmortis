@@ -4,6 +4,7 @@ import MailWarning from "./mail/MailWarning";
 import ZoomWarning from "./events/ZoomWarning";
 import FallbackWarning from "./events/FallbackWarning";
 import BookingWarnings from "./booking/BookingWarnings";
+import ReadinessCard from "./ReadinessCard";
 import DashboardLibraryTile from "./DashboardLibraryTile";
 // Kafelek modułu biblioteki i wiadomości pokazuje się tylko, gdy którykolwiek przełącznik ≠ off.
 import { Link } from "react-router-dom";
@@ -56,6 +57,7 @@ export default function AdminDashboard() {
     <MailWarning />
     <ZoomWarning items={s?.zoom_missing} />
     <FallbackWarning />
+    <ReadinessCard />
     {(() => {
       // Kafelki w czterech grupach; numeracja liczona po kolei, więc ukryte kafelki nie robią dziur.
       const groups = [
