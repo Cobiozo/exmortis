@@ -10,6 +10,7 @@ import { issueOrderTickets, ticketsHtml, loadEvent } from "./tickets.ts";
 import { runSql, rpc, escStr } from "./supabase.ts";
 import { DIGITAL, grantAccess, ensureAccount } from "./access.ts";
 import { expandBundles } from "./bundles.ts";
+import { issueInvoice } from "./invoices.ts";
 import { randomToken, sha256hex } from "./booking.ts";
 
 function packageEmailHtml(token) {
@@ -153,4 +154,6 @@ export async function fulfillOrder(base44, stored, payuOrderId) {
     }
   } catch { /* informacja dla admina nie blokuje zamówienia */ }
   try { await grantThresholdPackage(base44, stored); } catch { /* pakiet ręcznie */ }
+  // Faktura w Fakturowni (gdy włączona i skonfigurowana). Błąd zapisuje się przy zamówieniu, ponowienie robi zadanie cykliczne.
+  try { await issueInvoice(base44, stored); } catch (e) { console.error("faktura:", e?.message); }
 }
