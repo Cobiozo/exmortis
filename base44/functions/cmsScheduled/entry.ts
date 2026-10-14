@@ -28,6 +28,31 @@ async function retryFreeOrders(base44) {
 
 // Higiena listy oczekujących (raz na dobę na instancję): 90 dni po powiadomieniu, a bez powiadomienia po 12 miesiącach.
 let lastHygiene = "";
+// Kopie publicznych danych (PublicSnapshot): katalog ma klucz z datą, więc codziennie przybywa wiersz,
+// a równoległe pierwsze odczyty potrafią założyć duplikaty. Raz na dobę: zostaje najnowszy wiersz każdego
+// klucza, a kopie katalogu starsze niż 3 dni znikają. Najwyżej 100 usunięć na przebieg.
+async function pruneSnapshots(base44) {
+  const lock = await runSql(base44, `INSERT INTO public.app_settings (key, value, updated_date)
+      VALUES ('snap_prune', jsonb_build_object('at', now()), now())
+    ON CONFLICT (key) DO UPDATE SET value = EXCLUDED.value, updated_date = now()
+      WHERE public.app_settings.updated_date < now() - interval '1 day'
+    RETURNING key`).catch(() => []);
+  if (!lock?.length) return 0;
+  const ent = base44.asServiceRole.entities.PublicSnapshot;
+  const rows = await ent.list("-refreshed_at", 1000).catch(() => []);
+  const cutoff = new Date(Date.now() - 3 * 86400000).toISOString().slice(0, 10);
+  const seen = new Set();
+  const del = [];
+  for (const r of rows || []) {
+    const k = String(r.key || "");
+    const oldDay = /^products:\d{4}-\d{2}-\d{2}$/.test(k) && k.slice(9) < cutoff;
+    if (oldDay || seen.has(k)) del.push(r.id); else seen.add(k);
+  }
+  let n = 0;
+  for (const id of del.slice(0, 100)) { await ent.delete(id).then(() => n++).catch(() => {}); }
+  return n;
+}
+
 async function waitlistHygiene(base44) {
   const day = new Date().toISOString().slice(0, 10);
   if (lastHygiene === day) return;
@@ -99,9 +124,10 @@ export default async function(req) {
     const released = await releaseDue(base44).catch((e) => { console.error("premiera:", e.message); return []; });
     await loadAppUrl(base44).catch(() => {});
     const freeDone = await retryFreeOrders(base44).catch((e) => { console.error("zamówienia 0 zł:", e.message); return 0; });
+    const pruned = await pruneSnapshots(base44).catch((e) => { console.error("kopie:", e.message); return 0; });
     const ready = await requireMail(base44).then(() => true).catch(() => false);
     const reminded = ready ? await unpaidReminders(base44).catch((e) => { console.error("przypomnienia:", e.message); return 0; }) : 0;
-    return Response.json({ ok: true, published: done, prices, released, reminded, patched, freeDone });
+    return Response.json({ ok: true, published: done, prices, released, reminded, patched, freeDone, pruned });
   } catch (error) {
     return Response.json({ error: error.message }, { status: 500 });
   }
