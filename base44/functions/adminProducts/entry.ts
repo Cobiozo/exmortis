@@ -183,6 +183,7 @@ export default async function (req) {
       const category = CATEGORIES.includes(p.category) ? p.category : "ebook";
 
       const v = buildValues(p, name, slug, price, oldPrice, category);
+      const optionsSql = optionsVal(p); // walidacja przed zapisem, żeby błąd nie zostawił połowy zmian
 
       await runSql(
         base44,
@@ -236,7 +237,7 @@ export default async function (req) {
       const rel = p.status === "wkrótce" ? releaseVal(p.release_at) : "NULL";
       await runSql(base44, `UPDATE public.products SET release_at = ${rel}, release_note = ${rel === "NULL" ? "NULL" : textVal(p.release_note, 1500)} WHERE slug = ${v.slug}`);
       await runSql(base44, `ALTER TABLE public.products ADD COLUMN IF NOT EXISTS price_options jsonb`);
-      await runSql(base44, `UPDATE public.products SET price_options = ${optionsVal(p)} WHERE slug = ${v.slug}`);
+      await runSql(base44, `UPDATE public.products SET price_options = ${optionsSql} WHERE slug = ${v.slug}`);
       await recordPrices(base44, true).catch(() => {}); // historia cen (Omnibus) od razu po zmianie
       await clearSnap(base44, "products:").catch(() => {}); // katalog w Skarbcu odświeży się przy najbliższym wejściu
       return Response.json({ ok: true });
