@@ -235,7 +235,7 @@ export default async function (req) {
   } catch (error) {
     if (reservedFor) await releaseCode(base44Ref, reservedFor);
     // Błąd walidacji formularza = 400 (wina danych), reszta = 500.
-    const bad = /^(Brak pola|Pole .* jest zbyt długie|Niepoprawny adres e-mail|Zaakceptuj|Zaznacz|Koszyk jest pusty|Jeden z produktów|Nieprawidłowy kod|Kod |Kodem |Kwota zamówienia|Podaj |Niepoprawny NIP|Bilet:|Brak wolnych)/.test(String(error?.message || ""));
+    const bad = /^(Brak pola|Pole .* jest zbyt długie|Niepoprawny adres e-mail|Zaakceptuj|Zaznacz|Koszyk jest pusty|Jeden z produktów|Nieprawidłowy kod|Kod |Kodem |Kwota zamówienia|Podaj |Niepoprawny NIP|Bilet:|Brak wolnych|Zostało tylko)/.test(String(error?.message || ""));
     return Response.json({ error: error.message }, { status: bad ? 400 : 500 });
   }
 }
