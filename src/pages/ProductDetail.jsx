@@ -12,6 +12,8 @@ import Logo from "@/components/exmortis/Logo";
 import WaitlistDialog from "@/components/exmortis/shop/WaitlistDialog";
 import Curriculum from "@/components/exmortis/shop/Curriculum";
 import { isPromoActive, priceOnRequest, regularPrice, unitPrice, lowestPrice30, zl, nextPriceText } from "@/lib/productPrice";
+import { GiftCardBuy } from "@/components/exmortis/shop/GiftCard";
+import { cardAmounts } from "@/components/exmortis/CartContext";
 
 // Zmienione adresy produktów: stary → nowy.
 const OLD_SLUGS = { "krag-mezczyzn-rzeszow": "krag-mezczyzn" };
@@ -70,6 +72,7 @@ export default function ProductDetail() {
   const soon = product.status === "wkrótce";
   const promo = !soon && !product.is_free && isPromoActive(product);
   const onRequest = !soon && priceOnRequest(product);
+  const amounts = product.product_type === "karta" ? cardAmounts(product) : [];
   const linkUrl = (product.checkout_url || "").trim();
 
   return (
@@ -119,7 +122,7 @@ export default function ProductDetail() {
 
             <div className="flex items-baseline flex-wrap gap-x-4 gap-y-1 mb-8">
               <span className="font-mono text-4xl gold-text">
-                {soon ? "Wkrótce" : product.is_free ? "Bezpłatnie" : onRequest ? "Po rozmowie" : `${unitPrice(product)} zł`}
+                {soon ? "Wkrótce" : product.is_free ? "Bezpłatnie" : amounts.length > 1 ? amounts.map((a) => `${a}`).join(" · ") + " zł" : onRequest ? "Po rozmowie" : `${unitPrice(product)} zł`}
               </span>
               {promo && (
                 <span className="font-mono text-xl text-foreground/40 line-through">{regularPrice(product)} zł</span>
@@ -215,6 +218,8 @@ export default function ProductDetail() {
               <div className="mt-auto">
                 <FreeOrderForm product={product} />
               </div>
+            ) : product.product_type === "karta" ? (
+              <GiftCardBuy product={product} />
             ) : onRequest ? (
               <div className="mt-auto">
                 <Link to="/kontakt" className="btn-relic w-full">NAPISZ DO MNIE <ArrowRight className="h-4 w-4" /></Link>

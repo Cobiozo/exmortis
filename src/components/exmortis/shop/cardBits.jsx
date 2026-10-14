@@ -141,6 +141,14 @@ export function ProductButton({ p, onWaitlist }) {
     );
   }
 
+  if (p.product_type === "karta") {
+    return (
+      <Link to={`/skarbiec/${p.slug}`} className={cls}>
+        Wybierz kwotę <ArrowRight className="h-3.5 w-3.5" />
+      </Link>
+    );
+  }
+
   return (
     <button onClick={() => addItem(p)} className={cls}>
       Do koszyka <ArrowRight className="h-3.5 w-3.5" />

@@ -1,7 +1,8 @@
 import React from "react";
 import { X, Plus, Minus, Trash2, ArrowRight } from "lucide-react";
 import { Link } from "react-router-dom";
-import { useCart } from "./CartContext";
+import { useCart, lineKey } from "./CartContext";
+import { GiftLine } from "./shop/GiftCard";
 
 export default function CartDrawer() {
   const { items, open, setOpen, removeItem, updateQty, total } = useCart();

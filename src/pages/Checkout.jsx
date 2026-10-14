@@ -10,6 +10,7 @@ import DiscountField from "@/components/exmortis/shop/DiscountField";
 import OrderSummaryInfo from "@/components/exmortis/shop/OrderSummaryInfo";
 import ChooseTermButton from "@/components/exmortis/shop/ChooseTermButton";
 import InvoiceFields, { validNip } from "@/components/exmortis/shop/InvoiceFields";
+import { GiftLine } from "@/components/exmortis/shop/GiftCard";
 
 const ORDER_KEY = "exm_payu_order";
 
@@ -82,7 +83,7 @@ export default function Checkout() {
         newsletter_consent: newsletterConsent,
         digital_consent: digitalConsent,
         terms_consent: termsConsent,
-        items: items.map((it) => ({ id: it.id, qty: it.qty })),
+        items: items.map((it) => (it.gift ? { id: it.id, qty: it.qty, amount: it.gift.amount, to_name: it.gift.to_name, message: it.gift.message } : { id: it.id, qty: it.qty })),
         code: discount?.code || "",
         invoice: invoice.want ? { want: true, company: invoice.company, nip: invoice.nip, address: invoice.address } : null,
       });
@@ -223,13 +224,14 @@ export default function Checkout() {
             <div className="border hairline p-6 space-y-4 sticky top-28">
               <p className="technical text-[11px] gold-text pb-4 border-b hairline">TWOJE ZAPISY</p>
               {items.map((item) => (
-                <div key={item.id} className="flex gap-4">
+                <div key={item.key || item.id} className="flex gap-4">
                   <div className="w-14 h-14 bg-card border hairline overflow-hidden flex-shrink-0">
                     {item.image_url && <img src={item.image_url} alt="" className="w-full h-full object-cover" />}
                   </div>
                   <div className="flex-1 min-w-0">
                     <p className="relic-heading text-sm gold-text truncate">{item.name}</p>
                     <p className="font-mono text-xs text-foreground/50">{item.qty} × {item.price} zł</p>
+                    {item.gift && <GiftLine gift={item.gift} />}
                   </div>
                 </div>
               ))}
