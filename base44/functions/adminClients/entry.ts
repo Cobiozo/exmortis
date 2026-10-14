@@ -1,6 +1,8 @@
 import { createClientFromRequest } from "npm:@base44/sdk@0.8.53";
 import { runSql, escStr, requireAdmin } from "../../shared/supabase.ts";
 import { grantAccess, isActive, ensureAccount } from "../../shared/access.ts";
+import { sendMail } from "../../shared/smtp.ts";
+import { APP_URL } from "../../shared/settings.ts";
 
 function addMonths(ymd: string, m: number) {
   const [y, mo, d] = ymd.split("-").map(Number);
@@ -50,6 +52,21 @@ export default async function (req) {
         type: "blokada", user_email: email, ip: "", until, resolved: false,
         details: `blokada ręczna na ${days === 1 ? "24 h" : `${days} dni`} · ${admin.email}`,
       });
+      // Klient dostaje informację o wstrzymaniu odtwarzania — z terminem i drogą odwołania.
+      const do_ = new Date(until).toLocaleDateString("pl-PL", { day: "numeric", month: "long", year: "numeric", timeZone: "Europe/Warsaw" });
+      await sendMail(base44, {
+        kind: "blokada", ref: email, to: email,
+        subject: "exmortis — odtwarzanie materiałów zostało wstrzymane",
+        html: `<div style="background:#0A0A0B;padding:32px;font-family:Georgia,serif;color:#E2E2E2;">
+    <p style="letter-spacing:4px;color:#C9A24A;font-size:13px;">EXMORTIS</p>
+    <h1 style="font-size:26px;letter-spacing:1px;">Odtwarzanie wstrzymane</h1>
+    <p style="color:#8A8A8C;line-height:1.7;">Wstrzymaliśmy odtwarzanie materiałów na Twoim koncie do <span style="color:#E2E2E2;">${do_}</span>.</p>
+    <p style="color:#8A8A8C;line-height:1.7;">Powód: materiał był odtwarzany z kilku różnych sieci w krótkim czasie — przy dostępie imiennym traktujemy to jako możliwe udostępnienie konta innej osobie.</p>
+    <p style="color:#8A8A8C;line-height:1.7;">Jeśli to pomyłka (np. zmiana sieci w telefonie albo podróż), odpisz na ten list — zdejmiemy blokadę. Dostęp do zakupionych produktów zostaje na koncie, przedłużymy go o czas wstrzymania.</p>
+    <p style="margin:20px 0;"><a href="${APP_URL}/konto" style="color:#C9A24A;">Moje konto</a></p>
+    <p style="color:#5C5C5E;font-size:12px;letter-spacing:2px;">WRACAM Z SIEBIE · UCZĘ WRACAĆ</p>
+  </div>`,
+      }).catch(() => {});
       return Response.json({ ok: true, until });
     }
 
