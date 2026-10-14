@@ -210,3 +210,25 @@ Zakres: `course`, `myAccount` (moje produkty, pliki, kopie PDF), moduły `shared
 16. **Bilety: limit miejsc sprawdzany przy składaniu zamówienia, nie przy wystawianiu.** Dwie płatności zakończone ponad 30 minut po sobie mogą teoretycznie dać o jeden bilet za dużo (niedokończone płatności blokują miejsce tylko przez 30 minut). Uszczelnienie wymaga sprawdzenia limitu przy wystawianiu i obsługi zwrotu, gdy miejsc już nie ma — do rozważenia przy realnym ruchu.
 17. **Pobranie PDF biletu zapisuje wpis w rejestrze bezpieczeństwa.** Limit 60 na godzinę chroni adres, ale przy dużym wydarzeniu (wielu kupujących za jednym adresem sieciowym) dziennik rośnie — jeśli zacznie przeszkadzać, limit trzeba przenieść na licznik w pamięci instancji.
 18. **Blokada odtwarzania po czwartym różnym adresie IP w 24 godzinach.** **NAPRAWIONE** — automatyczna blokada zastąpiona powiadomieniem do administratora (mail + wpis w panelu Bezpieczeństwo), raz na 12 h na konto; odtwarzanie nie jest już wstrzymywane, a decyzję podejmuje człowiek.
+
+## Ogłoszenia, powiadomienia i spotkania — przegląd (2026-10-14)
+
+Zakres: `announcements`, `notifications`, `eventsPublic`, `eventsAdmin`, moduły `shared/announce.ts` i `shared/smtp.ts`.
+
+### Znalezione i naprawione
+1. **Dzwoneczek mielił bazę.** Każde wejście na listę powiadomień sprawdzało przynależność do grupy osobno dla każdego ogłoszenia — osobne zapytanie do bazy na ogłoszenie, a przy grupie „wszyscy” jeszcze raz pobierana lista wszystkich kont. Teraz przynależność liczona jest zbiorczo: najwyżej trzy zapytania na całą listę, a liczba odbiorców jednej grupy pobierana raz. Zachowanie identyczne, obciążenie nieporównywalnie mniejsze.
+2. **Panel ogłoszeń wysyłał setki zapytań.** Przy 200 ogłoszeniach lista robiła cztery zapytania na każde (liczba odbiorców + trzy liczniki odsłon, kliknięć i zamknięć), w tym wielokrotnie pełną listę kont. Teraz liczniki pobierane są trzema zapytaniami zbiorczymi, a grupa odbiorców liczona raz na cel. Panel otwiera się natychmiast.
+3. **Publiczny adres przypomnień bez limitu.** `eventsPublic` z akcją „przypomnij” przyjmuje adres e-mail i zapisuje go w bazie, nie wymagając logowania — bez limitu dawał się zapełnić dowolnymi adresami. Dodany limit 5 zgłoszeń na godzinę z jednego połączenia (ten sam mechanizm co w pozostałych formularzach publicznych).
+4. **Wysyłki do uczestników spotkania szły po jednej wiadomości.** Odwołanie spotkania, zmiana terminu, przypomnienie, wysyłka nagrania i wiadomość do uczestników wysyłały maile sekwencyjnie — przy spotkaniu na kilkaset osób funkcja urywała się w połowie i część osób nie dostawała wiadomości, choć panel pokazywał sukces. Wszystkie te wysyłki idą teraz partiami po 6.
+5. **Uproszczenie: jeden nadmiarowy import i podwójne liczenie tokenu wejścia** w `eventsPublic` (token liczony dwa razy przy każdym odczycie zapisu) — bez wpływu na działanie, usunięte przy okazji.
+
+### Zweryfikowane jako poprawne
+- **Panel ogłoszeń i powiadomień** — akcje administracyjne pod `requireAdmin`; osoba widzi wyłącznie ogłoszenia skierowane do grup, do których faktycznie należy (zakupiony produkt, uczestnictwo w serii, zapis na spotkanie), liczone po adresie z zalogowanej sesji.
+- **Publiczny adres przypomnień** nie ujawnia danych innych osób — odpowiada wyłącznie potwierdzeniem przyjęcia zgłoszenia, a przy braku wydarzenia zwraca ogólny komunikat.
+- **Wysyłka do uczestników** ograniczona do administratora, treść czyszczona, a przy błędzie pojedynczej wiadomości pozostałe i tak wychodzą.
+- **Baza**: tabele ogłoszeń mają włączony RLS, a funkcje dostępne wyłącznie po stronie serwera.
+
+### Testy wykonane
+- `announcements` (lista panelu) — odpowiedź poprawna, brak zapytań do listy kont przy pustej liście ogłoszeń.
+- `eventsPublic` (przypomnienie dla nieistniejącego spotkania) — poprawna odmowa, bez zapisu danych; wpis testowy limitu usunięty z rejestru bezpieczeństwa.
+- Zapytanie zbiorcze liczników sprawdzone bezpośrednio na bazie (kolekcja obecnie pusta, zapytanie wykonuje się bez błędu).
