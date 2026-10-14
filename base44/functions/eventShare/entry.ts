@@ -19,7 +19,8 @@ export default async function (req) {
   const ev = rows?.[0];
   // Źródło (facebook, whatsapp, plakat…) przechodzi dalej — zapisy pokazują, skąd ktoś przyszedł.
   const src = (new URL(req.url).searchParams.get("src") || "").toLowerCase().replace(/[^a-z0-9_-]/g, "").slice(0, 30);
-  const target = (ev ? `${APP_URL}/spotkania/${encodeURIComponent(slug)}` : `${APP_URL}/spotkania`) + (src ? `?src=${src}` : "");
+  const clean = ev ? `${APP_URL}/spotkania/${encodeURIComponent(slug)}` : `${APP_URL}/spotkania`;
+  const target = clean + (src ? `?src=${src}` : "");
   let c = ev?.cover;
   if (typeof c === "string") { try { c = JSON.parse(c); } catch { c = null; } }
   const title = ev ? `${ev.title} · exmortis` : "Spotkania · exmortis";
@@ -29,12 +30,12 @@ export default async function (req) {
 <title>${esc(title)}</title>
 <meta name="description" content="${esc(desc)}">
 <meta property="og:type" content="website">
-<meta property="og:url" content="${esc(target)}">
+<meta property="og:url" content="${esc(clean)}">
 <meta property="og:title" content="${esc(title)}">
 <meta property="og:description" content="${esc(desc)}">
 ${img ? `<meta property="og:image" content="${esc(img)}"><meta property="og:image:width" content="1200"><meta property="og:image:height" content="630"><meta property="og:image:alt" content="${esc(c?.alt || ev?.title)}">` : ""}
 <meta name="twitter:card" content="summary_large_image">
-<link rel="canonical" href="${esc(target)}">
+<link rel="canonical" href="${esc(clean)}">
 <meta http-equiv="refresh" content="0;url=${esc(target)}">
 </head><body style="background:#0A0A0B;color:#E2E2E2;font-family:Georgia,serif">
 <p><a href="${esc(target)}" style="color:#C9A24A">${esc(ev?.title || "Spotkania exmortis")}</a></p></body></html>`;
