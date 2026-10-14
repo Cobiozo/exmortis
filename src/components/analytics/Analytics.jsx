@@ -8,9 +8,11 @@ export default function Analytics() {
   const loc = useLocation();
   const key = loc.pathname + loc.search;
   const pomiar = useSiteSettings()?.pomiar;
-  const skip = loc.pathname.startsWith("/admin") || loc.pathname.startsWith("/skaner");
+  // Bez pomiaru: panel, skaner i strony z prywatnym kluczem w adresie (wypis, potwierdzenie, zmiana adresu,
+  // rezerwacja, karta, bilet, dołączenie do spotkania, konto) — klucz nie może trafić do narzędzi zewnętrznych.
+  const skip = /^\/(admin|skaner|listy\/|zmiana-adresu|rezerwacja\/|karta|bilet|konto)/.test(loc.pathname) || /\/dolacz\/?$/.test(loc.pathname);
 
-  useEffect(() => { setTrackSettings(pomiar); applyConsent(); }, [pomiar]);
+  useEffect(() => { setTrackSettings(pomiar); if (!skip) applyConsent(); }, [pomiar, skip]);
 
   useEffect(() => {
     if (skip) return undefined;
