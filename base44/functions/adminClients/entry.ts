@@ -39,6 +39,20 @@ export default async function (req) {
       return Response.json({ alerts });
     }
 
+    if (body.action === "block") {
+      if (!email.includes("@")) return Response.json({ error: "Podaj e-mail" }, { status: 400 });
+      const days = [1, 7, 30].includes(Number(body.days)) ? Number(body.days) : 7;
+      const until = new Date(Date.now() + days * 86400000).toISOString();
+      // Jedna aktywna blokada na konto — poprzednie zdejmujemy, żeby nie mnożyć wpisów.
+      const prev = await sr.SecurityLog.filter({ type: "blokada", user_email: email, resolved: false }, "-created_date", 20);
+      for (const p of prev) await sr.SecurityLog.update(p.id, { resolved: true });
+      await sr.SecurityLog.create({
+        type: "blokada", user_email: email, ip: "", until, resolved: false,
+        details: `blokada ręczna na ${days === 1 ? "24 h" : `${days} dni`} · ${admin.email}`,
+      });
+      return Response.json({ ok: true, until });
+    }
+
     if (body.action === "unblock") {
       await sr.SecurityLog.update(String(body.log_id), { resolved: true });
       return Response.json({ ok: true });
