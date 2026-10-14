@@ -112,7 +112,8 @@ export default function Skaner() {
     } catch { /* klatka nieczytelna */ }
     if (!raw) return;
     const now = Date.now();
-    if (raw === lastRef.current.raw && now - lastRef.current.at < 4000) return;
+    // Ten sam kod w kadrze (osoba jeszcze stoi przed telefonem) — nie sprawdzamy go ponownie przez 10 s.
+    if (raw === lastRef.current.raw && now - lastRef.current.at < 10000) return;
     lastRef.current = { raw, at: now };
     check({ raw });
   }, [check, result]);
