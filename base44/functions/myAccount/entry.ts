@@ -66,7 +66,13 @@ export default async function (req) {
          ORDER BY created_date DESC LIMIT 100`,
         true
       );
-      return Response.json({ orders });
+      // Karty podarunkowe kupione tym adresem — z linkiem do wersji do wydruku.
+      const cards = await base44.asServiceRole.entities.DiscountCode.filter({ buyer_email: email }, "-created_date", 100).catch(() => []);
+      const gift_cards = cards.filter((c) => c.gift_token).map((c) => ({
+        token: c.gift_token, value: c.value, until: c.valid_until, to_name: c.gift_to || "",
+        used: (Number(c.uses) || 0) >= (Number(c.max_uses) || 1) || c.active === false,
+      }));
+      return Response.json({ orders, gift_cards });
     }
 
     if (body.action === "file") {
