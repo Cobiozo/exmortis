@@ -46,10 +46,15 @@ export default function MyOrders() {
           <span className="text-foreground/50">{plDate(o.created_date)}<span className="block technical text-[9px] text-foreground/35 mt-1">NR {String(o.id).slice(0, 8).toUpperCase()}</span></span>
           <div className="sm:col-span-2 text-[#F5EFE1] space-y-2">
             {(o.items || []).map((i, k) => (
-              <div key={k} className="flex flex-wrap items-center gap-x-3 gap-y-1.5">
-                <span>{i.name}</span>
-                {reviews[`${o.id}:${i.product_id}`] && (
-                  <ReviewButton item={{ ...reviews[`${o.id}:${i.product_id}`], product_name: i.name }} onSaved={loadReviews} />
+              <div key={k} className="space-y-1">
+                <div className="flex flex-wrap items-center gap-x-3 gap-y-1.5">
+                  <span>{i.name}</span>
+                  {reviews[`${o.id}:${i.product_id}`] && (
+                    <ReviewButton item={{ ...reviews[`${o.id}:${i.product_id}`], product_name: i.name }} onSaved={loadReviews} />
+                  )}
+                </div>
+                {Array.isArray(i.components) && i.components.length > 0 && (
+                  <p className="text-xs text-foreground/45">W pakiecie: {i.components.join(", ")}</p>
                 )}
               </div>
             ))}

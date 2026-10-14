@@ -1,6 +1,7 @@
 import { createClientFromRequest } from "npm:@base44/sdk@0.8.44";
 import { runSql, escStr, requireAdmin } from "../../shared/supabase.ts";
 import { recordPrices, readSteps } from "../../shared/productPrice.ts";
+import { DIGITAL } from "../../shared/access.ts";
 import { requireMail } from "../../shared/smtp.ts";
 import { ensureWaitlistCols, notifyBatch } from "../../shared/waitlist.ts";
 import { clearSnap } from "../../shared/snapshot.ts";
@@ -9,7 +10,7 @@ const CATEGORIES = ["ebook", "warsztat", "mentoring", "mastermind", "retreat", "
 const STAGES = ["Śmierć", "Próg", "Powrót", "Inny", "Wszystkie"];
 const FORMS = ["Czytam", "Słucham", "Oglądam", "Uczestniczę", "Idę głęboko"];
 const STATUSES = ["dostępny", "wkrótce", "ukryty"];
-const TYPES = ["pdf", "audio", "wideo", "kurs", "usluga", "karta"];
+const TYPES = ["pdf", "audio", "wideo", "kurs", "usluga", "karta", "pakiet"];
 const AUDIENCES = ["Mężczyzna", "Kobieta", "Ojciec", "Matka", "Mąż", "Żona", "Lider"];
 
 // Tekst opcjonalny → NULL; obcięty do max.
@@ -70,6 +71,20 @@ function optionsVal(p) {
   return nums.length ? `${escStr(JSON.stringify(nums))}::jsonb` : "NULL";
 }
 
+// Pakiet: 2–10 produktów cyfrowych (PDF/audio/wideo/kurs) — bez pakietów, kart, usług i samego siebie.
+async function bundleVal(base44, p, selfId) {
+  if (p.product_type !== "pakiet") return "'[]'::jsonb";
+  const raw = Array.isArray(p.bundle_items) ? p.bundle_items : [];
+  const ids = [...new Set(raw.map((x) => String(x || "").trim()).filter((x) => /^[0-9a-f-]{36}$/i.test(x)))];
+  if (ids.length < 2) throw new Error("Pakiet: wybierz co najmniej 2 produkty.");
+  if (ids.length > 10) throw new Error("Pakiet: składników może być najwyżej 10.");
+  if (selfId && ids.includes(String(selfId))) throw new Error("Pakiet nie może zawierać samego siebie.");
+  const rows = await runSql(base44, `SELECT id::text AS id, product_type FROM public.products WHERE id::text IN (${ids.map(escStr).join(",")})`, true);
+  if (!rows || rows.length !== ids.length) throw new Error("Pakiet: jeden ze składników nie istnieje.");
+  if (rows.some((r) => !DIGITAL.includes(r.product_type))) throw new Error("Pakiet: składnikami mogą być tylko produkty cyfrowe (PDF, audio, wideo, kurs).");
+  return `${escStr(JSON.stringify(ids))}::jsonb`;
+}
+
 // Wartość z listy dozwolonych albo NULL.
 function pickVal(v, allowed) {
   return allowed.includes(v) ? escStr(v) : "NULL";
@@ -127,7 +142,7 @@ const SHOP_COLUMNS = `name, slug, subtitle, description, long_description, price
   level, stage, form, audience_tags, promise, for_whom, format_details,
   price_start, price_regular, is_free, status, promo_end_date,
   button_label, checkout_url, next_step, is_featured, sort_order, cover_image, file_url,
-  product_type, access_months, private_file_uri, private_file_name, price_steps`;
+  product_type, access_months, private_file_uri, private_file_name, price_steps, bundle_items`;
 
 const SHOP_SELECT = `id, name, slug, subtitle, description, long_description,
   price::float8 AS price, old_price::float8 AS old_price, category, image_url, gallery,
@@ -157,6 +172,7 @@ export default async function (req) {
                 p.button_label, p.checkout_url, p.next_step, p.is_featured, p.sort_order, p.cover_image, p.file_url,
                 p.product_type, p.access_months, p.private_file_uri, p.private_file_name,
                 to_jsonb(p)->'price_steps' AS price_steps, to_jsonb(p)->'price_options' AS price_options,
+                to_jsonb(p)->'bundle_items' AS bundle_items,
                 p.created_date, p.updated_date,
                 (SELECT COUNT(*)::int FROM public.waitlist w WHERE w.product_id = p.id) AS waitlist_count
          FROM public.products p
@@ -182,12 +198,13 @@ export default async function (req) {
       if (oldPrice !== null && (!Number.isFinite(oldPrice) || oldPrice < 0)) throw new Error("Niepoprawna cena przekreślona");
       const category = CATEGORIES.includes(p.category) ? p.category : "ebook";
 
-      const v = buildValues(p, name, slug, price, oldPrice, category);
       const optionsSql = optionsVal(p); // walidacja przed zapisem, żeby błąd nie zostawił połowy zmian
+      const bundleSql = await bundleVal(base44, p, p.id); // pakiet: składniki sprawdzone przed zapisem
+      const v = { ...buildValues(p, name, slug, price, oldPrice, category), bundle_items: bundleSql };
 
       await runSql(
         base44,
-        `ALTER TABLE public.products ADD COLUMN IF NOT EXISTS file_url text, ADD COLUMN IF NOT EXISTS price_steps jsonb, ADD COLUMN IF NOT EXISTS available_at timestamptz`
+        `ALTER TABLE public.products ADD COLUMN IF NOT EXISTS file_url text, ADD COLUMN IF NOT EXISTS price_steps jsonb, ADD COLUMN IF NOT EXISTS available_at timestamptz, ADD COLUMN IF NOT EXISTS bundle_items jsonb DEFAULT '[]'`
       );
 
       if (p.id) {
@@ -209,6 +226,7 @@ export default async function (req) {
              product_type = ${v.product_type}, access_months = ${v.access_months},
              private_file_uri = ${v.private_file_uri}, private_file_name = ${v.private_file_name},
              price_steps = ${v.price_steps},
+             bundle_items = ${v.bundle_items},
              -- chwila premiery („wkrótce”/ukryty → „dostępny”) — dla powiadomień klientów o nowościach
              available_at = CASE WHEN ${v.status} = 'dostępny' AND COALESCE(status, 'dostępny') <> 'dostępny' THEN now() ELSE available_at END,
              updated_date = now()
@@ -218,15 +236,15 @@ export default async function (req) {
         await runSql(
           base44,
           `INSERT INTO public.products
-             (${SHOP_COLUMNS}, created_by_id)
-           VALUES (${v.name}, ${v.slug}, ${v.subtitle}, ${v.description}, ${v.long_description}, ${v.price}, ${v.old_price},
+             (id, ${SHOP_COLUMNS}, created_by_id)
+           VALUES (gen_random_uuid()::text, ${v.name}, ${v.slug}, ${v.subtitle}, ${v.description}, ${v.long_description}, ${v.price}, ${v.old_price},
                    ${v.category}, ${v.image_url}, ${v.gallery}, ${v.featured}, ${v.active}, ${v.details},
                    ${v.format}, ${v.duration}, ${v.spots},
                    ${v.level}, ${v.stage}, ${v.form}, ${v.audience_tags}, ${v.promise}, ${v.for_whom}, ${v.format_details},
                    ${v.price_start}, ${v.price_regular}, ${v.is_free}, ${v.status}, ${v.promo_end_date},
                    ${v.button_label}, ${v.checkout_url}, ${v.next_step}, ${v.is_featured}, ${v.sort_order}, ${v.cover_image},
                    ${v.file_url}, ${v.product_type}, ${v.access_months}, ${v.private_file_uri}, ${v.private_file_name},
-                   ${v.price_steps}, ${escStr(user.id)})`
+                   ${v.price_steps}, ${v.bundle_items}, ${escStr(user.id)})`
         );
         await runSql(
           base44,

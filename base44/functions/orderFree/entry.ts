@@ -6,6 +6,7 @@ import { addSubscriber } from "../../shared/newsletter.ts";
 import { getSetting } from "../../shared/settings.ts";
 import { sendMail } from "../../shared/smtp.ts";
 import { grantAccess } from "../../shared/access.ts";
+import { expandBundles } from "../../shared/bundles.ts";
 
 function escapeHtml(s) {
   return String(s)
@@ -33,7 +34,7 @@ export default async function (req) {
 
     const rows = await runSql(
       base44,
-      `SELECT id, name, is_free, active, COALESCE(status, 'dostępny') AS status, file_url, product_type
+      `SELECT id, name, is_free, active, COALESCE(status, 'dostępny') AS status, file_url, product_type, access_months
        FROM public.products WHERE slug = ${escStr(slug)} LIMIT 1`,
       true
     );
@@ -68,14 +69,20 @@ export default async function (req) {
       await addSubscriber(base44, { email, name, consentGiven: true });
     }
 
-    // Jeśli istnieje konto na ten e-mail — materiał trafia też do „Moich produktów”.
+    // Jeśli istnieje konto na ten e-mail — materiał trafia też do „Moich produktów” (pakiet: jego składniki).
     const hasAccount = (await base44.asServiceRole.entities.User.filter({ email: email.toLowerCase() })).length > 0;
-    if (hasAccount && ["pdf", "audio", "wideo", "kurs"].includes(product.product_type)) {
-      await grantAccess(base44, {
-        email,
-        product: { id: product.id, name: product.name, product_type: product.product_type || "pdf", access_months: null },
-        source: "darmowy",
-      });
+    if (hasAccount) {
+      if (product.product_type === "pakiet") {
+        for (const it of await expandBundles(base44, [product])) {
+          await grantAccess(base44, { email, product: it, source: "darmowy" });
+        }
+      } else if (["pdf", "audio", "wideo", "kurs"].includes(product.product_type)) {
+        await grantAccess(base44, {
+          email,
+          product: { id: product.id, name: product.name, product_type: product.product_type || "pdf", access_months: null },
+          source: "darmowy",
+        });
+      }
     }
 
     const fileUrl = String(product.file_url || "").trim();

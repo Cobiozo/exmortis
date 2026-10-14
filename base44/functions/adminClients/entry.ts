@@ -1,6 +1,7 @@
 import { createClientFromRequest } from "npm:@base44/sdk@0.8.53";
 import { runSql, escStr, requireAdmin } from "../../shared/supabase.ts";
 import { grantAccess, isActive, ensureAccount } from "../../shared/access.ts";
+import { expandBundles } from "../../shared/bundles.ts";
 import { sendMail } from "../../shared/smtp.ts";
 import { APP_URL } from "../../shared/settings.ts";
 
@@ -102,7 +103,13 @@ export default async function (req) {
       if (!email.includes("@")) return Response.json({ error: "Podaj e-mail" }, { status: 400 });
       const rows = await runSql(base44, `SELECT id, name, product_type, access_months FROM public.products WHERE id::text = ${escStr(String(body.product_id))} LIMIT 1`, true);
       if (!rows[0]) return Response.json({ error: "Nie ma takiego produktu" }, { status: 404 });
-      const until = await grantAccess(base44, { email, product: rows[0], source: "reczny" });
+      // Pakiet: dostęp nadajemy jego składnikom.
+      const items = await expandBundles(base44, rows);
+      let until = null;
+      for (const it of items) {
+        const u = await grantAccess(base44, { email, product: it, source: "reczny" });
+        if (u) until = u;
+      }
       await ensureAccount(base44, email);
       return Response.json({ ok: true, valid_until: until });
     }

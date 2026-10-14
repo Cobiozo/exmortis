@@ -21,6 +21,7 @@ async function loadCatalog(base44, slug: string, today: string) {
             is_free, status, promo_end_date::text AS promo_end_date,
             button_label, checkout_url, next_step, is_featured, sort_order, cover_image,
             product_type, access_months, to_jsonb(p)->'price_steps' AS price_steps, to_jsonb(p)->'price_options' AS price_options,
+            to_jsonb(p)->'bundle_items' AS bundle_items,
             created_date, updated_date
      FROM public.products p
      WHERE ${where}
@@ -43,6 +44,35 @@ async function loadCatalog(base44, slug: string, today: string) {
     const r = ratings.get(String(p.id));
     if (r) { p.rating_avg = r.avg; p.rating_count = r.count; }
   }
+  // Pakiety: składniki (nazwa, typ, adres, cena) i odwrotne „taniej w pakiecie” — liczone w kopii katalogu.
+  const catalogIds = new Set(out.map((p) => String(p.id)));
+  const pkgs = out.filter((p) => p.product_type === "pakiet" && Array.isArray(p.bundle_items) && p.bundle_items.length);
+  const compIds = [...new Set(pkgs.flatMap((p) => p.bundle_items.map(String)))];
+  const comps = compIds.length
+    ? await runSql(base44, `SELECT id::text AS id, name, slug, product_type,
+        price::float8 AS price, price_regular::float8 AS price_regular, price_start::float8 AS price_start,
+        promo_end_date::text AS promo_end_date, to_jsonb(p)->'price_steps' AS price_steps
+       FROM public.products WHERE id::text IN (${compIds.map(escStr).join(",")})`, true).catch(() => [])
+    : [];
+  const compById = new Map((comps || []).map((c) => [String(c.id), withSteps(c)]));
+  const inPkg = new Map();
+  for (const p of pkgs) {
+    const items = p.bundle_items.map(String).map((id) => compById.get(id)).filter(Boolean).map((c) => ({
+      id: String(c.id), name: c.name, slug: c.slug, product_type: c.product_type,
+      price: unitPrice(c), available: catalogIds.has(String(c.id)),
+    }));
+    if (!items.length) continue;
+    const separately = Math.round(items.reduce((s, c) => s + (Number(c.price) || 0), 0) * 100) / 100;
+    const now = unitPrice(p);
+    p.bundle = { items, separately, save: Math.round((separately - now) * 100) / 100 };
+    if (p.status === "wkrótce") continue; // pakiet jeszcze niedostępny — nie proponujemy go pod składnikiem
+    for (const c of items) {
+      const l = inPkg.get(c.id) || [];
+      l.push({ slug: p.slug, name: p.name, price: now });
+      inPkg.set(c.id, l);
+    }
+  }
+  for (const p of out) { delete p.bundle_items; const ip = inPkg.get(String(p.id)); if (ip) p.in_packages = ip; }
   return out;
 }
 
@@ -71,6 +101,18 @@ export default async function (req) {
       if (slug) out = (out || []).filter((p) => p.slug === slug);
     } catch {
       out = await loadCatalog(base44, slug, today); // pierwsze wejście dnia przy wolnym Supabase — wolniej, ale zawsze z odpowiedzią
+    }
+    // Na stronie produktu: które składniki pakietu osoba już ma (kopia katalogu jest wspólna, więc liczone osobno).
+    if (slug && out?.length) {
+      const me = await base44.auth.me().catch(() => null);
+      const mail = me?.email ? String(me.email).toLowerCase() : "";
+      if (mail) {
+        const access = await base44.asServiceRole.entities.Access.filter({ user_email: mail }, "-created_date", 300).catch(() => []);
+        const owned = new Set(access.filter((a) => !a.revoked).map((a) => String(a.product_id)));
+        out = out.map((p) => p.bundle
+          ? { ...p, bundle: { ...p.bundle, items: p.bundle.items.map((c) => ({ ...c, owned: owned.has(String(c.id)) })) } }
+          : p);
+      }
     }
     return Response.json({ products: out || [] });
   } catch (error) {

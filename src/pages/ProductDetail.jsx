@@ -14,6 +14,8 @@ import Curriculum from "@/components/exmortis/shop/Curriculum";
 import ProductReviews from "@/components/exmortis/shop/ProductReviews";
 import { isPromoActive, priceOnRequest, regularPrice, unitPrice, lowestPrice30, zl, nextPriceText } from "@/lib/productPrice";
 import { GiftCardBuy } from "@/components/exmortis/shop/GiftCard";
+import BundleBox from "@/components/exmortis/shop/BundleBox";
+import InBundleLink from "@/components/exmortis/shop/InBundleLink";
 import { cardAmounts } from "@/components/exmortis/CartContext";
 
 // Zmienione adresy produktów: stary → nowy.
@@ -147,6 +149,8 @@ export default function ProductDetail() {
               </p>
             )}
 
+            <InBundleLink product={product} />
+
             {product.description && !sameText(product.description, product.subtitle) && (
               <p className="text-foreground/70 leading-relaxed text-lg mb-8">{product.description}</p>
             )}
@@ -192,6 +196,8 @@ export default function ProductDetail() {
                 ))}
               </ul>
             )}
+
+            <BundleBox product={product} />
 
             {product.category === "mentoring" && linkUrl !== "/powrot" && (
               <Link to="/powrot" className="btn-ghost w-full mb-4">

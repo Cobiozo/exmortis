@@ -37,6 +37,14 @@ export function StageBadge({ stage }) {
 
 // Górny znaczek karty: darmowe produkty dostają „NN · DARMOWE”.
 export function CardTopBadge({ p, index }) {
+  if (p.product_type === "pakiet") {
+    const n = Array.isArray(p.bundle?.items) ? p.bundle.items.length : 0;
+    return (
+      <span className="technical text-[9px] px-2.5 py-1 bg-[#5C6247] text-[#F5EFE1]">
+        PAKIET{n ? ` · ${n}` : ""}
+      </span>
+    );
+  }
   if (p.is_free && index != null) {
     return (
       <span className="technical text-[9px] px-2.5 py-1 bg-[#C9A24A] text-[#0A0A0B]">

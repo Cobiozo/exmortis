@@ -5,6 +5,7 @@ import ReleaseFields from "@/components/admin/ReleaseFields";
 import { ArrowLeft, Plus, Trash2, Upload } from "lucide-react";
 import RichTextEditor from "./RichTextEditor";
 import ProductAccessFields from "./ProductAccessFields";
+import BundleItemsPicker from "./BundleItemsPicker";
 import LessonsManager from "./course/LessonsManager";
 import PriceSteps from "./PriceSteps";
 import CoverAiButton from "./CoverAiButton";
@@ -60,6 +61,7 @@ export default function ProductEditor({ product, onSaved, onCancel }) {
     access_months: product?.access_months != null ? String(product.access_months) : "",
     private_file_uri: product?.private_file_uri || "",
     private_file_name: product?.private_file_name || "",
+    bundle_items: Array.isArray(product?.bundle_items) ? product.bundle_items : [],
     // Ceny
     price_start: product?.price_start != null ? String(product.price_start) : "",
     price_regular: product?.price_regular != null ? String(product.price_regular) : "",
@@ -426,6 +428,7 @@ export default function ProductEditor({ product, onSaved, onCancel }) {
       </div>
 
       <ProductAccessFields form={form} set={set} />
+      {form.product_type === "pakiet" && <BundleItemsPicker form={form} set={set} />}
       {(form.product_type === "wideo" || form.product_type === "kurs") && (
         product?.id ? <LessonsManager productId={product.id} /> : (
           <p className="mb-10 text-sm text-foreground/50">Zapisz produkt, a potem dodasz lekcje i wideo.</p>

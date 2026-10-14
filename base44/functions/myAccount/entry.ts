@@ -66,13 +66,30 @@ export default async function (req) {
          ORDER BY created_date DESC LIMIT 100`,
         true
       );
+      // Składniki pakietów: pozycja pakietu pokazuje, co zawiera.
+      const pids = [...new Set((orders || []).flatMap((o) => (Array.isArray(o.items) ? o.items : []).map((i) => i?.product_id).filter(Boolean).map(String)))];
+      const compNames = new Map();
+      if (pids.length) {
+        const pk = await runSql(base44, `SELECT id::text AS id, to_jsonb(p)->'bundle_items' AS bundle_items FROM public.products p WHERE id::text IN (${pids.map(escStr).join(",")})`, true).catch(() => []);
+        const withItems = (pk || []).filter((r) => Array.isArray(r.bundle_items) && r.bundle_items.length);
+        const cids = [...new Set(withItems.flatMap((r) => r.bundle_items.map(String)))];
+        const comps = cids.length
+          ? await runSql(base44, `SELECT id::text AS id, name FROM public.products WHERE id::text IN (${cids.map(escStr).join(",")})`, true).catch(() => [])
+          : [];
+        const nameById = new Map((comps || []).map((c) => [String(c.id), c.name]));
+        for (const r of withItems) compNames.set(String(r.id), r.bundle_items.map(String).map((id) => nameById.get(id)).filter(Boolean));
+      }
+      const ordersOut = (orders || []).map((o) => ({
+        ...o,
+        items: (Array.isArray(o.items) ? o.items : []).map((i) => ({ ...i, components: compNames.get(String(i?.product_id)) || null })),
+      }));
       // Karty podarunkowe kupione tym adresem — z linkiem do wersji do wydruku.
       const cards = await base44.asServiceRole.entities.DiscountCode.filter({ buyer_email: email }, "-created_date", 100).catch(() => []);
       const gift_cards = cards.filter((c) => c.gift_token).map((c) => ({
         token: c.gift_token, value: c.value, until: c.valid_until, to_name: c.gift_to || "",
         used: (Number(c.uses) || 0) >= (Number(c.max_uses) || 1) || c.active === false,
       }));
-      return Response.json({ orders, gift_cards });
+      return Response.json({ orders: ordersOut, gift_cards });
     }
 
     if (body.action === "file") {

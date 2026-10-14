@@ -9,6 +9,7 @@ const TYPES = [
   ["kurs", "Kurs wideo"],
   ["usluga", "Usługa / spotkanie"],
   ["karta", "Karta podarunkowa (kod na cenę, 6 mies.)"],
+  ["pakiet", "Pakiet produktów (kilka w jednej cenie)"],
 ];
 const inputCls = "w-full bg-[#0A0A0B] border hairline px-4 py-3 focus:border-[#C9A24A] focus:outline-none";
 const labelCls = "technical text-[10px] text-foreground/50 block mb-2";
