@@ -53,7 +53,7 @@ for (const n of fns) {
 }
 fs.writeFileSync(`${A}/docs/tech/FUNKCJE.md`, F);
 // --- Zadania cykliczne
-let W = `# Zadania cykliczne (workflows Base44)\n\n${head}Pliki: \`base44/workflows/*.jsonc\`. Wywołują funkcje serwera z tokenem (\`tick_token\`) zapisanym w pliku — workflow Base44 nie czyta sekretów. Od 14.10.2026 całe tło obsługuje **jeden workflow „Zadania cykliczne"** (\`*/5 * * * *\`, czas polski → funkcja \`cronTick\`, która równolegle robi to samo, co dawniej sześć osobnych workflowów). Sześć starych plików jest **wyłączonych, nie usuniętych** — zostają jako wzorzec i historia. Po migracji: zwykły cron wołający te same adresy z tym samym tokenem.\n\n| Plik | Nazwa | Co robi | Harmonogram | Funkcja |\n|---|---|---|---|---|\n`;
+let W = `# Zadania cykliczne (workflows Base44)\n\n${head}Pliki: \`base44/workflows/*.jsonc\`. Wywołują funkcje serwera z tokenem (\`tick_token\`) zapisanym w pliku — workflow Base44 nie czyta sekretów. Od 14.10.2026 całe tło obsługuje **jeden workflow „Zadania cykliczne”** (\`*/5 * * * *\`, czas polski → funkcja \`cronTick\`, która równolegle robi to samo, co dawniej sześć osobnych workflowów). Sześć starych plików jest **wyłączonych, nie usuniętych** — zostają jako wzorzec i historia. Po migracji: zwykły cron wołający te same adresy z tym samym tokenem.\n\n| Plik | Nazwa | Co robi | Harmonogram | Funkcja |\n|---|---|---|---|---|\n`;
 for (const f of fs.readdirSync(`${A}/base44/workflows`).sort()) {
   const j = JSON.parse(strip(fs.readFileSync(`${A}/base44/workflows/${f}`, "utf8")));
   const txt = JSON.stringify(j);
