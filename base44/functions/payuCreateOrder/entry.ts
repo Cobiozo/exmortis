@@ -1,5 +1,5 @@
 import { createClientFromRequest } from "npm:@base44/sdk@0.8.44";
-import { applyDiscount } from "../../shared/discounts.ts";
+import { applyDiscount, reserveCode, releaseCode } from "../../shared/discounts.ts";
 import { runSql, escStr, textField, emailField, clientIp } from "../../shared/supabase.ts";
 import { ipAllowed, TOO_MANY } from "../../shared/rateLimit.ts";
 import { getSetting, loadAppUrl, APP_URL } from "../../shared/settings.ts";
@@ -31,6 +31,7 @@ const BASE_URLS = {
 };
 
 export default async function (req) {
+  let reservedFor = null; // zamówienie, pod które zarezerwowano kod — zwalniane, gdy płatność się nie utworzy
   try {
     const base44 = createClientFromRequest(req);
     await loadAppUrl(base44);
@@ -116,10 +117,13 @@ export default async function (req) {
     }
     if (totalGrosze < 0) totalGrosze = 0;
     if (totalGrosze > 0 && totalGrosze < 100) throw new Error("Kwota zamówienia jest zbyt niska dla PayU");
+    // Numer zamówienia od razu — pod nim rezerwujemy kod z limitem użyć (karta podarunkowa).
+    const orderId = crypto.randomUUID();
+    if (disc && (await reserveCode(base44, disc.record, orderId, buyerEmail))) reservedFor = orderId;
 
     // Zamówienie za 0 zł (np. całość pokryta kartą) — bez bramki PayU, od razu realizowane.
     if (totalGrosze === 0) {
-      const id = crypto.randomUUID();
+      const id = orderId;
       const freeId = `FREE-${id}`;
       await insertOrder(base44, {
         id, payuOrderId: freeId, buyerName, buyerEmail,
@@ -155,7 +159,7 @@ export default async function (req) {
       throw new Error("PayU: błąd autoryzacji (sprawdź Client ID / Client Secret)");
     }
 
-    const extOrderId = crypto.randomUUID();
+    const extOrderId = orderId;
     const realIp = clientIp(req);
     const customerIp = realIp === "brak" ? "127.0.0.1" : realIp;
 
@@ -210,6 +214,7 @@ export default async function (req) {
 
     return Response.json({ redirectUri: data.redirectUri, orderId: extOrderId });
   } catch (error) {
+    if (reservedFor) await releaseCode(base44Ref, reservedFor);
     // Błąd walidacji formularza = 400 (wina danych), reszta = 500.
     const bad = /^(Brak pola|Pole .* jest zbyt długie|Niepoprawny adres e-mail|Zaakceptuj|Zaznacz|Koszyk jest pusty|Jeden z produktów|Nieprawidłowy kod|Kod |Kodem |Kwota zamówienia|Podaj |Niepoprawny NIP|Bilet:|Brak wolnych)/.test(String(error?.message || ""));
     return Response.json({ error: error.message }, { status: bad ? 400 : 500 });
