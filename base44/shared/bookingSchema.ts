@@ -1,6 +1,122 @@
 // Rezerwacje 1:1 — schemat w Supabase (wyłącznie dodający). Uruchamiane przez bookingAdmin {action:"migrate"};
 // każde polecenie jest powtarzalne (IF NOT EXISTS / OR REPLACE). KROK 1B: utwardzenie uprawnień i szyfrowania.
 
+// Rezerwacja z pakietu i przeniesienie — osobno, bo poprawka danych 2026-10-14 wgrywa je bez pełnej migracji.
+export const BK_BOOK_PACKAGE_SQL = `CREATE OR REPLACE FUNCTION public.bk_book_package(p jsonb) RETURNS jsonb
+LANGUAGE plpgsql SECURITY DEFINER SET search_path = '' AS $bp$
+DECLARE
+  v_pk public.bk_packages; v_t public.bk_types; v_id uuid; v_en timestamptz; v_last timestamptz;
+  v_token boolean := false;
+  v_st timestamptz := (p->>'starts_at')::timestamptz;
+  v_admin boolean := COALESCE((p->>'viewer_admin')::boolean, false);
+  v_uid text := NULLIF(p->>'user_id','');
+  v_email text := lower(btrim(COALESCE(p->>'email','')));
+BEGIN
+  PERFORM pg_advisory_xact_lock(hashtext('bk_calendar'));
+  SELECT * INTO v_pk FROM public.bk_packages WHERE id = (p->>'package_id')::uuid FOR UPDATE;
+  IF NOT FOUND THEN RETURN jsonb_build_object('error','not_found'); END IF;
+  SELECT EXISTS (SELECT 1 FROM public.bk_tokens x WHERE x.token_hash = NULLIF(p->>'token_hash','')
+    AND x.purpose = 'zamowienie' AND x.package_id = v_pk.id AND x.used_at IS NULL AND x.expires_at > now()) INTO v_token;
+  IF NOT v_admin AND NOT v_token THEN
+    IF (v_uid IS NULL OR v_pk.user_id IS DISTINCT FROM v_uid)
+      AND (v_email = '' OR lower(btrim(COALESCE(v_pk.email_display,''))) IS DISTINCT FROM v_email) THEN
+      RETURN jsonb_build_object('error','forbidden');
+    END IF;
+  END IF;
+  IF v_pk.payment_status <> 'oplacony' THEN RETURN jsonb_build_object('error','unpaid'); END IF;
+  IF v_pk.valid_until < now() THEN RETURN jsonb_build_object('error','expired'); END IF;
+  IF v_pk.sessions_used >= v_pk.sessions_total THEN RETURN jsonb_build_object('error','used_up'); END IF;
+  SELECT * INTO v_t FROM public.bk_types WHERE id = v_pk.type_id;
+  IF NOT FOUND OR (NOT v_t.active AND NOT v_admin) THEN RETURN jsonb_build_object('error','not_found'); END IF;
+  -- Odstęp liczony w obie strony: żadna inna sesja z pakietu nie może być bliżej niż min_gap_days
+  -- (wcześniej tylko „po ostatniej”, co przy przenoszeniu dawało się obejść).
+  IF v_pk.min_gap_days > 0 AND EXISTS (SELECT 1 FROM public.bk_bookings k
+      WHERE k.package_id = v_pk.id AND k.status IN ('POTWIERDZONA','ODBYLA_SIE')
+        AND abs(extract(epoch FROM (k.starts_at - v_st))) < v_pk.min_gap_days * 86400) THEN
+    RETURN jsonb_build_object('error','gap', 'min_days', v_pk.min_gap_days);
+  END IF;
+  IF NOT EXISTS (SELECT 1 FROM public.bk_free_slots(v_t.id, v_st, v_st + interval '1 minute', v_admin) f WHERE f.slot_start = v_st) THEN
+    RETURN jsonb_build_object('error','taken');
+  END IF;
+  -- Zgoda o wykonaniu usługi przed upływem 14 dni — wymagana tylko, gdy termin wypada w tym oknie.
+  IF v_st < v_pk.created_at + interval '14 days'
+     AND NOT EXISTS (SELECT 1 FROM jsonb_to_recordset(COALESCE(p->'consents','[]')) AS x(kind text) WHERE x.kind = 'odstapienie') THEN
+    RETURN jsonb_build_object('error','consent');
+  END IF;
+  v_en := v_st + v_t.duration_min * interval '1 minute';
+  BEGIN
+    INSERT INTO public.bk_bookings (type_id, package_id, user_id, email, first_name, is_public, starts_at, ends_at, busy, client_tz, source)
+    VALUES (v_t.id, v_pk.id, COALESCE(v_uid, v_pk.user_id), v_pk.email_display, p->>'first_name', false, v_st, v_en,
+      tstzrange(v_st - v_t.buffer_before * interval '1 minute', v_en + v_t.buffer_after * interval '1 minute', '[)'),
+      p->>'tz', COALESCE(p->>'source','klient'))
+    RETURNING id INTO v_id;
+  EXCEPTION WHEN exclusion_violation THEN RETURN jsonb_build_object('error','taken');
+  END;
+  UPDATE public.bk_packages SET sessions_used = sessions_used + 1 WHERE id = v_pk.id;
+  IF NULLIF(p->>'token_hash','') IS NOT NULL THEN
+    UPDATE public.bk_tokens SET used_at = now() WHERE token_hash = p->>'token_hash' AND used_at IS NULL;
+  END IF;
+  INSERT INTO public.bk_consents (booking_id, kind, text_version, text, email_hmac, ip_hmac)
+  SELECT v_id, x.kind, x.text_version, x.text, x.email_hmac, x.ip_hmac
+  FROM jsonb_to_recordset(COALESCE(p->'consents','[]')) AS x(kind text, text_version text, text text, email_hmac text, ip_hmac text);
+  INSERT INTO public.bk_log (actor, action, object_type, object_id, summary)
+  VALUES (COALESCE(p->>'actor','klient'), 'rezerwacja_z_pakietu', 'booking', v_id::text,
+    v_t.slug || ' ' || to_char(v_st AT TIME ZONE 'Europe/Warsaw', 'YYYY-MM-DD HH24:MI'));
+  RETURN jsonb_build_object('ok', true, 'id', v_id, 'starts_at', v_st, 'ends_at', v_en);
+END $bp$;`;
+
+export const BK_RESCHEDULE_SQL = `CREATE OR REPLACE FUNCTION public.bk_reschedule(p jsonb) RETURNS jsonb
+LANGUAGE plpgsql SECURITY DEFINER SET search_path = '' AS $r$
+DECLARE
+  v_k public.bk_bookings; v_t public.bk_types; v_pk public.bk_packages; v_en timestamptz;
+  v_new timestamptz := (p->>'starts_at')::timestamptz;
+  v_admin boolean := COALESCE((p->>'viewer_admin')::boolean, false);
+  v_uid text := NULLIF(p->>'user_id','');
+  v_email text := lower(btrim(COALESCE(p->>'email','')));
+BEGIN
+  PERFORM pg_advisory_xact_lock(hashtext('bk_calendar'));
+  SELECT * INTO v_k FROM public.bk_bookings WHERE id = (p->>'booking_id')::uuid FOR UPDATE;
+  IF NOT FOUND OR v_k.status <> 'POTWIERDZONA' THEN RETURN jsonb_build_object('error','not_found'); END IF;
+  IF NOT v_admin THEN
+    IF (v_uid IS NULL OR v_k.user_id IS DISTINCT FROM v_uid)
+      AND (v_email = '' OR lower(btrim(COALESCE(v_k.email,''))) IS DISTINCT FROM v_email) THEN
+      RETURN jsonb_build_object('error','forbidden');
+    END IF;
+  END IF;
+  SELECT * INTO v_t FROM public.bk_types WHERE id = v_k.type_id;
+  IF NOT v_admin AND v_k.starts_at < now() + v_t.change_window_h * interval '1 hour' THEN
+    RETURN jsonb_build_object('error','too_late');
+  END IF;
+  IF v_k.package_id IS NOT NULL THEN
+    SELECT * INTO v_pk FROM public.bk_packages WHERE id = v_k.package_id;
+    IF NOT v_admin AND v_pk.reschedule_limit IS NOT NULL AND v_k.reschedule_count >= v_pk.reschedule_limit THEN
+      RETURN jsonb_build_object('error','limit', 'max', v_pk.reschedule_limit);
+    END IF;
+    IF v_pk.valid_until < now() THEN RETURN jsonb_build_object('error','expired'); END IF;
+    -- Ten sam odstęp co przy rezerwacji (przeniesienie nie może go obejść); administrator może.
+    IF NOT v_admin AND v_pk.min_gap_days > 0 AND EXISTS (SELECT 1 FROM public.bk_bookings k
+        WHERE k.package_id = v_pk.id AND k.id <> v_k.id AND k.status IN ('POTWIERDZONA','ODBYLA_SIE')
+          AND abs(extract(epoch FROM (k.starts_at - v_new))) < v_pk.min_gap_days * 86400) THEN
+      RETURN jsonb_build_object('error','gap', 'min_days', v_pk.min_gap_days);
+    END IF;
+  END IF;
+  IF NOT EXISTS (SELECT 1 FROM public.bk_free_slots(v_t.id, v_new, v_new + interval '1 minute', v_admin, v_k.id) f WHERE f.slot_start = v_new) THEN
+    RETURN jsonb_build_object('error','taken');
+  END IF;
+  v_en := v_new + v_t.duration_min * interval '1 minute';
+  BEGIN
+    UPDATE public.bk_bookings SET starts_at = v_new, ends_at = v_en,
+      busy = tstzrange(v_new - v_t.buffer_before * interval '1 minute', v_en + v_t.buffer_after * interval '1 minute', '[)'),
+      reschedule_count = reschedule_count + 1, version = version + 1, updated_at = now()
+    WHERE id = v_k.id;
+  EXCEPTION WHEN exclusion_violation THEN RETURN jsonb_build_object('error','taken');
+  END;
+  INSERT INTO public.bk_log (actor, action, object_type, object_id, summary)
+  VALUES (COALESCE(p->>'actor','klient'), 'przeniesienie', 'booking', v_k.id::text,
+    to_char(v_k.starts_at AT TIME ZONE 'Europe/Warsaw', 'YYYY-MM-DD HH24:MI') || ' -> ' || to_char(v_new AT TIME ZONE 'Europe/Warsaw', 'YYYY-MM-DD HH24:MI'));
+  RETURN jsonb_build_object('ok', true, 'starts_at', v_new, 'ends_at', v_en);
+END $r$;`;
+
 export const SCHEMA_SQL = `
 -- ============ KROK 1B: utwardzenie bezpieczeństwa ============
 
@@ -560,113 +676,10 @@ $tp$;
 
 -- 14) Rezerwacja z pakietu: właściciel po user_id albo e-mailu, nigdy po samym id pakietu.
 --     Odstęp, ważność, liczba sesji i granica 24 h sprawdzane tutaj, w tej samej transakcji.
-CREATE OR REPLACE FUNCTION public.bk_book_package(p jsonb) RETURNS jsonb
-LANGUAGE plpgsql SECURITY DEFINER SET search_path = '' AS $bp$
-DECLARE
-  v_pk public.bk_packages; v_t public.bk_types; v_id uuid; v_en timestamptz; v_last timestamptz;
-  v_token boolean := false;
-  v_st timestamptz := (p->>'starts_at')::timestamptz;
-  v_admin boolean := COALESCE((p->>'viewer_admin')::boolean, false);
-  v_uid text := NULLIF(p->>'user_id','');
-  v_email text := lower(btrim(COALESCE(p->>'email','')));
-BEGIN
-  PERFORM pg_advisory_xact_lock(hashtext('bk_calendar'));
-  SELECT * INTO v_pk FROM public.bk_packages WHERE id = (p->>'package_id')::uuid FOR UPDATE;
-  IF NOT FOUND THEN RETURN jsonb_build_object('error','not_found'); END IF;
-  SELECT EXISTS (SELECT 1 FROM public.bk_tokens x WHERE x.token_hash = NULLIF(p->>'token_hash','')
-    AND x.purpose = 'zamowienie' AND x.package_id = v_pk.id AND x.used_at IS NULL AND x.expires_at > now()) INTO v_token;
-  IF NOT v_admin AND NOT v_token THEN
-    IF (v_uid IS NULL OR v_pk.user_id IS DISTINCT FROM v_uid)
-      AND (v_email = '' OR lower(btrim(COALESCE(v_pk.email_display,''))) IS DISTINCT FROM v_email) THEN
-      RETURN jsonb_build_object('error','forbidden');
-    END IF;
-  END IF;
-  IF v_pk.payment_status <> 'oplacony' THEN RETURN jsonb_build_object('error','unpaid'); END IF;
-  IF v_pk.valid_until < now() THEN RETURN jsonb_build_object('error','expired'); END IF;
-  IF v_pk.sessions_used >= v_pk.sessions_total THEN RETURN jsonb_build_object('error','used_up'); END IF;
-  SELECT * INTO v_t FROM public.bk_types WHERE id = v_pk.type_id;
-  IF NOT FOUND OR (NOT v_t.active AND NOT v_admin) THEN RETURN jsonb_build_object('error','not_found'); END IF;
-  SELECT max(k.starts_at) INTO v_last FROM public.bk_bookings k
-    WHERE k.package_id = v_pk.id AND k.status IN ('POTWIERDZONA','ODBYLA_SIE');
-  IF v_pk.min_gap_days > 0 AND v_last IS NOT NULL AND v_st < v_last + (v_pk.min_gap_days || ' days')::interval THEN
-    RETURN jsonb_build_object('error','gap', 'min_days', v_pk.min_gap_days);
-  END IF;
-  IF NOT EXISTS (SELECT 1 FROM public.bk_free_slots(v_t.id, v_st, v_st + interval '1 minute', v_admin) f WHERE f.slot_start = v_st) THEN
-    RETURN jsonb_build_object('error','taken');
-  END IF;
-  -- Zgoda o wykonaniu usługi przed upływem 14 dni — wymagana tylko, gdy termin wypada w tym oknie.
-  IF v_st < v_pk.created_at + interval '14 days'
-     AND NOT EXISTS (SELECT 1 FROM jsonb_to_recordset(COALESCE(p->'consents','[]')) AS x(kind text) WHERE x.kind = 'odstapienie') THEN
-    RETURN jsonb_build_object('error','consent');
-  END IF;
-  v_en := v_st + v_t.duration_min * interval '1 minute';
-  BEGIN
-    INSERT INTO public.bk_bookings (type_id, package_id, user_id, email, first_name, is_public, starts_at, ends_at, busy, client_tz, source)
-    VALUES (v_t.id, v_pk.id, COALESCE(v_uid, v_pk.user_id), v_pk.email_display, p->>'first_name', false, v_st, v_en,
-      tstzrange(v_st - v_t.buffer_before * interval '1 minute', v_en + v_t.buffer_after * interval '1 minute', '[)'),
-      p->>'tz', COALESCE(p->>'source','klient'))
-    RETURNING id INTO v_id;
-  EXCEPTION WHEN exclusion_violation THEN RETURN jsonb_build_object('error','taken');
-  END;
-  UPDATE public.bk_packages SET sessions_used = sessions_used + 1 WHERE id = v_pk.id;
-  IF NULLIF(p->>'token_hash','') IS NOT NULL THEN
-    UPDATE public.bk_tokens SET used_at = now() WHERE token_hash = p->>'token_hash' AND used_at IS NULL;
-  END IF;
-  INSERT INTO public.bk_consents (booking_id, kind, text_version, text, email_hmac, ip_hmac)
-  SELECT v_id, x.kind, x.text_version, x.text, x.email_hmac, x.ip_hmac
-  FROM jsonb_to_recordset(COALESCE(p->'consents','[]')) AS x(kind text, text_version text, text text, email_hmac text, ip_hmac text);
-  INSERT INTO public.bk_log (actor, action, object_type, object_id, summary)
-  VALUES (COALESCE(p->>'actor','klient'), 'rezerwacja_z_pakietu', 'booking', v_id::text,
-    v_t.slug || ' ' || to_char(v_st AT TIME ZONE 'Europe/Warsaw', 'YYYY-MM-DD HH24:MI'));
-  RETURN jsonb_build_object('ok', true, 'id', v_id, 'starts_at', v_st, 'ends_at', v_en);
-END $bp$;
+${BK_BOOK_PACKAGE_SQL}
 
 -- 15) Przeniesienie terminu — granica zmiany, limit przełożeń i wolny termin w jednej transakcji.
-CREATE OR REPLACE FUNCTION public.bk_reschedule(p jsonb) RETURNS jsonb
-LANGUAGE plpgsql SECURITY DEFINER SET search_path = '' AS $r$
-DECLARE
-  v_k public.bk_bookings; v_t public.bk_types; v_pk public.bk_packages; v_en timestamptz;
-  v_new timestamptz := (p->>'starts_at')::timestamptz;
-  v_admin boolean := COALESCE((p->>'viewer_admin')::boolean, false);
-  v_uid text := NULLIF(p->>'user_id','');
-  v_email text := lower(btrim(COALESCE(p->>'email','')));
-BEGIN
-  PERFORM pg_advisory_xact_lock(hashtext('bk_calendar'));
-  SELECT * INTO v_k FROM public.bk_bookings WHERE id = (p->>'booking_id')::uuid FOR UPDATE;
-  IF NOT FOUND OR v_k.status <> 'POTWIERDZONA' THEN RETURN jsonb_build_object('error','not_found'); END IF;
-  IF NOT v_admin THEN
-    IF (v_uid IS NULL OR v_k.user_id IS DISTINCT FROM v_uid)
-      AND (v_email = '' OR lower(btrim(COALESCE(v_k.email,''))) IS DISTINCT FROM v_email) THEN
-      RETURN jsonb_build_object('error','forbidden');
-    END IF;
-  END IF;
-  SELECT * INTO v_t FROM public.bk_types WHERE id = v_k.type_id;
-  IF NOT v_admin AND v_k.starts_at < now() + v_t.change_window_h * interval '1 hour' THEN
-    RETURN jsonb_build_object('error','too_late');
-  END IF;
-  IF v_k.package_id IS NOT NULL THEN
-    SELECT * INTO v_pk FROM public.bk_packages WHERE id = v_k.package_id;
-    IF NOT v_admin AND v_pk.reschedule_limit IS NOT NULL AND v_k.reschedule_count >= v_pk.reschedule_limit THEN
-      RETURN jsonb_build_object('error','limit', 'max', v_pk.reschedule_limit);
-    END IF;
-    IF v_pk.valid_until < now() THEN RETURN jsonb_build_object('error','expired'); END IF;
-  END IF;
-  IF NOT EXISTS (SELECT 1 FROM public.bk_free_slots(v_t.id, v_new, v_new + interval '1 minute', v_admin, v_k.id) f WHERE f.slot_start = v_new) THEN
-    RETURN jsonb_build_object('error','taken');
-  END IF;
-  v_en := v_new + v_t.duration_min * interval '1 minute';
-  BEGIN
-    UPDATE public.bk_bookings SET starts_at = v_new, ends_at = v_en,
-      busy = tstzrange(v_new - v_t.buffer_before * interval '1 minute', v_en + v_t.buffer_after * interval '1 minute', '[)'),
-      reschedule_count = reschedule_count + 1, version = version + 1, updated_at = now()
-    WHERE id = v_k.id;
-  EXCEPTION WHEN exclusion_violation THEN RETURN jsonb_build_object('error','taken');
-  END;
-  INSERT INTO public.bk_log (actor, action, object_type, object_id, summary)
-  VALUES (COALESCE(p->>'actor','klient'), 'przeniesienie', 'booking', v_k.id::text,
-    to_char(v_k.starts_at AT TIME ZONE 'Europe/Warsaw', 'YYYY-MM-DD HH24:MI') || ' -> ' || to_char(v_new AT TIME ZONE 'Europe/Warsaw', 'YYYY-MM-DD HH24:MI'));
-  RETURN jsonb_build_object('ok', true, 'starts_at', v_new, 'ends_at', v_en);
-END $r$;
+${BK_RESCHEDULE_SQL}
 
 -- 16) Anulowanie: w terminie sesja wraca do pakietu; po granicy zostaje wykorzystana
 --     (polityka: „decyduje admin” albo „sesja przepada”). Admin zawsze oddaje sesję.
