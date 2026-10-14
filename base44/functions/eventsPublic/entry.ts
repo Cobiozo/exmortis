@@ -308,6 +308,11 @@ export default async function (req) {
            AND e.start_datetime + (COALESCE(e.duration_minutes,60) * interval '1 minute') + interval '90 days' < now()
          RETURNING r.id`
       );
+      // Bilety (imię i nazwisko, e-mail) — usuwane razem z zapisami, 90 dni po spotkaniu.
+      await runSql(base44, `DO $t$ BEGIN IF to_regclass('public.event_tickets') IS NOT NULL THEN
+          DELETE FROM public.event_tickets t USING public.events e WHERE t.event_id = e.id AND e.start_datetime IS NOT NULL
+            AND e.start_datetime + (COALESCE(e.duration_minutes,60) * interval '1 minute') + interval '90 days' < now();
+        END IF; END $t$`).catch(() => {});
       const evCols = `e.id, e.title, e.slug, e.subtitle, e.event_type, e.format,
         e.start_datetime, e.duration_minutes, e.location, e.join_link, e.external_url, e.recording_url, e.short_path, e.recording_until`;
 

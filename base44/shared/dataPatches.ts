@@ -6,6 +6,7 @@ import { getSetting, saveSetting } from "./settings.ts";
 import { clearSnap } from "./snapshot.ts";
 import { ensureWaitlistCols } from "./waitlist.ts";
 import { BK_BOOK_PACKAGE_SQL, BK_RESCHEDULE_SQL } from "./bookingSchema.ts";
+import { TICKET_SCHEMA_SQL } from "./tickets.ts";
 
 const PATCHES: { id: string; why: string; sql: string[] }[] = [
   {
@@ -86,6 +87,11 @@ const PATCHES: { id: string; why: string; sql: string[] }[] = [
            AND COALESCE((SELECT value->>'link' FROM public.app_settings WHERE key = 'zoom_staly'), '') LIKE 'https://%'`,
       `SELECT slug, (zoom_link IS NOT NULL) AS ma_zoom FROM public.bk_types WHERE slug IN ('sesja-powrot', 'indywidualne-konsultacje')`,
     ],
+  },
+  {
+    id: "2026-10-14-bilety-schemat",
+    why: "Bilety na wydarzenia: tabela event_tickets (numer, klucz QR, imię i nazwisko, status) i kolumny wydarzeń (sprzedaż, wzór)",
+    sql: [TICKET_SCHEMA_SQL],
   },
 ];
 

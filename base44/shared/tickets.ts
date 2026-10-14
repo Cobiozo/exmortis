@@ -3,10 +3,7 @@
 import { runSql, escStr } from "./supabase.ts";
 import { APP_URL, getSetting } from "./settings.ts";
 
-let schemaReady = false;
-export async function ensureTicketSchema(base44) {
-  if (schemaReady) return;
-  await runSql(base44, `
+export const TICKET_SCHEMA_SQL = `
     ALTER TABLE public.events ADD COLUMN IF NOT EXISTS tickets boolean DEFAULT false;
     ALTER TABLE public.events ADD COLUMN IF NOT EXISTS ticket_template jsonb;
     CREATE TABLE IF NOT EXISTS public.event_tickets (
@@ -29,7 +26,12 @@ export async function ensureTicketSchema(base44) {
     CREATE INDEX IF NOT EXISTS event_tickets_event_idx ON public.event_tickets (event_id);
     CREATE INDEX IF NOT EXISTS event_tickets_email_idx ON public.event_tickets (lower(buyer_email));
     ALTER TABLE public.event_tickets ENABLE ROW LEVEL SECURITY;
-    REVOKE ALL ON public.event_tickets FROM PUBLIC, anon, authenticated;`);
+    REVOKE ALL ON public.event_tickets FROM PUBLIC, anon, authenticated;`;
+
+let schemaReady = false;
+export async function ensureTicketSchema(base44) {
+  if (schemaReady) return;
+  await runSql(base44, TICKET_SCHEMA_SQL);
   schemaReady = true;
 }
 
