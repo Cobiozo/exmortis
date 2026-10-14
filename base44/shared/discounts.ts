@@ -20,7 +20,8 @@ export async function applyDiscount(base44, rawCode, lines) {
     .filter((l) => !cards.includes(String(l.product_id)))
     .filter((l) => ids.length === 0 || ids.includes(String(l.product_id)))
     .reduce((s, l) => s + l.unit * l.qty, 0);
-  if (base === 0) throw new Error(cards.length ? (fromCard ? "Kodem z karty podarunkowej nie opłacisz innej karty podarunkowej" : "Kodów rabatowych nie łączy się z kartą podarunkową") : "Kod nie obejmuje produktów w koszyku");
+  const onlyCards = lines.length > 0 && lines.every((l) => cards.includes(String(l.product_id)));
+  if (base === 0) throw new Error(onlyCards ? (fromCard ? "Kodem z karty podarunkowej nie opłacisz innej karty podarunkowej" : "Kodów rabatowych nie łączy się z kartą podarunkową") : "Kod nie obejmuje produktów w koszyku");
   const off = found.kind === "kwota"
     ? Math.min(base, Math.round(found.value * 100))
     : Math.round((base * Math.min(100, found.value)) / 100);
