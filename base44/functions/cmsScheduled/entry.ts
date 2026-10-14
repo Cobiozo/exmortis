@@ -6,6 +6,7 @@ import { requireMail } from "../../shared/smtp.ts";
 import { clearSnap } from "../../shared/snapshot.ts";
 import { unpaidReminders } from "../../shared/unpaidReminder.ts";
 import { safeEqual } from "../../shared/libraryAccess.ts";
+import { applyDataPatches } from "../../shared/dataPatches.ts";
 
 // Higiena listy oczekujących (raz na dobę na instancję): 90 dni po powiadomieniu, a bez powiadomienia po 12 miesiącach.
 let lastHygiene = "";
@@ -72,13 +73,15 @@ export default async function(req) {
       await db.ContentLog.create({ page_slug: page.slug, akcja: "publikacja", wersja, kto, opis });
       done.push(page.slug);
     }
+    // Jednorazowe poprawki danych zapisane w kodzie (base44/shared/dataPatches.ts).
+    const patched = await applyDataPatches(base44).catch((e) => { console.error("poprawki danych:", e.message); return []; });
     // Przy okazji (najwyżej raz na godzinę): dzisiejsze ceny produktów do historii — podstawa informacji Omnibus.
-    const prices = await recordPrices(base44).catch(() => -1);
+    const prices = await recordPrices(base44, patched.length > 0).catch(() => -1);
     await waitlistHygiene(base44).catch(() => {});
     const released = await releaseDue(base44).catch((e) => { console.error("premiera:", e.message); return []; });
     const ready = await requireMail(base44).then(() => true).catch(() => false);
     const reminded = ready ? await unpaidReminders(base44).catch((e) => { console.error("przypomnienia:", e.message); return 0; }) : 0;
-    return Response.json({ ok: true, published: done, prices, released, reminded });
+    return Response.json({ ok: true, published: done, prices, released, reminded, patched });
   } catch (error) {
     return Response.json({ error: error.message }, { status: 500 });
   }
