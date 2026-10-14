@@ -22,7 +22,9 @@ export async function productSeats(base44, ids) {
        FROM public.orders o, ${items} i
        WHERE o.status = 'COMPLETED' AND i->>'product_id' IN (${inList})
          -- Zamówienie zwrócone w całości nie zajmuje miejsca (częściowy zwrot zostaje — nie sprzedajemy nadkompletu).
-         AND COALESCE((to_jsonb(o)->>'refunded_total')::numeric, 0) < COALESCE(o.total, 0)
+         -- Uwaga: zwrot musi być większy od zera — inaczej zamówienie darmowe (total 0) wypadałoby z puli sprzedanych.
+         AND NOT (COALESCE((to_jsonb(o)->>'refunded_total')::numeric, 0) > 0
+                  AND COALESCE((to_jsonb(o)->>'refunded_total')::numeric, 0) >= COALESCE(o.total, 0))
        GROUP BY 1
      ) s ON s.pid = p.id::text
      LEFT JOIN (

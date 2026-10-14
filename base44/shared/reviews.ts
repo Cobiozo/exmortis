@@ -28,6 +28,8 @@ export async function ensureReviewsTable(base44) {
   )`);
   await runSql(base44, `CREATE UNIQUE INDEX IF NOT EXISTS product_reviews_order_product ON public.product_reviews (order_id, product_id)`);
   await runSql(base44, `CREATE INDEX IF NOT EXISTS product_reviews_product ON public.product_reviews (product_id, status, published_at DESC)`);
+  // Licznik limitu „10 opinii na godzinę" i pytanie „z których zamówień mogę ocenić" chodzą po adresie e-mail.
+  await runSql(base44, `CREATE INDEX IF NOT EXISTS product_reviews_email ON public.product_reviews (lower(email), created_at DESC)`);
   await runSql(base44, `ALTER TABLE public.product_reviews ENABLE ROW LEVEL SECURITY`);
   await runSql(base44, `REVOKE ALL ON public.product_reviews FROM anon, authenticated`);
   READY = true;
