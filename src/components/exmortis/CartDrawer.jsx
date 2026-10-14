@@ -3,6 +3,7 @@ import { X, Plus, Minus, Trash2, ArrowRight } from "lucide-react";
 import { Link } from "react-router-dom";
 import { useCart, lineKey } from "./CartContext";
 import { GiftLine } from "./shop/GiftCard";
+import { TicketLine } from "./events/TicketBuy";
 
 export default function CartDrawer() {
   const { items, open, setOpen, removeItem, updateQty, total } = useCart();
@@ -56,7 +57,7 @@ export default function CartDrawer() {
                     </div>
                     <div className="flex-1 min-w-0">
                       <Link
-                        to={`/skarbiec/${item.slug}`}
+                        to={item.kind === "bilet" ? `/spotkania/${item.slug}` : `/skarbiec/${item.slug}`}
                         onClick={() => setOpen(false)}
                         className="relic-heading text-sm gold-text block truncate"
                       >
@@ -64,7 +65,9 @@ export default function CartDrawer() {
                       </Link>
                       <p className="font-mono text-sm text-foreground/70 mt-1">{item.price} zł</p>
                       {item.gift && <GiftLine gift={item.gift} />}
+                      {item.kind === "bilet" && <TicketLine holders={item.holders} />}
                       <div className="flex items-center gap-3 mt-3">
+                        {item.kind === "bilet" ? <span className="font-mono text-xs text-foreground/60">× {item.qty}</span> : (
                         <div className="flex items-center border hairline">
                           <button
                             onClick={() => updateQty(lineKey(item), item.qty - 1)}
@@ -82,6 +85,7 @@ export default function CartDrawer() {
                             <Plus className="h-3 w-3" />
                           </button>
                         </div>
+                        )}
                         <button
                           onClick={() => removeItem(lineKey(item))}
                           aria-label={`Usuń z koszyka: ${item.name}`}

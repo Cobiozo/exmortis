@@ -11,6 +11,7 @@ import OrderSummaryInfo from "@/components/exmortis/shop/OrderSummaryInfo";
 import ChooseTermButton from "@/components/exmortis/shop/ChooseTermButton";
 import InvoiceFields, { validNip } from "@/components/exmortis/shop/InvoiceFields";
 import { GiftLine } from "@/components/exmortis/shop/GiftCard";
+import { TicketLine } from "@/components/exmortis/events/TicketBuy";
 
 const ORDER_KEY = "exm_payu_order";
 
@@ -83,7 +84,8 @@ export default function Checkout() {
         newsletter_consent: newsletterConsent,
         digital_consent: digitalConsent,
         terms_consent: termsConsent,
-        items: items.map((it) => (it.gift ? { id: it.id, qty: it.qty, amount: it.gift.amount, to_name: it.gift.to_name, message: it.gift.message } : { id: it.id, qty: it.qty })),
+        items: items.map((it) => (it.kind === "bilet" ? { id: it.id, kind: "bilet", holders: it.holders }
+          : it.gift ? { id: it.id, qty: it.qty, amount: it.gift.amount, to_name: it.gift.to_name, message: it.gift.message } : { id: it.id, qty: it.qty })),
         code: discount?.code || "",
         invoice: invoice.want ? { want: true, company: invoice.company, nip: invoice.nip, address: invoice.address } : null,
       });
@@ -232,6 +234,7 @@ export default function Checkout() {
                     <p className="relic-heading text-sm gold-text truncate">{item.name}</p>
                     <p className="font-mono text-xs text-foreground/50">{item.qty} × {item.price} zł</p>
                     {item.gift && <GiftLine gift={item.gift} />}
+                    {item.kind === "bilet" && <TicketLine holders={item.holders} />}
                   </div>
                 </div>
               ))}
