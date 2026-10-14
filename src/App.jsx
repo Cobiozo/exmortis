@@ -31,6 +31,8 @@ const CmsPreview = lazyPage(() => import('@/pages/CmsPreview'));
 const CoursePlayer = lazyPage(() => import('@/pages/CoursePlayer'));
 const Cisza = lazyPage(() => import('@/pages/Cisza'));
 const Karta = lazyPage(() => import('@/pages/Karta'));
+const Bilet = lazyPage(() => import('@/pages/Bilet'));
+const Skaner = lazyPage(() => import('@/pages/Skaner'));
 import ProtectedRoute from '@/components/ProtectedRoute';
 import LoginRedirect from '@/components/LoginRedirect';
 import { SiteContentProvider } from '@/components/exmortis/SiteContentProvider';
@@ -102,6 +104,7 @@ const AuthenticatedApp = () => {
         <Route path="/reset-password" element={<ResetPassword />} />
         <Route element={<ProtectedRoute unauthenticatedElement={<LoginRedirect />} />}>
           <Route path="/admin/podglad-strony" element={<CmsPreview />} />
+          <Route path="/skaner" element={<Skaner />} />
           <Route path="/admin" element={<Admin />} />
           <Route path="/admin/:section" element={<Admin />} />
           <Route element={<Layout />}>
@@ -112,6 +115,7 @@ const AuthenticatedApp = () => {
         </Route>
         <Route path="/cisza" element={<Cisza />} />
         <Route path="/karta" element={<Karta />} />
+        <Route path="/bilet" element={<Bilet />} />
         <Route element={<Layout />}>
           <Route path="/" element={<HomeSwitch />} />
           <Route path="/o-mnie" element={<About />} />
