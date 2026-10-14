@@ -46,6 +46,7 @@ export async function ensureRefundSchema(base44) {
   if (schemaReady) return;
   await runSql(base44, REFUND_SCHEMA_SQL);
   schemaReady = true;
+  tableKnown = true;
 }
 
 let tableKnown = null;
