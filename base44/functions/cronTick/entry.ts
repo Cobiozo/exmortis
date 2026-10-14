@@ -2,6 +2,7 @@ import { createClientFromRequest } from "npm:@base44/sdk@0.8.44";
 import { runSql } from "../../shared/supabase.ts";
 import { safeEqual } from "../../shared/libraryAccess.ts";
 import { APP_URL, DEFAULT_APP_URL, loadAppUrl } from "../../shared/settings.ts";
+import { sendMail, adminTo } from "../../shared/smtp.ts";
 
 // ============ Jedno zadanie cykliczne zamiast sześciu workflow ============
 // Workflow „Zadania cykliczne" woła tę funkcję co 5 minut (czas polski). Tutaj, równolegle,
@@ -98,6 +99,20 @@ export default async function (req) {
     }
 
     const failed = out.filter((c) => !c.ok);
+    // Alarm dla administratora: najwyżej jeden mail na 6 godzin, tylko gdy coś nie odpowiedziało.
+    if (failed.length) {
+      const lock = await runSql(base44, `INSERT INTO public.app_settings (key, value, updated_date)
+          VALUES ('cron_alert', jsonb_build_object('at', now()), now())
+        ON CONFLICT (key) DO UPDATE SET value = EXCLUDED.value, updated_date = now()
+          WHERE public.app_settings.updated_date < now() - interval '6 hours'
+        RETURNING key`).catch(() => []);
+      if (lock?.length) {
+        const to = await adminTo(base44).catch(() => null);
+        const list = failed.map((f) => `<li>${String(f.zadanie).replace(/</g, "&lt;")} — kod ${f.status}${f.blad ? `, ${String(f.blad).replace(/</g, "&lt;")}` : ""}</li>`).join("");
+        if (to) await sendMail(base44, { kind: "alarm", to, subject: `exmortis: zadanie w tle nie działa (${failed.length})`,
+          html: `<p>Ostatni przebieg zadań cyklicznych (${new Date().toISOString().slice(0, 16).replace("T", " ")} UTC) — nie odpowiedziały:</p><ul>${list}</ul><p>Kolejny alarm najwcześniej za 6 godzin. Jeśli powtarza się — sprawdź Panel → Pulpit → Gotowość platformy i logi funkcji.</p>` }).catch(() => {});
+      }
+    }
     console.log("cronTick", JSON.stringify({ minute, quarter, ok: out.length - failed.length, failed: failed.length }));
     return Response.json({
       ok: failed.length === 0,
