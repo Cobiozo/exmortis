@@ -36,13 +36,13 @@ export default function EventsListing() {
           <div className="px-5 md:px-10 pb-10">
             <div className="mx-auto max-w-[1400px] flex flex-wrap gap-3">
               {TABS.map(([k, l]) => (
-                <button key={k} onClick={() => setTab(k)} className={`technical text-[10px] px-5 py-2.5 border transition-colors duration-300 ${tab === k ? "border-[#C9A24A] gold-text" : "border-[#2A2A2A] text-foreground/40 hover:text-foreground/70"}`}>{l.toUpperCase()}</button>
+                <button key={k} onClick={() => setTab(k)} className={`technical text-[10px] px-5 py-2.5 border transition-colors duration-300 ${tab === k ? "border-[#C9A24A] gold-text" : "border-[#2A2A2A] text-foreground/55 hover:text-foreground/70"}`}>{l.toUpperCase()}</button>
               ))}
             </div>
           </div>
           <div className="px-5 md:px-10 pb-20 md:pb-24 mx-auto max-w-[1400px] grid gap-5 min-[641px]:grid-cols-2 min-[1101px]:grid-cols-3 items-stretch">
             {filtered.map((ev) => <EventTile key={ev.id} event={ev} />)}
-            {filtered.length === 0 && <p className="text-foreground/40 py-16 col-span-full">W tym filtrze nie ma teraz żadnych spotkań.</p>}
+            {filtered.length === 0 && <p className="text-foreground/55 py-16 col-span-full">W tym filtrze nie ma teraz żadnych spotkań.</p>}
           </div>
         </>
       )}

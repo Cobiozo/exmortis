@@ -68,7 +68,7 @@ export default function ReviewDialog({ item, onClose, onSaved }) {
                     type="button"
                     onClick={() => setRating(i)}
                     aria-label={`Ocena ${i} z 5`}
-                    className={`p-1.5 transition-colors ${i <= rating ? "gold-text" : "text-foreground/30 hover:text-foreground/60"}`}
+                    className={`p-1.5 transition-colors ${i <= rating ? "gold-text" : "text-foreground/55 hover:text-foreground/60"}`}
                   >
                     <Star className="h-6 w-6" fill={i <= rating ? "currentColor" : "none"} strokeWidth={1.5} />
                   </button>
@@ -89,7 +89,7 @@ export default function ReviewDialog({ item, onClose, onSaved }) {
                 placeholder="Jak Ci się czyta, słucha, pracuje z tym materiałem? Co się zmieniło?"
                 className="w-full bg-transparent border hairline px-4 py-3 text-sm leading-relaxed focus:border-[#C9A24A] focus:outline-none"
               />
-              <p className="technical text-[9px] text-foreground/40 mt-2">
+              <p className="technical text-[9px] text-foreground/55 mt-2">
                 {text.length < MIN ? `JESZCZE ${MIN - text.length} ZNAKÓW` : `${text.length} / ${MAX}`}
               </p>
             </div>
@@ -124,7 +124,7 @@ export default function ReviewDialog({ item, onClose, onSaved }) {
             <button onClick={save} disabled={!ready} className="btn-relic w-full disabled:opacity-40">
               {busy ? "WYSYŁAM..." : "WYŚLIJ OPINIĘ"} {!busy && <Check className="h-4 w-4" />}
             </button>
-            <p className="technical text-[9px] text-foreground/35 leading-relaxed">
+            <p className="technical text-[9px] text-foreground/55 leading-relaxed">
               OPINIA POJAWI SIĘ NA STRONIE PRODUKTU PO SPRAWDZENIU. NIE PŁACIMY ZA OPINIE I NIE USUWAMY KRYTYCZNYCH.
             </p>
           </div>

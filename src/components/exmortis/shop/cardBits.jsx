@@ -59,7 +59,7 @@ export { isPromoActive } from "@/lib/productPrice";
 
 export function PriceBlock({ p }) {
   if (p.status === "wkrótce") {
-    return <span className="technical text-[10px] text-foreground/40">WKRÓTCE</span>;
+    return <span className="technical text-[10px] text-foreground/55">WKRÓTCE</span>;
   }
   if (p.is_free) {
     return <span>0 zł</span>;
@@ -75,11 +75,11 @@ export function PriceBlock({ p }) {
     });
     return (
       <span className="flex items-baseline gap-2 flex-wrap">
-        <s className="text-foreground/40">{p.price_regular} zł</s>
+        <s className="text-foreground/55">{p.price_regular} zł</s>
         <span className="text-[#C9A24A] text-lg">{p.price_start} zł</span>
-        <span className="technical text-[9px] text-foreground/40">DO {until.toUpperCase()}</span>
+        <span className="technical text-[9px] text-foreground/55">DO {until.toUpperCase()}</span>
         {nextPriceText(p) && <span className="basis-full text-[11px] text-[#C9A24A]/80">{nextPriceText(p)}</span>}
-        <span className="basis-full text-[11px] text-foreground/45">Najniższa cena z 30 dni przed obniżką: {zl(lowestPrice30(p))}</span>
+        <span className="basis-full text-[11px] text-foreground/55">Najniższa cena z 30 dni przed obniżką: {zl(lowestPrice30(p))}</span>
       </span>
     );
   }
@@ -105,7 +105,7 @@ export function SeatsLine({ p, className = "" }) {
     return <span className={`technical text-[10px] blood-text ${className}`}>BRAK MIEJSC</span>;
   }
   return (
-    <span className={`technical text-[10px] ${s.left <= 10 ? "gold-text" : "text-foreground/45"} ${className}`}>
+    <span className={`technical text-[10px] ${s.left <= 10 ? "gold-text" : "text-foreground/55"} ${className}`}>
       ZOSTAŁO {s.left} Z {s.capacity} MIEJSC
     </span>
   );

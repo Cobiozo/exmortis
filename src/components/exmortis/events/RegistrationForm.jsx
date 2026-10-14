@@ -148,7 +148,7 @@ export default function RegistrationForm({ event: ev }) {
             value={firstName}
             onChange={(e) => setFirstName(e.target.value)}
             placeholder="Imię"
-            className="bg-transparent border hairline px-5 py-4 text-foreground placeholder:text-foreground/30 font-mono text-base min-h-[48px] w-full focus:border-[#C9A24A] focus:outline-none transition-colors"
+            className="bg-transparent border hairline px-5 py-4 text-foreground placeholder:text-foreground/55 font-mono text-base min-h-[48px] w-full focus:border-[#C9A24A] focus:outline-none transition-colors"
           />
         </label>
         <label htmlFor="reg-email" className="block">
@@ -161,7 +161,7 @@ export default function RegistrationForm({ event: ev }) {
             value={email}
             onChange={(e) => setEmail(e.target.value)}
             placeholder="E-mail"
-            className="bg-transparent border hairline px-5 py-4 text-foreground placeholder:text-foreground/30 font-mono text-base min-h-[48px] w-full focus:border-[#C9A24A] focus:outline-none transition-colors"
+            className="bg-transparent border hairline px-5 py-4 text-foreground placeholder:text-foreground/55 font-mono text-base min-h-[48px] w-full focus:border-[#C9A24A] focus:outline-none transition-colors"
           />
         </label>
       </div>
@@ -176,7 +176,7 @@ export default function RegistrationForm({ event: ev }) {
         onChange={(e) => setQuestion(e.target.value)}
         rows={3}
         placeholder="Czy jest pytanie, które chcesz mi zadać? (opcjonalnie)"
-        className="w-full bg-transparent border hairline px-5 py-4 text-foreground placeholder:text-foreground/30 font-mono text-base min-h-[48px] w-full focus:border-[#C9A24A] focus:outline-none transition-colors resize-none"
+        className="w-full bg-transparent border hairline px-5 py-4 text-foreground placeholder:text-foreground/55 font-mono text-base min-h-[48px] w-full focus:border-[#C9A24A] focus:outline-none transition-colors resize-none"
       />
       <label className="flex items-start gap-3 cursor-pointer group py-2 min-h-[44px]">
         <input

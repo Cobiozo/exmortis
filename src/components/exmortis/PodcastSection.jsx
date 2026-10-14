@@ -44,7 +44,7 @@ export default function PodcastSection() {
               <div className="flex flex-col justify-center">
                 <p className="technical text-[10px] gold-text mb-3">NAJNOWSZY · #{latest.numer}</p>
                 <h3 className="shop-heading text-3xl md:text-4xl text-[#F5EFE1] group-hover:text-[#C9A24A] mb-3">{latest.tytul}</h3>
-                <p className="text-sm text-foreground/45 mb-5">{[latest.gosc_nazwa, latest.dlugosc_s && fmtT(latest.dlugosc_s)].filter(Boolean).join(" · ")}</p>
+                <p className="text-sm text-foreground/55 mb-5">{[latest.gosc_nazwa, latest.dlugosc_s && fmtT(latest.dlugosc_s)].filter(Boolean).join(" · ")}</p>
                 {latest.opis_krotki && <p className="text-foreground/65 leading-relaxed mb-8 max-w-xl">{latest.opis_krotki}</p>}
                 <span className="btn-relic self-start">Słuchaj</span>
               </div>

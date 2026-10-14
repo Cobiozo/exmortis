@@ -54,7 +54,7 @@ export default function YouTubePlaylist() {
           />
           <div className="mt-4 flex items-baseline justify-between gap-4">
             <p className="relic-heading text-lg md:text-xl gold-text">{current.tytul}</p>
-            <p className="technical text-[9px] text-foreground/40 shrink-0">
+            <p className="technical text-[9px] text-foreground/55 shrink-0">
               {idx + 1} / {songs.length}
             </p>
           </div>
@@ -105,7 +105,7 @@ export default function YouTubePlaylist() {
                       </span>
                     )}
                   </span>
-                  <span className="technical text-[9px] text-foreground/30 shrink-0">
+                  <span className="technical text-[9px] text-foreground/55 shrink-0">
                     {String(i + 1).padStart(2, "0")}
                   </span>
                 </button>

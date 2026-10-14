@@ -61,7 +61,7 @@ export default function RegistrationBlock({ event: ev }) {
               value={remindEmail}
               onChange={(e) => setRemindEmail(e.target.value)}
               placeholder="Przypomnij mi — Twój e-mail"
-              className="flex-1 bg-transparent border hairline px-5 py-4 text-foreground placeholder:text-foreground/30 font-mono text-sm focus:border-[#C9A24A] focus:outline-none transition-colors"
+              className="flex-1 bg-transparent border hairline px-5 py-4 text-foreground placeholder:text-foreground/55 font-mono text-sm focus:border-[#C9A24A] focus:outline-none transition-colors"
             />
             <button type="submit" disabled={remindBusy} className="btn-ghost !px-5 !py-4 whitespace-nowrap disabled:opacity-60">
               <Bell className="h-4 w-4" /> {remindBusy ? "ZAPISUJĘ..." : "PRZYPOMNIJ MI"}

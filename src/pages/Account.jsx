@@ -91,7 +91,7 @@ export default function Account() {
             <button
               key={k}
               onClick={() => (k === "rozdroza" ? navigate("/konto/rozdroza") : setTab(k))}
-              className={`pb-4 -mb-px technical text-[10px] whitespace-nowrap border-b ${active === k ? "border-[#C9A24A] gold-text" : "border-transparent text-foreground/45 hover:text-[#F5EFE1]"}`}
+              className={`pb-4 -mb-px technical text-[10px] whitespace-nowrap border-b ${active === k ? "border-[#C9A24A] gold-text" : "border-transparent text-foreground/55 hover:text-[#F5EFE1]"}`}
             >
               {l}
             </button>

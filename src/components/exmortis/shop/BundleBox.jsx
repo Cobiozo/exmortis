@@ -31,7 +31,7 @@ export default function BundleBox({ product }) {
                 ) : (
                   <span className="text-[#F5EFE1] [overflow-wrap:anywhere]">{c.name}</span>
                 )}
-                <span className="block technical text-[9px] text-foreground/40 mt-0.5">
+                <span className="block technical text-[9px] text-foreground/55 mt-0.5">
                   {(TYPE_LABEL[c.product_type] || c.product_type || "").toUpperCase()}
                   {c.owned ? " · MASZ JUŻ" : ""}
                 </span>

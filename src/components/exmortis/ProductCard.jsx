@@ -31,7 +31,7 @@ export default function ProductCard({ product, index = 0 }) {
 
         <div className="p-6 space-y-4">
           {!product.image_url && (
-            <span className="technical text-[9px] text-foreground/40 block">
+            <span className="technical text-[9px] text-foreground/55 block">
               {String(index + 1).padStart(2, "0")} · {product.category}
             </span>
           )}
@@ -52,7 +52,7 @@ export default function ProductCard({ product, index = 0 }) {
                 : product.is_free ? "DARMOWE"
                 : priceOnRequest(product) ? "PO ROZMOWIE"
                 : isPromoActive(product)
-                  ? <><s className="text-foreground/40 text-sm mr-2">{regularPrice(product)} zł</s>{unitPrice(product)} zł</>
+                  ? <><s className="text-foreground/55 text-sm mr-2">{regularPrice(product)} zł</s>{unitPrice(product)} zł</>
                   : `${unitPrice(product)} zł`}
             </span>
             <span className="technical text-[10px] text-foreground/50 group-hover:gold-text flex items-center gap-1 transition-colors">
@@ -60,7 +60,7 @@ export default function ProductCard({ product, index = 0 }) {
             </span>
           </div>
           {product.status !== "wkrótce" && !product.is_free && isPromoActive(product) && (
-            <p className="text-[11px] text-foreground/45 -mt-2">Najniższa cena z 30 dni przed obniżką: {zl(lowestPrice30(product))}</p>
+            <p className="text-[11px] text-foreground/55 -mt-2">Najniższa cena z 30 dni przed obniżką: {zl(lowestPrice30(product))}</p>
           )}
         </div>
       </Link>

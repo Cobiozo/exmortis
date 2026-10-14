@@ -128,7 +128,7 @@ export default function EventTile({ event: ev, compact = false, past = false }) 
 
           <div>
             {ev.subtitle && <p className="italic text-foreground/50 text-sm leading-relaxed">{ev.subtitle}</p>}
-            <p className="technical text-[9px] text-foreground/40 mt-2">{infoLine}</p>
+            <p className="technical text-[9px] text-foreground/55 mt-2">{infoLine}</p>
           </div>
 
           {/* przycisk zawsze na dole karty */}

@@ -31,7 +31,7 @@ export default function EpisodeList({ episodes, playlists }) {
           <option value="">Wszystkie tematy</option>
           {TEMATY.map(([v, l]) => <option key={v} value={v}>{l}</option>)}
         </select>
-        <label className="flex-1 flex items-center gap-2 border hairline px-4"><Search className="h-4 w-4 text-foreground/40" />
+        <label className="flex-1 flex items-center gap-2 border hairline px-4"><Search className="h-4 w-4 text-foreground/55" />
           <input value={q} onChange={(e) => setQ(e.target.value)} placeholder="Szukaj w tytułach, gościach i transkrypcjach" className="flex-1 bg-transparent py-3 text-sm focus:outline-none" />
         </label>
       </div>
@@ -42,13 +42,13 @@ export default function EpisodeList({ episodes, playlists }) {
               <span className="font-mono text-sm gold-text w-10">#{e.numer ?? "—"}</span>
               <span className="flex-1 min-w-0">
                 <span className="block shop-heading text-lg text-[#F5EFE1] group-hover:text-[#C9A24A] truncate">{e.tytul}</span>
-                <span className="block text-xs text-foreground/45">{[e.gosc_nazwa, new Date(e.publikacja).toLocaleDateString("pl-PL"), e.dlugosc_s && fmtT(e.dlugosc_s)].filter(Boolean).join(" · ")}</span>
+                <span className="block text-xs text-foreground/55">{[e.gosc_nazwa, new Date(e.publikacja).toLocaleDateString("pl-PL"), e.dlugosc_s && fmtT(e.dlugosc_s)].filter(Boolean).join(" · ")}</span>
               </span>
               <Play className="h-4 w-4 gold-text shrink-0" />
             </Link>
           </li>
         ))}
-        {!shown.length && <li className="py-8 text-sm text-foreground/45">Brak odcinków dla tego wyboru.</li>}
+        {!shown.length && <li className="py-8 text-sm text-foreground/55">Brak odcinków dla tego wyboru.</li>}
       </ul>
       {shown.length > n && <button onClick={() => setN(n + 10)} className="btn-ghost">Pokaż więcej</button>}
     </div>

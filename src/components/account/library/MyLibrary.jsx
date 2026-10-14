@@ -99,9 +99,9 @@ export default function MyLibrary({ initial, onGoToOrders }) {
 
       {items.length > 12 && (
         <label className="relative block">
-          <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-foreground/40" strokeWidth={1.5} />
+          <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-foreground/55" strokeWidth={1.5} />
           <input value={q} onChange={(e) => setQ(e.target.value)} placeholder="Szukaj w materiałach…"
-            className="w-full min-h-[48px] pl-11 pr-4 bg-transparent border hairline font-body text-[16px] text-[#F5EFE1] placeholder:text-foreground/35 focus:outline-none focus:border-[#C9A24A]" />
+            className="w-full min-h-[48px] pl-11 pr-4 bg-transparent border hairline font-body text-[16px] text-[#F5EFE1] placeholder:text-foreground/55 focus:outline-none focus:border-[#C9A24A]" />
         </label>
       )}
 

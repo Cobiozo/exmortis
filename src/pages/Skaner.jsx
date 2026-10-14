@@ -180,7 +180,7 @@ export default function Skaner() {
       <header className="px-4 pt-[max(12px,env(safe-area-inset-top))] pb-3 border-b hairline space-y-2">
         <div className="flex items-center justify-between gap-3">
           <p className="technical text-[10px] gold-text">EXMORTIS · SKANER BILETÓW</p>
-          {counts && <p className="font-mono text-sm" aria-live="polite"><span className="gold-text">{counts.checked}</span> / {counts.sold} <span className="text-foreground/45 text-xs">wpuszczonych</span></p>}
+          {counts && <p className="font-mono text-sm" aria-live="polite"><span className="gold-text">{counts.checked}</span> / {counts.sold} <span className="text-foreground/55 text-xs">wpuszczonych</span></p>}
         </div>
         {(info.events || []).length ? (
           <select value={eventId} onChange={(e) => setEventId(e.target.value)} aria-label="Wydarzenie"
@@ -236,7 +236,7 @@ export default function Skaner() {
         )}
         {recent.length > 0 && (
           <div>
-            <p className="technical text-[10px] text-foreground/45 mb-2">OSTATNIE WEJŚCIA{ev ? ` · ${ev.title}` : ""}</p>
+            <p className="technical text-[10px] text-foreground/55 mb-2">OSTATNIE WEJŚCIA{ev ? ` · ${ev.title}` : ""}</p>
             <ul className="divide-y hairline border-y hairline text-sm">
               {recent.slice(0, 6).map((r, i) => (
                 <li key={`${r.code}-${r.at}`} className="py-2 flex items-center gap-3">

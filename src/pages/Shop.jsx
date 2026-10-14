@@ -132,7 +132,7 @@ export default function Shop() {
       ) : emptyState ? (
         <div className="py-32 text-center px-5">
           <p className="shop-heading text-2xl text-[#F5EFE1]/60">Nic tu jeszcze nie pasuje.</p>
-          <p className="text-foreground/40 mt-4 mb-8">
+          <p className="text-foreground/55 mt-4 mb-8">
             Spróbuj innych filtrów albo wyczyść wybór.
           </p>
           <button onClick={() => setFilters({ stage: null, form: null, audience: null, avail: null })} className="btn-ghost">

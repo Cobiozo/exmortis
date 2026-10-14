@@ -167,7 +167,7 @@ export default function Checkout() {
   if (items.length === 0) {
     return (
       <div className="min-h-screen flex flex-col items-center justify-center bg-[#0A0A0B] pt-20 px-6 text-center gap-8">
-        <h1 className="relic-heading text-4xl text-foreground/40">Skarbiec pusty</h1>
+        <h1 className="relic-heading text-4xl text-foreground/55">Skarbiec pusty</h1>
         <p className="text-foreground/60">Nie masz jeszcze nic na drodze powrotu.</p>
         <Link to="/skarbiec" className="btn-relic">DO SKLEPU <ArrowRight className="h-4 w-4" /></Link>
       </div>
@@ -237,7 +237,7 @@ export default function Checkout() {
               {submitting ? "PRZYGOTOWUJĘ PŁATNOŚĆ..." : "Zamawiam z obowiązkiem zapłaty"}{" "}
               {!submitting && <ArrowRight className="h-4 w-4" />}
             </button>
-            <p className="technical text-[10px] text-foreground/40">
+            <p className="technical text-[10px] text-foreground/55">
               Bezpieczna płatność online przez PayU. Potwierdzenie otrzymasz na maila.
             </p>
           </form>

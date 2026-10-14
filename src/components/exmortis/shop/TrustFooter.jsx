@@ -6,7 +6,7 @@ export default function TrustFooter() {
   return (
     <section className="py-20 md:py-24 px-5 md:px-10 border-t hairline">
       <div className="mx-auto max-w-[900px] text-center space-y-6">
-        <p className="text-sm text-foreground/45 leading-relaxed max-w-2xl mx-auto">
+        <p className="text-sm text-foreground/55 leading-relaxed max-w-2xl mx-auto">
           Gwarancja 14 dni na produkty cyfrowe — jeśli uznasz, że nic Ci nie dały, napisz, zwrócę
           pieniądze. Materiały exmortis nie zastępują terapii ani pomocy medycznej. Jeśli jesteś w
           kryzysie, zadzwoń pod bezpłatny numer{" "}
@@ -19,7 +19,7 @@ export default function TrustFooter() {
           </a>
           .
         </p>
-        <div className="flex items-center justify-center gap-x-3 technical text-[10px] text-foreground/45 flex-wrap">
+        <div className="flex items-center justify-center gap-x-3 technical text-[10px] text-foreground/55 flex-wrap">
           <Link to="/regulamin" className="inline-block py-2.5 hover:text-foreground/75 transition-colors">
             REGULAMIN
           </Link>

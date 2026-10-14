@@ -9,7 +9,7 @@ export const AVAIL_OPTIONS = ["Dostępne", "Oczekujące"];
 function Group({ label, options, value, onToggle, allowAll = false }) {
   return (
     <div className="flex items-start gap-3 flex-wrap">
-      <span className="technical text-[9px] text-foreground/30 pt-2 w-[72px] flex-shrink-0">{label}</span>
+      <span className="technical text-[9px] text-foreground/55 pt-2 w-[72px] flex-shrink-0">{label}</span>
       <div className="flex flex-wrap gap-1.5">
         {allowAll && (
           <button
@@ -17,7 +17,7 @@ function Group({ label, options, value, onToggle, allowAll = false }) {
             className={`technical text-[9px] px-3 py-1.5 border transition-all duration-200 ${
               !value
                 ? "border-[#C9A24A] gold-text bg-[#C9A24A]/10"
-                : "hairline text-foreground/40 hover:text-foreground/70"
+                : "hairline text-foreground/55 hover:text-foreground/70"
             }`}
           >
             WSZYSTKIE
@@ -30,7 +30,7 @@ function Group({ label, options, value, onToggle, allowAll = false }) {
             className={`technical text-[9px] px-3 py-1.5 border transition-all duration-200 ${
               value === o
                 ? "border-[#C9A24A] gold-text bg-[#C9A24A]/10"
-                : "hairline text-foreground/40 hover:text-foreground/70"
+                : "hairline text-foreground/55 hover:text-foreground/70"
             }`}
           >
             {o.toUpperCase()}
@@ -58,7 +58,7 @@ export default function ShopFilters({ filters, setFilters, available }) {
       {hasAny && (
         <button
           onClick={clear}
-          className="technical text-[9px] text-foreground/40 hover:blood-text flex items-center gap-1 pt-1 transition-colors"
+          className="technical text-[9px] text-foreground/55 hover:blood-text flex items-center gap-1 pt-1 transition-colors"
         >
           <X className="h-3 w-3" /> WYCZYŚĆ FILTRY
         </button>
@@ -78,7 +78,7 @@ export default function ShopFilters({ filters, setFilters, available }) {
             <SlidersHorizontal className="h-3.5 w-3.5" /> FILTRUJ {hasAny ? "· AKTYWNE" : ""}
           </button>
           {hasAny && (
-            <button onClick={clear} className="technical text-[9px] text-foreground/40 hover:blood-text transition-colors">
+            <button onClick={clear} className="technical text-[9px] text-foreground/55 hover:blood-text transition-colors">
               WYCZYŚĆ
             </button>
           )}

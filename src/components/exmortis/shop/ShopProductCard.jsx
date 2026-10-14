@@ -49,9 +49,9 @@ export default function ShopProductCard({ product: p, onWaitlist, index }) {
         </h3>
         {p.rating_count > 0 && <RatingLine avg={p.rating_avg} count={p.rating_count} className="technical text-[10px] gold-text" />}
         {p.promise && <p className="italic text-foreground/70 text-sm leading-relaxed line-clamp-3">{p.promise}</p>}
-        {p.for_whom && <p className="text-xs text-foreground/45 line-clamp-2">{p.for_whom}</p>}
+        {p.for_whom && <p className="text-xs text-foreground/55 line-clamp-2">{p.for_whom}</p>}
         {(p.form || p.format_details) && (
-          <p className="technical text-[9px] text-foreground/40">
+          <p className="technical text-[9px] text-foreground/55">
             {[p.form, p.format_details].filter(Boolean).join(" · ").toUpperCase()}
           </p>
         )}
@@ -64,9 +64,9 @@ export default function ShopProductCard({ product: p, onWaitlist, index }) {
           )}
           <SeatsLine p={p} />
           <ProductButton p={p} onWaitlist={onWaitlist} />
-          {p.next_step && !soon && <p className="text-[11px] text-foreground/40 line-clamp-2">{p.next_step}</p>}
+          {p.next_step && !soon && <p className="text-[11px] text-foreground/55 line-clamp-2">{p.next_step}</p>}
           {p.slug === "powrot-mentoring" && (
-            <p className="text-[11px] text-foreground/40">Nie da się zapisać przez koszyk. Najpierw rozmawiamy.</p>
+            <p className="text-[11px] text-foreground/55">Nie da się zapisać przez koszyk. Najpierw rozmawiamy.</p>
           )}
         </div>
       </div>

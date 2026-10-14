@@ -69,7 +69,7 @@ export default function MaterialSheet({ material, completed, onClose, onOpened }
               {d.url
                 ? <AudioPlayer src={d.url} expiresIn={d.expires_in} onRefresh={renew} />
                 : <p className="font-body text-[15px] text-[#F5EFE1]/70">Nagranie jest chwilowo niedostępne.</p>}
-              {material.duration_s ? <p className="font-mono text-xs text-foreground/45">{mmss(material.duration_s)}</p> : null}
+              {material.duration_s ? <p className="font-mono text-xs text-foreground/55">{mmss(material.duration_s)}</p> : null}
             </div>
           )}
 

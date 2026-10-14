@@ -27,10 +27,10 @@ export default function ObokSeria() {
           {list.map((n) => n.open ? (
             <li key={n.numer}><Link to={`/obok/${d.seria.slug}/${n.numer}`} className="flex items-center gap-4 py-5 border-b hairline hover:text-[#C9A24A]">
               <Play className="h-4 w-4 gold-text shrink-0" /><span className="flex-1 text-[#F5EFE1]">{n.tytul}</span>
-              <span className="text-sm text-foreground/45">{mins(n.dlugosc_s)}</span>{n.ukonczone && <Check className="h-4 w-4 gold-text" aria-label="Odsłuchane" />}
+              <span className="text-sm text-foreground/55">{mins(n.dlugosc_s)}</span>{n.ukonczone && <Check className="h-4 w-4 gold-text" aria-label="Odsłuchane" />}
             </Link></li>
           ) : (
-            <li key={n.numer} className="flex items-center gap-4 py-5 border-b hairline text-foreground/40">
+            <li key={n.numer} className="flex items-center gap-4 py-5 border-b hairline text-foreground/55">
               <Lock className="h-4 w-4 shrink-0" /><span className="flex-1">{n.tytul}</span>
               <span className="text-sm">{n.at ? `Otworzy się ${when(n.at)}` : "Wkrótce"}</span>
             </li>

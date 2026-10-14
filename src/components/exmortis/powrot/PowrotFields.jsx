@@ -41,7 +41,7 @@ export function TextArea({ label, required, hint, error, value, onChange, rows =
   return (
     <div>
       <Label required={required}>{label}</Label>
-      {hint && <p className="text-xs text-foreground/40 mb-3">{hint}</p>}
+      {hint && <p className="text-xs text-foreground/55 mb-3">{hint}</p>}
       <textarea
         rows={rows}
         value={value}

@@ -10,7 +10,7 @@ export default function ReviewButton({ item, onSaved }) {
   if (status) {
     const label =
       status === "opublikowana" ? "OPINIA OPUBLIKOWANA" : status === "odrzucona" ? "OPINIA NIEPUBLIKOWANA" : "OPINIA CZEKA NA SPRAWDZENIE";
-    return <span className="technical text-[9px] text-foreground/45 border hairline px-2 py-1 whitespace-nowrap">{label}</span>;
+    return <span className="technical text-[9px] text-foreground/55 border hairline px-2 py-1 whitespace-nowrap">{label}</span>;
   }
 
   return (

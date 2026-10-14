@@ -8,7 +8,7 @@ const plDate = (ymd) => (ymd ? new Date(`${String(ymd).slice(0, 10)}T12:00:00`).
 
 // Krótka informacja o karcie w koszyku i w kasie.
 export function GiftLine({ gift }) {
-  if (!gift?.to_name && !gift?.message) return <p className="text-xs text-foreground/45 mt-1">Karta na {zl(gift?.amount)}</p>;
+  if (!gift?.to_name && !gift?.message) return <p className="text-xs text-foreground/55 mt-1">Karta na {zl(gift?.amount)}</p>;
   return (
     <p className="text-xs text-foreground/50 mt-1 break-words">
       {gift.to_name ? `Dla: ${gift.to_name}` : "Karta podarunkowa"}
@@ -75,7 +75,7 @@ export function GiftCardBuy({ product }) {
       <label className="block">
         <span className="technical text-[10px] text-foreground/50 block mb-2">KILKA SŁÓW OD CIEBIE (NIEOBOWIĄZKOWO)</span>
         <textarea value={message} maxLength={200} rows={2} onChange={(e) => setMessage(e.target.value)} className={inp} />
-        <span className="text-[11px] text-foreground/40">{message.length}/200</span>
+        <span className="text-[11px] text-foreground/55">{message.length}/200</span>
       </label>
       <GiftCardVisual amount={amount} toName={toName.trim()} message={message.trim()} compact />
       <button onClick={add} className="btn-relic w-full">

@@ -47,7 +47,7 @@ export default function WaitlistDialog({ product, onClose }) {
       <div className="relative w-full max-w-md border border-[#C9A24A]/30 bg-[#0D0D0E] p-8 fade-up">
         <button
           onClick={onClose}
-          className="absolute top-4 right-4 text-foreground/40 hover:text-foreground transition-colors"
+          className="absolute top-4 right-4 text-foreground/55 hover:text-foreground transition-colors"
           aria-label="Zamknij"
         >
           <X className="h-4 w-4" />

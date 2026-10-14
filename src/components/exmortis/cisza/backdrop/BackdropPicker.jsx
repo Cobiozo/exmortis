@@ -19,7 +19,7 @@ export default function BackdropPicker({ items, value, onChange, match, onMatch 
         })}
       </div>
       {match && (
-        <button onClick={onMatch} className="mt-3 text-xs text-foreground/40 hover:text-[#C9A24A] transition-colors">
+        <button onClick={onMatch} className="mt-3 text-xs text-foreground/55 hover:text-[#C9A24A] transition-colors">
           Dopasuj dźwięk: {match.nazwa}
         </button>
       )}

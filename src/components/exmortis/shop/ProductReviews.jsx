@@ -32,7 +32,7 @@ export default function ProductReviews({ productId }) {
       <div className="flex flex-wrap items-center gap-x-4 gap-y-2 mb-10">
         <span className="font-mono text-3xl gold-text">{Number(data.avg || 0).toFixed(1).replace(".", ",")}</span>
         <Stars value={data.avg} className="gold-text" />
-        <span className="technical text-[10px] text-foreground/45">
+        <span className="technical text-[10px] text-foreground/55">
           {data.count} {ile(data.count)}
         </span>
       </div>
@@ -43,7 +43,7 @@ export default function ProductReviews({ productId }) {
             <div className="flex flex-wrap items-center gap-x-3 gap-y-1">
               <span className="text-[#F5EFE1]">{r.display_name}</span>
               <Stars value={r.rating} className="gold-text" />
-              <span className="technical text-[9px] text-foreground/40">{plDate(r.published_at)}</span>
+              <span className="technical text-[9px] text-foreground/55">{plDate(r.published_at)}</span>
             </div>
             <p className="text-foreground/75 leading-relaxed whitespace-pre-line max-w-[70ch]">{r.body}</p>
             {r.reply && (
@@ -62,7 +62,7 @@ export default function ProductReviews({ productId }) {
         </button>
       )}
 
-      <p className="text-xs text-foreground/45 leading-relaxed mt-10 max-w-[70ch]">
+      <p className="text-xs text-foreground/55 leading-relaxed mt-10 max-w-[70ch]">
         Opinie publikujemy wyłącznie od osób, które kupiły produkt — sprawdzamy to po zamówieniu. Publikujemy
         opinie pozytywne i negatywne; nie płacimy za opinie.
       </p>

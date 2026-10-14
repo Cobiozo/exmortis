@@ -64,7 +64,7 @@ export default function Karta() {
                 Kod wpisuje się w kasie Skarbca na exmortis.pl, w polu „kod rabatowy”. Działa jednorazowo —
                 niewykorzystana część kwoty przepada. Żeby zapisać PDF, wybierz w oknie drukowania „Zapisz jako PDF”.
               </p>
-              <p className="text-xs text-foreground/40">Kto ma ten link, widzi kod. Przekaż go tylko osobie obdarowanej.</p>
+              <p className="text-xs text-foreground/55">Kto ma ten link, widzi kod. Przekaż go tylko osobie obdarowanej.</p>
               <Link to="/skarbiec" className="technical text-[10px] gold-text inline-block">PRZEJDŹ DO SKARBCA</Link>
             </div>
           </>

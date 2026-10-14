@@ -12,7 +12,7 @@ export function strength(p) {
 }
 
 export default function PasswordStrength({ value }) {
-  if (!value) return <p className="text-xs text-foreground/40">Co najmniej 10 znaków.</p>;
+  if (!value) return <p className="text-xs text-foreground/55">Co najmniej 10 znaków.</p>;
   const s = strength(value);
   return (
     <div className="space-y-2">

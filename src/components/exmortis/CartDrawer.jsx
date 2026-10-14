@@ -38,7 +38,7 @@ export default function CartDrawer() {
           <div className="flex-1 overflow-y-auto">
             {items.length === 0 ? (
               <div className="h-full flex flex-col items-center justify-center px-6 text-center gap-4">
-                <p className="relic-heading text-2xl text-foreground/40">Pusto</p>
+                <p className="relic-heading text-2xl text-foreground/55">Pusto</p>
                 <p className="text-sm text-foreground/50">
                   Skarbiec czeka. Wybierz coś z drogi powrotu.
                 </p>
@@ -89,7 +89,7 @@ export default function CartDrawer() {
                         <button
                           onClick={() => removeItem(lineKey(item))}
                           aria-label={`Usuń z koszyka: ${item.name}`}
-                          className="p-2.5 -m-1 text-foreground/40 hover:blood-text"
+                          className="p-2.5 -m-1 text-foreground/55 hover:blood-text"
                         >
                           <Trash2 className="h-4 w-4" />
                         </button>

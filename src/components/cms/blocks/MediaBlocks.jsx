@@ -41,7 +41,7 @@ export function VideoBlock({ d, label }) {
       <div className={`${RATIO[d.proporcja] || RATIO["16:9"]} w-full bg-black border hairline`}>
         {e?.src && <iframe src={e.src} title={d.podpis || "Wideo"} className="w-full h-full" loading="lazy" allow="autoplay; fullscreen; picture-in-picture" allowFullScreen />}
         {e?.file && <video src={e.file} controls playsInline preload="metadata" className="w-full h-full object-contain" />}
-        {!e && <p className="h-full flex items-center justify-center text-sm text-foreground/40">Wklej link YouTube, Vimeo lub pliku MP4.</p>}
+        {!e && <p className="h-full flex items-center justify-center text-sm text-foreground/55">Wklej link YouTube, Vimeo lub pliku MP4.</p>}
       </div>
       {d.podpis && <figcaption className="technical text-[9px] text-foreground/50 mt-3">{d.podpis}</figcaption>}
     </figure>

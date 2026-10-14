@@ -166,7 +166,7 @@ export default function PlaylistManager({ onMutate }) {
           <button type="submit" disabled={busy} className="btn-relic disabled:opacity-50">
             <Plus className="h-4 w-4" /> {busy ? "DODAJĘ..." : "DODAJ UTWÓR"}
           </button>
-          <p className="technical text-[9px] text-foreground/40 mt-3">
+          <p className="technical text-[9px] text-foreground/55 mt-3">
             NOWY UTWÓR TRAFIA NA KONIEC LISTY.
           </p>
         </div>
@@ -182,7 +182,7 @@ export default function PlaylistManager({ onMutate }) {
               key={`${r.id}-${r.updated_date || ""}`}
               className="py-5 flex flex-col lg:flex-row lg:items-center gap-4"
             >
-              <span className="technical text-[10px] text-foreground/30 w-8 shrink-0">
+              <span className="technical text-[10px] text-foreground/55 w-8 shrink-0">
                 {String(i + 1).padStart(2, "0")}
               </span>
               <div className="flex-1 min-w-0 grid md:grid-cols-2 gap-3">
@@ -228,7 +228,7 @@ export default function PlaylistManager({ onMutate }) {
                   className={`p-2 border hairline transition-colors ${
                     r.widoczny
                       ? "gold-text border-[#C9A24A]/40"
-                      : "text-foreground/40 hover:text-foreground/70"
+                      : "text-foreground/55 hover:text-foreground/70"
                   }`}
                   aria-label={r.widoczny ? "Ukryj" : "Pokaż"}
                 >
@@ -254,14 +254,14 @@ export default function PlaylistManager({ onMutate }) {
                 ) : (
                   <button
                     onClick={() => setConfirmId(r.id)}
-                    className="p-2 border hairline text-foreground/40 hover:text-[#BC1E22] hover:border-[#BC1E22]/50 transition-colors"
+                    className="p-2 border hairline text-foreground/55 hover:text-[#BC1E22] hover:border-[#BC1E22]/50 transition-colors"
                     aria-label="Usuń"
                   >
                     <Trash2 className="h-4 w-4" />
                   </button>
                 )}
               </div>
-              <p className="technical text-[9px] text-foreground/30 lg:w-24 shrink-0">
+              <p className="technical text-[9px] text-foreground/55 lg:w-24 shrink-0">
                 {r.widoczny ? "WIDOCZNY" : "UKRYTY"}
               </p>
             </div>

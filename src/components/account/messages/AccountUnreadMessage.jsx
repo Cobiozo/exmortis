@@ -30,7 +30,7 @@ export default function AccountUnreadMessage({ initial, onOpen }) {
       <p className="font-mono text-xs tracking-[0.18em] text-[#C9A24A]">NOWA WIADOMOŚĆ</p>
       {m.title && <h2 className="shop-heading text-[20px] leading-snug text-[#F5EFE1] mt-2 break-words">{m.title}</h2>}
       {preview && <p className="font-body text-[15px] leading-relaxed text-[#F5EFE1]/85 mt-2">{preview}{preview.length >= 180 ? "…" : ""}</p>}
-      {m.sent_at && <p className="font-mono text-[11px] text-foreground/40 mt-3">{plDateTime(m.sent_at)}</p>}
+      {m.sent_at && <p className="font-mono text-[11px] text-foreground/55 mt-3">{plDateTime(m.sent_at)}</p>}
       <div className="flex flex-wrap gap-3 mt-5">
         <button type="button" onClick={read}
           className={`${BTN} bg-[#C9A24A] text-[#0A0A0B] hover:bg-[#E2C170]`}>CZYTAJ</button>

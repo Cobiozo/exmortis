@@ -34,7 +34,7 @@ export default function PodcastEpisode() {
     });
   }, [ep]);
 
-  if (ep === undefined) return <div className="min-h-screen pt-40 text-center text-foreground/45">Ładowanie…</div>;
+  if (ep === undefined) return <div className="min-h-screen pt-40 text-center text-foreground/55">Ładowanie…</div>;
   if (!ep) return <div className="min-h-screen pt-40 text-center"><p className="relic-heading text-3xl mb-6">Nie ma takiego odcinka</p><Link to="/glos#podcast" className="btn-ghost">Wszystkie odcinki</Link></div>;
 
   const chapters = parseChapters(ep.rozdzialy);
@@ -43,14 +43,14 @@ export default function PodcastEpisode() {
     <article className="bg-[#0A0A0B] pt-32 pb-24 px-5 md:px-10">
       <EpisodeSeo ep={ep} settings={settings} />
       <div className="mx-auto max-w-3xl space-y-10">
-        <Link to="/glos#podcast" className="technical text-[10px] text-foreground/45 hover:gold-text">← PODCAST EXMORTIS</Link>
+        <Link to="/glos#podcast" className="technical text-[10px] text-foreground/55 hover:gold-text">← PODCAST EXMORTIS</Link>
         <header className="grid sm:grid-cols-[200px_1fr] gap-8 items-end">
           <Image src={ep.okladka || settings?.okladka} alt={ep.tytul} className="aspect-square w-full max-w-[200px] bg-[#121212]" />
           <div>
             <p className="technical text-[10px] gold-text mb-3">ODCINEK #{ep.numer}</p>
             <h1 className="shop-heading text-3xl md:text-5xl text-[#F5EFE1] leading-tight mb-4" style={{ textWrap: "balance" }}>{ep.tytul}</h1>
             <p className="text-sm text-foreground/50">{[ep.gosc_nazwa, new Date(ep.publikacja).toLocaleDateString("pl-PL"), ep.dlugosc_s && fmtT(ep.dlugosc_s)].filter(Boolean).join(" · ")}</p>
-            {!!ep.tematy?.length && <p className="technical text-[9px] text-foreground/40 mt-3">{ep.tematy.map((t) => TEMATY.find((x) => x[0] === t)?.[1] || t).join(" · ")}</p>}
+            {!!ep.tematy?.length && <p className="technical text-[9px] text-foreground/55 mt-3">{ep.tematy.map((t) => TEMATY.find((x) => x[0] === t)?.[1] || t).join(" · ")}</p>}
           </div>
         </header>
         <ContentWarning topics={ep.ostrzezenia} />
@@ -73,9 +73,9 @@ export default function PodcastEpisode() {
           </div>
         )}
         <ShareBox ep={ep} />
-        <div className="space-y-3"><p className="technical text-[10px] text-foreground/45">SŁUCHAJ TEŻ NA</p><SubscribeLinks settings={{ spotify: ep.spotify || settings?.spotify, youtube: ep.youtube || settings?.youtube, apple: settings?.apple }} small /></div>
+        <div className="space-y-3"><p className="technical text-[10px] text-foreground/55">SŁUCHAJ TEŻ NA</p><SubscribeLinks settings={{ spotify: ep.spotify || settings?.spotify, youtube: ep.youtube || settings?.youtube, apple: settings?.apple }} small /></div>
         {!!more.length && (
-          <div className="space-y-3"><p className="technical text-[10px] text-foreground/45">KOLEJNE ODCINKI</p>
+          <div className="space-y-3"><p className="technical text-[10px] text-foreground/55">KOLEJNE ODCINKI</p>
             {more.map((e) => <Link key={e.id} to={`/glos/${e.slug}`} className="block border hairline p-4 hover:border-[#C9A24A]"><span className="font-mono text-xs gold-text mr-3">#{e.numer}</span><span className="shop-heading text-lg text-[#F5EFE1]">{e.tytul}</span></Link>)}
           </div>
         )}

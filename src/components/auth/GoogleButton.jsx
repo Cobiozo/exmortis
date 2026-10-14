@@ -11,7 +11,7 @@ export default function GoogleButton({ onClick }) {
       </button>
       <div className="flex items-center gap-4 my-6">
         <span className="flex-1 h-px bg-[#3D3D3F]" />
-        <span className="technical text-[9px] text-foreground/35">{t("albo")}</span>
+        <span className="technical text-[9px] text-foreground/55">{t("albo")}</span>
         <span className="flex-1 h-px bg-[#3D3D3F]" />
       </div>
     </>

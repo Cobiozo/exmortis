@@ -160,7 +160,7 @@ export default function PowrotForm() {
             Kilka pytań, które warto sobie zadać. Zgłoszenia rozpatruję
             w kolejności napływania — odezwę się osobiście.
           </p>
-          <p className="technical text-[10px] text-foreground/40 mt-8">
+          <p className="technical text-[10px] text-foreground/55 mt-8">
             ROZMOWA KWALIFIKACYJNA · BEZPŁATNA · BEZ ZOBOWIĄZAŃ
           </p>
         </div>

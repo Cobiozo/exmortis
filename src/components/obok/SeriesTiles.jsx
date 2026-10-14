@@ -7,7 +7,7 @@ import { obok, when } from "./obokApi";
 export default function SeriesTiles() {
   const [tiles, setTiles] = useState(null);
   useEffect(() => { obok("home").then((d) => setTiles(d.tiles)); }, []);
-  if (!tiles) return <p className="technical text-[10px] text-foreground/40">WCZYTUJĘ…</p>;
+  if (!tiles) return <p className="technical text-[10px] text-foreground/55">WCZYTUJĘ…</p>;
   if (!tiles.length) return <p className="text-foreground/60">Nie należysz jeszcze do żadnej serii.</p>;
   return (
     <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">

@@ -147,7 +147,7 @@ export default function CiszaSession({
           paused={paused} onPause={togglePause} canPause={stage === "run"} onEnd={end} full={full} onFull={toggleFull} />
       }
     >
-      <p className="h-5 mb-3 text-sm text-foreground/45">{stage === "intro" ? "Za chwilę…" : paused ? "Pauza" : ""}</p>
+      <p className="h-5 mb-3 text-sm text-foreground/55">{stage === "intro" ? "Za chwilę…" : paused ? "Pauza" : ""}</p>
       <TimerView clock={clock} view={view} minutesOnly={minutesOnly} ending={stage === "outro"} reduced={reduced} label={srText} />
       <span className="sr-only" aria-live="polite">{srText}</span>
       <p className="h-5 mt-3" aria-hidden="true" />

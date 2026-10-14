@@ -33,7 +33,7 @@ export default function BookingForm({ type, slot, onDone, onTaken }) {
       <label className="block text-sm">Imię<input required maxLength={120} className={inp} value={f.first_name} onChange={(e) => setF({ ...f, first_name: e.target.value })} /></label>
       <label className="block text-sm">E-mail<input required type="email" maxLength={320} className={inp} value={f.email} onChange={(e) => setF({ ...f, email: e.target.value })} /></label>
       {type.questions.map((q) => (
-        <label key={q.id} className="block text-sm">{q.label}{!q.required && <span className="text-foreground/40"> (nieobowiązkowe)</span>}
+        <label key={q.id} className="block text-sm">{q.label}{!q.required && <span className="text-foreground/55"> (nieobowiązkowe)</span>}
           <textarea rows={3} maxLength={2000} required={q.required} className={inp} value={f.answers[q.id] || ""} onChange={(e) => setA(q.id, e.target.value)} />
         </label>
       ))}

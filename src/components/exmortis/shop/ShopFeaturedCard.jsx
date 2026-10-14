@@ -27,14 +27,14 @@ export default function ShopFeaturedCard({ product: p, onWaitlist, index, classN
       </div>
 
       <div className="p-6 md:p-10 flex flex-col gap-4">
-        <p className="technical text-[9px] text-foreground/40">POLECANE</p>
+        <p className="technical text-[9px] text-foreground/55">POLECANE</p>
         <h3 className="shop-heading text-2xl md:text-3xl text-[#F5EFE1] leading-snug">{p.name}</h3>
         {p.promise && (
           <p className="italic text-foreground/75 text-base leading-relaxed">{p.promise}</p>
         )}
-        {p.for_whom && <p className="text-sm text-foreground/40">{p.for_whom}</p>}
+        {p.for_whom && <p className="text-sm text-foreground/55">{p.for_whom}</p>}
         {(p.form || p.format_details) && (
-          <p className="technical text-[9px] text-foreground/35">
+          <p className="technical text-[9px] text-foreground/55">
             {[p.form, p.format_details].filter(Boolean).join(" · ").toUpperCase()
             }
           </p>
@@ -48,11 +48,11 @@ export default function ShopFeaturedCard({ product: p, onWaitlist, index, classN
           )}
           <ProductButton p={p} onWaitlist={onWaitlist} />
           {mentoring && (
-            <p className="text-[11px] text-foreground/35">
+            <p className="text-[11px] text-foreground/55">
               Nie da się zapisać przez koszyk. Najpierw rozmawiamy.
             </p>
           )}
-          {p.next_step && !soon && <p className="text-[11px] text-foreground/35">{p.next_step}</p>}
+          {p.next_step && !soon && <p className="text-[11px] text-foreground/55">{p.next_step}</p>}
         </div>
       </div>
     </article>

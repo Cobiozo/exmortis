@@ -39,7 +39,7 @@ export default function InvoiceFields({ value, onChange }) {
             <label htmlFor="inv-address" className={lab}>ADRES FIRMY</label>
             <input id="inv-address" required autoComplete="street-address" placeholder="ulica i numer, kod, miasto" value={value.address || ""} onChange={(e) => set("address", e.target.value)} className={inp} />
           </div>
-          <p className="text-xs text-foreground/45">Fakturę wyślę na podany wyżej e-mail.</p>
+          <p className="text-xs text-foreground/55">Fakturę wyślę na podany wyżej e-mail.</p>
         </div>
       )}
     </div>

@@ -51,7 +51,7 @@ export default function Bilet() {
               <p className="text-sm text-foreground/50 mt-1">{t.event.format === "Online" ? "Online" : t.event.location || ""}</p>
             </div>
             <div className="p-6 text-center">
-              <p className="technical text-[10px] text-foreground/45">UCZESTNIK</p>
+              <p className="technical text-[10px] text-foreground/55">UCZESTNIK</p>
               <p className="shop-heading text-2xl text-[#F5EFE1] mt-1 break-words">{t.holder_name}</p>
               {t.status === "anulowany" ? (
                 <p className="mt-6 technical text-[11px] text-[#E8676A]">TEN BILET ZOSTAŁ ANULOWANY</p>
@@ -75,7 +75,7 @@ export default function Bilet() {
             )}
           </div>
         )}
-        {t && <p className="text-xs text-foreground/40 text-center mt-5 leading-relaxed">Bilet jest imienny i ważny na jedno wejście. Kto ma ten link, ma bilet — przekaż go tylko osobie, dla której jest.</p>}
+        {t && <p className="text-xs text-foreground/55 text-center mt-5 leading-relaxed">Bilet jest imienny i ważny na jedno wejście. Kto ma ten link, ma bilet — przekaż go tylko osobie, dla której jest.</p>}
       </div>
     </main>
   );

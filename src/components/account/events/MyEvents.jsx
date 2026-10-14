@@ -58,7 +58,7 @@ export default function MyEvents() {
                 {playing === i.id && (
                   <div className="mt-6">
                     <RecordingPlayer item={i} onExpired={load} />
-                    <p className="text-xs text-foreground/45 mt-3 leading-relaxed">Nagranie jest tylko do obejrzenia tutaj — bez pobierania. Po {whenText(i.recording.until)} zniknie z konta.</p>
+                    <p className="text-xs text-foreground/55 mt-3 leading-relaxed">Nagranie jest tylko do obejrzenia tutaj — bez pobierania. Po {whenText(i.recording.until)} zniknie z konta.</p>
                   </div>
                 )}
               </article>
@@ -89,13 +89,13 @@ export default function MyEvents() {
 
       {past.length > 0 && (
         <section>
-          <p className="technical text-[10px] text-foreground/45 mb-6">MINIONE</p>
+          <p className="technical text-[10px] text-foreground/55 mb-6">MINIONE</p>
           <ul className="space-y-3">
             {past.map((i) => (
               <li key={i.id} className="text-sm text-foreground/55 flex flex-wrap gap-x-3">
                 <span className="text-foreground/75">{i.title}</span>
                 <span>{plWhenFull(i.start_datetime)}</span>
-                {i.recording_was && <span className="text-foreground/40">· nagranie było dostępne przez ograniczony czas</span>}
+                {i.recording_was && <span className="text-foreground/55">· nagranie było dostępne przez ograniczony czas</span>}
               </li>
             ))}
           </ul>

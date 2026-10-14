@@ -17,7 +17,7 @@ export default function LegalVersions({ current, shown, versions, dataOd }) {
           To archiwalna wersja dokumentu. <Link to={pathname} className="underline">Zobacz obecną wersję {current.version}</Link>.
         </p>
       )}
-      <p className="technical text-[10px] text-foreground/40">
+      <p className="technical text-[10px] text-foreground/55">
         Poprzednie wersje:{" "}
         {arch.length === 0 ? "brak — to pierwsza wersja" : arch.map((a, i) => (
           <span key={a.version}>{i > 0 && ", "}<Link to={`${pathname}?wersja=${a.version}`} className="gold-text underline">{a.version}{a.date && ` (${plDate(a.date)})`}</Link></span>

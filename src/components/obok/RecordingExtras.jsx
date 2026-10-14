@@ -18,7 +18,7 @@ export default function RecordingExtras({ n }) {
         </div>
       )}
       {n.material_url && <a href={n.material_url} target="_blank" rel="noopener noreferrer" className="btn-ghost">{n.material_nazwa || "Materiał dodatkowy"}</a>}
-      <p className="text-xs text-foreground/40 border-t hairline pt-6">Obok to mentoring, nie terapia. Jeśli jest Ci bardzo ciężko: 116 123 lub 800 70 2222 (całą dobę). W zagrożeniu życia: 112.</p>
+      <p className="text-xs text-foreground/55 border-t hairline pt-6">Obok to mentoring, nie terapia. Jeśli jest Ci bardzo ciężko: 116 123 lub 800 70 2222 (całą dobę). W zagrożeniu życia: 112.</p>
     </div>
   );
 }

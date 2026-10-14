@@ -50,7 +50,7 @@ export default function MusicSection() {
             >
               <div className="flex items-center justify-between">
                 <p.icon className="h-8 w-8 gold-text" />
-                <ExternalLink className="h-4 w-4 text-foreground/30 group-hover:gold-text transition-colors" />
+                <ExternalLink className="h-4 w-4 text-foreground/55 group-hover:gold-text transition-colors" />
               </div>
               <h3 className="relic-heading text-2xl md:text-3xl">{p.name}</h3>
               <p className="text-foreground/60 leading-relaxed">{p.desc}</p>

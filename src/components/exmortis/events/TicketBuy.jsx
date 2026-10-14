@@ -5,7 +5,7 @@ import { base44 } from "@/api/base44Client";
 import { useCart } from "@/components/exmortis/CartContext";
 
 const zl = (n) => `${Number(n || 0).toFixed(2).replace(".", ",").replace(",00", "")} zł`;
-const inp = "w-full bg-transparent border hairline px-4 py-3 text-base text-foreground placeholder:text-foreground/30 focus:border-[#C9A24A] focus:outline-none";
+const inp = "w-full bg-transparent border hairline px-4 py-3 text-base text-foreground placeholder:text-foreground/55 focus:border-[#C9A24A] focus:outline-none";
 
 // Osoby na biletach — w koszyku i w kasie.
 export function TicketLine({ holders }) {

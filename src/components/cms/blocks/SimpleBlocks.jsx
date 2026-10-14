@@ -31,7 +31,7 @@ export function ImageBlock({ d }) {
   return (
     <figure>
       <Img img={d.zdjecie} ratio={d.proporcja} sizes="(min-width: 1440px) 1400px, 100vw" />
-      {d.podpis && <figcaption className="technical text-[10px] text-foreground/40 mt-3 px-5 md:px-0">{d.podpis}</figcaption>}
+      {d.podpis && <figcaption className="technical text-[10px] text-foreground/55 mt-3 px-5 md:px-0">{d.podpis}</figcaption>}
     </figure>
   );
 }
@@ -74,7 +74,7 @@ export function TextImageBlock({ d, label }) {
     <div className={`grid ${(COLS[d.kolumny] || COLS["50-50"])[right ? 1 : 0]} gap-10 md:gap-16 items-center`}>
       <figure className={`${imgOrder} ${right ? "md:order-2" : "md:order-1"}`}>
         <Img img={d.zdjecie} ratio={d.proporcja} />
-        {d.podpis && <figcaption className="technical text-[10px] text-foreground/40 mt-3">{d.podpis}</figcaption>}
+        {d.podpis && <figcaption className="technical text-[10px] text-foreground/55 mt-3">{d.podpis}</figcaption>}
       </figure>
       <div className={`${d.mobile === "dol" ? "order-1" : "order-2"} ${right ? "md:order-1" : "md:order-2"}`}>
         <SectionHead label={label} title={d.tytul} center />

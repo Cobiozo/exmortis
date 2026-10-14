@@ -98,7 +98,7 @@ export default function NotificationBell() {
                     <button type="button" onClick={() => openItem(x)} className="w-full text-left flex gap-3 px-4 py-3 pr-10 hover:bg-white/[0.03] focus-visible:outline-none focus-visible:bg-white/[0.05]">
                       <Icon className={`h-4 w-4 mt-0.5 shrink-0 ${x.important ? "text-[#E8C547]" : "text-foreground/50"}`} strokeWidth={1.5} aria-hidden="true" />
                       <span className="min-w-0 flex-1">
-                        <span className="flex items-center gap-2 technical text-[9px] text-foreground/45">
+                        <span className="flex items-center gap-2 technical text-[9px] text-foreground/55">
                           {x.unread && <span className="w-1.5 h-1.5 rounded-full bg-[#C9A24A] shrink-0" aria-label="nowe" />}
                           {LABEL[x.kind] || "Powiadomienie"} · {ago(x.at)}
                         </span>
@@ -108,7 +108,7 @@ export default function NotificationBell() {
                       </span>
                     </button>
                     <button type="button" onClick={() => hide(x)} aria-label={`Ukryj: ${x.title}`} title="Ukryj"
-                      className="absolute top-2.5 right-2 p-1.5 text-foreground/35 hover:text-foreground md:opacity-0 md:group-hover:opacity-100 focus:opacity-100">
+                      className="absolute top-2.5 right-2 p-1.5 text-foreground/55 hover:text-foreground md:opacity-0 md:group-hover:opacity-100 focus:opacity-100">
                       <X className="h-3.5 w-3.5" />
                     </button>
                   </li>

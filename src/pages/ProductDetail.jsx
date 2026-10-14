@@ -18,6 +18,8 @@ import BundleBox from "@/components/exmortis/shop/BundleBox";
 import { SeatsLine } from "@/components/exmortis/shop/cardBits";
 import InBundleLink from "@/components/exmortis/shop/InBundleLink";
 import { cardAmounts } from "@/components/exmortis/CartContext";
+import JsonLd from "@/components/seo/JsonLd";
+import { productJsonLd } from "@/lib/structuredData";
 
 // Zmienione adresy produktów: stary → nowy.
 const OLD_SLUGS = { "krag-mezczyzn-rzeszow": "krag-mezczyzn" };
@@ -67,7 +69,7 @@ export default function ProductDetail() {
   if (!product) {
     return (
       <div className="min-h-screen flex flex-col items-center justify-center bg-[#0A0A0B] pt-20 gap-6">
-        <p className="relic-heading text-4xl text-foreground/40">Nie znaleziono</p>
+        <p className="relic-heading text-4xl text-foreground/55">Nie znaleziono</p>
         <Link to="/skarbiec" className="btn-ghost">WRÓĆ DO SKLEPU</Link>
       </div>
     );
@@ -82,6 +84,7 @@ export default function ProductDetail() {
 
   return (
     <div className="bg-[#0A0A0B] pt-20">
+      <JsonLd data={productJsonLd(product)} />
       {/* Breadcrumb */}
       <div className="mx-auto max-w-[1400px] px-5 md:px-10 py-6">
         <button
@@ -130,7 +133,7 @@ export default function ProductDetail() {
                 {soon ? "Wkrótce" : product.is_free ? "Bezpłatnie" : amounts.length > 1 ? amounts.map((a) => `${a}`).join(" · ") + " zł" : onRequest ? "Po rozmowie" : `${unitPrice(product)} zł`}
               </span>
               {promo && (
-                <span className="font-mono text-xl text-foreground/40 line-through">{regularPrice(product)} zł</span>
+                <span className="font-mono text-xl text-foreground/55 line-through">{regularPrice(product)} zł</span>
               )}
               {promo && (
                 <span className="technical text-[10px] text-foreground/50">
@@ -138,7 +141,7 @@ export default function ProductDetail() {
                 </span>
               )}
               {!promo && !soon && Number(product.old_price) > 0 && (
-                <span className="font-mono text-xl text-foreground/30 line-through">
+                <span className="font-mono text-xl text-foreground/55 line-through">
                   {product.old_price} zł
                 </span>
               )}
@@ -179,7 +182,7 @@ export default function ProductDetail() {
                 <div className="grid grid-cols-2 gap-px bg-[#3D3D3F]/40 mb-8">
                   {meta.map(([k, v], i) => (
                     <div key={k} className={`bg-[#0A0A0B] p-4 ${meta.length % 2 === 1 && i === meta.length - 1 ? "col-span-2" : ""}`}>
-                      <p className="technical text-[9px] text-foreground/40 mb-1">{k}</p>
+                      <p className="technical text-[9px] text-foreground/55 mb-1">{k}</p>
                       <p className="text-sm">{v}</p>
                     </div>
                   ))}
@@ -265,7 +268,7 @@ export default function ProductDetail() {
                   </button>
                 </div>
                 {isDigital(product) && <p className="text-sm text-foreground/60">{accessLabel(product)}</p>}
-                <p className="technical text-[10px] text-foreground/40">
+                <p className="technical text-[10px] text-foreground/55">
                   Sprzedaję z dojrzałości, nie z presji. Decyzję zostawiam Tobie.
                 </p>
               </div>

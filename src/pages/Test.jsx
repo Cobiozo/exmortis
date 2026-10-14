@@ -59,7 +59,7 @@ function CrisisLine({ className = "" }) {
 
 const inputCls =
   "w-full bg-transparent border hairline px-4 py-4 focus:border-[#C9A24A] focus:outline-none transition-colors";
-const back = "technical text-[9px] text-foreground/30 hover:text-foreground/60 mt-10 flex items-center gap-2 transition-colors";
+const back = "technical text-[9px] text-foreground/55 hover:text-foreground/60 mt-10 flex items-center gap-2 transition-colors";
 
 // Kroki: 0 wstęp · 1–15 stwierdzenia · 16 etap · 17 zdanie · 18 formularz · 19 wynik
 // Moduł testu; d.tytul i d.tekst (wstęp) pochodzą z edytora stron.
@@ -175,7 +175,7 @@ export default function Test({ d = {} }) {
                 </p>
               </div>
             )}
-            <p className="text-xs text-foreground/40 leading-relaxed max-w-xl mx-auto mb-14">{NOT_DIAGNOSIS}</p>
+            <p className="text-xs text-foreground/55 leading-relaxed max-w-xl mx-auto mb-14">{NOT_DIAGNOSIS}</p>
             <p className="shop-heading text-xl text-[#F5EFE1] mb-8">Jak mam się do Ciebie zwracać?</p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
               <button onClick={() => { setFormOfAddress("Mężczyzna"); setStep(1); }} className="btn-ghost">
@@ -191,10 +191,10 @@ export default function Test({ d = {} }) {
         {/* ===== 1–15 · STWIERDZENIA ===== */}
         {qText && (
           <div key={step} className="fade-up">
-            <p className="technical text-[9px] text-foreground/30 mb-3">
+            <p className="technical text-[9px] text-foreground/55 mb-3">
               {String(step).padStart(2, "0")} Z {N}
             </p>
-            <p className="text-sm text-foreground/45 mb-6">W ciągu ostatnich czterech tygodni…</p>
+            <p className="text-sm text-foreground/55 mb-6">W ciągu ostatnich czterech tygodni…</p>
             <h2 className="shop-heading text-2xl md:text-4xl text-[#F5EFE1] leading-snug mb-12 break-words">{qText}</h2>
 
             <div className="space-y-3" role="radiogroup" aria-label={qText}>
@@ -211,7 +211,7 @@ export default function Test({ d = {} }) {
                   }`}
                 >
                   <span className="text-base">{s.label}</span>
-                  <span className="technical text-[9px] text-foreground/30">{s.value}</span>
+                  <span className="technical text-[9px] text-foreground/55">{s.value}</span>
                 </button>
               ))}
             </div>
@@ -228,7 +228,7 @@ export default function Test({ d = {} }) {
             <h2 className="shop-heading text-2xl md:text-4xl text-[#F5EFE1] leading-snug mb-4">
               Jeszcze jedno. Który opis jest Ci dziś najbliższy?
             </h2>
-            <p className="text-sm text-foreground/45 mb-10">Droga ma cztery etapy: Śmierć, Próg, Powrót, Inny. Wybierz ten, w którym jest więcej prawdy niż nadziei.</p>
+            <p className="text-sm text-foreground/55 mb-10">Droga ma cztery etapy: Śmierć, Próg, Powrót, Inny. Wybierz ten, w którym jest więcej prawdy niż nadziei.</p>
             <div className="space-y-3">
               {STAGE_OPTIONS.map((o) => (
                 <button
@@ -258,7 +258,7 @@ export default function Test({ d = {} }) {
             </h2>
             <p className="italic text-foreground/50 text-lg mb-6">«Ostatnio umarło we mnie…»</p>
             <textarea value={openAnswer} onChange={(e) => setOpenAnswer(e.target.value)} rows={4} maxLength={2000} className={inputCls} placeholder="…" />
-            <p className="text-xs text-foreground/35 mt-3">Przeczytam to tylko ja. Nie musisz pisać nic, czego nie chcesz.</p>
+            <p className="text-xs text-foreground/55 mt-3">Przeczytam to tylko ja. Nie musisz pisać nic, czego nie chcesz.</p>
             <div className="flex flex-col sm:flex-row gap-4 mt-10">
               <button onClick={() => setStep(S_FORM)} className="btn-relic">DALEJ</button>
               <button onClick={() => { setOpenAnswer(""); setStep(S_FORM); }} className="btn-ghost">POMIŃ</button>
@@ -295,7 +295,7 @@ export default function Test({ d = {} }) {
             <button type="submit" disabled={sending} className="btn-relic w-full disabled:opacity-60">
               {sending ? "ZAPISUJĘ..." : "POKAŻ MÓJ WYNIK"}
             </button>
-            <p className="text-xs text-foreground/30 text-center">Nie wysyłam spamu. Wypiszesz się jednym kliknięciem.</p>
+            <p className="text-xs text-foreground/55 text-center">Nie wysyłam spamu. Wypiszesz się jednym kliknięciem.</p>
             <button type="button" onClick={() => setStep(S_OPEN)} className={back}>
               <ArrowLeft className="h-3 w-3" /> WSTECZ
             </button>
@@ -314,7 +314,7 @@ export default function Test({ d = {} }) {
 
             {Array.isArray(result.dims) && (
               <section className="mb-14">
-                <p className="technical text-[9px] text-foreground/40 mb-6">TRZY OBSZARY · NA ILE KAŻDA ŚMIERĆ JEST DZIŚ OBECNA</p>
+                <p className="technical text-[9px] text-foreground/55 mb-6">TRZY OBSZARY · NA ILE KAŻDA ŚMIERĆ JEST DZIŚ OBECNA</p>
                 <div className="space-y-8">
                   {result.dims.map((s) => (
                     <div key={s.key}>
@@ -329,7 +329,7 @@ export default function Test({ d = {} }) {
                     </div>
                   ))}
                 </div>
-                <p className="text-xs text-foreground/35 mt-6">Skala w każdym obszarze: 0–3 brak wyraźnych oznak · 4–7 pierwsze sygnały · 8–11 wyraźnie obecna · 12–15 głęboko obecna.</p>
+                <p className="text-xs text-foreground/55 mt-6">Skala w każdym obszarze: 0–3 brak wyraźnych oznak · 4–7 pierwsze sygnały · 8–11 wyraźnie obecna · 12–15 głęboko obecna.</p>
               </section>
             )}
 
@@ -346,18 +346,18 @@ export default function Test({ d = {} }) {
 
             {Array.isArray(result.questions) && (
               <div className="border hairline p-8 md:p-10 mb-14">
-                <p className="technical text-[9px] text-foreground/40 mb-6">PYTANIA DO ZABRANIA ZE SOBĄ</p>
+                <p className="technical text-[9px] text-foreground/55 mb-6">PYTANIA DO ZABRANIA ZE SOBĄ</p>
                 <ul className="space-y-4">
                   {result.questions.map((q) => (
                     <li key={q} className="shop-heading text-xl md:text-2xl text-[#F5EFE1] leading-snug">{q}</li>
                   ))}
                 </ul>
-                <p className="text-sm text-foreground/45 mt-6">Nie odpowiadaj od razu. Zapisz je i wróć do nich za kilka dni.</p>
+                <p className="text-sm text-foreground/55 mt-6">Nie odpowiadaj od razu. Zapisz je i wróć do nich za kilka dni.</p>
               </div>
             )}
 
             <div className="border border-[#5C1A1B]/50 bg-[#0D0D0E] p-8 md:p-10 mb-16">
-              <p className="technical text-[9px] text-foreground/40 mb-3">TWÓJ ETAP</p>
+              <p className="technical text-[9px] text-foreground/55 mb-3">TWÓJ ETAP</p>
               <p className="shop-heading text-2xl text-[#C9A24A] mb-4">{stage}</p>
               <p className="text-foreground/60 leading-relaxed">{result.stage_text}</p>
             </div>
@@ -380,10 +380,10 @@ export default function Test({ d = {} }) {
               <Link to="/powrot" className="btn-relic">UMÓW ROZMOWĘ KWALIFIKACYJNĄ</Link>
             </div>
 
-            <div className="text-xs text-foreground/45 text-center leading-relaxed mb-10 space-y-2 max-w-xl mx-auto">
+            <div className="text-xs text-foreground/55 text-center leading-relaxed mb-10 space-y-2 max-w-xl mx-auto">
               <p>{NOT_DIAGNOSIS}</p>
               <CrisisLine />
-              {result.email_sent === false && <p className="text-foreground/35">Wyniku nie udało się teraz wysłać e-mailem — zapisz go albo zrób zrzut ekranu.</p>}
+              {result.email_sent === false && <p className="text-foreground/55">Wyniku nie udało się teraz wysłać e-mailem — zapisz go albo zrób zrzut ekranu.</p>}
             </div>
 
             <div className="text-center">

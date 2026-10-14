@@ -8,7 +8,7 @@ const spotifyEmbed = (u) => u?.replace("open.spotify.com/", "open.spotify.com/em
 export default function EpisodeMedia({ ep, startAt }) {
   const yt = extractVideoId(ep.youtube);
   const [mode, setMode] = useState(ep.audio || ep.spotify ? "audio" : "video");
-  const tab = (m) => `technical text-[10px] px-4 py-2 border ${mode === m ? "border-[#C9A24A] gold-text" : "hairline text-foreground/45"}`;
+  const tab = (m) => `technical text-[10px] px-4 py-2 border ${mode === m ? "border-[#C9A24A] gold-text" : "hairline text-foreground/55"}`;
   return (
     <div className="space-y-3">
       {yt && (ep.audio || ep.spotify) && (

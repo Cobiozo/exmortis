@@ -42,7 +42,7 @@ export default function Testimonials() {
               </blockquote>
               <figcaption className="mt-8 pt-6 border-t hairline">
                 <p className="relic-heading text-lg gold-text">{t.name}</p>
-                <p className="technical text-[9px] text-foreground/40 mt-2">{t.source.toUpperCase()}</p>
+                <p className="technical text-[9px] text-foreground/55 mt-2">{t.source.toUpperCase()}</p>
               </figcaption>
             </figure>
           ))}

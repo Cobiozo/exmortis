@@ -23,7 +23,7 @@ export default function MessageCard({ m, footer, onRead, onHide, onOpenMaterial 
         <p className="font-mono text-[11px] tracking-[0.18em] uppercase text-[#C9A24A]">
           {m.read_at ? "Wiadomość" : "Nowa"}
         </p>
-        {m.sent_at && <p className="font-mono text-[11px] text-foreground/40">{plDateTime(m.sent_at)}</p>}
+        {m.sent_at && <p className="font-mono text-[11px] text-foreground/55">{plDateTime(m.sent_at)}</p>}
       </div>
 
       {m.title && <h3 className="shop-heading text-[21px] leading-snug text-[#F5EFE1] mt-2 break-words">{m.title}</h3>}
@@ -39,7 +39,7 @@ export default function MessageCard({ m, footer, onRead, onHide, onOpenMaterial 
                 className={`w-full flex items-center gap-4 text-left p-4 border hairline hover:border-[rgba(201,162,74,.5)] transition-colors ${FOCUS}`}>
                 <Paperclip className="w-5 h-5 shrink-0 text-[#C9A24A]" strokeWidth={1.5} />
                 <span className="min-w-0">
-                  <span className="block font-mono text-[10px] tracking-[0.16em] uppercase text-foreground/45">{KIND[x.kind] || x.kind || "Materiał"}</span>
+                  <span className="block font-mono text-[10px] tracking-[0.16em] uppercase text-foreground/55">{KIND[x.kind] || x.kind || "Materiał"}</span>
                   <span className="block font-body text-[15px] text-[#F5EFE1] break-words">{x.title}</span>
                 </span>
               </button>
@@ -47,7 +47,7 @@ export default function MessageCard({ m, footer, onRead, onHide, onOpenMaterial 
               <div key={i} className="w-full flex items-center gap-4 p-4 border hairline">
                 <Paperclip className="w-5 h-5 shrink-0 text-[#C9A24A]" strokeWidth={1.5} />
                 <span className="min-w-0">
-                  <span className="block font-mono text-[10px] tracking-[0.16em] uppercase text-foreground/45">Kolekcja · w zakładce „Moja biblioteka”</span>
+                  <span className="block font-mono text-[10px] tracking-[0.16em] uppercase text-foreground/55">Kolekcja · w zakładce „Moja biblioteka”</span>
                   <span className="block font-body text-[15px] text-[#F5EFE1] break-words">{x.title}</span>
                 </span>
               </div>
@@ -66,7 +66,7 @@ export default function MessageCard({ m, footer, onRead, onHide, onOpenMaterial 
           </button>
         )}
         <button type="button" onClick={() => onHide(m.id)}
-          className={`inline-flex items-center justify-center min-h-[44px] font-mono text-[11px] tracking-[0.14em] uppercase text-foreground/45 underline underline-offset-4 hover:text-[#F5EFE1] ${FOCUS}`}>
+          className={`inline-flex items-center justify-center min-h-[44px] font-mono text-[11px] tracking-[0.14em] uppercase text-foreground/55 underline underline-offset-4 hover:text-[#F5EFE1] ${FOCUS}`}>
           UKRYJ
         </button>
       </div>

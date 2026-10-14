@@ -19,7 +19,7 @@ export default function OrderSummaryInfo({ items, total }) {
       <p>Dostarczenie: w Twoim koncie zaraz po zaksięgowaniu płatności.</p>
       <p>Wymagania techniczne: <Link to="/regulamin#p3" className="underline">§3 Regulaminu</Link>.</p>
       <p>{digital ? "Treści cyfrowe: po rozpoczęciu dostarczania tracisz prawo odstąpienia od umowy (za Twoją zgodą poniżej)." : "Masz 14 dni na odstąpienie od umowy bez podania przyczyny."}</p>
-      <p className="text-xs text-foreground/45">{seller && `Sprzedawca: ${seller} · `}<Link to="/regulamin" className="underline">Regulamin</Link></p>
+      <p className="text-xs text-foreground/55">{seller && `Sprzedawca: ${seller} · `}<Link to="/regulamin" className="underline">Regulamin</Link></p>
     </div>
   );
 }

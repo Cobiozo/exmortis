@@ -27,7 +27,7 @@ export default function EpisodePlayer({ ep, startAt }) {
       <input type="range" min="0" max={dur || 1} value={t} disabled={!mine} onChange={(e) => p.seek(Number(e.target.value))} className="w-full accent-[#C9A24A]" aria-label="Postęp" />
       <div className="flex flex-wrap items-center gap-2">
         {RATES.map((r) => (
-          <button key={r} onClick={() => p.setRate(r)} className={`technical text-[10px] px-2 py-1 border ${p.rate === r ? "border-[#C9A24A] gold-text" : "hairline text-foreground/45"}`}>{r}×</button>
+          <button key={r} onClick={() => p.setRate(r)} className={`technical text-[10px] px-2 py-1 border ${p.rate === r ? "border-[#C9A24A] gold-text" : "hairline text-foreground/55"}`}>{r}×</button>
         ))}
         {resume > 0 && <button onClick={() => p.play(ep, resume)} className="ml-auto text-xs gold-text underline">Kontynuuj od {fmtT(resume)}</button>}
       </div>

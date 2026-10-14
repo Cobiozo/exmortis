@@ -14,7 +14,7 @@ export default function InBundleLink({ product }) {
           <Link to={`/skarbiec/${b.slug}`} className="gold-text hover:underline">
             {b.name}
           </Link>
-          {Number(b.price) > 0 && <span className="text-foreground/45"> · {zl(b.price)}</span>}
+          {Number(b.price) > 0 && <span className="text-foreground/55"> · {zl(b.price)}</span>}
         </p>
       ))}
     </div>

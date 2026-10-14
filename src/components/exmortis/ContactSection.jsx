@@ -56,7 +56,7 @@ export default function ContactSection() {
                 <Mail className="h-5 w-5 text-foreground/70 group-hover:gold-text transition-colors" />
               </span>
               <span>
-                <span className="technical text-[9px] text-foreground/40 block mb-1">EMAIL</span>
+                <span className="technical text-[9px] text-foreground/55 block mb-1">EMAIL</span>
                 <span className="font-mono text-sm text-foreground/80 group-hover:gold-text transition-colors">
                   kontakt@exmortis.pl
                 </span>
@@ -64,7 +64,7 @@ export default function ContactSection() {
             </a>
 
             <div className="flex items-center gap-4">
-              <span className="technical text-[9px] text-foreground/40">SOCIAL MEDIA</span>
+              <span className="technical text-[9px] text-foreground/55">SOCIAL MEDIA</span>
               <div className="flex gap-3">
                 {SOCIAL_LINKS.map((s) => (
                   <a
@@ -137,7 +137,7 @@ export default function ContactSection() {
                 {sending ? "WYSYŁAM..." : "WYŚLIJ WIADOMOŚĆ"}{" "}
                 {!sending && <ArrowRight className="h-4 w-4" />}
               </button>
-              <p className="technical text-[10px] text-foreground/40">
+              <p className="technical text-[10px] text-foreground/55">
                 Twoja wiadomość ląduje tylko u mnie. Nikt jej nie zobaczy poza nami.
               </p>
             </form>

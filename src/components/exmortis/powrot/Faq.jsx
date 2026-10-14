@@ -57,7 +57,7 @@ export default function Faq() {
               </span>
               <ChevronDown
                 className={`h-5 w-5 flex-shrink-0 transition-transform duration-300 ${
-                  open === i ? "gold-text rotate-180" : "text-foreground/40"
+                  open === i ? "gold-text rotate-180" : "text-foreground/55"
                 }`}
               />
             </button>

@@ -23,7 +23,7 @@ export default function MyTickets() {
               <p className="text-foreground/55 text-xs mt-1">{t.start_datetime ? plWhenFull(t.start_datetime) : ""} · {t.holder_name}</p>
             </div>
             <span className="font-mono gold-text">{t.code}</span>
-            {t.status === "wykorzystany" && <span className="technical text-[9px] text-foreground/45">WYKORZYSTANY</span>}
+            {t.status === "wykorzystany" && <span className="technical text-[9px] text-foreground/55">WYKORZYSTANY</span>}
             <Link to={t.link} className="technical text-[10px] gold-text">OTWÓRZ</Link>
             <a href={t.pdf} className="technical text-[10px] gold-text inline-flex items-center gap-1"><Download className="h-3.5 w-3.5" /> PDF</a>
           </li>

@@ -13,7 +13,7 @@ export default function ShareBox({ ep }) {
   const cls = "btn-ghost !px-4 !py-2 text-[10px]";
   return (
     <div className="space-y-3">
-      <p className="technical text-[10px] text-foreground/45">UDOSTĘPNIJ</p>
+      <p className="technical text-[10px] text-foreground/55">UDOSTĘPNIJ</p>
       <div className="flex flex-wrap gap-2">
         <button onClick={() => copy(u("link"), "link")} className={cls}>{copied === "link" ? "SKOPIOWANO" : "KOPIUJ LINK"}</button>
         <a className={cls} target="_blank" rel="noreferrer" href={`https://wa.me/?text=${encodeURIComponent(`${ep.tytul} ${u("whatsapp")}`)}`}>WHATSAPP</a>

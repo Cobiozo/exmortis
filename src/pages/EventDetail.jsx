@@ -18,6 +18,8 @@ import CalendarButtons from "@/components/exmortis/events/CalendarButtons";
 import ZoomFaq from "@/components/exmortis/events/ZoomFaq";
 import RegistrationBlock from "@/components/exmortis/events/RegistrationBlock";
 import { whenText, durationText, priceText } from "@/components/exmortis/events/time";
+import JsonLd from "@/components/seo/JsonLd";
+import { eventJsonLd } from "@/lib/structuredData";
 
 // Strona wydarzenia /spotkania/:slug — szczegóły i zapis.
 export default function EventDetail() {
@@ -67,6 +69,7 @@ export default function EventDetail() {
 
   return (
     <div className="bg-[#0A0A0B] pt-20 overflow-x-hidden">
+      <JsonLd data={eventJsonLd(event)} />
       {cover && (
         <CoverHero ev={event}>
           <HeroContent ev={event} />
@@ -82,7 +85,7 @@ export default function EventDetail() {
           <span className="technical text-[9px] text-[#C9A24A] border border-[#C9A24A]/40 px-2 py-1">
             {event.event_type.toUpperCase()}
           </span>
-          <span className="technical text-[9px] text-foreground/40 border hairline px-2 py-1">
+          <span className="technical text-[9px] text-foreground/55 border hairline px-2 py-1">
             {event.stage === "Wszystkie" ? "DROGA: WSZYSTKIE ETAPY" : `ETAP: ${event.stage.toUpperCase()}`}
           </span>
           {cancelled && (
@@ -97,22 +100,22 @@ export default function EventDetail() {
 
         <div className="mt-10 grid sm:grid-cols-3 gap-6 border-y hairline py-8">
           <div>
-            <p className="technical text-[9px] text-foreground/35 mb-2">KIEDY</p>
+            <p className="technical text-[9px] text-foreground/55 mb-2">KIEDY</p>
             <p className="text-[#F5EFE1]">{whenText(event.start_datetime)}<WarsawNote iso={event.start_datetime} /></p>
-            <p className="text-foreground/40 text-sm mt-1">
+            <p className="text-foreground/55 text-sm mt-1">
               <Clock className="h-3.5 w-3.5 inline mr-1 -mt-0.5" /> {durationText(event.duration_minutes)}
             </p>
           </div>
           <div>
-            <p className="technical text-[9px] text-foreground/35 mb-2">GDZIE</p>
+            <p className="technical text-[9px] text-foreground/55 mb-2">GDZIE</p>
             <p className="text-[#F5EFE1]">{event.format}</p>
-            <p className="text-foreground/40 text-sm mt-1">
+            <p className="text-foreground/55 text-sm mt-1">
               <MapPin className="h-3.5 w-3.5 inline mr-1 -mt-0.5" />{" "}
               {event.format === "Stacjonarnie" ? "Adres otrzymasz po zapisaniu" : event.location || "Online"}
             </p>
           </div>
           <div>
-            <p className="technical text-[9px] text-foreground/35 mb-2">CENA</p>
+            <p className="technical text-[9px] text-foreground/55 mb-2">CENA</p>
             <p className="text-[#F5EFE1]">{priceText(event.price)}</p>
           </div>
         </div>
@@ -152,7 +155,7 @@ export default function EventDetail() {
         })()}
 
         <div className="mt-12">
-          <p className="technical text-[10px] text-foreground/40 mb-5">DODAJ DO KALENDARZA</p>
+          <p className="technical text-[10px] text-foreground/55 mb-5">DODAJ DO KALENDARZA</p>
           <CalendarButtons event={event} />
         </div>
         <ZoomFaq event={event} />

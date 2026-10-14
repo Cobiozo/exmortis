@@ -23,11 +23,11 @@ export default function LibraryTile({ item, onOpen, onToggleDone }) {
         <p className="font-mono text-[11px] tracking-[0.18em] uppercase text-[#C9A24A]">{KIND[item.kind] || item.kind}</p>
         <h3 className="shop-heading text-[19px] leading-snug text-[#F5EFE1] mt-2 break-words">{item.title}</h3>
         {item.description && <p className="font-body text-[14px] leading-relaxed text-foreground/55 mt-2 line-clamp-3">{item.description}</p>}
-        {meta.length > 0 && <p className="font-mono text-[11px] text-foreground/45 mt-3">{meta.join(" · ")}</p>}
+        {meta.length > 0 && <p className="font-mono text-[11px] text-foreground/55 mt-3">{meta.join(" · ")}</p>}
         {item.note && <p className="font-body text-[13px] leading-relaxed text-[#C9A24A]/80 mt-3 border-l border-[rgba(201,162,74,.4)] pl-3 whitespace-pre-line">{item.note}</p>}
       </button>
       <button type="button" onClick={() => onToggleDone(item)}
-        className={`flex items-center gap-2 min-h-[44px] px-5 border-t hairline font-mono text-[11px] tracking-[0.14em] uppercase transition-colors ${item.completed_at ? "text-[#C9A24A]" : "text-foreground/45 hover:text-[#C9A24A]"} ${FOCUS}`}>
+        className={`flex items-center gap-2 min-h-[44px] px-5 border-t hairline font-mono text-[11px] tracking-[0.14em] uppercase transition-colors ${item.completed_at ? "text-[#C9A24A]" : "text-foreground/55 hover:text-[#C9A24A]"} ${FOCUS}`}>
         <Check className="w-4 h-4" strokeWidth={1.5} /> {item.completed_at ? "Ukończone" : "Oznacz jako ukończone"}
       </button>
     </div>

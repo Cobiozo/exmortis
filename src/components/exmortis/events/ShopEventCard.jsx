@@ -19,7 +19,7 @@ export default function ShopEventCard({ event: ev }) {
           <p className="shop-heading text-4xl gold-text leading-none">
             {day} <span className="text-base text-foreground/50">{month}</span>
           </p>
-          <p className="technical text-[9px] text-foreground/40 mt-2">
+          <p className="technical text-[9px] text-foreground/55 mt-2">
             {weekday} · {timeText(ev.start_datetime).toUpperCase()}
           </p>
         </div>
@@ -33,7 +33,7 @@ export default function ShopEventCard({ event: ev }) {
         <p className="italic text-foreground/70 text-sm mt-2 leading-relaxed">{ev.subtitle}</p>
       )}
       {(ev.format || ev.location) && (
-        <p className="technical text-[9px] text-foreground/35 mt-3">
+        <p className="technical text-[9px] text-foreground/55 mt-3">
           {[ev.format, ev.format === "Stacjonarnie" ? ev.location : null]
             .filter(Boolean)
             .join(" · ")

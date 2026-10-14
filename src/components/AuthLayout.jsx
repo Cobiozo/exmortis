@@ -11,7 +11,7 @@ export default function AuthLayout({ title, subtitle, footer, children, tabs = f
     <Link
       to={to + search}
       className={`flex-1 text-center py-3 technical text-[10px] border-b ${
-        pathname === to ? "border-[#C9A24A] text-[#C9A24A]" : "border-[#3D3D3F] text-foreground/45 hover:text-[#F5EFE1]"
+        pathname === to ? "border-[#C9A24A] text-[#C9A24A]" : "border-[#3D3D3F] text-foreground/55 hover:text-[#F5EFE1]"
       }`}
     >
       {label}

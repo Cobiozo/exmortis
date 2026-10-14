@@ -14,7 +14,7 @@ export default function HowItWorks() {
       <div className="grid md:grid-cols-4 gap-px bg-[#3D3D3F]/40 mb-12">
         {META.map((m) => (
           <div key={m.label} className="bg-[#0A0A0B] p-6">
-            <p className="technical text-[9px] text-foreground/40 mb-2">{m.label}</p>
+            <p className="technical text-[9px] text-foreground/55 mb-2">{m.label}</p>
             <p className="text-sm md:text-base">{m.value}</p>
           </div>
         ))}

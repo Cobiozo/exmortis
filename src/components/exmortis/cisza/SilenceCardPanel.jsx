@@ -21,13 +21,13 @@ export default function SilenceCardPanel({ view, minutes, backdrop }) {
 
   const share = () => navigator.share({ files: [card.file] }).catch(() => {});
   const canShare = card && navigator.canShare?.({ files: [card.file] });
-  const link = "text-xs text-foreground/45 hover:text-[#C9A24A] transition-colors";
+  const link = "text-xs text-foreground/55 hover:text-[#C9A24A] transition-colors";
 
   if (!card) {
     return (
       <div className="mt-10">
         <button onClick={make} disabled={busy} className={link}>{busy ? "Przygotowuję…" : "Zapisz kartę ciszy"}</button>
-        {err && <p className="mt-2 text-xs text-foreground/35">Nie udało się przygotować karty</p>}
+        {err && <p className="mt-2 text-xs text-foreground/55">Nie udało się przygotować karty</p>}
       </div>
     );
   }

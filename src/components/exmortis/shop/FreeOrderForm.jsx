@@ -93,7 +93,7 @@ export default function FreeOrderForm({ product }) {
           onChange={(e) => setForm({ ...form, phone: e.target.value })}
           className={inputCls}
         />
-        <p className="text-xs text-foreground/40 mt-2">
+        <p className="text-xs text-foreground/55 mt-2">
           Jeśli chcesz, żebym mógł do Ciebie zadzwonić.
         </p>
         {form.phone.trim() !== "" && (
@@ -114,7 +114,7 @@ export default function FreeOrderForm({ product }) {
       <button type="submit" disabled={sending} className="btn-relic w-full disabled:opacity-60">
         {sending ? "PRZYGOTOWUJĘ..." : "POBIERZ PLIK"} {!sending && <ArrowRight className="h-4 w-4" />}
       </button>
-      <p className="technical text-[10px] text-foreground/40">
+      <p className="technical text-[10px] text-foreground/55">
         Plik wyślę na Twój e-mail. Bez spamu, bez presji.
       </p>
     </form>

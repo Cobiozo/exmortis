@@ -44,13 +44,13 @@ export default function ProductTile({ p }) {
         <AccessLine p={p} />
         {p.active && p.lessons_total > 0 && (
           <div>
-            <div className="flex justify-between technical text-[9px] text-foreground/45"><span>{p.lessons_done >= p.lessons_total ? "UKOŃCZONY" : `LEKCJE ${p.lessons_done} / ${p.lessons_total}`}</span><span>{Math.round((p.lessons_done / p.lessons_total) * 100)}%</span></div>
+            <div className="flex justify-between technical text-[9px] text-foreground/55"><span>{p.lessons_done >= p.lessons_total ? "UKOŃCZONY" : `LEKCJE ${p.lessons_done} / ${p.lessons_total}`}</span><span>{Math.round((p.lessons_done / p.lessons_total) * 100)}%</span></div>
             <div className="mt-1.5 h-1 bg-[#26262A]" aria-hidden="true"><div className="h-full bg-[#C9A24A]" style={{ width: `${Math.round((p.lessons_done / p.lessons_total) * 100)}%` }} /></div>
           </div>
         )}
         <div className="mt-auto pt-3 space-y-3">
           {!p.active ? null : !p.has_file && (p.type === "pdf" || p.type === "audio") ? (
-            <p className="text-xs text-foreground/40">Materiał jest przygotowywany. Dam znać mailem.</p>
+            <p className="text-xs text-foreground/55">Materiał jest przygotowywany. Dam znać mailem.</p>
           ) : p.type === "pdf" ? (
             <div className="flex flex-wrap gap-3">
               <button onClick={open} disabled={busy} className="btn-relic !px-4 !py-2.5">{busy ? <Loader2 className={`${ico} animate-spin`} /> : <Download className={ico} strokeWidth={1.25} />} POBIERZ</button>

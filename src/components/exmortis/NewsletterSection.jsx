@@ -51,7 +51,7 @@ export default function NewsletterSection() {
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 placeholder="twój.mail@powrotu.pl"
-                className="flex-1 min-w-0 bg-transparent border hairline px-5 py-4 text-foreground placeholder:text-foreground/30 font-mono text-sm focus:border-[#C9A24A] focus:outline-none transition-colors"
+                className="flex-1 min-w-0 bg-transparent border hairline px-5 py-4 text-foreground placeholder:text-foreground/55 font-mono text-sm focus:border-[#C9A24A] focus:outline-none transition-colors"
               />
               <button type="submit" disabled={sending} className="btn-relic whitespace-nowrap disabled:opacity-60">
                 {sending ? "ZAPISUJĘ..." : "ZAPISZ"} {!sending && <ArrowRight className="h-4 w-4" />}
@@ -61,7 +61,7 @@ export default function NewsletterSection() {
               <p className="technical text-[10px] gold-text">✓ {t("dz.listy")}</p>
             )}
             {error && <p className="technical text-[10px] blood-text">{error}</p>}
-            <p className="technical text-[10px] text-foreground/40">
+            <p className="technical text-[10px] text-foreground/55">
               Bez spamu. Tylko powrót. Wypisujesz jednym kliknięciem.
             </p>
           </form>
