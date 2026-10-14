@@ -232,3 +232,42 @@ Zakres: `announcements`, `notifications`, `eventsPublic`, `eventsAdmin`, moduły
 - `announcements` (lista panelu) — odpowiedź poprawna, brak zapytań do listy kont przy pustej liście ogłoszeń.
 - `eventsPublic` (przypomnienie dla nieistniejącego spotkania) — poprawna odmowa, bez zapisu danych; wpis testowy limitu usunięty z rejestru bezpieczeństwa.
 - Zapytanie zbiorcze liczników sprawdzone bezpośrednio na bazie (kolekcja obecnie pusta, zapytanie wykonuje się bez błędu).
+
+## Strony treści i szybkość strony głównej — przegląd (2026-10-14)
+
+Zakres: `CmsPage`, `CmsPreview`, `About`, `Powrot`, `Kontakt`, `Listopad`, `siteContent`, `siteSettings`, `sitemap`, `usePublishedPage`, `BlockRenderer`, `sanitizeHtml`, start strony głównej (`Home`, `HomeSwitch`, `prefetch`, `index.html`, `vite.config.js`).
+
+### Zweryfikowane jako poprawne
+- **Wersje robocze nie wyciekają.** Gość czyta wyłącznie `PublishedPage` — kopię opublikowanej wersji (`usePublishedPage`, `bootstrap`, `cmsScheduled`). Wersje robocze (`SitePage`) i historia (`PageVersion`) nie są podawane żadną publiczną ścieżką. Podgląd szkicu (`/admin/podglad-strony`) stoi za logowaniem i pobiera bloki komunikatem z edytora, nie z bazy.
+- **Sitemap nie ujawnia szkiców.** Mapa zawiera listę stałą, aktywne (nieukryte) produkty, opublikowane spotkania i opublikowane odcinki podcastu. Strony z edytora nie trafiają do mapy, więc niepublikowana treść nie może się w niej znaleźć.
+- **Oczyszczanie HTML z panelu.** `sanitizeHtml` działa na białej liście znaczników, usuwa `SCRIPT`, `STYLE`, `IFRAME`, `OBJECT`, `EMBED` i `FORM`, odrzuca `javascript:`, `data:` oraz adresy bez protokołu (`//obca-domena`), przepuszcza wyłącznie `https://`, ścieżki tej strony, kotwice, `mailto:` i `tel:`, a linki zewnętrzne dostają `rel="noopener noreferrer"`. Używane w blokach CMS, ROZDROŻACH, produktach, spotkaniach, odcinkach, bibliotece i wiadomościach.
+- **Meta strony.** Adres kanoniczny i obrazek udostępniania ustawiane są przez `usePageMeta`; opis i tytuł nadpisuje `SeoMeta` przy zmianie adresu, a strony z danymi dochodzącymi później (spotkanie, produkt) — przez `useDocMeta`. Brak konfliktów (SeoMeta nie ustawia kanonicznego).
+- **404.** Nieistniejący adres poza routerem (`*`) oddaje `PageNotFound` z `noindex`.
+
+### Znalezione i naprawione
+1. **Przełączniki SEO z edytora były martwe.** `noindex` („ukryj przed wyszukiwarkami”) i `seo_image` („obrazek udostępniania”) zapisywano przy publikacji, ale **nikt ich nie czytał** — strona oznaczona jako ukryta i tak trafiała do wyszukiwarek, a obrazek udostępniania nigdy się nie pokazywał. Teraz `noindex` jest respektowany w `usePublishedPage` (obejmuje strony z edytora, strony stałe i stronę główną), a `/strona/:slug` dostaje adres kanoniczny, obrazek udostępniania (tylko pełne adresy `https`) i opis z edytora.
+2. **Miękkie 404 dla `/strona/:slug`.** Nieistniejąca strona oddawała treść 404, ale z tytułem i opisem strony głównej i bez `noindex` — wyszukiwarka widziała kopię strony głównej pod każdym wymyślonym adresem. Teraz to `PageNotFound` (własny tytuł, opis i `noindex`).
+3. **Tytuł strony z edytora.** Strona bez ustawionego `seo_title` pokazywała tytuł strony głównej; teraz tytuł powstaje z nazwy strony.
+
+### Szybkość strony głównej
+**Zmiana (mała, bezpieczna).** `AdminModeProvider` pytał o konto (`auth.me()`) przy każdym wejściu na stronę — także u gościa bez logowania, gdzie odpowiedź i tak nie może być administratorem. To zbędne zapytanie w starcie (konkuruje z `bootstrap`). Teraz pytanie idzie tylko wtedy, gdy w przeglądarce jest token; zachowanie bez zmian.
+
+**Zmierzone.** Publikacja ładuje **44 pliki JavaScript (198 KB po kompresji)** zanim cokolwiek się pokaże, w tym cały moduł bloków CMS (`modules`, 47 KB gzip) — wciągany do pierwszej paczki przez `HomeSwitch` → `Home`/`Listopad` → `CmsRoutePage` → `BlockRenderer` i moduły. Do tego dochodzi `Admin` (872 KB surowo) w osobnej paczce — dobrze, że nie w pierwszej.
+
+**Czego NIE zmieniano.** Mechanizm przedpremierowy i `src/content/landingShell.html` działają jak dotąd: do 1.11 21:30 gość na „/” dostaje gotowy HTML (nagłówek + główne zdjęcie) wstawiany skryptem z `vite.config.js`, a React podmienia go identyczną treścią. Warunek wyłącza się sam po dacie premiery.
+
+**Co trzeba zrobić po 1.11, żeby opublikowana strona „home” startowała równie szybko** (do wdrożenia dopiero po premierze, bo każda z tych zmian opóźnia dziś podmianę gotowego HTML):
+1. **Rozdzielić paczki.** `HomeSwitch` (i `Home`/`Listopad`) nie powinny wciągać `BlockRenderer` i modułów do pierwszej paczki — wtedy menu i tło wchodzą od razu, a bloki treści dochodzą osobnym plikiem. Dziś zrobienie tego przed 1.11 jest szkodliwe: gotowy HTML znika w chwili pierwszego rysunku Reacta, więc odroczenie bloków pokazałoby czarny ekran zamiast nagłówka.
+2. **Ograniczyć listę `modulepreload`.** Z 44 plików wstępnie ładowanych zostawić czcionkę i obraz nagłówka, resztę doładowywać naturalnie — na telefonie to jedno pełne zapytanie mniej przed pierwszym obrazem.
+3. **Usunąć zależność pierwszego widoku od `bootstrap`.** Mechanizm już istnieje: `usePublishedPage` rysuje kopię z pamięci przeglądarki (`swrCache`) i odświeża w tle. Po premierze wystarczy oprzeć pierwszy rysunek strony głównej na tej kopii (albo na treści wbudowanej), zamiast czekać do 2 s na odpowiedź serwera.
+4. **Ponownie zmierzyć po premierze.** Cały koszt startu (te 198 KB) wróci wtedy do aplikacji, bo gotowy HTML przestanie się wstawiać — warto wtedy sprawdzić stronę główną PageSpeedem i dopiero na tych liczbach ciąć dalej.
+
+**Drobiazgi bez zmian.** Obrazy (`SafeImg`) mają poprawnie ustawione `loading`/`fetchpriority` (nagłówek `eager` + `high`, resztę `lazy`); nie mają atrybutów `width`/`height`, ale rozmiar ustalają kontenery, więc nie powodują przesuwania układu.
+
+### Uwaga (niski priorytet, bez zmian)
+Komponenty treści spoza bloków CMS (`ContactSection`, `Footer`, `NewsletterSection`, `ForWhom`, `PowrotTeaser`, `Testimonials`) wstawiają HTML z panelu bez `sanitizeHtml`. Treść pochodzi wyłącznie z panelu (rola `admin`/`techniczna`), więc nie jest to droga z zewnątrz, a sanitizacja usunęłaby atrybuty `style` (mogłaby zmienić wygląd). Do rozważenia przy okazji, razem z `ContactSection`.
+
+### Testy wykonane
+- Publikacja przechodzi bez błędów (`vite build`, kod wyjścia 0), więc zmiany w `CmsPage` i `usePublishedPage` się kompilują.
+- Przegląd wyłącznie do odczytu: bez wysyłki maili, bez usuwania danych, bez publikowania stron z panelu.
+- Zmierzona waga pierwszej paczki (44 pliki, 198 KB po kompresji) i przynależność modułu bloków do paczki startowej.

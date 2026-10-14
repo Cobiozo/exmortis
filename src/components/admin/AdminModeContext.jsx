@@ -1,6 +1,7 @@
 import React, { createContext, useContext, useEffect, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { base44 } from "@/api/base44Client";
+import { appParams } from "@/lib/app-params";
 import { panelFor, siteFor } from "@/components/admin/adminLinks";
 
 const Ctx = createContext({ isAdmin: false, adminView: false, guest: false, setMode: () => {} });
@@ -17,6 +18,8 @@ export function AdminModeProvider({ children }) {
   const navigate = useNavigate();
 
   useEffect(() => {
+    // Gość bez zalogowania: nie ma kogo pytać — oszczędzamy zapytanie w starcie strony.
+    if (!appParams.token) { setIsAdmin(false); return; }
     base44.auth.me().then((u) => setIsAdmin(u?.role === "admin")).catch(() => setIsAdmin(false));
   }, []);
 

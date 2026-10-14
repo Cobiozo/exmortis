@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { base44 } from "@/api/base44Client";
 import { takePage } from "@/lib/prefetch";
 import { readCache, writeCache } from "@/lib/swrCache";
+import { usePageMeta } from "@/lib/usePageMeta";
 
 // Opublikowana wersja strony: undefined = ładowanie, null = brak. Kopia z poprzedniej wizyty od razu, świeża w tle.
 export default function usePublishedPage(slug) {
@@ -15,5 +16,7 @@ export default function usePublishedPage(slug) {
   useEffect(() => {
     if (page?.seo_title) document.title = page.seo_title;
   }, [page]);
+  // „Ukryta dla wyszukiwarek” ustawiona w edytorze działa też na żywej stronie.
+  usePageMeta({ noindex: !!page?.noindex });
   return page;
 }
