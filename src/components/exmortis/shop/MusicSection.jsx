@@ -6,12 +6,12 @@ import ShopProductCard from "./ShopProductCard";
 export default function MusicSection({ products, onWaitlist }) {
   const soundtrack = (products || []).find((p) => p.slug === "soundtrack-powrotu");
   return (
-    <section className="py-24 md:py-32 px-5 md:px-10 border-t hairline bg-[#070708]">
+    <section className="py-14 md:py-20 px-5 md:px-10 border-t hairline bg-[#070708]">
       <div className="mx-auto max-w-[1400px]">
-        <div className="grid md:grid-cols-12 gap-10 items-end mb-12">
+        <div className="grid md:grid-cols-12 gap-8 items-end mb-8">
           <div className="md:col-span-7">
             <p className="technical text-[11px] gold-text mb-4">MUZYKA</p>
-            <h2 className="shop-heading text-3xl md:text-5xl text-[#F5EFE1] leading-tight">
+            <h2 className="shop-heading text-3xl md:text-4xl text-[#F5EFE1] leading-tight">
               Ta droga wyrosła z muzyki.
             </h2>
           </div>

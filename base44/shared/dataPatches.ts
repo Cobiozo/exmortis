@@ -37,6 +37,11 @@ const PATCHES: { id: string; why: string; sql: string[] }[] = [
     ],
   },
   {
+    id: "2026-10-14-soundtrack-ukryty",
+    why: "„Soundtrack powrotu” wycofany (decyzja Dawida): ukryty, nie usunięty — nie pojawia się w katalogu, następnym kroku ani powiadomieniach",
+    sql: [`UPDATE public.products SET active = FALSE WHERE slug = 'soundtrack-powrotu'`],
+  },
+  {
     id: "2026-10-14-rezerwacje-raport",
     why: "Raport przed włączeniem rezerwacji: tryb, rodzaje (aktywne, dostęp) i godziny",
     sql: [
