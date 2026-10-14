@@ -3,8 +3,20 @@ import { runSql, escStr, esc } from "./supabase.ts";
 // Zamówienia z kasy (PayU) — tabela public.orders.
 
 // Struktura tabeli zakładana migracją przy wdrożeniu — przy zapytaniach nic nie zmieniamy.
-export async function ensureOrdersTable(_base44) {
-  // Tabela i kolumny zakładane migracją przy wdrożeniu (dawny blok DDL usunięty — nie był wykonywany).
+// Indeksy natomiast zakładamy tu: tabela rośnie, a bez nich każde powiadomienie PayU (payu_order_id),
+// konto i opinie (e-mail), lista i statystyki w panelu (status, data) oraz ponowienia faktur
+// (updated_date) przechodzą przez całą tabelę. Raz na instancję; po pierwszym razie to no-op.
+let ORDERS_IDX = false;
+export async function ensureOrdersTable(base44) {
+  if (ORDERS_IDX) return;
+  ORDERS_IDX = true;
+  await runSql(
+    base44,
+    `CREATE INDEX IF NOT EXISTS orders_payu_idx ON public.orders (payu_order_id);
+     CREATE INDEX IF NOT EXISTS orders_email_idx ON public.orders (lower(buyer_email));
+     CREATE INDEX IF NOT EXISTS orders_status_created_idx ON public.orders (status, created_date DESC);
+     CREATE INDEX IF NOT EXISTS orders_updated_idx ON public.orders (updated_date)`
+  ).catch(() => {});
 }
 
 export async function insertOrder(base44, order) {

@@ -29,6 +29,8 @@ let cols = false;
 export async function ensureWaitlistCols(base44) {
   if (cols) return;
   await runSql(base44, `ALTER TABLE public.waitlist ADD COLUMN IF NOT EXISTS notified_at timestamptz`);
+  // Lista w panelu liczy zapisanych dla każdego produktu osobno — bez indeksu to skan całej tabeli na produkt.
+  await runSql(base44, `CREATE INDEX IF NOT EXISTS waitlist_product_idx ON public.waitlist (product_id)`);
   await runSql(base44, `ALTER TABLE public.products ADD COLUMN IF NOT EXISTS release_at timestamptz, ADD COLUMN IF NOT EXISTS release_note text, ADD COLUMN IF NOT EXISTS release_notify boolean DEFAULT false`);
   cols = true;
 }
