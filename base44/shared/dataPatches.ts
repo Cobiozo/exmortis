@@ -25,6 +25,17 @@ const PATCHES: { id: string; why: string; sql: string[] }[] = [
       `UPDATE public.products SET name = regexp_replace(name, '„([^„”"'']*)["'']', '„\\1”', 'g') WHERE name ~ '„[^”]*["'']'`,
     ],
   },
+  {
+    id: "2026-10-14-karta",
+    why: "Karta podarunkowa: kwoty 97 · 197 · 497 zł, „wkrótce”, premiera 1.12 o 6:00",
+    sql: [
+      `ALTER TABLE public.products ADD COLUMN IF NOT EXISTS price_options jsonb`,
+      `UPDATE public.products SET price_options = '[97,197,497]'::jsonb, price = 97, price_regular = 97, price_start = NULL,
+         promo_end_date = NULL, old_price = NULL, price_steps = NULL, status = 'wkrótce', available_at = NULL,
+         release_at = '2026-12-01T06:00:00+01:00'::timestamptz, release_notify = FALSE
+       WHERE slug = 'karta-podarunkowa' AND product_type = 'karta'`,
+    ],
+  },
 ];
 
 export async function applyDataPatches(base44): Promise<string[]> {
