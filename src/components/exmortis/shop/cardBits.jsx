@@ -56,6 +56,10 @@ export function PriceBlock({ p }) {
   if (p.is_free) {
     return <span>0 zł</span>;
   }
+  // Karta podarunkowa z kwotami do wyboru: „97 · 197 · 497 zł”.
+  if (p.product_type === "karta" && Array.isArray(p.price_options) && p.price_options.length > 1) {
+    return <span>{[...p.price_options].map(Number).sort((a, b) => a - b).join(" · ")} zł</span>;
+  }
   if (isPromoActive(p) && p.price_start != null) {
     const until = new Date(`${p.promo_end_date}T12:00:00`).toLocaleDateString("pl-PL", {
       day: "numeric",
