@@ -5,6 +5,9 @@ import React, { Suspense, useEffect, useState } from "react";
 // blok niżej czeka na moment bezczynności po załadowaniu strony i wtedy dociąga się w tle.
 const load = () => import("./ModuleLazy");
 const LazyModule = React.lazy(load);
+// Strony zbudowane głównie z modułów (Skarbiec, produkt, spotkanie, kontakt…) pobierają plik modułów od razu,
+// równolegle z danymi — bez dodatkowego czekania. Odciążamy tylko stronę główną i /1-listopada.
+if (typeof window !== "undefined" && !["/", "/1-listopada"].includes(window.location.pathname)) load().catch(() => {});
 
 // Zbliżona wysokość bloku: kontener trzyma miejsce, żeby treść nie skakała w trakcie dociągania.
 const HEIGHT = {
