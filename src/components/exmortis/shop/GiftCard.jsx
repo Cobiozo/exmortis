@@ -20,8 +20,8 @@ export function GiftLine({ gift }) {
 // Wygląd karty — ten sam w podglądzie przy zakupie i na stronie do druku (czerń, złoto, imię i słowa darczyńcy).
 export function GiftCardVisual({ amount, toName, message, code, until, compact = false }) {
   return (
-    <div className={`relative bg-[#0A0A0B] border border-[#C9A24A]/70 text-center overflow-hidden ${compact ? "p-6" : "p-8 sm:p-12"}`}
-      style={{ aspectRatio: compact ? undefined : "1.6 / 1" }}>
+    // Bez overflow-hidden: przy długich słowach karta rośnie zamiast ucinać treść (aspect-ratio to tylko minimum).
+    <div className={`relative bg-[#0A0A0B] border border-[#C9A24A]/70 text-center ${compact ? "p-6" : "p-8 sm:p-12 sm:aspect-[1.6/1]"}`}>
       <div className="absolute inset-3 border border-[#C9A24A]/20 pointer-events-none" aria-hidden="true" />
       <div className="relative h-full flex flex-col items-center justify-center gap-3">
         <Logo className="h-10 w-10" glow={false} />
