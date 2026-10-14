@@ -4,7 +4,7 @@ import { base44 } from "@/api/base44Client";
 import FindOwner from "./FindOwner";
 import ClientErrors from "./ClientErrors";
 
-const LABEL = { blokada: "Blokada wideo", znak_wodny: "Naruszenie znaku wodnego", wideo_limit: "Limit żądań wideo", rabat: "Limit prób kodu" };
+const LABEL = { blokada: "Blokada wideo", wspoldzielenie: "Podejrzenie współdzielenia konta", znak_wodny: "Naruszenie znaku wodnego", wideo_limit: "Limit żądań wideo", rabat: "Limit prób kodu" };
 
 export default function SecurityPanel() {
   const [alerts, setAlerts] = useState(null);

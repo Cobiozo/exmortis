@@ -35,7 +35,7 @@ export default async function (req) {
     }
 
     if (body.action === "security") {
-      const alerts = await sr.SecurityLog.filter({ type: { $in: ["blokada", "znak_wodny", "wideo_limit", "rabat"] } }, "-created_date", 100);
+      const alerts = await sr.SecurityLog.filter({ type: { $in: ["blokada", "wspoldzielenie", "znak_wodny", "wideo_limit", "rabat"] } }, "-created_date", 100);
       return Response.json({ alerts });
     }
 
