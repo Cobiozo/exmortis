@@ -128,7 +128,7 @@ export default function PlaylistManager({ onMutate }) {
       {/* Dodawanie */}
       <form onSubmit={add} className="grid md:grid-cols-2 gap-4 mb-10">
         <div className="md:col-span-2">
-          <label className="technical text-[10px] text-foreground/50 block mb-2">
+          <label className="technical text-[10px] text-foreground/55 block mb-2">
             LINK YOUTUBE
           </label>
           <input
@@ -141,7 +141,7 @@ export default function PlaylistManager({ onMutate }) {
           {urlError && <p className="text-[#BC1E22] text-xs mt-1">{urlError}</p>}
         </div>
         <div>
-          <label className="technical text-[10px] text-foreground/50 block mb-2">
+          <label className="technical text-[10px] text-foreground/55 block mb-2">
             TYTUŁ (UZUPEŁNIA SIĘ AUTOMATYCZNIE)
           </label>
           <input
@@ -152,7 +152,7 @@ export default function PlaylistManager({ onMutate }) {
           />
         </div>
         <div>
-          <label className="technical text-[10px] text-foreground/50 block mb-2">
+          <label className="technical text-[10px] text-foreground/55 block mb-2">
             OPIS (OPCJONALNIE)
           </label>
           <input
@@ -174,7 +174,7 @@ export default function PlaylistManager({ onMutate }) {
 
       {/* Lista — edycja, kolejność, widoczność, usuwanie */}
       {rows.length === 0 ? (
-        <p className="text-foreground/50 text-sm">Playlista jest pusta.</p>
+        <p className="text-foreground/55 text-sm">Playlista jest pusta.</p>
       ) : (
         <div className="divide-y divide-[#3D3D3F]/40 border-y hairline">
           {rows.map((r, i) => (
@@ -245,7 +245,7 @@ export default function PlaylistManager({ onMutate }) {
                     </button>
                     <button
                       onClick={() => setConfirmId(null)}
-                      className="p-2 border hairline text-foreground/50 hover:text-foreground transition-colors"
+                      className="p-2 border hairline text-foreground/55 hover:text-foreground transition-colors"
                       aria-label="Anuluj"
                     >
                       <X className="h-4 w-4" />

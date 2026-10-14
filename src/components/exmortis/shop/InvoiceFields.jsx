@@ -10,7 +10,7 @@ export function validNip(raw) {
 }
 
 const inp = "w-full bg-transparent border hairline px-5 py-4 focus:border-[#C9A24A] focus:outline-none transition-colors";
-const lab = "technical text-[10px] text-foreground/50 block mb-3";
+const lab = "technical text-[10px] text-foreground/55 block mb-3";
 
 // Opcjonalne dane do faktury na firmę.
 export default function InvoiceFields({ value, onChange }) {

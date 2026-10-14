@@ -80,7 +80,7 @@ export default function LessonPlayer({ accessId, lesson, onDone, onNext, nextTit
     <div className="min-w-0">
       <div ref={box} className={`relative bg-black border hairline overflow-hidden ${fakeFull ? "fixed inset-0 z-[100]" : full ? "" : "aspect-video"}`} onContextMenu={(e) => e.preventDefault()}>
         {!lesson.has_video ? (
-          <p className="absolute inset-0 flex items-center justify-center text-sm text-foreground/50">Wideo jest przygotowywane.</p>
+          <p className="absolute inset-0 flex items-center justify-center text-sm text-foreground/55">Wideo jest przygotowywane.</p>
         ) : err ? (
           <div className="absolute inset-0 flex flex-col items-center justify-center gap-4 px-6 text-center">
             <p className="text-sm text-[#E8C547]">{err}</p>

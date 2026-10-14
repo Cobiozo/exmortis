@@ -7,7 +7,7 @@ export default function LeaveConfirm({ onStay, onLeave }) {
       <p className="text-sm text-[#F5EFE1]/80 mb-3">Przerwać ciszę?</p>
       <div className="flex gap-5 justify-center text-xs technical">
         <button onClick={onStay} className="gold-text hover:text-[#E2C170]">Zostaję</button>
-        <button onClick={onLeave} className="text-foreground/50 hover:text-foreground">Wychodzę</button>
+        <button onClick={onLeave} className="text-foreground/55 hover:text-foreground">Wychodzę</button>
       </div>
     </div>
   );

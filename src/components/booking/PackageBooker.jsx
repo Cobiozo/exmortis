@@ -44,7 +44,7 @@ export default function PackageBooker({ packageId, token, purchasedAt, consent, 
     }
   };
 
-  if (slots === null) return <p className="text-foreground/50">Ładowanie terminów…</p>;
+  if (slots === null) return <p className="text-foreground/55">Ładowanie terminów…</p>;
 
   if (!pick) {
     return (
@@ -63,10 +63,10 @@ export default function PackageBooker({ packageId, token, purchasedAt, consent, 
   const note = plNote(pick.start);
   return (
     <form onSubmit={submit} className="space-y-5">
-      <button type="button" onClick={() => setPick(null)} className="technical text-[10px] text-foreground/50 hover:gold-text">← ZMIEŃ TERMIN</button>
+      <button type="button" onClick={() => setPick(null)} className="technical text-[10px] text-foreground/55 hover:gold-text">← ZMIEŃ TERMIN</button>
       <p className="relic-heading text-xl">
         {fullLabel(pick.start)}
-        {note && <span className="block text-xs font-mono text-foreground/50 mt-1">{note}</span>}
+        {note && <span className="block text-xs font-mono text-foreground/55 mt-1">{note}</span>}
       </p>
       <label className="block text-sm">Imię<input required maxLength={120} className={inp} value={name} onChange={(e) => setName(e.target.value)} /></label>
       {near && (

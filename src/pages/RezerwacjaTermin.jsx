@@ -38,7 +38,7 @@ export default function RezerwacjaTermin() {
         {done ? (
           <div className="border border-[#C9A24A] p-6 space-y-3" role="status">
             <p className="relic-heading text-2xl">Zarezerwowane</p>
-            <p>{fullLabel(done.starts_at)}{plNote(done.starts_at) && <span className="text-foreground/50"> ({plNote(done.starts_at)})</span>}</p>
+            <p>{fullLabel(done.starts_at)}{plNote(done.starts_at) && <span className="text-foreground/55"> ({plNote(done.starts_at)})</span>}</p>
             <p className="text-sm text-foreground/70">Szczegóły i link Zoom pojawią się w Moich sesjach na koncie — zaloguj się adresem, na który kupiłaś/eś pakiet.</p>
           </div>
         ) : (

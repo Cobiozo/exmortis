@@ -30,13 +30,13 @@ export default function SessionRow({ b, past, onReschedule, onChanged }) {
     <div className="border hairline p-5 space-y-3">
       <div className="flex flex-wrap items-baseline justify-between gap-3">
         <p className="relic-heading text-lg">{b.type}</p>
-        <span className="technical text-[10px] text-foreground/50">{STATUS[b.status] || b.status}</span>
+        <span className="technical text-[10px] text-foreground/55">{STATUS[b.status] || b.status}</span>
       </div>
-      <p>{fullLabel(b.starts_at)}{note && <span className="text-foreground/50"> ({note})</span>}</p>
+      <p>{fullLabel(b.starts_at)}{note && <span className="text-foreground/55"> ({note})</span>}</p>
       {active && b.zoom_link && (
         <a href={b.zoom_link} target="_blank" rel="noreferrer" className="btn-relic text-[10px]">WEJDŹ NA SPOTKANIE</a>
       )}
-      {active && !b.zoom_link && <p className="text-xs text-foreground/50">Link do spotkania pojawi się 15 minut przed terminem.</p>}
+      {active && !b.zoom_link && <p className="text-xs text-foreground/55">Link do spotkania pojawi się 15 minut przed terminem.</p>}
       {active && (b.can_change || b.can_cancel ? (
         <div className="flex flex-wrap gap-3 pt-1">
           {b.can_change && <button onClick={onReschedule} className="btn-ghost text-[10px]">PRZENIEŚ</button>}

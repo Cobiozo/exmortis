@@ -33,18 +33,18 @@ export default function Rezerwacja() {
         {done ? (
           <div className="border border-[#C9A24A] p-6 space-y-3" role="status">
             <p className="relic-heading text-2xl">Zarezerwowane</p>
-            <p>{fullLabel(done.starts_at)}{plNote(done.starts_at) && <span className="text-foreground/50"> ({plNote(done.starts_at)})</span>}</p>
+            <p>{fullLabel(done.starts_at)}{plNote(done.starts_at) && <span className="text-foreground/55"> ({plNote(done.starts_at)})</span>}</p>
             {done.manage_url && <p className="text-sm text-foreground/70">Zapisz ten link — pokazuje szczegóły Twojej rezerwacji: <Link to={done.manage_url} className="gold-text underline break-all">Moja rezerwacja</Link></p>}
           </div>
         ) : pick ? (
           <div className="space-y-6">
-            <button onClick={() => setPick(null)} className="technical text-[10px] text-foreground/50 hover:gold-text">← ZMIEŃ TERMIN</button>
+            <button onClick={() => setPick(null)} className="technical text-[10px] text-foreground/55 hover:gold-text">← ZMIEŃ TERMIN</button>
             <BookingForm type={type} slot={pick} onDone={setDone} onTaken={(m) => { setNotice(m); setPick(null); setSlots(null); loadSlots(); }} />
           </div>
         ) : (
           <>
             {notice && <p className="mb-6 text-sm text-[#E8C547]" role="alert">{notice}</p>}
-            {slots ? <SlotPicker slots={slots} value={pick} onPick={(s) => { setNotice(""); setPick(s); }} /> : <p className="text-foreground/50">Ładowanie terminów…</p>}
+            {slots ? <SlotPicker slots={slots} value={pick} onPick={(s) => { setNotice(""); setPick(s); }} /> : <p className="text-foreground/55">Ładowanie terminów…</p>}
           </>
         )}
       </div>

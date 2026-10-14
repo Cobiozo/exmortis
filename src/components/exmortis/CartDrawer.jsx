@@ -39,7 +39,7 @@ export default function CartDrawer() {
             {items.length === 0 ? (
               <div className="h-full flex flex-col items-center justify-center px-6 text-center gap-4">
                 <p className="relic-heading text-2xl text-foreground/55">Pusto</p>
-                <p className="text-sm text-foreground/50">
+                <p className="text-sm text-foreground/55">
                   Skarbiec czeka. Wybierz coś z drogi powrotu.
                 </p>
                 <Link to="/skarbiec" onClick={() => setOpen(false)} className="btn-ghost mt-2">

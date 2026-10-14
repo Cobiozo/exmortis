@@ -9,7 +9,7 @@ export function SectionHead({ children }) {
 
 export function Label({ children, required }) {
   return (
-    <label className="technical text-[10px] text-foreground/50 block mb-3">
+    <label className="technical text-[10px] text-foreground/55 block mb-3">
       {children}
       {required && <span className="gold-text"> *</span>}
     </label>

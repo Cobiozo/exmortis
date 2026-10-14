@@ -34,7 +34,7 @@ export default function AuthLayout({ title, subtitle, footer, children, tabs = f
           </div>
         )}
         <div className="border hairline p-6 md:p-8">{children}</div>
-        {footer && <p className="text-center text-sm text-foreground/50 mt-6">{footer}</p>}
+        {footer && <p className="text-center text-sm text-foreground/55 mt-6">{footer}</p>}
       </div>
     </div>
   );

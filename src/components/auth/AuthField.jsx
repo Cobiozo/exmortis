@@ -5,7 +5,7 @@ export default function AuthField({ id, label, aside, ...props }) {
   return (
     <div className="space-y-2">
       <div className="flex items-center justify-between">
-        <label htmlFor={id} className="technical text-[10px] text-foreground/50">{label}</label>
+        <label htmlFor={id} className="technical text-[10px] text-foreground/55">{label}</label>
         {aside}
       </div>
       <input

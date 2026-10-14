@@ -8,7 +8,7 @@ export default function LegalVersions({ current, shown, versions, dataOd }) {
   const arch = versions.filter((v) => v.version !== current.version);
   return (
     <div className="mb-10 print:hidden">
-      <p className="technical text-[10px] text-foreground/50 mb-3">
+      <p className="technical text-[10px] text-foreground/55 mb-3">
         Wersja {shown.version}{shown.date && ` z ${plDate(shown.date)}`}
         {dataOd && !shown.old && ` · Obowiązuje od: ${dataOd}`}
       </p>

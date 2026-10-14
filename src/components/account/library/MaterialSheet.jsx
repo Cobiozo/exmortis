@@ -61,7 +61,7 @@ export default function MaterialSheet({ material, completed, onClose, onOpened }
         </div>
 
         <div className="p-5 space-y-5">
-          {!d && !err && <p className="text-foreground/50 font-body text-[15px]">Przygotowuję materiał…</p>}
+          {!d && !err && <p className="text-foreground/55 font-body text-[15px]">Przygotowuję materiał…</p>}
           {err && <p className="font-body text-[15px] text-[#F5EFE1]/70">{err}</p>}
 
           {d && material.kind === "AUDIO" && (

@@ -49,7 +49,7 @@ export default function PodcastEpisode() {
           <div>
             <p className="technical text-[10px] gold-text mb-3">ODCINEK #{ep.numer}</p>
             <h1 className="shop-heading text-3xl md:text-5xl text-[#F5EFE1] leading-tight mb-4" style={{ textWrap: "balance" }}>{ep.tytul}</h1>
-            <p className="text-sm text-foreground/50">{[ep.gosc_nazwa, new Date(ep.publikacja).toLocaleDateString("pl-PL"), ep.dlugosc_s && fmtT(ep.dlugosc_s)].filter(Boolean).join(" · ")}</p>
+            <p className="text-sm text-foreground/55">{[ep.gosc_nazwa, new Date(ep.publikacja).toLocaleDateString("pl-PL"), ep.dlugosc_s && fmtT(ep.dlugosc_s)].filter(Boolean).join(" · ")}</p>
             {!!ep.tematy?.length && <p className="technical text-[9px] text-foreground/55 mt-3">{ep.tematy.map((t) => TEMATY.find((x) => x[0] === t)?.[1] || t).join(" · ")}</p>}
           </div>
         </header>

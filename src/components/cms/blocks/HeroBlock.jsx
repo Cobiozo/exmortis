@@ -41,7 +41,7 @@ export default function HeroBlock({ d }) {
           {d.linia2 && <span className="block gold-text mt-3 text-2xl sm:text-3xl md:text-4xl lg:text-[4rem]">{nbsp(d.linia2)}</span>}
         </h1>
         {d.lead && <p className="no-hyph mt-8 text-lg md:text-2xl text-foreground/75 font-light">{nbsp(d.lead)}</p>}
-        {d.podlead && <p className="no-hyph mt-2 text-sm md:text-base text-foreground/50 font-light">{d.podlead}</p>}
+        {d.podlead && <p className="no-hyph mt-2 text-sm md:text-base text-foreground/55 font-light">{d.podlead}</p>}
         <Zapowiedz d={d} center />
         <Buttons list={d.przyciski} className="mt-12 justify-center" pion={d.przyciski_pion} />
         <Dopisek t={d.dopisek} />
@@ -60,7 +60,7 @@ export default function HeroBlock({ d }) {
           {d.linia2 && <span className="block gold-text">{nbsp(d.linia2)}</span>}
         </h1>
         {d.lead && <p className="no-hyph mt-8 text-lg md:text-xl text-foreground/70 max-w-2xl leading-relaxed">{nbsp(d.lead)}</p>}
-        {d.podlead && <p className="no-hyph mt-3 text-foreground/50 max-w-2xl">{d.podlead}</p>}
+        {d.podlead && <p className="no-hyph mt-3 text-foreground/55 max-w-2xl">{d.podlead}</p>}
         <Zapowiedz d={d} />
         <Buttons list={d.przyciski} className="mt-10" pion={d.przyciski_pion} />
         <Dopisek t={d.dopisek} />

@@ -21,13 +21,13 @@ export default function MyOrders() {
     loadReviews();
   }, []);
 
-  if (!list) return <p className="text-foreground/50">Ładowanie…</p>;
-  if (!list.length) return <p className="text-foreground/50 py-10">Nie masz jeszcze zamówień.</p>;
+  if (!list) return <p className="text-foreground/55">Ładowanie…</p>;
+  if (!list.length) return <p className="text-foreground/55 py-10">Nie masz jeszcze zamówień.</p>;
   return (
     <div className="space-y-10">
     {cards.length > 0 && (
       <section>
-        <p className="technical text-[10px] text-foreground/50 mb-3">KARTY PODARUNKOWE</p>
+        <p className="technical text-[10px] text-foreground/55 mb-3">KARTY PODARUNKOWE</p>
         <div className="divide-y divide-[#3D3D3F]/60 border-y hairline">
           {cards.map((c) => (
             <div key={c.token} className="py-4 flex flex-wrap items-center gap-x-6 gap-y-2 text-sm">
@@ -43,7 +43,7 @@ export default function MyOrders() {
     <div className="divide-y divide-[#3D3D3F]/60 border-y hairline">
       {list.map((o) => (
         <div key={o.id} className="py-5 grid sm:grid-cols-4 gap-2 sm:gap-6 text-sm">
-          <span className="text-foreground/50">{plDate(o.created_date)}<span className="block technical text-[9px] text-foreground/55 mt-1">NR {String(o.id).slice(0, 8).toUpperCase()}</span></span>
+          <span className="text-foreground/55">{plDate(o.created_date)}<span className="block technical text-[9px] text-foreground/55 mt-1">NR {String(o.id).slice(0, 8).toUpperCase()}</span></span>
           <div className="sm:col-span-2 text-[#F5EFE1] space-y-2">
             {(o.items || []).map((i, k) => (
               <div key={k} className="space-y-1">

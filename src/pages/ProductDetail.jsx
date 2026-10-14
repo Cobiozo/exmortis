@@ -89,7 +89,7 @@ export default function ProductDetail() {
       <div className="mx-auto max-w-[1400px] px-5 md:px-10 py-6">
         <button
           onClick={() => navigate("/skarbiec")}
-          className="py-3 -my-3 technical text-[10px] text-foreground/50 hover:gold-text flex items-center gap-2 transition-colors"
+          className="py-3 -my-3 technical text-[10px] text-foreground/55 hover:gold-text flex items-center gap-2 transition-colors"
         >
           <ArrowLeft className="h-3 w-3" /> SKLEP / {product.category.toUpperCase()}
         </button>
@@ -114,7 +114,7 @@ export default function ProductDetail() {
               </div>
             )}
             <div className="absolute top-4 left-4">
-              <span className="technical text-[9px] text-foreground/50 bg-[#0A0A0B]/70 px-2 py-1 border hairline">
+              <span className="technical text-[9px] text-foreground/55 bg-[#0A0A0B]/70 px-2 py-1 border hairline">
                 {product.category.toUpperCase()}
               </span>
             </div>
@@ -125,7 +125,7 @@ export default function ProductDetail() {
             <p className="technical text-[11px] gold-text mb-4">{product.category.toUpperCase()} · ARTEFAKT</p>
             <h1 className="relic-heading text-4xl md:text-5xl lg:text-6xl leading-[0.95] mb-4 [overflow-wrap:break-word]">{product.name}</h1>
             {product.subtitle && (
-              <p className="text-xl text-foreground/50 mb-8">{product.subtitle}</p>
+              <p className="text-xl text-foreground/55 mb-8">{product.subtitle}</p>
             )}
 
             <div className="flex items-baseline flex-wrap gap-x-4 gap-y-1 mb-8">
@@ -136,7 +136,7 @@ export default function ProductDetail() {
                 <span className="font-mono text-xl text-foreground/55 line-through">{regularPrice(product)} zł</span>
               )}
               {promo && (
-                <span className="technical text-[10px] text-foreground/50">
+                <span className="technical text-[10px] text-foreground/55">
                   DO {new Date(`${String(product.promo_end_date).slice(0, 10)}T12:00:00`).toLocaleDateString("pl-PL", { day: "numeric", month: "long" }).toUpperCase()}
                 </span>
               )}
@@ -148,7 +148,7 @@ export default function ProductDetail() {
             </div>
 
             {promo && (
-              <p className="text-xs text-foreground/50 -mt-6 mb-8">
+              <p className="text-xs text-foreground/55 -mt-6 mb-8">
                 {nextPriceText(product) && <span className="block text-sm gold-text mb-1">{nextPriceText(product)}</span>}
                 Najniższa cena z 30 dni przed obniżką: {zl(lowestPrice30(product))}
               </p>
@@ -251,7 +251,7 @@ export default function ProductDetail() {
             ) : (
               <div className="mt-auto space-y-4">
                 {product.product_type === "pdf" && (
-                  <p className="text-xs text-foreground/50">Plik jest osobisty — oznaczony Twoim adresem e-mail i numerem zamówienia.</p>
+                  <p className="text-xs text-foreground/55">Plik jest osobisty — oznaczony Twoim adresem e-mail i numerem zamówienia.</p>
                 )}
                 <div className="flex items-center gap-4">
                   <div className="flex items-center border hairline">

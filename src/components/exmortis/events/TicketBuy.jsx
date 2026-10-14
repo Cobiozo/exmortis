@@ -10,7 +10,7 @@ const inp = "w-full bg-transparent border hairline px-4 py-3 text-base text-fore
 // Osoby na biletach — w koszyku i w kasie.
 export function TicketLine({ holders }) {
   if (!Array.isArray(holders) || !holders.length) return null;
-  return <p className="text-xs text-foreground/50 mt-1 break-words">Na bilecie: {holders.join(", ")}</p>;
+  return <p className="text-xs text-foreground/55 mt-1 break-words">Na bilecie: {holders.join(", ")}</p>;
 }
 
 // Zakup biletów na stronie wydarzenia: liczba osób, imię i nazwisko każdej, przejście do kasy (PayU).
@@ -56,12 +56,12 @@ export default function TicketBuy({ event: ev }) {
     <form onSubmit={buy} className="space-y-5" noValidate>
       <div className="flex flex-wrap items-end justify-between gap-4">
         <div>
-          <p className="technical text-[10px] text-foreground/50 mb-1">BILET</p>
+          <p className="technical text-[10px] text-foreground/55 mb-1">BILET</p>
           <p className="font-mono text-2xl gold-text">{zl(price)}</p>
-          {av?.left != null && <p className="text-xs text-foreground/50 mt-1">{av.left <= 10 ? `Zostało miejsc: ${av.left}` : "Liczba miejsc ograniczona"}</p>}
+          {av?.left != null && <p className="text-xs text-foreground/55 mt-1">{av.left <= 10 ? `Zostało miejsc: ${av.left}` : "Liczba miejsc ograniczona"}</p>}
         </div>
         <div>
-          <p className="technical text-[10px] text-foreground/50 mb-2" id="tk-count-l">LICZBA BILETÓW</p>
+          <p className="technical text-[10px] text-foreground/55 mb-2" id="tk-count-l">LICZBA BILETÓW</p>
           <div className="flex items-center border hairline" role="group" aria-labelledby="tk-count-l">
             <button type="button" onClick={() => setCount(names.length - 1)} disabled={names.length <= 1} aria-label="Mniej biletów" className="p-3 min-w-[44px] min-h-[44px] flex items-center justify-center text-foreground/70 disabled:opacity-30"><Minus className="h-4 w-4" /></button>
             <span className="px-4 font-mono" aria-live="polite">{names.length}</span>
@@ -84,7 +84,7 @@ export default function TicketBuy({ event: ev }) {
       <button type="submit" className="btn-relic w-full">
         <Ticket className="h-4 w-4" /> KUPUJĘ — {zl(price * names.length)} <ArrowRight className="h-4 w-4" />
       </button>
-      <p className="text-xs text-foreground/50 leading-relaxed">
+      <p className="text-xs text-foreground/55 leading-relaxed">
         Płatność przez PayU. Po opłaceniu dostaniesz e-mailem bilety w PDF — każdy z imieniem i nazwiskiem, numerem i kodem QR do pokazania przy wejściu.
         Bilety będą też w Moim koncie (zakładka Spotkania), po zalogowaniu adresem podanym przy zakupie.
       </p>

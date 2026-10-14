@@ -21,7 +21,7 @@ export default function PasswordStrength({ value }) {
           <span key={i} className={`h-[2px] flex-1 ${i <= s ? "bg-[#C9A24A]" : "bg-[#3D3D3F]"}`} />
         ))}
       </div>
-      <p className="text-xs text-foreground/50">{LABELS[s]}{s === 0 && " — co najmniej 10 znaków"}</p>
+      <p className="text-xs text-foreground/55">{LABELS[s]}{s === 0 && " — co najmniej 10 znaków"}</p>
     </div>
   );
 }

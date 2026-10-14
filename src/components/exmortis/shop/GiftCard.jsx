@@ -10,7 +10,7 @@ const plDate = (ymd) => (ymd ? new Date(`${String(ymd).slice(0, 10)}T12:00:00`).
 export function GiftLine({ gift }) {
   if (!gift?.to_name && !gift?.message) return <p className="text-xs text-foreground/55 mt-1">Karta na {zl(gift?.amount)}</p>;
   return (
-    <p className="text-xs text-foreground/50 mt-1 break-words">
+    <p className="text-xs text-foreground/55 mt-1 break-words">
       {gift.to_name ? `Dla: ${gift.to_name}` : "Karta podarunkowa"}
       {gift.message ? ` · „${gift.message.length > 60 ? gift.message.slice(0, 60) + "…" : gift.message}”` : ""}
     </p>
@@ -32,7 +32,7 @@ export function GiftCardVisual({ amount, toName, message, code, until, compact =
         {code && (
           <p className="mt-2 font-mono text-lg sm:text-xl tracking-[0.15em] text-[#F5EFE1] border border-[#C9A24A]/50 px-4 py-2 break-all">{code}</p>
         )}
-        {until && <p className="technical text-[9px] text-foreground/50">WAŻNA DO {plDate(until).toUpperCase()} · SKARBIEC NA EXMORTIS.PL</p>}
+        {until && <p className="technical text-[9px] text-foreground/55">WAŻNA DO {plDate(until).toUpperCase()} · SKARBIEC NA EXMORTIS.PL</p>}
       </div>
     </div>
   );
@@ -57,7 +57,7 @@ export function GiftCardBuy({ product }) {
     <div className="mt-auto space-y-5">
       {amounts.length > 1 && (
         <div>
-          <p className="technical text-[10px] text-foreground/50 mb-3">KWOTA</p>
+          <p className="technical text-[10px] text-foreground/55 mb-3">KWOTA</p>
           <div className="grid grid-cols-3 gap-2" role="radiogroup" aria-label="Kwota karty">
             {amounts.map((a) => (
               <button key={a} type="button" role="radio" aria-checked={amount === a} onClick={() => setAmount(a)}
@@ -69,11 +69,11 @@ export function GiftCardBuy({ product }) {
         </div>
       )}
       <label className="block">
-        <span className="technical text-[10px] text-foreground/50 block mb-2">DLA KOGO (IMIĘ, NIEOBOWIĄZKOWO)</span>
+        <span className="technical text-[10px] text-foreground/55 block mb-2">DLA KOGO (IMIĘ, NIEOBOWIĄZKOWO)</span>
         <input value={toName} maxLength={60} onChange={(e) => setToName(e.target.value)} className={inp} />
       </label>
       <label className="block">
-        <span className="technical text-[10px] text-foreground/50 block mb-2">KILKA SŁÓW OD CIEBIE (NIEOBOWIĄZKOWO)</span>
+        <span className="technical text-[10px] text-foreground/55 block mb-2">KILKA SŁÓW OD CIEBIE (NIEOBOWIĄZKOWO)</span>
         <textarea value={message} maxLength={200} rows={2} onChange={(e) => setMessage(e.target.value)} className={inp} />
         <span className="text-[11px] text-foreground/55">{message.length}/200</span>
       </label>
@@ -81,7 +81,7 @@ export function GiftCardBuy({ product }) {
       <button onClick={add} className="btn-relic w-full">
         {added ? "DODANO ✓" : `DO KOSZYKA — ${zl(amount)}`} {!added && <ArrowRight className="h-4 w-4" />}
       </button>
-      <p className="text-xs text-foreground/50 leading-relaxed">
+      <p className="text-xs text-foreground/55 leading-relaxed">
         Po opłaceniu dostaniesz e-mailem kartę z kodem — do wydrukowania albo zapisania jako PDF i przekazania dalej.
         Kod wpisuje się w kasie Skarbca, działa jednorazowo, ważny 6 miesięcy.
       </p>

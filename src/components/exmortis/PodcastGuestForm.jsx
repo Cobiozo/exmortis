@@ -11,7 +11,7 @@ const FORMA = [["pelne", "Imię i nazwisko"], ["imie", "Samo imię"], ["pseudoni
 
 const L = ({ t, hint, children }) => (
   <label className="block">
-    <span className="technical text-[10px] text-foreground/50 block mb-3">{t}{hint && <span className="normal-case tracking-normal text-foreground/55"> — {hint}</span>}</span>
+    <span className="technical text-[10px] text-foreground/55 block mb-3">{t}{hint && <span className="normal-case tracking-normal text-foreground/55"> — {hint}</span>}</span>
     {children}
   </label>
 );

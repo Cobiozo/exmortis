@@ -28,7 +28,7 @@ export default function ShopLevelSection({ section, products, events, onWaitlist
               {section.label} · {String(section.level).padStart(2, "0")}
             </p>
             <h2 className="shop-heading text-3xl md:text-4xl text-[#F5EFE1] mb-3">{section.title}</h2>
-            <p className="text-foreground/50">{section.line}</p>
+            <p className="text-foreground/55">{section.line}</p>
           </div>
         </div>
 

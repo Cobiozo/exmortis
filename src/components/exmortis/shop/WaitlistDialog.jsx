@@ -71,7 +71,7 @@ export default function WaitlistDialog({ product, onClose }) {
               <h3 className="shop-heading text-2xl text-[#F5EFE1]">{product.name}</h3>
             </div>
             <div>
-              <label className="technical text-[9px] text-foreground/50 block mb-2">IMIĘ</label>
+              <label className="technical text-[9px] text-foreground/55 block mb-2">IMIĘ</label>
               <input
                 required
                 value={form.first_name}
@@ -80,7 +80,7 @@ export default function WaitlistDialog({ product, onClose }) {
               />
             </div>
             <div>
-              <label className="technical text-[9px] text-foreground/50 block mb-2">E-MAIL</label>
+              <label className="technical text-[9px] text-foreground/55 block mb-2">E-MAIL</label>
               <input
                 required
                 type="email"
@@ -96,7 +96,7 @@ export default function WaitlistDialog({ product, onClose }) {
                 onChange={(e) => setForm({ ...form, consent: e.target.checked })}
                 className="accent-[#C9A24A] w-5 h-5 shrink-0 mt-0.5"
               />
-              <span className="text-xs text-foreground/50 leading-relaxed">
+              <span className="text-xs text-foreground/55 leading-relaxed">
                 {soldOut
                   ? "Wyrażam zgodę, żeby exmortis napisał do mnie, gdy zwolni się miejsce."
                   : "Wyrażam zgodę, żeby exmortis napisał do mnie, kiedy ten materiał będzie dostępny."}

@@ -33,7 +33,7 @@ export default function ForWhom() {
               </li>
             ))}
           </ul>
-          <div className="rich-content mt-10 text-foreground/50 leading-relaxed max-w-lg" dangerouslySetInnerHTML={{ __html: close }} />
+          <div className="rich-content mt-10 text-foreground/55 leading-relaxed max-w-lg" dangerouslySetInnerHTML={{ __html: close }} />
         </div>
       </div>
     </section>

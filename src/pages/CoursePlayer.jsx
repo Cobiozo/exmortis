@@ -41,7 +41,7 @@ export default function CoursePlayer() {
 
   return (
     <div className="pt-28 pb-24 px-5 md:px-10 mx-auto max-w-[1300px]">
-      <Link to="/konto" className="inline-flex items-center gap-2 technical text-[10px] text-foreground/50 hover:gold-text"><ArrowLeft className="h-4 w-4" /> MOJE PRODUKTY</Link>
+      <Link to="/konto" className="inline-flex items-center gap-2 technical text-[10px] text-foreground/55 hover:gold-text"><ArrowLeft className="h-4 w-4" /> MOJE PRODUKTY</Link>
       <h1 className="shop-heading text-3xl md:text-4xl text-[#F5EFE1] mt-6">{data.name}</h1>
       <div className="mt-4 max-w-md">
         <div className="flex justify-between technical text-[10px] text-foreground/55"><span>UKOŃCZONE {done} / {data.lessons.length}</span><span>{pct}%</span></div>
@@ -51,7 +51,7 @@ export default function CoursePlayer() {
         {data.valid_until && <p className="text-xs text-foreground/55 mt-2">Dostęp do {new Date(`${data.valid_until}T12:00:00Z`).toLocaleDateString("pl-PL", { day: "numeric", month: "long", year: "numeric" })}</p>}
       </div>
       {data.lessons.length === 0 ? (
-        <p className="mt-10 text-foreground/50">Lekcje są przygotowywane. Dam znać mailem, kiedy będą gotowe.</p>
+        <p className="mt-10 text-foreground/55">Lekcje są przygotowywane. Dam znać mailem, kiedy będą gotowe.</p>
       ) : (
         <div className="mt-10 grid grid-cols-1 lg:grid-cols-[minmax(0,1fr)_340px] gap-10">
           {lesson && (consented ? <LessonPlayer key={lesson.id} accessId={accessId} lesson={lesson} onDone={markDone} onNext={next ? () => pick(next.id) : null} nextTitle={next?.title} /> : <LicenseConsent onAccept={() => setConsented(true)} />)}

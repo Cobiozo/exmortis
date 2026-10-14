@@ -37,7 +37,7 @@ export default function InstagramFeed() {
             href={`https://instagram.com/${feed.username}`}
             target="_blank"
             rel="noreferrer"
-            className="inline-flex items-center gap-1.5 py-3 -my-3 technical text-[10px] text-foreground/50 hover:gold-text transition-colors"
+            className="inline-flex items-center gap-1.5 py-3 -my-3 technical text-[10px] text-foreground/55 hover:gold-text transition-colors"
           >
             Obserwuj <ArrowUpRight className="h-3.5 w-3.5" />
           </a>

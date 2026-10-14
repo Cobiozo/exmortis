@@ -11,7 +11,7 @@ export default function MyProducts() {
     base44.functions.invoke("myAccount", { action: "products" }).then((r) => { setList(r.data.products); setNext(r.data.next || null); });
   }, []);
 
-  if (!list) return <p className="text-foreground/50">Ładowanie…</p>;
+  if (!list) return <p className="text-foreground/55">Ładowanie…</p>;
   if (!list.length) {
     return (
       <div className="py-16 text-center">

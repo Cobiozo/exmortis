@@ -80,7 +80,7 @@ export default function Register() {
         <button onClick={handleVerify} disabled={loading || otpCode.length < 6} className="btn-relic w-full disabled:opacity-60">
           {loading && <Loader2 className="h-4 w-4 animate-spin" />} POTWIERDŹ
         </button>
-        <p className="text-center text-sm text-foreground/50 mt-5">
+        <p className="text-center text-sm text-foreground/55 mt-5">
           Nie dotarł? <button onClick={handleResend} className="gold-text hover:underline">Wyślij ponownie</button>
         </p>
       </AuthLayout>

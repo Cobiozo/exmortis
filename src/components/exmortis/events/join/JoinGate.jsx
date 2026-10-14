@@ -19,7 +19,7 @@ export default function JoinGate({ state, error, onSubmit }) {
         {" "}Wpisz adres e-mail podany przy zapisie.
       </p>
       <div>
-        <label htmlFor="join-email" className="technical text-[10px] text-foreground/50 block mb-2">E-MAIL Z ZAPISU</label>
+        <label htmlFor="join-email" className="technical text-[10px] text-foreground/55 block mb-2">E-MAIL Z ZAPISU</label>
         <input id="join-email" type="email" required autoComplete="email" inputMode="email" value={email} onChange={(e) => setEmail(e.target.value)}
           className="w-full bg-transparent border hairline px-4 py-3.5 focus:border-[#C9A24A] focus:outline-none" />
       </div>
@@ -27,7 +27,7 @@ export default function JoinGate({ state, error, onSubmit }) {
       <button type="submit" disabled={busy} className="btn-relic w-full disabled:opacity-60">
         {busy ? <Loader2 className="h-4 w-4 animate-spin" /> : <>{state === "po" ? "POKAŻ NAGRANIE" : "WEJDŹ NA SPOTKANIE"} <ArrowRight className="h-4 w-4" /></>}
       </button>
-      <p className="text-xs text-foreground/50 leading-relaxed">Szybciej: otwórz osobisty link z e-maila potwierdzającego zapis. Nie masz zapisu? Zapisy zamykają się 15 minut przed startem.</p>
+      <p className="text-xs text-foreground/55 leading-relaxed">Szybciej: otwórz osobisty link z e-maila potwierdzającego zapis. Nie masz zapisu? Zapisy zamykają się 15 minut przed startem.</p>
     </form>
   );
 }

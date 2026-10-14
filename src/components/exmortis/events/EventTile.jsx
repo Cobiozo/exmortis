@@ -35,7 +35,7 @@ export default function EventTile({ event: ev, compact = false, past = false }) 
 
   const action = () => {
     if (cancelled) {
-      return <span className="technical text-[10px] text-foreground/50 py-3 block text-center md:text-right">Odwołane</span>;
+      return <span className="technical text-[10px] text-foreground/55 py-3 block text-center md:text-right">Odwołane</span>;
     }
     if (past) {
       return (
@@ -116,7 +116,7 @@ export default function EventTile({ event: ev, compact = false, past = false }) 
               <span className="font-heading gold-text leading-none text-2xl">
                 {d.day}
               </span>
-              <span className="text-[10px] text-foreground/50">{d.weekday}</span>
+              <span className="text-[10px] text-foreground/55">{d.weekday}</span>
             </div>
 
             {/* znaczkи + nazwa */}
@@ -127,7 +127,7 @@ export default function EventTile({ event: ev, compact = false, past = false }) 
           </div>
 
           <div>
-            {ev.subtitle && <p className="italic text-foreground/50 text-sm leading-relaxed">{ev.subtitle}</p>}
+            {ev.subtitle && <p className="italic text-foreground/55 text-sm leading-relaxed">{ev.subtitle}</p>}
             <p className="technical text-[9px] text-foreground/55 mt-2">{infoLine}</p>
           </div>
 
@@ -135,7 +135,7 @@ export default function EventTile({ event: ev, compact = false, past = false }) 
           <div className="mt-auto w-full flex flex-col gap-2 [&>a]:w-full [&>button]:w-full">
             {action()}
             {spotsNote && (
-              <p className="technical text-[9px] text-foreground/50 text-center md:text-right">
+              <p className="technical text-[9px] text-foreground/55 text-center md:text-right">
                 zostało {spotsLeft} {spotsLeft === 1 ? "miejsce" : spotsLeft < 5 ? "miejsca" : "miejsc"}
               </p>
             )}
@@ -147,7 +147,7 @@ export default function EventTile({ event: ev, compact = false, past = false }) 
         <DialogContent className="bg-[#121212] border-[#2A2A2A] max-w-md">
           <DialogHeader>
             <DialogTitle className="shop-heading text-xl text-[#F5EFE1]">{ev.title}</DialogTitle>
-            <DialogDescription className="text-foreground/50">
+            <DialogDescription className="text-foreground/55">
               {tbd ? "Termin do ustalenia" : whenText(ev.start_datetime)} · {formatText(ev.format)}
               {!tbd && <WarsawNote iso={ev.start_datetime} />}
             </DialogDescription>

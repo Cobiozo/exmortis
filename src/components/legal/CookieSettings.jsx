@@ -8,7 +8,7 @@ export default function CookieSettings({ onSave }) {
   const [m, setM] = useState(prev?.marketing || false);
   const Row = ({ title, desc, children }) => (
     <div className="flex items-start justify-between gap-4 py-3 border-b hairline">
-      <div><p className="text-sm text-foreground/85">{title}</p><p className="text-xs text-foreground/50">{desc}</p></div>{children}
+      <div><p className="text-sm text-foreground/85">{title}</p><p className="text-xs text-foreground/55">{desc}</p></div>{children}
     </div>
   );
   return (

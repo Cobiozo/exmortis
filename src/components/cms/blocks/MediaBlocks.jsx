@@ -24,7 +24,7 @@ export function GalleryBlock({ d, label }) {
         {zd.map((z, i) => (
           <figure key={i}>
             <SafeImg img={z.obraz} sizes="(min-width: 1024px) 33vw, 50vw" className={`w-full ${ratioClass(z.obraz, "4:5")}`} />
-            {z.podpis && <figcaption className="technical text-[9px] text-foreground/50 mt-2">{z.podpis}</figcaption>}
+            {z.podpis && <figcaption className="technical text-[9px] text-foreground/55 mt-2">{z.podpis}</figcaption>}
           </figure>
         ))}
       </div>
@@ -43,7 +43,7 @@ export function VideoBlock({ d, label }) {
         {e?.file && <video src={e.file} controls playsInline preload="metadata" className="w-full h-full object-contain" />}
         {!e && <p className="h-full flex items-center justify-center text-sm text-foreground/55">Wklej link YouTube, Vimeo lub pliku MP4.</p>}
       </div>
-      {d.podpis && <figcaption className="technical text-[9px] text-foreground/50 mt-3">{d.podpis}</figcaption>}
+      {d.podpis && <figcaption className="technical text-[9px] text-foreground/55 mt-3">{d.podpis}</figcaption>}
     </figure>
   );
 }

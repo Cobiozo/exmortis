@@ -10,7 +10,7 @@ export default function RzIntro() {
       <Logo className="h-14 w-14 mx-auto" glow={false} />
       <p className="technical text-[11px] text-foreground/55 mt-5 tracking-[0.3em]">EXMORTIS</p>
       <p className="relic-heading text-4xl md:text-5xl gold-text mt-2 tracking-[0.12em]">ROZDROŻA</p>
-      <p className="shop-heading italic text-foreground/50 mt-3">„Każda decyzja coś kończy. Każda coś zaczyna”.</p>
+      <p className="shop-heading italic text-foreground/55 mt-3">„Każda decyzja coś kończy. Każda coś zaczyna”.</p>
       <h1 className="shop-heading text-3xl md:text-4xl text-[#F5EFE1] mt-12">„Nie jesteś widzem tej historii”.</h1>
       <div className="mt-8 space-y-5 text-foreground/75 leading-[1.8] text-[17px] text-left sm:text-center">
         <p>Istnieją historie, w których wszystko wydaje się oczywiste, dopóki nie przychodzi moment wyboru.</p>

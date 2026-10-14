@@ -34,7 +34,7 @@ export default function Bilet() {
   return (
     <main className="min-h-[100svh] bg-[#0A0A0B] text-foreground px-4 py-8 sm:py-14">
       <div className="max-w-md mx-auto">
-        {state.loading && <p className="text-foreground/50 text-center">Ładowanie…</p>}
+        {state.loading && <p className="text-foreground/55 text-center">Ładowanie…</p>}
         {state.error && (
           <div className="text-center space-y-6">
             <p className="text-foreground/70">{state.error}</p>
@@ -48,7 +48,7 @@ export default function Bilet() {
               <p className="technical text-[10px] gold-text tracking-[0.3em] mt-3">EXMORTIS · BILET</p>
               <h1 className="shop-heading text-2xl text-[#F5EFE1] mt-3 leading-snug break-words">{t.event.title}</h1>
               {t.event.start_datetime && <p className="text-sm text-foreground/60 mt-2">{when(t.event.start_datetime)} (czas polski)</p>}
-              <p className="text-sm text-foreground/50 mt-1">{t.event.format === "Online" ? "Online" : t.event.location || ""}</p>
+              <p className="text-sm text-foreground/55 mt-1">{t.event.format === "Online" ? "Online" : t.event.location || ""}</p>
             </div>
             <div className="p-6 text-center">
               <p className="technical text-[10px] text-foreground/55">UCZESTNIK</p>
@@ -63,7 +63,7 @@ export default function Bilet() {
                   <p className="font-mono text-2xl tracking-[0.2em] gold-text mt-4">{t.code}</p>
                   {t.status === "wykorzystany"
                     ? <p className="technical text-[10px] text-[#E8C547] mt-3">WEJŚCIE ZAREJESTROWANE{t.checked_at ? ` · ${hhmm(t.checked_at).toUpperCase()}` : ""}</p>
-                    : <p className="text-xs text-foreground/50 mt-3">Pokaż ten kod przy wejściu. Podkręć jasność ekranu.</p>}
+                    : <p className="text-xs text-foreground/55 mt-3">Pokaż ten kod przy wejściu. Podkręć jasność ekranu.</p>}
                 </>
               )}
             </div>

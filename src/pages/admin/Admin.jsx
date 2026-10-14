@@ -90,7 +90,7 @@ export default function Admin() {
       <div className="min-h-screen flex flex-col items-center justify-center gap-6 px-5 text-center">
         <ShieldAlert className="h-12 w-12 blood-text" />
         <p className="relic-heading text-3xl">Nie masz dostępu</p>
-        <p className="text-foreground/50 max-w-sm">Ta część strony jest dostępna tylko dla administratora.</p>
+        <p className="text-foreground/55 max-w-sm">Ta część strony jest dostępna tylko dla administratora.</p>
         <Link to="/" className="btn-relic">STRONA GŁÓWNA</Link>
       </div>
     );
@@ -116,13 +116,13 @@ export default function Admin() {
         </header>
 
         {section && (
-          <Link to="/admin" className="inline-flex items-center gap-2 technical text-[10px] text-foreground/50 hover:gold-text mt-8">
+          <Link to="/admin" className="inline-flex items-center gap-2 technical text-[10px] text-foreground/55 hover:gold-text mt-8">
             <ArrowLeft className="h-4 w-4" /> PULPIT
           </Link>
         )}
 
         <div className="mt-10">
-          {!section ? (tech ? <TechDashboard sections={TECH.map((k) => [k, SECTIONS[k][0]])} /> : <AdminDashboard />) : current ? current[1]() : <p className="text-foreground/50">Nie ma takiej sekcji.</p>}
+          {!section ? (tech ? <TechDashboard sections={TECH.map((k) => [k, SECTIONS[k][0]])} /> : <AdminDashboard />) : current ? current[1]() : <p className="text-foreground/55">Nie ma takiej sekcji.</p>}
         </div>
       </div>
     </div>

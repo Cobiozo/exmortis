@@ -186,7 +186,7 @@ export default function Checkout() {
           {/* Form */}
           <form onSubmit={submit} className="md:col-span-3 space-y-8">
             <div>
-              <label htmlFor="co-name" className="technical text-[10px] text-foreground/50 block mb-3">IMIĘ I NAZWISKO</label>
+              <label htmlFor="co-name" className="technical text-[10px] text-foreground/55 block mb-3">IMIĘ I NAZWISKO</label>
               <input
                 id="co-name"
                 autoComplete="name"
@@ -197,7 +197,7 @@ export default function Checkout() {
               />
             </div>
             <div>
-              <label htmlFor="co-email" className="technical text-[10px] text-foreground/50 block mb-3">E-MAIL</label>
+              <label htmlFor="co-email" className="technical text-[10px] text-foreground/55 block mb-3">E-MAIL</label>
               <input
                 id="co-email"
                 autoComplete="email"
@@ -213,7 +213,7 @@ export default function Checkout() {
               </div>
             </div>
             <div>
-              <label htmlFor="co-note" className="technical text-[10px] text-foreground/50 block mb-3">NOTATKA (OPCJONALNIE)</label>
+              <label htmlFor="co-note" className="technical text-[10px] text-foreground/55 block mb-3">NOTATKA (OPCJONALNIE)</label>
               <textarea
                 id="co-note"
                 rows={4}
@@ -253,7 +253,7 @@ export default function Checkout() {
                   </div>
                   <div className="flex-1 min-w-0">
                     <p className="relic-heading text-sm gold-text truncate">{item.name}</p>
-                    <p className="font-mono text-xs text-foreground/50">{item.qty} × {item.price} zł</p>
+                    <p className="font-mono text-xs text-foreground/55">{item.qty} × {item.price} zł</p>
                     {item.gift && <GiftLine gift={item.gift} />}
                     {item.kind === "bilet" && <TicketLine holders={item.holders} />}
                   </div>

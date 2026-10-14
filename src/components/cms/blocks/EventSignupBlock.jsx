@@ -44,7 +44,7 @@ export default function EventSignupBlock({ d, label }) {
     <div className="max-w-xl mx-auto">
       <SectionHead label={label} title={d.tytul} center />
       <div id="zapis" className="border hairline bg-[#0D0D0E] p-5 sm:p-7 scroll-mt-28">
-        <p className="technical text-[10px] text-foreground/50 mb-6 min-h-[1.5em]">{ev.start_datetime && <>{whenText(ev.start_datetime)} · {durationText(ev.duration_minutes)} · {ev.format} · {priceText(ev.price)}<WarsawNote iso={ev.start_datetime} /></>}</p>
+        <p className="technical text-[10px] text-foreground/55 mb-6 min-h-[1.5em]">{ev.start_datetime && <>{whenText(ev.start_datetime)} · {durationText(ev.duration_minutes)} · {ev.format} · {priceText(ev.price)}<WarsawNote iso={ev.start_datetime} /></>}</p>
         {closed ? <p className="text-foreground/70">{ev.status === "Odwołane" ? "To spotkanie zostało odwołane." : "To spotkanie już się odbyło."}</p>
           : notYet && !adminView ? <NotYet od={d.zapisy_od} />
           : <>

@@ -24,7 +24,7 @@ export default function DiscountField({ items, applied, onApply }) {
     return (
       <div className="flex justify-between items-center text-sm">
         <span className="gold-text">Kod {applied.code}: −{applied.discount.toFixed(2)} zł</span>
-        <button type="button" onClick={() => { onApply(null); setCode(""); }} className="technical text-[10px] text-foreground/50 hover:gold-text">USUŃ</button>
+        <button type="button" onClick={() => { onApply(null); setCode(""); }} className="technical text-[10px] text-foreground/55 hover:gold-text">USUŃ</button>
       </div>
     );
   }

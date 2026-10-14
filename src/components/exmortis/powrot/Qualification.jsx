@@ -33,7 +33,7 @@ export default function Qualification() {
               </div>
             ))}
           </div>
-          <p className="mt-12 text-foreground/50 leading-relaxed border-l hairline pl-6">
+          <p className="mt-12 text-foreground/55 leading-relaxed border-l hairline pl-6">
             Jeśli po rozmowie któreś z nas uzna, że to nie ten moment albo nie ta osoba —
             rozstajemy się w dobrym. Bez presji z żadnej strony.
           </p>

@@ -256,7 +256,7 @@ export default function Test({ d = {} }) {
             <h2 className="shop-heading text-2xl md:text-3xl text-[#F5EFE1] leading-snug mb-6">
               Jeśli chcesz — dokończ jednym zdaniem:
             </h2>
-            <p className="italic text-foreground/50 text-lg mb-6">«Ostatnio umarło we mnie…»</p>
+            <p className="italic text-foreground/55 text-lg mb-6">«Ostatnio umarło we mnie…»</p>
             <textarea value={openAnswer} onChange={(e) => setOpenAnswer(e.target.value)} rows={4} maxLength={2000} className={inputCls} placeholder="…" />
             <p className="text-xs text-foreground/55 mt-3">Przeczytam to tylko ja. Nie musisz pisać nic, czego nie chcesz.</p>
             <div className="flex flex-col sm:flex-row gap-4 mt-10">
@@ -276,20 +276,20 @@ export default function Test({ d = {} }) {
               Twój wynik jest gotowy. Gdzie mam go wysłać?
             </h2>
             <div>
-              <label className="technical text-[10px] text-foreground/50 block mb-3">IMIĘ</label>
+              <label className="technical text-[10px] text-foreground/55 block mb-3">IMIĘ</label>
               <input required maxLength={200} value={lead.first_name} onChange={(e) => setLead({ ...lead, first_name: e.target.value })} className={inputCls} />
             </div>
             <div>
-              <label className="technical text-[10px] text-foreground/50 block mb-3">E-MAIL</label>
+              <label className="technical text-[10px] text-foreground/55 block mb-3">E-MAIL</label>
               <input required type="email" value={lead.email} onChange={(e) => setLead({ ...lead, email: e.target.value })} className={inputCls} />
             </div>
             <label className="flex items-start gap-3 cursor-pointer">
               <input type="checkbox" required checked={lead.consent} onChange={(e) => setLead({ ...lead, consent: e.target.checked })} className="accent-[#C9A24A] w-5 h-5 shrink-0 mt-0.5" />
-              <span className="text-sm text-foreground/50 leading-relaxed">Zgadzam się na przetwarzanie danych w celu przesłania wyniku.</span>
+              <span className="text-sm text-foreground/55 leading-relaxed">Zgadzam się na przetwarzanie danych w celu przesłania wyniku.</span>
             </label>
             <label className="flex items-start gap-3 cursor-pointer">
               <input type="checkbox" checked={lead.newsletter} onChange={(e) => setLead({ ...lead, newsletter: e.target.checked })} className="accent-[#C9A24A] w-5 h-5 shrink-0 mt-0.5" />
-              <span className="text-sm text-foreground/50 leading-relaxed">Chcę też dostawać „Listy powrotu” — jeden list w każdy poniedziałek.</span>
+              <span className="text-sm text-foreground/55 leading-relaxed">Chcę też dostawać „Listy powrotu” — jeden list w każdy poniedziałek.</span>
             </label>
             {error && <p className="text-sm blood-text" role="alert">{error}</p>}
             <button type="submit" disabled={sending} className="btn-relic w-full disabled:opacity-60">

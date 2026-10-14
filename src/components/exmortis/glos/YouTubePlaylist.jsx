@@ -100,7 +100,7 @@ export default function YouTubePlaylist() {
                       {s.tytul}
                     </span>
                     {s.opis && (
-                      <span className="block text-foreground/50 text-xs mt-0.5 line-clamp-2">
+                      <span className="block text-foreground/55 text-xs mt-0.5 line-clamp-2">
                         {s.opis}
                       </span>
                     )}

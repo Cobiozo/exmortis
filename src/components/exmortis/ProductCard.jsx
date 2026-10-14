@@ -22,7 +22,7 @@ export default function ProductCard({ product, index = 0 }) {
               fittingType="fill"
             />
             <div className="absolute top-4 left-4">
-              <span className="technical text-[9px] text-foreground/50 bg-[#0A0A0B]/70 px-2 py-1 border hairline">
+              <span className="technical text-[9px] text-foreground/55 bg-[#0A0A0B]/70 px-2 py-1 border hairline">
                 {String(index + 1).padStart(2, "0")} · {product.category}
               </span>
             </div>
@@ -38,7 +38,7 @@ export default function ProductCard({ product, index = 0 }) {
           <div>
             <h3 className="relic-heading text-lg gold-text">{product.name}</h3>
             {product.subtitle && (
-              <p className="text-sm text-foreground/50 mt-1">{product.subtitle}</p>
+              <p className="text-sm text-foreground/55 mt-1">{product.subtitle}</p>
             )}
           </div>
           {product.description && !sameAsSubtitle && (
@@ -55,7 +55,7 @@ export default function ProductCard({ product, index = 0 }) {
                   ? <><s className="text-foreground/55 text-sm mr-2">{regularPrice(product)} zł</s>{unitPrice(product)} zł</>
                   : `${unitPrice(product)} zł`}
             </span>
-            <span className="technical text-[10px] text-foreground/50 group-hover:gold-text flex items-center gap-1 transition-colors">
+            <span className="technical text-[10px] text-foreground/55 group-hover:gold-text flex items-center gap-1 transition-colors">
               ZOBACZ <ArrowRight className="h-3 w-3" />
             </span>
           </div>

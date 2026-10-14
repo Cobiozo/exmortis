@@ -103,7 +103,7 @@ export default function ContactSection() {
             <form onSubmit={submit} className="space-y-6">
               <div className="grid sm:grid-cols-2 gap-6">
                 <div>
-                  <label className="technical text-[10px] text-foreground/50 block mb-3">IMIĘ</label>
+                  <label className="technical text-[10px] text-foreground/55 block mb-3">IMIĘ</label>
                   <input
                     required
                     value={form.name}
@@ -112,7 +112,7 @@ export default function ContactSection() {
                   />
                 </div>
                 <div>
-                  <label className="technical text-[10px] text-foreground/50 block mb-3">EMAIL</label>
+                  <label className="technical text-[10px] text-foreground/55 block mb-3">EMAIL</label>
                   <input
                     required
                     type="email"
@@ -123,7 +123,7 @@ export default function ContactSection() {
                 </div>
               </div>
               <div>
-                <label className="technical text-[10px] text-foreground/50 block mb-3">WIADOMOŚĆ</label>
+                <label className="technical text-[10px] text-foreground/55 block mb-3">WIADOMOŚĆ</label>
                 <textarea
                   required
                   rows={5}

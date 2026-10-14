@@ -6,7 +6,7 @@ import useSystemText from "@/content/useSystemText";
 
 const inputCls =
   "w-full bg-transparent border hairline px-5 py-4 focus:border-[#C9A24A] focus:outline-none transition-colors";
-const labelCls = "technical text-[10px] text-foreground/50 block mb-3";
+const labelCls = "technical text-[10px] text-foreground/55 block mb-3";
 
 // Formularz zamówienia bezpłatnego materiału: imię, e-mail, telefon (opcjonalnie)
 // z osobną zgodą na kontakt oraz opcjonalna zgoda na newsletter.
@@ -104,7 +104,7 @@ export default function FreeOrderForm({ product }) {
               onChange={(e) => setForm({ ...form, phoneConsent: e.target.checked })}
               className="accent-[#C9A24A] w-5 h-5 shrink-0 mt-0.5"
             />
-            <span className="text-xs text-foreground/50 leading-relaxed">
+            <span className="text-xs text-foreground/55 leading-relaxed">
               Zgadzam się na kontakt telefoniczny w sprawie moich materiałów i programu POWRÓT.
             </span>
           </label>

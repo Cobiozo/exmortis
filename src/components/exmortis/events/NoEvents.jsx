@@ -9,7 +9,7 @@ export default function NoEvents() {
       <p className="shop-heading text-2xl md:text-3xl text-[#F5EFE1] leading-snug">
         Kolejne terminy wkrótce. Zajrzyj do Skarbca.
       </p>
-      <p className="mt-5 text-foreground/50 leading-relaxed">
+      <p className="mt-5 text-foreground/55 leading-relaxed">
         W międzyczasie zajrzyj do Skarbca — znajdziesz tam drogi powrotu, od których możesz zacząć od razu.
       </p>
       <Link

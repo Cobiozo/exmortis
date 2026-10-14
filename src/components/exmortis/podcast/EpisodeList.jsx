@@ -19,7 +19,7 @@ export default function EpisodeList({ episodes, playlists }) {
     return l;
   }, [episodes, playlists, pl, topic, q]);
 
-  const tab = (on) => `technical text-[10px] px-4 py-2 border ${on ? "border-[#C9A24A] gold-text" : "hairline text-foreground/50 hover:text-foreground"}`;
+  const tab = (on) => `technical text-[10px] px-4 py-2 border ${on ? "border-[#C9A24A] gold-text" : "hairline text-foreground/55 hover:text-foreground"}`;
   return (
     <div className="space-y-6">
       <div className="flex flex-wrap gap-2">

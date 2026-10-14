@@ -28,7 +28,7 @@ export default function BookingForm({ type, slot, onDone, onTaken }) {
   const note = plNote(slot.start);
   return (
     <form onSubmit={submit} className="space-y-5">
-      <p className="relic-heading text-xl">{fullLabel(slot.start)}{note && <span className="block text-xs font-mono text-foreground/50 mt-1">{note}</span>}</p>
+      <p className="relic-heading text-xl">{fullLabel(slot.start)}{note && <span className="block text-xs font-mono text-foreground/55 mt-1">{note}</span>}</p>
       <input className="hidden" tabIndex={-1} autoComplete="off" value={f.website} onChange={(e) => setF({ ...f, website: e.target.value })} aria-hidden="true" />
       <label className="block text-sm">Imię<input required maxLength={120} className={inp} value={f.first_name} onChange={(e) => setF({ ...f, first_name: e.target.value })} /></label>
       <label className="block text-sm">E-mail<input required type="email" maxLength={320} className={inp} value={f.email} onChange={(e) => setF({ ...f, email: e.target.value })} /></label>

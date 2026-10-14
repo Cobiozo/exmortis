@@ -16,7 +16,7 @@ export default function MiniPlayer() {
         <button onClick={p.toggle} aria-label={p.playing ? "Pauza" : "Odtwórz"} className="p-2 gold-text">
           {p.playing ? <Pause className="h-5 w-5" /> : <Play className="h-5 w-5" />}
         </button>
-        <button onClick={p.close} aria-label="Zamknij" className="p-2 text-foreground/50 hover:text-foreground"><X className="h-5 w-5" /></button>
+        <button onClick={p.close} aria-label="Zamknij" className="p-2 text-foreground/55 hover:text-foreground"><X className="h-5 w-5" /></button>
       </div>
     </div>
   );

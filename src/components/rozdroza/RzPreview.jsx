@@ -48,7 +48,7 @@ export function StoryCard({ meta, going = false, backTo, backLabel, onStart, onR
       <div className="mt-8">
         <p className="technical text-[10px] text-[#E8676A]/90">{(CATEGORY_LABEL[meta.category] || "ROZDROŻA").toUpperCase()}</p>
         <h1 className="shop-heading text-4xl md:text-5xl text-[#F5EFE1] mt-2 leading-tight">{meta.title}</h1>
-        {meta.reading_time || meta.estimated_minutes ? <p className="text-sm text-foreground/50 mt-3 flex items-center gap-1.5"><Clock className="h-4 w-4" /> Orientacyjnie {meta.reading_time || `${meta.estimated_minutes} min`} czytania jednej ścieżki</p> : null}
+        {meta.reading_time || meta.estimated_minutes ? <p className="text-sm text-foreground/55 mt-3 flex items-center gap-1.5"><Clock className="h-4 w-4" /> Orientacyjnie {meta.reading_time || `${meta.estimated_minutes} min`} czytania jednej ścieżki</p> : null}
         {meta.summary && <p className="mt-6 text-[17px] text-foreground/80 leading-[1.8] whitespace-pre-line">{meta.summary}</p>}
         {meta.content_warning && (
           <div className="mt-6 border border-[#BC1E22]/50 bg-[#BC1E22]/[0.06] p-4 flex gap-3">

@@ -165,7 +165,7 @@ export default function PowrotForm() {
           </p>
         </div>
         <div className="min-w-0">
-          <p className="text-foreground/50 text-sm mb-8">
+          <p className="text-foreground/55 text-sm mb-8">
             Nie wiesz, czy to dla Ciebie? Zacznij od{" "}
             <Link to="/test?src=powrot" className="gold-text hover:underline">
               testu «Która śmierć jest Twoja?»

@@ -77,10 +77,10 @@ export default function MyEvents() {
                   <p className="text-[#F5EFE1]">{i.title}</p>
                   <p className="text-sm text-foreground/55 mt-1">{plWhenFull(i.start_datetime)} · {i.format === "Online" ? "online" : "na żywo"}</p>
                 </div>
-                {i.status === "Odwołane" ? <span className="technical text-[10px] text-foreground/50">ODWOŁANE</span>
+                {i.status === "Odwołane" ? <span className="technical text-[10px] text-foreground/55">ODWOŁANE</span>
                   : i.reg_status === "Lista rezerwowa" ? <span className="technical text-[10px] text-[#E8C547]">LISTA REZERWOWA</span>
                   : i.join_url ? <Link to={i.join_url} className="btn-ghost !px-4 !py-2 text-[10px]">STRONA SPOTKANIA <ArrowRight className="h-4 w-4" /></Link>
-                  : <span className="technical text-[10px] text-foreground/50">ZAPISANO</span>}
+                  : <span className="technical text-[10px] text-foreground/55">ZAPISANO</span>}
               </div>
             ))}
           </div>

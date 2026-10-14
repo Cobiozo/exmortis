@@ -12,7 +12,7 @@ export default function SlotPicker({ slots, value, onPick }) {
   const tz = viewerTz();
   return (
     <div className="space-y-6">
-      {tz !== "Europe/Warsaw" && <p className="text-xs text-foreground/50">Godziny w Twojej strefie czasowej ({tz}).</p>}
+      {tz !== "Europe/Warsaw" && <p className="text-xs text-foreground/55">Godziny w Twojej strefie czasowej ({tz}).</p>}
       {days.map((d) => (
         <div key={d.k}>
           <p className="technical text-[10px] gold-text mb-2">{d.label}</p>

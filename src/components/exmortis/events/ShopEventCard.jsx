@@ -17,7 +17,7 @@ export default function ShopEventCard({ event: ev }) {
       <div className="flex items-start justify-between mb-6">
         <div>
           <p className="shop-heading text-4xl gold-text leading-none">
-            {day} <span className="text-base text-foreground/50">{month}</span>
+            {day} <span className="text-base text-foreground/55">{month}</span>
           </p>
           <p className="technical text-[9px] text-foreground/55 mt-2">
             {weekday} · {timeText(ev.start_datetime).toUpperCase()}

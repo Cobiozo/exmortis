@@ -84,7 +84,7 @@ export default function MySessions() {
                 <div key={p.id} className="border hairline p-5 space-y-3">
                   <p className="relic-heading text-lg gold-text">{p.type}</p>
                   <p className="text-sm text-foreground/70">Zostało spotkań: {p.sessions_left} z {p.sessions_total}</p>
-                  <p className="text-xs text-foreground/50">
+                  <p className="text-xs text-foreground/55">
                     Dostęp do {day(p.valid_until)}
                     {p.min_gap_days ? ` · spotkania nie częściej niż co ${p.min_gap_days} dni` : ""}
                   </p>
@@ -105,7 +105,7 @@ export default function MySessions() {
         <div className="border border-[#C9A24A] p-6 space-y-5">
           <div className="flex items-center justify-between gap-4">
             <p className="relic-heading text-xl">Wybierz termin — {bookFrom.type}</p>
-            <button onClick={() => setBookFrom(null)} className="technical text-[10px] text-foreground/50">ZAMKNIJ</button>
+            <button onClick={() => setBookFrom(null)} className="technical text-[10px] text-foreground/55">ZAMKNIJ</button>
           </div>
           <PackageBooker
             packageId={bookFrom.id}
@@ -120,7 +120,7 @@ export default function MySessions() {
       <section>
         <p className="technical text-[10px] gold-text mb-6">NAJBLIŻSZE</p>
         {upcoming.length === 0 ? (
-          <p className="text-sm text-foreground/50">Brak zaplanowanych spotkań.</p>
+          <p className="text-sm text-foreground/55">Brak zaplanowanych spotkań.</p>
         ) : (
           <div className="space-y-4">
             {upcoming.map((b) => (
@@ -133,7 +133,7 @@ export default function MySessions() {
       <section>
         <p className="technical text-[10px] gold-text mb-6">HISTORIA</p>
         {history.length === 0 ? (
-          <p className="text-sm text-foreground/50">Jeszcze pusto.</p>
+          <p className="text-sm text-foreground/55">Jeszcze pusto.</p>
         ) : (
           <div className="space-y-2">
             {history.map((b) => <SessionRow key={b.id} b={b} past />)}

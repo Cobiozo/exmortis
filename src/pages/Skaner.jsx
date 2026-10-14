@@ -160,7 +160,7 @@ export default function Skaner() {
     try { await track.applyConstraints({ advanced: [{ torch: !torch }] }); setTorch(!torch); } catch { setTorch(null); }
   };
 
-  if (!info) return <main className="min-h-[100svh] bg-[#0A0A0B] flex items-center justify-center text-foreground/50">Ładowanie…</main>;
+  if (!info) return <main className="min-h-[100svh] bg-[#0A0A0B] flex items-center justify-center text-foreground/55">Ładowanie…</main>;
   if (!info.allowed) {
     return (
       <main className="min-h-[100svh] bg-[#0A0A0B] text-foreground flex items-center justify-center px-6 text-center">
@@ -240,10 +240,10 @@ export default function Skaner() {
             <ul className="divide-y hairline border-y hairline text-sm">
               {recent.slice(0, 6).map((r, i) => (
                 <li key={`${r.code}-${r.at}`} className="py-2 flex items-center gap-3">
-                  <span className="font-mono text-xs text-foreground/50 w-11">{hhmm(r.at)}</span>
+                  <span className="font-mono text-xs text-foreground/55 w-11">{hhmm(r.at)}</span>
                   <span className="flex-1 min-w-0 truncate">{r.name}</span>
                   <span className="font-mono text-xs gold-text">{r.code}</span>
-                  {i === 0 && <button type="button" onClick={() => window.confirm(`Cofnąć wejście ${r.name} (${r.code})?`) && check({ code: r.code }, true)} className="text-foreground/50 hover:text-foreground p-1" aria-label={`Cofnij wejście ${r.code}`}><RotateCcw className="h-4 w-4" /></button>}
+                  {i === 0 && <button type="button" onClick={() => window.confirm(`Cofnąć wejście ${r.name} (${r.code})?`) && check({ code: r.code }, true)} className="text-foreground/55 hover:text-foreground p-1" aria-label={`Cofnij wejście ${r.code}`}><RotateCcw className="h-4 w-4" /></button>}
                 </li>
               ))}
             </ul>

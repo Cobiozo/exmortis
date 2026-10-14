@@ -25,7 +25,7 @@ export default function FinalWord() {
             ZOBACZ SKARBIEC — RÓŻNE DROGI POWROTU
           </Link>
         </div>
-        <p className="text-foreground/50 leading-relaxed pt-2">
+        <p className="text-foreground/55 leading-relaxed pt-2">
           Porozmawiamy bez zobowiązań. Zobaczymy, czy to Twój moment.
         </p>
       </div>

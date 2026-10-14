@@ -14,7 +14,7 @@ export default function ObokVideo({ n, poster, onSave }) {
           onTimeUpdate={tick} onEnded={(e) => onSave(Math.floor(e.currentTarget.duration), true)} className="w-full bg-black" />
       </div>
       <button onClick={() => setAudioOnly(!audioOnly)} className="btn-ghost !py-2 !px-4 mt-4">{audioOnly ? "Pokaż obraz" : "Tylko dźwięk"}</button>
-      {audioOnly && <p className="text-sm text-foreground/50 mt-3">Obraz ukryty, dźwięk gra dalej. Sterowanie odtwarzaniem jest w powiadomieniu telefonu.</p>}
+      {audioOnly && <p className="text-sm text-foreground/55 mt-3">Obraz ukryty, dźwięk gra dalej. Sterowanie odtwarzaniem jest w powiadomieniu telefonu.</p>}
     </div>
   );
 }

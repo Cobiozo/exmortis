@@ -71,15 +71,15 @@ export default function RezerwacjaZarzadzaj() {
       <div className="max-w-xl space-y-6">
         <p className="technical text-[10px] gold-text">TWOJA REZERWACJA</p>
         {msg && <p className="text-sm gold-text" role="status">{msg}</p>}
-        {b === undefined && <p className="text-foreground/50">Sprawdzam…</p>}
+        {b === undefined && <p className="text-foreground/55">Sprawdzam…</p>}
         {b === null && <p className="text-foreground/70">Ten link jest nieważny albo rezerwacja została anulowana.</p>}
         {b && (
           <>
             <h1 className="relic-heading text-3xl">{b.type}</h1>
-            <p>{fullLabel(b.starts_at)}{note && <span className="text-foreground/50"> ({note})</span>}</p>
+            <p>{fullLabel(b.starts_at)}{note && <span className="text-foreground/55"> ({note})</span>}</p>
             {b.zoom_link
               ? <a href={b.zoom_link} target="_blank" rel="noreferrer" className="btn-relic text-[10px]">WEJDŹ NA SPOTKANIE</a>
-              : <p className="text-xs text-foreground/50">Link do spotkania pojawi się 15 minut przed terminem.</p>}
+              : <p className="text-xs text-foreground/55">Link do spotkania pojawi się 15 minut przed terminem.</p>}
             {b.can_change || b.can_cancel ? (
               <div className="flex flex-wrap gap-3">
                 {b.can_change && <button onClick={wantChange} className="btn-ghost text-[10px]">PRZENIEŚ</button>}

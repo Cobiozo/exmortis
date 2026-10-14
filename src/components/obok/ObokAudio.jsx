@@ -28,13 +28,13 @@ export default function ObokAudio({ n, seria, onSave }) {
           {mine && p.playing ? <Pause className="h-6 w-6" /> : <Play className="h-6 w-6" />}
         </button>
         <input type="range" min={0} max={dur || 1} value={t} onChange={(e) => mine && p.seek(Number(e.target.value))} aria-label="Pozycja" className="flex-1 accent-[#C9A24A]" />
-        <span className="text-xs text-foreground/50 tabular-nums">{fmt(t)} / {fmt(dur)}</span>
+        <span className="text-xs text-foreground/55 tabular-nums">{fmt(t)} / {fmt(dur)}</span>
       </div>
       {mine && (
         <div className="flex flex-wrap items-center gap-3 mt-4">
           <button onClick={() => p.skip(-15)} aria-label="Cofnij 15 s" className="p-2 text-foreground/60 hover:gold-text"><RotateCcw className="h-4 w-4" /></button>
           <button onClick={() => p.skip(15)} aria-label="Dalej 15 s" className="p-2 text-foreground/60 hover:gold-text"><RotateCw className="h-4 w-4" /></button>
-          {RATES.map((r) => <button key={r} onClick={() => p.setRate(r)} className={`technical text-[10px] px-2 py-1 border ${p.rate === r ? "border-[#C9A24A] gold-text" : "hairline text-foreground/50"}`}>{r}×</button>)}
+          {RATES.map((r) => <button key={r} onClick={() => p.setRate(r)} className={`technical text-[10px] px-2 py-1 border ${p.rate === r ? "border-[#C9A24A] gold-text" : "hairline text-foreground/55"}`}>{r}×</button>)}
         </div>
       )}
     </div>

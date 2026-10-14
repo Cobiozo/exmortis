@@ -42,7 +42,7 @@ export default function YouTubeEmbed({ videoId, watchUrl, title }) {
         href={watchUrl}
         target="_blank"
         rel="noreferrer"
-        className="inline-flex items-center gap-1.5 text-sm text-foreground/50 hover:gold-text transition-colors mt-4"
+        className="inline-flex items-center gap-1.5 text-sm text-foreground/55 hover:gold-text transition-colors mt-4"
       >
         Otwórz na YouTube <ArrowRight className="h-3.5 w-3.5" />
       </a>

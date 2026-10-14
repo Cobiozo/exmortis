@@ -26,7 +26,7 @@ export default function Footer() {
               <Logo className="h-12 w-12" glow={false} />
               <span className="relic-heading text-2xl gold-text tracking-[0.3em]">EXMORTIS</span>
             </div>
-            <div className="rich-content text-foreground/50 max-w-sm leading-relaxed text-sm" dangerouslySetInnerHTML={{ __html: aboutText }} />
+            <div className="rich-content text-foreground/55 max-w-sm leading-relaxed text-sm" dangerouslySetInnerHTML={{ __html: aboutText }} />
           </div>
 
           {!gated && <FooterColumns />}

@@ -82,12 +82,12 @@ export default function MyLibrary({ initial, onGoToOrders }) {
     <div className="space-y-10">
       <div className="flex flex-wrap items-center gap-3">
         <button type="button" onClick={() => setKind("all")}
-          className={`min-h-[44px] px-4 border font-mono text-[11px] tracking-[0.14em] uppercase transition-colors ${kind === "all" ? "border-[#C9A24A] text-[#C9A24A]" : "hairline text-foreground/50 hover:text-[#F5EFE1]"} ${FOCUS}`}>
+          className={`min-h-[44px] px-4 border font-mono text-[11px] tracking-[0.14em] uppercase transition-colors ${kind === "all" ? "border-[#C9A24A] text-[#C9A24A]" : "hairline text-foreground/55 hover:text-[#F5EFE1]"} ${FOCUS}`}>
           Wszystko ({items.length})
         </button>
         {ORDER.filter((k) => counts[k]).map((k) => (
           <button key={k} type="button" onClick={() => setKind(k)}
-            className={`min-h-[44px] px-4 border font-mono text-[11px] tracking-[0.14em] uppercase transition-colors ${kind === k ? "border-[#C9A24A] text-[#C9A24A]" : "hairline text-foreground/50 hover:text-[#F5EFE1]"} ${FOCUS}`}>
+            className={`min-h-[44px] px-4 border font-mono text-[11px] tracking-[0.14em] uppercase transition-colors ${kind === k ? "border-[#C9A24A] text-[#C9A24A]" : "hairline text-foreground/55 hover:text-[#F5EFE1]"} ${FOCUS}`}>
             {KIND[k]} ({counts[k]})
           </button>
         ))}

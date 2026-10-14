@@ -60,7 +60,7 @@ export default function ReviewDialog({ item, onClose, onSaved }) {
         ) : (
           <div className="space-y-5 py-2">
             <div>
-              <p className="technical text-[10px] text-foreground/50 mb-2">OCENA</p>
+              <p className="technical text-[10px] text-foreground/55 mb-2">OCENA</p>
               <div className="flex items-center gap-1">
                 {[1, 2, 3, 4, 5].map((i) => (
                   <button
@@ -77,7 +77,7 @@ export default function ReviewDialog({ item, onClose, onSaved }) {
             </div>
 
             <div>
-              <label htmlFor="rev-body" className="technical text-[10px] text-foreground/50 block mb-2">
+              <label htmlFor="rev-body" className="technical text-[10px] text-foreground/55 block mb-2">
                 TWOJA OPINIA
               </label>
               <textarea
@@ -95,7 +95,7 @@ export default function ReviewDialog({ item, onClose, onSaved }) {
             </div>
 
             <div>
-              <label htmlFor="rev-name" className="technical text-[10px] text-foreground/50 block mb-2">
+              <label htmlFor="rev-name" className="technical text-[10px] text-foreground/55 block mb-2">
                 PODPIS POD OPINIĄ
               </label>
               <input

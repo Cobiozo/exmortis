@@ -96,7 +96,7 @@ export default function NotificationBell() {
                 return (
                   <li key={x.key} className={`group relative border-b hairline last:border-0 ${x.unread ? "bg-[#C9A24A]/[0.05]" : ""}`}>
                     <button type="button" onClick={() => openItem(x)} className="w-full text-left flex gap-3 px-4 py-3 pr-10 hover:bg-white/[0.03] focus-visible:outline-none focus-visible:bg-white/[0.05]">
-                      <Icon className={`h-4 w-4 mt-0.5 shrink-0 ${x.important ? "text-[#E8C547]" : "text-foreground/50"}`} strokeWidth={1.5} aria-hidden="true" />
+                      <Icon className={`h-4 w-4 mt-0.5 shrink-0 ${x.important ? "text-[#E8C547]" : "text-foreground/55"}`} strokeWidth={1.5} aria-hidden="true" />
                       <span className="min-w-0 flex-1">
                         <span className="flex items-center gap-2 technical text-[9px] text-foreground/55">
                           {x.unread && <span className="w-1.5 h-1.5 rounded-full bg-[#C9A24A] shrink-0" aria-label="nowe" />}

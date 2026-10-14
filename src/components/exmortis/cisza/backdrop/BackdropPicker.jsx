@@ -13,7 +13,7 @@ export default function BackdropPicker({ items, value, onChange, match, onMatch 
               <span className={`relative h-14 w-14 rounded-full overflow-hidden border transition-colors ${sel ? "border-[#C9A24A]" : "border-[#3D3D3F] hover:border-[#C9A24A]/60"}`}>
                 <BackdropThumb bg={b} />
               </span>
-              <span className={`text-[11px] max-w-full truncate ${sel ? "text-[#C9A24A]" : "text-foreground/50"}`}>{b.nazwa}</span>
+              <span className={`text-[11px] max-w-full truncate ${sel ? "text-[#C9A24A]" : "text-foreground/55"}`}>{b.nazwa}</span>
             </button>
           );
         })}

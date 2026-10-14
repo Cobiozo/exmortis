@@ -14,7 +14,7 @@ export function CardsBlock({ d, label, center }) {
         {(d.karty || []).map((c, i) => (
           <div key={i} className="bg-[#0A0A0B] p-8 sm:p-10 md:p-8 lg:p-12 min-w-0 group hover:bg-[#070708] transition-colors duration-500 flex flex-col">
             {c.obraz?.url && <Img img={c.obraz} ratio="3:2" className="mb-8" />}
-            {d.numerowane && <p className="font-mono text-5xl text-foreground/15 mb-8">{String(i + 1).padStart(2, "0")}</p>}
+            {d.numerowane && <p aria-hidden="true" className="font-mono text-5xl text-foreground/15 mb-8">{String(i + 1).padStart(2, "0")}</p>}
             <h3 className="relic-heading text-2xl md:text-xl lg:text-2xl gold-text mb-5 [overflow-wrap:break-word]">{c.tytul}</h3>
             <p className="text-foreground/60 leading-relaxed">{c.opis}</p>
             <Buttons list={c.przycisk} className="mt-8" />
