@@ -67,8 +67,6 @@ const PATCHES: { id: string; why: string; sql: string[] }[] = [
          WHERE t.slug IN ('sesja-powrot', 'indywidualne-konsultacje')`,
       `UPDATE public.bk_types SET active = TRUE WHERE slug IN ('sesja-powrot', 'indywidualne-konsultacje')`,
       `UPDATE public.bk_settings SET mode = 'on', updated_at = now() WHERE id = 1`,
-      `INSERT INTO public.bk_log (actor, action, object_type, object_id, summary)
-         VALUES ('system (poprawka danych)', 'ustawienia', 'settings', '1', 'tryb=on; POWRÓT i konsultacje pn-pt 8-10, 16-20')`,
       `SELECT (SELECT mode FROM public.bk_settings WHERE id = 1) AS mode,
          (SELECT json_agg(json_build_object('slug', t.slug, 'active', t.active, 'n_hours', (SELECT count(*) FROM public.bk_hours h WHERE h.type_id = t.id)) ORDER BY t.sort) FROM public.bk_types t) AS types`,
     ],
