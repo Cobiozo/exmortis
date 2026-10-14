@@ -16,7 +16,7 @@ const NEW_DAYS = 30;          // ile dni „nowość” jest nowością
 const DEFAULT_PREFS = { nowosci: true, promocje: true, spotkania: true };
 const CAT = { ogloszenie: "zawsze", produkt: "nowosci", wkrotce: "nowosci", historia: "nowosci", promocja: "promocje", kod: "promocje",
   spotkanie: "spotkania", moje_spotkanie: "moje", nagranie: "moje", dostep: "moje", wiadomosc: "moje", obok: "moje",
-  lista: "moje", zamowienie: "moje", platnosc: "moje", lekcja: "moje" };
+  lista: "moje", zamowienie: "moje", platnosc: "moje", lekcja: "moje", opinia: "moje" };
 const PENDING = ["NEW", "PENDING", "WAITING_FOR_CONFIRMATION"];
 const names = (items) => { const n = (Array.isArray(items) ? items : []).map((i) => i?.name).filter(Boolean); return n.length > 2 ? `${n.slice(0, 2).join(", ")} i ${n.length - 2} więcej` : n.join(", "); };
 
@@ -77,7 +77,7 @@ async function buildFeed(base44, me) {
   const out = [];
   const push = (x) => { if (x.at) out.push(x); };
 
-  const [anns, regs, access, msgs, obok, waits, orders] = await Promise.all([
+  const [anns, regs, access, msgs, obok, waits, orders, revOrders, myRevs] = await Promise.all([
     myAnnouncements(base44.asServiceRole, base44, me).catch(() => ({ items: [], seen: {} })),
     runSql(base44, `SELECT e.id::text AS id, e.title, e.slug, e.start_datetime, r.status AS reg_status, e.recording_until,
         (e.recording_url IS NOT NULL AND e.recording_until IS NOT NULL AND e.recording_until > now()
@@ -108,6 +108,11 @@ async function buildFeed(base44, me) {
     runSql(base44, `SELECT id, status, total::float8 AS total, items, created_date::timestamptz AS created, updated_date::timestamptz AS updated
       FROM public.orders WHERE lower(buyer_email) = ${escStr(email)} AND COALESCE(total, 0) > 0 AND created_date::timestamptz > now() - interval '14 days'
       ORDER BY created_date DESC LIMIT 10`, true).catch(() => []),
+    // Opinie: zamówienia opłacone w ostatnich 60 dniach i już wystawione opinie (żeby przypomnienie zniknęło).
+    runSql(base44, `SELECT id::text AS id, items, COALESCE(updated_date, created_date)::timestamptz AS paid
+      FROM public.orders WHERE lower(buyer_email) = ${escStr(email)} AND status = 'COMPLETED'
+        AND COALESCE(updated_date, created_date) > now() - interval '60 days'`, true).catch(() => []),
+    runSql(base44, `SELECT order_id, product_id FROM public.product_reviews WHERE lower(email) = ${escStr(email)}`, true).catch(() => []),
   ]);
 
   // Ogłoszenia od Dawida (zawsze).
@@ -136,6 +141,20 @@ async function buildFeed(base44, me) {
     } else if (PENDING.includes(o.status) && now - created > 20 * 60000 && now - created < 2 * DAY && !paidAfter(created)) {
       push({ key: `pay:${o.id}`, kind: "platnosc", title: `Płatność niedokończona${what ? `: ${what}` : ""}`, body: "Jeśli to nie było celowe, możesz złożyć zamówienie jeszcze raz w Skarbcu. Gdy PayU potwierdzi wcześniejszą płatność, ta informacja zniknie.",
         link: "/skarbiec", at: new Date(created + 20 * 60000).toISOString(), important: true });
+    }
+  }
+  // Opinie: 14 dni po opłaceniu, jedno na produkt z zamówienia. Znika po wystawieniu opinii i po 60 dniach.
+  const reviewed = new Set((myRevs || []).map((r) => `${r.order_id}:${r.product_id}`));
+  for (const o of revOrders || []) {
+    const paid = new Date(o.paid).getTime();
+    if (!Number.isFinite(paid) || paid > now - 14 * DAY) continue;
+    for (const it of Array.isArray(o.items) ? o.items : []) {
+      const pid = it?.product_id ? String(it.product_id) : "";
+      if (!pid || it.gift || reviewed.has(`${o.id}:${pid}`)) continue;
+      push({ key: `rev:${o.id}:${pid}`, kind: "opinia",
+        title: `Jak Ci się czyta/słucha „${String(it.name || "").slice(0, 60)}”?`,
+        body: "Zostaw opinię — kilka zdań. Publikujemy też krytyczne, nie płacimy za opinie.",
+        link: "/konto?tab=zakupy", at: new Date(paid + 14 * DAY).toISOString() });
     }
   }
   // Nowe lekcje w moich kursach (dodane po zakupie, 14 dni) — jedno powiadomienie na kurs.

@@ -2,6 +2,7 @@ import { createClientFromRequest } from "npm:@base44/sdk@0.8.44";
 import { runSql, escStr } from "../../shared/supabase.ts";
 import { withSteps, unitPrice, omnibusPrices, omnibusFrom, warsawToday } from "../../shared/productPrice.ts";
 import { getSnap } from "../../shared/snapshot.ts";
+import { ratingMap } from "../../shared/reviews.ts";
 
 // Katalog z kopii (PublicSnapshot, odświeżanej w tle co minutę) — bez czekania na Supabase przy każdym wejściu.
 // Klucz zawiera dzisiejszą datę (czas polski), więc po północy ceny z drabinki nigdy nie są wczorajsze.
@@ -36,6 +37,12 @@ async function loadCatalog(base44, slug: string, today: string) {
     if (low != null) p.omnibus_price = low;
   }
   for (const p of out) delete p.price_steps; // klient dostaje tylko bieżący i następny próg
+  // Średnia ocen i liczba opinii liczone w kopii katalogu (odświeżanej w tle) — nie przy wejściu gościa.
+  const ratings = await ratingMap(base44, out.map((p) => String(p.id))).catch(() => new Map());
+  for (const p of out) {
+    const r = ratings.get(String(p.id));
+    if (r) { p.rating_avg = r.avg; p.rating_count = r.count; }
+  }
   return out;
 }
 

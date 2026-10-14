@@ -1,12 +1,24 @@
 import React, { useEffect, useState } from "react";
 import { base44 } from "@/api/base44Client";
 import { plDate, STATUS_LABEL } from "./accountUtils";
+import ReviewButton from "./reviews/ReviewButton";
 
 export default function MyOrders() {
   const [list, setList] = useState(null);
   const [cards, setCards] = useState([]);
+  const [reviews, setReviews] = useState({});
+
+  // Produkty z zamówień opłaconych co najmniej 7 dni temu, które można ocenić.
+  const loadReviews = () => {
+    base44.functions
+      .invoke("reviews", { action: "mine" })
+      .then((r) => setReviews(Object.fromEntries((r.data.items || []).map((i) => [`${i.order_id}:${i.product_id}`, i]))))
+      .catch(() => setReviews({}));
+  };
+
   useEffect(() => {
     base44.functions.invoke("myAccount", { action: "orders" }).then((r) => { setList(r.data.orders); setCards(r.data.gift_cards || []); });
+    loadReviews();
   }, []);
 
   if (!list) return <p className="text-foreground/50">Ładowanie…</p>;
@@ -32,7 +44,16 @@ export default function MyOrders() {
       {list.map((o) => (
         <div key={o.id} className="py-5 grid sm:grid-cols-4 gap-2 sm:gap-6 text-sm">
           <span className="text-foreground/50">{plDate(o.created_date)}<span className="block technical text-[9px] text-foreground/35 mt-1">NR {String(o.id).slice(0, 8).toUpperCase()}</span></span>
-          <span className="sm:col-span-2 text-[#F5EFE1]">{(o.items || []).map((i) => i.name).join(", ")}</span>
+          <div className="sm:col-span-2 text-[#F5EFE1] space-y-2">
+            {(o.items || []).map((i, k) => (
+              <div key={k} className="flex flex-wrap items-center gap-x-3 gap-y-1.5">
+                <span>{i.name}</span>
+                {reviews[`${o.id}:${i.product_id}`] && (
+                  <ReviewButton item={{ ...reviews[`${o.id}:${i.product_id}`], product_name: i.name }} onSaved={loadReviews} />
+                )}
+              </div>
+            ))}
+          </div>
           <span className="sm:text-right">
             <span className="font-mono gold-text">{Number(o.total).toFixed(2).replace(".", ",")} zł</span>
             <span className="block technical text-[9px] text-foreground/45 mt-1">{STATUS_LABEL[o.status] || o.status}</span>

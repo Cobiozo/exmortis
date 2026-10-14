@@ -11,6 +11,7 @@ import { useDocMeta } from "@/lib/useDocMeta";
 import Logo from "@/components/exmortis/Logo";
 import WaitlistDialog from "@/components/exmortis/shop/WaitlistDialog";
 import Curriculum from "@/components/exmortis/shop/Curriculum";
+import ProductReviews from "@/components/exmortis/shop/ProductReviews";
 import { isPromoActive, priceOnRequest, regularPrice, unitPrice, lowestPrice30, zl, nextPriceText } from "@/lib/productPrice";
 import { GiftCardBuy } from "@/components/exmortis/shop/GiftCard";
 import { cardAmounts } from "@/components/exmortis/CartContext";
@@ -251,6 +252,7 @@ export default function ProductDetail() {
             )}
           </div>
         </div>
+        <ProductReviews productId={product.id} />
       </section>
       {waitlist && <WaitlistDialog product={product} onClose={() => setWaitlist(false)} />}
     </div>

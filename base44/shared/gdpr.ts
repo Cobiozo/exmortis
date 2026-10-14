@@ -13,6 +13,8 @@ export const SB = {
   // Przydziały grupowe i historia zmian zostają (nie są danymi osoby) — historia jest anonimizowana.
   mb_group_members: "client_email", mb_assignments: "target_email",
   mb_material_state: "client_email", mb_message_recipients: "client_email",
+  // Opinie kupujących (podpis i treść są anonimizowane razem z wierszem).
+  product_reviews: "email",
   // Bilety na spotkania, kody zarezerwowane przy nieopłaconym zamówieniu i linki do zarządzania
   // rezerwacją albo pakietem.
   event_tickets: "buyer_email", discount_reservations: "email", bk_tokens: "owner_email",

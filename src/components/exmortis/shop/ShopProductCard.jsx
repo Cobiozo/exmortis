@@ -2,6 +2,7 @@ import React from "react";
 import { Link } from "react-router-dom";
 import { Image } from "@/components/ui/image";
 import { CardTopBadge, PriceBlock, ProductButton, isListenProduct, productHref } from "./cardBits";
+import { RatingLine } from "./Stars";
 
 // Link wewnętrzny albo zewnętrzny (produkty z własnym adresem, np. POWRÓT → /powrot).
 function To({ href, children, ...rest }) {
@@ -46,6 +47,7 @@ export default function ShopProductCard({ product: p, onWaitlist, index }) {
         <h3 className="shop-heading text-lg text-[#F5EFE1] leading-snug">
           <To href={href} className="hover:text-[#C9A24A] transition-colors">{p.name}</To>
         </h3>
+        {p.rating_count > 0 && <RatingLine avg={p.rating_avg} count={p.rating_count} className="technical text-[10px] gold-text" />}
         {p.promise && <p className="italic text-foreground/70 text-sm leading-relaxed line-clamp-3">{p.promise}</p>}
         {p.for_whom && <p className="text-xs text-foreground/45 line-clamp-2">{p.for_whom}</p>}
         {(p.form || p.format_details) && (

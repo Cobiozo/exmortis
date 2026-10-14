@@ -1,9 +1,10 @@
 import React, { useEffect, useState } from "react";
 import { base44 } from "@/api/base44Client";
 import { Image } from "@/components/ui/image";
-import { Plus, Pencil, Trash2, Eye, EyeOff } from "lucide-react";
+import { Plus, Pencil, Trash2, Eye, EyeOff, Star } from "lucide-react";
 import ProductEditor from "./ProductEditor";
 import WaitlistPanel from "./WaitlistPanel";
+import ReviewsPanel from "./reviews/ReviewsPanel";
 
 const LEVEL_NAMES = {
   0: "BRAMA",
@@ -20,6 +21,8 @@ export default function ProductsManager() {
   const [editing, setEditing] = useState(null); // null | "new" | produkt
   const [busy, setBusy] = useState(false);
   const [waitlist, setWaitlist] = useState(null);
+  const [reviews, setReviews] = useState(false);
+  const [pending, setPending] = useState(0);
 
   const load = () => {
     setLoading(true);
@@ -28,8 +31,15 @@ export default function ProductsManager() {
       .then((res) => setProducts(res.data.products))
       .catch(() => setProducts([]))
       .finally(() => setLoading(false));
+    // Licznik opinii czekających na sprawdzenie (przycisk OPINIE).
+    base44.functions
+      .invoke("reviewsAdmin", { action: "counts" })
+      .then((r) => setPending(r.data.counts?.oczekuje || 0))
+      .catch(() => setPending(0));
   };
   useEffect(load, []);
+
+  if (reviews) return <ReviewsPanel onBack={() => { setReviews(false); load(); }} />;
 
   if (editing !== null) {
     return (
@@ -74,11 +84,21 @@ export default function ProductsManager() {
         <p className="technical text-[10px] text-foreground/40">
           {loading ? "ŁADUJĘ..." : `${products.length} PRODUKTÓW`}
         </p>
-        <button onClick={() => setEditing("new")} className="btn-relic !px-5 !py-3">
-          <Plus className="h-4 w-4" /> NOWY PRODUKT
-        </button>
+        <div className="flex items-center gap-3">
+          <button
+            onClick={() => setReviews(true)}
+            className={`technical text-[9px] px-4 py-3 border transition-colors inline-flex items-center gap-2 ${
+              pending ? "border-[#C9A24A] gold-text bg-[#C9A24A]/10" : "hairline text-foreground/50 hover:text-foreground"
+            }`}
+            title="Opinie kupujących: moderacja i odpowiedzi"
+          >
+            <Star className="h-4 w-4" /> OPINIE{pending ? ` (${pending})` : ""}
+          </button>
+          <button onClick={() => setEditing("new")} className="btn-relic !px-5 !py-3">
+            <Plus className="h-4 w-4" /> NOWY PRODUKT
+          </button>
+        </div>
       </div>
-
       {loading ? (
         <div className="space-y-3">
           {[...Array(4)].map((_, i) => (
