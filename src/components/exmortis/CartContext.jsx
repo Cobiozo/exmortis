@@ -69,6 +69,16 @@ export function CartProvider({ children }) {
     setOpen(true);
   }, []);
 
+  // Bilety na wydarzenie: jedna pozycja na zakup (liczba = liczba osób; każda osoba ma imię i nazwisko na bilecie).
+  const addTickets = useCallback((ev, holders) => {
+    const list = (holders || []).map((h) => String(h || "").trim().slice(0, 80)).filter(Boolean).slice(0, 10);
+    if (!list.length) return;
+    setItems((prev) => [...prev.filter((i) => !(i.kind === "bilet" && i.id === ev.id)), {
+      key: `bilet:${ev.id}`, kind: "bilet", id: ev.id, slug: ev.slug, name: `Bilet — ${ev.title}`, price: Number(ev.price) || 0,
+      image_url: ev.cover_image || null, start_datetime: ev.start_datetime || null, qty: list.length, holders: list,
+    }]);
+  }, []);
+
   // Pozycje rozpoznawane po kluczu (karty podarunkowe) albo po id produktu.
   const removeItem = useCallback((k) => {
     setItems((prev) => prev.filter((i) => lineKey(i) !== k));
@@ -76,6 +86,7 @@ export function CartProvider({ children }) {
 
   const updateQty = useCallback((k, qty) => {
     if (qty < 1) return;
+    if (String(k).startsWith("bilet:")) return; // liczba biletów = liczba osób z imionami (zmiana na stronie wydarzenia)
     setItems((prev) => prev.map((i) => (lineKey(i) === k ? { ...i, qty: Math.min(MAX_QTY, qty) } : i)));
   }, []);
 
@@ -87,6 +98,11 @@ export function CartProvider({ children }) {
     let changed = false;
     const next = [];
     for (const i of itemsRef.current) {
+      // Bilety sprawdza kasa na serwerze (cena, miejsca, termin sprzedaży) — tu tylko usuwamy te po wydarzeniu.
+      if (i.kind === "bilet") {
+        if (i.start_datetime && Date.parse(i.start_datetime) < Date.now()) { changed = true; continue; }
+        next.push(i); continue;
+      }
       const p = byId.get(String(i.id));
       if (!p || p.status === "wkrótce" || p.status === "ukryty" || p.is_free || (priceOnRequest(p) && !i.gift)) { changed = true; continue; }
       if (i.gift) {
@@ -111,7 +127,7 @@ export function CartProvider({ children }) {
 
   return (
     <CartContext.Provider
-      value={{ items, addItem, removeItem, updateQty, refresh, clear, count, total, open, setOpen }}
+      value={{ items, addItem, addTickets, removeItem, updateQty, refresh, clear, count, total, open, setOpen }}
     >
       {children}
     </CartContext.Provider>
