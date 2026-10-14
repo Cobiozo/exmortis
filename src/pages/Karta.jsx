@@ -24,10 +24,15 @@ export default function Karta() {
     const robots = document.createElement("meta");
     robots.name = "robots"; robots.content = "noindex, nofollow";
     document.head.appendChild(robots);
+    const missing = "Nie ma takiej karty. Sprawdź, czy link jest pełny.";
     if (!token) { setState({ error: "Brak klucza karty w linku. Otwórz link z e-maila jeszcze raz." }); return () => robots.remove(); }
+    if (!/^[A-Za-z0-9]{24,64}$/.test(token)) { setState({ error: missing }); return () => robots.remove(); }
     base44.functions.invoke("giftCardView", { token })
-      .then((r) => setState({ card: r.data }))
-      .catch((e) => setState({ error: e?.response?.status === 404 ? "Nie ma takiej karty. Sprawdź, czy link jest pełny." : "Nie udało się wczytać karty. Spróbuj za chwilę." }));
+      .then((r) => setState(r.data?.code ? { card: r.data } : { error: missing }))
+      .catch((e) => {
+        const st = e?.response?.status ?? e?.status;
+        setState({ error: st === 404 ? missing : "Nie udało się wczytać karty. Spróbuj za chwilę." });
+      });
     return () => robots.remove();
   }, []);
 
