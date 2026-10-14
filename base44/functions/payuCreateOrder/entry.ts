@@ -22,6 +22,19 @@ async function saveConsents(base44, req, orderId, email, hasDigital, newsletterC
   await base44.asServiceRole.entities.Consent.bulkCreate(consents);
 }
 
+// Pozycja karty podarunkowej z koszyka → kwota w groszach i słowa na karcie (oczyszczone, z limitami).
+const clip = (v, n) => String(v ?? "").replace(/[\u0000-\u001f<>]/g, " ").replace(/\s+/g, " ").trim().slice(0, n);
+function giftLine(p, it) {
+  if (p.product_type !== "karta") return null;
+  let opts = p.price_options;
+  if (typeof opts === "string") { try { opts = JSON.parse(opts); } catch { opts = null; } }
+  const amounts = Array.isArray(opts) ? opts.map(Number).filter((n) => n > 0) : [];
+  const want = Number((it || {}).amount);
+  const amount = amounts.length ? (amounts.includes(want) ? want : NaN) : unitPrice(p);
+  if (!Number.isFinite(amount) || amount <= 0) throw new Error("Jeden z produktów nie jest już dostępny — wybierz kwotę karty jeszcze raz");
+  return { unit: Math.round(amount * 100), gift: { to_name: clip(it?.to_name, 60), message: clip(it?.message, 200) } };
+}
+
 const BASE_URLS = {
   secure: "https://secure.payu.com",
   sandbox: "https://merch-prod.snd.payu.com",
@@ -57,7 +70,7 @@ export default async function (req) {
       base44,
       `SELECT id, name, price::float8 AS price, price_regular::float8 AS price_regular, price_start::float8 AS price_start,
               promo_end_date::text AS promo_end_date, to_jsonb(p)->'price_steps' AS price_steps,
-              active, is_free, COALESCE(status, 'dostępny') AS status, product_type
+              active, is_free, COALESCE(status, 'dostępny') AS status, product_type, to_jsonb(p)->'price_options' AS price_options
        FROM public.products p WHERE id IN (${idList})`,
       true
     );
@@ -77,11 +90,14 @@ export default async function (req) {
         throw new Error("Jeden z produktów nie jest już dostępny");
       }
       const qty = Math.max(1, Math.min(20, Math.floor(Number((it || {}).qty) || 1)));
-      const unit = Math.round(unitPrice(p) * 100);
+      // Karta podarunkowa: kwota wybrana przez klienta — tylko z listy kwot produktu (albo zwykła cena, gdy listy nie ma).
+      const card = giftLine(p, it);
+      const unit = card ? card.unit : Math.round(unitPrice(p) * 100);
       if (!Number.isFinite(unit) || unit <= 0) throw new Error("Niepoprawna cena produktu");
       totalGrosze += unit * qty;
-      products.push({ name: String(p.name).slice(0, 150), unitPrice: String(unit), quantity: qty });
-      stored.push({ product_id: String(p.id), name: String(p.name).slice(0, 150), unitPrice: String(unit), quantity: qty });
+      const label = card ? `${String(p.name).slice(0, 120)} ${(unit / 100).toFixed(0)} zł` : String(p.name).slice(0, 150);
+      products.push({ name: label, unitPrice: String(unit), quantity: qty });
+      stored.push({ product_id: String(p.id), name: label, unitPrice: String(unit), quantity: qty, ...(card ? { gift: card.gift } : {}) });
     }
     const disc = await applyDiscount(base44, body.code, stored.map((s) => ({
       product_id: s.product_id, unit: Number(s.unitPrice), qty: s.quantity,

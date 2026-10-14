@@ -19,7 +19,7 @@ async function loadCatalog(base44, slug: string, today: string) {
             price_start::float8 AS price_start, price_regular::float8 AS price_regular,
             is_free, status, promo_end_date::text AS promo_end_date,
             button_label, checkout_url, next_step, is_featured, sort_order, cover_image,
-            product_type, access_months, to_jsonb(p)->'price_steps' AS price_steps,
+            product_type, access_months, to_jsonb(p)->'price_steps' AS price_steps, to_jsonb(p)->'price_options' AS price_options,
             created_date, updated_date
      FROM public.products p
      WHERE ${where}
