@@ -24,11 +24,10 @@ const cardKey = (value, toName, message) => `${value}|${clip(toName, 60)}|${clip
 export async function issueGiftCards(base44, orderId, items, cardIds, buyerEmail = "") {
   const Dc = base44.asServiceRole.entities.DiscountCode;
   const tag = `zamówienie ${String(orderId).slice(0, 8).toUpperCase()}`;
-  let existing = [];
-  try {
-    const found = await Dc.filter({ opis: { $regex: tag } }, { limit: 500 });
-    existing = Array.isArray(found) ? found : found?.items || [];
-  } catch { existing = []; }
+  // Klasyczny podpis filter(zapytanie, sortowanie, limit) — działa w każdej wersji SDK funkcji.
+  // Błąd odczytu NIE jest połykany: bez listy istniejących kart powtórka wydałaby komplet drugi raz.
+  const found = await Dc.filter({ opis: { $regex: tag } }, "created_date", 500);
+  const existing = Array.isArray(found) ? found : found?.items || [];
 
   // Ile kart już jest dla każdej pozycji (kwota + dedykacja).
   const counts = new Map();
