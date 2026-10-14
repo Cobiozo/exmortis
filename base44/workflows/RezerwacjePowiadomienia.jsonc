@@ -17,7 +17,7 @@
       "ends_after_count": null
     }
   },
-  "description": "Co 15 minut wysy\u0142a przypomnienia 24 h i 1 h przed spotkaniem. Liczone s\u0105 od aktualnego terminu: po przeniesieniu stare wpisy s\u0105 anulowane, a sp\u00f3\u017anione (powy\u017cej 20 minut) nie wychodz\u0105 wcale. Wywo\u0142anie potwierdza si\u0119 tokenem tick_token z bk_settings \u2014 bez niego bookingPublic zwraca 403.",
+  "description": "WY\u0141\u0104CZONY \u2014 praca przeniesiona do \u201eZadania cykliczne\u201d (o pe\u0142nych kwadransach). Co 15 minut wysy\u0142a przypomnienia 24 h i 1 h przed spotkaniem. Liczone s\u0105 od aktualnego terminu: po przeniesieniu stare wpisy s\u0105 anulowane, a sp\u00f3\u017anione (powy\u017cej 20 minut) nie wychodz\u0105 wcale. Wywo\u0142anie potwierdza si\u0119 tokenem tick_token z bk_settings \u2014 bez niego bookingPublic zwraca 403.",
   "definition": {
     "document": {
       "dsl": "1.0.0",

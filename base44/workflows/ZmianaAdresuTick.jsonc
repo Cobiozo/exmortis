@@ -16,7 +16,7 @@
       "ends_after_count": null
     }
   },
-  "description": "Co 15 minut: wykrywa przyj\u0119te zaproszenia, ponawia nieudane przeniesienia, oznacza wygas\u0142e linki.",
+  "description": "WY\u0141\u0104CZONY \u2014 praca przeniesiona do \u201eZadania cykliczne\u201d (o pe\u0142nych kwadransach). Co 15 minut: wykrywa przyj\u0119te zaproszenia, ponawia nieudane przeniesienia, oznacza wygas\u0142e linki.",
   "definition": {
     "document": {
       "dsl": "1.0.0",

@@ -1,5 +1,5 @@
 {
-  "description": "Co 5 minut publikuje strony z edytora, kt\u00f3rych termin publikacji ju\u017c min\u0105\u0142.",
+  "description": "WY\u0141\u0104CZONY \u2014 praca przeniesiona do \u201eZadania cykliczne\u201d (co 5 minut). Co 5 minut publikuje strony z edytora, kt\u00f3rych termin publikacji ju\u017c min\u0105\u0142.",
   "definition": {
     "document": {
       "dsl": "1.0.0",

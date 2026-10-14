@@ -42,6 +42,6 @@
       }
     ]
   },
-  "description": "Co 15 minut: przypomnienia 24 h / 1 h przed spotkaniami, podzi\u0119kowania z nagraniem 12 h po oraz usuwanie zapis\u00f3w 90 dni po wydarzeniu (tick w eventsPublic).",
+  "description": "WY\u0141\u0104CZONY \u2014 praca przeniesiona do \u201eZadania cykliczne\u201d (o pe\u0142nych kwadransach). Co 15 minut: przypomnienia 24 h / 1 h przed spotkaniami, podzi\u0119kowania z nagraniem 12 h po oraz usuwanie zapis\u00f3w 90 dni po wydarzeniu (tick w eventsPublic).",
   "name": "Spotkania \u2014 przypomnienia i higiena danych"
 }

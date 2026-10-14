@@ -58,6 +58,6 @@
       }
     ]
   },
-  "description": "Co 5 minut lekkie wywo\u0142anie funkcji startowej (bootstrap) i strony /dolacz, \u017ceby go\u015bcie nie trafiali na zimny start.",
+  "description": "WY\u0141\u0104CZONY \u2014 praca przeniesiona do \u201eZadania cykliczne\u201d (co 5 minut). Co 5 minut lekkie wywo\u0142anie funkcji startowej (bootstrap) i strony /dolacz, \u017ceby go\u015bcie nie trafiali na zimny start.",
   "name": "Rozgrzewanie funkcji startowej"
 }

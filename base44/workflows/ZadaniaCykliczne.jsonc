@@ -1,0 +1,47 @@
+{
+  "name": "Zadania cykliczne",
+  "description": "Jeden przebieg co 5 minut (czas polski) obs\u0142uguje wszystkie zadania w tle: publikacj\u0119 zaplanowanych stron, wysy\u0142k\u0119 i higien\u0119 biblioteki, rozgrzanie funkcji startowej i strony /dolacz, a o pe\u0142nych kwadransach (:00, :15, :30, :45) przypomnienia o spotkaniach, przypomnienia o rezerwacjach 1:1 i ponowienia zmiany adresu e-mail. Zast\u0119puje sze\u015b\u0107 osobnych workflow\u00f3w (Rozgrzewanie, Strony, Biblioteka, Spotkania, Rezerwacje \u2014 przypomnienia, Zmiana adresu), wi\u0119c koszt spada z ok. 1,2 kredytu do 0,2 kredytu na 5 minut. Wywo\u0142anie potwierdza si\u0119 tokenem tick_token z mb_settings \u2014 bez niego cronTick zwraca 403. Token musi by\u0107 wpisany w tym pliku, bo workflow Base44 nie potrafi odczyta\u0107 sekret\u00f3w ani warto\u015bci z bazy. Obr\u00f3t: akcja tick_token z rotate, potem podmiana warto\u015bci tutaj.",
+  "trigger": {
+    "condition": null,
+    "config": {
+      "trigger_type": "scheduled",
+      "events": [],
+      "schedule_mode": "recurring",
+      "cron_expression": "*/5 * * * *",
+      "one_time_date": null,
+      "timezone": "Europe/Warsaw",
+      "interval_value": null,
+      "interval_unit": null,
+      "interval_anchor": null,
+      "ends_type": "never",
+      "ends_on_date": null,
+      "ends_after_count": null
+    }
+  },
+  "definition": {
+    "document": {
+      "dsl": "1.0.0",
+      "name": "zadania_cykliczne",
+      "version": "1.0",
+      "namespace": "base44"
+    },
+    "do": [
+      {
+        "tick": {
+          "call": "invoke_backend_function",
+          "with": {
+            "function_name": "cronTick",
+            "args": {
+              "tick_token": "I5U8h24BrfhYd_Ty_NsdM2QGUsDflwmWRH0h4uh38NA"
+            }
+          },
+          "then": "end",
+          "x-base44": {
+            "title": "Zadania w tle",
+            "description": "Strony, biblioteka, rozgrzanie; co 15 min spotkania, rezerwacje, adresy"
+          }
+        }
+      }
+    ]
+  }
+}
