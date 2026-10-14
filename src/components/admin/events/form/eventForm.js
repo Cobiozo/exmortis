@@ -88,7 +88,7 @@ export function toPayload(f, status) {
   const { date, time, paid, cover, deadline_manual, ...rest } = f; // eslint-disable-line no-unused-vars
   return {
     ...rest, id: f.id || null, status, start_datetime: startIso(f),
-    duration_minutes: Number(f.duration_minutes) || 60, price: paid ? Number(f.price) || 0 : 0, checkout_url: paid && !f.tickets ? f.checkout_url : "", tickets: paid && f.tickets === true,
+    duration_minutes: Number(f.duration_minutes) || 60, price: paid ? Number(f.price) || 0 : 0, checkout_url: paid && !f.tickets ? f.checkout_url : "", tickets: paid && f.tickets === true, registration_type: paid && f.tickets === true ? "Zapis na stronie" : f.registration_type,
     location: f.format === "Online" ? f.location || "Online, Zoom" : f.location,
     capacity: f.capacity === "" || f.capacity === null ? null : Number(f.capacity),
     registration_deadline: iso(f.registration_deadline), recording_until: iso(f.recording_until),

@@ -151,6 +151,11 @@ export default async function (req) {
          ORDER BY COALESCE(e.start_datetime, e.created_at) DESC`,
         true
       );
+      // Bilety: sprzedane i wykorzystane (tabela powstaje przy pierwszym użyciu biletów — wcześniej zera).
+      const tk = await runSql(base44, `SELECT event_id, count(*) FILTER (WHERE status <> 'anulowany')::int AS sold,
+          count(*) FILTER (WHERE status = 'wykorzystany')::int AS checked FROM public.event_tickets GROUP BY event_id`, true).catch(() => []);
+      const tkBy = new Map((tk || []).map((r) => [String(r.event_id), r]));
+      for (const e of rows || []) { const t = tkBy.get(String(e.id)); e.tickets_sold = t?.sold || 0; e.tickets_checked = t?.checked || 0; }
       return Response.json({ events: rows || [] });
     }
 
