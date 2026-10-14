@@ -56,8 +56,9 @@ export default async function (req) {
              published_at = CASE WHEN ${escStr(status)} = 'opublikowana' THEN COALESCE(published_at, now()) ELSE published_at END
          WHERE id = ${escStr(id)}`
       );
-      // Średnia na karcie produktu liczy się z kopii katalogu — oznaczamy ją jako starą.
-      if (status === "opublikowana") await clearSnap(base44, "products:").catch(() => {});
+      // Średnia na karcie produktu liczy się z kopii katalogu — oznaczamy ją jako starą
+      // przy każdej zmianie statusu (publikacja, odrzucenie, ukrycie ponownie).
+      await clearSnap(base44, "products:").catch(() => {});
       return Response.json({ ok: true });
     }
 
