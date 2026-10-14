@@ -33,7 +33,7 @@ export const APP = {
 };
 // Wiersze, których nie usuwamy: dowód księgowy i dowody zgody. Bilety opłacone zostają wyłącznie
 // po to, żeby je zanonimizować (patrz anonymizePaid).
-export const KEEP = new Set(["orders", "Withdrawal", "License", "Consent", "event_tickets"]);
+export const KEEP = new Set(["orders", "Withdrawal", "License", "Consent", "event_tickets", "order_refunds"]);
 
 const rx = (email) => ({ $regex: `^${email.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}$`, $options: "i" });
 
@@ -49,6 +49,12 @@ export async function collectPerson(base44, email) {
   const appData = {};
   for (const [e, f] of Object.entries(APP)) {
     appData[e] = await sr[e].filter({ [f]: rx(email) }, "-created_date", 1000);
+  }
+  // Zwroty PayU: dowód księgowy przypisany do zamówienia (bez adresu w wierszu) — szukamy po numerach zamówień osoby.
+  const ords = sbData.orders || [];
+  if (ords.length) {
+    sbData.order_refunds = await runSql(base44,
+      `SELECT * FROM public.order_refunds WHERE order_id IN (${ords.map((r) => escStr(String(r.id))).join(",")})`, true).catch(() => []);
   }
   // Odpowiedzi z formularza rezerwacji (dane o zdrowiu są zaszyfrowane — zwracamy postać zaszyfrowaną).
   const bks = sbData.bk_bookings || [];
@@ -83,6 +89,10 @@ export async function anonymizePaid(base44, email) {
             ELSE items END
     WHERE lower(buyer_email) = ${e} RETURNING id`).catch(() => []);
   if (orders.length) out["Supabase: orders (anonimizacja)"] = orders.length;
+  // Zwroty zostają (księgowość) — anonimizujemy tylko powód, który bywa opisem sprawy osoby.
+  const refunds = await runSql(base44, `UPDATE public.order_refunds SET reason = ${escStr(ANON)}
+    WHERE order_id IN (SELECT id FROM public.orders WHERE lower(buyer_email) = ${e}) RETURNING 1`).catch(() => []);
+  if (refunds.length) out["Supabase: order_refunds (anonimizacja)"] = refunds.length;
   // Tabela biletów powstaje przy pierwszym bilecie — jej brak nie może przewrócić usuwania konta.
   const free = await runSql(base44, `DELETE FROM public.event_tickets WHERE lower(buyer_email) = ${e} AND price <= 0 RETURNING 1`).catch(() => []);
   if (free.length) out["Supabase: event_tickets (bezpłatne)"] = free.length;

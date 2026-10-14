@@ -3,6 +3,8 @@ import { Loader2, Download, Search, ChevronDown, FileText, Check } from "lucide-
 import { base44 } from "@/api/base44Client";
 import { STATUS_LABEL } from "@/components/account/accountUtils";
 import SalesStats from "./SalesStats";
+import RefundBox, { canRefund, refundLabel } from "./RefundBox";
+import RefundDialog from "./RefundDialog";
 
 const zl = (n) => `${Number(n || 0).toFixed(2).replace(".", ",")} zł`;
 const when = (iso) => (iso ? new Date(iso).toLocaleString("pl-PL", { timeZone: "Europe/Warsaw", day: "numeric", month: "short", year: "numeric", hour: "2-digit", minute: "2-digit" }) : "");
@@ -71,6 +73,7 @@ export default function OrdersPanel() {
   const [data, setData] = useState(null);
   const [err, setErr] = useState("");
   const [open, setOpen] = useState(null);
+  const [refund, setRefund] = useState(null);
   const seq = useRef(0);
 
   const load = () => {
@@ -85,6 +88,8 @@ export default function OrdersPanel() {
   const s = data?.summary || {};
   const orders = data?.orders || [];
   const patch = (id, invoice) => setData((d) => ({ ...d, orders: d.orders.map((o) => (o.id === id ? { ...o, invoice } : o)) }));
+  const refundsOf = (id) => (data?.refunds || []).filter((r) => r.order_id === id);
+  const afterRefund = () => { setRefund(null); load(); };
 
   return (
     <div className="space-y-8">
@@ -138,7 +143,7 @@ export default function OrdersPanel() {
                   <span className="hidden md:block text-sm text-foreground/70 truncate">{(o.items || []).map((i) => i.name).join(", ")}</span>
                   <span className="font-mono text-sm gold-text md:text-right">{zl(o.total)}</span>
                   <span className={`justify-self-start md:justify-self-end technical text-[9px] border px-2 py-1 ${STATUS_CLS[o.status] || "text-[#E8C547] border-[#E8C547]/40"}`}>
-                    {(STATUS_LABEL[o.status] || o.status || "").toUpperCase()}{o.invoice?.nip && !o.invoice.wystawiona && o.status === "COMPLETED" ? " · FV" : ""}
+                    {(STATUS_LABEL[o.status] || o.status || "").toUpperCase()}{refundLabel(o)}{o.invoice?.nip && !o.invoice.wystawiona && o.status === "COMPLETED" ? " · FV" : ""}
                   </span>
                   <ChevronDown className={`hidden md:block h-4 w-4 text-foreground/40 transition-transform ${isOpen ? "rotate-180" : ""}`} aria-hidden="true" />
                 </button>
@@ -153,7 +158,10 @@ export default function OrdersPanel() {
                       {o.note && <p className="text-xs text-foreground/50 whitespace-pre-line pt-2">{o.note}</p>}
                       <p className="text-xs text-foreground/35 pt-2 break-all">Pełny numer: {o.id}{o.payu_order_id ? ` · PayU: ${o.payu_order_id}` : ""}</p>
                     </div>
-                    <InvoiceBox o={o} onSaved={(inv) => patch(o.id, inv)} />
+                    <div className="space-y-4">
+                      <InvoiceBox o={o} onSaved={(inv) => patch(o.id, inv)} />
+                      <RefundBox order={o} refunds={refundsOf(o.id)} onOpen={setRefund} />
+                    </div>
                   </div>
                 )}
               </div>
@@ -161,6 +169,7 @@ export default function OrdersPanel() {
           })}
         </div>
       )}
+      {refund && <RefundDialog order={refund} onClose={() => setRefund(null)} onDone={afterRefund} />}
     </div>
   );
 }

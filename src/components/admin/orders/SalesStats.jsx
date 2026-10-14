@@ -59,7 +59,10 @@ export default function SalesStats() {
   const toggle = () => { setOpen(!open); try { localStorage.setItem("exm_sales_open", open ? "0" : "1"); } catch { /* */ } };
 
   const c = d?.cur || {}, p = d?.prev || {};
-  const aov = c.orders ? c.revenue / c.orders : 0, aovPrev = p.orders ? p.revenue / p.orders : 0;
+  const ref = Number(c.refunds || 0), refPrev = Number(p.refunds || 0);
+  // Przychód pokazujemy po potrąceniu zwrotów — zwroty mają własną linię pod kaflami.
+  const net = Number(c.revenue || 0) - ref, netPrev = Number(p.revenue || 0) - refPrev;
+  const aov = c.orders ? net / c.orders : 0, aovPrev = p.orders ? netPrev / p.orders : 0;
   const paidProducts = (d?.products || []).filter((x) => x.value > 0);
   const free = (d?.products || []).filter((x) => !(x.value > 0));
 
@@ -82,7 +85,7 @@ export default function SalesStats() {
           {d && (
             <>
               <div className="grid grid-cols-2 lg:grid-cols-4 gap-px bg-[#3D3D3F]/40 border hairline">
-                {[["Przychód", zl(c.revenue), c.revenue, p.revenue], ["Opłacone zamówienia", c.orders || 0, c.orders, p.orders],
+                {[["Przychód", zl(net), net, netPrev], ["Opłacone zamówienia", c.orders || 0, c.orders, p.orders],
                   ["Średnia wartość", zl(aov), aov, aovPrev], ["Kupujący (różni)", c.buyers || 0, c.buyers, p.buyers]].map(([k, v, a, b]) => (
                   <div key={k} className="bg-[#0A0A0B] p-4">
                     <p className="technical text-[9px] text-foreground/45">{k.toUpperCase()}</p>
@@ -91,6 +94,7 @@ export default function SalesStats() {
                   </div>
                 ))}
               </div>
+              <p className="text-sm text-foreground/65">Zwroty w okresie: <span className="font-mono blood-text">−{zl(ref)}</span> ({c.refunds_n || 0}){refPrev > 0 ? ` · poprzednio −${zl(refPrev)}` : ""}</p>
               <Daily rows={d.daily} days={d.days} />
               <div className="grid lg:grid-cols-2 gap-8">
                 <div>

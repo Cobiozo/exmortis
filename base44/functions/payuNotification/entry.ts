@@ -4,6 +4,7 @@ import { getSetting, loadAppUrl } from "../../shared/settings.ts";
 import { safeEqual } from "../../shared/libraryAccess.ts";
 import { getOrderByPayuId, updateOrderStatus, claimCompletion } from "../../shared/orders.ts";
 import { fulfillOrder } from "../../shared/fulfillOrder.ts";
+import { applyRefundFromNotification } from "../../shared/refunds.ts";
 
 // Webhook powiadomień PayU — wywoływany z serwerów PayU bez sesji użytkownika.
 // Autentyczność weryfikowana podpisem OpenPayU (MD5: treść + drugi klucz).
@@ -25,7 +26,15 @@ export default async function (req) {
       return new Response("Invalid signature", { status: 400 });
     }
 
-    const order = JSON.parse(raw).order || {};
+    const payload = JSON.parse(raw);
+
+    // Powiadomienie o ZWROCIE — obsługiwane osobno, bez dotykania ścieżki płatności.
+    if (payload.refund) {
+      await applyRefundFromNotification(base44, payload.refund);
+      return Response.json({ ok: true });
+    }
+
+    const order = payload.order || {};
     const payuOrderId = String(order.orderId || "");
     const status = String(order.status || "");
     if (!payuOrderId || !status) return Response.json({ ok: true });
