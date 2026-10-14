@@ -1,6 +1,7 @@
 import { runSql, escStr } from "./supabase.ts";
 
 // Ogłoszenia na koncie: status i to, czy ogłoszenie trafia do danej osoby (wspólne dla „announcements” i „notifications”).
+
 export function annStatus(a, now = Date.now()) {
   if (!a.opublikowane) return "Szkic";
   if (a.zakonczono_at || (a.do && new Date(a.do).getTime() <= now)) return "Zakończone";
@@ -8,29 +9,42 @@ export function annStatus(a, now = Date.now()) {
   return "Aktywne";
 }
 
+// Przynależność do grup odbiorców liczona ZBIORCZO: jedno zapytanie na typ odbiorcy, nie na ogłoszenie.
+// Wcześniej każde ogłoszenie robiło własne zapytanie (przy 200 ogłoszeniach i 200 wejściach na dzwoneczek
+// mieliło bazę bez potrzeby) — teraz to najwyżej trzy zapytania na całą listę.
+async function audienceSets(sr, base44, me, all) {
+  const email = String(me?.email || "").toLowerCase();
+  const idsOf = (typ) => [...new Set(all.filter((a) => a.odbiorcy === typ && a.cel_id).map((a) => String(a.cel_id)))];
+  const prodIds = idsOf("produkt"), obokIds = idsOf("obok"), evIds = idsOf("spotkanie");
+  const today = new Date().toISOString().slice(0, 10);
+  const [acc, obok, regs] = await Promise.all([
+    prodIds.length ? sr.entities.Access.filter({ user_email: email, product_id: { $in: prodIds } }, "-created_date", 500) : [],
+    obokIds.length ? sr.entities.ObokUczestnik.filter({ user_email: email, seria_id: { $in: obokIds } }, "-created_date", 500) : [],
+    evIds.length
+      ? runSql(base44, `SELECT DISTINCT event_id::text AS id FROM public.registrations
+           WHERE lower(email) = ${escStr(email)} AND status IN ('Zapisany','Obecny','Lista rezerwowa')
+             AND event_id::text IN (${evIds.map(escStr).join(",")})`, true).catch(() => [])
+      : [],
+  ]);
+  return {
+    produkt: new Set(acc.filter((r) => !r.valid_until || r.valid_until >= today).map((r) => String(r.product_id))),
+    obok: new Set(obok.map((r) => String(r.seria_id))),
+    spotkanie: new Set((regs || []).map((r) => String(r.id))),
+  };
+}
+
 export async function inAudience(sr, base44, a, me) {
   if (a.odbiorcy === "wszyscy") return true;
-  const email = String(me.email).toLowerCase();
-  if (a.odbiorcy === "produkt") {
-    const rows = await sr.entities.Access.filter({ user_email: email, product_id: a.cel_id }, "-created_date", 5);
-    const today = new Date().toISOString().slice(0, 10);
-    return rows.some((r) => !r.valid_until || r.valid_until >= today);
-  }
-  if (a.odbiorcy === "obok") return (await sr.entities.ObokUczestnik.filter({ seria_id: a.cel_id, user_email: email }, "-created_date", 1)).length > 0;
-  if (a.odbiorcy === "spotkanie") {
-    const r = await runSql(base44, `SELECT 1 FROM public.registrations WHERE event_id = ${escStr(a.cel_id)} AND lower(email) = ${escStr(email)}
-      AND status IN ('Zapisany','Obecny','Lista rezerwowa') LIMIT 1`, true).catch(() => []);
-    return r.length > 0;
-  }
-  return false;
+  const set = (await audienceSets(sr, base44, me, [a]))[a.odbiorcy];
+  return !!set && set.has(String(a.cel_id));
 }
 
 // Aktywne ogłoszenia dla osoby (bez zamkniętych przez nią) + mapa „widziane”.
 export async function myAnnouncements(sr, base44, me) {
   const A = sr.entities.Announcement, S = sr.entities.AnnouncementSeen;
   const all = (await A.filter({ opublikowane: true }, "-created_date", 200)).filter((a) => annStatus(a) === "Aktywne");
-  const mine = [];
-  for (const a of all) if (await inAudience(sr, base44, a, me)) mine.push(a);
+  const sets = await audienceSets(sr, base44, me, all);
+  const mine = all.filter((a) => a.odbiorcy === "wszyscy" || !!sets[a.odbiorcy]?.has(String(a.cel_id)));
   const seen = mine.length ? await S.filter({ user_id: me.id, ann_id: { $in: mine.map((a) => a.id) } }, "-created_date", 500) : [];
   const by = Object.fromEntries(seen.map((s) => [s.ann_id, s]));
   return { items: mine.filter((a) => !by[a.id]?.dismissed_at), seen: by };

@@ -11,7 +11,7 @@ import {
   sendRecordingMail,
   sendRescheduleMail,
 } from "../../shared/events.ts";
-import { requireMail } from "../../shared/smtp.ts";
+import { requireMail, inPool } from "../../shared/smtp.ts";
 
 // Administracja wydarzeniami: lista, szczegóły z uczestnikami, zapis/edycja,
 // duplikacja, powtarzanie (Wieczory powrotu), odwołanie, usuwanie, obecność,
@@ -283,7 +283,7 @@ export default async function (req) {
       const recs = await runSql(base44, `SELECT id, first_name, email, cancel_token FROM public.registrations
         WHERE event_id = ${escStr(id)} AND status IN ('Zapisany','Obecny','Lista rezerwowa')`, true);
       let n = 0;
-      for (const r of recs) { try { await sendRescheduleMail(base44, ev, r); n += 1; } catch {} }
+      await inPool(recs, async (r) => { try { await sendRescheduleMail(base44, ev, r); n += 1; } catch {} });
       return Response.json({ ok: true, queued: n });
     }
 
@@ -375,15 +375,8 @@ export default async function (req) {
          WHERE event_id = ${escStr(id)} AND status IN ('Zapisany','Obecny')`,
         true
       );
-      waitUntil(
-        (async () => {
-          for (const r of recs) {
-            try {
-              await sendCancelledMail(base44, ev, r, reason);
-            } catch {}
-          }
-        })()
-      );
+      // Partiami: przy dużym spotkaniu sekwencyjna pętla przekraczała czas życia funkcji.
+      waitUntil(inPool(recs, (r) => sendCancelledMail(base44, ev, r, reason).catch(() => {})));
       return Response.json({ ok: true, notified: recs.length });
     }
 
@@ -435,12 +428,7 @@ export default async function (req) {
       );
       await requireMail(base44);
       let sent = 0;
-      for (const r of recs) {
-        try {
-          await sendReminderMail(base44, ev, r, "now");
-          sent += 1;
-        } catch {}
-      }
+      await inPool(recs, async (r) => { try { await sendReminderMail(base44, ev, r, "now"); sent += 1; } catch {} });
       return Response.json({ ok: true, sent, total: recs.length });
     }
 
@@ -460,13 +448,13 @@ export default async function (req) {
       );
       await requireMail(base44);
       let sent = 0;
-      for (const r of recs) {
+      await inPool(recs, async (r) => {
         try {
           await sendRecordingMail(base44, ev, r, "");
           await runSql(base44, `UPDATE public.registrations SET recording_sent = TRUE WHERE id = ${escStr(r.id)}`);
           sent += 1;
         } catch {}
-      }
+      });
       return Response.json({ ok: true, sent, total: recs.length });
     }
 
@@ -516,12 +504,9 @@ export default async function (req) {
       );
       await requireMail(base44);
       let sent = 0;
-      for (const r of recipients) {
-        try {
-          await sendBroadcastMail(base44, ev || { title: "Spotkanie" }, r, subject, text);
-          sent += 1;
-        } catch {}
-      }
+      await inPool(recipients, async (r) => {
+        try { await sendBroadcastMail(base44, ev || { title: "Spotkanie" }, r, subject, text); sent += 1; } catch {}
+      });
       return Response.json({ ok: true, sent, total: recipients.length });
     }
 

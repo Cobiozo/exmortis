@@ -4,7 +4,7 @@ import { runSql, escStr, textField, emailField, clientIp } from "../../shared/su
 import { getSetting, loadAppUrl } from "../../shared/settings.ts";
 import { getSnap, clearSnap } from "../../shared/snapshot.ts";
 import { rpcRegister, RPC_ERRORS, saveConsents, afterSaved, enqueue, flushQueue, snapEvent, ensureTzColumn } from "../../shared/registrations.ts";
-import { sendConfirmationMail, sendReminderMail, sendRecordingMail, plWhen, APP_URL, buildIcs, joinState, joinToken } from "../../shared/events.ts";
+import { sendReminderMail, sendRecordingMail, plWhen, APP_URL, buildIcs, joinState, joinToken } from "../../shared/events.ts";
 import { sendMail, adminTo } from "../../shared/smtp.ts";
 import { ipAllowed, TOO_MANY } from "../../shared/rateLimit.ts";
 
@@ -174,6 +174,7 @@ export default async function (req) {
       const regRow = res.reg;
       const sp = (await runSql(base44, `SELECT short_path FROM public.events WHERE slug = ${escStr(slug)}`, true).catch(() => []))[0]?.short_path || null;
       const ev = { ...res.ev, slug: res.ev.slug || slug, short_path: sp };
+      const jt = regRow.status === "Zapisany" && ev.format === "Online" ? await joinToken(regRow.cancel_token) : null;
       // Zgody (dowód z datą, godziną i id zapisu) i e-mail potwierdzający — dopiero po udanym zapisie.
       waitUntil(Promise.allSettled([saveConsents(base44, d, regRow.id), loadAppUrl(base44).then(() => afterSaved(base44, ev, regRow, d))]));
       return Response.json({
@@ -181,8 +182,7 @@ export default async function (req) {
         status: regRow.status,
         first_name: regRow.first_name,
         checkout_url: Number(ev.price) > 0 ? ev.checkout_url : null,
-        join_url: regRow.status === "Zapisany" && ev.format === "Online"
-          ? `${sp ? `/${sp}/dolacz` : `/spotkania/${slug}/dolacz`}${(await joinToken(regRow.cancel_token)) ? `?t=${await joinToken(regRow.cancel_token)}` : ""}` : null,
+        join_url: jt ? `${sp ? `/${sp}/dolacz` : `/spotkania/${slug}/dolacz`}?t=${jt}` : null,
       });
     }
 
@@ -260,6 +260,10 @@ export default async function (req) {
       const source = typeof body.source === "string" && body.source.trim() !== ""
         ? body.source.trim().slice(0, 100)
         : null;
+      // Publiczny adres zapisujący wiersze w bazie — bez limitu dawał się zapełnić dowolnymi adresami.
+      if (!(await ipAllowed(base44, clientIp(req), "przypomnij", 5, 3600000))) {
+        return Response.json({ error: TOO_MANY }, { status: 429 });
+      }
 
       const evRows = await runSql(
         base44,

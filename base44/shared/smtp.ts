@@ -46,6 +46,15 @@ export async function smtpSend(smtp, { to, subject, html, attachments }) {
   });
 }
 
+// Wysyłka wielu wiadomości naraz (partiami) — sekwencyjna pętla przy setce odbiorców przekracza czas życia
+// funkcji i urywa się w połowie, zostawiając część osób bez wiadomości. Kolejność nie ma tu znaczenia.
+export async function inPool(items, fn, n = 6) {
+  let i = 0;
+  await Promise.all(Array.from({ length: Math.min(n, items.length) }, async () => {
+    while (i < items.length) { const item = items[i++]; await fn(item); }
+  }));
+}
+
 // Skutki faktycznej wysyłki (np. 7 dni na potwierdzenie Listów liczy się od wysłania).
 export async function afterSent(base44, kind, to) {
   if (kind === "listy_potwierdzenie") {

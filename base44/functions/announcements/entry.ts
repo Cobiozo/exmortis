@@ -81,14 +81,30 @@ export default async function (req) {
 
     if (body.action === "list") {
       const rows = await A.list("-created_date", 200);
+      const liveIds = rows.filter((a) => annStatus(a) !== "Szkic").map((a) => a.id);
+      // Liczniki zbiorczo: trzy zapytania dla całej listy zamiast czterech na każde ogłoszenie.
+      // Wcześniej panel przy 200 ogłoszeniach wysyłał setki zapytań, w tym wielokrotnie listę wszystkich kont.
+      const grouped = async (field) => {
+        if (!liveIds.length) return new Map();
+        const r = await S.aggregate({ query: { ann_id: { $in: liveIds }, [field]: { $gt: "2000" } }, groupBy: "ann_id", limit: 1000 });
+        return new Map((r.rows || []).map((x) => [String(x.ann_id), x.count]));
+      };
+      const [wysw, klik, zamk] = await Promise.all([grouped("viewed_at"), grouped("clicked_at"), grouped("dismissed_at")]);
+      // Liczba odbiorców jednej grupy liczona raz (dawniej raz na ogłoszenie, także dla „wszyscy”).
+      const recCache = new Map();
+      const recCount = (a) => {
+        const key = `${a.odbiorcy}:${a.cel_id || ""}`;
+        if (!recCache.has(key)) recCache.set(key, recipients(sr, base44, a));
+        return recCache.get(key);
+      };
       const items = [];
       for (const a of rows) {
         const st = annStatus(a);
         const stats = st === "Szkic" ? null : {
-          odbiorcy: await recipients(sr, base44, a),
-          wyswietlenia: await S.count({ ann_id: a.id, viewed_at: { $gt: "2000" } }),
-          klikniecia: await S.count({ ann_id: a.id, clicked_at: { $gt: "2000" } }),
-          zamkniecia: await S.count({ ann_id: a.id, dismissed_at: { $gt: "2000" } }),
+          odbiorcy: await recCount(a),
+          wyswietlenia: wysw.get(a.id) || 0,
+          klikniecia: klik.get(a.id) || 0,
+          zamkniecia: zamk.get(a.id) || 0,
         };
         items.push({ ...a, status: st, stats });
       }
