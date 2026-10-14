@@ -74,6 +74,28 @@ export function otherPath(snap, st) {
   return { scene: d.key, stack, picks, done: false, previous: prev ? { at: d.key, idx: prev.idx } : null };
 }
 
+// Wszystkie zakończenia historii (kolejność wg klucza sceny) — do licznika „zakończenie 2 z 4”.
+export const endingKeys = (snap) => Object.keys(snap?.scenes || {}).filter((k) => snap.scenes[k]?.y === "ending").sort();
+
+// Pierwsza podjęta decyzja na tej ścieżce — stamtąd prowadzą drogi do pozostałych zakończeń.
+export function firstDecision(st) {
+  for (let i = 0; i < st.stack.length - 1; i++) {
+    const k = st.stack[i];
+    if (st.picks.some((p) => p.at === k)) return { index: i, key: k };
+  }
+  return null;
+}
+
+// Powrót do pierwszej decyzji (jak „Zobacz inną drogę”, ale na samym rozwidleniu historii).
+export function toFirstDecision(snap, st) {
+  const d = firstDecision(st);
+  if (!d) return st;
+  const prev = st.picks.find((p) => p.at === d.key);
+  const pi = st.picks.findIndex((p) => p.at === d.key);
+  return { scene: d.key, stack: st.stack.slice(0, d.index + 1), picks: pi >= 0 ? st.picks.slice(0, pi) : [], done: false,
+    previous: prev ? { at: d.key, idx: prev.idx } : null };
+}
+
 // Odtworzenie zapisu: ta sama wersja → wprost; inna wersja → tylko gdy cała ścieżka nadal istnieje.
 export function restore(snap, saved) {
   if (!saved || !Array.isArray(saved.stack) || !saved.stack.length) return { state: null };

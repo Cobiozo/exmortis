@@ -96,6 +96,14 @@ export default function RzReader({ previewId = null }) {
   });
 
   const lastDec = useMemo(() => (st ? E.lastDecision(st) : null), [st]);
+  const firstDec = useMemo(() => (st ? E.firstDecision(st) : null), [st]);
+  // Zakończenia: które to z ilu i ile już odkryto (zapis w przeglądarce, jak postęp).
+  const ends = useMemo(() => {
+    if (!snap || !st?.done) return null;
+    const all = E.endingKeys(snap);
+    const seen = new Set([...(data?.preview ? [] : E.readProgress(uid, data.meta.id)?.ended || []), st.scene].filter((k) => all.includes(k)));
+    return { n: all.indexOf(st.scene) + 1, total: all.length, seen: seen.size };
+  }, [snap, st, data, uid]);
 
   if (err) return <RzProblem text={err} onRetry={open} />;
   if (!data) return (
@@ -143,7 +151,11 @@ export default function RzReader({ previewId = null }) {
 
       <div key={`${st.scene}-${st.stack.length}`} className="motion-safe:animate-[rzIn_.35s_ease-out]">
         {prefs.images && scene.i && <RzImage url={scene.i} alt={scene.a || ""} eager className="border hairline mb-8" />}
-        {scene.y === "ending" && <p className="technical text-[10px] text-[#E8676A] mb-2">ZAKOŃCZENIE</p>}
+        {scene.y === "ending" && (
+          <p className="technical text-[10px] text-[#E8676A] mb-2">
+            {ends && ends.total > 1 ? `ZAKOŃCZENIE ${ends.n} Z ${ends.total} · ODKRYTE: ${ends.seen}/${ends.total}` : "ZAKOŃCZENIE"}
+          </p>
+        )}
         {scene.t && <h1 ref={head} tabIndex={-1} className={`outline-none text-[#F5EFE1] leading-tight ${scene.t === scene.t.toUpperCase() ? "relic-heading text-xl md:text-2xl tracking-[0.14em]" : "shop-heading text-3xl md:text-4xl"}`}>{scene.t}</h1>}
         {!scene.t && <span ref={head} tabIndex={-1} className="sr-only">Scena</span>}
         <Body text={scene.b} className="mt-6 text-foreground/85" />
@@ -176,8 +188,12 @@ export default function RzReader({ previewId = null }) {
                 <p className="shop-heading italic text-2xl text-[#F5EFE1]/90 leading-snug">{scene.q}</p>
               </blockquote>
             )}
-            <div className="mt-10 flex flex-col sm:flex-row flex-wrap gap-3">
+            {ends && ends.seen < ends.total && (
+              <p className="mt-10 text-sm text-foreground/60">Ta historia ma {ends.total} zakończenia. „Zobacz inną drogę” zmienia tylko ostatnią decyzję — pozostałe zakończenia czekają za inną pierwszą decyzją.</p>
+            )}
+            <div className="mt-6 flex flex-col sm:flex-row flex-wrap gap-3">
               {lastDec && <button type="button" onClick={() => act(E.otherPath)} className="btn-relic focus-visible:ring-2 focus-visible:ring-[#C9A24A]/60">ZOBACZ INNĄ DROGĘ</button>}
+              {firstDec && lastDec && firstDec.key !== lastDec.key && <button type="button" onClick={() => act(E.toFirstDecision)} className="btn-ghost">WRÓĆ DO PIERWSZEJ DECYZJI</button>}
               <button type="button" onClick={restart} className="btn-ghost">PRZEJDŹ PONOWNIE</button>
               <button type="button" onClick={() => nav(libraryHref)} className="btn-ghost">WRÓĆ DO BIBLIOTEKI</button>
             </div>
