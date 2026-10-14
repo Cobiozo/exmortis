@@ -30,6 +30,7 @@ const Admin = lazyPage(() => import('@/pages/admin/Admin'));
 const CmsPreview = lazyPage(() => import('@/pages/CmsPreview'));
 const CoursePlayer = lazyPage(() => import('@/pages/CoursePlayer'));
 const Cisza = lazyPage(() => import('@/pages/Cisza'));
+const Karta = lazyPage(() => import('@/pages/Karta'));
 import ProtectedRoute from '@/components/ProtectedRoute';
 import LoginRedirect from '@/components/LoginRedirect';
 import { SiteContentProvider } from '@/components/exmortis/SiteContentProvider';
@@ -110,6 +111,7 @@ const AuthenticatedApp = () => {
           </Route>
         </Route>
         <Route path="/cisza" element={<Cisza />} />
+        <Route path="/karta" element={<Karta />} />
         <Route element={<Layout />}>
           <Route path="/" element={<HomeSwitch />} />
           <Route path="/o-mnie" element={<About />} />
