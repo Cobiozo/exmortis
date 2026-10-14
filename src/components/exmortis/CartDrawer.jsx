@@ -40,7 +40,7 @@ export default function CartDrawer() {
             ) : (
               <ul className="divide-y hairline">
                 {items.map((item) => (
-                  <li key={item.id} className="p-6 flex gap-4">
+                  <li key={lineKey(item)} className="p-6 flex gap-4">
                     <div className="w-20 h-20 bg-card border hairline overflow-hidden flex-shrink-0">
                       {item.image_url && (
                         <img src={item.image_url} alt={item.name} className="w-full h-full object-cover" />
@@ -55,10 +55,11 @@ export default function CartDrawer() {
                         {item.name}
                       </Link>
                       <p className="font-mono text-sm text-foreground/70 mt-1">{item.price} zł</p>
+                      {item.gift && <GiftLine gift={item.gift} />}
                       <div className="flex items-center gap-3 mt-3">
                         <div className="flex items-center border hairline">
                           <button
-                            onClick={() => updateQty(item.id, item.qty - 1)}
+                            onClick={() => updateQty(lineKey(item), item.qty - 1)}
                             aria-label="Mniej"
                             className="p-2.5 text-foreground/60 hover:gold-text"
                           >
@@ -66,7 +67,7 @@ export default function CartDrawer() {
                           </button>
                           <span className="px-3 font-mono text-xs" aria-live="polite">{item.qty}</span>
                           <button
-                            onClick={() => updateQty(item.id, item.qty + 1)}
+                            onClick={() => updateQty(lineKey(item), item.qty + 1)}
                             aria-label="Więcej"
                             className="p-2.5 text-foreground/60 hover:gold-text"
                           >
@@ -74,7 +75,7 @@ export default function CartDrawer() {
                           </button>
                         </div>
                         <button
-                          onClick={() => removeItem(item.id)}
+                          onClick={() => removeItem(lineKey(item))}
                           aria-label={`Usuń z koszyka: ${item.name}`}
                           className="p-2.5 -m-1 text-foreground/40 hover:blood-text"
                         >
