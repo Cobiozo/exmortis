@@ -145,12 +145,17 @@ async function buildFeed(base44, me) {
   }
   // Opinie: 14 dni po opłaceniu, jedno na produkt z zamówienia. Znika po wystawieniu opinii i po 60 dniach.
   const reviewed = new Set((myRevs || []).map((r) => `${r.order_id}:${r.product_id}`));
+  // Tylko produkty z katalogu, bez kart podarunkowych i biletów (bilet ma product_id „bilet:…”).
+  const revPids = [...new Set((revOrders || []).flatMap((o) => (Array.isArray(o.items) ? o.items : [])
+    .map((it) => String(it?.product_id || "")).filter((x) => /^[0-9a-f-]{36}$/i.test(x))))];
+  const reviewable = new Set(revPids.length ? (await runSql(base44, `SELECT id::text AS id FROM public.products
+    WHERE id::text IN (${revPids.map(escStr).join(",")}) AND COALESCE(product_type, '') <> 'karta'`, true).catch(() => [])).map((r) => String(r.id)) : []);
   for (const o of revOrders || []) {
     const paid = new Date(o.paid).getTime();
     if (!Number.isFinite(paid) || paid > now - 14 * DAY) continue;
     for (const it of Array.isArray(o.items) ? o.items : []) {
       const pid = it?.product_id ? String(it.product_id) : "";
-      if (!pid || it.gift || reviewed.has(`${o.id}:${pid}`)) continue;
+      if (!reviewable.has(pid) || it.gift || reviewed.has(`${o.id}:${pid}`)) continue;
       push({ key: `rev:${o.id}:${pid}`, kind: "opinia",
         title: `Jak Ci się czyta/słucha „${String(it.name || "").slice(0, 60)}”?`,
         body: "Zostaw opinię — kilka zdań. Publikujemy też krytyczne, nie płacimy za opinie.",
