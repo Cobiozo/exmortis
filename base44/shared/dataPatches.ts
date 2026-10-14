@@ -36,6 +36,18 @@ const PATCHES: { id: string; why: string; sql: string[] }[] = [
        WHERE slug = 'karta-podarunkowa' AND product_type = 'karta'`,
     ],
   },
+  {
+    id: "2026-10-14-rezerwacje-raport",
+    why: "Raport przed włączeniem rezerwacji: tryb, rodzaje (aktywne, dostęp) i godziny",
+    sql: [
+      `SELECT (SELECT mode FROM public.bk_settings WHERE id = 1) AS mode,
+         (SELECT json_agg(json_build_object('slug', t.slug, 'active', t.active, 'access', t.access, 'dur', t.duration_min,
+            'hours', (SELECT json_agg(json_build_object('d', h.weekday, 'f', to_char(h.start_local,'HH24:MI'), 't', to_char(h.end_local,'HH24:MI')) ORDER BY h.weekday, h.start_local)
+                      FROM public.bk_hours h WHERE h.type_id = t.id)) ORDER BY t.sort) FROM public.bk_types t) AS types,
+         (SELECT count(*) FROM public.bk_packages) AS packages,
+         (SELECT count(*) FROM public.bk_bookings) AS bookings`,
+    ],
+  },
 ];
 
 export async function applyDataPatches(base44): Promise<string[]> {
@@ -46,7 +58,11 @@ export async function applyDataPatches(base44): Promise<string[]> {
   const applied: string[] = [];
   for (const p of todo) {
     try {
-      for (const q of p.sql) await runSql(base44, q);
+      for (const q of p.sql) {
+        // Zapytania SELECT w poprawce to raport stanu — wynik trafia do logu funkcji (bez danych osobowych).
+        const r = await runSql(base44, q, /^\s*SELECT/i.test(q));
+        if (/^\s*SELECT/i.test(q)) console.log(`[poprawka danych] ${p.id} raport:`, JSON.stringify(r).slice(0, 3000));
+      }
       applied.push(p.id);
       console.log(`[poprawka danych] ${p.id}: ${p.why}`);
     } catch (e) {
