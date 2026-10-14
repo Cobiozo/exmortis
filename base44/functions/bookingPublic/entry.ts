@@ -125,7 +125,9 @@ export default async function (req) {
         if (v?.id) t = (await runSql(base44, `SELECT id, slug, name, duration_min FROM public.bk_types WHERE id = (SELECT type_id FROM public.bk_bookings WHERE id = ${escStr(v.id)}::uuid)`, true))?.[0] || null;
       } else if (body.booking_id) {
         const own = admin ? "TRUE" : `(user_id = ${me?.id ? escStr(me.id) : "NULL"} OR lower(btrim(COALESCE(email,''))) = ${escStr(String(me?.email || "").toLowerCase())})`;
-        const rows = await runSql(base44, `SELECT type_id FROM public.bk_bookings WHERE id = ${escStr(textField(body, "booking_id", { max: 40 }))}::uuid AND ${own}`, true);
+        const bid = textField(body, "booking_id", { max: 40 });
+        if (!/^[0-9a-f-]{36}$/i.test(bid)) return bad("Nie znaleziono", 404);
+        const rows = await runSql(base44, `SELECT type_id FROM public.bk_bookings WHERE id = ${escStr(bid)}::uuid AND ${own}`, true);
         if (rows?.[0]) t = (await runSql(base44, `SELECT id, slug, name, duration_min FROM public.bk_types WHERE id = ${escStr(rows[0].type_id)} AND (active OR ${admin ? "TRUE" : "FALSE"})`, true))?.[0] || null;
       } else {
         const pk = await resolvePackage(base44, body, me, admin);
@@ -244,7 +246,9 @@ export default async function (req) {
       const emailH = await keys.hmac(emailForRate || "brak"), ipH = await keys.hmac(ip);
       const consents = [];
       if (body.service_consent === true) {
-        consents.push({ kind: "odstapienie", text_version: String(body.consent_version || "").slice(0, 40), text: String(body.consent_text || "").slice(0, 2000), email_hmac: emailH, ip_hmac: ipH });
+        // Treść i wersja zgody zawsze z ustawień serwera — nie z przeglądarki (dowód zgody musi być tym, co klient widział w panelu).
+        const [cs] = await runSql(base44, `SELECT service_consent_version, service_consent_text FROM public.bk_settings WHERE id = 1`, true);
+        consents.push({ kind: "odstapienie", text_version: String(cs?.service_consent_version || "").slice(0, 40), text: String(cs?.service_consent_text || "").slice(0, 2000), email_hmac: emailH, ip_hmac: ipH });
       }
       const pkRow = await resolvePackage(base44, body, me, admin);
       const dur = pkRow ? await typeDuration(base44, pkRow.type_id) : null;
@@ -303,7 +307,8 @@ export default async function (req) {
         const map = {
           forbidden: [403, "Ta rezerwacja należy do innego konta."],
           not_found: [404, "Nie znaleziono rezerwacji."],
-          too_late: [409, `Do spotkania zostało mniej niż ${(body.change_window_h || 24)} godzin — napisz do mnie.`],
+          too_late: [409, "Na zmianę jest już za późno — napisz do mnie."],
+          gap: [409, `Odstęp między sesjami to co najmniej ${res.min_days} dni. Wybierz inny termin.`],
           limit: [409, `Limit przełożeń (${res.max}) został wykorzystany.`],
           expired: [409, "Ważność pakietu się skończyła."],
           taken: [409, "Ten termin właśnie się zajął. Wybierz inny."],

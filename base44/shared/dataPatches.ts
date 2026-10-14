@@ -5,6 +5,7 @@ import { runSql } from "./supabase.ts";
 import { getSetting, saveSetting } from "./settings.ts";
 import { clearSnap } from "./snapshot.ts";
 import { ensureWaitlistCols } from "./waitlist.ts";
+import { BK_BOOK_PACKAGE_SQL, BK_RESCHEDULE_SQL } from "./bookingSchema.ts";
 
 const PATCHES: { id: string; why: string; sql: string[] }[] = [
   {
@@ -69,6 +70,21 @@ const PATCHES: { id: string; why: string; sql: string[] }[] = [
       `UPDATE public.bk_settings SET mode = 'on', updated_at = now() WHERE id = 1`,
       `SELECT (SELECT mode FROM public.bk_settings WHERE id = 1) AS mode,
          (SELECT json_agg(json_build_object('slug', t.slug, 'active', t.active, 'n_hours', (SELECT count(*) FROM public.bk_hours h WHERE h.type_id = t.id)) ORDER BY t.sort) FROM public.bk_types t) AS types`,
+    ],
+  },
+  {
+    id: "2026-10-14-rezerwacje-odstep",
+    why: "Rezerwacje z pakietu: odstęp między sesjami liczony w obie strony i pilnowany także przy przenoszeniu terminu",
+    sql: [BK_BOOK_PACKAGE_SQL, BK_RESCHEDULE_SQL],
+  },
+  {
+    id: "2026-10-14-rezerwacje-zoom",
+    why: "Sesja POWRÓT i Indywidualne konsultacje: stały link Zoom z Ustawień strony (tylko gdy rodzaj nie ma własnego)",
+    sql: [
+      `UPDATE public.bk_types SET zoom_link = (SELECT value->>'link' FROM public.app_settings WHERE key = 'zoom_staly')
+         WHERE slug IN ('sesja-powrot', 'indywidualne-konsultacje') AND COALESCE(zoom_link, '') = ''
+           AND COALESCE((SELECT value->>'link' FROM public.app_settings WHERE key = 'zoom_staly'), '') LIKE 'https://%'`,
+      `SELECT slug, (zoom_link IS NOT NULL) AS ma_zoom FROM public.bk_types WHERE slug IN ('sesja-powrot', 'indywidualne-konsultacje')`,
     ],
   },
 ];
