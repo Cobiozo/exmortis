@@ -62,6 +62,11 @@ export default function MyOrders() {
           <span className="sm:text-right">
             <span className="font-mono gold-text">{Number(o.total).toFixed(2).replace(".", ",")} zł</span>
             <span className="block technical text-[9px] text-foreground/55 mt-1">{STATUS_LABEL[o.status] || o.status}</span>
+            {o.invoice_url && (
+              <a href={o.invoice_url} target="_blank" rel="noopener noreferrer" className="block technical text-[9px] gold-text mt-1 underline">
+                POBIERZ FAKTURĘ{o.invoice_number ? ` ${o.invoice_number}` : ""}
+              </a>
+            )}
           </span>
         </div>
       ))}

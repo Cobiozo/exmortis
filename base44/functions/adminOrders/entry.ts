@@ -2,12 +2,15 @@ import { createClientFromRequest } from "npm:@base44/sdk@0.8.44";
 import { runSql, escStr, requireAdmin } from "../../shared/supabase.ts";
 import { ensureInvoiceColumn } from "../../shared/orders.ts";
 import { createRefund, listRefunds, hasRefundsTable } from "../../shared/refunds.ts";
+import { issueInvoice } from "../../shared/invoices.ts";
 
 // Panel admina: zamówienia ze Skarbca (lista, podsumowanie, oznaczanie wystawionych faktur).
 // Kolumna invoice czytana przez to_jsonb(o) — działa także, zanim powstała.
 // refunded_total czytany przez to_jsonb — działa także, zanim powstała kolumna zwrotów.
 const LIST_SQL = (where) => `SELECT o.id, o.payu_order_id, o.created_date, o.updated_date, o.buyer_name, o.buyer_email,
     o.note, o.items, o.total::float8 AS total, o.status, to_jsonb(o)->'invoice' AS invoice,
+    to_jsonb(o)->>'invoice_number' AS invoice_number, to_jsonb(o)->>'invoice_url' AS invoice_url,
+    to_jsonb(o)->>'invoice_error' AS invoice_error,
     COALESCE((to_jsonb(o)->>'refunded_total')::numeric, 0)::float8 AS refunded_total
   FROM public.orders o WHERE ${where} ORDER BY o.created_date DESC LIMIT 500`;
 
@@ -121,6 +124,28 @@ export default async function (req) {
       });
       if (r.error === "PAYU_NOT_CONFIGURED") return Response.json({ error: "PAYU_NOT_CONFIGURED" }, { status: 400 });
       if (r.error) return Response.json({ error: r.error }, { status: 400 });
+      return Response.json(r);
+    }
+
+    // Ponowienie wystawienia faktury w Fakturowni (dostęp sprawdzony przez requireAdmin wyżej).
+    if (body.action === "invoice_retry") {
+      const id = String(body.id || "");
+      if (!/^[0-9a-f-]{36}$/i.test(id)) return Response.json({ error: "Brak zamówienia" }, { status: 400 });
+      const [o] = await runSql(base44, `SELECT * FROM public.orders WHERE id = ${escStr(id)} LIMIT 1`, true);
+      if (!o) return Response.json({ error: "Nie ma takiego zamówienia" }, { status: 400 });
+      if (o.status !== "COMPLETED") return Response.json({ error: "Fakturę wystawiamy tylko do opłaconego zamówienia." }, { status: 400 });
+      const r = await issueInvoice(base44, o);
+      if (r.error) return Response.json({ error: r.error });
+      if (r.skipped) {
+        const why = r.skipped === "wylaczone"
+          ? "Automatyczne faktury są wyłączone w ustawieniach."
+          : r.skipped === "brak_konfiguracji"
+          ? "Brak tokenu API albo nazwy konta Fakturowni."
+          : r.skipped === "osoba_bez_faktury"
+          ? "Ustawienie: osobie prywatnej nie wystawiamy faktury automatycznie."
+          : "Nie ma czego wystawić (kwota 0 albo brak pozycji).";
+        return Response.json({ skipped: r.skipped, error: why });
+      }
       return Response.json(r);
     }
 

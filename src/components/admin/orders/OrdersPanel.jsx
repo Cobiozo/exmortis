@@ -4,6 +4,7 @@ import { base44 } from "@/api/base44Client";
 import { STATUS_LABEL } from "@/components/account/accountUtils";
 import SalesStats from "./SalesStats";
 import RefundBox, { canRefund, refundLabel } from "./RefundBox";
+import FakturaBlock from "./FakturaBlock";
 import RefundDialog from "./RefundDialog";
 
 const zl = (n) => `${Number(n || 0).toFixed(2).replace(".", ",")} zł`;
@@ -159,6 +160,7 @@ export default function OrdersPanel() {
                       <p className="text-xs text-foreground/35 pt-2 break-all">Pełny numer: {o.id}{o.payu_order_id ? ` · PayU: ${o.payu_order_id}` : ""}</p>
                     </div>
                     <div className="space-y-4">
+                      <FakturaBlock o={o} />
                       <InvoiceBox o={o} onSaved={(inv) => patch(o.id, inv)} />
                       <RefundBox order={o} refunds={refundsOf(o.id)} onOpen={setRefund} />
                     </div>

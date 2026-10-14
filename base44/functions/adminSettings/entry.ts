@@ -3,6 +3,7 @@ import { requireStaff } from "../../shared/supabase.ts";
 import { getSetting, saveSetting, deleteSetting, cleanAppUrl, DEFAULT_APP_URL } from "../../shared/settings.ts";
 import { cleanFirma, cleanPremiera, PREMIERA_DEFAULT } from "../../shared/firma.ts";
 import { cleanPomiar, validatePomiar, POMIAR_DEFAULT } from "../../shared/tracking.ts";
+import { cleanFaktury, fakturyToken } from "../../shared/invoices.ts";
 import { syncDocs, publicDocs } from "../../shared/legalDocs.ts";
 import { VIDEO_SETTING, signServerVideo, newVideoKey, ttlHours } from "../../shared/videoSign.ts";
 
@@ -31,8 +32,11 @@ export default async function (req) {
       const firma = await getSetting(base44, "firma");
       const premiera = await getSetting(base44, "premiera");
       const pomiar = await getSetting(base44, "pomiar");
+      const faktury = await getSetting(base44, "faktury");
       return Response.json({
         pomiar: { ...POMIAR_DEFAULT, ...cleanPomiar(pomiar) },
+        // Token API faktur siedzi w sekretach aplikacji — panel dostaje tylko informację, czy jest ustawiony.
+        faktury: { ...cleanFaktury(faktury), token_set: !!fakturyToken() },
         firma: cleanFirma(firma),
         dokumenty: publicDocs(await getSetting(base44, "dokumenty")),
         // Rola techniczna nie widzi listy adresów z dostępem przedpremierowym.
@@ -66,6 +70,13 @@ export default async function (req) {
       const value = validatePomiar(body.data);
       if (!value.pixel_id && !value.ga4_id) value.wlaczony = false;
       await saveSetting(base44, "pomiar", value);
+      return Response.json({ ok: true });
+    }
+
+    // Faktury: w panelu zapisujemy tylko ustawienia wystawiania — token API jest sekretem aplikacji.
+    if (body.action === "save" && body.target === "faktury") {
+      if (tech) return Response.json({ error: "Brak dostępu" }, { status: 403 });
+      await saveSetting(base44, "faktury", cleanFaktury(body.data));
       return Response.json({ ok: true });
     }
 

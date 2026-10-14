@@ -10,6 +10,7 @@ import LibrarySettingsPanel from "@/components/admin/library/LibrarySettingsPane
 import VideoProtectionSettings from "./VideoProtectionSettings";
 import ZoomFixedSettings from "./ZoomFixedSettings";
 import PomiarSettings from "./PomiarSettings";
+import FakturySettings from "./FakturySettings";
 import BackupsPanel from "./BackupsPanel";
 import { useAdminMode } from "@/components/admin/AdminModeContext";
 
@@ -30,6 +31,7 @@ export default function SiteSettingsPanel() {
       <LibrarySettingsPanel />
       <VideoProtectionSettings />
       {isAdmin && <PomiarSettings initial={s.pomiar} />}
+      {isAdmin && <FakturySettings initial={s.faktury} />}
       {isAdmin && <BackupsPanel />}
       <EmailChangeToggle />
     </div>

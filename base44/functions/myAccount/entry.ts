@@ -61,8 +61,9 @@ export default async function (req) {
     if (body.action === "orders") {
       const orders = await runSql(
         base44,
-        `SELECT id, created_date, items, total::float8 AS total, status
-         FROM public.orders WHERE lower(buyer_email) = ${escStr(email)}
+        `SELECT id, created_date, items, total::float8 AS total, status,
+                to_jsonb(o)->>'invoice_number' AS invoice_number, to_jsonb(o)->>'invoice_url' AS invoice_url
+         FROM public.orders o WHERE lower(buyer_email) = ${escStr(email)}
          ORDER BY created_date DESC LIMIT 100`,
         true
       );

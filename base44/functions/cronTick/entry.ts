@@ -4,6 +4,7 @@ import { runSql } from "../../shared/supabase.ts";
 import { safeEqual } from "../../shared/libraryAccess.ts";
 import { APP_URL, DEFAULT_APP_URL, loadAppUrl } from "../../shared/settings.ts";
 import { sendMail, adminTo } from "../../shared/smtp.ts";
+import { issueInvoice, pendingInvoices, loadFaktury } from "../../shared/invoices.ts";
 
 // ============ Jedno zadanie cykliczne zamiast sześciu workflow ============
 // Workflow „Zadania cykliczne" woła tę funkcję co 5 minut (czas polski). Tutaj, równolegle,
@@ -126,6 +127,25 @@ export default async function (req) {
       }
     }
 
+    // Faktury: ponowienie dla opłaconych zamówień bez dokumentu — najwyżej 10 na przebieg,
+    // własny limit czasu (żeby nie zjadło limitu funkcji). Bez tokenu nic nie wysyłamy.
+    let faktury = null;
+    try {
+      const f = await loadFaktury(base44);
+      if (f.on) {
+        const todo = await pendingInvoices(base44, f.cfg, 10);
+        let wystawione = 0, bledne = 0;
+        for (const o of todo) {
+          if (Date.now() - t0 > LIMIT_MS - 25000) break;
+          const r = await issueInvoice(base44, o);
+          if (r?.ok) wystawione++; else bledne++;
+        }
+        faktury = { zalegle: todo.length, wystawione, bledne };
+      }
+    } catch (e) {
+      faktury = { blad: String((e && e.message) || e).slice(0, 120) };
+    }
+
     const failed = out.filter((c) => !c.ok);
     // Alarm dla administratora: najwyżej jeden mail na 6 godzin, tylko gdy coś nie odpowiedziało.
     if (failed.length) {
@@ -147,6 +167,7 @@ export default async function (req) {
       minuta: minute,
       co15: quarter,
       kopia_zapasowa: kopia,
+      faktury,
       przebiegi: out,
       niepowodzenia: failed.length,
       ms: Date.now() - t0,

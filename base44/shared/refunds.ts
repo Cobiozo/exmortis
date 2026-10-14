@@ -4,6 +4,7 @@
 import { runSql, escStr, esc } from "./supabase.ts";
 import { getSetting } from "./settings.ts";
 import { sendMail } from "./smtp.ts";
+import { issueCorrection } from "./invoices.ts";
 
 const BASE_URLS = { secure: "https://secure.payu.com", sandbox: "https://merch-prod.snd.payu.com" };
 
@@ -196,6 +197,9 @@ export async function finishRefund(base44, row, status, payuRefundId) {
   await applyEffects(base44, claim);
   await syncRefundedTotal(base44, String(claim.order_id));
   await sendRefundMail(base44, claim);
+  // Faktura korygująca do kwoty zwrotu — tylko gdy zamówienie ma już fakturę w Fakturowni.
+  // Błąd zapisujemy przy zwrocie i nie cofamy skutków przyjętego zwrotu.
+  await issueCorrection(base44, claim).catch(() => {});
   return mapped;
 }
 

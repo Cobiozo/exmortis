@@ -2,6 +2,7 @@ import { createClientFromRequest } from "npm:@base44/sdk@0.8.44";
 import { runSql, requireAdmin } from "../../shared/supabase.ts";
 import { getSetting } from "../../shared/settings.ts";
 import { mailReady } from "../../shared/smtp.ts";
+import { cleanFaktury, fakturyToken, FAKTURY_DEFAULT, DOKUMENT_OSOBA } from "../../shared/invoices.ts";
 
 const STATS_SQL = `SELECT
   (SELECT COUNT(*)::int FROM public.events WHERE status = 'Opublikowane' AND start_datetime > now()) AS upcoming_events,
@@ -48,18 +49,25 @@ const READY_SQL = `SELECT
   (SELECT mode FROM public.bk_settings WHERE id = 1) AS bk_mode,
   (SELECT COALESCE(google_calendar_id, '') <> '' FROM public.bk_settings WHERE id = 1) AS gcal_used,
   (SELECT google_status FROM public.bk_settings WHERE id = 1) AS gcal_status,
-  (SELECT google_error IS NOT NULL FROM public.bk_settings WHERE id = 1) AS gcal_error`;
+  (SELECT google_error IS NOT NULL FROM public.bk_settings WHERE id = 1) AS gcal_error,
+  (SELECT COUNT(*)::int FROM public.orders o
+     WHERE o.status = 'COMPLETED' AND COALESCE(o.total, 0) > 0
+       AND COALESCE(to_jsonb(o)->>'invoice_id', '') = ''
+       AND COALESCE(o.payu_order_id, '') NOT LIKE 'FREE-%'
+       AND o.updated_date < now() - interval '10 minutes'
+       AND o.updated_date > now() - interval '7 days') AS invoices_missing`;
 
 let READY = null, READY_AT = 0;
 
 async function readiness(base44) {
   if (READY && Date.now() - READY_AT < 60000) return READY;
   const [row] = await runSql(base44, READY_SQL, true);
-  const [payu, smtp, firma, zoom] = (await Promise.all([
+  const [payu, smtp, firma, zoom, fakturyRaw] = (await Promise.all([
     getSetting(base44, "payu").catch(() => null),
     getSetting(base44, "smtp").catch(() => null),
     getSetting(base44, "firma").catch(() => null),
     getSetting(base44, "zoom_staly").catch(() => null),
+    getSetting(base44, "faktury").catch(() => null),
   ])) as any[];
   // Kolejka maili: ten sam odczyt co w panelu poczty (kolejka jest krótka — same oczekujące wiadomości).
   const queued = (await base44.asServiceRole.entities.MailQueue
@@ -92,6 +100,18 @@ async function readiness(base44) {
   const backupAt = lastBackup?.created_at || lastBackup?.created_date || null;
   const backupDays = backupAt ? Math.floor((Date.now() - Date.parse(backupAt)) / 86400000) : null;
 
+  // Faktury: włączone + token + nazwa konta = gotowe. Zaległe dokumenty to ostrzeżenie, nie błąd.
+  let fak: any;
+  try {
+    fak = cleanFaktury(fakturyRaw);
+  } catch {
+    fak = { ...FAKTURY_DEFAULT };
+  }
+  const fakToken = fakturyToken();
+  const fakOn = fak.wlaczona && !!fakToken && !!fak.subdomena;
+  const fakMissing = [!fakToken ? "token API" : "", !fak.subdomena ? "nazwa konta" : ""].filter(Boolean).join(", ");
+  const invoicesMissing = Number(row?.invoices_missing || 0);
+
   const items = [
     {
       id: "email",
@@ -112,6 +132,19 @@ async function readiness(base44) {
         ? `Brakuje: ${payuMissing.join(", ")}.`
         : `Klucze ustawione · tryb: ${payu?.env === "sandbox" ? "sandbox (testowy)" : "produkcja"}.`,
       to: "/admin/integracje",
+    },
+    {
+      id: "faktury",
+      title: "Faktury (Fakturownia)",
+      status: !fak.wlaczona ? "ok" : !fakOn ? "err" : invoicesMissing ? "warn" : "ok",
+      detail: !fak.wlaczona
+        ? "Wyłączone — faktury wystawiasz ręcznie."
+        : !fakOn
+        ? `Włączone, ale brakuje: ${fakMissing}.`
+        : invoicesMissing
+        ? `Działa. ${invoicesMissing} opłaconych zamówień czeka na fakturę — sprawdź Zamówienia.`
+        : `Działa · konto ${fak.subdomena} · osoba prywatna: ${DOKUMENT_OSOBA[fak.dokument_osoba]}.`,
+      to: "/admin/ustawienia",
     },
     {
       id: "firma",
