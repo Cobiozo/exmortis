@@ -64,6 +64,9 @@ async function readiness(base44) {
   // Kolejka maili: ten sam odczyt co w panelu poczty (kolejka jest krótka — same oczekujące wiadomości).
   const queued = (await base44.asServiceRole.entities.MailQueue
     .filter({ status: "kolejka" }, "created_date", 1000).catch(() => [])).length;
+  // Ostatnia kopia zapasowa — tylko data i rozmiar, bez treści.
+  const lastBackup = (await base44.asServiceRole.entities.BackupFile
+    .filter({ status: "gotowa" }, "-created_date", 1).catch(() => []))[0] || null;
   // Łącznik Google Calendar: sprawdzamy samo połączenie (token zostaje na serwerze).
   const gcalConn = await base44.asServiceRole.connectors
     .getConnection("googlecalendar").then(() => true).catch(() => false);
@@ -86,6 +89,8 @@ async function readiness(base44) {
   const gcalErr = String(row?.gcal_status || "") === "error" || !!row?.gcal_error;
   const eventsNoLink = Number(row?.events_no_link || 0);
   const productsNoFile = Number(row?.products_no_file || 0);
+  const backupAt = lastBackup?.created_at || lastBackup?.created_date || null;
+  const backupDays = backupAt ? Math.floor((Date.now() - Date.parse(backupAt)) / 86400000) : null;
 
   const items = [
     {
@@ -143,6 +148,15 @@ async function readiness(base44) {
         ? `${eventsNoLink} spotkań online bez linku do dołączenia (najbliższe 14 dni).`
         : "Wszystkie najbliższe spotkania online mają link.",
       to: "/admin/spotkania",
+    },
+    {
+      id: "backup",
+      title: "Kopia zapasowa danych",
+      status: !lastBackup || backupDays > 8 ? "warn" : "ok",
+      detail: !lastBackup
+        ? "Jeszcze nie ma kopii — powstanie w niedzielę ok. 3:30 albo zrób ją w panelu."
+        : `Ostatnia ${backupDays === 0 ? "dziś" : backupDays === 1 ? "wczoraj" : `${backupDays} dni temu`} · ${(Number(lastBackup.size || 0) / 1024 / 1024).toFixed(1)} MB.`,
+      to: "/admin/ustawienia",
     },
     {
       id: "products",

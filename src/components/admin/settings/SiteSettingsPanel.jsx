@@ -10,6 +10,7 @@ import LibrarySettingsPanel from "@/components/admin/library/LibrarySettingsPane
 import VideoProtectionSettings from "./VideoProtectionSettings";
 import ZoomFixedSettings from "./ZoomFixedSettings";
 import PomiarSettings from "./PomiarSettings";
+import BackupsPanel from "./BackupsPanel";
 import { useAdminMode } from "@/components/admin/AdminModeContext";
 
 // Ustawienia strony: dane firmy i tryb przedpremierowy.
@@ -29,6 +30,7 @@ export default function SiteSettingsPanel() {
       <LibrarySettingsPanel />
       <VideoProtectionSettings />
       {isAdmin && <PomiarSettings initial={s.pomiar} />}
+      {isAdmin && <BackupsPanel />}
       <EmailChangeToggle />
     </div>
   );

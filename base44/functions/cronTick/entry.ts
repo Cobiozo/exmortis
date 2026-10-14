@@ -1,4 +1,5 @@
 import { createClientFromRequest } from "npm:@base44/sdk@0.8.44";
+import { waitUntil } from "base44:runtime";
 import { runSql } from "../../shared/supabase.ts";
 import { safeEqual } from "../../shared/libraryAccess.ts";
 import { APP_URL, DEFAULT_APP_URL, loadAppUrl } from "../../shared/settings.ts";
@@ -49,6 +50,10 @@ async function call(origin, job) {
 const warsawMinute = () =>
   Number(new Intl.DateTimeFormat("en-GB", { timeZone: "Europe/Warsaw", minute: "2-digit" }).format(new Date()));
 
+// Dzień tygodnia czasu polskiego — po nim wypada tygodniowa kopia zapasowa.
+const warsawIsSunday = () =>
+  new Intl.DateTimeFormat("en-GB", { timeZone: "Europe/Warsaw", weekday: "short" }).format(new Date()) === "Sun";
+
 export default async function (req) {
   const t0 = Date.now();
   try {
@@ -88,6 +93,29 @@ export default async function (req) {
       }
     }
 
+    // Raz w tygodniu: kopia zapasowa danych (niedziela ok. 3:30 czasu polskiego).
+    // Blokada w app_settings (klucz 'backup_week') — jedno uruchomienie na 6 dni.
+    // Kopia idzie w tle (własny limit czasu) i nie opóźnia pozostałych zadań.
+    let kopia = false;
+    if (warsawIsSunday() && minute >= 30 && minute < 35) {
+      const lock = await runSql(base44, `INSERT INTO public.app_settings (key, value, updated_date)
+          VALUES ('backup_week', jsonb_build_object('at', now()), now())
+        ON CONFLICT (key) DO UPDATE SET value = EXCLUDED.value, updated_date = now()
+          WHERE public.app_settings.updated_date < now() - interval '6 days'
+        RETURNING key`).catch(() => []);
+      if (lock && lock.length) {
+        kopia = true;
+        waitUntil(
+          fetch(`${origin}/functions/backupAdmin`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ action: "weekly", tick_token: given }),
+            signal: AbortSignal.timeout(240000),
+          }).catch(() => {})
+        );
+      }
+    }
+
     // Równolegle, partiami po 6 (limit połączeń workera). Błąd jednego zadania nie zatrzymuje pozostałych.
     const out = [];
     for (let i = 0; i < jobs.length; i += 6) {
@@ -118,6 +146,7 @@ export default async function (req) {
       ok: failed.length === 0,
       minuta: minute,
       co15: quarter,
+      kopia_zapasowa: kopia,
       przebiegi: out,
       niepowodzenia: failed.length,
       ms: Date.now() - t0,

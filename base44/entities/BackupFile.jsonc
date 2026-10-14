@@ -1,0 +1,73 @@
+{
+  "name": "BackupFile",
+  "type": "object",
+  "properties": {
+    "file_uri": {
+      "type": "string",
+      "description": "Wska\u017anik prywatnego pliku kopii"
+    },
+    "size": {
+      "type": "number",
+      "description": "Rozmiar pliku w bajtach"
+    },
+    "format": {
+      "type": "string",
+      "description": "json.gz albo json"
+    },
+    "rows": {
+      "type": "number",
+      "description": "\u0141\u0105czna liczba wierszy w kopii"
+    },
+    "tables": {
+      "type": "array",
+      "items": {
+        "type": "object"
+      },
+      "description": "Spis tabel z liczb\u0105 wierszy"
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "gotowa",
+        "blad"
+      ],
+      "default": "gotowa"
+    },
+    "blad": {
+      "type": "string"
+    },
+    "kto": {
+      "type": "string",
+      "description": "Kto zleci\u0142 kopi\u0119 (panel albo zadanie tygodniowe)"
+    },
+    "created_at": {
+      "type": "string",
+      "format": "date-time"
+    }
+  },
+  "required": [
+    "status"
+  ],
+  "rls": {
+    "read": {
+      "user_condition": {
+        "role": "admin"
+      }
+    },
+    "create": {
+      "user_condition": {
+        "role": "admin"
+      }
+    },
+    "update": {
+      "user_condition": {
+        "role": "admin"
+      }
+    },
+    "delete": {
+      "user_condition": {
+        "role": "admin"
+      }
+    }
+  }
+}
