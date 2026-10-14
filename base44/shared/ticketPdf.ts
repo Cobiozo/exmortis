@@ -89,7 +89,10 @@ function drawFit(page, text, font, o, W, H, maxW) {
   page.drawText(s, { x, y: yc - size * 0.35, size, font, color: hex(o.color) });
 }
 
-const plWhen = (iso) => new Intl.DateTimeFormat("pl-PL", { timeZone: "Europe/Warsaw", weekday: "long", day: "numeric", month: "long", year: "numeric", hour: "2-digit", minute: "2-digit" }).format(new Date(iso));
+const plWhen = (iso) => {
+  const f = (o) => new Intl.DateTimeFormat("pl-PL", { timeZone: "Europe/Warsaw", ...o }).format(new Date(iso));
+  return `${f({ weekday: "long", day: "numeric", month: "long", year: "numeric" })} · ${f({ hour: "2-digit", minute: "2-digit" })}`;
+};
 
 function wrap(font, text, size, maxW, maxLines = 2) {
   const words = String(text || "").split(/\s+/).filter(Boolean);
