@@ -16,7 +16,8 @@ export function sanitizeHtml(html) {
       [...el.attributes].forEach((a) => { if (!ok.includes(a.name)) el.removeAttribute(a.name); });
       ["href", "src"].forEach((k) => {
         const v = el.getAttribute(k);
-        if (v && !/^(https:\/\/|\/|#|mailto:|tel:)/i.test(v.trim())) el.removeAttribute(k);
+        // „//inna-strona” (adres bez protokołu) też odpada — tylko https, ścieżki tej strony, kotwice, e-mail i telefon.
+        if (v && !/^(https:\/\/|\/(?!\/)|#|mailto:|tel:)/i.test(v.trim())) el.removeAttribute(k);
       });
       if (el.tagName === "A" && /^https:/i.test(el.getAttribute("href") || "")) {
         el.setAttribute("target", "_blank");
