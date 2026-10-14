@@ -61,11 +61,12 @@ export async function confirmSubscriber(base44, token) {
 // również przy powtórnym kliknięciu (wypis jest idempotentny).
 export async function unsubscribeByToken(base44, token) {
   if (!/^[a-f0-9]{32}$/.test(String(token || ""))) return null;
+  // Kolumnę zakłada panel newslettera przy pierwszym otwarciu — zanim to nastąpi, nie ma czego wypisywać.
   const rows = await runSql(
     base44,
     `UPDATE public.subscribers SET status = 'unsubscribed', updated_date = now()
      WHERE unsub_token = ${escStr(token)} RETURNING email`
-  );
+  ).catch(() => []);
   return rows[0]?.email || null;
 }
 

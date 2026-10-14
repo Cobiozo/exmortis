@@ -204,12 +204,13 @@ Zakres: `course`, `myAccount` (moje produkty, pliki, kopie PDF), moduły `shared
 9. **Limit „20 wiadomości na godzinę" liczy wysyłki, nie odbiorców.** Jedna wiadomość do 500 osób to jedno wysłanie — limit nie chroni więc przed jednorazowym obciążeniem serwera poczty. Świadomy wybór: to narzędzie obsługi, nie kanał masowy.
 10. **Wysyłka masowa jest wciąż synchroniczna.** Partie po 6 skracają czas kilkukrotnie, ale przy kilkuset odbiorcach i wolnej poczcie funkcja może się przerwać w połowie, a wiadomość jest już oznaczona jako wysłana. Docelowo: wrzucenie wysyłki do kolejki i rozłożenie jej na zadanie cykliczne.
 11. **`arr()` w `libraryAdmin` to martwy kod** (zdefiniowany, nigdzie nie używany) — do usunięcia przy okazji.
-13. **Karty podarunkowe powstają pojedynczo i przerwanie w połowie zostawia mniej kart, niż kupiono.** **NAPRAWIONE** — komplet rozpoznawany jest teraz per pozycja (kwota + dedykacja), więc powtórka dokłada brakujące karty, a już wydanych nie dubluje; cały komplet trzyma jedną datę ważności. Powtórka nic nie dokończy, bo komplet rozpoznawany jest po numerze zamówienia („jest choć jedna — koniec"), a nie po liczbie i kwotach. Skutek: kupujący zapłacił za trzy karty, dostał jedną i żaden mail nie wyszedł. Karty widać w panelu, więc da się to naprawić ręcznie, ale docelowo trzeba rozpoznawać komplet po liczbie i kwotach, a nie po pierwszej napotkanej.
+13. **Karty podarunkowe powstawały pojedynczo i przerwanie w połowie zostawiało mniej kart, niż kupiono** (kupujący zapłacił za trzy, dostał jedną, żaden mail nie wyszedł). **NAPRAWIONE** — komplet rozpoznawany jest teraz per pozycja (kwota + dedykacja), więc powtórka dokłada brakujące karty, a już wydanych nie dubluje; cały komplet trzyma jedną datę ważności.
 14. **Sprawdzanie stanu zamówienia po powrocie z PayU nie ma limitu** (celowo, żeby strona powrotu działała). Odpytywanie idzie po losowym numerze zamówienia i zwraca wyłącznie status, więc nie da się z tego odczytać danych osobowych.
-15. **Rachunek „suma pozycji minus zapłata" w statystykach zakłada, że pozycje zamówienia są zapisane przed rabatem.** Tak jest dzisiaj i tak zostanie, dopóki nikt nie zmieni sposobu zapisu pozycji — przy takiej zmianie trzeba poprawić i ten wzór. (do 2000 rekordów) i zawężają wynik w przeglądarce. Działa, ale przy większej liczbie kont będzie to najwolniejsze miejsce panelu — warto przenieść filtrowanie do zapytania.
+15. **Rachunek „suma pozycji minus zapłata" w statystykach zakłada, że pozycje zamówienia są zapisane przed rabatem.** Tak jest dzisiaj i tak zostanie, dopóki nikt nie zmieni sposobu zapisu pozycji — przy takiej zmianie trzeba poprawić i ten wzór.
 16. **Bilety: limit miejsc sprawdzany przy składaniu zamówienia, nie przy wystawianiu.** Dwie płatności zakończone ponad 30 minut po sobie mogą teoretycznie dać o jeden bilet za dużo (niedokończone płatności blokują miejsce tylko przez 30 minut). Uszczelnienie wymaga sprawdzenia limitu przy wystawianiu i obsługi zwrotu, gdy miejsc już nie ma — do rozważenia przy realnym ruchu.
 17. **Pobranie PDF biletu zapisuje wpis w rejestrze bezpieczeństwa.** Limit 60 na godzinę chroni adres, ale przy dużym wydarzeniu (wielu kupujących za jednym adresem sieciowym) dziennik rośnie — jeśli zacznie przeszkadzać, limit trzeba przenieść na licznik w pamięci instancji.
 18. **Blokada odtwarzania po czwartym różnym adresie IP w 24 godzinach.** **NAPRAWIONE** — automatyczna blokada zastąpiona powiadomieniem do administratora (mail + wpis w panelu Bezpieczeństwo), raz na 12 h na konto; odtwarzanie nie jest już wstrzymywane, a decyzję podejmuje człowiek.
+19. **Lista klientów w panelu pobiera do 2000 rekordów i zawęża wynik w przeglądarce.** Działa, ale przy większej liczbie kont będzie to najwolniejsze miejsce panelu — warto przenieść filtrowanie do zapytania.
 
 ## Ogłoszenia, powiadomienia i spotkania — przegląd (2026-10-14)
 
@@ -271,3 +272,51 @@ Komponenty treści spoza bloków CMS (`ContactSection`, `Footer`, `NewsletterSec
 - Publikacja przechodzi bez błędów (`vite build`, kod wyjścia 0), więc zmiany w `CmsPage` i `usePublishedPage` się kompilują.
 - Przegląd wyłącznie do odczytu: bez wysyłki maili, bez usuwania danych, bez publikowania stron z panelu.
 - Zmierzona waga pierwszej paczki (44 pliki, 198 KB po kompresji) i przynależność modułu bloków do paczki startowej.
+
+## RODO, newsletter, zmiana adresu i OBOK — przegląd (2026-10-14)
+
+Zakres: `gdprPerson`, `shared/gdpr.ts`, `adminNewsletter`, `subscribeNewsletter`, `shared/newsletter.ts`, `shared/smtp.ts`, `emailChange`, `obok`, `shared/obok.ts`, strony list i panel klienta.
+
+### Zasięg danych osobowych — dopisane brakujące miejsca
+Eksport i usuwanie danych obejmowały dotąd tylko część miejsc, w których leży adres osoby. Dopisane:
+- **Bilety na spotkania (`event_tickets`)** — eksport i usuwanie. Bilet opłacony zostaje jako zapis sprzedaży (obowiązek podatkowy), ale **zanonimizowany**: imię i nazwisko zastępuje napis „dane usunięte (RODO)", a adres wykupującego znika. Bilety bezpłatne (cena 0) nie mają wartości księgowej, więc są usuwane w całości.
+- **Zamówienia (`orders`)** — wiersz zostawał dotąd nietknięty. Teraz anonimizowane są w nim dane osobowe: imię i nazwisko, telefon, zgoda na telefon i notatka znikają, a z pozycji zamówienia usuwane są dedykacje kart podarunkowych („od kogo", „dla kogo"). Numer, data i kwoty zostają.
+- **Karty podarunkowe (`DiscountCode`)** — dane kupującego i obdarowanego oraz klucz wydruku są usuwane; kod i kwota zostają (to one są dowodem).
+- **Kody zarezerwowane przy nieopłaconym zamówieniu (`discount_reservations`)** i **klucze linków do zarządzania rezerwacją albo pakietem (`bk_tokens`)** — usuwane w całości, nie mają wartości księgowej.
+- **Dziennik wysłanej poczty (`MailQueue`)** — usuwany.
+- **Proces zmiany adresu (`EmailChange`)** — kopia wszystkich danych osoby (cały jej stan przed przeniesieniem) jest usuwana, a oba adresy w zakończonych procesach zastępowane. W procesach w toku adresy zostają, bo są jeszcze potrzebne do przeniesienia.
+- **Lista adresów zamrożona przy przydziale grupowym (`mb_assignments.snapshot_emails`)** — adres usuwany również z cudzych wierszy, w których ta osoba była w chwili przydziału.
+
+Dwie tabele (`event_tickets`, `discount_reservations`) powstają dopiero przy pierwszym użyciu — brak tabeli przerywał cały eksport, więc jest teraz traktowany jak brak danych.
+
+### Newsletter i Listy powrotu
+**Znalezione i naprawione**
+1. **W mailu kampanii nie było linku wypisu** — tylko zdanie „odpowiedz STOP". Teraz każdy list zawiera link wypisu działający bez logowania (nowa strona `/listy/wypis`, po samym kluczu, tak samo jak potwierdzenie zapisu). Klucz wypisu zakładany jest w bazie raz, także dla adresów zapisanych wcześniej.
+2. **Ponowny zapis po wypisie nie dawał żadnej odpowiedzi.** Adres wypisany (albo niepotwierdzony) trafiał na „nic nie rób", więc nie dostawał maila z potwierdzeniem i pozostawał wypisany. Teraz ponowny zapis wysyła świeży link potwierdzający, a adres już potwierdzony zostaje aktywny (bez ponownego maila).
+
+**Zweryfikowane jako poprawne**
+- **Potwierdzenie zapisu (double opt-in) działa.** Nowy adres trafia jako „oczekujący", aktywny staje się po kliknięciu linku (data zgody = data kliknięcia), a niepotwierdzony jest usuwany po 7 dniach. Link potwierdzający jest jednorazowy, ważny 7 dni, a strona potwierdzenia działa bez logowania.
+- **Wysyłka masowa idzie partiami** (10 adresów na jedno wywołanie, panel powtarza do końca): wiadomości nie lecą już pojedynczo, a przerwanie w połowie nie zaczyna od nowa. Odbiorca zapisany jest dopiero po faktycznej wysyłce i tylko raz (unikalny klucz w bazie), więc ponowienie nie dubluje listów.
+- **Kampania wysyła wyłącznie do potwierdzonych** (`status = 'active'`) i wyłącznie do osób z wybranej grupy; kampania oznaczona jako wysłana nie da się już edytować.
+- **Limity:** zapis na listę — 5 na godzinę z jednego połączenia. Wypis i potwierdzenie celowo bez limitu (klucz jest nieodgadywalny), żeby link w starym mailu działał zawsze.
+
+**Do rozważenia (bez zmian)**
+- Przerwanie wysyłki dokładnie w trakcie partii może powtórzyć kilka listów — odbiorcy zapisywani są po całej partii, nie po każdym liście.
+- Wypis nie trafia do rejestru bezpieczeństwa; sam fakt wypisu widać na liście odbiorców.
+
+### Zmiana adresu i moduł OBOK
+**Zweryfikowane jako poprawne**
+- **Zmiana adresu (`emailChange`):** każda akcja panelu wymaga roli administratora; link potwierdzający jest jednorazowy (w bazie wyłącznie skrót), ważny 48 godzin, a użycie po terminie kończy się komunikatem ogólnym. Nowy adres nie może należeć do istniejącego konta. Przeniesienie najpierw robi kopię wszystkich danych, a przy niepowodzeniu wraca do stanu wyjściowego; konto stare jest blokowane, a nowe zapraszane raz, nie przy każdym wejściu do panelu.
+- **Moduł OBOK (`obok`):** wszystkie akcje poza wypisem wymagają zalogowania i sprawdzają dostęp do serii (status, przynależność, zakupiony produkt); administrator ma własną ścieżkę. Nagranie wychodzi tylko wtedy, gdy jest odblokowane, i wyłącznie podpisanym linkiem. Publiczna informacja o serii to sama nazwa, krótki opis i daty — bez nagrań i cen.
+- **Wypis z powiadomień OBOK** działa bez logowania po samym kluczu (klucz trwały, żeby link w starym mailu nie przestał działać).
+
+**Uwaga**
+- Zadanie cykliczne zmiany adresu jest publiczne (bez logowania), ale chronione blokadą czasową: jedno uruchomienie na kilka minut, a w tym czasie wykonuje realną pracę (przeniesienie danych, zaproszenie). Przy obecnej skali bez znaczenia — do rozważenia, gdyby ruch wzrósł.
+- Link do nagrania OBOK jest ważny 3 godziny (w pozostałych modułach 1 godzina) — jeśli to za długo, warto skrócić.
+
+### Testy wykonane
+- `gdprPerson` (eksport) na nieistniejącym adresie — odpowiedź poprawna, pusta lista, bez błędu; usuwania danych nie uruchamiano.
+- `subscribeNewsletter` (wypis) z nieprawidłowym kluczem — odpowiedź poprawna, bez zmiany danych.
+- Publikacja przechodzi bez błędów (`vite build`, kod wyjścia 0).
+- Sprawdzone w kodzie: filtr wysyłki kampanii (`status = 'active'` + grupa + brak powtórzeń), czas życia linków, wymóg roli administratora w obu modułach.
+- Przegląd wyłącznie do odczytu: bez wysyłki maili, bez usuwania danych.
