@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useEffect } from "react";
 import { X, Plus, Minus, Trash2, ArrowRight } from "lucide-react";
 import { Link } from "react-router-dom";
 import { useCart, lineKey } from "./CartContext";
@@ -6,6 +6,13 @@ import { GiftLine } from "./shop/GiftCard";
 
 export default function CartDrawer() {
   const { items, open, setOpen, removeItem, updateQty, total } = useCart();
+  // Esc zamyka koszyk (klawiatura, czytniki ekranu).
+  useEffect(() => {
+    if (!open) return undefined;
+    const onKey = (e) => { if (e.key === "Escape") setOpen(false); };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [open, setOpen]);
 
   return (
     <>
@@ -22,7 +29,7 @@ export default function CartDrawer() {
         >
           <div className="flex items-center justify-between p-6 border-b hairline">
             <p className="technical text-[11px] gold-text">SKARBIEC · TWÓJ KOSZYK</p>
-            <button onClick={() => setOpen(false)} className="text-foreground/60 hover:text-foreground">
+            <button onClick={() => setOpen(false)} aria-label="Zamknij koszyk" className="text-foreground/60 hover:text-foreground">
               <X className="h-5 w-5" />
             </button>
           </div>
