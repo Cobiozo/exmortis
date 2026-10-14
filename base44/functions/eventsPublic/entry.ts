@@ -140,6 +140,7 @@ export default async function (req) {
 
       const closedErr = (ev) => {
         if (ev.status !== "Opublikowane") return "To wydarzenie nie jest już dostępne.";
+        if (ev.tickets === true || ev.tickets === "true") return "Na to wydarzenie wchodzi się z biletem — kup go na stronie wydarzenia.";
         if (ev.registration_type !== "Zapis na stronie") return "To wydarzenie nie przyjmuje zapisów na stronie.";
         const deadline = ev.registration_deadline ? new Date(ev.registration_deadline)
           : ev.start_datetime ? new Date(new Date(ev.start_datetime).getTime() - 15 * 60000) : null;
@@ -153,6 +154,10 @@ export default async function (req) {
         await enqueue(base44, d, err);
         return Response.json({ ok: true, status: "Zapisany", first_name: firstName, pending: true });
       };
+
+      // Wydarzenie z biletami: zapis wyłącznie przez zakup biletu.
+      const tk = (await runSql(base44, `SELECT COALESCE((to_jsonb(e)->>'tickets')::boolean, false) AS t FROM public.events e WHERE slug = ${escStr(slug)}`, true).catch(() => []))[0];
+      if (tk?.t === true) return Response.json({ error: "Na to wydarzenie wchodzi się z biletem — kup go na stronie wydarzenia." }, { status: 400 });
 
       let res;
       try {

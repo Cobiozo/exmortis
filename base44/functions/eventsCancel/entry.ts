@@ -35,6 +35,11 @@ export default async function (req) {
 
     const base44 = createClientFromRequest(req);
     await loadAppUrl(base44);
+    // Zapis z kupionym biletem nie zwalnia miejsca jednym kliknięciem — bilet jest opłacony (zwroty ustalamy mailowo).
+    const paid = await runSql(base44, `SELECT 1 FROM public.registrations WHERE cancel_token = ${escStr(token)} AND source = 'bilet' LIMIT 1`, true).catch(() => []);
+    if (paid?.length) {
+      return htmlPage("Masz bilet na to spotkanie", "Twój bilet jest ważny. Jeśli nie możesz przyjść, odpowiedz na e-mail z biletem — ustalimy, co dalej. Bilet możesz też przekazać innej osobie.");
+    }
     const freed = await runSql(
       base44,
       `UPDATE public.registrations SET status = 'Wypisany'
