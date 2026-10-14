@@ -109,7 +109,7 @@ export async function fulfillOrder(base44, stored, payuOrderId) {
     try {
       // „Następny krok” dotyczy tego, co osoba kupiła dla siebie — karta podarunkowa go nie wyznacza,
       // a produkty, które już ma, są pomijane.
-      const own = ids.map(String).filter((id) => !cardIds.includes(id));
+      const own = ids.map(String).filter((id) => !cardIds.includes(id) && !id.startsWith("bilet:"));
       const owned = await base44.asServiceRole.entities.Access.filter({ user_email: String(stored.buyer_email).toLowerCase() }, "-created_date", 200)
         .then((l) => l.filter((a) => !a.revoked).map((a) => String(a.product_id))).catch(() => []);
       const step = own.length ? await nextStep(base44, own, owned).then((s) => nextStepHtml(base44, s)).catch(() => "") : "";
