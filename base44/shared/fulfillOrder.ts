@@ -102,15 +102,24 @@ export async function fulfillOrder(base44, stored, payuOrderId) {
   }
 
   // Bilety na wydarzenia: numery, kody QR i zapis kupującego (niezależnie od wysyłki maila — są też w koncie).
-  let tix = "";
+  // Nieudane wystawienie przerywa realizację (przejęcie cofnięte, więc PayU ponowi) — inaczej kupujący
+  // zapłaciłby za bilety, których nie ma, a powtórka nie miałaby czego dokończyć. Powtórka jest idempotentna
+  // (numer zamówienia i numer pozycji), więc dopełnia tylko brakujące bilety.
+  let issued = [];
   try {
-    const issued = await issueOrderTickets(base44, stored, items);
-    if (issued.length) {
+    issued = await issueOrderTickets(base44, stored, items);
+  } catch (e) {
+    await releaseCompletion(base44, payuOrderId, stored.status).catch(() => {});
+    throw e;
+  }
+  let tix = "";
+  if (issued.length) {
+    try {
       const evs = new Map();
       for (const id of [...new Set(issued.map((t) => t.event_id))]) evs.set(id, await loadEvent(base44, id));
       tix = ticketsHtml(issued, evs);
-    }
-  } catch (e) { console.error("bilety:", e?.message); }
+    } catch (e) { console.error("bilety — treść maila:", e?.message); }
+  }
 
   if (stored.buyer_email) {
     try {

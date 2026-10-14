@@ -1,5 +1,6 @@
 import { createClientFromRequest } from "npm:@base44/sdk@0.8.53";
-import { runSql, escStr, textField } from "../../shared/supabase.ts";
+import { runSql, escStr, textField, clientIp } from "../../shared/supabase.ts";
+import { ipAllowed } from "../../shared/rateLimit.ts";
 import { loadAppUrl } from "../../shared/settings.ts";
 import { ensureTicketSchema, validToken, showCode, ticketUrl, ticketPdfUrl, salesClosed, seatsTaken, scannerScope, canScan, checkTicket, parseScan, eventCounts } from "../../shared/tickets.ts";
 import { renderTicketsPdf } from "../../shared/ticketPdf.ts";
@@ -37,6 +38,11 @@ export default async function (req) {
     const pdfToken = url.searchParams.get("pdf");
     if (pdfToken !== null) {
       if (!validToken(pdfToken)) return new Response("Nieprawidłowy link do biletu.", { status: 404, headers: { "content-type": "text/plain; charset=utf-8" } });
+      // Klucz biletu jest losowy, ale to publiczny adres bez logowania, a każde pobranie składa PDF:
+      // 60 pobrań na godzinę z jednego połączenia.
+      if (!(await ipAllowed(base44, clientIp(req), "bilet_pdf", 60, 3600000))) {
+        return new Response("Zbyt wiele pobrań z tego połączenia. Spróbuj ponownie później.", { status: 429, headers: { "content-type": "text/plain; charset=utf-8" } });
+      }
       await ensureTicketSchema(base44);
       const t = await ticketByToken(base44, pdfToken);
       if (!t || t.status === "anulowany") return new Response("Ten bilet nie istnieje albo został anulowany.", { status: 404, headers: { "content-type": "text/plain; charset=utf-8" } });
@@ -72,6 +78,8 @@ export default async function (req) {
         FROM public.events WHERE slug = ${escStr(slug)}`, true);
       if (!ev) return bad("Nie znaleziono wydarzenia", 404);
       const closed = salesClosed(ev);
+      // Wydarzenie nieopublikowane nie zdradza ceny ani liczby wolnych miejsc — odpowiedź mówi tylko, że sprzedaży nie ma.
+      if (ev.status !== "Opublikowane") return Response.json({ on_sale: false, reason: closed, price: null, left: null, max: 0 });
       let left = null;
       if (Number(ev.capacity) > 0) {
         const s = await seatsTaken(base44, ev.id);

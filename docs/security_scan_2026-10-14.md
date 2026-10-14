@@ -134,6 +134,42 @@ Zakres: kasa (`Checkout`), `payuCreateOrder`, `payuNotification`, `orderFree`, `
 - **Karta podarunkowa z linku:** klucz 32 losowe znaki, 30 odczytów na godzinę z jednego połączenia, zwracana wyłącznie treść karty.
 - **Baza:** wszystkie tabele publiczne mają włączony RLS, brak jakichkolwiek uprawnień dla `anon`/`authenticated`, żadna funkcja nie jest wykonywalna publicznie (sprawdzone w katalogu bazy).
 
+## Kody rabatowe i karty podarunkowe — przegląd (2026-10-14)
+
+### Znalezione i naprawione
+1. **Aktywny kod „TEST" dawał nieograniczony rabat 197 zł.** W bazie leżał kod `TEST` (rodzaj: kwota, 197 zł, **bez limitu użyć**, ważny do 2027-04-13) — pozostałość po testowaniu karty podarunkowej, z opisem „Karta podarunkowa · testowa". Wystarczyło wpisać w kasie słowo „TEST", żeby dostać 197 zł zniżki na dowolne zamówienie i to bez ograniczenia liczby razy. Kod wyłączony (`active: false`); rekord zostaje, więc do testów można go włączyć jednym kliknięciem.
+2. **Stara karta podarunkowa bez klucza do wydruku.** Karta z zamówienia 56E8771A nie miała wygenerowanego klucza linku (`gift_token`), więc nie dało się otworzyć jej wersji do wydruku — ani z maila, ani z konta. Klucz uzupełniony (32 znaki). Ta sama luka dotyczyła drugiej, testowej karty — obie mają teraz klucz.
+
+### Zweryfikowane jako poprawne
+- **`TESTADMIN`** — jednorazowy (1/1), wygasa 2026-10-20, już wykorzystany; do usunięcia po wygaśnięciu.
+- **`POWROT20`** — 20 zł, bez limitu użyć, do 2026-11-01 (kod marketingowy; brak limitu użyć jest tu świadomy).
+- **`PREZENT-6D7HYMPJUP`** — karta jednorazowa, wykorzystana (1/1), ważna do 2027-04-14.
+- **Kwoty kart i rabaty** liczone po stronie serwera z danych produktu; karta nie obniża ceny innej karty ani nie łączy się ze zwykłym kodem.
+
+## Bilety i wydarzenia — przegląd (2026-10-14)
+
+Zakres: `tickets`, `ticketsAdmin`, moduły `shared/tickets.ts` i `shared/ticketPdf.ts`, strony `/bilet` i `/skaner`.
+
+### Znalezione i naprawione
+1. **Nieudane wystawienie biletów było połykane.** `fulfillOrder` logował błąd i szedł dalej: zamówienie było oznaczane jako zrealizowane, mail wychodził bez biletów, a żadna powtórka nie następowała — kupujący płacił i nie dostawał biletów (były tylko do ręcznego odtworzenia w panelu). To dokładnie ta sama wada, którą zamknięto przy kartach podarunkowych. Teraz nieudane wystawienie przerywa realizację (przejęcie zamówienia cofnięte), więc PayU ponowi powiadomienie, a powtórka dopełni brakujące bilety (idempotencja po numerze zamówienia i numerze pozycji). Błąd w samej treści maila (np. nieudany odczyt tytułu wydarzenia) realizacji nie przewraca — bilety są wtedy i tak w Moim koncie.
+2. **Publiczny adres PDF biletu nie miał limitu.** `/functions/tickets?pdf=…` składa PDF przy każdym wywołaniu, bez logowania i bez limitu — wygodne narzędzie do obciążania serwera seriami żądań. Dodano limit 60 pobrań na godzinę z jednego połączenia (klucz biletu pozostaje losowy i nieodgadywalny).
+3. **`availability` zdradzało cenę i wolne miejsca nieopublikowanego wydarzenia.** Publiczny odczyt po adresie wydarzenia zwracał cenę i liczbę miejsc także dla szkicu i wydarzenia odwołanego — wystarczyło znać adres, żeby poznać cenę zaplanowanej sprzedaży. Teraz dla nieopublikowanych wraca wyłącznie informacja, że sprzedaży nie ma.
+
+### Zweryfikowane jako poprawne
+- **`ticketsAdmin`** — każda akcja pod `requireAdmin` (rola `admin`).
+- **Panel nie wydaje kluczy biletów** — odpowiedź listy biletów odcina `token`, a do pobrania zostawia gotowe linki (PDF i podglądu), więc klucz nie krąży w danych panelu.
+- **PDF tylko po losowym kluczu** — 32 znaki, nagłówki `no-store` i `noindex`, bilet anulowany nie jest wydawany; treść PDF jest w całości rysowana na serwerze (żadnych danych z żądania poza imieniem z bazy).
+- **Skaner** — dostęp wyłącznie dla administratora albo osoby z listy uprawnień (e-mail, opcjonalnie jedno wydarzenie i data ważności); sprawdzenie poza swoim wydarzeniem kończy się odmową, a limit 240 sprawdzeń na minutę chroni przed seriami.
+- **Wejście na wydarzenie to jedno atomowe przejście „ważny → wykorzystany"** — dwa równoległe skany tego samego biletu nie wpuszczą dwóch osób; cofnięcie (pomyłka przy wejściu) jest osobną, świadomą akcją.
+- **Zajętość miejsc** liczona z biletów ważnych i wykorzystanych plus niedokończone płatności z ostatnich 30 minut; sprzedaż zamyka się w terminie z panelu albo 15 minut przed startem.
+- **Ceny, terminy i limity miejsc** brane z bazy przy każdym zamówieniu — dane z koszyka są tylko wskazówką, która pozycja i ile osób.
+- **Numery i klucze biletów** losowane z ponowieniem przy kolizji; bilety wydawane idempotentnie, a bilet dodany ręcznie w panelu nie ma ceny (nie zaniża sprzedaży).
+- **Zapis kupującego na wydarzenie** aktualizuje istniejący wpis i nie cofa statusu „Obecny".
+
+### Świadome wybory (bez zmian)
+- **Skaner spoza swojego wydarzenia widzi numer biletu i nazwisko osoby** wraz z odmową — to personel obsługi, a komunikat „ten bilet jest na inne wydarzenie" jest przy wejściu potrzebny.
+- **Zajętość sprawdzana jest przy składaniu zamówienia, a nie przy wystawianiu biletów.** Dwie płatności zakończone ponad 30 minut po sobie mogłyby teoretycznie dać o jeden bilet za dużo — okno jest wąskie (niedokończone płatności blokują miejsce przez 30 minut), a uszczelnienie wymagałoby sprawdzenia limitu przy wystawianiu i obsługi zwrotu, gdy miejsc już nie ma. Do rozważenia przy realnym ruchu.
+
 ## Ryzyka otwarte (bez zmian)
 1. Wylogowanie ze wszystkich urządzeń — ograniczenie platformy.
 2. Podpisane linki do plików działają do 1 godziny.
@@ -149,3 +185,5 @@ Zakres: kasa (`Checkout`), `payuCreateOrder`, `payuNotification`, `orderFree`, `
 13. **Karty podarunkowe powstają pojedynczo i przerwanie w połowie zostawia mniej kart, niż kupiono.** **NAPRAWIONE** — komplet rozpoznawany jest teraz per pozycja (kwota + dedykacja), więc powtórka dokłada brakujące karty, a już wydanych nie dubluje; cały komplet trzyma jedną datę ważności. Powtórka nic nie dokończy, bo komplet rozpoznawany jest po numerze zamówienia („jest choć jedna — koniec"), a nie po liczbie i kwotach. Skutek: kupujący zapłacił za trzy karty, dostał jedną i żaden mail nie wyszedł. Karty widać w panelu, więc da się to naprawić ręcznie, ale docelowo trzeba rozpoznawać komplet po liczbie i kwotach, a nie po pierwszej napotkanej.
 14. **Sprawdzanie stanu zamówienia po powrocie z PayU nie ma limitu** (celowo, żeby strona powrotu działała). Odpytywanie idzie po losowym numerze zamówienia i zwraca wyłącznie status, więc nie da się z tego odczytać danych osobowych.
 15. **Rachunek „suma pozycji minus zapłata" w statystykach zakłada, że pozycje zamówienia są zapisane przed rabatem.** Tak jest dzisiaj i tak zostanie, dopóki nikt nie zmieni sposobu zapisu pozycji — przy takiej zmianie trzeba poprawić i ten wzór. (do 2000 rekordów) i zawężają wynik w przeglądarce. Działa, ale przy większej liczbie kont będzie to najwolniejsze miejsce panelu — warto przenieść filtrowanie do zapytania.
+16. **Bilety: limit miejsc sprawdzany przy składaniu zamówienia, nie przy wystawianiu.** Dwie płatności zakończone ponad 30 minut po sobie mogą teoretycznie dać o jeden bilet za dużo (niedokończone płatności blokują miejsce tylko przez 30 minut). Uszczelnienie wymaga sprawdzenia limitu przy wystawianiu i obsługi zwrotu, gdy miejsc już nie ma — do rozważenia przy realnym ruchu.
+17. **Pobranie PDF biletu zapisuje wpis w rejestrze bezpieczeństwa.** Limit 60 na godzinę chroni adres, ale przy dużym wydarzeniu (wielu kupujących za jednym adresem sieciowym) dziennik rośnie — jeśli zacznie przeszkadzać, limit trzeba przenieść na licznik w pamięci instancji.
