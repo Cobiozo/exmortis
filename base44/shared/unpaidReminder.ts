@@ -9,6 +9,7 @@ export async function unpaidReminders(base44, limit = 20) {
   await runSql(base44, `ALTER TABLE public.orders ADD COLUMN IF NOT EXISTS reminded_at timestamptz`);
   const rows = await runSql(base44, `SELECT o.id, o.buyer_name, o.buyer_email, o.items FROM public.orders o
     WHERE o.status IN ('NEW','PENDING') AND o.reminded_at IS NULL AND o.buyer_email IS NOT NULL
+      AND COALESCE(o.payu_order_id, '') NOT LIKE 'FREE-%'
       AND o.created_date < now() - interval '3 hours' AND o.created_date > now() - interval '48 hours'
       AND NOT EXISTS (SELECT 1 FROM public.orders x WHERE lower(x.buyer_email) = lower(o.buyer_email)
         AND x.status = 'COMPLETED' AND x.created_date >= o.created_date)

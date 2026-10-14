@@ -7,6 +7,24 @@ import { clearSnap } from "../../shared/snapshot.ts";
 import { unpaidReminders } from "../../shared/unpaidReminder.ts";
 import { safeEqual } from "../../shared/libraryAccess.ts";
 import { applyDataPatches } from "../../shared/dataPatches.ts";
+import { getOrderByPayuId, claimCompletion } from "../../shared/orders.ts";
+import { fulfillOrder } from "../../shared/fulfillOrder.ts";
+import { loadAppUrl } from "../../shared/settings.ts";
+
+// Zamówienia za 0 zł (całość pokryta kartą/kodem) nie mają powiadomienia PayU, które by je ponowiło.
+// Gdy realizacja w kasie się nie udała, zamówienie zostaje PENDING — tu dokańczamy je (najwyżej 5 na przebieg, do doby wstecz).
+async function retryFreeOrders(base44) {
+  const rows = await runSql(base44, `SELECT payu_order_id FROM public.orders WHERE status = 'PENDING' AND payu_order_id LIKE 'FREE-%'
+    AND created_date < now() - interval '3 minutes' AND created_date > now() - interval '1 day' ORDER BY created_date LIMIT 5`, true);
+  let done = 0;
+  for (const r of rows) {
+    const order = await getOrderByPayuId(base44, r.payu_order_id);
+    if (order && await claimCompletion(base44, r.payu_order_id)) {
+      await fulfillOrder(base44, order, r.payu_order_id).then(() => done++).catch((e) => console.error("zamówienie 0 zł:", e?.message));
+    }
+  }
+  return done;
+}
 
 // Higiena listy oczekujących (raz na dobę na instancję): 90 dni po powiadomieniu, a bez powiadomienia po 12 miesiącach.
 let lastHygiene = "";
@@ -79,9 +97,11 @@ export default async function(req) {
     const prices = await recordPrices(base44, patched.length > 0).catch(() => -1);
     await waitlistHygiene(base44).catch(() => {});
     const released = await releaseDue(base44).catch((e) => { console.error("premiera:", e.message); return []; });
+    await loadAppUrl(base44).catch(() => {});
+    const freeDone = await retryFreeOrders(base44).catch((e) => { console.error("zamówienia 0 zł:", e.message); return 0; });
     const ready = await requireMail(base44).then(() => true).catch(() => false);
     const reminded = ready ? await unpaidReminders(base44).catch((e) => { console.error("przypomnienia:", e.message); return 0; }) : 0;
-    return Response.json({ ok: true, published: done, prices, released, reminded, patched });
+    return Response.json({ ok: true, published: done, prices, released, reminded, patched, freeDone });
   } catch (error) {
     return Response.json({ error: error.message }, { status: 500 });
   }

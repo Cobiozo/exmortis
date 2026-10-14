@@ -3,32 +3,8 @@ import { runSql, escStr, esc } from "./supabase.ts";
 // Zamówienia z kasy (PayU) — tabela public.orders.
 
 // Struktura tabeli zakładana migracją przy wdrożeniu — przy zapytaniach nic nie zmieniamy.
-export async function ensureOrdersTable(base44) {
-  return;
-  await runSql(
-    base44,
-    `CREATE TABLE IF NOT EXISTS public.orders (
-      id text PRIMARY KEY,
-      payu_order_id text,
-      buyer_name text,
-      buyer_email text,
-      note text,
-      items jsonb NOT NULL,
-      total numeric NOT NULL DEFAULT 0,
-      status text NOT NULL DEFAULT 'NEW',
-      created_date timestamptz DEFAULT now(),
-      updated_date timestamptz DEFAULT now()
-    )`
-  );
-  await runSql(
-    base44,
-    `ALTER TABLE public.orders
-       ADD COLUMN IF NOT EXISTS buyer_phone text,
-       ADD COLUMN IF NOT EXISTS phone_consent_date timestamptz,
-       ADD COLUMN IF NOT EXISTS newsletter_consent_date timestamptz,
-       ADD COLUMN IF NOT EXISTS digital_consent_text text,
-       ADD COLUMN IF NOT EXISTS digital_consent_date timestamptz`
-  );
+export async function ensureOrdersTable(_base44) {
+  // Tabela i kolumny zakładane migracją przy wdrożeniu (dawny blok DDL usunięty — nie był wykonywany).
 }
 
 export async function insertOrder(base44, order) {
