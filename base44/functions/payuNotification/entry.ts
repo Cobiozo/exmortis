@@ -1,6 +1,7 @@
 import { createHash } from "node:crypto";
 import { createClientFromRequest } from "npm:@base44/sdk@0.8.44";
 import { getSetting, loadAppUrl } from "../../shared/settings.ts";
+import { safeEqual } from "../../shared/libraryAccess.ts";
 import { getOrderByPayuId, updateOrderStatus, claimCompletion } from "../../shared/orders.ts";
 import { fulfillOrder } from "../../shared/fulfillOrder.ts";
 
@@ -20,7 +21,7 @@ export default async function (req) {
     const algo = String(parts.algorithm || "MD5").toUpperCase().replace("-", "");
     const hashName = algo === "SHA256" ? "sha256" : algo === "SHA1" || algo === "SHA" ? "sha1" : "md5";
     const expected = createHash(hashName).update(raw + payu.secondKey).digest("hex");
-    if (!parts.signature || parts.signature.toLowerCase() !== expected) {
+    if (!parts.signature || !safeEqual(parts.signature.toLowerCase(), expected)) {
       return new Response("Invalid signature", { status: 400 });
     }
 

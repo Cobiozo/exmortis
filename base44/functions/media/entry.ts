@@ -25,7 +25,11 @@ function fromSite(req) {
 function limited(ip) {
   const now = Date.now();
   const h = hits.get(ip);
-  if (!h || now - h.t > 60000) { hits.set(ip, { t: now, n: 1 }); return false; }
+  if (!h || now - h.t > 60000) {
+    if (hits.size > 5000) hits.clear(); // mapa nie rośnie bez końca na długo żyjącej instancji
+    hits.set(ip, { t: now, n: 1 });
+    return false;
+  }
   h.n++;
   return h.n > 300;
 }

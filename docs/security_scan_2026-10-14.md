@@ -27,9 +27,29 @@ Metoda: przegląd kodu, zapytania tylko do odczytu do bazy, build produkcyjny, p
 - **Kalendarz Google**: wyłącznie zakresy `calendar.app.created` i `calendar.freebusy`; zapis tylko do własnego kalendarza, z głównego czytana tylko zajętość; błąd Google nigdy nie przewraca rezerwacji (kolejka ponowień).
 - **Eksport CSV**: neutralizacja komórek zaczynających się jak formuła.
 
+## Funkcje publiczne — przegląd (2026-10-14)
+
+Sprawdzono wszystkie funkcje pod kątem tego, co da się wywołać bez logowania.
+
+### Bez zastrzeżeń
+- **bootstrap / siteSettings / siteContent** — zwracają wyłącznie dane publiczne. `publicSettings` przepuszcza tylko pola firmy z listy dozwolonej (`cleanFirma`), a ustawienia przedpremierowe bez listy dostępu (pole `dostep` odcinane przed odpowiedzią). Klucze `payu` i `smtp` (z hasłami) nie są czytane tą ścieżką — `getSettingsFast` pobiera wyłącznie wskazane klucze. Odpowiedzi trzymane dodatkowo w kopii w pamięci instancji.
+- **media** — proxy obrazów z biblioteki: wymaga nagłówka pochodzenia z dozwolonej domeny, `pub_id` jest losowy (32 znaki), limit 300 żądań na minutę, link do pliku podpisywany na 60 s.
+- **payuNotification** — autentyczność potwierdzana podpisem OpenPayU na surowej treści żądania; bez poprawnego podpisu odrzuca.
+- **eventsCancel** — token 32 znaki; zapis z opłaconym biletem nie jest zwalniany jednym kliknięciem.
+- **orderFree / shopQuizSubmit / webinarSignup / subscribeNewsletter / shopWaitlist / createPowrotApplication / createContactMessage / withdrawal / checkDiscount** — każdy ma limit na IP (5–10 na godzinę) przed wysyłką e-maila; `checkDiscount` i `withdrawal` zapisują próby w rejestrze bezpieczeństwa, a `createContactMessage` ma pole-pułapkę na boty.
+- **Funkcje konta** (`myAccount`, `library`, `obok`, `course`, `notifications`, `myEvents`, `tickets`, `announcements`, `gdprPerson`) — każda wiąże dane z adresem zalogowanego użytkownika, nigdy z identyfikatorem podanym w żądaniu. `gdprPerson`, edycja w `announcements` i wszystkie `admin*` wymagają roli `admin`. Nie znaleziono możliwości podejrzenia cudzych danych przez podstawienie identyfikatora.
+- **silenceSession** — anonimowe statystyki, limit 60 zdarzeń na godzinę, bez danych osobowych.
+- **Zapytania SQL** — wszystkie wartości przechodzą przez quoting (`escStr`) lub parametry; brak sklejania danych od użytkownika z treścią zapytania.
+
+### Poprawione
+1. **instagramFeed** — publiczny adres wywoływał Instagram Graph API przy każdym wejściu na stronę główną. Dodano pamięć 10 minut w instancji (jedno wywołanie obsługuje wszystkich gości) i limit 60 żądań na minutę.
+2. **giftCardView** — dodano limit 30 odczytów na godzinę z jednego połączenia (klucz karty pozostaje losowy i nieodgadywalny).
+3. **payuNotification** — porównanie podpisu w czasie stałym (odporność na atak czasowy).
+4. **media** — mapa liczników czyszczona po przekroczeniu rozmiaru (brak nieograniczonego wzrostu pamięci instancji).
+
 ## Ryzyka otwarte (bez zmian)
 1. Wylogowanie ze wszystkich urządzeń — ograniczenie platformy.
 2. Podpisane linki do plików działają do 1 godziny.
 3. Klucz `service_role` Supabase trzymany w pamięci instancji (1 h), nigdy w logach ani odpowiedzi.
 4. Poczta: do czasu konfiguracji SMTP przypomnienia czekają w kolejce (bez utraty danych).
-5. Część funkcji publicznych (np. `bootstrap`, `siteSettings`, `media`, `instagramFeed`) jest celowo dostępna bez logowania — do osobnego przeglądu, poza zakresem modułu rezerwacji.
+5. Limity publicznych formularzy działają per IP; przy braku nagłówka adresu (rzadkie) przepuszczają — świadomy wybór, żeby formularz nigdy nie zniknął przez licznik.
