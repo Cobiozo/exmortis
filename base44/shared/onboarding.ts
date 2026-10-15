@@ -101,7 +101,7 @@ export function onboardingMail(step, ctx) {
       P(`${hi}dwa tygodnie z ${prod}. To dobry moment, żeby się zatrzymać i zobaczyć, gdzie jesteś.`),
       P(`Powrót ma cztery etapy: Śmierć · Próg · Powrót · Inny. Żaden materiał nie przeprowadzi przez wszystkie naraz — i nie musi. Ważne jest, żeby zrobić kolejny krok, a nie wszystkie od razu.`),
       nx ? [
-        `<div style="margin:28px 0 8px;padding:22px 22px 4px;border:1px solid #2A2A2C;">`,
+        `<div style="margin:28px 0 28px;padding:22px 22px 4px;border:1px solid #2A2A2C;">`,
         LABEL("NASTĘPNY KROK"),
         `<p style="margin:0 0 10px;font-size:21px;line-height:1.35;color:#F5EFE1;">${esc(nx.name)}</p>`,
         nx.text ? P(`<span style="color:#C8C6C1;">${esc(nx.text)}</span>`) : "",
