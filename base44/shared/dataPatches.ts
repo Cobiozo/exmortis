@@ -121,6 +121,15 @@ const PATCHES: { id: string; why: string; sql: string[] }[] = [
        FROM public.bk_settings s LEFT JOIN public.bk_types t ON t.slug = 'rozmowa-na-progu' WHERE s.id = 1`,
     ],
   },
+  {
+    id: "2026-10-15-rezerwacje-staly-zoom",
+    why: "Rodzaje rezerwacji bez własnego linku dostają stały link Zoom z Ustawień strony (wpisany przez Dawida 15.10)",
+    sql: [
+      `UPDATE public.bk_types SET zoom_link = (SELECT value->>'link' FROM public.app_settings WHERE key = 'zoom_staly')
+         WHERE COALESCE(zoom_link, '') = ''
+           AND COALESCE((SELECT value->>'link' FROM public.app_settings WHERE key = 'zoom_staly'), '') LIKE 'https://%'`,
+    ],
+  },
 ];
 
 export async function applyDataPatches(base44): Promise<string[]> {

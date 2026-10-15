@@ -90,7 +90,7 @@ async function readiness(base44) {
   const bkNoZoom = Number(row?.bk_no_zoom || 0);
   const bkParts = [];
   if (!hasFixedZoom) bkParts.push("brak stałego linku Zoom");
-  if (bkNoZoom > 0) bkParts.push(`brak linku w ${bkNoZoom} aktywnych rodzajach`);
+  if (bkNoZoom > 0) bkParts.push(`brak linku w ${bkNoZoom} aktywnych rodzajach (Rezerwacje → Rodzaje i godziny → edytuj rodzaj → „Mój stały link”)`);
   if (bkOff) bkParts.push("rezerwacje 1:1 wyłączone");
 
   const gcalConnected = gcalConn || !!row?.gcal_used;
