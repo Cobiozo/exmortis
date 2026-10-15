@@ -1,7 +1,7 @@
 import React from "react";
 import { ArrowUp, ArrowDown, Trash2, Plus } from "lucide-react";
 import { inputCls, smallBtn } from "../ui";
-import { linkError } from "@/components/cms/links";
+import { linkError, cleanLink } from "@/components/cms/links";
 
 // Lista par etykieta + link z kolejnością, dodawaniem i usuwaniem.
 export default function LinkRows({ rows, onChange, max = 12 }) {
@@ -15,7 +15,7 @@ export default function LinkRows({ rows, onChange, max = 12 }) {
           <div key={i}>
             <div className="flex gap-2 items-center">
               <input className={inputCls} value={r.label} placeholder="Etykieta" onChange={(e) => set(i, { label: e.target.value })} />
-              <input className={inputCls} value={r.to} placeholder="/adres lub https://" onChange={(e) => set(i, { to: e.target.value })} />
+              <input className={inputCls} value={r.to} placeholder="/adres lub https://" onChange={(e) => set(i, { to: cleanLink(e.target.value) })} />
               <button className={smallBtn} disabled={i === 0} onClick={() => move(i, -1)} aria-label="Wyżej"><ArrowUp className="h-4 w-4" /></button>
               <button className={smallBtn} disabled={i === rows.length - 1} onClick={() => move(i, 1)} aria-label="Niżej"><ArrowDown className="h-4 w-4" /></button>
               <button className={smallBtn} onClick={() => onChange(rows.filter((_, j) => j !== i))} aria-label="Usuń"><Trash2 className="h-4 w-4" /></button>

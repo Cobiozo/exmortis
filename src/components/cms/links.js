@@ -12,8 +12,12 @@ const FIXED = { zapowiedz: "/", home: "/", "o-mnie": "/o-mnie", glos: "/glos", k
 export const pagePath = (slug) => FIXED[slug] || `/strona/${slug}`;
 
 // Czy link prowadzi do istniejącego miejsca. extraPaths — adresy stron z edytora.
+// Linki kopiowane z aplikacji (WhatsApp, Instagram, PDF) mają często niewidoczne znaki kierunku tekstu
+// lub spacje zerowej szerokości — przeglądarka nie rozpozna wtedy adresu. Usuwamy je przy wpisywaniu.
+export const cleanLink = (v) => String(v ?? "").replace(/[\u200B-\u200F\u202A-\u202E\u2060-\u2064\uFEFF\u00AD]/g, "").trim();
+
 export function linkError(link, extraPaths = []) {
-  const l = String(link || "").trim();
+  const l = cleanLink(link);
   if (!l) return "brak linku";
   if (l.startsWith("#")) return null;
   if (/^(https:\/\/|mailto:|tel:)/i.test(l)) return null;

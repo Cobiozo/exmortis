@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { ROUTES, linkError } from "@/components/cms/links";
+import { ROUTES, linkError, cleanLink } from "@/components/cms/links";
 import { inputCls } from "./ui";
 
 // Wybór strony wewnętrznej z listy (z wyszukiwaniem) albo adres zewnętrzny https://.
@@ -16,12 +16,12 @@ export default function LinkPicker({ value, onChange, extra = [] }) {
       <input className={inputCls} value={open ? q : current ? `${current[1]} (${current[0]})` : value || ""}
         placeholder="Wyszukaj stronę albo wpisz https://…"
         onFocus={() => { setOpen(true); setQ(current ? "" : value || ""); }}
-        onBlur={() => setTimeout(() => { setOpen(false); if (q && !current) onChange(q.trim()); }, 150)}
-        onChange={(e) => setQ(e.target.value)} />
+        onBlur={() => setTimeout(() => { setOpen(false); if (q && !current) onChange(cleanLink(q)); }, 150)}
+        onChange={(e) => setQ(cleanLink(e.target.value))} />
       {open && (
         <div className="absolute z-30 left-0 right-0 mt-1 max-h-64 overflow-y-auto bg-[#0F0F10] border hairline">
           {/^(https:\/\/|#|\/)/.test(q) && (
-            <button type="button" onMouseDown={() => { onChange(q.trim()); setQ(""); }} className="block w-full text-left px-4 py-3 text-sm gold-text hover:bg-[#C9A24A]/10">
+            <button type="button" onMouseDown={() => { onChange(cleanLink(q)); setQ(""); }} className="block w-full text-left px-4 py-3 text-sm gold-text hover:bg-[#C9A24A]/10">
               Użyj adresu: {q}
             </button>
           )}
