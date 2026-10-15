@@ -24,6 +24,7 @@ export const SOCIAL = [
   ["Instagram", "https://www.instagram.com/e.x.m.o.r.t.i.s/"],
   ["Facebook", "https://www.facebook.com/dawidkowalczyk.exmortis"],
   ["YouTube", "https://www.youtube.com/@e.x.m.o.r.t.i.s"],
+  ["WhatsApp", "https://whatsapp.com/channel/0029VbDYXi1Lo4hfFPvT3O3G"],
 ];
 
 // Rodzaje maili marketingowych (zgoda na listy) — w stopce informacja o wypisie.

@@ -15,7 +15,7 @@ export const FOOTER = [
   col("Słuchaj", [["Podcast „Głos”", "/glos?src=footer"], ["Chwila ciszy", "/cisza?src=footer"], ["Test: która śmierć jest Twoja?", "/test?src=footer"]]),
   col("Poznaj", [["Strona główna", "/"], ["O mnie", "/o-mnie"], ["Manifest", "/#manifest"], ["Formularz kontaktowy", "/kontakt"]]),
   col("Kontakt", [["kontakt@exmortis.pl", "mailto:kontakt@exmortis.pl"], ["Instagram", "https://www.instagram.com/e.x.m.o.r.t.i.s/"],
-    ["Facebook", "https://www.facebook.com/dawidkowalczyk.exmortis"], ["YouTube", "https://www.youtube.com/@e.x.m.o.r.t.i.s"]]),
+    ["Facebook", "https://www.facebook.com/dawidkowalczyk.exmortis"], ["YouTube", "https://www.youtube.com/@e.x.m.o.r.t.i.s"], ["Kanał WhatsApp", "https://whatsapp.com/channel/0029VbDYXi1Lo4hfFPvT3O3G"]]),
 ];
 
 export const isActive = (pathname, to) => {

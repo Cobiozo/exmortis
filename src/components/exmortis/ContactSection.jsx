@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { ArrowRight, Check, Mail, Instagram, Facebook, Youtube } from "lucide-react";
+import { ArrowRight, Check, Mail, Instagram, Facebook, Youtube, MessageCircle } from "lucide-react";
 import { sendForm } from "@/lib/outbox";
 import { useSiteContent } from "@/components/exmortis/SiteContentProvider";
 import useSystemText from "@/content/useSystemText";
@@ -11,6 +11,7 @@ const SOCIAL_LINKS = [
   { label: "Instagram", url: "https://www.instagram.com/e.x.m.o.r.t.i.s/", icon: Instagram },
   { label: "Facebook", url: "https://www.facebook.com/dawidkowalczyk.exmortis", icon: Facebook },
   { label: "YouTube", url: "https://www.youtube.com/@e.x.m.o.r.t.i.s", icon: Youtube },
+  { label: "Kanał WhatsApp", url: "https://whatsapp.com/channel/0029VbDYXi1Lo4hfFPvT3O3G", icon: MessageCircle },
 ];
 
 export default function ContactSection() {
