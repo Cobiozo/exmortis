@@ -1,11 +1,12 @@
+/* latin-ext: tylko polskie litery (ąćęłńśźż i wielkie) — podzbiór pyftsubset, ~5 KB zamiast ~100 KB na krój */
 /* latin-ext */
 @font-face {
   font-family: 'Cinzel';
   font-style: normal;
   font-weight: 400 700;
   font-display: swap;
-  src: url(/fonts/cinzel-0.woff2) format('woff2');
-  unicode-range: U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304, U+0308, U+0329, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C4, U+2113, U+2C60-2C7F, U+A720-A7FF;
+  src: url(/fonts/cinzel-0-pl.woff2) format('woff2');
+  unicode-range: U+0104-0107, U+0118-0119, U+0141-0144, U+015A-015B, U+0179-017C;
 }
 /* latin */
 @font-face {
@@ -22,8 +23,8 @@
   font-style: italic;
   font-weight: 400 500;
   font-display: swap;
-  src: url(/fonts/eb-garamond-2.woff2) format('woff2');
-  unicode-range: U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304, U+0308, U+0329, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C4, U+2113, U+2C60-2C7F, U+A720-A7FF;
+  src: url(/fonts/eb-garamond-2-pl.woff2) format('woff2');
+  unicode-range: U+0104-0107, U+0118-0119, U+0141-0144, U+015A-015B, U+0179-017C;
 }
 /* latin */
 @font-face {
@@ -40,8 +41,8 @@
   font-style: normal;
   font-weight: 400 600;
   font-display: swap;
-  src: url(/fonts/eb-garamond-4.woff2) format('woff2');
-  unicode-range: U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304, U+0308, U+0329, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C4, U+2113, U+2C60-2C7F, U+A720-A7FF;
+  src: url(/fonts/eb-garamond-4-pl.woff2) format('woff2');
+  unicode-range: U+0104-0107, U+0118-0119, U+0141-0144, U+015A-015B, U+0179-017C;
 }
 /* latin */
 @font-face {
@@ -58,8 +59,8 @@
   font-style: normal;
   font-weight: 300 700;
   font-display: swap;
-  src: url(/fonts/inter-6.woff2) format('woff2');
-  unicode-range: U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304, U+0308, U+0329, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C4, U+2113, U+2C60-2C7F, U+A720-A7FF;
+  src: url(/fonts/inter-6-pl.woff2) format('woff2');
+  unicode-range: U+0104-0107, U+0118-0119, U+0141-0144, U+015A-015B, U+0179-017C;
 }
 /* latin */
 @font-face {
@@ -76,8 +77,8 @@
   font-style: normal;
   font-weight: 400;
   font-display: swap;
-  src: url(/fonts/space-mono-8.woff2) format('woff2');
-  unicode-range: U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304, U+0308, U+0329, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C4, U+2113, U+2C60-2C7F, U+A720-A7FF;
+  src: url(/fonts/space-mono-8-pl.woff2) format('woff2');
+  unicode-range: U+0104-0107, U+0118-0119, U+0141-0144, U+015A-015B, U+0179-017C;
 }
 /* latin */
 @font-face {
@@ -94,8 +95,8 @@
   font-style: normal;
   font-weight: 700;
   font-display: swap;
-  src: url(/fonts/space-mono-10.woff2) format('woff2');
-  unicode-range: U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304, U+0308, U+0329, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C4, U+2113, U+2C60-2C7F, U+A720-A7FF;
+  src: url(/fonts/space-mono-10-pl.woff2) format('woff2');
+  unicode-range: U+0104-0107, U+0118-0119, U+0141-0144, U+015A-015B, U+0179-017C;
 }
 /* latin */
 @font-face {
