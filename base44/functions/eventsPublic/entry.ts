@@ -46,6 +46,7 @@ function tooManyMisses(ip) {
   return !!m && Date.now() - m.at < 600000 && m.n >= 12;
 }
 function addMiss(ip) {
+  if (MISSES.size > 10000) MISSES.clear();
   const m = MISSES.get(ip);
   if (!m || Date.now() - m.at > 600000) MISSES.set(ip, { at: Date.now(), n: 1 }); else m.n++;
 }
@@ -205,9 +206,16 @@ export default async function (req) {
     // --- Strona dołączenia: link i hasło tylko w oknie czasowym (czas serwera) ---
     if (body.action === "join" || body.action === "ics") {
       const key = textField(body, "slug", { max: 200 });
+      // Podgląd na żywo (?preview=) tylko dla administratora: gość z tym parametrem omijałby kopię
+      // w pamięci i każdym żądaniem trafiał wprost do bazy — łatwe zalanie Supabase w szczycie.
+      let admin = false;
+      if (body.preview) {
+        const me = await base44.auth.me().catch(() => null);
+        admin = me?.role === "admin";
+      }
       // Kopia wiersza spotkania w pamięci serwera (30 s): w szczycie goście nie trafiają do bazy, stan liczony z zegara.
       let hit = JOIN_CACHE.get(key);
-      if (!hit || Date.now() - hit.at > 30000 || body.preview) {
+      if (!hit || Date.now() - hit.at > 30000 || (body.preview && admin)) {
         if (!joinColsReady) { await ensureJoinColumns(base44); joinColsReady = true; }
         const rows = await runSql(base44,
           `SELECT id, title, slug, subtitle, format, status, start_datetime, duration_minutes, location, join_link, join_password,
@@ -217,8 +225,6 @@ export default async function (req) {
         if (!body.preview) JOIN_CACHE.set(key, hit);
       }
       const ev = hit.ev;
-      const me = body.preview ? await base44.auth.me().catch(() => null) : null;
-      const admin = me?.role === "admin";
       if (!ev || !ev.start_datetime || (!admin && !["Opublikowane", "Odwołane"].includes(ev.status))) {
         return Response.json({ error: "Nie znaleziono spotkania" }, { status: 404 });
       }
