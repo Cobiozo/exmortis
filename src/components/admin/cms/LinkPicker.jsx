@@ -17,7 +17,7 @@ export default function LinkPicker({ value, onChange, extra = [] }) {
         placeholder="Wyszukaj stronę albo wpisz https://…"
         onFocus={() => { setOpen(true); setQ(current ? "" : value || ""); }}
         onBlur={() => setTimeout(() => { setOpen(false); if (q && !current) onChange(cleanLink(q)); }, 150)}
-        onChange={(e) => setQ(cleanLink(e.target.value))} />
+        onChange={(e) => setQ(e.target.value.replace(/[\u200B-\u200F\u202A-\u202E\u2060-\u2064\uFEFF\u00AD]/g, ""))} />
       {open && (
         <div className="absolute z-30 left-0 right-0 mt-1 max-h-64 overflow-y-auto bg-[#0F0F10] border hairline">
           {/^(https:\/\/|#|\/)/.test(q) && (
