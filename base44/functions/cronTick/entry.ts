@@ -61,6 +61,11 @@ export default async function (req) {
   try {
     const base44 = createClientFromRequest(req);
     const body = await req.json().catch(() => ({}));
+    // DIAG (tymczasowo): kim jest wywołujący workflow — tylko nazwy nagłówków i rola, bez wartości.
+    try {
+      const me = await base44.auth.me().catch((e) => ({ err: String(e?.message || e).slice(0, 80) }));
+      console.log("DIAG_WF", JSON.stringify({ headers: [...req.headers.keys()].sort(), role: me?.role || null, email: me?.email ? me.email.replace(/^(.).*@/, "$1***@") : null, err: me?.err || null, auth: (req.headers.get("authorization") || "").split(" ")[0] }));
+    } catch { /* diag */ }
 
     // Dostęp: token zadania z mb_settings (porównanie w czasie stałym).
     const rows = await runSql(base44, `SELECT tick_token FROM public.mb_settings WHERE id = 1`, true).catch(() => null);
