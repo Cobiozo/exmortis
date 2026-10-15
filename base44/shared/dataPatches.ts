@@ -106,8 +106,8 @@ const PATCHES: { id: string; why: string; sql: string[] }[] = [
       `UPDATE public.products SET price = 799, price_regular = 799, price_start = NULL, promo_end_date = NULL, old_price = NULL, price_steps = NULL
          WHERE slug = 'rozmowa-na-progu'`,
       `UPDATE public.bk_settings SET
-           threshold_product_id = COALESCE(threshold_product_id, (SELECT id FROM public.products WHERE slug = 'rozmowa-na-progu' LIMIT 1)),
-           threshold_type_id = COALESCE(threshold_type_id, (SELECT id FROM public.bk_types WHERE slug = 'rozmowa-na-progu' LIMIT 1))
+           threshold_product_id = COALESCE(threshold_product_id, (SELECT id::text::uuid FROM public.products WHERE slug = 'rozmowa-na-progu' LIMIT 1)),
+           threshold_type_id = COALESCE(threshold_type_id, (SELECT id::text::uuid FROM public.bk_types WHERE slug = 'rozmowa-na-progu' LIMIT 1))
          WHERE id = 1`,
       `UPDATE public.bk_types SET zoom_link = (SELECT value->>'link' FROM public.app_settings WHERE key = 'zoom_staly')
          WHERE slug = 'rozmowa-na-progu' AND COALESCE(zoom_link, '') = ''
@@ -115,8 +115,8 @@ const PATCHES: { id: string; why: string; sql: string[] }[] = [
       `SELECT (SELECT price FROM public.products WHERE slug = 'rozmowa-na-progu') AS cena,
          (SELECT status FROM public.products WHERE slug = 'rozmowa-na-progu') AS status,
          s.mode, s.threshold_sessions, s.threshold_valid_days,
-         (s.threshold_product_id = (SELECT id FROM public.products WHERE slug = 'rozmowa-na-progu')) AS produkt_ok,
-         (s.threshold_type_id = t.id) AS rodzaj_ok, to_jsonb(t)->>'active' AS rodzaj_aktywny, (t.zoom_link IS NOT NULL) AS ma_zoom,
+         (s.threshold_product_id::text = (SELECT id::text FROM public.products WHERE slug = 'rozmowa-na-progu')) AS produkt_ok,
+         (s.threshold_type_id::text = t.id::text) AS rodzaj_ok, to_jsonb(t)->>'active' AS rodzaj_aktywny, (t.zoom_link IS NOT NULL) AS ma_zoom,
          (SELECT count(*) FROM public.bk_hours h WHERE h.type_id = t.id) AS godziny
        FROM public.bk_settings s LEFT JOIN public.bk_types t ON t.slug = 'rozmowa-na-progu' WHERE s.id = 1`,
     ],
