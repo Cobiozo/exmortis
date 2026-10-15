@@ -187,7 +187,7 @@ export default function Skaner() {
             className="w-full bg-[#0D0D0E] border hairline px-3 py-3 text-base focus:border-[#C9A24A] focus:outline-none">
             {info.events.map((e) => <option key={e.id} value={e.id}>{e.title} · {day(e.start_datetime)}</option>)}
           </select>
-        ) : <p className="text-sm text-foreground/60">Brak wydarzeń z biletami w najbliższym czasie.</p>}
+        ) : <p className="text-sm text-foreground/60">Brak opublikowanych spotkań stacjonarnych z biletami w najbliższym czasie — skaner sprawdza bilety na dowolne wydarzenie.</p>}
       </header>
 
       <section className="relative flex-1 min-h-[52svh] bg-black overflow-hidden">
@@ -198,7 +198,7 @@ export default function Skaner() {
           <div className="absolute inset-0 flex flex-col items-center justify-center gap-4 p-6 text-center">
             {cam === "denied" && <p className="text-sm text-[#E8C547] max-w-xs">Brak zgody na kamerę. Zezwól na kamerę w ustawieniach przeglądarki albo wpisuj numery biletów ręcznie.</p>}
             {cam === "none" && <p className="text-sm text-[#E8C547] max-w-xs">Nie udało się włączyć kamery. Wpisuj numery biletów ręcznie.</p>}
-            <button type="button" onClick={startCam} disabled={cam === "starting" || !eventId} className="btn-relic !px-8 !py-4 disabled:opacity-50">
+            <button type="button" onClick={startCam} disabled={cam === "starting"} className="btn-relic !px-8 !py-4 disabled:opacity-50">
               <Camera className="h-5 w-5" /> {cam === "starting" ? "WŁĄCZAM…" : "WŁĄCZ KAMERĘ"}
             </button>
           </div>
@@ -228,7 +228,7 @@ export default function Skaner() {
           <form onSubmit={(e) => { e.preventDefault(); if (code.trim()) { check({ code: code.trim() }); setCode(""); } }} className="flex gap-2">
             <input value={code} onChange={(e) => setCode(e.target.value.toUpperCase())} placeholder="Numer biletu, np. KRT-4821" autoCapitalize="characters" autoComplete="off"
               aria-label="Numer biletu" className="flex-1 min-w-0 bg-transparent border hairline px-4 py-3 font-mono text-base focus:border-[#C9A24A] focus:outline-none" />
-            <button type="submit" disabled={!eventId} className="btn-relic !px-5 disabled:opacity-50">SPRAWDŹ</button>
+            <button type="submit" className="btn-relic !px-5">SPRAWDŹ</button>
             <button type="button" onClick={() => setManual(false)} className="btn-ghost !px-3" aria-label="Zamknij wpisywanie"><X className="h-4 w-4" /></button>
           </form>
         ) : (
