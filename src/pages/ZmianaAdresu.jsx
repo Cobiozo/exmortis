@@ -30,7 +30,7 @@ export default function ZmianaAdresu() {
         <h1 className="relic-heading text-3xl">Nowy adres e-mail</h1>
         {state === "check" && <Loader2 className="h-5 w-5 animate-spin gold-text" />}
         {state === "invalid" && <p className="text-foreground/60">Link wygasł albo został już użyty.</p>}
-        {state === "done" && <p className="text-foreground/70">Gotowe. Na nowy adres wysłaliśmy zaproszenie. Przyjmij je, aby dokończyć zmianę.</p>}
+        {state === "done" && <p className="text-foreground/70">Gotowe. Na nowy adres wysłałem zaproszenie. Przyjmij je, aby dokończyć zmianę.</p>}
         {(state === "form" || state === "busy") && (
           <form onSubmit={submit} className="space-y-4">
             <input type="email" required value={a} onChange={(e) => setA(e.target.value)} placeholder="nowy adres e-mail" className={inp} />

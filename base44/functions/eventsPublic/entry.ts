@@ -70,7 +70,7 @@ async function zoomAlarm(base44, ev) {
   const subject = `PILNE: brak linku Zoom — ${ev.title}`;
   if (!to) return base44.asServiceRole.entities.MailQueue.create({ to_email: "—", kind: "alarm_zoom", ref, subject, status: "pominiety", blad: "Uzupełnij e-mail firmy w Ustawieniach" });
   await sendMail(base44, { kind: "alarm_zoom", ref, to, subject,
-    html: `<p>Pokój spotkania «${ev.title}» jest otwarty, a w panelu nie ma linku do Zoom. Uczestnicy widzą: „Za chwilę podamy link”.</p>` });
+    html: `<p>Pokój spotkania «${ev.title}» jest otwarty, a w panelu nie ma linku do Zoom. Uczestnicy widzą: „Za chwilę podam link”.</p>` });
 }
 
 // Publiczny moduł Spotkań: lista nadchodzących/minionych wydarzeń, szczegóły,

@@ -158,7 +158,7 @@ async function buildFeed(base44, me) {
       if (!reviewable.has(pid) || it.gift || reviewed.has(`${o.id}:${pid}`)) continue;
       push({ key: `rev:${o.id}:${pid}`, kind: "opinia",
         title: `Jak Ci się czyta/słucha „${String(it.name || "").slice(0, 60)}”?`,
-        body: "Zostaw opinię — kilka zdań. Publikujemy też krytyczne, nie płacimy za opinie.",
+        body: "Zostaw opinię — kilka zdań. Publikuję też krytyczne, nie płacę za opinie.",
         link: "/konto?tab=zakupy", at: new Date(paid + 14 * DAY).toISOString() });
     }
   }

@@ -24,7 +24,7 @@ export default function ListyCard() {
   const toggle = async () => {
     if (busy || state === null) return;
     if (state === "off") await call("listy_on");
-    else { const d = await call("listy_off"); if (!d.error) setMsg("Wyłączono. Nie wyślemy więcej Listów."); }
+    else { const d = await call("listy_off"); if (!d.error) setMsg("Wyłączono. Nie wyślę więcej Listów."); }
   };
   const resend = async () => { const d = await call("listy_resend"); setMsg(d.error || "Wysłano ponownie. Sprawdź skrzynkę."); };
   const on = state === "on" || state === "pending";

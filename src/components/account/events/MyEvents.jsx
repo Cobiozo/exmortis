@@ -29,7 +29,7 @@ export default function MyEvents() {
 
   if (!items.length) return (
     <div className="border hairline p-6 md:p-8 max-w-2xl">
-      <p className="text-foreground/75 leading-relaxed">Nie widzę tu zapisów na spotkania. Pokazujemy zapisy na adres <strong className="text-[#F5EFE1]">{user?.email}</strong> — jeśli zapis był na inny adres, zaloguj się nim.</p>
+      <p className="text-foreground/75 leading-relaxed">Nie widzę tu zapisów na spotkania. Pokazuję zapisy na adres <strong className="text-[#F5EFE1]">{user?.email}</strong> — jeśli zapis był na inny adres, zaloguj się nim.</p>
       <Link to="/spotkania" className="btn-ghost mt-6">ZOBACZ SPOTKANIA <ArrowRight className="h-4 w-4" /></Link>
     </div>
   );

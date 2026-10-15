@@ -4,7 +4,7 @@ import { sendMail, adminTo } from "./smtp.ts";
 const MAX_PER_HOUR = 60;
 const MAX_IPS_24H = 3;
 const ALERT_COOLDOWN_H = 12;
-export const BLOCK_MSG = "Wstrzymaliśmy odtwarzanie na tym koncie. Jeśli to pomyłka — napisz do nas.";
+export const BLOCK_MSG = "Wstrzymałem odtwarzanie na tym koncie. Jeśli to pomyłka — napisz do mnie.";
 
 // Zwraca komunikat błędu, jeśli odtwarzanie ma być zablokowane; inaczej null.
 export async function checkVideoAbuse(base44, email: string, ip: string) {

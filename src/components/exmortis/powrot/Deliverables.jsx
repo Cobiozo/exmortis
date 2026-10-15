@@ -13,7 +13,7 @@ const ITEMS = [
 
 export default function Deliverables() {
   return (
-    <Section dark label="CO DOSTAJESZ · 07">
+    <Section dark label="CO OTRZYMUJESZ · 07">
       <h2 className="relic-heading text-4xl md:text-6xl leading-[0.95] mb-12">
         Co <span className="gold-text">dostajesz</span>
       </h2>

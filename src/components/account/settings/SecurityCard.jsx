@@ -17,7 +17,7 @@ export default function SecurityCard({ me }) {
 
   return (
     <SettingsCard title="Bezpieczeństwo">
-      <p className="text-[#E2E2E2]/80 mb-4">Wyślemy link do zmiany hasła na Twój adres e-mail.</p>
+      <p className="text-[#E2E2E2]/80 mb-4">Wyślę link do zmiany hasła na Twój adres e-mail.</p>
       <button type="button" onClick={send} disabled={busy || left > 0} className={BTN_SECONDARY}>
         {busy && <Loader2 className="h-4 w-4 animate-spin" />} {left > 0 ? `Zmień hasło (${left} s)` : "Zmień hasło"}
       </button>

@@ -85,7 +85,7 @@ export default async function (req) {
       if (!Number.isFinite(rating) || rating < 1 || rating > 5) return Response.json({ error: "Wybierz ocenę od 1 do 5" }, { status: 400 });
       const text = plainText(body.body, { min: REVIEW_MIN, max: REVIEW_MAX, label: "Opinia" });
       const name = plainText(body.display_name, { min: 2, max: 40, label: "Podpis" });
-      if (body.consent !== true) return Response.json({ error: "Potrzebujemy zgody na publikację opinii" }, { status: 400 });
+      if (body.consent !== true) return Response.json({ error: "Potrzebuję zgody na publikację opinii" }, { status: 400 });
 
       // Limit: 10 opinii na godzinę z jednego konta.
       const recent = await runSql(

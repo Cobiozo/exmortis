@@ -69,7 +69,7 @@ export const cleanName = (v) => String(v ?? "").replace(/[\u0000-\u001f<>]/g, " 
 // Zapisy zamknięte: termin z panelu albo 15 minut przed startem.
 export function salesClosed(ev, now = Date.now()) {
   if (!ev || ev.status !== "Opublikowane") return "To wydarzenie nie jest już dostępne.";
-  if (!ev.tickets || !(Number(ev.price) > 0) || ev.format === "Online") return "Na to wydarzenie nie sprzedajemy biletów.";
+  if (!ev.tickets || !(Number(ev.price) > 0) || ev.format === "Online") return "Na to wydarzenie nie sprzedaję biletów.";
   if (!ev.start_datetime) return "Sprzedaż biletów jeszcze się nie zaczęła.";
   const deadline = ev.registration_deadline ? Date.parse(ev.registration_deadline) : Date.parse(ev.start_datetime) - 15 * 60000;
   if (now > deadline) return "Sprzedaż biletów jest zamknięta.";
@@ -249,7 +249,7 @@ export function ticketsHtml(tickets, events) {
     </div>`;
   }).join("");
   return `<div style="background:#0A0A0B;padding:0 32px 32px;font-family:Georgia,serif;">${blocks}
-    <p style="margin:0;color:#8A8A8C;font-size:13px;line-height:1.6;">Bilet jest imienny i ważny na jedno wejście. Przy wejściu pokaż kod QR — na telefonie albo wydrukowany. Każdą osobę wpuszczamy na jej bilet, więc bilety dla innych przekaż im wcześniej (PDF albo link). Wszystkie bilety są też w Moim koncie → Spotkania, po zalogowaniu tym adresem e-mail.</p></div>`;
+    <p style="margin:0;color:#8A8A8C;font-size:13px;line-height:1.6;">Bilet jest imienny i ważny na jedno wejście. Przy wejściu pokaż kod QR — na telefonie albo wydrukowany. Każdą osobę wpuszczam na jej bilet, więc bilety dla innych przekaż im wcześniej (PDF albo link). Wszystkie bilety są też w Moim koncie → Spotkania, po zalogowaniu tym adresem e-mail.</p></div>`;
 }
 
 // ---- Bilety tylko na spotkania stacjonarne. Darmowe stacjonarne: bilet wydawany przy zapisie ----
