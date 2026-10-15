@@ -201,6 +201,11 @@ export async function checkTicket(base44, { scan, eventId, by, scope, undo = fal
   if (undo) {
     const r = await runSql(base44, `UPDATE public.event_tickets SET status = 'wazny', checked_at = NULL, checked_by = NULL
       WHERE id = ${escStr(t.id)} AND status = 'wykorzystany' RETURNING id`);
+    // Cofnięcie wejścia przywraca też obecność w zapisach (administrator widzi go znów jako „Zapisany").
+    if (r?.length && t.buyer_email) {
+      await runSql(base44, `UPDATE public.registrations SET status = 'Zapisany' WHERE event_id = ${escStr(t.event_id)}
+        AND lower(email) = ${escStr(String(t.buyer_email).toLowerCase())} AND status = 'Obecny'`).catch(() => {});
+    }
     return { result: r?.length ? "cofniety" : "bez_zmian", ...base };
   }
   if (t.status === "anulowany") return { result: "anulowany", ...base };
