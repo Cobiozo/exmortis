@@ -9,9 +9,11 @@ function logError(error) {
   const key = location.pathname + message;
   if (logged.has(key)) return;
   logged.add(key);
-  base44.entities.ClientError.create({
-    url: (location.origin + location.pathname + location.search.replace(/[?&]_preview_token=[^&]*/, "")).slice(0, 500), message, stack: String(error?.stack || "").slice(0, 2000),
-    browser: navigator.userAgent.slice(0, 300), at: new Date().toISOString(),
+  // Zapis przez funkcję serwera: limit 10/h z jednego IP i przycięte pola (bezpośredni zapis SDK jest zablokowany).
+  base44.functions.invoke("clientError", {
+    url: location.origin + location.pathname + location.search.replace(/[?&]_preview_token=[^&]*/, ""),
+    message, stack: String(error?.stack || ""),
+    browser: navigator.userAgent, at: new Date().toISOString(),
   }).catch(() => {});
 }
 
