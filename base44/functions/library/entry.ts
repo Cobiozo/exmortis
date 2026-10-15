@@ -23,6 +23,7 @@ export default async function (req) {
       req.json().catch(() => ({})),
     ]);
     if (!me) return Response.json({ error: "Zaloguj się" }, { status: 401 });
+    if (me.role === "zablokowane") return Response.json({ error: "To konto jest zablokowane." }, { status: 403 }); // stare konto po zmianie adresu
     if (!s) return Response.json({ error: "Coś poszło nie tak. Spróbuj ponownie." }, { status: 503 });
     const a = body.action;
     const admin = me.role === "admin";

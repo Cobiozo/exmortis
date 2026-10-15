@@ -18,6 +18,7 @@ export default async function (req) {
     const base44 = createClientFromRequest(req);
     const me = await base44.auth.me().catch(() => null);
     if (!me?.email) return Response.json({ error: "Zaloguj się" }, { status: 401 });
+    if (me.role === "zablokowane") return Response.json({ error: "To konto jest zablokowane." }, { status: 403 }); // stare konto po zmianie adresu
     const email = String(me.email).trim().toLowerCase();
     const admin = me.role === "admin";
     const body = await req.json().catch(() => ({}));

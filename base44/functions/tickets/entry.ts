@@ -91,6 +91,7 @@ export default async function (req) {
 
     const me = await base44.auth.me().catch(() => null);
     if (!me) return bad("Zaloguj się", 401);
+    if (me.role === "zablokowane") return bad("To konto jest zablokowane.", 403); // stare konto po zmianie adresu
 
     // Moje konto → Spotkania: bilety kupione tym adresem.
     if (a === "mine") {
