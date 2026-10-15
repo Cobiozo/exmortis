@@ -7,6 +7,7 @@ import { rpcRegister, RPC_ERRORS, saveConsents, afterSaved, enqueue, flushQueue,
 import { sendReminderMail, sendRecordingMail, plWhen, APP_URL, buildIcs, joinState, joinToken } from "../../shared/events.ts";
 import { sendMail, adminTo } from "../../shared/smtp.ts";
 import { ipAllowed, TOO_MANY } from "../../shared/rateLimit.ts";
+import { safeEqual } from "../../shared/libraryAccess.ts";
 import { claimFollowups, nextEventAfter, followupMail, followupCtx, attended } from "../../shared/followup.ts";
 
 const ensureJoinColumns = (base44) => runSql(base44,
@@ -305,8 +306,15 @@ export default async function (req) {
     // --- Tick: higiena danych (zapisy 90 dni po spotkaniu) + przypomnienia
     //     24 h / 1 h przed oraz podziękowania z nagraniem ---
     if (body.action === "tick") {
-      // Najwyżej jeden przebieg na minutę — zadanie jest publiczne (wywołuje je workflow),
-      // więc ponowne wywołania z zewnątrz nie mogą mnożyć pracy ani wysyłek.
+      // Dostęp: administrator albo cronTick z tokenem zadania (mb_settings). Anonimowe wywołanie — 403.
+      const who = await base44.auth.me().catch(() => null);
+      if (who?.role !== "admin") {
+        const tk = await runSql(base44, `SELECT tick_token FROM public.mb_settings WHERE id = 1`, true).catch(() => null);
+        const stored = String(tk?.[0]?.tick_token || "");
+        const given = typeof body.tick_token === "string" ? body.tick_token : "";
+        if (!stored || !given || !(await safeEqual(given, stored))) return Response.json({ error: "Forbidden" }, { status: 403 });
+      }
+      // Najwyżej jeden przebieg na minutę — ponowne wywołania nie mnożą pracy ani wysyłek.
       const lock = await runSql(
         base44,
         `INSERT INTO public.app_settings (key, value, updated_date)

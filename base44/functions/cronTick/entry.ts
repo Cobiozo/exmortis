@@ -88,7 +88,7 @@ export default async function (req) {
     if (quarter) {
       const bk = await runSql(base44, `SELECT tick_token FROM public.bk_settings WHERE id = 1`, true).catch(() => null);
       const bkToken = (bk && bk[0] ? bk[0].tick_token : "") || "";
-      jobs.push({ label: "eventsPublic/tick", name: "eventsPublic", args: { action: "tick" } });
+      jobs.push({ label: "eventsPublic/tick", name: "eventsPublic", args: { action: "tick", tick_token: stored } });
       jobs.push({ label: "emailChange/tick", name: "emailChange", args: { action: "tick", tick_token: stored } });
       if (bkToken) {
         jobs.push({ label: "bookingPublic/notify_tick", name: "bookingPublic", args: { action: "notify_tick", tick_token: bkToken } });
