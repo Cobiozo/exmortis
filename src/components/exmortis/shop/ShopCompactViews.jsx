@@ -13,10 +13,9 @@ export function loadShopView() {
 }
 export function saveShopView(v) { try { localStorage.setItem(KEY, v); } catch { /* bez pamięci */ } }
 
+// Przełącznik w przyklejonym pasku filtrów (zawsze pod ręką przy przewijaniu).
 export function ShopViewToggle({ view, onChange }) {
   return (
-    <div className="px-5 md:px-10 pb-2">
-      <div className="mx-auto max-w-[1400px] flex justify-end">
         <div role="group" aria-label="Widok produktów" className="inline-flex border hairline">
           {SHOP_VIEWS.map(([k, label, Icon]) => (
             <button key={k} type="button" onClick={() => onChange(k)} aria-pressed={view === k} title={label}
@@ -25,8 +24,6 @@ export function ShopViewToggle({ view, onChange }) {
             </button>
           ))}
         </div>
-      </div>
-    </div>
   );
 }
 

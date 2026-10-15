@@ -42,7 +42,7 @@ function Group({ label, options, value, onToggle, allowAll = false }) {
 }
 
 // Pasek filtrów Skarbca. Przyciski bez produktów są ukryte.
-export default function ShopFilters({ filters, setFilters, available }) {
+export default function ShopFilters({ filters, setFilters, available, extra = null }) {
   const [open, setOpen] = useState(false);
   const a = available || { stages: STAGES, forms: FORM_OPTIONS, audiences: AUDIENCE_OPTIONS };
   const hasAny = filters.stage || filters.form || filters.audience || filters.avail;
@@ -69,19 +69,22 @@ export default function ShopFilters({ filters, setFilters, available }) {
   return (
     <div className="sticky top-20 z-30 bg-[#0A0A0B]/95 backdrop-blur-md border-b hairline">
       <div className="mx-auto max-w-[1400px] px-5 md:px-10">
-        <div className="hidden md:block">{panel}</div>
-        <div className="md:hidden py-3 flex items-center justify-between">
+        <div className="hidden md:flex items-start justify-between gap-6"><div className="flex-1 min-w-0">{panel}</div>{extra && <div className="pt-5 shrink-0">{extra}</div>}</div>
+        <div className="md:hidden py-3 flex items-center justify-between gap-3">
           <button
             onClick={() => setOpen(!open)}
             className="technical text-[10px] px-4 py-2.5 border hairline text-foreground/60 flex items-center gap-2"
           >
             <SlidersHorizontal className="h-3.5 w-3.5" /> FILTRUJ {hasAny ? "· AKTYWNE" : ""}
           </button>
-          {hasAny && (
-            <button onClick={clear} className="technical text-[9px] text-foreground/55 hover:blood-text transition-colors">
-              WYCZYŚĆ
-            </button>
-          )}
+          <div className="flex items-center gap-3">
+            {hasAny && (
+              <button onClick={clear} className="technical text-[9px] text-foreground/55 hover:blood-text transition-colors">
+                WYCZYŚĆ
+              </button>
+            )}
+            {extra}
+          </div>
         </div>
         {open && <div className="md:hidden border-t hairline">{panel}</div>}
       </div>

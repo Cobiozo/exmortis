@@ -121,8 +121,7 @@ export default function Shop() {
       </section>
 
       {/* ===== FILTRY ===== */}
-      <ShopFilters filters={filters} setFilters={setFilters} available={available} />
-      <ShopViewToggle view={view} onChange={changeView} />
+      <ShopFilters filters={filters} setFilters={setFilters} available={available} extra={<ShopViewToggle view={view} onChange={changeView} />} />
 
       {/* ===== SEKCJE DRABINY ===== */}
       {loading ? (
