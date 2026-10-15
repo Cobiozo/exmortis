@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { base44 } from "@/api/base44Client";
-import { Check, AlertTriangle, X, ArrowRight } from "lucide-react";
+import { Check, AlertTriangle, X, ArrowRight, ChevronDown } from "lucide-react";
 
 // Pulpit: lista kontrolna „co jeszcze trzeba ustawić”, żeby sprzedaż, maile i spotkania działały.
 // Serwer zwraca wyłącznie wartości tak/nie — nigdy treści kluczy ani haseł.
@@ -12,6 +12,7 @@ const LABEL = { ok: "GOTOWE", warn: "DO POPRAWY", err: "BLOKUJE" };
 
 export default function ReadinessCard() {
   const [d, setD] = useState(null);
+  const [showDone, setShowDone] = useState(false); // ukończone zwinięte pod jednym wierszem
 
   useEffect(() => {
     base44.functions
@@ -21,6 +22,8 @@ export default function ReadinessCard() {
   }, []);
 
   if (!d?.items?.length) return null;
+  const open = d.items.filter((i) => i.status !== "ok");
+  const done = d.items.filter((i) => i.status === "ok");
 
   return (
     <div className="border hairline bg-[#0F0F10] mb-8">
@@ -31,7 +34,10 @@ export default function ReadinessCard() {
         </p>
       </div>
       <div className="divide-y divide-[#3D3D3F]/40">
-        {d.items.map((i) => {
+        {open.length === 0 && (
+          <p className="px-5 py-4 text-sm text-[#7FB08C] flex items-center gap-2"><Check className="h-4 w-4" /> Wszystko gotowe.</p>
+        )}
+        {[...open, ...(showDone ? done : [])].map((i) => {
           const Icon = ICON[i.status] || AlertTriangle;
           return (
             <Link
@@ -53,6 +59,14 @@ export default function ReadinessCard() {
             </Link>
           );
         })}
+        {done.length > 0 && (
+          <button type="button" onClick={() => setShowDone((v) => !v)} aria-expanded={showDone}
+            className="w-full flex items-center gap-3 px-5 py-3 text-left technical text-[10px] text-foreground/55 hover:text-[#F5EFE1] hover:bg-[#0A0A0B] transition-colors">
+            <Check className="h-3.5 w-3.5 text-[#7FB08C]" />
+            {showDone ? "ZWIŃ UKOŃCZONE" : `UKOŃCZONE (${done.length})`}
+            <ChevronDown className={`h-3.5 w-3.5 ml-auto transition-transform ${showDone ? "rotate-180" : ""}`} />
+          </button>
+        )}
       </div>
     </div>
   );
