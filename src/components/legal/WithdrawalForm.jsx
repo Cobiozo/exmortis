@@ -2,7 +2,6 @@ import React, { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { base44 } from "@/api/base44Client";
 import { useAuth } from "@/lib/AuthContext";
-import { clause } from "@/lib/firma";
 import { useFirma } from "@/lib/useSiteSettings";
 
 const F = "w-full bg-transparent border hairline px-4 py-3 focus:border-[#C9A24A] focus:outline-none";
@@ -44,7 +43,7 @@ export default function WithdrawalForm({ order }) {
       <Field id="w-reason" label="POWÓD (NIEOBOWIĄZKOWO)"><textarea id="w-reason" rows={3} value={f.reason} onChange={set("reason")} className={`${F} resize-none`} /></Field>
       {err && <p className="text-sm text-[#E8C547]">{err}</p>}
       <button disabled={state === "busy"} className="btn-relic w-full disabled:opacity-60">Potwierdź odstąpienie od umowy</button>
-      <p className="text-sm text-foreground/75">{clause("przyjąć i obsłużyć Twoje odstąpienie od umowy", "obowiazek", firma)} Więcej: <Link to="/polityka-prywatnosci" className="underline">Polityka prywatności</Link>.</p>
+      <p className="text-sm text-foreground/75">Dane z formularza przetwarzamy wyłącznie, aby obsłużyć odstąpienie. Szczegóły: <Link to="/polityka-prywatnosci" className="underline">Polityka prywatności</Link>.</p>
     </form>
   );
 }

@@ -2,8 +2,6 @@ import React, { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { sendForm } from "@/lib/outbox";
 import useSystemText from "@/content/useSystemText";
-import { useFirma } from "@/lib/useSiteSettings";
-import { clause } from "@/lib/firma";
 import { CalendarPlus } from "lucide-react";
 import { downloadIcs } from "./time";
 import { SITE_URL } from "@/config/site";
@@ -19,7 +17,6 @@ export default function RegistrationForm({ event: ev }) {
   const [listy, setListy] = useState(false);
   const [consentErr, setConsentErr] = useState(false);
   const [website, setWebsite] = useState("");
-  const firma = useFirma();
   const [sending, setSending] = useState(false);
   const [error, setError] = useState("");
   const [result, setResult] = useState(null);
