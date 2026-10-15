@@ -171,7 +171,7 @@ export default async function (req) {
       };
 
       // Płatne wydarzenie z biletami: zapis wyłącznie przez zakup biletu. Darmowe stacjonarne: zwykły zapis, bilet przychodzi w potwierdzeniu.
-      const tk = (await runSql(base44, `SELECT COALESCE((to_jsonb(e)->>'tickets')::boolean, false) AS t, COALESCE(e.price, 0)::float8 AS price FROM public.events e WHERE slug = ${escStr(slug)}`, true).catch(() => []))[0];
+      const tk = (await runSql(base44, `SELECT e.id, COALESCE((to_jsonb(e)->>'tickets')::boolean, false) AS t, COALESCE(e.price, 0)::float8 AS price FROM public.events e WHERE slug = ${escStr(slug)}`, true).catch(() => []))[0];
       if (tk?.t === true && Number(tk.price) > 0) return Response.json({ error: "Na to wydarzenie wchodzi się z biletem — kup go na stronie wydarzenia." }, { status: 400 });
 
       let res;
@@ -188,7 +188,7 @@ export default async function (req) {
       if (res.already) return Response.json({ ok: true, already: true });
       const regRow = res.reg;
       const sp = (await runSql(base44, `SELECT short_path FROM public.events WHERE slug = ${escStr(slug)}`, true).catch(() => []))[0]?.short_path || null;
-      const ev = { ...res.ev, slug: res.ev.slug || slug, short_path: sp };
+      const ev = { ...res.ev, id: res.ev?.id || tk?.id, slug: res.ev.slug || slug, short_path: sp };
       const jt = regRow.status === "Zapisany" && ev.format === "Online" ? await joinToken(regRow.cancel_token) : null;
       // Zgody (dowód z datą, godziną i id zapisu) i e-mail potwierdzający — dopiero po udanym zapisie.
       waitUntil(Promise.allSettled([saveConsents(base44, d, regRow.id), loadAppUrl(base44).then(() => afterSaved(base44, ev, regRow, d))]));
