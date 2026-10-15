@@ -116,9 +116,10 @@ export function googleCalendarUrl(ev) {
 }
 
 // Plik .ics budowany na serwerze z aktualnych danych spotkania (stały UID, stały adres dołączenia).
-export async function downloadIcs(ev) {
+export async function downloadIcs(ev, t = null) {
   const { base44 } = await import("@/api/base44Client");
-  const { ics } = (await base44.functions.invoke("eventsPublic", { action: "ics", slug: ev.slug })).data;
+  // t — osobisty klucz dołączenia (po zapisie): w kalendarzu ląduje wtedy osobisty link.
+  const { ics } = (await base44.functions.invoke("eventsPublic", { action: "ics", slug: ev.slug, ...(t ? { t } : {}) })).data;
   const url = URL.createObjectURL(new Blob([ics], { type: "text/calendar;charset=utf-8" }));
   const a = document.createElement("a");
   a.href = url;

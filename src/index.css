@@ -265,7 +265,8 @@
   body { line-height: 1.6; -webkit-text-size-adjust: 100%; text-size-adjust: 100%; }
   h1, h2, h3, h4, .relic-heading { text-wrap: balance; overflow-wrap: normal; word-break: normal; max-width: 100%; hyphens: manual; -webkit-hyphens: manual; }
   .no-hyph, .exm-styl-lead { hyphens: none; -webkit-hyphens: none; }
-  p, li, blockquote { hyphens: auto; -webkit-hyphens: auto; overflow-wrap: break-word; text-wrap: pretty; }
+  /* Bez dzielenia wyrazów — całe słowa przechodzą do kolejnej linii (decyzja marki). */
+  p, li, blockquote { hyphens: manual; -webkit-hyphens: manual; overflow-wrap: break-word; text-wrap: pretty; }
   a[href^="mailto:"], a[href^="http"], code { overflow-wrap: anywhere; }
   img, video, iframe, canvas, svg { max-width: 100%; }
   img, video { height: auto; }

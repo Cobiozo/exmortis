@@ -84,25 +84,39 @@ export default function RegistrationForm({ event: ev }) {
         </p>
       );
     }
+    // Tekst po zapisie (wersja Dawida): bez form „zapisany/a”, link dołączenia w przycisku, bez dzielenia wyrazów.
+    const items = String(ev.what_registered || "").split(/\s*[;\n]\s*/).map((x) => x.trim()).filter(Boolean);
+    const joinT = (String(result.join_url || "").match(/[?&]t=([0-9a-f]+)/i) || [])[1] || null;
     return (
-      <div className="border border-[#C9A24A]/40 bg-[#0D0D0E] p-8">
+      <div className="border border-[#C9A24A]/40 bg-[#0D0D0E] p-6 sm:p-8 no-hyph">
         <p className="shop-heading text-xl text-[#F5EFE1]">
           {t("dz.spotkanie", { imie: result.first_name || firstName })}
         </p>
-        {ev.what_registered && (
-          <p className="text-foreground/60 text-sm mt-3 leading-relaxed">Co dostają zapisani: {ev.what_registered}</p>
+        <p className="text-foreground/70 mt-4 leading-relaxed">
+          Uczestnictwo w spotkaniu może stać się jednym z pierwszych kroków Twojego POWROTU.
+        </p>
+        {items.length > 0 && (
+          <>
+            <p className="text-foreground/70 mt-4 leading-relaxed">W ramach uczestnictwa otrzymujesz:</p>
+            <ul className="mt-2 space-y-1.5 text-foreground/70 leading-relaxed list-disc pl-5 marker:text-[#C9A24A]">
+              {items.map((x) => <li key={x}>{x}</li>)}
+            </ul>
+          </>
         )}
         {result.join_url ? (
-          <p className="text-foreground/70 mt-4 leading-relaxed break-all">
-            Twój osobisty link do dołączenia:{" "}
-            <a href={result.join_url} className="gold-text underline">{SITE_URL}{result.join_url}</a>
-            {" "}— zapisz go albo dodaj spotkanie do kalendarza. Nie przekazuj go dalej; na stronie spotkania wejdziesz też, wpisując e-mail podany przy zapisie.
-          </p>
+          <>
+            <p className="text-foreground/70 mt-5 leading-relaxed">Poniżej znajduje się Twój unikalny link dostępowy:</p>
+            <a href={result.join_url} className="btn-relic !px-6 !py-3 mt-3">DOŁĄCZ DO SPOTKANIA</a>
+            <p className="text-foreground/60 text-sm mt-4 leading-relaxed">
+              Zachęcamy do zapisania linku lub dodania wydarzenia do kalendarza. Ponieważ jest to link spersonalizowany, prosimy o nieudostępnianie go osobom trzecim.
+              Do spotkania możesz dołączyć również bezpośrednio przez stronę wydarzenia, podając adres e-mail użyty podczas rejestracji.
+            </p>
+          </>
         ) : ev.format !== "Online" ? null : (
-          <p className="text-foreground/60 mt-4 leading-relaxed">Link do spotkania wyślę Ci e-mailem.</p>
+          <p className="text-foreground/60 mt-4 leading-relaxed">Link do spotkania przyjdzie e-mailem.</p>
         )}
         {ev.start_datetime && (
-          <button type="button" onClick={() => downloadIcs(ev)} className="btn-ghost !px-5 !py-3 mt-5">
+          <button type="button" onClick={() => downloadIcs(ev, joinT)} className="btn-ghost !px-5 !py-3 mt-5">
             <CalendarPlus className="h-4 w-4" /> DODAJ DO KALENDARZA
           </button>
         )}

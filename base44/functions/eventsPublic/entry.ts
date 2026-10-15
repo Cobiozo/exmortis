@@ -228,7 +228,7 @@ export default async function (req) {
       if (!ev || !ev.start_datetime || (!admin && !["Opublikowane", "Odwołane"].includes(ev.status))) {
         return Response.json({ error: "Nie znaleziono spotkania" }, { status: 404 });
       }
-      if (body.action === "ics") { await loadAppUrl(base44); return Response.json({ ics: buildIcs(ev) }); }
+      if (body.action === "ics") { await loadAppUrl(base44); const it = /^[0-9a-f]{16,64}$/i.test(String(body.t || "")) ? String(body.t) : null; return Response.json({ ics: buildIcs(ev, it) }); }
       const base = { title: ev.title, slug: ev.slug, start_datetime: ev.start_datetime, duration_minutes: ev.duration_minutes, open_minutes: Number(ev.open_minutes) || 15 };
       if (ev.format !== "Online") return Response.json({ ...base, state: "stacjonarne" });
       const state = admin && ["przed", "otwarte", "po"].includes(body.preview) ? body.preview : joinState(ev);
