@@ -70,7 +70,7 @@ export default function MailSettings({ profile = "main" }) {
           Adres nadawcy (np. listy@exmortis.pl) musi być zweryfikowany w Brevo, a w DNS domeny dodane rekordy DKIM od Brevo.
         </p>
       ) : (
-        <p className="text-sm text-foreground/60 max-w-3xl leading-relaxed">Zamówienia, zapisy, przypomnienia, linki do spotkań i odpowiedzi — jedna skrzynka nadawcy. Najwyżej 240 maili na 2 godziny (limit Simply), nadwyżka czeka i wychodzi sama.</p>
+        <p className="text-sm text-foreground/60 max-w-3xl leading-relaxed">Zamówienia, zapisy, przypomnienia, linki do spotkań i odpowiedzi — jedna skrzynka nadawcy. Wszystkie maile aplikacji — także Listy powrotu i ogłoszenia. Najwyżej 240 maili na 2 godziny (limit Simply), nadwyżka czeka i wychodzi sama.</p>
       )}
       <div className="grid sm:grid-cols-2 gap-4">
         {FIELDS.map(([k, label, ph]) => (
