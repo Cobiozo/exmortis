@@ -19,7 +19,15 @@ export function PodcastPlayerProvider({ children }) {
   if (!a.current && typeof Audio !== "undefined") a.current = new Audio();
   useEffect(() => {
     const el = a.current;
-    const tick = () => { setT(el.currentTime); if (Math.floor(el.currentTime) % 5 === 0 && el.dataset.id) localStorage.setItem(`pod_pos_${el.dataset.id}`, String(Math.floor(el.currentTime))); };
+    // timeupdate przychodzi ~4 razy na sekundę — stan (i przerysowanie odbiorców) najwyżej raz na sekundę.
+    let lastSec = -1;
+    const tick = () => {
+      const sec = Math.floor(el.currentTime);
+      if (sec === lastSec) return;
+      lastSec = sec;
+      setT(el.currentTime);
+      if (sec % 5 === 0 && el.dataset.id) { try { localStorage.setItem(`pod_pos_${el.dataset.id}`, String(sec)); } catch { /* brak pamięci */ } }
+    };
     const on = () => setPlaying(true), off = () => setPlaying(false), md = () => setDur(el.duration || 0);
     const end = () => { localStorage.removeItem(`pod_pos_${el.dataset.id}`); setPlaying(false); };
     el.addEventListener("timeupdate", tick); el.addEventListener("play", on); el.addEventListener("pause", off);
