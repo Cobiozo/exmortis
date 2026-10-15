@@ -45,6 +45,7 @@ export default async function (req) {
       const ev = await loadEvent(base44, String(body.event_id || ""));
       if (!ev) return Response.json({ error: "Nie znaleziono wydarzenia" }, { status: 404 });
       const sets = [];
+      if (body.tickets === true && ev.format === "Online") return Response.json({ error: "Bilety są tylko na spotkania stacjonarne." }, { status: 400 });
       if (typeof body.tickets === "boolean") sets.push(`tickets = ${body.tickets ? "TRUE" : "FALSE"}`);
       if (body.template !== undefined) sets.push(`ticket_template = ${body.template ? `${escStr(JSON.stringify(cleanLayout(body.template)))}::jsonb` : "NULL"}`);
       if (sets.length) await runSql(base44, `UPDATE public.events SET ${sets.join(", ")} WHERE id = ${escStr(ev.id)}`);

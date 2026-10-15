@@ -3,6 +3,7 @@ import { waitUntil } from "base44:runtime";
 import { runSql, escStr } from "../../shared/supabase.ts";
 import { getSetting, loadAppUrl } from "../../shared/settings.ts";
 import { sendSpotFreedMail } from "../../shared/events.ts";
+import { cancelRegTicket } from "../../shared/tickets.ts";
 
 // Link „Nie mogę przyjść — zwalniam miejsce" z e-maili: oznacza zapis jako
 // Wypisany i awansuje pierwszą osobę z listy rezerwowej (z e-mailem).
@@ -44,13 +45,14 @@ export default async function (req) {
       base44,
       `UPDATE public.registrations SET status = 'Wypisany'
        WHERE cancel_token = ${escStr(token)} AND status <> 'Wypisany'
-       RETURNING event_id, first_name`
+       RETURNING id, event_id, first_name`
     );
 
     if (!freed || freed.length === 0) {
       return htmlPage("To miejsce jest już zwolnione", "Nie musisz nic robić — zapis został już wcześniej anulowany.");
     }
 
+    await cancelRegTicket(base44, freed[0].id).catch((e) => console.error("bilet zapisu:", e?.message));
     const eventId = freed[0].event_id;
     const evRows = await runSql(
       base44,

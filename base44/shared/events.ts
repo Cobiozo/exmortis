@@ -5,6 +5,7 @@ import { sendMail } from "./smtp.ts";
 
 import { APP_URL } from "./settings.ts";
 import { emailButton } from "./emailLayout.ts";
+import { regTicket, showCode, ticketUrl, ticketPdfUrl } from "./tickets.ts";
 export { APP_URL };
 // APP_URL wczytuje loadAppUrl(base44) na początku każdej funkcji.
 
@@ -159,10 +160,26 @@ function joinBlock(ev, token = null) {
   return `<p style="margin-top:20px;color:#8A8A8C;">${escHtml(ev.location || "")} — przyjdź kilka minut wcześniej.</p>`;
 }
 
+// Bilet z kodem QR dla zapisu na darmowe spotkanie stacjonarne z włączonymi biletami (inaczej pusty).
+async function ticketBlock(base44, ev, reg) {
+  try {
+    const t = await regTicket(base44, ev?.id || reg?.event_id, reg);
+    if (!t) return "";
+    return `<div style="margin:22px 0;border:1px solid #C9A24A;padding:20px;"><p style="font-size:11px;letter-spacing:.22em;color:#C9A24A;margin:0 0 10px;">TWÓJ BILET</p>` +
+      `<p style="margin:0 0 8px;color:#E2E2E2;">${escHtml(t.holder_name)} · <b style="color:#C9A24A;letter-spacing:2px;">${escHtml(showCode(t.code))}</b></p>` +
+      emailButton("POBIERZ BILET (PDF)", ticketPdfUrl(t.token)) +
+      `<p style="margin:0;font-size:13px;color:#8A8A8C;line-height:1.6;"><a href="${ticketUrl(t.token)}" style="color:#C9A24A;">Otwórz bilet na telefonie</a>. Przy wejściu pokaż kod QR — na telefonie albo wydrukowany. Bilet jest imienny i ważny na jedno wejście. Znajdziesz go też w Moim koncie → Spotkania.</p></div>`;
+  } catch (e) {
+    console.error("bilet zapisu:", e?.message);
+    return "";
+  }
+}
+
 // Potwierdzenie zapisu (z załączonym plikiem .ics).
 export async function sendConfirmationMail(base44, ev, reg) {
   const jt = await joinToken(reg.cancel_token);
   const waitlist = reg.status === "Lista rezerwowa";
+  const tix = waitlist ? "" : await ticketBlock(base44, ev, reg);
   const lead = waitlist
     ? `${escHtml(reg.first_name)}, wszystkie miejsca na «${escHtml(ev.title)}» są już zajęte. Zapisałem Cię na listę rezerwową — dam znać, jeśli ktoś zrezygnuje.`
     : `${escHtml(reg.first_name)}, zapisuję Cię na «${escHtml(ev.title)}». ${ev.format === "Online" ? "Stały adres dołączenia masz poniżej — zadziała w dniu spotkania." : "Czekam na Ciebie na miejscu."}`;
@@ -174,7 +191,7 @@ export async function sendConfirmationMail(base44, ev, reg) {
       `<h1 style="font-size:24px;">${waitlist ? "Lista rezerwowa" : "Zapis potwierdzony"}</h1>${meetingLine(ev, reg)}` +
         `<p style="line-height:1.7;">${lead}</p>` +
         (ev.what_registered ? `<p style="color:#8A8A8C;font-size:13px;">Co dostają zapisani: ${escHtml(ev.what_registered)}</p>` : "") +
-        (waitlist ? "" : joinBlock(ev, jt)) +
+        (waitlist ? "" : joinBlock(ev, jt)) + tix +
         `<p style="color:#8A8A8C;font-size:13px;">Spotkanie masz w załączonym pliku kalendarza (.ics).</p>` +
         cancelLink(reg.cancel_token)
     ),
@@ -213,7 +230,7 @@ export async function sendReminderMail(base44, ev, reg, kind) {
     kind: "przypomnienie", ref: reg.id, waznyDo: ev.start_datetime,
     to: reg.email,
     subject: `EXMORTIS · ${head} — ${ev.title}`,
-    html: shell(ev, `<h1 style="font-size:24px;">${head}</h1>${meetingLine(ev, reg)}<p style="line-height:1.7;">${lead}</p>${joinBlock(ev, jt)}${cancelLink(reg.cancel_token)}`),
+    html: shell(ev, `<h1 style="font-size:24px;">${head}</h1>${meetingLine(ev, reg)}<p style="line-height:1.7;">${lead}</p>${joinBlock(ev, jt)}${await ticketBlock(base44, ev, reg)}${cancelLink(reg.cancel_token)}`),
   });
 }
 
@@ -250,6 +267,7 @@ export async function sendSpotFreedMail(base44, ev, reg) {
       `<h1 style="font-size:24px;">Zwolniło się miejsce</h1>${meetingLine(ev, reg)}` +
         `<p style="line-height:1.7;">${escHtml(reg.first_name)}, ktoś zrezygnował — miejsce na «${escHtml(ev.title)}» jest Twoje. Do zobaczenia na spotkaniu.</p>` +
         joinBlock(ev, jt) +
+        (await ticketBlock(base44, ev, reg)) +
         cancelLink(reg.cancel_token)
     ),
   });

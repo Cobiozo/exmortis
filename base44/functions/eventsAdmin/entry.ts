@@ -228,7 +228,7 @@ export default async function (req) {
       if (status === "Opublikowane") {
         if (!ev.start_datetime) throw new Error("Ustaw datę, zanim opublikujesz wydarzenie.");
         if (new Date(ev.start_datetime) < new Date()) throw new Error("Data nie może być w przeszłości.");
-        if (price > 0 && !checkout_url && ev.tickets !== true) {
+        if (price > 0 && !checkout_url && !(ev.tickets === true && format !== "Online")) {
           throw new Error("Wydarzenie płatne wymaga ceny i linku płatności.");
         }
       }
@@ -250,7 +250,7 @@ export default async function (req) {
         ${mailing_group ? escStr(mailing_group) : "NULL"}, ${escStr(stage)},
         ${cover_image ? escStr(cover_image) : "NULL"},
         ${cancel_reason ? escStr(cancel_reason) : "NULL"}, ${escStr(status)},
-        ${cover ? `${escStr(JSON.stringify(cover))}::jsonb` : "NULL"}, ${open_minutes}, ${zoom_faq}, ${short_path ? escStr(short_path) : "NULL"}, ${ev.tickets === true && price > 0 ? "TRUE" : "FALSE"}`;
+        ${cover ? `${escStr(JSON.stringify(cover))}::jsonb` : "NULL"}, ${open_minutes}, ${zoom_faq}, ${short_path ? escStr(short_path) : "NULL"}, ${ev.tickets === true && format !== "Online" ? "TRUE" : "FALSE"}`;
 
       let rows;
       let rescheduled = 0;
@@ -482,10 +482,16 @@ export default async function (req) {
     if (body.action === "present") {
       const id = String(body.id || "");
       const status = pick(["Obecny", "Zapisany", "Wypisany", "Lista rezerwowa"], body.status, "Obecny");
-      await runSql(
+      const upd = await runSql(
         base44,
-        `UPDATE public.registrations SET status = ${escStr(status)} WHERE id = ${escStr(id)}`
+        `UPDATE public.registrations SET status = ${escStr(status)} WHERE id = ${escStr(id)} RETURNING id, event_id, first_name, email`
       );
+      // Bilet z zapisu (darmowe stacjonarne): wypisanie anuluje, przywrócenie wydaje/przywraca.
+      const r0 = upd?.[0];
+      if (r0) {
+        const tk = await import("../../shared/tickets.ts");
+        await (status === "Wypisany" ? tk.cancelRegTicket(base44, r0.id) : status === "Lista rezerwowa" ? Promise.resolve() : tk.regTicket(base44, r0.event_id, r0)).catch((e) => console.error("bilet zapisu:", e?.message));
+      }
       return Response.json({ ok: true });
     }
 

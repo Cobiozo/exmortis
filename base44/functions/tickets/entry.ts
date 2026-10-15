@@ -74,7 +74,7 @@ export default async function (req) {
     // Wolne miejsca i stan sprzedaży (strona wydarzenia).
     if (a === "availability") {
       const slug = textField(body, "slug", { max: 200 });
-      const [ev] = await runSql(base44, `SELECT id, status, price::float8 AS price, capacity, start_datetime, registration_deadline, COALESCE(tickets, false) AS tickets
+      const [ev] = await runSql(base44, `SELECT id, status, format, price::float8 AS price, capacity, start_datetime, registration_deadline, COALESCE(tickets, false) AS tickets
         FROM public.events WHERE slug = ${escStr(slug)}`, true);
       if (!ev) return bad("Nie znaleziono wydarzenia", 404);
       const closed = salesClosed(ev);
@@ -107,7 +107,7 @@ export default async function (req) {
     if (a === "scanner") {
       if (!scope) return Response.json({ allowed: false });
       const rows = await runSql(base44, `SELECT id, title, slug, start_datetime, duration_minutes, format, capacity FROM public.events
-        WHERE COALESCE(tickets, false) = TRUE AND status IN ('Opublikowane','Odwołane') AND start_datetime IS NOT NULL
+        WHERE COALESCE(tickets, false) = TRUE AND COALESCE(format, '') <> 'Online' AND status IN ('Opublikowane','Odwołane') AND start_datetime IS NOT NULL
           AND start_datetime > now() - interval '2 days' AND start_datetime < now() + interval '60 days'
         ORDER BY start_datetime LIMIT 50`, true);
       const events = rows.filter((e) => canScan(scope, e.id));
