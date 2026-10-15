@@ -17,6 +17,10 @@
     "at": {
       "type": "string",
       "format": "date-time"
+    },
+    "ip": {
+      "type": "string",
+      "description": "Adres nadawcy \u2014 tylko do liczenia limitu zg\u0142osze\u0144"
     }
   },
   "required": [
@@ -28,7 +32,11 @@
         "role": "admin"
       }
     },
-    "create": {},
+    "create": {
+      "user_condition": {
+        "role": "nikt"
+      }
+    },
     "update": {
       "user_condition": {
         "role": "nikt"
