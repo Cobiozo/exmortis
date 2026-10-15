@@ -4,6 +4,7 @@ import { sendMail } from "./smtp.ts";
 // i szablony e-maili (potwierdzenia, przypomnienia, nagrania, lista rezerwowa).
 
 import { APP_URL } from "./settings.ts";
+import { emailButton } from "./emailLayout.ts";
 export { APP_URL };
 // APP_URL wczytuje loadAppUrl(base44) na początku każdej funkcji.
 
@@ -150,7 +151,7 @@ function meetingLine(ev, reg) {
 function joinBlock(ev, token = null) {
   const url = isOnline(ev) && joinUrl(ev, token);
   if (url) {
-    return `<p style="margin-top:20px;">Twój osobisty link do dołączenia (zapisz go albo dodaj spotkanie do kalendarza):<br /><a href="${url}" style="color:#C9A24A;">${url}</a></p><p style="color:#8A8A8C;font-size:12px;">Link jest przypisany do Twojego zapisu — nie przekazuj go dalej. Na stronie spotkania wejdziesz też, wpisując adres e-mail podany przy zapisie.</p>`;
+    return `${emailButton("DOŁĄCZ DO SPOTKANIA", url)}<p style="margin-top:0;font-size:13px;color:#A3A3A6;">Twój osobisty link (zadziała w dniu spotkania, pokój otwiera się kilka minut przed startem — zapisz go albo dodaj spotkanie do kalendarza):<br /><a href="${url}" style="color:#C9A24A;word-break:break-all;">${url}</a></p><p style="color:#8A8A8C;font-size:12px;">Link jest przypisany do Twojego zapisu — nie przekazuj go dalej. Na stronie spotkania wejdziesz też, wpisując adres e-mail podany przy zapisie.</p>`;
   }
   if (ev.format === "Online" && ev.external_url) {
     return `<p style="margin-top:20px;"><a href="${escHtml(ev.external_url)}" style="color:#C9A24A;">Dołącz do spotkania tutaj</a></p>`;
