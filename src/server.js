@@ -1,3 +1,4 @@
+/* eslint-env node */
 /**
  * Production Node.js server for exmortis
  * Deployed on Cyberfolks.pl (Phusion Passenger)
