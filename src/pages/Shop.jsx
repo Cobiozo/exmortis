@@ -6,6 +6,7 @@ import MusicSection from "@/components/exmortis/shop/MusicSection";
 import TrustFooter from "@/components/exmortis/shop/TrustFooter";
 import WaitlistDialog from "@/components/exmortis/shop/WaitlistDialog";
 import { EXCLUDED_SLUGS } from "@/components/exmortis/shop/cardBits";
+import { ShopViewToggle, loadShopView, saveShopView } from "@/components/exmortis/shop/ShopCompactViews";
 
 const LEVELS = [
   { level: 0, label: "BRAMA", title: "Za darmo — zacznij tutaj", line: "Tu zaczyna większość ludzi." },
@@ -26,6 +27,8 @@ export default function Shop() {
   const [filters, setFilters] = useState({ stage: null, form: null, audience: null, avail: null });
   const [waitlistProduct, setWaitlistProduct] = useState(null);
   const [events, setEvents] = useState([]);
+  const [view, setView] = useState(loadShopView);
+  const changeView = (v) => { setView(v); saveShopView(v); };
 
   useEffect(() => {
     base44.functions
@@ -119,6 +122,7 @@ export default function Shop() {
 
       {/* ===== FILTRY ===== */}
       <ShopFilters filters={filters} setFilters={setFilters} available={available} />
+      <ShopViewToggle view={view} onChange={changeView} />
 
       {/* ===== SEKCJE DRABINY ===== */}
       {loading ? (
@@ -154,6 +158,7 @@ export default function Shop() {
               ).includes(e.event_type)
             )}
             onWaitlist={setWaitlistProduct}
+            view={view}
           />
         ))
       )}

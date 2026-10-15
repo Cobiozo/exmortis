@@ -2,10 +2,11 @@ import React from "react";
 import ShopProductCard from "./ShopProductCard";
 import ShopFeaturedCard from "./ShopFeaturedCard";
 import ShopEventCard from "@/components/exmortis/events/ShopEventCard";
+import { ShopProductTile, ShopProductRow } from "./ShopCompactViews";
 
 // Sekcja poziomu drabiny: Brama, Pierwszy krok, Praktyka, Krąg, Głębia.
 // Karty numerowane po kolei — darmowe pokazują numer z napisem „DARMOWE" u góry.
-export default function ShopLevelSection({ section, products, events, onWaitlist }) {
+export default function ShopLevelSection({ section, products, events, onWaitlist, view = "karty" }) {
   const list = products || [];
   const eventList = events || [];
   if (list.length === 0 && eventList.length === 0) return null;
@@ -32,7 +33,19 @@ export default function ShopLevelSection({ section, products, events, onWaitlist
           </div>
         </div>
 
-        {featured.map((p) => (
+        {/* Kafelki i lista: wszystkie produkty poziomu w jednym zwartym układzie (bez dużej karty wyróżnionej). */}
+        {view === "kafelki" && list.length > 0 && (
+          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3 md:gap-4">
+            {[...featured, ...rest].map((p) => <ShopProductTile key={p.id} product={p} index={++n} />)}
+          </div>
+        )}
+        {view === "lista" && list.length > 0 && (
+          <div className="border-t hairline">
+            {[...featured, ...rest].map((p) => <ShopProductRow key={p.id} product={p} index={++n} />)}
+          </div>
+        )}
+
+        {view === "karty" && featured.map((p) => (
           <ShopFeaturedCard
             key={p.id}
             product={p}
@@ -42,7 +55,7 @@ export default function ShopLevelSection({ section, products, events, onWaitlist
           />
         ))}
 
-        {rest.length > 0 && (
+        {view === "karty" && rest.length > 0 && (
           <div className="grid sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 md:gap-5 items-stretch">
             {rest.map((p) => (
               <ShopProductCard key={p.id} product={p} onWaitlist={onWaitlist} index={++n} />
