@@ -44,12 +44,12 @@ export function emailButton(label, url, { secondary = false } = {}) {
 
 // Porządkowanie starszych treści: bez podwójnej ramki, logo i hasła; samodzielne linki → przyciski.
 // Treść kampanii z edytora → bezpieczny HTML do e-maila: bez skryptów, ramek, formularzy, zdarzeń on*,
-// stylów <style>, obiektów i adresów innych niż https:, mailto: (obrazy także data:image/ zablokowane).
+// stylów <style>, obiektów i adresów innych niż http(s):, mailto: (javascript:, data: zablokowane).
 const EMAIL_DROP = /<(script|style|iframe|frame|frameset|object|embed|form|input|button|select|textarea|link|meta|base|svg|math|template|noscript|applet)\b[\s\S]*?(<\/\1\s*>|$)/gi;
 const EMAIL_SINGLE = /<\/?(script|style|iframe|frame|frameset|object|embed|form|input|button|select|textarea|link|meta|base|svg|math|template|noscript|applet)\b[^>]*>/gi;
 const decodeEnt = (v) => String(v).replace(/&#x([0-9a-f]+);?/gi, (_, h) => String.fromCodePoint(parseInt(h, 16) || 32))
   .replace(/&#(\d+);?/g, (_, d) => String.fromCodePoint(Number(d) || 32)).replace(/&(colon|tab|newline);/gi, (_, n) => ({ colon: ":", tab: "", newline: "" }[n.toLowerCase()]));
-const okUrl = (v) => /^(https:\/\/|mailto:|#)/i.test(decodeEnt(v).replace(/[\u0000-\u0020]/g, ""));
+const okUrl = (v) => /^(https?:\/\/|mailto:|#)/i.test(decodeEnt(v).replace(/[\u0000-\u0020]/g, ""));
 export function cleanEmailHtml(html) {
   let s = String(html || "").replace(/<!--[\s\S]*?-->/g, "");
   for (let i = 0; i < 3; i++) s = s.replace(EMAIL_DROP, "");

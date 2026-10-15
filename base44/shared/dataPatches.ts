@@ -149,6 +149,14 @@ const PATCHES: { id: string; why: string; sql: string[] }[] = [
       `UPDATE public.events SET tickets = FALSE WHERE format = 'Online' AND COALESCE(tickets, false) = TRUE`,
     ],
   },
+  {
+    id: "2026-10-15-nowe-tokeny-zadan",
+    why: "Bezpieczeństwo: tokeny zadań cyklicznych były zapisane w plikach workflow (historia kodu) — nowe wartości tylko w bazie",
+    sql: [
+      `UPDATE public.mb_settings SET tick_token = replace(gen_random_uuid()::text, '-', '') || replace(gen_random_uuid()::text, '-', '') WHERE id = 1`,
+      `UPDATE public.bk_settings SET tick_token = replace(gen_random_uuid()::text, '-', '') || replace(gen_random_uuid()::text, '-', '') WHERE id = 1`,
+    ],
+  },
 ];
 
 export async function applyDataPatches(base44): Promise<string[]> {
