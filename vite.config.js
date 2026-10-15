@@ -95,7 +95,11 @@ function exmFastStart() {
       const cond = `(location.pathname==="/"||location.pathname==="/1-listopada")&&Date.now()<${Date.parse(end)}&&!localStorage.getItem("base44_access_token")&&!localStorage.getItem("token")&&!/[?&]access_token=/.test(location.search)`;
       const head = `<script>try{if(${cond}){var l=document.createElement("link");l.rel="preload";l.as="image";l.href=${JSON.stringify(attr("src"))};l.setAttribute("imagesrcset",${JSON.stringify(attr("srcset"))});l.setAttribute("imagesizes",${JSON.stringify(attr("sizes") || "100vw")});l.setAttribute("fetchpriority","high");document.head.appendChild(l)}}catch(e){}</script>`;
       const body = `<template id="exm-shell">${shell}</template>\n    <script>try{if(${cond}){var r=document.getElementById("root");r.appendChild(document.getElementById("exm-shell").content.cloneNode(true));r.querySelectorAll("[data-shell-until]").forEach(function(e){var t=e.getAttribute("data-shell-until");if(Date.now()>=Date.parse(/[zZ+]|-\\d\\d:\\d\\d$/.test(t)?t:t+"+02:00"))e.remove()})}}catch(e){}</script>`;
-      return out.replace("</head>", `  ${head}\n  </head>`).replace('<div id="root"></div>', `<div id="root"></div>\n    ${body}`);
+      // Skrypt podający preload zdjęcia hero — jak najwcześniej w head (przed skryptami i dużym CSS),
+      // żeby na wolnym łączeniu obraz startował zanim przeglądarka dojdzie do reszty nagłówka.
+      const LOGO_LINK = '<link rel="preload" href="/exmortis-logo-144.webp" as="image" type="image/webp" />';
+      const withHead = out.includes(LOGO_LINK) ? out.replace(LOGO_LINK, `${LOGO_LINK}\n    ${head}`) : out.replace("</head>", `  ${head}\n  </head>`);
+      return withHead.replace('<div id="root"></div>', `<div id="root"></div>\n    ${body}`);
     },
   };
 }
