@@ -213,5 +213,5 @@ export function campaignEmailHtml(content, name, _unsubUrl = "", { cta_label = "
   const greeting = name ? `<p style="margin:0 0 18px;">${escHtml(name)},</p>` : "";
   const cta = cta_label && /^https?:\/\//.test(cta_url)
     ? `<p><a href="${escHtml(cta_url)}">${escHtml(cta_label)}</a></p>` : "";
-  return `${greeting}<div>${content}</div>${cta}`;
+  return `${greeting}<div>${cleanEmailHtml(content)}</div>${cta}`;
 }

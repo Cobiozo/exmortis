@@ -43,6 +43,26 @@ export function emailButton(label, url, { secondary = false } = {}) {
 }
 
 // Porządkowanie starszych treści: bez podwójnej ramki, logo i hasła; samodzielne linki → przyciski.
+// Treść kampanii z edytora → bezpieczny HTML do e-maila: bez skryptów, ramek, formularzy, zdarzeń on*,
+// stylów <style>, obiektów i adresów innych niż https:, mailto: (obrazy także data:image/ zablokowane).
+const EMAIL_DROP = /<(script|style|iframe|frame|frameset|object|embed|form|input|button|select|textarea|link|meta|base|svg|math|template|noscript|applet)\b[\s\S]*?(<\/\1\s*>|$)/gi;
+const EMAIL_SINGLE = /<\/?(script|style|iframe|frame|frameset|object|embed|form|input|button|select|textarea|link|meta|base|svg|math|template|noscript|applet)\b[^>]*>/gi;
+const decodeEnt = (v) => String(v).replace(/&#x([0-9a-f]+);?/gi, (_, h) => String.fromCodePoint(parseInt(h, 16) || 32))
+  .replace(/&#(\d+);?/g, (_, d) => String.fromCodePoint(Number(d) || 32)).replace(/&(colon|tab|newline);/gi, (_, n) => ({ colon: ":", tab: "", newline: "" }[n.toLowerCase()]));
+const okUrl = (v) => /^(https:\/\/|mailto:|#)/i.test(decodeEnt(v).replace(/[\u0000-\u0020]/g, ""));
+export function cleanEmailHtml(html) {
+  let s = String(html || "").replace(/<!--[\s\S]*?-->/g, "");
+  for (let i = 0; i < 3; i++) s = s.replace(EMAIL_DROP, "");
+  s = s.replace(EMAIL_SINGLE, "");
+  // Atrybuty zdarzeń (onclick, onerror…) i srcdoc/formaction.
+  s = s.replace(/\s(on[a-z]+|srcdoc|formaction|xlink:href)\s*=\s*("[^"]*"|'[^']*'|[^\s>]+)/gi, "");
+  // Adresy w href/src: tylko https:, mailto: i kotwice.
+  s = s.replace(/\s(href|src|background|action)\s*=\s*("([^"]*)"|'([^']*)'|([^\s>]+))/gi, (m, attr, _q, a, b, c) => (okUrl(a ?? b ?? c ?? "") ? m : ""));
+  // Style z expression()/url(javascript:) — usuwamy cały atrybut.
+  s = s.replace(/\sstyle\s*=\s*("[^"]*"|'[^']*')/gi, (m) => (/expression\s*\(|javascript:|url\s*\(\s*['"]?\s*(?!https:)/i.test(decodeEnt(m)) ? "" : m));
+  return s;
+}
+
 export function normalizeBody(html) {
   let s = String(html || "");
   s = s.replace(/<p style="[^"]*">\s*EXMORTIS\s*<\/p>/g, "");
