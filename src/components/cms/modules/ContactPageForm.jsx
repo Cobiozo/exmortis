@@ -2,7 +2,6 @@ import React, { useState } from "react";
 import { Link } from "react-router-dom";
 import { sendForm } from "@/lib/outbox";
 import useSystemText from "@/content/useSystemText";
-import { clause } from "@/lib/firma";
 import { useFirma } from "@/lib/useSiteSettings";
 import CompanyLines from "@/components/legal/CompanyLines";
 import ContactField from "./ContactField";

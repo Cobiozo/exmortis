@@ -38,7 +38,7 @@ export function CoverHero({ ev, forceTall, children }) {
       {c && (
         <picture>
           {forceTall === undefined && c.crops.wide && <source media="(min-width: 768px)" srcSet={c.crops.wide} />}
-          <img src={(forceTall === false ? c.crops.wide : c.crops.tall) || c.src} alt={c.alt || ev.title} fetchpriority="high" decoding="async"
+          <img src={(forceTall === false ? c.crops.wide : c.crops.tall) || c.src} alt={c.alt || ev.title} fetchPriority="high" decoding="async"
             className={`absolute inset-0 w-full h-full object-cover ${cancelled ? "grayscale" : ""}`} style={{ objectPosition: pos }} />
         </picture>
       )}

@@ -3,7 +3,7 @@ import { Loader2, Download, Search, ChevronDown, FileText, Check } from "lucide-
 import { base44 } from "@/api/base44Client";
 import { STATUS_LABEL } from "@/components/account/accountUtils";
 import SalesStats from "./SalesStats";
-import RefundBox, { canRefund, refundLabel } from "./RefundBox";
+import RefundBox, { refundLabel } from "./RefundBox";
 import FakturaBlock from "./FakturaBlock";
 import RefundDialog from "./RefundDialog";
 
