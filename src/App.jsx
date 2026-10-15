@@ -65,7 +65,7 @@ const RezerwacjaZarzadzaj = lazyPage(() => import('@/pages/RezerwacjaZarzadzaj')
 import { CrisisProvider } from '@/components/crisis/CrisisContext';
 import CrisisHelpButton from '@/components/crisis/CrisisHelpButton';
 import PwaSetup from '@/components/pwa/PwaSetup';
-const InstallHint = lazy(() => import('@/components/pwa/InstallHint'));
+import InstallHintDeferred from '@/components/pwa/InstallHintDeferred';
 // Add page imports here
 
 const AuthenticatedApp = () => {
@@ -106,7 +106,7 @@ const AuthenticatedApp = () => {
       <CrisisProvider>
       <CrisisHelpButton />
       <PwaSetup />
-      <Suspense fallback={null}><InstallHint /></Suspense>
+      <InstallHintDeferred />
       <Suspense fallback={<div className="min-h-[100svh] bg-[#0A0A0B]" />}>
       <Routes>
         <Route path="/login" element={<Login />} />

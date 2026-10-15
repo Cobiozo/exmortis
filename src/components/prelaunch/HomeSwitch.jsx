@@ -1,6 +1,9 @@
 import React from "react";
-import Home from "@/pages/Home";
+import lazyPage from "@/lib/lazyPage";
 import Listopad from "@/pages/Listopad";
+
+// Strona główna po premierze: ładowana na żądanie, żeby nie obciążała startu w trybie przedpremierowym.
+const Home = lazyPage(() => import("@/pages/Home"));
 import usePrelaunch from "@/lib/usePrelaunch";
 import JsonLd from "@/components/seo/JsonLd";
 import { orgJsonLd } from "@/lib/structuredData";

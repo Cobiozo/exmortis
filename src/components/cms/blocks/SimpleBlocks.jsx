@@ -30,7 +30,7 @@ export function TextBlock({ d, label, center }) {
 export function ImageBlock({ d }) {
   return (
     <figure>
-      <Img img={d.zdjecie} ratio={d.proporcja} sizes="(min-width: 1440px) 1400px, 100vw" />
+      <Img img={d.zdjecie} ratio={d.proporcja} sizes="(min-width: 1470px) 1320px, (min-width: 768px) calc(100vw - 80px), calc(100vw - 40px)" />
       {d.podpis && <figcaption className="technical text-[10px] text-foreground/55 mt-3 px-5 md:px-0">{d.podpis}</figcaption>}
     </figure>
   );
