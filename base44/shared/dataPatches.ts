@@ -157,6 +157,14 @@ const PATCHES: { id: string; why: string; sql: string[] }[] = [
       `UPDATE public.bk_settings SET tick_token = replace(gen_random_uuid()::text, '-', '') || replace(gen_random_uuid()::text, '-', '') WHERE id = 1`,
     ],
   },
+  {
+    id: "2026-10-16-webinar-co-otrzymujesz",
+    why: "Webinar 1.11: lista „W ramach uczestnictwa otrzymujesz” (tekst Dawida; bez nagrania — spotkania na żywo nie są nagrywane)",
+    sql: [
+      `UPDATE public.events SET what_registered = 'Indywidualny link do spotkania na platformie Zoom; Możliwość udziału w zamkniętej sesji pytań i odpowiedzi (Q&A); Możliwość otrzymania prezentów z racji otwarcia platformy exmortis.pl'
+         WHERE slug = 'ze-smierci-o-powrotach-o-ktorych-swiat-nie-mowi'`,
+    ],
+  },
 ];
 
 export async function applyDataPatches(base44): Promise<string[]> {
