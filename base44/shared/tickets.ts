@@ -69,7 +69,7 @@ export const cleanName = (v) => String(v ?? "").replace(/[\u0000-\u001f<>]/g, " 
 // Zapisy zamknięte: termin z panelu albo 15 minut przed startem.
 export function salesClosed(ev, now = Date.now()) {
   if (!ev || ev.status !== "Opublikowane") return "To wydarzenie nie jest już dostępne.";
-  if (!ev.tickets || !(Number(ev.price) > 0)) return "Na to wydarzenie nie sprzedajemy biletów.";
+  if (!ev.tickets || !(Number(ev.price) > 0) || ev.format === "Online") return "Na to wydarzenie nie sprzedajemy biletów.";
   if (!ev.start_datetime) return "Sprzedaż biletów jeszcze się nie zaczęła.";
   const deadline = ev.registration_deadline ? Date.parse(ev.registration_deadline) : Date.parse(ev.start_datetime) - 15 * 60000;
   if (now > deadline) return "Sprzedaż biletów jest zamknięta.";
@@ -98,7 +98,7 @@ export async function ticketLines(base44, items) {
   }
   if (!wanted.size) return [];
   await ensureTicketSchema(base44);
-  const rows = await runSql(base44, `SELECT id, title, status, price::float8 AS price, capacity, start_datetime, registration_deadline,
+  const rows = await runSql(base44, `SELECT id, title, status, format, price::float8 AS price, capacity, start_datetime, registration_deadline,
       COALESCE(tickets, false) AS tickets FROM public.events WHERE id IN (${[...wanted.keys()].map(escStr).join(",")})`, true);
   const byId = new Map(rows.map((r) => [String(r.id), r]));
   const out = [];
@@ -245,4 +245,32 @@ export function ticketsHtml(tickets, events) {
   }).join("");
   return `<div style="background:#0A0A0B;padding:0 32px 32px;font-family:Georgia,serif;">${blocks}
     <p style="margin:0;color:#8A8A8C;font-size:13px;line-height:1.6;">Bilet jest imienny i ważny na jedno wejście. Przy wejściu pokaż kod QR — na telefonie albo wydrukowany. Każdą osobę wpuszczamy na jej bilet, więc bilety dla innych przekaż im wcześniej (PDF albo link). Wszystkie bilety są też w Moim koncie → Spotkania, po zalogowaniu tym adresem e-mail.</p></div>`;
+}
+
+// ---- Bilety tylko na spotkania stacjonarne. Darmowe stacjonarne: bilet wydawany przy zapisie ----
+export const ticketsAllowed = (ev) => !!ev && ev.format !== "Online";
+
+// Jeden bilet na zapis (klucz zapis:<id zapisu>), idempotentnie; ponowny zapis po wypisaniu przywraca bilet.
+export async function regTicket(base44, eventId, reg) {
+  if (!eventId || !reg?.id || !reg?.email) return null;
+  await ensureTicketSchema(base44);
+  const [ev] = await runSql(base44, `SELECT format, COALESCE(tickets, false) AS tickets, price::float8 AS price FROM public.events WHERE id = ${escStr(String(eventId))}`, true);
+  if (!ev || ev.tickets !== true || !ticketsAllowed(ev) || Number(ev.price) > 0) return null;
+  const key = `zapis:${reg.id}`;
+  const [had] = await runSql(base44, `SELECT * FROM public.event_tickets WHERE order_id = ${escStr(key)} AND line_no = 0`, true);
+  if (had) {
+    if (had.status !== "anulowany") return had;
+    const [back] = await runSql(base44, `UPDATE public.event_tickets SET status = CASE WHEN checked_at IS NULL THEN 'wazny' ELSE 'wykorzystany' END
+      WHERE id = ${escStr(had.id)} RETURNING *`);
+    return back || had;
+  }
+  return insertTicket(base44, { event_id: String(eventId), order_id: key, line_no: 0, holder_name: cleanName(reg.first_name) || "Uczestnik",
+    buyer_email: String(reg.email).trim().toLowerCase(), price: 0, source: "zapis" });
+}
+
+// Wypisanie z darmowego spotkania → bilet z zapisu anulowany (wykorzystanego nie ruszamy).
+export async function cancelRegTicket(base44, regId) {
+  if (!regId) return;
+  await ensureTicketSchema(base44);
+  await runSql(base44, `UPDATE public.event_tickets SET status = 'anulowany' WHERE order_id = ${escStr(`zapis:${regId}`)} AND status = 'wazny'`);
 }
