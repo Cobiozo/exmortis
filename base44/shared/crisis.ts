@@ -14,25 +14,52 @@ export function normalize(text: unknown) {
 }
 
 // Każdy wpis to fragment po normalizacji — łapie odmiany bez zgadywania form.
+// Zasada: pierwsza osoba i jednoznaczne sformułowania. Sama fraza „zabić się" NIE jest sygnałem,
+// bo pojawia się w zwykłych zdaniach („na tym rowerze można się zabić").
 export const CRISIS_SIGNALS = [
   "samoboj",
-  "odebrac sobie zycie",
-  "odbiora sobie zycie",
-  "zabic sie",
+  "chce sie zabic",
+  "chcialbym sie zabic",
+  "chcialabym sie zabic",
+  "mam ochote sie zabic",
+  "jak sie zabic",
   "zabije sie",
-  "nie chce zyc",
-  "nie chce juz zyc",
-  "nie chce dluzej zyc",
+  "zabijam sie",
+  "odebrac sobie zycie",
+  "odbiore sobie zycie",
+  "odbiera sobie zycie",
+  "odbierze sobie zycie",
   "skonczyc ze soba",
+  "skonczyc z soba",
+  "skoncze ze soba",
   "targnac sie",
   "samookalecz",
   "chce umrzec",
+  "nie chce zyc",
+  "nie chce juz zyc",
+  "nie chce dluzej zyc",
+  "nie chce mi sie zyc",
   "nie warto zyc",
+  "nie widze sensu zycia",
+  "nie widze sensu w zyciu",
+];
+
+// Figury stylistyczne z „umrzeć" (śmiech, wstyd, nudy…) — to nie sygnał kryzysowy.
+// Usuwamy je z tekstu przed sprawdzaniem.
+const CRISIS_IDIOMS = [
+  "umrzec ze smiechu",
+  "umrzec z nudow",
+  "umrzec ze wstydu",
+  "umrzec z ciekawosci",
+  "umrzec z milosci",
+  "umrzec z zazdrosci",
+  "umrzec z glodu",
 ];
 
 // true, gdy którakolwiek z podanych treści zawiera sygnał kryzysowy.
 export function isUrgent(...texts: unknown[]) {
-  const t = normalize(texts.filter(Boolean).join(" \n "));
+  let t = normalize(texts.filter(Boolean).join(" \n "));
+  for (const e of CRISIS_IDIOMS) t = t.split(e).join(" ");
   return CRISIS_SIGNALS.some((s) => t.includes(s));
 }
 

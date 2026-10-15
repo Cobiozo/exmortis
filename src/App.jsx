@@ -25,7 +25,7 @@ import SeoMeta from '@/components/seo/SeoMeta';
 import Analytics from '@/components/analytics/Analytics';
 const ForgotPassword = lazyPage(() => import('@/pages/ForgotPassword'));
 const ResetPassword = lazyPage(() => import('@/pages/ResetPassword'));
-import { Suspense } from 'react';
+import { Suspense, lazy } from 'react';
 import lazyPage from '@/lib/lazyPage';
 const Admin = lazyPage(() => import('@/pages/admin/Admin'));
 const CmsPreview = lazyPage(() => import('@/pages/CmsPreview'));
@@ -65,7 +65,7 @@ const RezerwacjaZarzadzaj = lazyPage(() => import('@/pages/RezerwacjaZarzadzaj')
 import { CrisisProvider } from '@/components/crisis/CrisisContext';
 import CrisisHelpButton from '@/components/crisis/CrisisHelpButton';
 import PwaSetup from '@/components/pwa/PwaSetup';
-import InstallHint from '@/components/pwa/InstallHint';
+const InstallHint = lazy(() => import('@/components/pwa/InstallHint'));
 // Add page imports here
 
 const AuthenticatedApp = () => {
@@ -106,7 +106,7 @@ const AuthenticatedApp = () => {
       <CrisisProvider>
       <CrisisHelpButton />
       <PwaSetup />
-      <InstallHint />
+      <Suspense fallback={null}><InstallHint /></Suspense>
       <Suspense fallback={<div className="min-h-[100svh] bg-[#0A0A0B]" />}>
       <Routes>
         <Route path="/login" element={<Login />} />

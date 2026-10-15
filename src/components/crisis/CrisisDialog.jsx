@@ -12,7 +12,7 @@ const NUMBERS = [
 export default function CrisisDialog({ open, onOpenChange }) {
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-lg border-[#3D3D3F] bg-[#0A0A0B] p-7 sm:p-9">
+      <DialogContent className="max-w-lg max-h-[calc(100dvh-2rem)] overflow-y-auto border-[#3D3D3F] bg-[#0A0A0B] p-7 sm:p-9">
         <DialogHeader>
           <DialogTitle className="relic-heading text-2xl leading-tight text-foreground">
             Jeśli jest Ci teraz bardzo ciężko

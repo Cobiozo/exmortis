@@ -1,6 +1,8 @@
 import { useEffect, useRef, useState } from "react";
 import { useLocation } from "react-router-dom";
 import { Download, X } from "lucide-react";
+import { readConsent } from "@/components/legal/cookieStore";
+import { useCrisis } from "@/components/crisis/CrisisContext";
 
 const KEY = "exm_install";
 // Nie przeszkadzamy w kasie ani w formularzach (POWRÓT, kontakt, spotkania, rezerwacja).
@@ -11,12 +13,22 @@ const isStandalone = () =>
   window.navigator.standalone === true;
 
 // Dyskretna podpowiedź „Dodaj do ekranu głównego": najwyżej raz, dopiero na drugiej wizycie,
-// z możliwością zamknięcia na zawsze.
+// z możliwością zamknięcia na zawsze. Nie pokazuje się nad banerem cookies ani nad oknem pomocy,
+// a na telefonie siedzi wyżej niż pigułka „Pomoc" i dolny pasek zapisu.
 export default function InstallHint() {
   const { pathname } = useLocation();
+  const { isOpen } = useCrisis();
   const [visible, setVisible] = useState(false);
   const [ios, setIos] = useState(false);
+  const [banner, setBanner] = useState(() => !readConsent());
   const deferred = useRef(null);
+
+  // Baner cookies zasłania dolny pas — wtedy podpowiedź czeka na wybór zgody.
+  useEffect(() => {
+    const upd = () => setBanner(!readConsent());
+    window.addEventListener("exm:consent", upd);
+    return () => window.removeEventListener("exm:consent", upd);
+  }, []);
 
   useEffect(() => {
     if (isStandalone()) return;
@@ -51,7 +63,7 @@ export default function InstallHint() {
     return () => { clearTimeout(t); window.removeEventListener("beforeinstallprompt", onPrompt); };
   }, []);
 
-  if (!visible || HIDE.some((p) => pathname.startsWith(p))) return null;
+  if (!visible || banner || isOpen || HIDE.some((p) => pathname.startsWith(p))) return null;
 
   const close = () => setVisible(false);
   const install = async () => {
@@ -61,7 +73,7 @@ export default function InstallHint() {
   };
 
   return (
-    <div className="fixed bottom-3 right-3 z-[85] w-[min(320px,calc(100vw-24px))] border border-[#3D3D3F] bg-[#0F0F10] p-4 pr-9 text-sm shadow-lg">
+    <div className="fixed right-3 z-[45] w-[min(320px,calc(100vw-24px))] bottom-[calc(env(safe-area-inset-bottom)+9rem)] md:bottom-[calc(env(safe-area-inset-bottom)+5.25rem)] border border-[#3D3D3F] bg-[#0F0F10] p-4 pr-9 text-sm shadow-lg">
       <button onClick={close} aria-label="Zamknij podpowiedź" className="absolute right-2 top-2 p-1 text-foreground/50 hover:text-foreground">
         <X className="h-4 w-4" />
       </button>

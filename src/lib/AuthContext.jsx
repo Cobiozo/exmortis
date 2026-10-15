@@ -4,6 +4,10 @@ import { appParams } from '@/lib/app-params';
 
 const AuthContext = createContext();
 
+// Ostatnie potwierdzone konto z tego urządzenia — używane tylko offline (aplikacja na telefonie),
+// gdy nie ma jak zapytać serwera. Kasowane przy wylogowaniu.
+const USER_CACHE = "exm_auth_user";
+
 export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
@@ -84,16 +88,26 @@ export const AuthProvider = ({ children }) => {
       const currentUser = await base44.auth.me();
       setUser(currentUser);
       setIsAuthenticated(true);
+      try { localStorage.setItem(USER_CACHE, JSON.stringify(currentUser)); } catch { /* brak pamięci */ }
       setIsLoadingAuth(false);
       setAuthChecked(true);
     } catch (error) {
       console.error('User auth check failed:', error);
+      // Offline: nie ma jak potwierdzić sesji, więc wracamy do ostatniego znanego konta z tego
+      // urządzenia — inaczej ROZDROŻA i Minutnik nie uruchomiłyby się bez internetu.
+      let offlineUser = null;
+      try {
+        if (typeof navigator !== "undefined" && navigator.onLine === false) {
+          offlineUser = JSON.parse(localStorage.getItem(USER_CACHE) || "null");
+        }
+      } catch { /* brak pamięci */ }
+      setUser(offlineUser);
+      setIsAuthenticated(!!offlineUser);
       setIsLoadingAuth(false);
-      setIsAuthenticated(false);
       setAuthChecked(true);
-      
+
       // If user auth fails, it might be an expired token
-      if (error.status === 401 || error.status === 403) {
+      if (!offlineUser && (error.status === 401 || error.status === 403)) {
         setAuthError({
           type: 'auth_required',
           message: 'Authentication required'
@@ -105,6 +119,7 @@ export const AuthProvider = ({ children }) => {
   const logout = (shouldRedirect = true) => {
     setUser(null);
     setIsAuthenticated(false);
+    try { localStorage.removeItem(USER_CACHE); } catch { /* brak pamięci */ }
     
     if (shouldRedirect) {
       // Use the SDK's logout method which handles token cleanup and redirect

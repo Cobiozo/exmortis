@@ -2,6 +2,16 @@ import { useEffect } from "react";
 import { useLocation } from "react-router-dom";
 import useSiteSettings from "@/lib/useSiteSettings";
 
+// Identyfikator wersji = nazwa pliku wejściowego z index.html (zawiera hash z publikacji).
+// Zmienia się przy każdym wdrożeniu, więc nowa wersja service workera zawsze się instaluje.
+function buildId() {
+  try {
+    const el = document.querySelector('script[type="module"][src*="/assets/"]');
+    const m = ((el && el.getAttribute("src")) || "").match(/assets\/(.+?)\.js$/);
+    return m ? m[1] : "";
+  } catch { return ""; }
+}
+
 // Rejestracja service workera (tylko produkcja, po zdarzeniu load), wyłącznik awaryjny
 // oraz zapamiętanie, że ROZDROŻA/Minutnik były wcześniej otwarte (dla strony offline).
 export default function PwaSetup() {
@@ -24,7 +34,7 @@ export default function PwaSetup() {
       if (window.caches) caches.keys().then((ks) => ks.filter((k) => k.startsWith("exm-")).forEach((k) => caches.delete(k))).catch(() => {});
       return;
     }
-    const reg = () => navigator.serviceWorker.register("/sw.js").catch(() => {});
+    const reg = () => navigator.serviceWorker.register(`/sw.js?v=${encodeURIComponent(buildId())}`, { updateViaCache: "none" }).catch(() => {});
     if (document.readyState === "complete") reg();
     else window.addEventListener("load", reg, { once: true });
   }, [offline]);
