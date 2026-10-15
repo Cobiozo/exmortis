@@ -26,6 +26,11 @@ async function saveConsents(base44, req, orderId, email, hasDigital, newsletterC
   await base44.asServiceRole.entities.Consent.bulkCreate(consents);
 }
 
+// PayU przy awarii potrafi zwrócić HTML albo puste body — parsuj bezpiecznie, żeby błąd bramki był czytelny.
+function safeJson(res) {
+  return res.json().catch(() => ({}));
+}
+
 const BASE_URLS = {
   secure: "https://secure.payu.com",
   sandbox: "https://merch-prod.snd.payu.com",
@@ -173,7 +178,7 @@ export default async function (req) {
         client_secret: payu.clientSecret,
       }),
     });
-    const token = await tokenRes.json();
+    const token = await safeJson(tokenRes);
     if (!tokenRes.ok || !token.access_token) {
       throw new Error("PayU: błąd autoryzacji (sprawdź Client ID / Client Secret)");
     }
@@ -201,7 +206,7 @@ export default async function (req) {
         products,
       }),
     });
-    const data = await orderRes.json();
+    const data = await safeJson(orderRes);
     if (!orderRes.ok || !data.redirectUri) {
       throw new Error(
         (data && data.error && data.error.message) || "PayU: nie udało się utworzyć płatności"
