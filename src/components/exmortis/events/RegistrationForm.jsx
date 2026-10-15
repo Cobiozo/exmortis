@@ -190,7 +190,8 @@ export default function RegistrationForm({ event: ev }) {
         />
         <span className="text-sm text-foreground/80 leading-relaxed group-hover:text-foreground transition-colors">
           Akceptuję{" "}
-          <Link to="/regulamin" className="gold-text underline">regulamin</Link>.
+          <Link to="/regulamin" className="gold-text underline">regulamin</Link> i{" "}
+          <Link to="/polityka-prywatnosci" className="gold-text underline">politykę prywatności</Link>.
         </span>
       </label>
       {consentErr && <p id="reg-consent-err" role="alert" className="-mt-3 text-sm text-[#E8C547]">Zaznacz, żeby się zapisać.</p>}
@@ -205,10 +206,6 @@ export default function RegistrationForm({ event: ev }) {
           Chcę też dostawać Listy powrotu — jeden list w każdy poniedziałek.
         </span>
       </label>
-      <p className="text-sm text-foreground/75 leading-relaxed">
-        {clause("obsłużyć Twój udział w spotkaniu", "umowa", firma)} Szczegóły:{" "}
-        <Link to="/polityka-prywatnosci" className="gold-text underline">polityka prywatności</Link>.
-      </p>
       {error && <p className="technical text-[10px] blood-text">{error}</p>}
       <button type="submit" disabled={sending} aria-busy={sending} className="btn-relic disabled:opacity-60 disabled:cursor-wait">
         {sending ? "ZAPISUJĘ…" : "ZAPISUJĘ SIĘ"}
