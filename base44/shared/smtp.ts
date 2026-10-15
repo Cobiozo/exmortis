@@ -15,7 +15,19 @@ export async function mailConfig(base44) {
   CFG_AT = Date.now();
   return CFG;
 }
-export const resetMailConfig = () => { CFG_AT = 0; };
+let MCFG = null, MCFG_AT = 0;
+export async function mailConfigMarketing(base44) {
+  if (MCFG_AT && Date.now() - MCFG_AT < 30000) return MCFG;
+  MCFG = await getSetting(base44, "smtp_marketing").catch(() => null);
+  MCFG_AT = Date.now();
+  return MCFG;
+}
+export const resetMailConfig = () => { CFG_AT = 0; MCFG_AT = 0; };
+
+// Listy powrotu i ogłoszenia idą osobnym kanałem (np. Brevo), jeśli jest skonfigurowany i przetestowany.
+// Simply.com zabrania wysyłki newsletterów przez zwykłą skrzynkę — a reputacja skrzynki transakcyjnej
+// (zamówienia, linki do spotkań) jest ważniejsza niż newsletter.
+const MARKETING_KINDS = new Set(["listy", "ogloszenie"]);
 
 // Akcje wyłącznie mailowe (ogłoszenia, ręczne przypomnienia) — bez działającej wysyłki odmawiamy jawnie.
 export async function requireMail(base44) {
@@ -107,23 +119,29 @@ export async function sendMail(base44, { to, subject, html, attachments, kind = 
   if (!to) throw new Error("Brak adresata");
   const Q = base44.asServiceRole.entities.MailQueue;
   const base = { to_email: String(to || ""), subject, kind, ...(ref ? { ref: String(ref) } : {}), ...(waznyDo ? { wazny_do: new Date(waznyDo).toISOString() } : {}) };
-  const smtp = await mailConfig(base44);
+  let smtp = await mailConfig(base44);
+  let viaMarketing = false;
+  if (MARKETING_KINDS.has(kind)) {
+    const m = await mailConfigMarketing(base44);
+    if (mailReady(m)) { smtp = m; viaMarketing = true; }
+  }
   if (!mailReady(smtp)) {
     await Q.create({ ...base, html, attachments: attachments || [], status: "kolejka" });
     return "kolejka";
   }
-  if (await sentLast2h(base44) >= MAIL_BUDGET) {
+  if (!viaMarketing && await sentLast2h(base44) >= MAIL_BUDGET) {
     await Q.create({ ...base, html, attachments: attachments || [], status: "kolejka", blad: LIMIT_MARK, ...(headers ? { headers } : {}) });
     return "kolejka";
   }
   try {
     await smtpSend(smtp, { to, subject, html, attachments, headers, kind, preheader });
-    SENT.n++;
+    if (!viaMarketing) SENT.n++;
   } catch (e) {
     await Q.create({ ...base, html, attachments: attachments || [], status: "blad", blad: String(e?.message || e).slice(0, 500) });
     throw e;
   }
-  await Q.create({ ...base, status: "wyslany", sent_at: new Date().toISOString() });
+  // Wysłane kanałem marketingowym nie liczą się do limitu skrzynki Simply (status „wyslany” + znacznik).
+  await Q.create({ ...base, status: "wyslany", sent_at: new Date().toISOString(), ...(viaMarketing ? { blad: "kanał: newsletter" } : {}) });
   await afterSent(base44, kind, to);
   return "wyslany";
 }

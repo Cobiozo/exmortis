@@ -36,7 +36,10 @@ export default async function (req) {
     const tech = me.role !== "admin";
     const body = await req.json().catch(() => ({}));
     const Q = base44.asServiceRole.entities.MailQueue;
-    const smtp = (await getSetting(base44, "smtp")) || {};
+    // Dwa profile: „smtp” (konto, zamówienia, zapisy — skrzynka Simply) i „smtp_marketing” (Listy powrotu,
+    // ogłoszenia — np. Brevo). Wysyłki masowej nie wolno puszczać przez zwykłą skrzynkę pocztową.
+    const KEY = body.profile === "marketing" ? "smtp_marketing" : "smtp";
+    const smtp = (await getSetting(base44, KEY)) || {};
 
     if (body.action === "status") {
       const queued = await Q.filter({ status: "kolejka" }, "created_date", 1000);
@@ -60,7 +63,7 @@ export default async function (req) {
       if (!next.from_name) next.from_name = "exmortis";
       next.status = "nieskonfigurowana"; // każda zmiana wymaga ponownego udanego testu
       delete next.tested_at;
-      await saveSetting(base44, "smtp", next);
+      await saveSetting(base44, KEY, next);
       resetMailConfig();
       return Response.json({ ok: true });
     }
@@ -69,14 +72,14 @@ export default async function (req) {
       if (tech) return Response.json({ error: "Brak dostępu" }, { status: 403 });
       const to = emailField(body, "to");
       try {
-        await smtpSend(smtp, { to, subject: "exmortis: test wysyłki e-mail", html: "<p>Test wysyłki z panelu exmortis. Jeśli widzisz tę wiadomość, wysyłka działa.</p>" });
+        await smtpSend(smtp, { to, subject: `exmortis: test wysyłki e-mail${KEY === "smtp_marketing" ? " (newsletter)" : ""}`, html: "<h1>Wysyłka działa</h1><p>To test z panelu exmortis. Jeśli widzisz tę wiadomość w skrzynce odbiorczej (nie w spamie), konfiguracja jest poprawna.</p>" });
       } catch (e) {
-        await saveSetting(base44, "smtp", { ...smtp, status: "nieskonfigurowana" });
+        await saveSetting(base44, KEY, { ...smtp, status: "nieskonfigurowana" });
         resetMailConfig();
         await Q.create({ to_email: to, subject: "test", kind: "test", status: "blad", blad: String(e?.message || e).slice(0, 500) });
         return Response.json({ ok: false, error: String(e?.message || e) });
       }
-      await saveSetting(base44, "smtp", { ...smtp, status: "dziala", tested_at: new Date().toISOString() });
+      await saveSetting(base44, KEY, { ...smtp, status: "dziala", tested_at: new Date().toISOString() });
       resetMailConfig();
       await Q.create({ to_email: to, subject: "test", kind: "test", status: "wyslany", sent_at: new Date().toISOString() });
       return Response.json({ ok: true });
