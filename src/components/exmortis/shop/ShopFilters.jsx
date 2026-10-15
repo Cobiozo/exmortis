@@ -75,7 +75,7 @@ export default function ShopFilters({ filters, setFilters, available, extra = nu
             onClick={() => setOpen(!open)}
             className="technical text-[10px] px-3 py-2.5 border hairline text-foreground/60 flex items-center gap-2"
           >
-            <SlidersHorizontal className="h-3.5 w-3.5" /> FILTRUJ {hasAny ? "· AKTYWNE" : ""}
+            <SlidersHorizontal className="h-3.5 w-3.5" /> FILTRUJ {hasAny && <span className="h-1.5 w-1.5 rounded-full bg-[#C9A24A]" aria-label="filtry aktywne" />}
           </button>
           <div className="flex items-center gap-3">
             {hasAny && (
