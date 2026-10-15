@@ -265,6 +265,7 @@ export default async function (req) {
             subject: campaign.subject,
             html: campaignEmailHtml(String(campaign.content || ""), s.name || "",
               s.unsub_token ? `${appUrl}/listy/wypis?t=${s.unsub_token}` : ""),
+            ...(s.unsub_token ? { headers: { "List-Unsubscribe": `<${appUrl}/listy/wypis?t=${s.unsub_token}>` } } : {}),
           });
           sentRows.push(s);
         } catch {

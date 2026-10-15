@@ -28,8 +28,41 @@ export async function adminTo(base44) {
   return FIRMA?.email || s?.reply_to || s?.from || null;
 }
 
+// Wersja tekstowa (multipart/alternative) — maile z samym HTML filtry antyspamowe oceniają gorzej.
+export function htmlToText(html) {
+  return String(html || "")
+    .replace(/<(style|script|head)[^>]*>[\s\S]*?<\/\1>/gi, "")
+    .replace(/<a\s[^>]*href="([^"]+)"[^>]*>([\s\S]*?)<\/a>/gi, (_, href, t) => {
+      const txt = t.replace(/<[^>]+>/g, "").trim();
+      return !txt ? href : txt === href || href.startsWith("mailto:") || href.startsWith("tel:") ? txt : `${txt} (${href})`;
+    })
+    .replace(/<br\s*\/?>/gi, "\n")
+    .replace(/<\/(p|div|h[1-6]|li|tr|table|blockquote)>/gi, "\n\n")
+    .replace(/<li[^>]*>/gi, "• ")
+    .replace(/<[^>]+>/g, "")
+    .replace(/&nbsp;/g, " ").replace(/&amp;/g, "&").replace(/&lt;/g, "<").replace(/&gt;/g, ">").replace(/&quot;/g, '"').replace(/&#39;/g, "'")
+    .replace(/[ \t]+\n/g, "\n").replace(/\n{3,}/g, "\n\n").replace(/[ \t]{2,}/g, " ")
+    .trim();
+}
+
+// Limit dostawcy: Simply.com blokuje skrzynkę po ponad 300 mailach w 2 godziny (smtp.simply.com).
+// Trzymamy się poniżej: najwyżej MAIL_BUDGET wysłanych w ostatnich 2 h; nadwyżka czeka w kolejce
+// z oznaczeniem LIMIT_MARK i wychodzi sama (zadanie cykliczne), gdy limit się zwolni.
+export const MAIL_BUDGET = 240;
+export const LIMIT_MARK = "Czeka na limit wysyłki (najwyżej 240 maili na 2 godziny)";
+let SENT = { at: 0, n: 0 };
+async function sentLast2h(base44) {
+  if (Date.now() - SENT.at < 30000) return SENT.n;
+  const since = new Date(Date.now() - 2 * 3600e3).toISOString();
+  const rows = await base44.asServiceRole.entities.MailQueue
+    .filter({ status: "wyslany", sent_at: { $gte: since } }, "-created_date", MAIL_BUDGET + 10).catch(() => null);
+  SENT = { at: Date.now(), n: rows ? rows.length : SENT.n };
+  return SENT.n;
+}
+export async function mailBudgetLeft(base44) { return Math.max(0, MAIL_BUDGET - await sentLast2h(base44)); }
+
 // Bezpośrednie wysłanie przez SMTP (bez bramki) — test i wysyłka zaległych.
-export async function smtpSend(smtp, { to, subject, html, attachments }) {
+export async function smtpSend(smtp, { to, subject, html, attachments, headers }) {
   if (!smtp || !smtp.host || !smtp.user || !smtp.password) throw new Error("Wysyłka e-mail nie jest skonfigurowana");
   const port = Number(smtp.port) || 587;
   const transporter = nodemailer.createTransport({
@@ -42,6 +75,8 @@ export async function smtpSend(smtp, { to, subject, html, attachments }) {
     ...(smtp.reply_to ? { replyTo: smtp.reply_to } : {}),
     to, subject,
     html: html + firmaFooter(FIRMA),
+    text: htmlToText(html + firmaFooter(FIRMA)),
+    ...(headers && typeof headers === "object" ? { headers } : {}),
     ...(Array.isArray(attachments) && attachments.length > 0 ? { attachments } : {}),
   });
 }
@@ -63,7 +98,7 @@ export async function afterSent(base44, kind, to) {
 }
 
 // Zwraca "wyslany" albo "kolejka". Błąd SMTP jest zapisywany w dzienniku i rzucany dalej.
-export async function sendMail(base44, { to, subject, html, attachments, kind = "inne", ref, waznyDo }) {
+export async function sendMail(base44, { to, subject, html, attachments, kind = "inne", ref, waznyDo, headers }) {
   if (!to) throw new Error("Brak adresata");
   const Q = base44.asServiceRole.entities.MailQueue;
   const base = { to_email: String(to || ""), subject, kind, ...(ref ? { ref: String(ref) } : {}), ...(waznyDo ? { wazny_do: new Date(waznyDo).toISOString() } : {}) };
@@ -72,8 +107,13 @@ export async function sendMail(base44, { to, subject, html, attachments, kind = 
     await Q.create({ ...base, html, attachments: attachments || [], status: "kolejka" });
     return "kolejka";
   }
+  if (await sentLast2h(base44) >= MAIL_BUDGET) {
+    await Q.create({ ...base, html, attachments: attachments || [], status: "kolejka", blad: LIMIT_MARK, ...(headers ? { headers } : {}) });
+    return "kolejka";
+  }
   try {
-    await smtpSend(smtp, { to, subject, html, attachments });
+    await smtpSend(smtp, { to, subject, html, attachments, headers });
+    SENT.n++;
   } catch (e) {
     await Q.create({ ...base, html, attachments: attachments || [], status: "blad", blad: String(e?.message || e).slice(0, 500) });
     throw e;
@@ -84,11 +124,15 @@ export async function sendMail(base44, { to, subject, html, attachments, kind = 
 }
 
 // Wysyłka zaległych (tylko na kliknięcie administratora), partiami.
-export async function flushMailQueue(base44) {
+export async function flushMailQueue(base44, { auto = false } = {}) {
   const smtp = await getSetting(base44, "smtp");
-  if (!mailReady(smtp)) throw new Error("Wysyłka e-mail nie działa — najpierw wyślij udany test.");
+  if (!mailReady(smtp)) { if (auto) return { sent: 0, skipped: 0, failed: 0, more: false }; throw new Error("Wysyłka e-mail nie działa — najpierw wyślij udany test."); }
   const Q = base44.asServiceRole.entities.MailQueue;
-  const items = await Q.filter({ status: "kolejka" }, "created_date", 20);
+  SENT.at = 0;
+  const budget = Math.min(auto ? 60 : 20, await mailBudgetLeft(base44));
+  if (budget <= 0) return { sent: 0, skipped: 0, failed: 0, more: true, limit: true };
+  // Automatycznie wychodzą tylko maile wstrzymane przez limit; pozostałe zaległe — na kliknięcie administratora.
+  const items = await Q.filter(auto ? { status: "kolejka", blad: LIMIT_MARK } : { status: "kolejka" }, "created_date", budget);
   let sent = 0, skipped = 0, failed = 0;
   for (const m of items) {
     if (m.wazny_do && new Date(m.wazny_do) < new Date()) {
@@ -97,8 +141,9 @@ export async function flushMailQueue(base44) {
       continue;
     }
     try {
-      await smtpSend(smtp, { to: m.to_email, subject: m.subject, html: m.html || "", attachments: m.attachments });
-      await Q.update(m.id, { status: "wyslany", sent_at: new Date().toISOString(), html: "", attachments: [] });
+      await smtpSend(smtp, { to: m.to_email, subject: m.subject, html: m.html || "", attachments: m.attachments, headers: m.headers });
+      SENT.n++;
+      await Q.update(m.id, { status: "wyslany", sent_at: new Date().toISOString(), html: "", attachments: [], blad: "" });
       await afterSent(base44, m.kind, m.to_email);
       sent++;
     } catch (e) {
@@ -106,7 +151,7 @@ export async function flushMailQueue(base44) {
       failed++;
     }
   }
-  const left = await Q.filter({ status: "kolejka" }, "created_date", 1);
+  const left = await Q.filter(auto ? { status: "kolejka", blad: LIMIT_MARK } : { status: "kolejka" }, "created_date", 1);
   return { sent, skipped, failed, more: left.length > 0 };
 }
 
