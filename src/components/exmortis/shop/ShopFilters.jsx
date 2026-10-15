@@ -73,7 +73,7 @@ export default function ShopFilters({ filters, setFilters, available, extra = nu
         <div className="md:hidden py-3 flex items-center justify-between gap-3">
           <button
             onClick={() => setOpen(!open)}
-            className="technical text-[10px] px-4 py-2.5 border hairline text-foreground/60 flex items-center gap-2"
+            className="technical text-[10px] px-3 py-2.5 border hairline text-foreground/60 flex items-center gap-2"
           >
             <SlidersHorizontal className="h-3.5 w-3.5" /> FILTRUJ {hasAny ? "· AKTYWNE" : ""}
           </button>
