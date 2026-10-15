@@ -6,6 +6,7 @@ import PrelaunchSettings from "./PrelaunchSettings";
 import OfflineAppSettings from "./OfflineAppSettings";
 import MailSettings from "@/components/admin/mail/MailSettings";
 import OnboardingSettings from "@/components/admin/mail/OnboardingSettings";
+import FollowupSettings from "@/components/admin/mail/FollowupSettings";
 import EmailChangeToggle from "./EmailChangeToggle";
 import LegalDocsSettings from "./LegalDocsSettings";
 import LibrarySettingsPanel from "@/components/admin/library/LibrarySettingsPanel";
@@ -31,6 +32,7 @@ export default function SiteSettingsPanel() {
       <LegalDocsSettings initial={s.dokumenty} />
       <MailSettings />
       <OnboardingSettings />
+      <FollowupSettings />
       <ZoomFixedSettings />
       <LibrarySettingsPanel />
       <VideoProtectionSettings />
