@@ -120,7 +120,23 @@ function exmInlineCss() {
   };
 }
 
+// Drobne ikony lucide w jednym pliku zamiast osobnych chunków (download, plus, minus, strzałka…):
+// mniej żądań na ścieżce startowej przy tym samym rozmiarze.
+function exmOneIconFile() {
+  return {
+    name: "exm-one-icon-file",
+    configResolved(c) {
+      const out = c.build?.rollupOptions?.output;
+      const list = Array.isArray(out) ? out : out ? [out] : [];
+      for (const o of list) o.manualChunks = (id) => (id.includes("lucide-react") ? "icons" : undefined);
+    },
+  };
+}
+
 export default defineConfig({
+  build: {
+    rollupOptions: { output: { manualChunks: (id) => (id.includes("lucide-react") ? "icons" : undefined) } },
+  },
   plugins: [
     base44({
       // Support for legacy code that imports the base44 SDK with @/integrations, @/entities, etc.
