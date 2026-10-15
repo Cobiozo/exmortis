@@ -6,7 +6,7 @@ const HOSTS = [
   [/(^|\.)instagram\.com$/, "instagram"], [/(^|\.)(facebook\.com|fb\.com|fb\.me|messenger\.com)$/, "facebook"],
   [/(^|\.)(youtube\.com|youtu\.be)$/, "youtube"], [/(^|\.)(whatsapp\.com|wa\.me)$/, "whatsapp"],
   [/(^|\.)tiktok\.com$/, "tiktok"], [/(^|\.)(t\.co|twitter\.com|x\.com)$/, "x"], [/(^|\.)linkedin\.com$/, "linkedin"],
-  [/(^|\.)google\./, "google"], [/(^|\.)(mail\.google\.com|outlook\.live\.com|poczta\.|mail\.)/, "email"],
+  [/(^|\.)(mail\.google\.com|outlook\.live\.com|outlook\.office\.com)$|^(poczta|mail)\./, "email"], [/(^|\.)google\./, "google"],
 ];
 function fromReferrer() {
   try {
