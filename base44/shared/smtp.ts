@@ -103,7 +103,7 @@ export async function afterSent(base44, kind, to) {
 }
 
 // Zwraca "wyslany" albo "kolejka". Błąd SMTP jest zapisywany w dzienniku i rzucany dalej.
-export async function sendMail(base44, { to, subject, html, attachments, kind = "inne", ref, waznyDo, headers }) {
+export async function sendMail(base44, { to, subject, html, attachments, kind = "inne", ref, waznyDo, headers, preheader = "" }) {
   if (!to) throw new Error("Brak adresata");
   const Q = base44.asServiceRole.entities.MailQueue;
   const base = { to_email: String(to || ""), subject, kind, ...(ref ? { ref: String(ref) } : {}), ...(waznyDo ? { wazny_do: new Date(waznyDo).toISOString() } : {}) };
@@ -117,7 +117,7 @@ export async function sendMail(base44, { to, subject, html, attachments, kind = 
     return "kolejka";
   }
   try {
-    await smtpSend(smtp, { to, subject, html, attachments, headers, kind });
+    await smtpSend(smtp, { to, subject, html, attachments, headers, kind, preheader });
     SENT.n++;
   } catch (e) {
     await Q.create({ ...base, html, attachments: attachments || [], status: "blad", blad: String(e?.message || e).slice(0, 500) });

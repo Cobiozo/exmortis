@@ -1,6 +1,7 @@
 import { createClientFromRequest } from "npm:@base44/sdk@0.8.44";
 import { runSql, escStr, requireAdmin } from "../../shared/supabase.ts";
-import { loadAppUrl } from "../../shared/settings.ts";
+import { loadAppUrl, getSetting } from "../../shared/settings.ts";
+import { emailLayout } from "../../shared/emailLayout.ts";
 import { sendMail, campaignEmailHtml, requireMail } from "../../shared/smtp.ts";
 
 // Moduł newslettera: grupy odbiorców, kampanie i wysyłki przez SMTP.
@@ -57,7 +58,16 @@ async function ensureTables(base44) {
       PRIMARY KEY (campaign_id, subscriber_id)
     )`
   );
+  // Zajawka (preheader) i jeden przycisk akcji — profesjonalny list ma jeden jasny następny krok.
+  await runSql(base44, `ALTER TABLE public.campaigns ADD COLUMN IF NOT EXISTS preheader text, ADD COLUMN IF NOT EXISTS cta_label text, ADD COLUMN IF NOT EXISTS cta_url text`);
 }
+
+const ctaOf = (b) => {
+  const cta_label = String(b.cta_label || "").trim().slice(0, 60);
+  const cta_url = String(b.cta_url || "").trim().slice(0, 500);
+  if (cta_url && !/^https:\/\//.test(cta_url)) throw new Error("Link przycisku musi zaczynać się od https://");
+  return { cta_label, cta_url };
+};
 
 // Ilu aktywnych odbiorców danej kampanii jeszcze nie dostało listu.
 async function remainingFor(base44, campaign) {
@@ -158,7 +168,7 @@ export default async function (req) {
       const id = String(body.id || "");
       const rows = await runSql(
         base44,
-        `SELECT id, subject, content, group_id, status FROM public.campaigns WHERE id = ${escStr(id)}`,
+        `SELECT id, subject, content, group_id, status, preheader, cta_label, cta_url FROM public.campaigns WHERE id = ${escStr(id)}`,
         true
       );
       if (!rows.length) throw new Error("Nie znaleziono kampanii");
@@ -172,6 +182,9 @@ export default async function (req) {
       if (!subject) throw new Error("Podaj temat kampanii");
       const content = String(body.content || "").slice(0, 100000);
       const groupId = body.group_id ? escStr(String(body.group_id)) : "NULL";
+      const preheader = String(body.preheader || "").trim().slice(0, 140);
+      const { cta_label, cta_url } = ctaOf(body);
+      const extra = `preheader = ${escStr(preheader)}, cta_label = ${escStr(cta_label)}, cta_url = ${escStr(cta_url)}`;
 
       let id;
       if (body.id) {
@@ -186,7 +199,7 @@ export default async function (req) {
         await runSql(
           base44,
           `UPDATE public.campaigns
-           SET subject = ${escStr(subject)}, content = ${escStr(content)}, group_id = ${groupId}
+           SET subject = ${escStr(subject)}, content = ${escStr(content)}, group_id = ${groupId}, ${extra}
            WHERE id = ${escStr(id)}`
         );
       } else {
@@ -196,14 +209,45 @@ export default async function (req) {
           `INSERT INTO public.campaigns (id, subject, content, group_id)
            VALUES (${escStr(id)}, ${escStr(subject)}, ${escStr(content)}, ${groupId})`
         );
+        await runSql(base44, `UPDATE public.campaigns SET ${extra} WHERE id = ${escStr(id)}`);
       }
       const rows = await runSql(
         base44,
-        `SELECT id, subject, content, group_id, status FROM public.campaigns WHERE id = ${escStr(id)}`,
+        `SELECT id, subject, content, group_id, status, preheader, cta_label, cta_url FROM public.campaigns WHERE id = ${escStr(id)}`,
         true
       );
       const remaining = await remainingFor(base44, rows[0]);
       return Response.json({ ok: true, id, remaining });
+    }
+
+    // Podgląd dokładnie takiego listu, jaki dostanie odbiorca (oprawa, stopka, przycisk).
+    if (action === "campaigns.preview") {
+      await ensureTables(base44);
+      const { cta_label, cta_url } = ctaOf(body);
+      const appUrl = await loadAppUrl(base44);
+      const firma = await getSetting(base44, "firma").catch(() => null);
+      const html = emailLayout(campaignEmailHtml(String(body.content || ""), "Anna", "", { cta_label, cta_url }), {
+        firma, kind: "listy", preheader: String(body.preheader || ""), unsubUrl: `${appUrl}/listy/wypis?t=podglad`,
+        appUrl: /base44\.app/.test(appUrl) ? "https://exmortis.pl" : appUrl,
+      });
+      return Response.json({ html });
+    }
+
+    // Wysyłka próbna na adres administratora (nie liczy się do kampanii).
+    if (action === "campaigns.test") {
+      await ensureTables(base44);
+      await requireMail(base44);
+      const me = await base44.auth.me();
+      const subject = String(body.subject || "").trim().slice(0, 300) || "Bez tematu";
+      const { cta_label, cta_url } = ctaOf(body);
+      const appUrl = await loadAppUrl(base44);
+      await sendMail(base44, {
+        kind: "listy", to: me.email, subject: `[TEST] ${subject}`,
+        html: campaignEmailHtml(String(body.content || ""), me.full_name ? String(me.full_name).split(" ")[0] : "", "", { cta_label, cta_url }),
+        preheader: String(body.preheader || ""),
+        headers: { "List-Unsubscribe": `<${appUrl}/listy/wypis?t=test>` },
+      });
+      return Response.json({ ok: true, to: me.email });
     }
 
     if (action === "campaigns.delete") {
@@ -264,7 +308,9 @@ export default async function (req) {
             to: s.email,
             subject: campaign.subject,
             html: campaignEmailHtml(String(campaign.content || ""), s.name || "",
-              s.unsub_token ? `${appUrl}/listy/wypis?t=${s.unsub_token}` : ""),
+              s.unsub_token ? `${appUrl}/listy/wypis?t=${s.unsub_token}` : "",
+              { cta_label: campaign.cta_label || "", cta_url: campaign.cta_url || "" }),
+            preheader: campaign.preheader || "",
             ...(s.unsub_token ? { headers: { "List-Unsubscribe": `<${appUrl}/listy/wypis?t=${s.unsub_token}>` } } : {}),
           });
           sentRows.push(s);
