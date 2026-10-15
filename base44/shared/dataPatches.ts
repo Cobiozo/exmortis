@@ -130,6 +130,17 @@ const PATCHES: { id: string; why: string; sql: string[] }[] = [
            AND COALESCE((SELECT value->>'link' FROM public.app_settings WHERE key = 'zoom_staly'), '') LIKE 'https://%'`,
     ],
   },
+  {
+    id: "2026-10-15-obecnosc-po-spotkaniu",
+    why: "Spotkania: godzina wejścia do pokoju (obecność) i znacznik maila po spotkaniu; spotkania już zakończone oznaczone jako wysłane",
+    sql: [
+      `ALTER TABLE public.registrations ADD COLUMN IF NOT EXISTS joined_at timestamptz`,
+      `ALTER TABLE public.registrations ADD COLUMN IF NOT EXISTS follow_up_sent boolean NOT NULL DEFAULT FALSE`,
+      `UPDATE public.registrations r SET follow_up_sent = TRUE FROM public.events e
+         WHERE e.id = r.event_id AND e.start_datetime IS NOT NULL
+           AND e.start_datetime + (COALESCE(e.duration_minutes,60) * interval '1 minute') < now()`,
+    ],
+  },
 ];
 
 export async function applyDataPatches(base44): Promise<string[]> {

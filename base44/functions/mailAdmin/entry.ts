@@ -4,6 +4,7 @@ import { getSetting, saveSetting } from "../../shared/settings.ts";
 import { smtpSend, mailReady, resetMailConfig, flushMailQueue } from "../../shared/smtp.ts";
 import { onboardingOn, setOnboarding, onboardingMail } from "../../shared/onboarding.ts";
 import { emailLayout } from "../../shared/emailLayout.ts";
+import { followupOn, setFollowup, followupMail } from "../../shared/followup.ts";
 
 // Ustawienia → Wysyłka e-mail: konfiguracja SMTP, test, status, kolejka zaległych, dziennik, DNS.
 // Hasło zapisywane wyłącznie po stronie serwera (Supabase app_settings, RLS) — nigdy nie wraca do przeglądarki.
@@ -106,6 +107,20 @@ export default async function (req) {
         await setOnboarding(base44, body.wlaczone);
       }
       return Response.json({ wlaczone: await onboardingOn(base44) });
+    }
+    if (body.action === "followup") {
+      if (typeof body.wlaczone === "boolean") {
+        if (tech) return Response.json({ error: "Brak dostępu" }, { status: 403 });
+        await setFollowup(base44, body.wlaczone);
+      }
+      return Response.json({ wlaczone: await followupOn(base44) });
+    }
+    if (body.action === "followup_preview") {
+      const variant = body.variant === "nieobecny" ? "nieobecny" : "obecny";
+      const firma = await getSetting(base44, "firma").catch(() => null);
+      const m = followupMail(variant, { name: "Anna", title: "Ze śmierci — o powrotach, o których świat nie mówi", site: "https://exmortis.pl",
+        next: { title: "Wieczór powrotu", slug: "wieczor-powrotu", start_datetime: "2026-12-03T18:00:00Z" } });
+      return Response.json({ subject: m.subject, html: emailLayout(m.html, { firma, kind: `po_spotkaniu_${variant}` }) });
     }
     if (body.action === "onboarding_preview") {
       const step = [1, 3, 7, 14].includes(Number(body.step)) ? Number(body.step) : 1;

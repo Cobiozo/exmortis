@@ -165,8 +165,8 @@ export default async function (req) {
       const evRows = await runSql(base44, `SELECT * FROM public.events WHERE id = ${escStr(id)}`, true);
       const parts = await runSql(
         base44,
-        `SELECT id, first_name, email, question_for_dawid, status, source, created_at
-         FROM public.registrations WHERE event_id = ${escStr(id)}
+        `SELECT id, first_name, email, question_for_dawid, status, source, created_at, to_jsonb(r)->>'joined_at' AS joined_at
+         FROM public.registrations r WHERE event_id = ${escStr(id)}
          ORDER BY created_at ASC`,
         true
       );
