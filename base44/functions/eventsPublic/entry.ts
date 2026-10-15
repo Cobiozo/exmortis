@@ -222,7 +222,7 @@ export default async function (req) {
              recording_url, recording_until, open_minutes, short_path FROM public.events
            WHERE (slug = ${escStr(key)} OR short_path = ${escStr(key)}) ORDER BY slug = ${escStr(key)} DESC LIMIT 1`, true);
         hit = { at: Date.now(), ev: rows[0] || null };
-        if (!body.preview) JOIN_CACHE.set(key, hit);
+        if (!(body.preview && admin)) JOIN_CACHE.set(key, hit); // gość z ?preview= też korzysta z kopii
       }
       const ev = hit.ev;
       if (!ev || !ev.start_datetime || (!admin && !["Opublikowane", "Odwołane"].includes(ev.status))) {
