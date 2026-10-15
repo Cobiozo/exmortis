@@ -158,9 +158,9 @@
 /* Puls świecenia logo na opacity/transform (kompozytor) zamiast animowanego filter. */
 @keyframes glow-pulse {
   0%, 100% { opacity: 1; }
-  50% { opacity: 0.72; }
+  50% { opacity: 0.82; }
 }
-.glow-pulse { animation: glow-pulse 4s ease-in-out infinite; will-change: opacity; }
+.glow-pulse { filter: drop-shadow(0 0 26px rgba(201,162,74,0.45)); animation: glow-pulse 4s ease-in-out infinite; will-change: opacity; }
 
 @keyframes scan {
   0% { transform: translateY(-100%); }
