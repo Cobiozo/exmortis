@@ -12,7 +12,6 @@ export default function EventsListing() {
   const [data, setData] = useState(null);
   const [tab, setTab] = useState("all");
   useEffect(() => {
-    base44.functions.invoke("eventsPublic", { action: "tick" }).catch(() => {});
     base44.functions.invoke("eventsPublic", { action: "list" }).then((res) => setData(res.data)).catch(() => setData({ upcoming: [], past: [] }));
   }, []);
   const upcoming = data?.upcoming || [];
