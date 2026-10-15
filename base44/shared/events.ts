@@ -152,7 +152,8 @@ function meetingLine(ev, reg) {
 function joinBlock(ev, token = null) {
   const url = isOnline(ev) && joinUrl(ev, token);
   if (url) {
-    return `${emailButton("DOŁĄCZ DO SPOTKANIA", url)}<p style="margin-top:0;font-size:13px;color:#A3A3A6;">Twój osobisty link (zadziała w dniu spotkania, pokój otwiera się kilka minut przed startem — zapisz go albo dodaj spotkanie do kalendarza):<br /><a href="${url}" style="color:#C9A24A;word-break:break-all;">${url}</a></p><p style="color:#8A8A8C;font-size:12px;">Link jest przypisany do Twojego zapisu — nie przekazuj go dalej. Na stronie spotkania wejdziesz też, wpisując adres e-mail podany przy zapisie.</p>`;
+    // Sam przycisk (adres ukryty w przycisku) — osobisty link nie leży w treści maila na widoku.
+    return `${emailButton("DOŁĄCZ DO SPOTKANIA", url)}<p style="margin-top:0;font-size:13px;color:#A3A3A6;line-height:1.6;">Przycisk prowadzi na Twoją stronę dołączenia. Pokój otwiera się kilka minut przed startem — wtedy pojawi się tam przycisk wejścia do Zoom. Zachowaj ten e-mail albo dodaj spotkanie do kalendarza.</p><p style="color:#8A8A8C;font-size:12px;line-height:1.6;">Przycisk jest przypisany do Twojego zapisu — nie przekazuj tego maila dalej. Na stronie spotkania wejdziesz też, wpisując adres e-mail podany przy zapisie.</p>`;
   }
   if (ev.format === "Online" && ev.external_url) {
     return `<p style="margin-top:20px;"><a href="${escHtml(ev.external_url)}" style="color:#C9A24A;">Dołącz do spotkania tutaj</a></p>`;

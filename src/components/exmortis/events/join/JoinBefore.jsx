@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { CalendarPlus } from "lucide-react";
+import { CalendarPlus, Lock } from "lucide-react";
 import useOnlineText from "@/content/useOnlineText";
 import { downloadIcs, timeText } from "../time";
 
@@ -21,7 +21,13 @@ export default function JoinBefore({ data, onOpen }) {
         {[d && unit(d, "dzień", "dni", "dni"), (d || h) && unit(h, "godzina", "godziny", "godzin"), unit(mm, "minuta", "minuty", "minut")].filter(Boolean).join(" · ")}
       </p>
       <p className="text-foreground/70 mt-6 leading-relaxed">{t("przed", { minuty: data.open_minutes, otwarcie: timeText(new Date(openAt).toISOString()) })}</p>
-      <button type="button" onClick={() => downloadIcs(data)} className="btn-ghost mt-8"><CalendarPlus className="h-4 w-4" /> DODAJ DO KALENDARZA</button>
+      {/* Przycisk wejścia widoczny od razu, nieaktywny do otwarcia pokoju — o tej godzinie strona sama podmienia go na działający. */}
+      <div className="mt-8 flex flex-wrap gap-3">
+        <button type="button" disabled aria-disabled="true" className="btn-relic opacity-45 cursor-not-allowed">
+          <Lock className="h-4 w-4" /> DOŁĄCZ — AKTYWNY OD {timeText(new Date(openAt).toISOString())}
+        </button>
+        <button type="button" onClick={() => downloadIcs(data)} className="btn-ghost"><CalendarPlus className="h-4 w-4" /> DODAJ DO KALENDARZA</button>
+      </div>
     </>
   );
 }
