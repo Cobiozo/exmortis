@@ -7,6 +7,7 @@ import { rpcRegister, RPC_ERRORS, saveConsents, afterSaved, enqueue, flushQueue,
 import { sendReminderMail, sendRecordingMail, plWhen, APP_URL, buildIcs, joinState, joinToken } from "../../shared/events.ts";
 import { sendMail, adminTo } from "../../shared/smtp.ts";
 import { ipAllowed, TOO_MANY } from "../../shared/rateLimit.ts";
+import { claimFollowups, nextEventAfter, followupMail, followupCtx, attended } from "../../shared/followup.ts";
 
 const ensureJoinColumns = (base44) => runSql(base44,
   `ALTER TABLE public.events ADD COLUMN IF NOT EXISTS open_minutes int DEFAULT 15,
@@ -28,8 +29,12 @@ async function regAccess(base44, eventId, fresh = false) {
     `SELECT lower(email) AS email, cancel_token FROM public.registrations
      WHERE event_id = ${escStr(String(eventId))} AND status IN ('Zapisany', 'Obecny')`, true);
   const emails = new Set(rows.map((r) => String(r.email || "")));
-  const tokens = new Set((await Promise.all(rows.map((r) => joinToken(r.cancel_token)))).filter(Boolean));
-  const out = { at: Date.now(), emails, tokens };
+  const pairs = await Promise.all(rows.map(async (r) => [await joinToken(r.cancel_token), r.cancel_token]));
+  const tokens = new Set(pairs.map(([t]) => t).filter(Boolean));
+  // Do zapisu obecności: osobisty klucz / e-mail → klucz zapisu.
+  const byToken = new Map(pairs.filter(([t]) => t));
+  const byEmail = new Map(rows.map((r) => [String(r.email || ""), r.cancel_token]));
+  const out = { at: Date.now(), emails, tokens, byToken, byEmail };
   REG_CACHE.set(eventId, out);
   return out;
 }
@@ -44,6 +49,16 @@ function addMiss(ip) {
   if (!m || Date.now() - m.at > 600000) MISSES.set(ip, { at: Date.now(), n: 1 }); else m.n++;
 }
 let joinColsReady = false;
+
+// Obecność: pierwsze otwarcie pokoju przez zapisaną osobę zapisuje godzinę wejścia (raz na osobę i instancję).
+const JOINED = new Set();
+function markJoined(base44, cancelToken) {
+  if (!cancelToken || JOINED.has(cancelToken)) return;
+  if (JOINED.size > 20000) JOINED.clear();
+  JOINED.add(cancelToken);
+  waitUntil(runSql(base44, `UPDATE public.registrations SET joined_at = now()
+     WHERE cancel_token = ${escStr(String(cancelToken))} AND joined_at IS NULL`).catch(() => JOINED.delete(cancelToken)));
+}
 
 // Pokój otwarty, a linku brak — jeden alarm na spotkanie (kolejka maili = widoczny w panelu).
 async function zoomAlarm(base44, ev) {
@@ -228,6 +243,7 @@ export default async function (req) {
           return Response.json({ ...base, state, need: true, error: email ? "Nie znajduję zapisu na ten adres. Sprawdź pisownię albo użyj linku z e-maila." : "Ten link jest nieaktualny. Wpisz e-mail podany przy zapisie." });
         }
         okToken = t && acc.tokens.has(t) ? t : null;
+        markJoined(base44, (t && acc.byToken?.get(t)) || (email && acc.byEmail?.get(email)) || null);
         if (!okToken && email) {
           const r = (await runSql(base44, `SELECT cancel_token FROM public.registrations WHERE event_id = ${escStr(String(ev.id))} AND lower(email) = ${escStr(email)} AND status IN ('Zapisany', 'Obecny') LIMIT 1`, true).catch(() => []))[0];
           okToken = r ? await joinToken(r.cancel_token) : null;
@@ -346,6 +362,8 @@ export default async function (req) {
       const due1 = await claim("reminder_1h_sent",
         `e.start_datetime > now() AND e.start_datetime <= now() + interval '1 hour'`, ", reminder_24h_sent = TRUE", 400);
       // Powiadomienie o nagraniu: gdy admin udostępni je w kontach (recording_until w przyszłości), po zakończeniu spotkania.
+      // Mail po spotkaniu (obecni / nieobecni) — następnego dnia od 9:00, bez nagrania.
+      const dueFollow = await claimFollowups(base44).catch(() => []);
       const dueRec = await claim("recording_sent",
         `e.recording_url IS NOT NULL AND e.recording_until IS NOT NULL AND e.recording_until > now() + interval '30 minutes'
            AND e.start_datetime + (COALESCE(e.duration_minutes,60) * interval '1 minute') < now()`);
@@ -370,6 +388,21 @@ export default async function (req) {
           await pool(due24, async (row) => {
             try { await sendReminderMail(base44, row, regOf(row), "24h"); } catch { await release("reminder_24h_sent", row); }
           });
+          if (dueFollow.length > 0) {
+            const site = /base44\.app/.test(APP_URL) ? "https://exmortis.pl" : APP_URL;
+            const nexts = new Map();
+            for (const row of dueFollow) {
+              if (!nexts.has(row.event_id)) nexts.set(row.event_id, await nextEventAfter(base44, row.event_id));
+            }
+            await pool(dueFollow, async (row) => {
+              const variant = attended(row) ? "obecny" : "nieobecny";
+              const m = followupMail(variant, followupCtx(row, site, nexts.get(row.event_id)));
+              try {
+                await sendMail(base44, { kind: `po_spotkaniu_${variant}`, ref: row.reg_id, to: row.email, subject: m.subject, html: m.html,
+                  waznyDo: new Date(Date.now() + 2 * 864e5) });
+              } catch { await release("follow_up_sent", row); }
+            }, 5);
+          }
           if (dueRec.length > 0) {
             const next = await runSql(
               base44,
@@ -392,7 +425,7 @@ export default async function (req) {
         removed: (removed || []).length,
         queue,
         retention,
-        due: { r24: due24.length, r1: due1.length, rec: dueRec.length },
+        due: { r24: due24.length, r1: due1.length, rec: dueRec.length, po: dueFollow.length },
       });
     }
 
