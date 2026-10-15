@@ -6,6 +6,7 @@ import { CalendarPlus } from "lucide-react";
 import { downloadIcs } from "./time";
 import { SITE_URL } from "@/config/site";
 import { track } from "@/lib/track";
+import { visitSource } from "@/lib/firstTouch";
 
 // Formularz zapisu na wydarzenie (strona wydarzenia): imię, e-mail, pytanie, zgoda.
 export default function RegistrationForm({ event: ev }) {
@@ -40,8 +41,7 @@ export default function RegistrationForm({ event: ev }) {
     setSending(true);
     setError("");
     try {
-      const params = new URLSearchParams(window.location.search);
-      const src = params.get("src") || params.get("utm_source") || "";
+      const src = visitSource();
       const data = await sendForm("eventsPublic", {
         action: "register",
         slug: ev.slug,

@@ -1,6 +1,7 @@
 import React from 'react'
 import ReactDOM from 'react-dom/client'
 import '@/lib/prefetch'
+import '@/lib/firstTouch'
 import App from '@/App.jsx'
 import '@/index.css'
 
