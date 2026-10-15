@@ -67,8 +67,8 @@ async function sentLast2h(base44) {
   if (Date.now() - SENT.at < 30000) return SENT.n;
   const since = new Date(Date.now() - 2 * 3600e3).toISOString();
   const rows = await base44.asServiceRole.entities.MailQueue
-    .filter({ status: "wyslany", sent_at: { $gte: since } }, "-created_date", MAIL_BUDGET + 10).catch(() => null);
-  SENT = { at: Date.now(), n: rows ? rows.length : SENT.n };
+    .filter({ status: "wyslany", sent_at: { $gte: since } }, "-created_date", 1000).catch(() => null);
+  SENT = { at: Date.now(), n: rows ? rows.filter((r) => r.blad !== "kanał: newsletter").length : SENT.n };
   return SENT.n;
 }
 export async function mailBudgetLeft(base44) { return Math.max(0, MAIL_BUDGET - await sentLast2h(base44)); }
