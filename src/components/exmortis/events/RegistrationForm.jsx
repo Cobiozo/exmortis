@@ -4,7 +4,6 @@ import { sendForm } from "@/lib/outbox";
 import useSystemText from "@/content/useSystemText";
 import { CalendarPlus } from "lucide-react";
 import { downloadIcs } from "./time";
-import { SITE_URL } from "@/config/site";
 import { track } from "@/lib/track";
 import { visitSource } from "@/lib/firstTouch";
 

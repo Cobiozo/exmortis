@@ -178,6 +178,13 @@ async function ticketBlock(base44, ev, reg) {
   }
 }
 
+// „Co otrzymujesz” — lista z pola spotkania (pozycje rozdzielone średnikiem albo nową linią).
+function whatList(raw) {
+  const items = String(raw || "").split(/\s*[;\n]\s*/).map((x) => x.trim()).filter(Boolean);
+  if (!items.length) return "";
+  return `<p style="line-height:1.7;margin-bottom:6px;">W ramach uczestnictwa otrzymujesz:</p><ul style="margin:0 0 16px;padding-left:20px;line-height:1.7;">${items.map((x) => `<li>${escHtml(x)}</li>`).join("")}</ul>`;
+}
+
 // Potwierdzenie zapisu (z załączonym plikiem .ics).
 export async function sendConfirmationMail(base44, ev, reg) {
   const jt = await joinToken(reg.cancel_token);
@@ -193,7 +200,7 @@ export async function sendConfirmationMail(base44, ev, reg) {
     html: shell(ev, 
       `<h1 style="font-size:24px;">${waitlist ? "Lista rezerwowa" : "Zapis potwierdzony"}</h1>${meetingLine(ev, reg)}` +
         `<p style="line-height:1.7;">${lead}</p>` +
-        (ev.what_registered ? `<p style="color:#8A8A8C;font-size:13px;">Co dostają zapisani: ${escHtml(ev.what_registered)}</p>` : "") +
+        whatList(ev.what_registered) +
         (waitlist ? "" : joinBlock(ev, jt)) + tix +
         `<p style="color:#8A8A8C;font-size:13px;">Spotkanie masz w załączonym pliku kalendarza (.ics).</p>` +
         cancelLink(reg.cancel_token)
