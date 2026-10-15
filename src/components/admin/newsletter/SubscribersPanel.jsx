@@ -16,6 +16,9 @@ export default function SubscribersPanel() {
   const [newName, setNewName] = useState("");
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
+  const [info, setInfo] = useState("");
+  const [consent, setConsent] = useState(false);
+  const [bulk, setBulk] = useState(null); // null = zamknięte, string = treść wklejonej listy
 
   const load = () => {
     setLoading(true);
@@ -68,20 +71,43 @@ export default function SubscribersPanel() {
   const add = async () => {
     if (!newEmail.trim()) return;
     setError("");
+    setInfo("");
     setBusy(true);
     try {
-      await base44.functions.invoke("adminSubscribers", {
+      const r = await base44.functions.invoke("adminSubscribers", {
         action: "save",
         email: newEmail.trim(),
         name: newName.trim(),
-        status: "active",
         groups: [],
+        consent,
       });
+      setInfo(r.data?.status === "active"
+        ? "Dodano jako aktywnego odbiorcę (zgoda potwierdzona przez Ciebie)."
+        : "Wysłano prośbę o potwierdzenie zapisu. Adres stanie się aktywny po kliknięciu w link.");
       setNewEmail("");
       setNewName("");
       load();
     } catch (err) {
       setError(err?.response?.data?.error || "Nie udało się dodać.");
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  const importList = async () => {
+    if (!bulk || !bulk.trim()) return;
+    if (!consent && !window.confirm("Każdy adres dostanie mail z prośbą o potwierdzenie zapisu. Kontynuować?")) return;
+    setError("");
+    setInfo("");
+    setBusy(true);
+    try {
+      const r = await base44.functions.invoke("adminSubscribers", { action: "import", text: bulk, consent, groups: [] });
+      const d = r.data || {};
+      setInfo(`Rozpoznano ${d.total} adresów: aktywni ${d.active}, czekają na potwierdzenie ${d.pending}.`);
+      setBulk(null);
+      load();
+    } catch (err) {
+      setError(err?.response?.data?.error || "Nie udało się zaimportować.");
     } finally {
       setBusy(false);
     }
@@ -99,6 +125,7 @@ export default function SubscribersPanel() {
   };
 
   const activeCount = subs.filter((s) => s.status === "active").length;
+  const pendingCount = subs.filter((s) => s.status === "pending").length;
 
   return (
     <div>
@@ -112,8 +139,8 @@ export default function SubscribersPanel() {
           <p className="font-mono text-3xl gold-text">{activeCount}</p>
         </div>
         <div className="border hairline p-5">
-          <p className="technical text-[9px] text-foreground/40 mb-2">WYPISANI</p>
-          <p className="font-mono text-3xl text-foreground/40">{subs.length - activeCount}</p>
+          <p className="technical text-[9px] text-foreground/40 mb-2">CZEKAJĄ / WYPISANI</p>
+          <p className="font-mono text-3xl text-foreground/40">{pendingCount} / {subs.length - activeCount - pendingCount}</p>
         </div>
         <div className="border hairline p-5">
           <p className="technical text-[9px] text-foreground/40 mb-2">GRUPY</p>
@@ -143,7 +170,25 @@ export default function SubscribersPanel() {
         >
           <Plus className="h-4 w-4" /> DODAJ
         </button>
+        <button onClick={() => setBulk(bulk === null ? "" : null)} className="btn-ghost !px-5 !py-2.5 whitespace-nowrap">
+          WKLEJ LISTĘ
+        </button>
       </div>
+      {bulk !== null && (
+        <div className="mb-6 -mt-4">
+          <textarea value={bulk} onChange={(e) => setBulk(e.target.value)} rows={6} className={inputCls}
+            placeholder={"Jeden adres w linii albo po przecinku, np.\nanna@example.com\nJan Kowalski <jan@example.com>"} />
+          <button onClick={importList} disabled={busy || !bulk.trim()} className="btn-relic !px-5 !py-2.5 mt-3 disabled:opacity-60">
+            DODAJ ADRESY Z LISTY
+          </button>
+        </div>
+      )}
+      <label className="flex items-start gap-3 text-xs text-foreground/70 mb-2 cursor-pointer max-w-2xl">
+        <input type="checkbox" checked={consent} onChange={(e) => setConsent(e.target.checked)} className="mt-0.5" />
+        <span>Mam zgodę tych osób na Listy powrotu (np. zapis na wydarzeniu, w formularzu). Bez zaznaczenia każda osoba dostaje mail z prośbą o potwierdzenie — tak jest bezpieczniej prawnie i chroni przed spamem.</span>
+      </label>
+      {info && <p className="text-sm gold-text mb-6">{info}</p>}
+      {!info && <div className="mb-6" />}
 
       <input
         value={search}
@@ -189,8 +234,9 @@ export default function SubscribersPanel() {
                     onChange={(e) => setEditForm((f) => ({ ...f, status: e.target.value }))}
                     className={`${inputCls} bg-[#0A0A0B] w-auto`}
                   >
-                    <option value="active">active</option>
-                    <option value="unsubscribed">unsubscribed</option>
+                    {editForm.status === "pending" && <option value="pending">czeka na potwierdzenie</option>}
+                    <option value="active">aktywny</option>
+                    <option value="unsubscribed">wypisany</option>
                   </select>
                   <button onClick={saveEdit} disabled={busy} className="text-[#C9A24A] p-2" aria-label="Zapisz">
                     <Check className="h-4 w-4" />
@@ -205,6 +251,11 @@ export default function SubscribersPanel() {
                     <p className="text-sm truncate font-mono">{s.email}</p>
                     <div className="flex flex-wrap gap-1 mt-0.5">
                       {s.name && <p className="text-xs text-foreground/40 truncate">{s.name}</p>}
+                      {s.status !== "active" && (
+                        <span className="technical text-[8px] px-1.5 py-0.5 border hairline text-foreground/50">
+                          {s.status === "pending" ? "CZEKA NA POTWIERDZENIE" : "WYPISANY"}
+                        </span>
+                      )}
                       {(s.groups || []).map((gid) => (
                         <span key={gid} className="technical text-[8px] px-1.5 py-0.5 border border-[#C9A24A]/30 gold-text">
                           {groupName(gid)}

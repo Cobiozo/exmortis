@@ -20,7 +20,7 @@ async function addFromPanel(base44, { email, name, groups, consent }) {
   return "pending";
 }
 
-const STATUSES = ["active", "unsubscribed"];
+const STATUSES = ["active", "unsubscribed", "pending"];
 
 export default async function (req) {
   try {
