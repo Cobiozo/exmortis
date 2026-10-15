@@ -11,8 +11,10 @@ export default async function (req) {
     const base44 = createClientFromRequest(req);
     const body = await req.json().catch(() => ({}));
     if (body.action === "confirm") {
-      const row = await confirmSubscriber(base44, String(body.token || ""));
-      if (!row) return Response.json({ ok: false });
+      const res = await confirmSubscriber(base44, String(body.token || ""));
+      if (!res) return Response.json({ ok: false });
+      if (res.already) return Response.json({ ok: true, already: true });
+      const row = res.row;
       const ip = clientIp(req);
       await base44.asServiceRole.entities.Consent.create({
         email: row.email, kind: "newsletter", text: `${LISTY_TEXT} (potwierdzone kliknięciem linku z e-maila)`,

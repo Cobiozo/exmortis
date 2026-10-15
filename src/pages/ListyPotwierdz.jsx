@@ -9,7 +9,7 @@ export default function ListyPotwierdz() {
   useEffect(() => {
     const token = new URLSearchParams(window.location.search).get("t") || "";
     base44.functions.invoke("subscribeNewsletter", { action: "confirm", token })
-      .then((r) => setState(r.data.ok ? "ok" : "bad"))
+      .then((r) => setState(r.data.ok ? (r.data.already ? "already" : "ok") : "bad"))
       .catch(() => setState("bad"));
   }, []);
 
@@ -22,9 +22,13 @@ export default function ListyPotwierdz() {
           <h1 className="relic-heading text-3xl md:text-4xl">Zapis potwierdzony</h1>
           <p className="text-foreground/70">Pierwszy list przyjdzie w najbliższy poniedziałek. Wypisać się możesz jednym kliknięciem w każdym liście.</p>
         </>}
+        {state === "already" && <>
+          <h1 className="relic-heading text-3xl md:text-4xl">Już potwierdzone</h1>
+          <p className="text-foreground/70">Ten adres jest zapisany na Listy powrotu. Nic więcej nie trzeba robić.</p>
+        </>}
         {state === "bad" && <>
           <h1 className="relic-heading text-3xl md:text-4xl">Link nieaktywny</h1>
-          <p className="text-foreground/70">Ten link został już użyty albo wygasł (ważny 7 dni). Możesz zapisać się ponownie.</p>
+          <p className="text-foreground/70">Ten link wygasł (ważny 7 dni) albo adres został wcześniej wypisany. Możesz zapisać się ponownie — przyjdzie nowy link.</p>
         </>}
         {state !== "loading" && <Link to="/" className="btn-ghost">STRONA GŁÓWNA</Link>}
       </div>

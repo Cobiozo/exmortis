@@ -47,14 +47,18 @@ export async function sendConfirmMail(base44, { email, name, token }) {
 }
 
 // Kliknięcie linku: aktywacja i data zgody = data kliknięcia.
+// Klucz zostaje po potwierdzeniu, żeby powtórne kliknięcie (drugie urządzenie, ponowne otwarcie maila)
+// pokazało „już potwierdzone” zamiast „link nieaktywny”. Zwraca { row, already }.
 export async function confirmSubscriber(base44, token) {
   if (!/^[a-f0-9]{64}$/.test(token)) return null;
   const rows = await runSql(
     base44,
-    `UPDATE public.subscribers SET status = 'active', consent_date = now(), confirmed_at = now(), confirm_token = NULL, updated_date = now()
+    `UPDATE public.subscribers SET status = 'active', consent_date = now(), confirmed_at = now(), updated_date = now()
      WHERE confirm_token = ${escStr(token)} AND status = 'pending' RETURNING email, name, confirmed_at`
   );
-  return rows[0] || null;
+  if (rows[0]) return { row: rows[0], already: false };
+  const act = await runSql(base44, `SELECT email FROM public.subscribers WHERE confirm_token = ${escStr(token)} AND status = 'active' LIMIT 1`, true).catch(() => []);
+  return act[0] ? { row: act[0], already: true } : null;
 }
 
 // Wypis z linku w mailu kampanii — bez logowania, sam token. Klucz zostaje, żeby link działał
