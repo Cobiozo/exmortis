@@ -87,9 +87,19 @@ export async function fulfillOrder(base44, stored, payuOrderId) {
   try {
     const code = String(stored.discount_code || "").trim();
     if (code) {
-      const rec = (await base44.asServiceRole.entities.DiscountCode.filter({ code }))[0];
-      if (rec) await base44.asServiceRole.entities.DiscountCode.update(rec.id, { uses: (rec.uses || 0) + 1 });
       await markCodeUsed(base44, String(stored.id));
+      const rec = (await base44.asServiceRole.entities.DiscountCode.filter({ code }))[0];
+      if (rec) {
+        // Dwa opłacenia w tej samej chwili czytają ten sam stan licznika — dla kodów z limitem liczymy też
+        // wykorzystane rezerwacje (zapis atomowy w bazie), więc żadne użycie nie ginie.
+        let uses = (Number(rec.uses) || 0) + 1;
+        if (Number(rec.max_uses) > 0) {
+          const [r] = await runSql(base44, `SELECT CASE WHEN to_regclass('public.discount_reservations') IS NULL THEN 0
+              ELSE (SELECT count(*)::int FROM public.discount_reservations WHERE code = ${escStr(code.toUpperCase())} AND used) END AS n`, true).catch(() => [{ n: 0 }]);
+          uses = Math.max(uses, Number(r?.n) || 0);
+        }
+        await base44.asServiceRole.entities.DiscountCode.update(rec.id, { uses });
+      }
     }
   } catch { /* licznik kodu nie blokuje zamówienia */ }
 
