@@ -129,7 +129,7 @@ export async function flushMailQueue(base44, { auto = false } = {}) {
   if (!mailReady(smtp)) { if (auto) return { sent: 0, skipped: 0, failed: 0, more: false }; throw new Error("Wysyłka e-mail nie działa — najpierw wyślij udany test."); }
   const Q = base44.asServiceRole.entities.MailQueue;
   SENT.at = 0;
-  const budget = Math.min(auto ? 60 : 20, await mailBudgetLeft(base44));
+  const budget = Math.min(auto ? 40 : 20, await mailBudgetLeft(base44));
   if (budget <= 0) return { sent: 0, skipped: 0, failed: 0, more: true, limit: true };
   // Automatycznie wychodzą tylko maile wstrzymane przez limit; pozostałe zaległe — na kliknięcie administratora.
   const items = await Q.filter(auto ? { status: "kolejka", blad: LIMIT_MARK } : { status: "kolejka" }, "created_date", budget);

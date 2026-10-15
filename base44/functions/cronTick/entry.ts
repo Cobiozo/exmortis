@@ -3,7 +3,7 @@ import { waitUntil } from "base44:runtime";
 import { runSql } from "../../shared/supabase.ts";
 import { safeEqual } from "../../shared/libraryAccess.ts";
 import { APP_URL, DEFAULT_APP_URL, loadAppUrl } from "../../shared/settings.ts";
-import { sendMail, adminTo } from "../../shared/smtp.ts";
+import { sendMail, adminTo, flushMailQueue } from "../../shared/smtp.ts";
 import { issueInvoice, pendingInvoices, loadFaktury } from "../../shared/invoices.ts";
 
 // ============ Jedno zadanie cykliczne zamiast sześciu workflow ============
@@ -146,6 +146,17 @@ export default async function (req) {
       faktury = { blad: String((e && e.message) || e).slice(0, 120) };
     }
 
+    // Poczta: maile wstrzymane przez limit dostawcy wychodzą same, gdy limit się zwolni (najwyżej 40 na przebieg).
+    let poczta = null;
+    if (Date.now() - t0 < LIMIT_MS - 50000) {
+      try {
+        const r = await flushMailQueue(base44, { auto: true });
+        if (r.sent || r.failed || r.more) poczta = r;
+      } catch (e) {
+        poczta = { blad: String((e && e.message) || e).slice(0, 120) };
+      }
+    }
+
     const failed = out.filter((c) => !c.ok);
     // Alarm dla administratora: najwyżej jeden mail na 6 godzin, tylko gdy coś nie odpowiedziało.
     if (failed.length) {
@@ -161,7 +172,7 @@ export default async function (req) {
           html: `<p>Ostatni przebieg zadań cyklicznych (${new Date().toISOString().slice(0, 16).replace("T", " ")} UTC) — nie odpowiedziały:</p><ul>${list}</ul><p>Kolejny alarm najwcześniej za 6 godzin. Jeśli powtarza się — sprawdź Panel → Pulpit → Gotowość platformy i logi funkcji.</p>` }).catch(() => {});
       }
     }
-    console.log("cronTick", JSON.stringify({ minute, quarter, ok: out.length - failed.length, failed: failed.length }));
+    console.log("cronTick", JSON.stringify({ minute, quarter, ok: out.length - failed.length, failed: failed.length, ...(poczta ? { poczta } : {}) }));
     return Response.json({
       ok: failed.length === 0,
       minuta: minute,
