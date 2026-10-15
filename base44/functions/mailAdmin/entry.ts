@@ -97,6 +97,27 @@ export default async function (req) {
       });
     }
 
+    // Listy prowadzące po zakupie: przełącznik i podgląd każdego z czterech listów.
+    if (body.action === "onboarding") {
+      const { onboardingOn, setOnboarding } = await import("../../shared/onboarding.ts");
+      if (typeof body.wlaczone === "boolean") {
+        if (tech) return Response.json({ error: "Brak dostępu" }, { status: 403 });
+        await setOnboarding(base44, body.wlaczone);
+      }
+      return Response.json({ wlaczone: await onboardingOn(base44) });
+    }
+    if (body.action === "onboarding_preview") {
+      const { onboardingMail } = await import("../../shared/onboarding.ts");
+      const { emailLayout } = await import("../../shared/emailLayout.ts");
+      const step = [1, 3, 7, 14].includes(Number(body.step)) ? Number(body.step) : 1;
+      const type = ["pdf", "audio", "kurs", "pakiet"].includes(body.type) ? body.type : "pdf";
+      const firma = await getSetting(base44, "firma").catch(() => null);
+      const m = onboardingMail(step, { name: "Anna", product: type === "kurs" ? "Kurs: Cztery etapy powrotu" : type === "audio" ? "Wracam inny — audiobook" : "Wracam inny",
+        type, site: "https://exmortis.pl", next: step === 14 ? { name: "Rozmowa na progu", slug: "rozmowa-na-progu", text: "Jedna sesja, jedna decyzja, pełna uwaga." } : null,
+        optoutUrl: "https://exmortis.pl/listy/wypis?d=podglad" });
+      return Response.json({ subject: m.subject, html: emailLayout(m.html, { firma, kind: `prowadzenie_${step}` }) });
+    }
+
     if (body.action === "flush") {
       await requireAdmin(base44);
       return Response.json(await flushMailQueue(base44));

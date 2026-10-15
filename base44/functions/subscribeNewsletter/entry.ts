@@ -3,6 +3,7 @@ import { emailField, clientIp } from "../../shared/supabase.ts";
 import { addSubscriber, confirmSubscriber, unsubscribeByToken } from "../../shared/newsletter.ts";
 import { LISTY_TEXT } from "../../shared/registrations.ts";
 import { ipAllowed, TOO_MANY } from "../../shared/rateLimit.ts";
+import { onboardingStop } from "../../shared/onboarding.ts";
 
 // Publiczne zapisy do newslettera „Listy powrotu" + potwierdzenie z linku (double opt-in).
 export default async function (req) {
@@ -23,6 +24,10 @@ export default async function (req) {
     if (body.action === "unsub") {
       const email = await unsubscribeByToken(base44, body.token);
       return Response.json({ ok: !!email });
+    }
+    // Wyłączenie listów prowadzących po zakupie (link w każdym z nich) — bez logowania, po kluczu.
+    if (body.action === "drip_stop") {
+      return Response.json({ ok: await onboardingStop(base44, body.token) });
     }
     const email = emailField(body);
     // Zapis wysyła mail z potwierdzeniem na podany adres — limit 5 na godzinę z jednego połączenia.

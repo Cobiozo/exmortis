@@ -5,6 +5,7 @@ import { safeEqual } from "../../shared/libraryAccess.ts";
 import { APP_URL, DEFAULT_APP_URL, loadAppUrl } from "../../shared/settings.ts";
 import { sendMail, adminTo, flushMailQueue } from "../../shared/smtp.ts";
 import { issueInvoice, pendingInvoices, loadFaktury } from "../../shared/invoices.ts";
+import { onboardingTick } from "../../shared/onboarding.ts";
 
 // ============ Jedno zadanie cykliczne zamiast sześciu workflow ============
 // Workflow „Zadania cykliczne" woła tę funkcję co 5 minut (czas polski). Tutaj, równolegle,
@@ -146,6 +147,17 @@ export default async function (req) {
       faktury = { blad: String((e && e.message) || e).slice(0, 120) };
     }
 
+    // Listy prowadzące po zakupie (dzień 1/3/7/14) — co 15 minut, w godzinach 8–20.
+    let prowadzenie = null;
+    if (quarter && Date.now() - t0 < LIMIT_MS - 60000) {
+      try {
+        const r = await onboardingTick(base44);
+        if (r?.sent) prowadzenie = r;
+      } catch (e) {
+        prowadzenie = { blad: String((e && e.message) || e).slice(0, 120) };
+      }
+    }
+
     // Poczta: maile wstrzymane przez limit dostawcy wychodzą same, gdy limit się zwolni (najwyżej 40 na przebieg).
     let poczta = null;
     if (Date.now() - t0 < LIMIT_MS - 50000) {
@@ -172,7 +184,7 @@ export default async function (req) {
           html: `<p>Ostatni przebieg zadań cyklicznych (${new Date().toISOString().slice(0, 16).replace("T", " ")} UTC) — nie odpowiedziały:</p><ul>${list}</ul><p>Kolejny alarm najwcześniej za 6 godzin. Jeśli powtarza się — sprawdź Panel → Pulpit → Gotowość platformy i logi funkcji.</p>` }).catch(() => {});
       }
     }
-    console.log("cronTick", JSON.stringify({ minute, quarter, ok: out.length - failed.length, failed: failed.length, ...(poczta ? { poczta } : {}) }));
+    console.log("cronTick", JSON.stringify({ minute, quarter, ok: out.length - failed.length, failed: failed.length, ...(poczta ? { poczta } : {}), ...(prowadzenie ? { prowadzenie } : {}) }));
     return Response.json({
       ok: failed.length === 0,
       minuta: minute,
