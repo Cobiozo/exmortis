@@ -3,6 +3,7 @@ import { logAccess } from "@/lib/auditLog";
 import { X, Download, Send, Bell, Video, ArrowUpCircle, UserMinus } from "lucide-react";
 import { base44 } from "@/api/base44Client";
 import useMailStatus, { MAIL_REQUIRED } from "@/lib/useMailStatus";
+import SourcesReport from "./SourcesReport";
 
 const STATUS_STYLE = {
   Zapisany: "text-[#C9A24A]",
@@ -158,6 +159,7 @@ export default function ParticipantsPanel({ event, onClose }) {
               </button>
             </div>
             {sentInfo && <p className="technical text-[10px] gold-text mb-4">{sentInfo}</p>}
+            <SourcesReport event={event} parts={parts} />
             <ul className="border hairline divide-y hairline">
               {parts.map((p) => (
                 <li key={p.id} className="p-5 flex flex-col md:flex-row md:items-start gap-4">
@@ -168,6 +170,7 @@ export default function ParticipantsPanel({ event, onClose }) {
                       {p.status.toUpperCase()}
                     </span>
                     {p.mail_unsent && <span className="block technical text-[9px] blood-text mt-1">MAIL NIEWYSŁANY</span>}
+                    {p.joined_at && <span className="block technical text-[9px] text-[#8FBF7F] mt-1">WSZEDŁ/WESZŁA {new Date(p.joined_at).toLocaleTimeString("pl-PL", { hour: "2-digit", minute: "2-digit" })}</span>}
                   </div>
                   <div className="flex-1">
                     {p.question_for_dawid ? (
