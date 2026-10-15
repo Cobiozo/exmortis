@@ -110,6 +110,11 @@ function exmInlineCss() {
       order: "post",
       handler(html, ctx) {
         if (!ctx?.bundle) return html;
+        // @font-face wprost w HTML — bez osobnego, blokującego renderowanie żądania /fonts/fonts.css.
+        try {
+          const fontsCss = fs.readFileSync(path.resolve(process.cwd(), "public/fonts/fonts.css"), "utf8");
+          if (fontsCss && !fontsCss.includes("</style")) html = html.replace(/<link rel="stylesheet" href="\/fonts\/fonts\.css"\s*\/?>/, `<style>${fontsCss}</style>`);
+        } catch { /* zostaje zwykły link */ }
         return html.replace(/<link rel="stylesheet"(?: crossorigin)? href="\/(assets\/[^"]+\.css)">/g, (tag, file) => {
           const asset = ctx.bundle[file];
           const css = asset && asset.type === "asset" ? String(asset.source) : "";
