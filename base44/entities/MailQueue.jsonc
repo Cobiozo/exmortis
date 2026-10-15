@@ -40,6 +40,10 @@
     "blad": {
       "type": "string"
     },
+    "headers": {
+      "type": "object",
+      "description": "Dodatkowe nagłówki (np. List-Unsubscribe) dla maili wstrzymanych przez limit wysyłki"
+    },
     "sent_at": {
       "type": "string",
       "format": "date-time"
