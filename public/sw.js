@@ -74,7 +74,7 @@ async function handleNavigate(req, url) {
     const res = await fetch(req);
     if (res && res.ok && !excluded(url)) {
       const copy = res.clone();
-      caches.open(PAGES).then((c) => c.put(req, copy)).catch(() => {});
+      caches.open(PAGES).then((c) => c.put(req, copy)).then(() => trim(PAGES, 20)).catch(() => {});
     }
     return res;
   } catch {
@@ -91,13 +91,22 @@ async function handleNavigate(req, url) {
   }
 }
 
+// Pamięć nie rośnie bez końca: po każdej publikacji przybywają nowe pliki z hashem.
+async function trim(cacheName, max) {
+  try {
+    const c = await caches.open(cacheName);
+    const keys = await c.keys();
+    for (let i = 0; i < keys.length - max; i++) await c.delete(keys[i]);
+  } catch { /* bez sprzątania */ }
+}
+
 async function cacheFirst(req, cacheName) {
   const cached = await caches.match(req);
   if (cached) return cached;
   const res = await fetch(req);
   if (res && res.ok) {
     const copy = res.clone();
-    caches.open(cacheName).then((c) => c.put(req, copy)).catch(() => {});
+    caches.open(cacheName).then((c) => c.put(req, copy)).then(() => trim(cacheName, 120)).catch(() => {});
   }
   return res;
 }
