@@ -16,7 +16,7 @@ const NEW_DAYS = 30;          // ile dni „nowość” jest nowością
 const DEFAULT_PREFS = { nowosci: true, promocje: true, spotkania: true };
 const CAT = { ogloszenie: "zawsze", produkt: "nowosci", wkrotce: "nowosci", historia: "nowosci", promocja: "promocje", kod: "promocje",
   spotkanie: "spotkania", moje_spotkanie: "moje", nagranie: "moje", dostep: "moje", wiadomosc: "moje", obok: "moje",
-  lista: "moje", zamowienie: "moje", platnosc: "moje", lekcja: "moje", opinia: "moje" };
+  lista: "moje", zamowienie: "moje", platnosc: "moje", lekcja: "moje", opinia: "moje", test: "moje" };
 const PENDING = ["NEW", "PENDING", "WAITING_FOR_CONFIRMATION"];
 const names = (items) => { const n = (Array.isArray(items) ? items : []).map((i) => i?.name).filter(Boolean); return n.length > 2 ? `${n.slice(0, 2).join(", ")} i ${n.length - 2} więcej` : n.join(", "); };
 
@@ -237,6 +237,29 @@ async function buildFeed(base44, me) {
   for (const m of msgs) {
     push({ key: `msg:${m.id}`, kind: "wiadomosc", title: m.title ? `Wiadomość: ${m.title}` : "Nowa wiadomość od Dawida",
       body: "", link: "/konto?tab=wiadomosci", at: iso(m.sent_at), important: true });
+  }
+  // Test „gdzie jesteś teraz”: 12 h po założeniu konta (jeśli jeszcze nie zrobiony), po 30 i 90 dniach (powtórka,
+  // jeśli ostatni wynik jest starszy niż 14 dni przed tym terminem). Znika sam po zrobieniu testu.
+  const created = me.created_date ? new Date(me.created_date).getTime() : NaN;
+  if (Number.isFinite(created) && me.role !== "admin" && now - created < 120 * DAY) {
+    const H = 36e5;
+    const steps = [
+      { k: "12h", at: created + 12 * H, until: created + 30 * DAY },
+      { k: "30d", at: created + 30 * DAY, until: created + 90 * DAY },
+      { k: "90d", at: created + 90 * DAY, until: created + 120 * DAY },
+    ];
+    const st = steps.find((s) => s.at <= now && now < s.until);
+    if (st) {
+      const last = (await runSql(base44, `SELECT max(created_at)::timestamptz AS t FROM public.quiz_result WHERE lower(email) = ${escStr(email)}`, true).catch(() => []))?.[0]?.t;
+      const lastT = last ? new Date(last).getTime() : 0;
+      const due = st.k === "12h" ? !lastT : lastT < st.at - 14 * DAY;
+      if (due) {
+        const t = st.k === "12h" || !lastT
+          ? { title: st.k === "12h" ? "Zacznij od krótkiego testu" : "Test wciąż na Ciebie czeka", body: "Kilka minut, żeby zobaczyć, w którym miejscu drogi jesteś teraz. Wynik pojawi się od razu." }
+          : { title: st.k === "30d" ? "Minął miesiąc — zrób test jeszcze raz" : "Trzy miesiące drogi — sprawdź, gdzie jesteś teraz", body: "Porównaj wynik z poprzednim i zobacz, co się zmieniło." };
+        push({ key: `test:${st.k}`, kind: "test", ...t, link: "/test", at: iso(st.at) });
+      }
+    }
   }
   // Nowe historie w ROZDROŻACH i nagrania Obok.
   for (const s of g.stories) {
