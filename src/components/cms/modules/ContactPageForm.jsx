@@ -21,13 +21,16 @@ export default function ContactPageForm() {
   const [errs, setErrs] = useState({});
   const [state, setState] = useState("form");
   const [msg, setMsg] = useState("");
+  const [agree, setAgree] = useState(false);
+  const [agreeErr, setAgreeErr] = useState(false);
   const t = useSystemText();
   const firma = useFirma();
   const set = (k) => (e) => { setF({ ...f, [k]: e.target.value }); if (errs[k]) setErrs({ ...errs, [k]: "" }); };
   const submit = async (e) => {
     e.preventDefault();
     const er = check(f); setErrs(er);
-    if (Object.values(er).some(Boolean)) return;
+    if (!agree) setAgreeErr(true);
+    if (Object.values(er).some(Boolean) || !agree) return;
     setState("busy");
     await sendForm("createContactMessage", f).then(() => { track("Lead", { content_name: "kontakt" }); setState("done"); })
       .catch((x) => { setMsg(x?.response?.data?.error || "Nie udało się wysłać. Spróbuj ponownie."); setState("error"); });
@@ -45,9 +48,16 @@ export default function ContactPageForm() {
               <label htmlFor="c-web">Strona www</label>
               <input id="c-web" tabIndex={-1} autoComplete="off" value={f.website} onChange={set("website")} />
             </div>
+            <label className="flex items-start gap-3 cursor-pointer py-2 min-h-[44px]">
+              <input type="checkbox" checked={agree} onChange={(e) => { setAgree(e.target.checked); if (e.target.checked) setAgreeErr(false); }}
+                aria-required="true" aria-invalid={agreeErr} className="mt-0.5 h-5 w-5 shrink-0 accent-[#C9A24A]" />
+              <span className="text-sm text-foreground/80 leading-relaxed">
+                Akceptuję <Link to="/polityka-prywatnosci" className="gold-text underline">politykę prywatności</Link>.
+              </span>
+            </label>
+            {agreeErr && <p role="alert" className="-mt-3 text-sm text-[#E8C547]">Zaznacz, żeby wysłać wiadomość.</p>}
             {state === "error" && <p role="alert" className="text-sm text-[#E8C547]">{msg}</p>}
             <button disabled={state === "busy"} className="btn-relic w-full">{state === "busy" ? "WYSYŁAM…" : "WYŚLIJ"}</button>
-            <p className="text-sm text-foreground/75">{clause("odpowiedzieć na wiadomość", "interes", firma)} Więcej: <Link to="/polityka-prywatnosci" className="underline">Polityka prywatności</Link>.</p>
           </form>
         )}
         <p className="mt-10 text-sm text-foreground/60">Chcesz odstąpić od umowy? <Link to="/odstapienie" className="gold-text underline">Odstąp od umowy tutaj</Link></p>
