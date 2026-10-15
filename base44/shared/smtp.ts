@@ -1,6 +1,6 @@
 import nodemailer from "npm:nodemailer@6.9.13";
-import { FIRMA, getSetting, APP_URL } from "./settings.ts";
-import { firmaFooter } from "./firma.ts";
+import { FIRMA, getSetting, APP_URL, DEFAULT_APP_URL } from "./settings.ts";
+import { emailLayout } from "./emailLayout.ts";
 import { runSql, escStr } from "./supabase.ts";
 
 // JEDYNA bramka wysyłki maili. Wysyła tylko, gdy wysyłka ma status „dziala” (po udanym teście).
@@ -62,7 +62,7 @@ async function sentLast2h(base44) {
 export async function mailBudgetLeft(base44) { return Math.max(0, MAIL_BUDGET - await sentLast2h(base44)); }
 
 // Bezpośrednie wysłanie przez SMTP (bez bramki) — test i wysyłka zaległych.
-export async function smtpSend(smtp, { to, subject, html, attachments, headers }) {
+export async function smtpSend(smtp, { to, subject, html, attachments, headers, kind = "", preheader = "" }) {
   if (!smtp || !smtp.host || !smtp.user || !smtp.password) throw new Error("Wysyłka e-mail nie jest skonfigurowana");
   const port = Number(smtp.port) || 587;
   const transporter = nodemailer.createTransport({
@@ -70,12 +70,17 @@ export async function smtpSend(smtp, { to, subject, html, attachments, headers }
     auth: { user: smtp.user, pass: smtp.password },
   });
   const addr = smtp.from || smtp.user;
+  const unsubUrl = String(headers?.["List-Unsubscribe"] || "").replace(/^<|>$/g, "");
+  const full = emailLayout(html, {
+    firma: FIRMA, kind, preheader, unsubUrl,
+    appUrl: APP_URL && APP_URL !== DEFAULT_APP_URL ? APP_URL : "https://exmortis.pl",
+  });
   await transporter.sendMail({
     from: `"${String(smtp.from_name || "exmortis").replace(/"/g, "")}" <${addr}>`,
     ...(smtp.reply_to ? { replyTo: smtp.reply_to } : {}),
     to, subject,
-    html: html + firmaFooter(FIRMA),
-    text: htmlToText(html + firmaFooter(FIRMA)),
+    html: full,
+    text: htmlToText(full.replace(/^[\s\S]*?<body[^>]*>/, "").replace(/<div style="display:none[^>]*>[\s\S]*?<\/div>/, "")),
     ...(headers && typeof headers === "object" ? { headers } : {}),
     ...(Array.isArray(attachments) && attachments.length > 0 ? { attachments } : {}),
   });
@@ -112,7 +117,7 @@ export async function sendMail(base44, { to, subject, html, attachments, kind = 
     return "kolejka";
   }
   try {
-    await smtpSend(smtp, { to, subject, html, attachments, headers });
+    await smtpSend(smtp, { to, subject, html, attachments, headers, kind });
     SENT.n++;
   } catch (e) {
     await Q.create({ ...base, html, attachments: attachments || [], status: "blad", blad: String(e?.message || e).slice(0, 500) });
@@ -141,7 +146,7 @@ export async function flushMailQueue(base44, { auto = false } = {}) {
       continue;
     }
     try {
-      await smtpSend(smtp, { to: m.to_email, subject: m.subject, html: m.html || "", attachments: m.attachments, headers: m.headers });
+      await smtpSend(smtp, { to: m.to_email, subject: m.subject, html: m.html || "", attachments: m.attachments, headers: m.headers, kind: m.kind });
       SENT.n++;
       await Q.update(m.id, { status: "wyslany", sent_at: new Date().toISOString(), html: "", attachments: [], blad: "" });
       await afterSent(base44, m.kind, m.to_email);
@@ -183,19 +188,11 @@ export function orderEmailHtml(buyerName, items, total, orderId = "", invoice = 
   </div>`;
 }
 
-// Treść kampanii newslettera opakowana w ciemną oprawę marki.
-export function campaignEmailHtml(content, name, unsubUrl = "") {
-  const greeting = name ? `<p style="color:#8A8A8C;">${escHtml(name)},</p>` : "";
-  // Wypis jednym kliknięciem, bez logowania. „Odpowiedz STOP" zostaje jako druga droga.
-  const unsub = unsubUrl
-    ? `<a href="${escHtml(unsubUrl)}" style="color:#8A8A8C;">Wypisz się jednym kliknięciem</a> · `
-    : "";
-  return `
-  <div style="background:#0A0A0B;padding:32px;font-family:Georgia,serif;color:#E2E2E2;">
-    <p style="letter-spacing:4px;color:#C9A24A;font-size:13px;">EXMORTIS</p>
-    ${greeting}
-    <div style="line-height:1.7;color:#E2E2E2;">${content}</div>
-    <p style="color:#5C5C5E;font-size:12px;letter-spacing:2px;margin-top:32px;">WRACAM Z SIEBIE · UCZĘ WRACAĆ</p>
-    <p style="color:#3D3D3F;font-size:11px;">${unsub}Nie chcesz więcej dostawać? Odpowiedz na ten list z jednym słowem: STOP.</p>
-  </div>`;
+// Treść kampanii newslettera. Oprawa (logo, stopka, wypis jednym kliknięciem) — w emailLayout;
+// adres wypisu przychodzi w nagłówku List-Unsubscribe (adminNewsletter).
+export function campaignEmailHtml(content, name, _unsubUrl = "", { cta_label = "", cta_url = "" } = {}) {
+  const greeting = name ? `<p style="margin:0 0 18px;">${escHtml(name)},</p>` : "";
+  const cta = cta_label && /^https?:\/\//.test(cta_url)
+    ? `<p><a href="${escHtml(cta_url)}">${escHtml(cta_label)}</a></p>` : "";
+  return `${greeting}<div>${content}</div>${cta}`;
 }
