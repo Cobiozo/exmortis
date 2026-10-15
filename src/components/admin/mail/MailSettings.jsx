@@ -87,6 +87,9 @@ export default function MailSettings({ profile = "main" }) {
         <input type="email" value={to} onChange={(e) => setTo(e.target.value)} placeholder="adres do testu" className={inp} />
         <button onClick={() => run("test", { to })} disabled={busy || !to} className="btn-ghost !px-5 !py-2.5 whitespace-nowrap disabled:opacity-50">{busy ? "CHWILĘ…" : "WYŚLIJ TEST"}</button>
       </div>
+      {mkt && /simply\.com/i.test(f.host || "") && (
+        <p className="text-sm blood-text">To ten sam serwer co skrzynka główna (Simply) — to nie jest osobny kanał i Simply nie pozwala wysyłać nim newsletterów. Zostaw tę sekcję pustą, dopóki nie założysz konta w Brevo (host smtp-relay.brevo.com).</p>
+      )}
       {msg && <p className={`text-sm ${msg.ok ? "gold-text" : "blood-text"}`}>{msg.t}</p>}
       {!mkt && <MailQueueBox status={status} ready={ready} onDone={reload} />}
       {!mkt && <MailDns />}
