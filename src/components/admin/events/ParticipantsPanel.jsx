@@ -170,7 +170,7 @@ export default function ParticipantsPanel({ event, onClose }) {
                       {p.status.toUpperCase()}
                     </span>
                     {p.mail_unsent && <span className="block technical text-[9px] blood-text mt-1">MAIL NIEWYSŁANY</span>}
-                    {p.joined_at && <span className="block technical text-[9px] text-[#8FBF7F] mt-1">WSZEDŁ/WESZŁA {new Date(p.joined_at).toLocaleTimeString("pl-PL", { hour: "2-digit", minute: "2-digit" })}</span>}
+                    {p.joined_at && <span className="block technical text-[9px] text-[#8FBF7F] mt-1">W POKOJU OD {new Date(p.joined_at).toLocaleTimeString("pl-PL", { hour: "2-digit", minute: "2-digit" })}</span>}
                   </div>
                   <div className="flex-1">
                     {p.question_for_dawid ? (
