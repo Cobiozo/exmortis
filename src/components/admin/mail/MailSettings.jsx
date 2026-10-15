@@ -37,7 +37,20 @@ export default function MailSettings({ profile = "main" }) {
     setBusy(true); setMsg(null);
     const r = await base44.functions.invoke("mailAdmin", { action, ...data, ...(mkt ? { profile: "marketing" } : {}) }).catch((e) => ({ data: { ok: false, error: e?.response?.data?.error || e.message } }));
     setBusy(false);
-    if (action === "save") setMsg(r.data?.ok ? { ok: true, t: "Zapisano. Wyślij test, aby włączyć wysyłkę." } : { ok: false, t: r.data?.error });
+    if (action === "save") {
+      if (!r.data?.ok) { setMsg({ ok: false, t: r.data?.error }); reload(); return; }
+      // Zapis zawsze od razu sprawdzamy testem — bez udanego testu wysyłka pozostaje wyłączona.
+      const testTo = (to || f.reply_to || f.from || "").trim();
+      if (testTo) {
+        setBusy(true);
+        const t = await base44.functions.invoke("mailAdmin", { action: "test", to: testTo, ...(mkt ? { profile: "marketing" } : {}) })
+          .catch((e) => ({ data: { ok: false, error: e?.response?.data?.error || e.message } }));
+        setBusy(false);
+        setMsg(t.data?.ok ? { ok: true, t: `Zapisano i sprawdzono — test wysłany na ${testTo}. Wysyłka DZIAŁA.` } : { ok: false, t: `Zapisano, ale test się nie udał: ${t.data?.error}. Wysyłka jest wyłączona, dopóki test nie przejdzie.` });
+      } else {
+        setMsg({ ok: true, t: "Zapisano. Wpisz adres do testu i wyślij test, aby włączyć wysyłkę." });
+      }
+    }
     if (action === "test") setMsg(r.data?.ok ? { ok: true, t: "Test wysłany. Wysyłka DZIAŁA." } : { ok: false, t: `Błąd: ${r.data?.error}` });
     reload();
   };
@@ -68,7 +81,8 @@ export default function MailSettings({ profile = "main" }) {
         ))}
       </div>
       <p className="text-xs text-foreground/40">Hasło zapisuje się tylko na serwerze i po zapisie nie jest wyświetlane. Zostaw maskę, aby zachować zapisane.</p>
-      <button onClick={() => run("save", { data: f })} disabled={busy} className="btn-relic !px-5 !py-2.5 disabled:opacity-60">ZAPISZ</button>
+      <button onClick={() => run("save", { data: f })} disabled={busy} className="btn-relic !px-5 !py-2.5 disabled:opacity-60">{busy ? "CHWILĘ…" : "ZAPISZ I SPRAWDŹ"}</button>
+      <p className="text-xs text-foreground/40 -mt-3">Po zapisie od razu wysyłam test (na adres poniżej, a gdy pusty — na adres REPLY-TO lub nadawcy). Wysyłka działa dopiero po udanym teście.</p>
       <div className="flex flex-col sm:flex-row gap-3 pt-6 border-t hairline">
         <input type="email" value={to} onChange={(e) => setTo(e.target.value)} placeholder="adres do testu" className={inp} />
         <button onClick={() => run("test", { to })} disabled={busy || !to} className="btn-ghost !px-5 !py-2.5 whitespace-nowrap disabled:opacity-50">{busy ? "CHWILĘ…" : "WYŚLIJ TEST"}</button>

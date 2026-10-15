@@ -123,7 +123,8 @@ export async function sendMail(base44, { to, subject, html, attachments, kind = 
   let viaMarketing = false;
   if (MARKETING_KINDS.has(kind)) {
     const m = await mailConfigMarketing(base44);
-    if (mailReady(m)) { smtp = m; viaMarketing = true; }
+    // Ten sam serwer co skrzynka główna (np. oba na Simply) to nie jest osobny kanał — obowiązuje limit skrzynki.
+    if (mailReady(m) && String(m.host || "").toLowerCase() !== String(smtp?.host || "").toLowerCase()) { smtp = m; viaMarketing = true; }
   }
   if (!mailReady(smtp)) {
     await Q.create({ ...base, html, attachments: attachments || [], status: "kolejka" });
