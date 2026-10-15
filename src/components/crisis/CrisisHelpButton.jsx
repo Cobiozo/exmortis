@@ -6,9 +6,9 @@ import { useCrisis } from "./CrisisContext";
 // Dyskretna etykieta przy dolnej krawędzi. Widoczna na stronach publicznych i w koncie;
 // ukryta w panelu admina i na /skaner. Nie zasłania treści ani przycisku zakupu/zapisu.
 export default function CrisisHelpButton() {
-  const { open } = useCrisis();
+  const { open, isOpen } = useCrisis();
   const { pathname } = useLocation();
-  if (pathname.startsWith("/admin") || pathname.startsWith("/skaner")) return null;
+  if (isOpen || pathname.startsWith("/admin") || pathname.startsWith("/skaner")) return null;
   return (
     <button
       type="button"

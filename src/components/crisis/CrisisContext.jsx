@@ -10,7 +10,7 @@ export function CrisisProvider({ children }) {
   const [open, setOpen] = useState(false);
   const openCrisis = useCallback(() => setOpen(true), []);
   return (
-    <Ctx.Provider value={{ open: openCrisis }}>
+    <Ctx.Provider value={{ open: openCrisis, isOpen: open }}>
       {children}
       <CrisisDialog open={open} onOpenChange={setOpen} />
     </Ctx.Provider>
