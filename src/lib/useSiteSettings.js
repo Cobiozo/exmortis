@@ -29,4 +29,5 @@ export default function useSiteSettings() {
   return data;
 }
 
-export const useFirma = () => useSiteSettings()?.firma || {};
+// Bez nazwy firmy (np. działalność na własne imię i nazwisko) w tekstach występuje imię i nazwisko.
+export const useFirma = () => { const f = useSiteSettings()?.firma || {}; return f.nazwa ? f : { ...f, nazwa: f.osoba || "" }; };
