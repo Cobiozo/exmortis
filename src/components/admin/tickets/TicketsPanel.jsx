@@ -30,7 +30,7 @@ export default function TicketsPanel({ event, onClose, initialTab = "bilety" }) 
             {data && (
               <p className="text-xs text-foreground/55 mt-1">
                 Sprzedane {data.counts.sold}{ev?.capacity ? ` / ${ev.capacity}` : ""} · wpuszczone {data.counts.checked} · cena {Number(ev?.price || 0)} zł
-                {!ev?.tickets && <span className="text-[#E8C547]"> · sprzedaż biletów jest wyłączona (włącz w edycji spotkania → Cena)</span>}
+                {!ev?.tickets && <span className="text-[#E8C547]"> · bilety są wyłączone (włącz w edycji spotkania → Miejsce; tylko spotkania stacjonarne)</span>}
               </p>
             )}
           </div>

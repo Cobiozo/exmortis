@@ -7,6 +7,7 @@ import RecordingField from "./RecordingField";
 
 export default function StepAccess(p) {
   const { form: f, set } = p;
+  const tix = f.format === "Stacjonarnie" && f.tickets === true; // bilety tylko na spotkania stacjonarne
   return (
     <div className="space-y-8">
       <Group title="Miejsce">
@@ -14,7 +15,16 @@ export default function StepAccess(p) {
           <Chips label="Forma" value={f.format} options={[["Online", "Online"], ["Stacjonarnie", "Stacjonarnie"]]} onChange={(v) => set({ format: v })} />
         </Field>
         {f.format === "Stacjonarnie" ? (
-          <Input id="location" label="Adres (widzą go tylko zapisani) *" {...p} />
+          <div className="space-y-3">
+            <Input id="location" label="Adres (widzą go tylko zapisani) *" {...p} />
+            <Toggle id="tickets" label="Bilety z kodem QR i skanowanie przy wejściu" checked={f.tickets === true} onChange={(v) => set({ tickets: v })} />
+            {f.tickets && (
+              <p className="text-sm text-foreground/55 leading-relaxed">
+                {f.paid ? "Spotkanie płatne: bilet kupuje się na stronie (PayU), bilet PDF przychodzi po opłaceniu." : "Spotkanie darmowe: bilet przychodzi w e-mailu potwierdzającym zapis (lista rezerwowa — po awansie, wypisanie anuluje bilet)."}{" "}
+                Wzór biletu, listę biletów i osoby, które mogą je skanować, ustawisz po zapisaniu: lista spotkań → przycisk „BILETY”.
+              </p>
+            )}
+          </div>
         ) : (
           <div className="space-y-5">
             <Field id="join_link_choice" label="Link do pokoju">
@@ -36,12 +46,11 @@ export default function StepAccess(p) {
         <Toggle id="paid" label="Spotkanie płatne" checked={f.paid} onChange={(v) => set({ paid: v })} />
         {f.paid && (
           <div className="space-y-5">
-            <Toggle id="tickets" label="Bilety na stronie: płatność PayU, bilet PDF z kodem QR, skanowanie przy wejściu" checked={f.tickets === true} onChange={(v) => set({ tickets: v })} />
             <div className="grid md:grid-cols-2 gap-5">
-              <Input id="price" type="number" min="0" step="0.01" inputMode="decimal" label="Cena biletu (zł) *" {...p} />
-              {!f.tickets && <Input id="checkout_url" type="url" inputMode="url" label="Link płatności (zewnętrzny) *" {...p} />}
+              <Input id="price" type="number" min="0" step="0.01" inputMode="decimal" label={tix ? "Cena biletu (zł) *" : "Cena (zł) *"} {...p} />
+              {!tix && <Input id="checkout_url" type="url" inputMode="url" label="Link płatności (zewnętrzny) *" {...p} />}
             </div>
-            {f.tickets && <p className="text-sm text-foreground/55 leading-relaxed">Wzór biletu, sprzedane bilety i osoby, które mogą je skanować, ustawisz po zapisaniu: lista spotkań → przycisk „BILETY”. Limit miejsc niżej działa też dla biletów.</p>}
+            {tix && <p className="text-sm text-foreground/55 leading-relaxed">Sprzedaż biletów na stronie przez PayU. Limit miejsc niżej działa też dla biletów.</p>}
           </div>
         )}
       </Group>

@@ -73,7 +73,7 @@ export function stepErrors(f, step, publish = false) {
   if (step === 1 && f.cover?.src && !String(f.cover.alt || "").trim()) e.cover_alt = "Dodaj opis obrazu dla czytników ekranu";
   if (step === 2) {
     if (f.paid && !(Number(f.price) > 0)) e.price = "Podaj cenę spotkania";
-    if (f.paid && !f.tickets && !f.checkout_url) e.checkout_url = "Podaj link płatności albo włącz sprzedaż biletów na stronie";
+    if (f.paid && !(f.tickets && f.format === "Stacjonarnie") && !f.checkout_url) e.checkout_url = f.format === "Stacjonarnie" ? "Podaj link płatności albo włącz bilety (wyżej, przy adresie)" : "Podaj link płatności";
     if (f.format === "Stacjonarnie" && !f.location.trim()) e.location = "Podaj adres spotkania";
     if (f.registration_type === "Link zewnętrzny" && !f.external_url) e.external_url = "Podaj link do transmisji lub zapisu";
     if (f.format === "Online" && f.join_link && !ZOOM_RE.test(f.join_link.trim())) e.join_link = "To nie wygląda na link do Zoom";
@@ -86,9 +86,10 @@ export const allErrors = (f, publish) => [0, 1, 2].reduce((a, s) => ({ ...a, ...
 export function toPayload(f, status) {
   const iso = wawIso;
   const { date, time, paid, cover, deadline_manual, ...rest } = f; // eslint-disable-line no-unused-vars
+  const tix = f.format === "Stacjonarnie" && f.tickets === true; // bilety tylko na spotkania stacjonarne
   return {
     ...rest, id: f.id || null, status, start_datetime: startIso(f),
-    duration_minutes: Number(f.duration_minutes) || 60, price: paid ? Number(f.price) || 0 : 0, checkout_url: paid && !f.tickets ? f.checkout_url : "", tickets: paid && f.tickets === true, registration_type: paid && f.tickets === true ? "Zapis na stronie" : f.registration_type,
+    duration_minutes: Number(f.duration_minutes) || 60, price: paid ? Number(f.price) || 0 : 0, checkout_url: paid && !tix ? f.checkout_url : "", tickets: tix, registration_type: tix ? "Zapis na stronie" : f.registration_type,
     location: f.format === "Online" ? f.location || "Online, Zoom" : f.location,
     capacity: f.capacity === "" || f.capacity === null ? null : Number(f.capacity),
     registration_deadline: iso(f.registration_deadline), recording_until: iso(f.recording_until),
