@@ -43,7 +43,7 @@ export default function WhoIAmNot() {
         <div className="grid md:grid-cols-3 gap-px bg-[#3D3D3F]/40">
           {nots.map((n, i) => (
             <div key={i} className="bg-[#0A0A0B] p-10">
-              <p className="font-mono text-4xl text-foreground/15 mb-6">0{i + 1}</p>
+              <p aria-hidden="true" data-n={`0${i + 1}`} className="font-mono text-4xl leading-none text-foreground/15 mb-6 before:content-[attr(data-n)]" />
               <h3 className="relic-heading text-xl gold-text mb-4">{n.title}</h3>
               <p className="text-foreground/60 leading-relaxed">{n.text}</p>
             </div>
