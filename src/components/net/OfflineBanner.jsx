@@ -14,7 +14,7 @@ export default function OfflineBanner() {
   if (!off) return null;
   return (
     <div role="status" aria-live="polite"
-      className="fixed bottom-[max(12px,env(safe-area-inset-bottom))] left-1/2 -translate-x-1/2 z-[100] max-w-[calc(100vw-32px)] bg-[#6B4E00] text-white text-sm px-4 py-2 shadow-lg text-center">
+      className="fixed top-0 inset-x-0 z-[100] pt-[max(8px,env(safe-area-inset-top))] pb-2 bg-[#6B4E00] text-white text-sm px-4 text-center">
       Brak połączenia z internetem — to, co teraz wyślesz, może się nie zapisać.
     </div>
   );
