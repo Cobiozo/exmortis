@@ -21,11 +21,10 @@ export default async function (req) {
     const ip = clientIp(req);
     if (ip && ip !== "brak") {
       const since = new Date(Date.now() - 3600000).toISOString();
-      const recent = await base44.asServiceRole.entities.ClientError.filter(
-        { ip, created_date: { $gte: since } },
-        { limit: MAX_GODZINA, fields: ["id"] }
-      );
-      if ((recent.items || []).length >= MAX_GODZINA) {
+      const recent = await base44.asServiceRole.entities.ClientError
+        .filter({ ip, created_date: { $gte: since } }, "-created_date", MAX_GODZINA).catch(() => []);
+      const n = Array.isArray(recent) ? recent.length : (recent?.items || []).length;
+      if (n >= MAX_GODZINA) {
         // Cicho odrzucamy — klient nie ma z tego powodu przestać działać.
         return Response.json({ ok: true, odrzucone: true });
       }
