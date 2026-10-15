@@ -29,6 +29,7 @@ export default function SiteSettingsPanel() {
       <CompanySettings initial={s.firma} />
       <LegalDocsSettings initial={s.dokumenty} />
       <MailSettings />
+      <MailSettings profile="marketing" />
       <ZoomFixedSettings />
       <LibrarySettingsPanel />
       <VideoProtectionSettings />

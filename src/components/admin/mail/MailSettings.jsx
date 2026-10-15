@@ -12,9 +12,21 @@ const FIELDS = [
   ["from_name", "NAZWA NADAWCY", "exmortis"], ["reply_to", "REPLY-TO", "kontakt@exmortis.pl"],
 ];
 
-// Ustawienia → Wysyłka e-mail.
-export default function MailSettings() {
-  const { status, ready, reload } = useMailStatus();
+// Status profilu newslettera (osobna konfiguracja, np. Brevo).
+function useMarketingStatus(enabled) {
+  const [status, setStatus] = useState(null);
+  const reload = () => base44.functions.invoke("mailAdmin", { action: "status", profile: "marketing" })
+    .then((r) => setStatus(r.data)).catch(() => setStatus({ ready: false, config: {} }));
+  useEffect(() => { if (enabled) reload(); }, [enabled]);
+  return { status, ready: !!status?.ready, reload };
+}
+
+// Ustawienia → Wysyłka e-mail. profile="marketing" — osobny kanał dla Listów powrotu i ogłoszeń.
+export default function MailSettings({ profile = "main" }) {
+  const mkt = profile === "marketing";
+  const main = useMailStatus();
+  const m = useMarketingStatus(mkt);
+  const { status, ready, reload } = mkt ? m : main;
   const [f, setF] = useState(null);
   const [to, setTo] = useState("");
   const [busy, setBusy] = useState(false);
@@ -23,7 +35,7 @@ export default function MailSettings() {
 
   const run = async (action, data) => {
     setBusy(true); setMsg(null);
-    const r = await base44.functions.invoke("mailAdmin", { action, ...data }).catch((e) => ({ data: { ok: false, error: e?.response?.data?.error || e.message } }));
+    const r = await base44.functions.invoke("mailAdmin", { action, ...data, ...(mkt ? { profile: "marketing" } : {}) }).catch((e) => ({ data: { ok: false, error: e?.response?.data?.error || e.message } }));
     setBusy(false);
     if (action === "save") setMsg(r.data?.ok ? { ok: true, t: "Zapisano. Wyślij test, aby włączyć wysyłkę." } : { ok: false, t: r.data?.error });
     if (action === "test") setMsg(r.data?.ok ? { ok: true, t: "Test wysłany. Wysyłka DZIAŁA." } : { ok: false, t: `Błąd: ${r.data?.error}` });
@@ -34,9 +46,19 @@ export default function MailSettings() {
   return (
     <section className="border hairline p-6 md:p-8 space-y-6">
       <div className="flex flex-wrap items-center gap-4">
-        <h2 className="relic-heading text-xl">Wysyłka e-mail</h2>
-        <span className={`technical text-[10px] px-3 py-1 border ${ready ? "border-[#C9A24A] gold-text" : "border-foreground/30 text-foreground/50"}`}>{ready ? "DZIAŁA" : "NIESKONFIGUROWANA"}</span>
+        <h2 className="relic-heading text-xl">{mkt ? "Wysyłka newslettera (Listy powrotu)" : "Wysyłka e-mail"}</h2>
+        <span className={`technical text-[10px] px-3 py-1 border ${ready ? "border-[#C9A24A] gold-text" : "border-foreground/30 text-foreground/50"}`}>{ready ? "DZIAŁA" : mkt ? "NIEUSTAWIONA — LISTY IDĄ ZWYKŁĄ SKRZYNKĄ" : "NIESKONFIGUROWANA"}</span>
       </div>
+      {mkt ? (
+        <p className="text-sm text-foreground/60 max-w-3xl leading-relaxed">
+          Osobny serwis do wysyłki masowej (np. Brevo: Ustawienia → SMTP i API → klucz SMTP; host smtp-relay.brevo.com, port 587).
+          Gdy działa, Listy powrotu i ogłoszenia idą przez niego, a skrzynka Simply zostaje dla zamówień, zapisów i linków do spotkań —
+          Simply nie pozwala wysyłać newsletterów zwykłą skrzynką, a jej blokada zatrzymałaby też maile z zamówień.
+          Adres nadawcy (np. listy@exmortis.pl) musi być zweryfikowany w Brevo, a w DNS domeny dodane rekordy DKIM od Brevo.
+        </p>
+      ) : (
+        <p className="text-sm text-foreground/60 max-w-3xl leading-relaxed">Zamówienia, zapisy, przypomnienia, linki do spotkań i odpowiedzi — jedna skrzynka nadawcy. Najwyżej 240 maili na 2 godziny (limit Simply), nadwyżka czeka i wychodzi sama.</p>
+      )}
       <div className="grid sm:grid-cols-2 gap-4">
         {FIELDS.map(([k, label, ph]) => (
           <label key={k} className="block">
@@ -52,9 +74,9 @@ export default function MailSettings() {
         <button onClick={() => run("test", { to })} disabled={busy || !to} className="btn-ghost !px-5 !py-2.5 whitespace-nowrap disabled:opacity-50">{busy ? "CHWILĘ…" : "WYŚLIJ TEST"}</button>
       </div>
       {msg && <p className={`text-sm ${msg.ok ? "gold-text" : "blood-text"}`}>{msg.t}</p>}
-      <MailQueueBox status={status} ready={ready} onDone={reload} />
-      <MailDns />
-      <MailLog />
+      {!mkt && <MailQueueBox status={status} ready={ready} onDone={reload} />}
+      {!mkt && <MailDns />}
+      {!mkt && <MailLog />}
     </section>
   );
 }
