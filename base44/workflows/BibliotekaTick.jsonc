@@ -32,8 +32,7 @@
           "with": {
             "function_name": "libraryTick",
             "args": {
-              "tick_token": "I5U8h24BrfhYd_Ty_NsdM2QGUsDflwmWRH0h4uh38NA"
-            }
+              }
           },
           "then": "end",
           "x-base44": {

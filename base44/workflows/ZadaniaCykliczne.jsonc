@@ -1,6 +1,6 @@
 {
   "name": "Zadania cykliczne",
-  "description": "Jeden przebieg co 5 minut (czas polski) obs\u0142uguje wszystkie zadania w tle: publikacj\u0119 zaplanowanych stron, wysy\u0142k\u0119 i higien\u0119 biblioteki, rozgrzanie funkcji startowej i strony /dolacz, a o pe\u0142nych kwadransach (:00, :15, :30, :45) przypomnienia o spotkaniach, przypomnienia o rezerwacjach 1:1 i ponowienia zmiany adresu e-mail. Zast\u0119puje sze\u015b\u0107 osobnych workflow\u00f3w (Rozgrzewanie, Strony, Biblioteka, Spotkania, Rezerwacje \u2014 przypomnienia, Zmiana adresu), wi\u0119c koszt spada z ok. 1,2 kredytu do 0,2 kredytu na 5 minut. Wywo\u0142anie potwierdza si\u0119 tokenem tick_token z mb_settings \u2014 bez niego cronTick zwraca 403. Token musi by\u0107 wpisany w tym pliku, bo workflow Base44 nie potrafi odczyta\u0107 sekret\u00f3w ani warto\u015bci z bazy. Obr\u00f3t: akcja tick_token z rotate, potem podmiana warto\u015bci tutaj.",
+  "description": "Jeden przebieg co 5 minut (czas polski) obs\u0142uguje wszystkie zadania w tle: publikacj\u0119 zaplanowanych stron, wysy\u0142k\u0119 i higien\u0119 biblioteki, rozgrzanie funkcji startowej i strony /dolacz, a o pe\u0142nych kwadransach (:00, :15, :30, :45) przypomnienia o spotkaniach, przypomnienia o rezerwacjach 1:1 i ponowienia zmiany adresu e-mail. Zast\u0119puje sze\u015b\u0107 osobnych workflow\u00f3w (Rozgrzewanie, Strony, Biblioteka, Spotkania, Rezerwacje \u2014 przypomnienia, Zmiana adresu), wi\u0119c koszt spada z ok. 1,2 kredytu do 0,2 kredytu na 5 minut. Workflow wywo\u0142uje cronTick z sesj\u0105 w\u0142a\u015bciciela aplikacji (administrator) \u2014 bez tokenu w tym pliku; anonimowe wywo\u0142anie dostaje 403.",
   "trigger": {
     "condition": null,
     "config": {
@@ -32,8 +32,7 @@
           "with": {
             "function_name": "cronTick",
             "args": {
-              "tick_token": "I5U8h24BrfhYd_Ty_NsdM2QGUsDflwmWRH0h4uh38NA"
-            }
+              }
           },
           "then": "end",
           "x-base44": {

@@ -32,8 +32,7 @@
           "with": {
             "function_name": "bookingPublic",
             "args": {
-              "action": "tick",
-              "tick_token": "09c45682ab6dfd72d0f5413702d6001b89eac0bb95bc88aa257795099058fad9"
+              "action": "tick"
             }
           },
           "then": "end",

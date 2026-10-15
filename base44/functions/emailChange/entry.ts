@@ -1,5 +1,6 @@
 import { createClientFromRequest } from "npm:@base44/sdk@0.8.52";
 import { runSql, escStr, requireAdmin, EMAIL_RE } from "../../shared/supabase.ts";
+import { safeEqual } from "../../shared/libraryAccess.ts";
 import { getSetting, saveSetting, loadAppUrl } from "../../shared/settings.ts";
 import { sendMail, mailConfig, mailReady } from "../../shared/smtp.ts";
 import { moveLibraryEmail } from "../../shared/libraryAccess.ts";
@@ -148,8 +149,14 @@ export default async function (req) {
 
     // ---- Ponawianie (harmonogram): wykrycie przyjęcia zaproszenia i ponowienie nieudanych przeniesień ----
     if (body.action === "tick") {
-      // Zadanie publiczne (wywołuje je workflow bez sekretu): najwyżej jeden przebieg na 5 minut,
-      // więc wywołania z zewnątrz nie mnożą pracy. Przebieg robi tylko to, co i tak zrobiłby harmonogram.
+      // Dostęp: administrator albo cronTick z tokenem zadania (mb_settings). Najwyżej jeden przebieg na 5 minut.
+      const who = await base44.auth.me().catch(() => null);
+      if (who?.role !== "admin") {
+        const tk = await runSql(base44, `SELECT tick_token FROM public.mb_settings WHERE id = 1`, true).catch(() => null);
+        const stored = tk?.[0]?.tick_token || "";
+        const given = typeof body.tick_token === "string" ? body.tick_token : "";
+        if (!stored || !given || !(await safeEqual(given, stored))) return Response.json({ error: "Forbidden" }, { status: 403 });
+      }
       const lock = await runSql(
         base44,
         `INSERT INTO public.app_settings (key, value, updated_date)

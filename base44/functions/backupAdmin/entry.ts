@@ -17,7 +17,8 @@ export default async function (req) {
       const rows = await runSql(base44, `SELECT tick_token FROM public.mb_settings WHERE id = 1`, true).catch(() => null);
       const stored = rows && rows[0] ? rows[0].tick_token : null;
       const given = typeof body.tick_token === "string" ? body.tick_token : "";
-      if (!stored || !given || !safeEqual(given, stored)) {
+      const who = await base44.auth.me().catch(() => null);
+      if (who?.role !== "admin" && (!stored || !given || !safeEqual(given, stored))) {
         return Response.json({ error: "Forbidden" }, { status: 403 });
       }
       const r = await createBackup(base44, { kto: "zadanie tygodniowe" });

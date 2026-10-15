@@ -12,7 +12,7 @@ import { onboardingTick } from "../../shared/onboarding.ts";
 // idą dokładnie te same wywołania, które wcześniej robiło sześć osobnych workflowów — ta sama
 // praca, ale jeden przebieg workflow zamiast sześciu (koszt 0,2 kredytu zamiast 1,2).
 //
-// Dostęp: wyłącznie token zadania z mb_settings (jak w Bibliotece i Stronach). Bez tokenu 403.
+// Dostęp: sesja właściciela (workflow) albo token zadania z mb_settings. Token nie jest zapisany w plikach workflow.
 // Tokenów nie zapisujemy w raporcie ani w logach — raport zawiera tylko nazwę, kod odpowiedzi i czas.
 
 const LIMIT_MS = 110000; // jeden krok nie może zjeść całego limitu funkcji (5 minut)
@@ -61,17 +61,14 @@ export default async function (req) {
   try {
     const base44 = createClientFromRequest(req);
     const body = await req.json().catch(() => ({}));
-    // DIAG (tymczasowo): kim jest wywołujący workflow — tylko nazwy nagłówków i rola, bez wartości.
-    try {
-      const me = await base44.auth.me().catch((e) => ({ err: String(e?.message || e).slice(0, 80) }));
-      console.log("DIAG_WF", JSON.stringify({ headers: [...req.headers.keys()].sort(), role: me?.role || null, email: me?.email ? me.email.replace(/^(.).*@/, "$1***@") : null, err: me?.err || null, auth: (req.headers.get("authorization") || "").split(" ")[0] }));
-    } catch { /* diag */ }
-
-    // Dostęp: token zadania z mb_settings (porównanie w czasie stałym).
+    // Dostęp: workflow Base44 wywołuje funkcję z sesją właściciela aplikacji (administrator) — bez tokenu w plikach.
+    // Zapasowo token zadania z mb_settings (porównanie w czasie stałym). Token z bazy przekazujemy dalej podzadaniom.
     const rows = await runSql(base44, `SELECT tick_token FROM public.mb_settings WHERE id = 1`, true).catch(() => null);
     const stored = rows && rows[0] ? rows[0].tick_token : null;
     const given = typeof body.tick_token === "string" ? body.tick_token : "";
-    if (!stored || !given || !safeEqual(given, stored)) {
+    const me = await base44.auth.me().catch(() => null);
+    const allowed = me?.role === "admin" || (!!stored && !!given && safeEqual(given, stored));
+    if (!allowed || !stored) {
       return Response.json({ error: "Forbidden" }, { status: 403 });
     }
 
@@ -81,8 +78,8 @@ export default async function (req) {
 
     // Co 5 minut: publikacja zaplanowanych stron, wysyłka i higiena biblioteki, rozgrzanie startu i /dolacz.
     const jobs = [
-      { label: "cmsScheduled", name: "cmsScheduled", args: { tick_token: given } },
-      { label: "libraryTick", name: "libraryTick", args: { tick_token: given } },
+      { label: "cmsScheduled", name: "cmsScheduled", args: { tick_token: stored } },
+      { label: "libraryTick", name: "libraryTick", args: { tick_token: stored } },
       { label: "bootstrap/ping", name: "bootstrap", args: { ping: true } },
       { label: "eventsPublic/ping", name: "eventsPublic", args: { ping: true } },
     ];
@@ -92,7 +89,7 @@ export default async function (req) {
       const bk = await runSql(base44, `SELECT tick_token FROM public.bk_settings WHERE id = 1`, true).catch(() => null);
       const bkToken = (bk && bk[0] ? bk[0].tick_token : "") || "";
       jobs.push({ label: "eventsPublic/tick", name: "eventsPublic", args: { action: "tick" } });
-      jobs.push({ label: "emailChange/tick", name: "emailChange", args: { action: "tick" } });
+      jobs.push({ label: "emailChange/tick", name: "emailChange", args: { action: "tick", tick_token: stored } });
       if (bkToken) {
         jobs.push({ label: "bookingPublic/notify_tick", name: "bookingPublic", args: { action: "notify_tick", tick_token: bkToken } });
       } else {
@@ -116,7 +113,7 @@ export default async function (req) {
           fetch(`${origin}/functions/backupAdmin`, {
             method: "POST",
             headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ action: "weekly", tick_token: given }),
+            body: JSON.stringify({ action: "weekly", tick_token: stored }),
             signal: AbortSignal.timeout(240000),
           }).catch(() => {})
         );
