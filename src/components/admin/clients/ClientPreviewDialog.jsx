@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { Loader2 } from "lucide-react";
 import { lib, plDateTime, KIND_LABEL } from "@/components/admin/library/libApi";
+import { sanitizeHtml } from "@/lib/sanitizeHtml";
 import LibModal from "@/components/admin/library/LibModal";
 
 // „Podgląd oczami klienta" — tylko do odczytu. Nic nie jest oznaczane jako przeczytane
@@ -46,7 +47,7 @@ export default function ClientPreviewDialog({ email, onClose }) {
                   <div key={m.id} className="p-3">
                     <p className="text-sm truncate">{m.title || "(bez tytułu)"}</p>
                     <p className="text-[11px] text-foreground/45">{plDateTime(m.sent_at)}</p>
-                    <div className="rich-content text-xs text-foreground/60 mt-2" dangerouslySetInnerHTML={{ __html: m.text }} />
+                    <div className="rich-content text-xs text-foreground/60 mt-2" dangerouslySetInnerHTML={{ __html: sanitizeHtml(m.text) }} />
                     {Array.isArray(m.attachments) && m.attachments.length > 0 && (
                       <ul className="mt-2 text-[11px] text-foreground/50 list-disc pl-5">
                         {m.attachments.map((x, i) => <li key={i}>{x.material_title || (x.collection_title ? `Kolekcja · ${x.collection_title}` : "Materiał")}</li>)}

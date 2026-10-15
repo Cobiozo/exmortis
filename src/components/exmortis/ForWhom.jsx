@@ -1,5 +1,6 @@
 import React from "react";
 import { useSiteContent } from "@/components/exmortis/SiteContentProvider";
+import { sanitizeHtml } from "@/lib/sanitizeHtml";
 
 const POINTS = [
   "Wracasz z wypalenia zawodowego",
@@ -33,7 +34,7 @@ export default function ForWhom() {
               </li>
             ))}
           </ul>
-          <div className="rich-content mt-10 text-foreground/55 leading-relaxed max-w-lg" dangerouslySetInnerHTML={{ __html: close }} />
+          <div className="rich-content mt-10 text-foreground/55 leading-relaxed max-w-lg" dangerouslySetInnerHTML={{ __html: sanitizeHtml(close) }} />
         </div>
       </div>
     </section>

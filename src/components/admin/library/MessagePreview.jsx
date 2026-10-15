@@ -1,5 +1,6 @@
 import React from "react";
 import { Loader2 } from "lucide-react";
+import { sanitizeHtml } from "@/lib/sanitizeHtml";
 
 // Podgląd „tak zobaczy to [osoba]" — liczony na serwerze, tą samą ścieżką co u klienta (renderBody → sanitizeHtml).
 export default function MessagePreview({ data, email, onPick, busy }) {
@@ -21,7 +22,7 @@ export default function MessagePreview({ data, email, onPick, busy }) {
 
       <div className="border hairline bg-[#0F0F10] p-4 space-y-4">
         <p className="technical text-[10px] gold-text">EXMORTIS</p>
-        <div className="rich-content text-sm" dangerouslySetInnerHTML={{ __html: data.html }} />
+        <div className="rich-content text-sm" dangerouslySetInnerHTML={{ __html: sanitizeHtml(data.html) }} />
         <div className="border-t hairline pt-3 space-y-1 text-xs text-foreground/50">
           <p>{data.stopka?.reply}</p>
           {data.stopka?.whatsapp && <p>WhatsApp: {data.stopka.whatsapp}</p>}

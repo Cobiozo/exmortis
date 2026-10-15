@@ -2,6 +2,7 @@ import React from "react";
 import { Link } from "react-router-dom";
 import { ArrowRight } from "lucide-react";
 import { useSiteContent } from "@/components/exmortis/SiteContentProvider";
+import { sanitizeHtml } from "@/lib/sanitizeHtml";
 
 export default function PowrotTeaser() {
   const { rich } = useSiteContent();
@@ -18,8 +19,8 @@ export default function PowrotTeaser() {
           </h2>
         </div>
         <div className="md:col-span-7">
-          <p className="relic-heading text-2xl md:text-3xl leading-tight text-foreground/85 mb-8" dangerouslySetInnerHTML={{ __html: quote }} />
-          <div className="rich-content text-foreground/60 leading-relaxed max-w-xl mb-10" dangerouslySetInnerHTML={{ __html: desc }} />
+          <p className="relic-heading text-2xl md:text-3xl leading-tight text-foreground/85 mb-8" dangerouslySetInnerHTML={{ __html: sanitizeHtml(quote) }} />
+          <div className="rich-content text-foreground/60 leading-relaxed max-w-xl mb-10" dangerouslySetInnerHTML={{ __html: sanitizeHtml(desc) }} />
           <Link to="/powrot" className="btn-relic">
             POZNAJ POWRÓT <ArrowRight className="h-4 w-4" />
           </Link>

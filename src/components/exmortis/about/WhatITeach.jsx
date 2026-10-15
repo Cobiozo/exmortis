@@ -1,5 +1,6 @@
 import React from "react";
 import { useSiteContent } from "@/components/exmortis/SiteContentProvider";
+import { sanitizeHtml } from "@/lib/sanitizeHtml";
 
 const DEFAULT_TEACHINGS = [
   "Że powrót jest możliwy. Z każdej z trzech śmierci.",
@@ -27,7 +28,7 @@ export default function WhatITeach() {
         <h2 className="relic-heading text-4xl md:text-6xl mb-10 leading-[0.95]">Czego uczę?</h2>
         <div
           className="rich-content text-lg text-foreground/60 mb-16"
-          dangerouslySetInnerHTML={{ __html: intro }}
+          dangerouslySetInnerHTML={{ __html: sanitizeHtml(intro) }}
         />
         <div className="space-y-10">
           {teachings.map((t, i) => (

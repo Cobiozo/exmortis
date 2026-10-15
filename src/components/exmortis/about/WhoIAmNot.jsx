@@ -1,6 +1,7 @@
 import React from "react";
 import { Image } from "@/components/ui/image";
 import { useSiteContent } from "@/components/exmortis/SiteContentProvider";
+import { sanitizeHtml } from "@/lib/sanitizeHtml";
 
 const PORTRAIT =
   "https://media.base44.com/images/public/6aa08bc6318b0f886cc3b9a3/76a96cdf4_686174507_17893800810460401_1310148896120990981_n.jpg";
@@ -65,7 +66,7 @@ export default function WhoIAmNot() {
           <div className="p-10 md:p-16 lg:p-20 flex flex-col justify-center">
             <div
               className="rich-content text-lg leading-relaxed text-foreground/75"
-              dangerouslySetInnerHTML={{ __html: mentor }}
+              dangerouslySetInnerHTML={{ __html: sanitizeHtml(mentor) }}
             />
           </div>
         </div>

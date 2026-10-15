@@ -7,6 +7,7 @@ import CompanyLines from "@/components/legal/CompanyLines";
 import usePrelaunch from "@/lib/usePrelaunch";
 import { openCookieSettings } from "@/components/legal/cookieStore";
 import { linkPhones } from "@/lib/phones";
+import { sanitizeHtml } from "@/lib/sanitizeHtml";
 
 export default function Footer() {
   const { rich } = useSiteContent();
@@ -26,7 +27,7 @@ export default function Footer() {
               <Logo className="h-12 w-12" glow={false} />
               <span className="relic-heading text-2xl gold-text tracking-[0.3em]">EXMORTIS</span>
             </div>
-            <div className="rich-content text-foreground/55 max-w-sm leading-relaxed text-sm" dangerouslySetInnerHTML={{ __html: aboutText }} />
+            <div className="rich-content text-foreground/55 max-w-sm leading-relaxed text-sm" dangerouslySetInnerHTML={{ __html: sanitizeHtml(aboutText) }} />
           </div>
 
           {!gated && <FooterColumns />}

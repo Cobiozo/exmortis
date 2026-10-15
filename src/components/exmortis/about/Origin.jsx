@@ -1,5 +1,6 @@
 import React from "react";
 import { useSiteContent } from "@/components/exmortis/SiteContentProvider";
+import { sanitizeHtml } from "@/lib/sanitizeHtml";
 
 export default function Origin() {
   const { rich } = useSiteContent();
@@ -22,7 +23,7 @@ export default function Origin() {
         </h2>
         <div
           className="rich-content text-lg leading-relaxed text-foreground/75"
-          dangerouslySetInnerHTML={{ __html: content }}
+          dangerouslySetInnerHTML={{ __html: sanitizeHtml(content) }}
         />
       </div>
     </section>

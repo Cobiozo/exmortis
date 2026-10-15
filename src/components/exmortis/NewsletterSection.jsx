@@ -4,6 +4,7 @@ import { base44 } from "@/api/base44Client";
 import { useSiteContent } from "@/components/exmortis/SiteContentProvider";
 import useSystemText from "@/content/useSystemText";
 import { track } from "@/lib/track";
+import { sanitizeHtml } from "@/lib/sanitizeHtml";
 
 // Sekcja „Listy powrotu" (newsletter) na stronie głównej — podpis pod kontakt.
 export default function NewsletterSection() {
@@ -39,8 +40,8 @@ export default function NewsletterSection() {
       <div className="mx-auto max-w-[1400px] grid md:grid-cols-2 gap-12 md:gap-20 items-center">
         <div>
           <p className="technical text-[11px] gold-text mb-4">LISTY POWROTU · 09</p>
-          <h2 className="relic-heading text-4xl md:text-5xl lg:text-6xl leading-[0.95] mb-6" dangerouslySetInnerHTML={{ __html: title }} />
-          <div className="rich-content text-foreground/60 text-lg max-w-md leading-relaxed" dangerouslySetInnerHTML={{ __html: desc }} />
+          <h2 className="relic-heading text-4xl md:text-5xl lg:text-6xl leading-[0.95] mb-6" dangerouslySetInnerHTML={{ __html: sanitizeHtml(title) }} />
+          <div className="rich-content text-foreground/60 text-lg max-w-md leading-relaxed" dangerouslySetInnerHTML={{ __html: sanitizeHtml(desc) }} />
         </div>
         <div>
           <form onSubmit={submit} className="space-y-4">

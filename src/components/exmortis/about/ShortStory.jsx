@@ -1,6 +1,7 @@
 import React from "react";
 import { Image } from "@/components/ui/image";
 import { useSiteContent } from "@/components/exmortis/SiteContentProvider";
+import { sanitizeHtml } from "@/lib/sanitizeHtml";
 
 const PHOTO =
   "https://media.base44.com/images/public/6aa08bc6318b0f886cc3b9a3/29c863d5e_Gemini_Generated_Image_5hhwtq5hhwtq5hhw.jpeg";
@@ -27,7 +28,7 @@ export default function ShortStory() {
         <p className="technical text-[11px] gold-text mb-8">KRÓTKA HISTORIA · 01</p>
         <div
           className="rich-content text-lg leading-relaxed text-foreground/75"
-          dangerouslySetInnerHTML={{ __html: story }}
+          dangerouslySetInnerHTML={{ __html: sanitizeHtml(story) }}
         />
       </div>
       <div className="relative bg-[#070708] overflow-hidden min-h-[60vh] md:min-h-[80vh] order-2">

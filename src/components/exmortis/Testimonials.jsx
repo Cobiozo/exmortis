@@ -1,6 +1,7 @@
 import React from "react";
 import { Quote } from "lucide-react";
 import { useSiteContent } from "@/components/exmortis/SiteContentProvider";
+import { sanitizeHtml } from "@/lib/sanitizeHtml";
 
 // Podmień na prawdziwe opinie klientów — imię + produkt + zdanie
 const TESTIMONIALS = [
@@ -30,8 +31,8 @@ export default function Testimonials() {
     <section className="py-32 px-5 md:px-10 border-t hairline">
       <div className="mx-auto max-w-[1400px]">
         <p className="technical text-[11px] gold-text mb-4">Świadectwa · 07</p>
-        <h2 className="relic-heading text-4xl md:text-6xl mb-6 leading-[0.95]" dangerouslySetInnerHTML={{ __html: title }} />
-        <div className="rich-content text-foreground/60 text-lg max-w-xl mb-16 leading-relaxed" dangerouslySetInnerHTML={{ __html: intro }} />
+        <h2 className="relic-heading text-4xl md:text-6xl mb-6 leading-[0.95]" dangerouslySetInnerHTML={{ __html: sanitizeHtml(title) }} />
+        <div className="rich-content text-foreground/60 text-lg max-w-xl mb-16 leading-relaxed" dangerouslySetInnerHTML={{ __html: sanitizeHtml(intro) }} />
 
         <div className="grid md:grid-cols-3 gap-px bg-[#3D3D3F]/40">
           {testimonials.map((t, i) => (

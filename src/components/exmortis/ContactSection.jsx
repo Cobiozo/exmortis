@@ -5,6 +5,7 @@ import { useSiteContent } from "@/components/exmortis/SiteContentProvider";
 import useSystemText from "@/content/useSystemText";
 import { track } from "@/lib/track";
 import { useCrisis } from "@/components/crisis/CrisisContext";
+import { sanitizeHtml } from "@/lib/sanitizeHtml";
 
 // Wklej tu linki do swoich profili
 const SOCIAL_LINKS = [
@@ -48,8 +49,8 @@ export default function ContactSection() {
         {/* Lewa kolumna — kanały kontaktu */}
         <div>
           <p className="technical text-[11px] gold-text mb-4">KONTAKT · 10</p>
-          <h2 className="relic-heading text-4xl lg:text-5xl xl:text-6xl mb-6 leading-[0.95] [overflow-wrap:break-word]" dangerouslySetInnerHTML={{ __html: heading }} />
-          <div className="rich-content text-foreground/60 text-lg leading-relaxed max-w-md mb-12" dangerouslySetInnerHTML={{ __html: intro }} />
+          <h2 className="relic-heading text-4xl lg:text-5xl xl:text-6xl mb-6 leading-[0.95] [overflow-wrap:break-word]" dangerouslySetInnerHTML={{ __html: sanitizeHtml(heading) }} />
+          <div className="rich-content text-foreground/60 text-lg leading-relaxed max-w-md mb-12" dangerouslySetInnerHTML={{ __html: sanitizeHtml(intro) }} />
 
           <div className="space-y-6">
             <a
