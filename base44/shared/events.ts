@@ -84,8 +84,10 @@ export function buildIcs(ev, token = null) {
   const end = new Date(start.getTime() + (Number(ev.duration_minutes) || 60) * 60000);
   const esc = (s) => String(s || "").replace(/\\/g, "\\\\").replace(/;/g, "\\;").replace(/,/g, "\\,").replace(/\r?\n/g, "\\n");
   const url = isOnline(ev) ? joinUrl(ev, token) : null;
-  const place = url || ev.location || "";
-  const desc = [ev.subtitle || "", url ? `Dołącz: ${url}` : ""].filter(Boolean).join("\n\n");
+  // Spotkanie online: w polu „miejsce” stały opis — link w tym polu kalendarze (Gmail) traktują jak adres i otwierają mapę.
+  // Link dołączenia jest w opisie wydarzenia i w polu URL.
+  const place = isOnline(ev) ? "Online · Zoom (link w opisie)" : ev.location || "";
+  const desc = [ev.subtitle || "", url ? `Dołącz do spotkania (pokój otwiera się kilka minut przed startem):\n${url}` : ""].filter(Boolean).join("\n\n");
   return [
     "BEGIN:VCALENDAR",
     "VERSION:2.0",

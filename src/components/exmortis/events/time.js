@@ -107,8 +107,10 @@ export function googleCalendarUrl(ev) {
     action: "TEMPLATE",
     text: ev.title,
     dates: `${icsStamp(start)}/${icsStamp(end)}`,
-    details: ev.subtitle || "",
-    location: ev.format === "Online" ? `${SITE_URL}/spotkania/${ev.slug}/dolacz` : ev.location || "",
+    details: ev.format === "Online"
+      ? [ev.subtitle || "", `Dołącz do spotkania: ${SITE_URL}/spotkania/${ev.slug}/dolacz`].filter(Boolean).join("\n\n")
+      : ev.subtitle || "",
+    location: ev.format === "Online" ? "Online · Zoom (link w opisie)" : ev.location || "",
   });
   return `https://calendar.google.com/calendar/render?${params.toString()}`;
 }
