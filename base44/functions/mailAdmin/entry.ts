@@ -2,6 +2,8 @@ import { createClientFromRequest } from "npm:@base44/sdk@0.8.44";
 import { requireStaff, requireAdmin, emailField } from "../../shared/supabase.ts";
 import { getSetting, saveSetting } from "../../shared/settings.ts";
 import { smtpSend, mailReady, resetMailConfig, flushMailQueue } from "../../shared/smtp.ts";
+import { onboardingOn, setOnboarding, onboardingMail } from "../../shared/onboarding.ts";
+import { emailLayout } from "../../shared/emailLayout.ts";
 
 // Ustawienia → Wysyłka e-mail: konfiguracja SMTP, test, status, kolejka zaległych, dziennik, DNS.
 // Hasło zapisywane wyłącznie po stronie serwera (Supabase app_settings, RLS) — nigdy nie wraca do przeglądarki.
@@ -99,7 +101,6 @@ export default async function (req) {
 
     // Listy prowadzące po zakupie: przełącznik i podgląd każdego z czterech listów.
     if (body.action === "onboarding") {
-      const { onboardingOn, setOnboarding } = await import("../../shared/onboarding.ts");
       if (typeof body.wlaczone === "boolean") {
         if (tech) return Response.json({ error: "Brak dostępu" }, { status: 403 });
         await setOnboarding(base44, body.wlaczone);
@@ -107,8 +108,6 @@ export default async function (req) {
       return Response.json({ wlaczone: await onboardingOn(base44) });
     }
     if (body.action === "onboarding_preview") {
-      const { onboardingMail } = await import("../../shared/onboarding.ts");
-      const { emailLayout } = await import("../../shared/emailLayout.ts");
       const step = [1, 3, 7, 14].includes(Number(body.step)) ? Number(body.step) : 1;
       const type = ["pdf", "audio", "kurs", "pakiet"].includes(body.type) ? body.type : "pdf";
       const firma = await getSetting(base44, "firma").catch(() => null);
