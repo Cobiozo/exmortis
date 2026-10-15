@@ -71,7 +71,7 @@ export default function StepAccess(p) {
                 onChange={(e) => p.set({ registration_deadline: e.target.value, deadline_manual: true })} />
               <Input id="mailing_group" label="Grupa mailingowa dla zapisanych" placeholder="np. Webinar 1.11" {...p} />
             </div>
-            <Input id="what_registered" label="Co dostają zapisani" placeholder="np. link do Zooma, pytania na żywo" {...p} />
+            <Input id="what_registered" label="Co dostają zapisani (pozycje oddziel średnikiem ;)" placeholder="np. Indywidualny link do Zoom; Zamknięta sesja pytań i odpowiedzi" {...p} />
           </>
         )}
       </Group>
