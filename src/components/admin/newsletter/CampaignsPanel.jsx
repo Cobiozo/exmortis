@@ -1,13 +1,14 @@
 import React, { useEffect, useState } from "react";
 import { base44 } from "@/api/base44Client";
-import { Plus, Trash2, X, Pencil, Send } from "lucide-react";
+import { Plus, Trash2, X, Pencil, Send, Eye, Smartphone, Monitor, FlaskConical } from "lucide-react";
 import RichTextEditor from "@/components/admin/RichTextEditor";
 import useMailStatus, { MAIL_REQUIRED } from "@/lib/useMailStatus";
 
 const inputCls =
   "w-full bg-transparent border hairline px-4 py-2.5 focus:border-[#C9A24A] focus:outline-none transition-colors text-sm";
 
-const EMPTY = { id: null, subject: "", content: "", group_id: "" };
+const EMPTY = { id: null, subject: "", content: "", group_id: "", preheader: "", cta_label: "", cta_url: "" };
+const fields = (e) => ({ subject: e.subject, content: e.content, preheader: e.preheader, cta_label: e.cta_label, cta_url: e.cta_url });
 
 export default function CampaignsPanel() {
   const [campaigns, setCampaigns] = useState([]);
@@ -19,6 +20,8 @@ export default function CampaignsPanel() {
   const [busy, setBusy] = useState(false);
   const [sending, setSending] = useState(null);
   const [error, setError] = useState("");
+  const [info, setInfo] = useState("");
+  const [preview, setPreview] = useState(null); // { html, w }
 
   const load = () => {
     setLoading(true);
@@ -48,6 +51,9 @@ export default function CampaignsPanel() {
           subject: camp.subject,
           content: camp.content || "",
           group_id: camp.group_id || "",
+          preheader: camp.preheader || "",
+          cta_label: camp.cta_label || "",
+          cta_url: camp.cta_url || "",
         });
         setRemaining(res.data.remaining);
       } else {
@@ -71,8 +77,7 @@ export default function CampaignsPanel() {
       const res = await base44.functions.invoke("adminNewsletter", {
         action: "campaigns.save",
         id: editor.id,
-        subject: editor.subject,
-        content: editor.content,
+        ...fields(editor),
         group_id: editor.group_id || null,
       });
       setEditor({ ...editor, id: res.data.id });
@@ -85,12 +90,39 @@ export default function CampaignsPanel() {
     }
   };
 
+  const showPreview = async () => {
+    setError("");
+    setBusy(true);
+    try {
+      const r = await base44.functions.invoke("adminNewsletter", { action: "campaigns.preview", ...fields(editor) });
+      setPreview({ html: r.data.html, w: 390 });
+    } catch (err) {
+      setError(err?.response?.data?.error || "Nie udało się przygotować podglądu.");
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  const sendTest = async () => {
+    setError("");
+    setInfo("");
+    setBusy(true);
+    try {
+      const r = await base44.functions.invoke("adminNewsletter", { action: "campaigns.test", ...fields(editor) });
+      setInfo(`Wysłano list testowy na ${r.data.to}. Sprawdź, jak wygląda w Twojej skrzynce (także w telefonie).`);
+    } catch (err) {
+      setError(err?.response?.data?.error || "Nie udało się wysłać testu.");
+    } finally {
+      setBusy(false);
+    }
+  };
+
   const send = async () => {
     if (!editor.id) {
       setError("Najpierw zapisz szkic kampanii.");
       return;
     }
-    if (!window.confirm(`Wysłać „${editor.subject.trim()}" do odbiorców?`)) return;
+    if (!window.confirm(`Wysłać „${editor.subject.trim()}" do ${remaining ?? "wszystkich"} odbiorców? Tego nie da się cofnąć.`)) return;
     setError("");
     setBusy(true);
     setSending({ sent: 0, total: null, failures: [] });
@@ -140,12 +172,27 @@ export default function CampaignsPanel() {
           </button>
         </div>
 
+        <label className="technical text-[10px] text-foreground/50 block mb-2">TEMAT</label>
         <input
           value={editor.subject}
           onChange={(e) => setEditor({ ...editor, subject: e.target.value })}
-          className={`${inputCls} mb-4`}
-          placeholder="Temat wiadomości"
+          className={`${inputCls} mb-1`}
+          placeholder="np. Za tydzień: Wieczór Wszystkich Świętych"
+          maxLength={120}
         />
+        <p className={`text-[11px] mb-4 ${editor.subject.length > 60 ? "text-[#E8676A]" : "text-foreground/40"}`}>
+          {editor.subject.length}/60 — krótki, konkretny temat bez krzyku (bez WIELKICH LITER i „!!!”) ma najlepszą otwieralność i rzadziej trafia do spamu.
+        </p>
+
+        <label className="technical text-[10px] text-foreground/50 block mb-2">ZAJAWKA (widoczna w skrzynce obok tematu)</label>
+        <input
+          value={editor.preheader}
+          onChange={(e) => setEditor({ ...editor, preheader: e.target.value })}
+          className={`${inputCls} mb-1`}
+          placeholder="np. Dwie godziny o trzech śmierciach i czterech etapach powrotu."
+          maxLength={140}
+        />
+        <p className="text-[11px] text-foreground/40 mb-4">Uzupełnia temat — nie powtarzaj go. Puste pole = pierwsze zdanie listu.</p>
 
         <div className="mb-4">
           <label className="technical text-[10px] text-foreground/50 block mb-2">GRUPA ODBIORCÓW</label>
@@ -172,6 +219,21 @@ export default function CampaignsPanel() {
           placeholder="Treść listu do odbiorców…"
         />
 
+        <div className="grid sm:grid-cols-2 gap-3 mt-4">
+          <div>
+            <label className="technical text-[10px] text-foreground/50 block mb-2">PRZYCISK — TEKST (opcjonalnie)</label>
+            <input value={editor.cta_label} onChange={(e) => setEditor({ ...editor, cta_label: e.target.value })}
+              className={inputCls} placeholder="np. Zapisz się na 1 listopada" maxLength={60} />
+          </div>
+          <div>
+            <label className="technical text-[10px] text-foreground/50 block mb-2">PRZYCISK — LINK</label>
+            <input value={editor.cta_url} onChange={(e) => setEditor({ ...editor, cta_url: e.target.value })}
+              className={inputCls} placeholder="https://exmortis.pl/…" />
+          </div>
+        </div>
+        <p className="text-[11px] text-foreground/40 mt-1">Jeden list = jeden następny krok. Złoty przycisk pojawi się pod treścią.</p>
+        {info && <p className="text-sm gold-text mt-3">{info}</p>}
+
         {error && <p className="text-sm blood-text mt-3">{error}</p>}
 
         {sending && (
@@ -195,11 +257,30 @@ export default function CampaignsPanel() {
           <button onClick={save} disabled={busy} className="btn-ghost !px-5 !py-2.5 disabled:opacity-60">
             ZAPISZ SZKIC
           </button>
+          <button onClick={showPreview} disabled={busy} className="btn-ghost !px-5 !py-2.5 disabled:opacity-60">
+            <Eye className="h-4 w-4" /> PODGLĄD
+          </button>
+          <button onClick={sendTest} disabled={busy || !mailOk} className="btn-ghost !px-5 !py-2.5 disabled:opacity-60">
+            <FlaskConical className="h-4 w-4" /> WYŚLIJ TEST DO MNIE
+          </button>
           <button onClick={send} disabled={busy || !mailOk} title={mailOk ? undefined : MAIL_REQUIRED} className="btn-relic !px-5 !py-2.5 disabled:opacity-60">
             <Send className="h-4 w-4" /> WYŚLIJ
           </button>
           {!mailOk && <p className="technical text-[10px] text-foreground/40 self-center">{MAIL_REQUIRED.toUpperCase()}</p>}
         </div>
+
+        {preview && (
+          <div className="fixed inset-0 z-[100] bg-black/80 flex flex-col items-center p-4 overflow-auto" role="dialog" aria-modal="true" aria-label="Podgląd listu">
+            <div className="flex items-center gap-2 mb-3 sticky top-0">
+              <button onClick={() => setPreview({ ...preview, w: 390 })} className={`btn-ghost !px-4 !py-2 ${preview.w === 390 ? "!border-[#C9A24A]" : ""}`}><Smartphone className="h-4 w-4" /> TELEFON</button>
+              <button onClick={() => setPreview({ ...preview, w: 720 })} className={`btn-ghost !px-4 !py-2 ${preview.w === 720 ? "!border-[#C9A24A]" : ""}`}><Monitor className="h-4 w-4" /> KOMPUTER</button>
+              <button onClick={() => setPreview(null)} className="btn-ghost !px-4 !py-2" aria-label="Zamknij podgląd"><X className="h-4 w-4" /></button>
+            </div>
+            <p className="text-xs text-foreground/60 mb-2 text-center max-w-md">Temat: <span className="text-foreground">{editor.subject || "—"}</span></p>
+            <iframe title="Podgląd listu" srcDoc={preview.html} sandbox="" className="bg-[#0A0A0B] border hairline"
+              style={{ width: Math.min(preview.w, typeof window !== "undefined" ? window.innerWidth - 32 : preview.w), height: "80vh" }} />
+          </div>
+        )}
       </div>
     );
   }
