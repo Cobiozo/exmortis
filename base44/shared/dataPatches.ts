@@ -141,6 +141,14 @@ const PATCHES: { id: string; why: string; sql: string[] }[] = [
            AND e.start_datetime + (COALESCE(e.duration_minutes,60) * interval '1 minute') < now()`,
     ],
   },
+  {
+    id: "2026-10-15-bilety-tylko-stacjonarne",
+    why: "Bilety tylko na spotkania stacjonarne — wyłączenie biletów na spotkaniach online",
+    sql: [
+      `ALTER TABLE public.events ADD COLUMN IF NOT EXISTS tickets boolean DEFAULT false`,
+      `UPDATE public.events SET tickets = FALSE WHERE format = 'Online' AND COALESCE(tickets, false) = TRUE`,
+    ],
+  },
 ];
 
 export async function applyDataPatches(base44): Promise<string[]> {
