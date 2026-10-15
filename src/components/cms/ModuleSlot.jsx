@@ -1,10 +1,11 @@
 import React, { Suspense, useEffect, useState } from "react";
+import lazyPage from "@/lib/lazyPage";
 
 // Blok „moduł” (Dla kogo, Skarbiec, Spotkania, Newsletter…) rysuje się z osobnego pliku, więc nie
 // obciąża pierwszej paczki. Blok w pierwszym widoku (albo w edytorze) startuje od razu — jak dotąd;
 // blok niżej czeka na moment bezczynności po załadowaniu strony i wtedy dociąga się w tle.
 const load = () => import("./ModuleLazy");
-const LazyModule = React.lazy(load);
+const LazyModule = lazyPage(load); // po publikacji nowej wersji: jedno przeładowanie zamiast błędu
 // Strony zbudowane głównie z modułów (Skarbiec, produkt, spotkanie, kontakt…) pobierają plik modułów od razu,
 // równolegle z danymi — bez dodatkowego czekania. Odciążamy tylko stronę główną i /1-listopada.
 if (typeof window !== "undefined" && !["/", "/1-listopada"].includes(window.location.pathname)) load().catch(() => {});

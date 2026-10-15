@@ -1,38 +1,39 @@
-import React, { Suspense, lazy, useEffect, useState } from "react";
+import React, { Suspense, useEffect, useState } from "react";
+import lazyPage from "@/lib/lazyPage";
 import { Link, useParams } from "react-router-dom";
 import { base44 } from "@/api/base44Client";
 import Logo from "@/components/exmortis/Logo";
-import ProductsManager from "@/components/admin/ProductsManager";
-import NewsletterManager from "@/components/admin/NewsletterManager";
-import ContentHub from "@/components/admin/cms/ContentHub";
-import NavEditor from "@/components/admin/cms/nav/NavEditor";
-import IntegrationsManager from "@/components/admin/IntegrationsManager";
-import SiteSettingsPanel from "@/components/admin/settings/SiteSettingsPanel";
-import QuizStatsPanel from "@/components/admin/QuizStatsPanel";
-import SilencePanel from "@/components/admin/silence/SilencePanel";
-import SilenceStatsPanel from "@/components/admin/SilenceStatsPanel";
-import EventsManager from "@/components/admin/EventsManager";
+const ProductsManager = lazyPage(() => import("@/components/admin/ProductsManager"));
+const NewsletterManager = lazyPage(() => import("@/components/admin/NewsletterManager"));
+const ContentHub = lazyPage(() => import("@/components/admin/cms/ContentHub"));
+const NavEditor = lazyPage(() => import("@/components/admin/cms/nav/NavEditor"));
+const IntegrationsManager = lazyPage(() => import("@/components/admin/IntegrationsManager"));
+const SiteSettingsPanel = lazyPage(() => import("@/components/admin/settings/SiteSettingsPanel"));
+const QuizStatsPanel = lazyPage(() => import("@/components/admin/QuizStatsPanel"));
+const SilencePanel = lazyPage(() => import("@/components/admin/silence/SilencePanel"));
+const SilenceStatsPanel = lazyPage(() => import("@/components/admin/SilenceStatsPanel"));
+const EventsManager = lazyPage(() => import("@/components/admin/EventsManager"));
 import AdminDashboard from "@/components/admin/AdminDashboard";
-import ContactsTabs from "@/components/admin/ContactsTabs";
-import PodcastAdmin from "@/components/admin/podcast/PodcastAdmin";
-import ObokAdmin from "@/components/admin/obok/ObokAdmin";
-import ClientsPanel from "@/components/admin/clients/ClientsPanel";
-import SecurityPanel from "@/components/admin/security/SecurityPanel";
+const ContactsTabs = lazyPage(() => import("@/components/admin/ContactsTabs"));
+const PodcastAdmin = lazyPage(() => import("@/components/admin/podcast/PodcastAdmin"));
+const ObokAdmin = lazyPage(() => import("@/components/admin/obok/ObokAdmin"));
+const ClientsPanel = lazyPage(() => import("@/components/admin/clients/ClientsPanel"));
+const SecurityPanel = lazyPage(() => import("@/components/admin/security/SecurityPanel"));
 import { useNoIndex } from "@/lib/useNoIndex";
-import DiscountsPanel from "@/components/admin/DiscountsPanel";
-import PersonDataPanel from "@/components/admin/gdpr/PersonDataPanel";
-import PlaylistManager from "@/components/exmortis/glos/PlaylistManager";
+const DiscountsPanel = lazyPage(() => import("@/components/admin/DiscountsPanel"));
+const PersonDataPanel = lazyPage(() => import("@/components/admin/gdpr/PersonDataPanel"));
+const PlaylistManager = lazyPage(() => import("@/components/exmortis/glos/PlaylistManager"));
 import { ShieldAlert, ArrowLeft } from "lucide-react";
 import PanelHeaderActions from "@/components/admin/PanelHeaderActions";
 import TechDashboard from "@/components/admin/TechDashboard";
-import AnnouncementsAdmin from "@/components/admin/announce/AnnouncementsAdmin";
-import BookingAdmin from "@/components/admin/booking/BookingAdmin";
-import LibraryPanel from "@/components/admin/library/LibraryPanel";
-import GroupsTab from "@/components/admin/library/GroupsTab";
-import MessagesPanel from "@/components/admin/library/MessagesPanel";
-import HistoryPanel from "@/components/admin/library/HistoryPanel";
-import OrdersPanel from "@/components/admin/orders/OrdersPanel";
-const RozdrozaAdmin = lazy(() => import("@/components/admin/rozdroza/RozdrozaAdmin"));
+const AnnouncementsAdmin = lazyPage(() => import("@/components/admin/announce/AnnouncementsAdmin"));
+const BookingAdmin = lazyPage(() => import("@/components/admin/booking/BookingAdmin"));
+const LibraryPanel = lazyPage(() => import("@/components/admin/library/LibraryPanel"));
+const GroupsTab = lazyPage(() => import("@/components/admin/library/GroupsTab"));
+const MessagesPanel = lazyPage(() => import("@/components/admin/library/MessagesPanel"));
+const HistoryPanel = lazyPage(() => import("@/components/admin/library/HistoryPanel"));
+const OrdersPanel = lazyPage(() => import("@/components/admin/orders/OrdersPanel"));
+const RozdrozaAdmin = lazyPage(() => import("@/components/admin/rozdroza/RozdrozaAdmin"));
 
 const SECTIONS = {
   spotkania: ["Spotkania", () => <EventsManager />],
@@ -122,7 +123,10 @@ export default function Admin() {
         )}
 
         <div className="mt-10">
-          {!section ? (tech ? <TechDashboard sections={TECH.map((k) => [k, SECTIONS[k][0]])} /> : <AdminDashboard />) : current ? current[1]() : <p className="text-foreground/55">Nie ma takiej sekcji.</p>}
+          {/* Sekcje panelu ładują się osobno — telefon nie pobiera całego panelu naraz. */}
+          <Suspense fallback={<div className="py-16 flex justify-center"><div className="w-6 h-6 border-2 border-[#3D3D3F] border-t-[#C9A24A] rounded-full animate-spin" /></div>}>
+            {!section ? (tech ? <TechDashboard sections={TECH.map((k) => [k, SECTIONS[k][0]])} /> : <AdminDashboard />) : current ? current[1]() : <p className="text-foreground/55">Nie ma takiej sekcji.</p>}
+          </Suspense>
         </div>
       </div>
     </div>
