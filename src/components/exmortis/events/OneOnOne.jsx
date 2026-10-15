@@ -9,7 +9,7 @@ const ITEMS = [
   { slug: "powrot-mentoring", label: "MENTORING 1:1", to: "/powrot", cta: "POZNAJ POWRÓT",
     name: "POWRÓT — mentoring 1:1", text: "Kilka miesięcy wspólnej drogi przez cztery etapy powrotu. Zaczynamy od bezpłatnej rozmowy.", note: "Nie przez koszyk. Najpierw rozmawiamy." },
   { slug: "rozmowa-na-progu", label: "POJEDYNCZE SPOTKANIE 1:1", cta: "ZOBACZ I UMÓW",
-    name: "Rozmowa na progu", text: "Jedna sesja, jedna decyzja, pełna uwaga. 90 minut online.", note: "Po opłaceniu sam(a) wybierasz termin w kalendarzu." },
+    name: "Rozmowa na progu", text: "Jedna sesja, jedna decyzja, pełna uwaga. 90 minut online.", note: "Po opłaceniu wybierasz termin w kalendarzu." },
 ];
 
 const zl = (n) => `${Number(n || 0).toLocaleString("pl-PL", { maximumFractionDigits: 2 })} zł`;
