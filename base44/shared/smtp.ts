@@ -1,6 +1,6 @@
 import nodemailer from "npm:nodemailer@6.9.13";
 import { FIRMA, getSetting, APP_URL, DEFAULT_APP_URL } from "./settings.ts";
-import { emailLayout } from "./emailLayout.ts";
+import { emailLayout, cleanEmailHtml } from "./emailLayout.ts";
 import { runSql, escStr } from "./supabase.ts";
 
 // JEDYNA bramka wysyłki maili. Wysyła tylko, gdy wysyłka ma status „dziala” (po udanym teście).
