@@ -7,9 +7,9 @@ import { base44 } from "@/api/base44Client";
 // po opłaceniu wybór terminu w kalendarzu). Dane i cena z produktu w Skarbcu; ukryty produkt → bez karty.
 const ITEMS = [
   { slug: "powrot-mentoring", label: "MENTORING 1:1", to: "/powrot", cta: "POZNAJ POWRÓT",
-    name: "POWRÓT — mentoring 1:1", text: "Kilka miesięcy wspólnej drogi przez cztery etapy powrotu. Zaczynamy od bezpłatnej rozmowy.", note: "Nie przez koszyk. Najpierw rozmawiamy." },
+    name: "POWRÓT — mentoring 1:1", text: "", note: "Nie przez koszyk. Najpierw rozmawiamy." },
   { slug: "rozmowa-na-progu", label: "POJEDYNCZE SPOTKANIE 1:1", cta: "ZOBACZ I UMÓW",
-    name: "Rozmowa na progu", text: "Jedna sesja, jedna decyzja, pełna uwaga. 90 minut online.", note: "Po opłaceniu wybierasz termin w kalendarzu." },
+    name: "Rozmowa na progu", text: "", note: "Po opłaceniu wybierasz termin w kalendarzu." },
 ];
 
 const zl = (n) => `${Number(n || 0).toLocaleString("pl-PL", { maximumFractionDigits: 2 })} zł`;
@@ -31,7 +31,7 @@ export default function OneOnOne() {
     <section className="px-5 md:px-10 pb-20 md:pb-24" aria-labelledby="one-on-one-h">
       <div className="mx-auto max-w-[1400px]">
         <p className="technical text-[10px] text-foreground/55 mb-3">JEDEN NA JEDEN</p>
-        <h2 id="one-on-one-h" className="font-display text-2xl md:text-3xl text-[#F5EFE1] mb-8">Spotkania indywidualne</h2>
+        <h2 id="one-on-one-h" className="shop-heading text-2xl md:text-4xl text-[#F5EFE1] mb-10">Spotkania indywidualne</h2>
         <div className="grid gap-5 min-[641px]:grid-cols-2">
           {cards.map(({ p, ...c }) => {
             const to = c.to || `/skarbiec/${p.slug}`;
@@ -45,7 +45,8 @@ export default function OneOnOne() {
                   {soon && <span className="technical text-[9px] text-foreground/55 border border-[#3D3D3F] px-2 py-0.5">WKRÓTCE</span>}
                 </div>
                 <h3 className="shop-heading text-2xl text-[#F5EFE1] leading-snug">{p.name || c.name}</h3>
-                <p className="text-foreground/75 leading-relaxed">{c.text}</p>
+                <p className="italic text-foreground/75 leading-relaxed">{p.promise || c.text}</p>
+                {p.format_details && <p className="technical text-[9px] text-foreground/55">{String(p.format_details).toUpperCase()}</p>}
                 <div className="mt-auto pt-5 border-t hairline flex flex-wrap items-end justify-between gap-4">
                   <div>
                     {paid && <p className="text-lg text-[#F5EFE1]">{zl(p.price)}</p>}

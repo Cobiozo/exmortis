@@ -3,6 +3,7 @@ import { base44 } from "@/api/base44Client";
 import EventTile from "@/components/exmortis/events/EventTile";
 import PastEvents from "@/components/exmortis/events/PastEvents";
 import NoEvents from "@/components/exmortis/events/NoEvents";
+import OneOnOne from "@/components/exmortis/events/OneOnOne";
 
 const TABS = [["all", "Wszystkie"], ["free", "Bezpłatne"], ["online", "Online"], ["onsite", "Stacjonarnie"]];
 
@@ -46,6 +47,7 @@ export default function EventsListing() {
           </div>
         </>
       )}
+      {data && <OneOnOne />}
       <PastEvents events={data?.past || []} />
     </div>
   );
