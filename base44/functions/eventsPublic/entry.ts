@@ -18,7 +18,7 @@ const JOIN_CACHE = new Map();
 
 // Start zapisów na wybrane spotkania (adres spotkania → chwila otwarcia). Na stronie to samo pole:
 // listopadDefault.js → LISTOPAD_ZAPISY_OD (formularz ukryty do tej chwili).
-const REG_OPENS = { "ze-smierci-o-powrotach-o-ktorych-swiat-nie-mowi": "2026-10-16T00:00:00+02:00" };
+const REG_OPENS = {};
 
 // Kto może zobaczyć link / nagranie: zapisani (status Zapisany/Obecny). Lista w pamięci instancji (60 s),
 // więc w szczycie każde wejście nie odpytuje bazy. Klucz: e-mail (małe litery) albo osobisty klucz z maila.
@@ -147,7 +147,7 @@ export default async function (req) {
       // Start zapisów (czas serwera) — przed nim zapisać może się tylko administrator (testy).
       const opens = REG_OPENS[slug];
       if (opens && Date.now() < new Date(opens).getTime() && (await base44.auth.me().catch(() => null))?.role !== "admin") {
-        return Response.json({ error: "Zapisy ruszają 16 października.", not_yet: true }, { status: 400 });
+        return Response.json({ error: `Zapisy ruszają ${new Date(opens).toLocaleDateString("pl-PL", { day: "numeric", month: "long" })}.`, not_yet: true }, { status: 400 });
       }
       const source = typeof body.source === "string" && body.source.trim() !== "" ? body.source.trim().slice(0, 100) : null;
       const ip = clientIp(req);

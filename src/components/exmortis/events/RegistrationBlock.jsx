@@ -68,7 +68,7 @@ export default function RegistrationBlock({ event: ev }) {
             </button>
           </form>
         )}
-        {remindError && <p className="technical text-[10px] blood-text">{remindError}</p>}
+        {remindError && <p role="alert" className="text-sm text-[#E8C547] leading-relaxed">{remindError}</p>}
       </div>
     );
   }

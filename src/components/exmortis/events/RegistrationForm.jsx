@@ -213,7 +213,7 @@ export default function RegistrationForm({ event: ev }) {
           Chcę też dostawać Listy powrotu — jeden list w każdy poniedziałek.
         </span>
       </label>
-      {error && <p className="technical text-[10px] blood-text">{error}</p>}
+      {error && <p role="alert" className="text-sm text-[#E8C547] leading-relaxed">{error}</p>}
       <button type="submit" disabled={sending} aria-busy={sending} className="btn-relic disabled:opacity-60 disabled:cursor-wait">
         {sending ? "ZAPISUJĘ…" : "ZAPISUJĘ SIĘ"}
       </button>
