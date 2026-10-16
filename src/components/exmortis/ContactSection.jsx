@@ -1,4 +1,5 @@
 import React, { useState } from "react";
+import { Link } from "react-router-dom";
 import { ArrowRight, Check, Mail, Instagram, Facebook, Youtube, MessageCircle } from "lucide-react";
 import { sendForm } from "@/lib/outbox";
 import { useSiteContent } from "@/components/exmortis/SiteContentProvider";
@@ -25,9 +26,15 @@ export default function ContactSection() {
   const [sent, setSent] = useState(false);
   const t = useSystemText();
   const [error, setError] = useState("");
+  const [consent, setConsent] = useState(false);
+  const [consentErr, setConsentErr] = useState(false);
 
   const submit = async (e) => {
     e.preventDefault();
+    if (!consent) {
+      setConsentErr(true);
+      return;
+    }
     setSending(true);
     setError("");
     try {
@@ -36,8 +43,8 @@ export default function ContactSection() {
       setSent(true);
       if (res?.pilne) openCrisis();
       setForm({ name: "", email: "", message: "" });
-    } catch {
-      setError("Nie udało się wysłać. Spróbuj ponownie albo napisz bezpośrednio na kontakt@exmortis.pl");
+    } catch (err) {
+      setError(err?.response?.data?.error || "Nie udało się wysłać. Spróbuj ponownie albo napisz bezpośrednio na kontakt@exmortis.pl");
     } finally {
       setSending(false);
     }
@@ -111,6 +118,7 @@ export default function ContactSection() {
                   <label className="technical text-[10px] text-foreground/55 block mb-3">IMIĘ</label>
                   <input
                     required
+                    maxLength={200}
                     value={form.name}
                     onChange={(e) => setForm({ ...form, name: e.target.value })}
                     className="w-full bg-transparent border hairline px-5 py-4 focus:border-[#C9A24A] focus:outline-none transition-colors"
@@ -132,12 +140,30 @@ export default function ContactSection() {
                 <textarea
                   required
                   rows={5}
+                  maxLength={10000}
                   value={form.message}
                   onChange={(e) => setForm({ ...form, message: e.target.value })}
                   className="w-full bg-transparent border hairline px-5 py-4 focus:border-[#C9A24A] focus:outline-none transition-colors resize-none"
                 />
+                <span className="block text-right text-xs mt-1 text-foreground/55">{form.message.length} / 10000</span>
               </div>
-              {error && <p className="text-sm blood-text">{error}</p>}
+              <label className="flex items-start gap-3 cursor-pointer group">
+                <input
+                  type="checkbox"
+                  checked={consent}
+                  onChange={(e) => { setConsent(e.target.checked); if (e.target.checked) setConsentErr(false); }}
+                  aria-required="true"
+                  aria-invalid={consentErr}
+                  aria-describedby={consentErr ? "ct-consent-err" : undefined}
+                  className="mt-0.5 h-5 w-5 shrink-0 accent-[#C9A24A]"
+                />
+                <span className="text-sm text-foreground/80 leading-relaxed group-hover:text-foreground transition-colors">
+                  Akceptuję <Link to="/regulamin" className="gold-text underline">regulamin</Link> i{" "}
+                  <Link to="/polityka-prywatnosci" className="gold-text underline">politykę prywatności</Link>.
+                </span>
+              </label>
+              {consentErr && <p id="ct-consent-err" role="alert" className="-mt-3 text-sm text-[#E8C547]">Zaznacz, żeby wysłać wiadomość.</p>}
+              {error && <p role="alert" className="text-sm blood-text">{error}</p>}
               <button type="submit" disabled={sending} className="btn-relic w-full disabled:opacity-60">
                 {sending ? "WYSYŁAM..." : "WYŚLIJ WIADOMOŚĆ"}{" "}
                 {!sending && <ArrowRight className="h-4 w-4" />}

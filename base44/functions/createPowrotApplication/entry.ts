@@ -3,6 +3,11 @@ import { waitUntil } from "base44:runtime";
 import { runSql, esc, escStr, textField, emailField, clientIp } from "../../shared/supabase.ts";
 import { ipAllowed, TOO_MANY } from "../../shared/rateLimit.ts";
 import { isUrgent, notifyUrgent } from "../../shared/crisis.ts";
+import { loadAppUrl, APP_URL as APP } from "../../shared/settings.ts";
+import { sendMail, adminTo } from "../../shared/smtp.ts";
+
+const HELP = `<p style="font-size:18px;color:#C9A24A;line-height:1.7"><b>116 123</b> · <b>800 70 2222</b> (całą dobę, bezpłatnie) · <b>112</b></p>`;
+const wrap = (body) => `<div style="background:#0A0A0B;color:#E2E2E2;font-family:Georgia,serif;padding:32px;max-width:560px">${body}<hr style="border:none;border-top:1px solid #3D3D3F;margin:28px 0"><p style="font-size:12px;color:#8A8A8C">W kryzysie: 116 123 · 800 70 2222 · 112</p></div>`;
 
 // Nowe kolumny formularza kwalifikacyjnego (tele jest zgodne z encją PowrotApplication).
 const COLUMNS = [
@@ -45,6 +50,8 @@ const num1to10 = (v) => {
 const list = (v) => (Array.isArray(v) ? v.map((s) => String(s)).slice(0, 20) : []);
 
 const jsonb = (v) => `${escStr(JSON.stringify(v))}::jsonb`;
+
+const escHtml = (v) => String(v ?? "").replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
 
 export default async function (req) {
   try {
@@ -102,9 +109,25 @@ export default async function (req) {
        RETURNING id`
     );
 
-    if (pilne) waitUntil(notifyUrgent(base44));
+    // Potwierdzenie dla kandydata i powiadomienie do mnie — jak w zgłoszeniu do podcastu (kolejka, bez blokowania odpowiedzi).
+    const appId = rows && rows[0] ? rows[0].id : null;
+    await loadAppUrl(base44).catch(() => {});
+    waitUntil((async () => {
+      const admin = await adminTo(base44).catch(() => null);
+      const link = `${APP}/admin/kontakty`;
+      if (pilne) {
+        await sendMail(base44, { kind: "powrot", ref: appId, to: email, subject: "Dziękuję za Twoją wiadomość",
+          html: wrap(`<p>Dziękuję za tę wiadomość. Przeczytam Twoje zgłoszenie osobiście.</p><p>Jeśli jest Ci teraz bardzo ciężko, nie czekaj na moją odpowiedź. Zadzwoń teraz:</p>${HELP}<p>Twoja historia poczeka. Ty jesteś ważniejszy(-a).</p><p>Dawid, exmortis</p>`) }).catch(() => {});
+        await notifyUrgent(base44);
+      } else {
+        await sendMail(base44, { kind: "powrot", ref: appId, to: email, subject: "Twoje zgłoszenie POWRÓT",
+          html: wrap(`<p>Dziękuję za zaufanie. Każdy powrót zaczyna się od pierwszego kroku — właśnie został zrobiony. Przeczytam Twoje zgłoszenie osobiście i odezwę się w ciągu kilku dni, żeby umówić rozmowę.</p><p>Dawid, exmortis</p>`) }).catch(() => {});
+        if (admin) await sendMail(base44, { kind: "powrot", ref: appId, to: admin, subject: "Nowe zgłoszenie kwalifikacyjne POWRÓT",
+          html: wrap(`<p>Przyszło nowe zgłoszenie kwalifikacyjne od ${escHtml(fullName)} (${escHtml(email)}).</p><p><a style="color:#C9A24A" href="${link}">Otwórz panel</a></p>`) }).catch(() => {});
+      }
+    })());
 
-    return Response.json({ ok: true, id: rows && rows[0] ? rows[0].id : null, pilne });
+    return Response.json({ ok: true, id: appId, pilne });
   } catch (error) {
     return Response.json({ error: error.message }, { status: 400 });
   }

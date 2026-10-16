@@ -120,7 +120,8 @@ export default function PowrotForm() {
     e.preventDefault();
     const errs = {};
     if (!form.full_name.trim()) errs.full_name = "Podaj imię.";
-    if (!form.phone.trim()) errs.phone = "Podaj numer telefonu.";
+    if (!/^\+?[0-9\s\-()]{7,20}$/.test(form.phone.trim()))
+      errs.phone = "Podaj poprawny numer telefonu.";
     if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.email.trim()))
       errs.email = "Podaj poprawny adres e-mail.";
     if (form.return_from.length === 0) errs.return_from = "Wybierz co najmniej jedną odpowiedź.";
@@ -197,7 +198,7 @@ export default function PowrotForm() {
                 <SectionHead>O Tobie</SectionHead>
                 <TextInput label="Imię i nazwisko" required {...field("full_name")} />
                 <TextInput label="E-mail" required {...field("email")} />
-                <TextInput label="Telefon" required {...field("phone")} />
+                <TextInput label="Telefon" required {...field("phone", "tel")} />
                 <SingleChoice label="Wiek" options={AGE_OPTIONS} {...choice("age")} />
               </div>
 
@@ -319,8 +320,10 @@ export default function PowrotForm() {
               {/* ===== ZGODY ===== */}
               <div className="space-y-4 border-t hairline pt-8">
                 <CheckRow {...check("consent_rodo")}>
-                  Wyrażam zgodę na przetwarzanie moich danych osobowych w celu kontaktu w sprawie
-                  programu POWRÓT (RODO). <span className="gold-text">*</span>
+                  Akceptuję{" "}
+                  <Link to="/regulamin" className="gold-text underline">regulamin</Link> i{" "}
+                  <Link to="/polityka-prywatnosci" className="gold-text underline">politykę prywatności</Link>.
+                  <span className="gold-text"> *</span>
                 </CheckRow>
                 <CheckRow {...check("consent_adult")}>
                   Oświadczam, że mam ukończone 18 lat. <span className="gold-text">*</span>

@@ -17,7 +17,7 @@ export function Label({ children, required }) {
 }
 
 export function Err({ msg }) {
-  return msg ? <p className="text-xs blood-text mt-2">{msg}</p> : null;
+  return msg ? <p role="alert" className="text-xs blood-text mt-2">{msg}</p> : null;
 }
 
 export function TextInput({ label, required, error, value, onChange, type = "text" }) {

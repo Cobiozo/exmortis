@@ -10,7 +10,7 @@ export default function ContactField({ id, label, textarea, error, ...props }) {
     <div>
       <label htmlFor={id} className="block technical text-[10px] text-foreground/70 mb-2">{label}</label>
       {textarea ? <textarea rows={5} {...aria} {...props} className={`${cls} resize-none`} /> : <input {...aria} {...props} className={cls} />}
-      {error && <p id={`${id}-err`} className="text-sm text-[#E8C547] mt-1.5">{error}</p>}
+      {error && <p id={`${id}-err`} role="alert" className="text-sm text-[#E8C547] mt-1.5">{error}</p>}
     </div>
   );
 }
