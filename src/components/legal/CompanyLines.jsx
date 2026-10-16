@@ -4,7 +4,8 @@ import { useFirma } from "@/lib/useSiteSettings";
 // Dane firmy — tylko wypełnione pola. variant: "line" (jedna linia) albo "block" (strona Kontakt).
 export default function CompanyLines({ variant = "line", className = "" }) {
   const f = useFirma();
-  const main = [f.nazwa, f.adres, f.nip && `NIP ${f.nip}`, f.regon && `REGON ${f.regon}`].filter(Boolean).join(", ");
+  // Gdy nazwa firmy to ta sama osoba (działalność jednoosobowa), nie powtarzam jej w drugiej linii.
+  const main = [f.nazwa !== f.osoba && f.nazwa, f.adres, f.nip && `NIP ${f.nip}`, f.regon && `REGON ${f.regon}`].filter(Boolean).join(", ");
   if (variant === "line") return main ? <p className={className}>{main}</p> : null;
   return (
     <div className={className}>
