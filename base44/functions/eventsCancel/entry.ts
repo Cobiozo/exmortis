@@ -30,7 +30,9 @@ export default async function (req) {
       token = body.token;
     }
     token = String(token || "").trim().toLowerCase();
-    if (!/^[0-9a-f]{32}$/.test(token)) {
+    // Klucz zapisu to UUID z bazy (gen_random_uuid, 36 znaków z myślnikami); 32 znaki hex przyjmujemy na wszelki wypadek.
+    // Wcześniej sprawdzano tylko 32 hex — każdy prawdziwy link „zwalniam miejsce” kończył się „Nieprawidłowy link”.
+    if (!/^(?:[0-9a-f]{32}|[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12})$/.test(token)) {
       return htmlPage("Nieprawidłowy link", "Ten link nie działa. Jeśli nie możesz przyjść, odpowiedz po prostu na e-mail ze spotkania.");
     }
 
