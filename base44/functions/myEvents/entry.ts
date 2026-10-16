@@ -42,6 +42,7 @@ export default async function (req) {
           id: r.id, title: r.title, start_datetime: r.start_datetime, duration_minutes: r.duration_minutes,
           format: r.format, status: r.status, reg_status: r.reg_status, ended: !!r.ended,
           join_url: t ? `${path}?t=${t}` : null,
+          event_url: `/spotkania/${r.slug}`,
           recording: registered && r.rec_open ? { until: r.recording_until } : null,
           recording_was: registered && r.has_rec && r.ended && !r.rec_open,
         };

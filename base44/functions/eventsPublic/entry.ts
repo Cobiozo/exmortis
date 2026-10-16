@@ -460,6 +460,7 @@ export default async function (req) {
 
     return Response.json({ error: "Nieznana akcja" }, { status: 400 });
   } catch (error) {
-    return Response.json({ error: error.message }, { status: 500 });
+    // Błąd walidacji to błąd użytkownika — wraca jako 400 z polskim komunikatem, nie jako awaria serwera.
+    return Response.json({ error: error.message }, { status: error?.isValidation ? 400 : 500 });
   }
 }

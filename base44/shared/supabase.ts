@@ -92,17 +92,17 @@ export const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 export function textField(body, key, { max = 2000, required = true } = {}) {
   const v = body ? body[key] : undefined;
   if (v === undefined || v === null || String(v).trim() === "") {
-    if (required) throw new Error(`Brak pola: ${key}`);
+    if (required) { const e = new Error(`Brak pola: ${key}`); e.isValidation = true; throw e; }
     return null;
   }
   const s = String(v).trim();
-  if (s.length > max) throw new Error(`Pole ${key} jest zbyt długie`);
+  if (s.length > max) { const e = new Error(`Pole ${key} jest zbyt długie`); e.isValidation = true; throw e; }
   return s;
 }
 
 export function emailField(body, key = "email") {
   const v = textField(body, key, { max: 320 });
-  if (!EMAIL_RE.test(v)) throw new Error("Niepoprawny adres e-mail");
+  if (!EMAIL_RE.test(v)) { const e = new Error("Niepoprawny adres e-mail"); e.isValidation = true; throw e; }
   return v;
 }
 
