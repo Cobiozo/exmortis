@@ -6,7 +6,7 @@ import path from "path"
 import { fileURLToPath } from "url"
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
 import { SITE_URL, OG_SPOTKANIE, OG_MARKA, metaMode } from './src/config/site.js'
-import { criticalCss } from './build/criticalCss.js'
+import { criticalCss } from './src/config/criticalCss.js'
 
 // Wspólny nagłówek dla robotów: wstawiany przy publikacji wg src/config/site.js (bez og:url).
 const esc = (s) => s.replace(/&/g, "&amp;").replace(/"/g, "&quot;").replace(/</g, "&lt;");

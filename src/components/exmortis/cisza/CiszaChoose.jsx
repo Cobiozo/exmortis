@@ -9,7 +9,7 @@ export default function CiszaChoose({ minutes, setMinutes, onStart, onLogo, view
   return (
     <CiszaFrame onLogo={onLogo}>
       <div className="w-full max-w-xl flex flex-col items-center text-center gap-4 sm:gap-6 fade-up">
-        <div className="grid grid-cols-3 sm:grid-cols-6 gap-2 w-full" role="radiogroup" aria-label="Czas ciszy">
+        <div className="grid grid-cols-4 sm:grid-cols-7 gap-2 w-full" role="radiogroup" aria-label="Czas ciszy">
           {TIMES.map((m) => (
             <button key={m} role="radio" aria-checked={minutes === m} onClick={() => setMinutes(m)}
               className={`py-3 shop-heading text-xl border transition-colors ${minutes === m ? "bg-[#C9A24A] border-[#C9A24A] text-[#0A0A0B]" : "border-[#C9A24A]/50 text-[#C9A24A] hover:border-[#C9A24A]"}`}>

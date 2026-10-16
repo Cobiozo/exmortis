@@ -1,7 +1,7 @@
 // Zapamiętane ustawienia gościa: czas, głośność, wyciszenie, tło (per czas).
 const KEY = "exm_cisza";
 
-export const TIMES = [5, 10, 15, 30, 45, 60];
+export const TIMES = [3, 5, 10, 15, 30, 45, 60];
 
 export const SETTINGS_DEFAULTS = {
   glosnosc_domyslna: 60,

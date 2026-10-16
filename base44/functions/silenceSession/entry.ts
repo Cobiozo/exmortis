@@ -1,7 +1,7 @@
 import { createClientFromRequest } from "npm:@base44/sdk@0.8.44";
 import { runSql, escStr, esc, clientIp } from "../../shared/supabase.ts";
 
-const MINUTES = [5, 10, 15, 30, 45, 60];
+const MINUTES = [3, 5, 10, 15, 30, 45, 60];
 // Anonimowe statystyki: najwyżej 60 zdarzeń na godzinę z jednego połączenia (licznik w pamięci instancji).
 const HITS = new Map<string, number[]>();
 function tooMany(ip: string) {
