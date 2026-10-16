@@ -7,10 +7,21 @@ import NextStepCard from "./NextStepCard";
 export default function MyProducts() {
   const [list, setList] = useState(null);
   const [next, setNext] = useState(null);
-  useEffect(() => {
-    base44.functions.invoke("myAccount", { action: "products" }).then((r) => { setList(r.data.products); setNext(r.data.next || null); });
-  }, []);
+  const [err, setErr] = useState(false);
+  const load = () => {
+    setErr(false); setList(null);
+    base44.functions.invoke("myAccount", { action: "products" })
+      .then((r) => { setList(r.data.products); setNext(r.data.next || null); })
+      .catch(() => setErr(true));
+  };
+  useEffect(load, []);
 
+  if (err) return (
+    <div className="py-16 text-center">
+      <p className="text-foreground/60 mb-4">Nie udało się wczytać produktów.</p>
+      <button onClick={load} className="btn-ghost !py-2 !px-4">Ponów</button>
+    </div>
+  );
   if (!list) return <p className="text-foreground/55">Ładowanie…</p>;
   if (!list.length) {
     return (

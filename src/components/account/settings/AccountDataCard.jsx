@@ -10,11 +10,17 @@ export default function AccountDataCard({ me }) {
   const [msg, setMsg] = useState("");
   const dirty = name.trim() !== saved.trim() && name.trim() !== "";
 
+  const [err, setErr] = useState("");
   const save = async (e) => {
     e.preventDefault();
-    setBusy(true);
-    await base44.auth.updateMe({ imie: name.trim() });
-    setSaved(name.trim()); setBusy(false); setMsg("Zapisano.");
+    setBusy(true); setErr("");
+    try {
+      await base44.auth.updateMe({ imie: name.trim() });
+      setSaved(name.trim()); setMsg("Zapisano.");
+    } catch {
+      setErr("Nie udało się zapisać. Spróbuj ponownie.");
+    }
+    setBusy(false);
   };
 
   return (
@@ -27,6 +33,7 @@ export default function AccountDataCard({ me }) {
               className={`flex-1 min-h-[44px] bg-transparent border border-[#3D3D3F] px-4 text-base focus:border-[#C9A24A] ${FOCUS}`} />
             <button disabled={!dirty || busy} className={BTN_PRIMARY}>{busy && <Loader2 className="h-4 w-4 animate-spin" />} Zapisz</button>
             {msg && <span role="status" className="text-sm text-[#C9A24A]">{msg}</span>}
+            {err && <span role="alert" className="text-sm text-[#FF6B6B]">{err}</span>}
           </div>
         </div>
         <div>

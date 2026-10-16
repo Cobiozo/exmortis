@@ -8,9 +8,16 @@ export default function YourDataCard({ me }) {
   const [busy, setBusy] = useState(false);
   const [open, setOpen] = useState(false);
 
+  const [err, setErr] = useState("");
   const download = async () => {
-    setBusy(true);
-    const r = await base44.functions.invoke("mySettings", { action: "export" });
+    setBusy(true); setErr("");
+    let r;
+    try {
+      r = await base44.functions.invoke("mySettings", { action: "export" });
+    } catch {
+      setBusy(false); setErr("Nie udało się przygotować pliku. Spróbuj ponownie.");
+      return;
+    }
     setBusy(false);
     const a = document.createElement("a");
     a.href = URL.createObjectURL(new Blob([JSON.stringify(r.data, null, 2)], { type: "application/json" }));
@@ -26,6 +33,7 @@ export default function YourDataCard({ me }) {
         </button>
         <button type="button" onClick={() => setOpen(true)} className={`${LINK} !decoration-[#FF6B6B] text-[#FF6B6B]`}>Usuń konto</button>
       </div>
+      {err && <p role="alert" className="text-sm text-[#FF6B6B] mt-3">{err}</p>}
       <DeleteAccountDialog me={me} open={open} onOpenChange={setOpen} />
     </SettingsCard>
   );

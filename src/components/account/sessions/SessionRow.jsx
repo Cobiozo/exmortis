@@ -11,9 +11,10 @@ const call = (p) => base44.functions.invoke("bookingPublic", p).then((r) => r.da
 export default function SessionRow({ b, past, onReschedule, onChanged }) {
   const [err, setErr] = useState("");
   const [busy, setBusy] = useState(false);
+  const [confirm, setConfirm] = useState(false);
 
   const cancel = async () => {
-    if (busy || !window.confirm("Anulować to spotkanie?")) return;
+    if (busy) return;
     setBusy(true); setErr("");
     try {
       await call({ action: "cancel", booking_id: b.id, change_window_h: b.change_window_h });
@@ -22,6 +23,7 @@ export default function SessionRow({ b, past, onReschedule, onChanged }) {
       setErr(e?.response?.data?.error || "Nie udało się anulować.");
     }
     setBusy(false);
+    setConfirm(false);
   };
 
   const note = plNote(b.starts_at);
@@ -40,7 +42,15 @@ export default function SessionRow({ b, past, onReschedule, onChanged }) {
       {active && (b.can_change || b.can_cancel ? (
         <div className="flex flex-wrap gap-3 pt-1">
           {b.can_change && <button onClick={onReschedule} className="btn-ghost text-[10px]">PRZENIEŚ</button>}
-          {b.can_cancel && <button onClick={cancel} disabled={busy} className="btn-ghost text-[10px]">{busy ? "ANULUJĘ…" : "ANULUJ"}</button>}
+          {b.can_cancel && (confirm ? (
+            <span className="flex items-center gap-3">
+              <span className="technical text-[10px] text-foreground/70">ANULOWAĆ TO SPOTKANIE?</span>
+              <button onClick={cancel} disabled={busy} className="gold-text technical text-[10px]">{busy ? "ANULUJĘ…" : "TAK"}</button>
+              <button onClick={() => setConfirm(false)} className="technical text-[10px] text-foreground/55">NIE</button>
+            </span>
+          ) : (
+            <button onClick={() => setConfirm(true)} className="btn-ghost text-[10px]">ANULUJ</button>
+          ))}
         </div>
       ) : (
         <p className="text-sm text-[#E8C547]">Do sesji zostało mniej niż {b.change_window_h || 24} godziny — napisz do mnie.</p>

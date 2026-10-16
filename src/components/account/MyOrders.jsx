@@ -16,11 +16,22 @@ export default function MyOrders() {
       .catch(() => setReviews({}));
   };
 
-  useEffect(() => {
-    base44.functions.invoke("myAccount", { action: "orders" }).then((r) => { setList(r.data.orders); setCards(r.data.gift_cards || []); });
+  const [err, setErr] = useState(false);
+  const load = () => {
+    setList(null); setErr(false);
+    base44.functions.invoke("myAccount", { action: "orders" })
+      .then((r) => { setList(r.data.orders); setCards(r.data.gift_cards || []); })
+      .catch(() => setErr(true));
     loadReviews();
-  }, []);
+  };
+  useEffect(load, []);
 
+  if (err) return (
+    <div className="py-16 text-center">
+      <p className="text-foreground/60 mb-4">Nie udało się wczytać zamówień.</p>
+      <button onClick={load} className="btn-ghost !py-2 !px-4">Ponów</button>
+    </div>
+  );
   if (!list) return <p className="text-foreground/55">Ładowanie…</p>;
   if (!list.length) return <p className="text-foreground/55 py-10">Nie masz jeszcze zamówień.</p>;
   return (
