@@ -96,9 +96,6 @@ function icsStamp(d) {
   return new Date(d).toISOString().replace(/[-:]/g, "").replace(/\.\d{3}/, "");
 }
 
-function icsEsc(s) {
-  return String(s || "").replace(/\\/g, "\\\\").replace(/;/g, "\\;").replace(/,/g, "\\,").replace(/\r?\n/g, "\\n");
-}
 
 // Adres dołączenia do opisu w kalendarzu: osobisty (po zapisie) albo ogólny strony wydarzenia.
 const joinHref = (ev, joinUrl) => (joinUrl ? (/^https?:/.test(joinUrl) ? joinUrl : `${SITE_URL}${joinUrl}`) : `${SITE_URL}/spotkania/${ev.slug}/dolacz`);
