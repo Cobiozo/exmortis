@@ -26,7 +26,7 @@ export default function CiszaSession({
   useWakeLock(true);
 
   const eng = useRef(null);
-  const st = useRef({ stage: "intro", endAt: 0, pausedAt: 0, paused: false, faded: false, sid: null });
+  const st = useRef({ stage: "intro", endAt: 0, pausedAt: 0, paused: false, faded: false, sid: null, starting: null });
   const go = (s) => { st.current.stage = s; setStage(s); };
   const api = useRef({});
 
@@ -53,11 +53,21 @@ export default function CiszaSession({
     go("outro");
     if (muted) navigator.vibrate?.(200);
     eng.current.stopMelody(300);
-    const done = () => {
-      if (st.current.sid) base44.functions.invoke("silenceSession", { event: "cisza_ukonczona", duration_minutes: minutes, session_id: st.current.sid }).catch(() => {});
-      eng.current.stopAll(0);
-      onDone();
+    // Zapis ukończenia od razu po zliczeniu do zera — nie po sygnale końca.
+    // Gdy potwierdzenie startu wciąż idzie, czekamy na nie; gdy się nie udało, jednorazowa próba po 3 s.
+    const record = async () => {
+      try {
+        let sid = st.current.sid;
+        if (!sid && st.current.starting) sid = (await st.current.starting)?.data?.session_id;
+        if (sid) {
+          st.current.sid = sid;
+          const send = () => base44.functions.invoke("silenceSession", { event: "cisza_ukonczona", duration_minutes: minutes, session_id: sid });
+          try { await send(); } catch { setTimeout(() => send().catch(() => {}), 3000); }
+        }
+      } catch { /* zapis nie może zatrzymać przebiegu sesji */ }
     };
+    record();
+    const done = () => { eng.current.stopAll(0); onDone(); };
     if (outro?.plik && !late) signal(outro).then(done);
     else setTimeout(done, late ? 0 : 4000);
   };
@@ -74,9 +84,12 @@ export default function CiszaSession({
         keep.connect(g).connect(e.ctx.destination); keep.start();
       } catch { keep = null; }
     }
-    base44.functions
+    // Zapamiętana obietnica startu: przy błędzie jednorazowa ponowna próba — bez niej ukończenie nie miało dokąd trafić.
+    st.current.starting = base44.functions
       .invoke("silenceSession", { event: "cisza_start", duration_minutes: minutes, soundtrack: music?.nazwa || null, with_sound: !muted, source, background: backdropName })
-      .then((r) => (st.current.sid = r.data.session_id)).catch(() => {});
+      .catch(() => base44.functions.invoke("silenceSession", { event: "cisza_start", duration_minutes: minutes, soundtrack: music?.nazwa || null, with_sound: !muted, source, background: backdropName }))
+      .then((r) => { const sid = r?.data?.session_id; if (sid) st.current.sid = sid; return r; })
+      .catch(() => {});
     const run = () => {
       if (st.current.stage !== "intro") return;
       st.current.endAt = Date.now() + dur;
