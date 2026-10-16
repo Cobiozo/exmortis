@@ -6,6 +6,7 @@ export default async function (req) {
   try {
     return Response.json(await publicSettings(createClientFromRequest(req), req));
   } catch (error) {
-    return Response.json({ error: error.message }, { status: 500 });
+    console.error("siteSettings", error?.message);
+    return Response.json({ error: "Chwilowy problem z ustawieniami. Odśwież za chwilę." }, { status: 500 });
   }
 }

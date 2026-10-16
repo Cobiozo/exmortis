@@ -2,6 +2,7 @@ import { createClientFromRequest } from "npm:@base44/sdk@0.8.44";
 import { waitUntil } from "base44:runtime";
 import { runSql, esc, textField, emailField, clientIp } from "../../shared/supabase.ts";
 import { isUrgent, notifyUrgent } from "../../shared/crisis.ts";
+import { errorResponse } from "../../shared/errors.ts";
 
 const LIMIT_PER_HOUR = 5;
 
@@ -50,6 +51,7 @@ export default async function (req) {
 
     return Response.json({ ok: true, id: rows && rows[0] ? rows[0].id : null, pilne });
   } catch (error) {
-    return Response.json({ error: error.message }, { status: 400 });
+    // Błąd walidacji = komunikat dla formularza; reszta (baza, połączanie) = generyczna odpowiedź.
+    return errorResponse(error, "Nie udało się wysłać wiadomości. Spróbuj ponownie za chwilę.");
   }
 }

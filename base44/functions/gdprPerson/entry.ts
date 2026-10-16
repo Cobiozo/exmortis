@@ -1,6 +1,7 @@
 import { createClientFromRequest } from "npm:@base44/sdk@0.8.52";
 import { runSql, escStr, emailField } from "../../shared/supabase.ts";
 import { KEEP, collectPerson, deletePerson, maskEmail } from "../../shared/gdpr.ts";
+import { errorResponse } from "../../shared/errors.ts";
 
 // RODO art. 15 i 17: znajdź / wyeksportuj / usuń dane osoby po e-mailu — w Supabase i w bazie aplikacji naraz.
 export default async function (req) {
@@ -44,6 +45,6 @@ export default async function (req) {
     }
     return Response.json({ error: "Nieznana akcja" }, { status: 400 });
   } catch (error) {
-    return Response.json({ error: error.message }, { status: 500 });
+    return errorResponse(error, "Nie udało się wykonać operacji. Spróbuj ponownie.");
   }
 }

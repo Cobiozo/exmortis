@@ -4,6 +4,7 @@ import { runSql, escStr, textField, emailField, clientIp } from "../../shared/su
 import { ipAllowed, TOO_MANY } from "../../shared/rateLimit.ts";
 import { getSetting, loadAppUrl, APP_URL } from "../../shared/settings.ts";
 import { insertOrder, getOrderStatus, getOrderByPayuId, claimCompletion } from "../../shared/orders.ts";
+import { errorResponse } from "../../shared/errors.ts";
 import { fulfillOrder } from "../../shared/fulfillOrder.ts";
 import { addSubscriber } from "../../shared/newsletter.ts";
 import { DIGITAL } from "../../shared/access.ts";
@@ -239,8 +240,8 @@ export default async function (req) {
     return Response.json({ redirectUri: data.redirectUri, orderId: extOrderId });
   } catch (error) {
     if (reservedFor) await releaseCode(base44Ref, reservedFor);
-    // Błąd walidacji formularza = 400 (wina danych), reszta = 500.
-    const bad = /^(Brak pola|Pole .* jest zbyt długie|Niepoprawny adres e-mail|Zaakceptuj|Zaznacz|Koszyk jest pusty|Jeden z produktów|Nieprawidłowy kod|Kod |Kodem |Kwota zamówienia|Podaj |Niepoprawny NIP|Bilet:|Brak wolnych|Zostało tylko)/.test(String(error?.message || ""));
-    return Response.json({ error: error.message }, { status: bad ? 400 : 500 });
+    // Błąd walidacji formularza = 400 (komunikat dla klienta); reszta (baza, PayU) = generyczna 500,
+    // szczegóły tylko w logach (audyt W1: bez wycieku surowego tekstu błędu).
+    return errorResponse(error, "Nie udało się rozpocząć płatności. Spróbuj ponownie.");
   }
 }

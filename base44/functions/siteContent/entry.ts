@@ -6,6 +6,7 @@ export default async function (req) {
   try {
     return Response.json({ content: await publicContent(createClientFromRequest(req)) });
   } catch (error) {
-    return Response.json({ error: error.message }, { status: 500 });
+    console.error("siteContent", error?.message);
+    return Response.json({ error: "Chwilowy problem z treścią strony. Odśwież za chwilę." }, { status: 500 });
   }
 }

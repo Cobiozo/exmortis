@@ -21,6 +21,7 @@ export default async function (req) {
     ]);
     return Response.json({ settings, content, page: pages ? pages[0] || null : undefined, event: ev });
   } catch (error) {
-    return Response.json({ error: error.message }, { status: 500 });
+    console.error("bootstrap", error?.message);
+    return Response.json({ error: "Chwilowy problem z danymi strony. Odśwież za chwilę." }, { status: 500 });
   }
 }

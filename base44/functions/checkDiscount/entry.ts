@@ -2,6 +2,7 @@ import { createClientFromRequest } from "npm:@base44/sdk@0.8.53";
 import { runSql, escStr, clientIp } from "../../shared/supabase.ts";
 import { applyDiscount } from "../../shared/discounts.ts";
 import { unitPrice } from "../../shared/productPrice.ts";
+import { errorResponse } from "../../shared/errors.ts";
 
 // Podgląd rabatu w kasie (ostateczne wyliczenie i tak robi payuCreateOrder).
 export default async function (req) {
@@ -27,6 +28,6 @@ export default async function (req) {
     const r = await applyDiscount(base44, body.code, lines);
     return Response.json({ code: r.code, discount: r.discount / 100 });
   } catch (error) {
-    return Response.json({ error: error.message }, { status: 400 });
+    return errorResponse(error, "Nie udało się sprawdzić kodu. Spróbuj ponownie.");
   }
 }

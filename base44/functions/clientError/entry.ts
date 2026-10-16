@@ -33,6 +33,7 @@ export default async function (req) {
     await base44.asServiceRole.entities.ClientError.create({ url, message, stack, browser, at, ip });
     return Response.json({ ok: true });
   } catch (error) {
-    return Response.json({ error: error.message }, { status: 500 });
+    console.error("clientError", error?.message);
+    return Response.json({ error: "Nie udało się zapisać błędu" }, { status: 500 });
   }
 }
