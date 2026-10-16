@@ -145,7 +145,7 @@ function exmInlineCss() {
             try { crit = criticalCss(css, shellSrc); } catch (e) { this?.warn?.(`Krytyczny CSS: ${e.message}`); }
             if (crit && crit.length < css.length && !crit.includes("</style")) {
               lateCss = "/" + file;
-              return `<style>${crit}</style>\n    <link rel="preload" as="style" href="${lateCss}">`;
+              return `<style>${crit}</style>`;
             }
           }
           return `<style>${css}</style>`;
@@ -158,8 +158,13 @@ function exmInlineCss() {
         const entry = html.match(/<script type="module" crossorigin src="(\/assets\/index-[^"]+\.js)"><\/script>/);
         if (entry && html.includes("</body>")) {
           const [tag, src] = entry;
-          const boot = `<script>(function(){var css=${JSON.stringify(lateCss)},cssOn=false,cssOk=!css,wait=[];var done=function(){if(cssOk)return;cssOk=true;for(var k=0;k<wait.length;k++)wait[k]()};var loadCss=function(){if(cssOn||!css)return;cssOn=true;var l=document.createElement("link");l.rel="stylesheet";l.href=css;l.onload=done;l.onerror=done;document.head.appendChild(l);setTimeout(done,4000)};var run=function(){var s=document.createElement("script");s.type="module";s.crossOrigin="";s.src=${JSON.stringify(src)};document.head.appendChild(s)};var go=function(){if(go.d)return;go.d=1;loadCss();if(cssOk)run();else wait.push(run)};try{var o=document.getElementById("exm-shell-root");if(!o){go();return}var im=o.querySelector("img[srcset]");var paint=function(){requestAnimationFrame(function(){setTimeout(go,0)})};var ready=function(){if(im.decode)im.decode().then(paint,paint);else paint()};if(!im||im.complete){im?ready():paint()}else{im.addEventListener("load",ready);im.addEventListener("error",paint)}setTimeout(go,1500)}catch(e){go()}})()</script>`;
-          html = html.replace(tag, `<link rel="modulepreload" crossorigin href="${src}">`).replace("</body>", `  ${boot}\n  </body>`);
+          // Podpowiedzi modulepreload (~35 plików JS) i pełny CSS pobieramy dopiero po pierwszym obrazie powłoki (albo od razu,
+          // gdy powłoki nie ma). Zgłoszone w nagłówku startowały przed pierwszym malowaniem i symulacja PageSpeed (4G)
+          // doliczała ich pobieranie do FCP — wynik wahał się 1,0–2,6 s przy tym samym kodzie.
+          const mp = [src];
+          html = html.replace(/\s*<link rel="modulepreload" crossorigin href="([^"]+)">/g, (t, h) => { if (!mp.includes(h)) mp.push(h); return ""; });
+          const boot = `<script>(function(){var mp=${JSON.stringify(hasShell && lateCss ? mp : [])},pre=function(){if(pre.d)return;pre.d=1;for(var k=0;k<mp.length;k++){var l=document.createElement("link");l.rel="modulepreload";l.crossOrigin="";l.href=mp[k];document.head.appendChild(l)}};var css=${JSON.stringify(lateCss)},cssOn=false,cssOk=!css,wait=[];var done=function(){if(cssOk)return;cssOk=true;for(var k=0;k<wait.length;k++)wait[k]()};var loadCss=function(){if(cssOn||!css)return;cssOn=true;var l=document.createElement("link");l.rel="stylesheet";l.href=css;l.onload=done;l.onerror=done;document.head.appendChild(l);setTimeout(done,4000)};var run=function(){var s=document.createElement("script");s.type="module";s.crossOrigin="";s.src=${JSON.stringify(src)};document.head.appendChild(s)};var go=function(){if(go.d)return;go.d=1;pre();loadCss();if(cssOk)run();else wait.push(run)};try{var o=document.getElementById("exm-shell-root");if(!o){go();return}var im=o.querySelector("img[srcset]");var paint=function(){requestAnimationFrame(function(){setTimeout(go,0)})};var ready=function(){if(im.decode)im.decode().then(paint,paint);else paint()};if(!im||im.complete){im?ready():paint()}else{im.addEventListener("load",ready);im.addEventListener("error",paint)}setTimeout(go,1500)}catch(e){go()}})()</script>`;
+          html = html.replace(tag, hasShell && lateCss ? "" : mp.map((h) => `<link rel="modulepreload" crossorigin href="${h}">`).join("\n    ")).replace("</body>", `  ${boot}\n  </body>`);
         }
         return html;
       },
