@@ -1,4 +1,5 @@
 import { createClientFromRequest } from "npm:@base44/sdk@0.8.44";
+import { clientIp } from "../../shared/supabase.ts";
 import { isActive } from "../../shared/access.ts";
 import { checkVideoAbuse } from "../../shared/videoGuard.ts";
 import { normalizeServerVideo, normalizeVideo } from "../../shared/libraryMedia.ts";
@@ -57,7 +58,7 @@ export default async function (req) {
           external = signed ? { url: signed.url, server: true, expires_in: signed.expires_in } : { url: server, server: true };
         } else external = { embed: embed.embed, provider: embed.provider };
       }
-      const ip = (req.headers.get("x-forwarded-for") || "").split(",")[0].trim();
+      const ip = clientIp(req);
       const blocked = await checkVideoAbuse(base44, email, ip);
       if (blocked) return Response.json({ error: blocked }, { status: 429 });
       // Jedno odtwarzanie naraz: nowa sesja przejmuje konto.
@@ -77,7 +78,7 @@ export default async function (req) {
     }
 
     if (body.action === "violation") {
-      await sr.SecurityLog.create({ type: "znak_wodny", user_email: email, ip: (req.headers.get("x-forwarded-for") || "").split(",")[0].trim(), details: `Lekcja: ${lesson.title}` });
+      await sr.SecurityLog.create({ type: "znak_wodny", user_email: email, ip: clientIp(req), details: `Lekcja: ${lesson.title}` });
       return Response.json({ ok: true });
     }
 

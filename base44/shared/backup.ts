@@ -22,19 +22,22 @@ const ENTITIES = [
 ];
 
 // Pola, których nie zapisujemy w kopii (hasła, tokeny, klucze).
-const SECRET_FIELD = /(password|haslo|hasło|secret|token|api_?key|private_?key|clientsecret|secondkey|smtp)/i;
+const SECRET_FIELD = /(password|haslo|hasło|secret|token|api_?key|openai_?key|private_?key|clientsecret|secondkey|smtp)/i;
 // Wiersze app_settings, których nie zapisujemy (konfiguracja płatności, poczty, tokeny zadań).
 const SECRET_ROW = /^(payu|smtp)$|token/i;
 
 // Czyści rekord: usuwa pola z sekretami i zamienia kolumnę „key" na „name".
-function clean(value) {
-  if (Array.isArray(value)) return value.map((v) => clean(v));
+// Zmiana nazwy „key” → „name” dotyczy tylko kolumny wiersza (głębokość 0). Wewnątrz wartości (jsonb) pole „key”
+// to sekret (np. klucz podpisu filmów w „wideo_ochrona”) — pomijamy je, zamiast przemianowywać i zapisywać.
+function clean(value, depth = 0) {
+  if (Array.isArray(value)) return value.map((v) => clean(v, depth));
   if (value && typeof value === "object") {
     const out = {};
     for (const [k, v] of Object.entries(value)) {
-      const name = k === "key" ? "name" : k;
+      if (depth > 0 && k === "key") continue;
+      const name = depth === 0 && k === "key" ? "name" : k;
       if (SECRET_FIELD.test(name)) continue;
-      out[name] = clean(v);
+      out[name] = clean(v, depth + 1);
     }
     return out;
   }

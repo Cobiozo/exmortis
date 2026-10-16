@@ -132,6 +132,8 @@ export default async function (req) {
     }
 
     // ---- Mój stały link Zoom (do wyboru przy spotkaniach i konsultacjach 1:1) ----
+    // Link i hasło pokoju Zoom — tylko administrator (rola techniczna nie potrzebuje wejścia do spotkań 1:1).
+    if ((body.action === "zoom_get" || body.action === "zoom_save") && tech) return Response.json({ error: "Brak dostępu" }, { status: 403 });
     if (body.action === "zoom_get") {
       const z = (await getSetting(base44, "zoom_staly")) || {};
       return Response.json({ link: z.link || "", haslo: z.haslo || "" });
