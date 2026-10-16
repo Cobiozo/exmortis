@@ -133,6 +133,7 @@ export default async function (req) {
 
     return Response.json({ error: "Nieznana akcja" }, { status: 400 });
   } catch (e) {
-    return Response.json({ error: String(e?.message || e) }, { status: 500 });
+    console.error("obok:", e);
+    return Response.json({ error: "Nie udało się wczytać. Spróbuj za chwilę." }, { status: 500 });
   }
 }

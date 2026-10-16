@@ -30,7 +30,7 @@ export default function ObokAudio({ n, seria, onSave }) {
         <button onClick={() => (mine ? p.toggle() : p.play(ep, n.pozycja_s || 0))} aria-label={mine && p.playing ? "Pauza" : "Odtwórz"} className="h-14 w-14 shrink-0 flex items-center justify-center bg-[#C9A24A] text-[#0A0A0B]">
           {mine && p.playing ? <Pause className="h-6 w-6" /> : <Play className="h-6 w-6" />}
         </button>
-        <input type="range" min={0} max={dur || 1} value={t} onChange={(e) => mine && p.seek(Number(e.target.value))} aria-label="Pozycja" className="flex-1 accent-[#C9A24A]" />
+        <input type="range" min={0} max={dur || 1} value={t} onChange={(e) => (mine ? p.seek(Number(e.target.value)) : p.play(ep, Number(e.target.value)))} aria-label="Pozycja" className="flex-1 accent-[#C9A24A]" />
         <span className="text-xs text-foreground/55 tabular-nums">{fmt(t)} / {fmt(dur)}</span>
       </div>
       {mine && (

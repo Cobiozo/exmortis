@@ -14,7 +14,16 @@ export default function ObokNagranie() {
   const [err, setErr] = useState(null);
   useEffect(() => { obok("nagranie", { slug: seria, numer: Number(numer) }).then(setD).catch((e) => setErr(e?.response?.data || {})); }, [seria, numer]);
   if (err) return <ObokDenied info={err} />;
-  if (!d) return <div className="min-h-screen" />;
+  if (!d) return (
+    <section className="px-5 md:px-10 pt-32 pb-24" aria-busy="true">
+      <div className="mx-auto max-w-[70ch]">
+        <div className="h-3 w-16 bg-[#141416] animate-pulse motion-reduce:animate-none" />
+        <div className="h-9 w-1/2 bg-[#141416] animate-pulse motion-reduce:animate-none mt-6 mb-8" />
+        <div className="aspect-video bg-[#141416] animate-pulse motion-reduce:animate-none mb-6" />
+        <div className="h-20 border hairline bg-[#141416] animate-pulse motion-reduce:animate-none" />
+      </div>
+    </section>
+  );
   const { n } = d;
   const save = (pozycja, ukonczone) => obok("progress", { slug: seria, numer: n.numer, pozycja, ukonczone }).catch(() => {});
   const img = n.obraz || d.seria.okladka;

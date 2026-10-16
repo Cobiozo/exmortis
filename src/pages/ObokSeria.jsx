@@ -12,7 +12,15 @@ export default function ObokSeria() {
   const [tylkoNowe, setTylkoNowe] = useState(false);
   useEffect(() => { obok("seria", { slug: seria }).then(setD).catch((e) => setErr(e?.response?.data || {})); }, [seria]);
   if (err) return <ObokDenied info={err} />;
-  if (!d) return <div className="min-h-screen" />;
+  if (!d) return (
+    <section className="px-5 md:px-10 pt-32 pb-24" aria-busy="true">
+      <div className="mx-auto max-w-[70ch]">
+        <div className="h-3 w-16 bg-[#141416] animate-pulse motion-reduce:animate-none" />
+        <div className="h-10 w-2/3 bg-[#141416] animate-pulse motion-reduce:animate-none mt-6 mb-8" />
+        <div className="border-t hairline">{Array.from({ length: 5 }, (_, i) => <div key={i} className="h-14 bg-[#141416] animate-pulse motion-reduce:animate-none border-b hairline" />)}</div>
+      </div>
+    </section>
+  );
   let list = d.nagrania;
   if (d.seria.typ === "cotygodniowa") list = [...list].reverse();
   if (tylkoNowe) list = list.filter((n) => !n.ukonczone);
