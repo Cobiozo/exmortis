@@ -63,7 +63,9 @@ export default function Checkout() {
     if (payuError) { setPayState("fail"); return undefined; }
     let orderId = "";
     try { orderId = sessionStorage.getItem(ORDER_KEY) || ""; } catch { /* brak */ }
-    if (!orderId) { clear(); setPayState("ok"); return undefined; }
+    // Bez numeru zamówienia (np. Safari prywatny z zablokowanym magazynem sesji) nie wiemy,
+    // czy płatność przeszła — widok „w weryfikacji" zamiast sukcesu (audyt W3); potwierdzenie mailem.
+    if (!orderId) { setPayState("wait"); return undefined; }
     let stop = false, tries = 0;
     const tick = async () => {
       if (stop) return;

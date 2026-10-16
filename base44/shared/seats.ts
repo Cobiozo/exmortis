@@ -1,9 +1,11 @@
 // Miejsca na produktach z limitem (kohorta, kurs na żywo, warsztat).
-// sold — suma sztuk z opłaconych zamówień; pending — z zamówień w trakcie płatności z ostatnich 30 minut.
+// sold — suma sztuk z opłaconych zamówień; pending — z zamówień w trakcie płatności z ostatnich 15 minut.
+// Okno samo wygasa (płatność w toku nie zajmuje miejsca na stałe); 15 minut zamiast 30 — krótsze
+// zatkanie sprzedaży żądaniami bez zapłaty, a kupujący ma nadal zapas na powolną płatność (audyt W5).
 // Jedno zapytanie dla wszystkich produktów naraz; zwraca wyłącznie produkty z ustawionym limitem.
 import { runSql, escStr } from "./supabase.ts";
 
-const PENDING_MIN = 30;
+const PENDING_MIN = 15;
 
 export async function productSeats(base44, ids) {
   const list = [...new Set((ids || []).map((x) => String(x || "")).filter((x) => /^[0-9a-f-]{36}$/i.test(x)))];
