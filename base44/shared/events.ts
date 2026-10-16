@@ -84,9 +84,9 @@ export function buildIcs(ev, token = null) {
   const end = new Date(start.getTime() + (Number(ev.duration_minutes) || 60) * 60000);
   const esc = (s) => String(s || "").replace(/\\/g, "\\\\").replace(/;/g, "\\;").replace(/,/g, "\\,").replace(/\r?\n/g, "\\n");
   const url = isOnline(ev) ? joinUrl(ev, token) : null;
-  // Spotkanie online: w polu „miejsce” stały opis — link w tym polu kalendarze (Gmail) traktują jak adres i otwierają mapę.
-  // Link dołączenia jest w opisie wydarzenia i w polu URL.
-  const place = isOnline(ev) ? "Online · Zoom (link w opisie)" : ev.location || "";
+  // Spotkanie online: BEZ pola „miejsce”. Każda wartość w nim (nawet opis) daje w Gmailu przycisk „Trasa”
+  // i otwiera Mapy Google. Link dołączenia jest w opisie wydarzenia i w polu URL.
+  const place = isOnline(ev) ? "" : ev.location || "";
   const desc = [ev.subtitle || "", url ? `Dołącz do spotkania (pokój otwiera się kilka minut przed startem):\n${url}` : ""].filter(Boolean).join("\n\n");
   return [
     "BEGIN:VCALENDAR",
@@ -102,7 +102,7 @@ export function buildIcs(ev, token = null) {
     `DTEND;TZID=Europe/Warsaw:${icsLocal(end)}`,
     `SUMMARY:${esc(ev.title)}`,
     `DESCRIPTION:${esc(desc)}`,
-    `LOCATION:${esc(place)}`,
+    ...(place ? [`LOCATION:${esc(place)}`] : []),
     ...(url ? [`URL:${url}`] : []),
     "BEGIN:VALARM",
     "TRIGGER:-PT30M",
