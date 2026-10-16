@@ -6,7 +6,15 @@ import { obok, when } from "./obokApi";
 // Kafelki serii: postęp, następne nagranie, „Słuchaj”. Ten sam widok w /obok i w koncie.
 export default function SeriesTiles() {
   const [tiles, setTiles] = useState(null);
-  useEffect(() => { obok("home").then((d) => setTiles(d.tiles)); }, []);
+  const [err, setErr] = useState(false);
+  const load = () => { setErr(false); setTiles(null); obok("home").then((d) => setTiles(d.tiles)).catch(() => setErr(true)); };
+  useEffect(load, []);
+  if (err) return (
+    <div className="text-center py-10">
+      <p className="text-foreground/60 mb-4">Nie udało się wczytać serii.</p>
+      <button onClick={load} className="btn-ghost !py-2 !px-4">Ponów</button>
+    </div>
+  );
   if (!tiles) return <p className="technical text-[10px] text-foreground/55">WCZYTUJĘ…</p>;
   if (!tiles.length) return <p className="text-foreground/60">Nie należysz jeszcze do żadnej serii.</p>;
   return (

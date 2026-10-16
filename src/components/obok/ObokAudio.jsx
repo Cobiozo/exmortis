@@ -10,6 +10,9 @@ export default function ObokAudio({ n, seria, onSave }) {
   const p = usePodcastPlayer();
   const mine = p.ep?.id === `obok-${n.id}`;
   const last = useRef(0);
+  // Aktualne wartości dla zapisu przy wyjściu — bez zamkniętych wartości z momentu montowania.
+  const now = useRef({ mine: false, t: 0 });
+  now.current = { mine, t: p.t };
   const ep = { id: `obok-${n.id}`, audio: n.src, tytul: n.tytul, numer: n.numer, okladka: n.obraz || seria.okladka, href: `/obok/${seria.slug}/${n.numer}`, dlugosc_s: n.dlugosc_s };
 
   useEffect(() => {
@@ -17,7 +20,7 @@ export default function ObokAudio({ n, seria, onSave }) {
     if (Math.abs(p.t - last.current) >= 15) { last.current = p.t; onSave(Math.floor(p.t)); }
     if ("mediaSession" in navigator) navigator.mediaSession.metadata = new MediaMetadata({ title: n.tytul, artist: `exmortis · ${seria.nazwa}`, artwork: [{ src: "/favicon.ico" }] });
   }, [mine, p.t]);
-  useEffect(() => () => { if (mine) onSave(Math.floor(p.t)); }, []);
+  useEffect(() => () => { if (now.current.mine) onSave(Math.floor(now.current.t)); }, []);
 
   const dur = (mine && p.dur) || n.dlugosc_s || 0;
   const t = mine ? p.t : n.pozycja_s;
