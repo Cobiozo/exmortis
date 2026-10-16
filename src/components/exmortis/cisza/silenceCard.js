@@ -60,7 +60,11 @@ export async function makeSilenceCard(view, minutes, bg) {
   await document.fonts?.load('80px "EB Garamond"').catch(() => {});
   // Cyfry „00:00” + pełny złoty pasek (wg wybranego widoku).
   x.textAlign = "center";
-  if (view !== "pasek") {
+  if (view === "cyfry") {
+    x.font = '230px "EB Garamond", Georgia, serif';
+    x.fillStyle = "#F5EFE1";
+    x.fillText("00", 540, 900);
+  } else if (view !== "pasek") {
     x.font = '230px "EB Garamond", Georgia, serif';
     x.fillStyle = "#F5EFE1";
     x.fillText("00", 365, 900);

@@ -1,7 +1,8 @@
-// Jeden widok czasu w trzech odmianach.
+// Jeden widok czasu w czterech odmianach.
 export const VIEWS = [
-  { id: "cyfry_pasek", label: "Cyfry i pasek" },
   { id: "cyfry", label: "Same cyfry" },
+  { id: "cyfry_sek", label: "Cyfry z sekundami" },
+  { id: "cyfry_pasek", label: "Cyfry i pasek" },
   { id: "pasek", label: "Sam pasek" },
 ];
 

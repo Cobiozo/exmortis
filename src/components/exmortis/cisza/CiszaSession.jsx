@@ -14,7 +14,7 @@ import { toPlay, offsetFor, dbGain } from "./library";
 // Przebieg: sygnał wstępu → odliczanie w ciszy → sygnał zakończenia. Jedno źródło czasu z Date.now().
 export default function CiszaSession({
   minutes, music, fadeMs = 8000, volume, onVolume, muted, onMuted, source, reduced, onDone, onExit,
-  view, onView, minutesOnly, speed = 1, backdrops, backdropId, onBackdrop, backdropName, intro, outro,
+  view, onView, speed = 1, backdrops, backdropId, onBackdrop, backdropName, intro, outro,
 }) {
   const dur = (minutes * 60000) / speed;
   const [stage, setStage] = useState("intro");
@@ -161,7 +161,7 @@ export default function CiszaSession({
       }
     >
       <p className="h-5 mb-3 text-sm text-foreground/55">{stage === "intro" ? "Za chwilę…" : paused ? "Pauza" : ""}</p>
-      <TimerView clock={clock} view={view} minutesOnly={minutesOnly} ending={stage === "outro"} reduced={reduced} label={srText} />
+      <TimerView clock={clock} view={view} ending={stage === "outro"} reduced={reduced} label={srText} />
       <span className="sr-only" aria-live="polite">{srText}</span>
       <p className="h-5 mt-3" aria-hidden="true" />
     </CiszaFrame>

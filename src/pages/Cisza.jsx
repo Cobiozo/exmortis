@@ -66,12 +66,12 @@ export default function Cisza() {
       )}
       {phase === "choose" && (
         <CiszaChoose {...common} minutes={minutes} setMinutes={(m) => update({ min: m })} onStart={() => setPhase("session")} onLogo={home}
-          minutesOnly={!!prefs.minutesOnly} onMinutesOnly={(v) => update({ minutesOnly: v })} introUrl={intro?.plik} text={settings.tekst_wstep} />
+          introUrl={intro?.plik} text={settings.tekst_wstep} />
       )}
       {phase === "session" && (
         <CiszaSession {...common} minutes={minutes} music={music} fadeMs={Number(settings.wyciszanie_melodii_s ?? 8) * 1000}
           volume={volume} onVolume={(v) => update({ vol: v })} muted={muted} onMuted={(m) => update({ muted: m })}
-          source={source} reduced={reduced} minutesOnly={!!prefs.minutesOnly} speed={speed}
+          source={source} reduced={reduced} speed={speed}
           onDone={() => setPhase("end")} onExit={() => setPhase("choose")} backdropName={backdrop.nazwa} intro={intro} outro={outro} />
       )}
       {phase === "end" && <CiszaEnd text={settings.tekst_na_koniec} onAgain={() => setPhase("choose")} onLogo={home} reduced={reduced} view={view} minutes={minutes} backdrop={backdrop} />}

@@ -2,7 +2,7 @@ import React, { useRef } from "react";
 import { useFrame, mmss, minutesText } from "./useFrame";
 
 // Duże cyfry MM:SS i cienki złoty pasek. Aktualizacja bezpośrednio w DOM — bez przerysowań Reacta.
-export default function TimerView({ clock, view = "cyfry_pasek", minutesOnly, ending, reduced, small, label }) {
+export default function TimerView({ clock, view = "cyfry_pasek", ending, reduced, small, label }) {
   const mm = useRef(null), ss = useRef(null), txt = useRef(null), fill = useRef(null), dot = useRef(null);
   useFrame(() => {
     const { p, rem } = clock.get();
@@ -14,15 +14,16 @@ export default function TimerView({ clock, view = "cyfry_pasek", minutesOnly, en
   }, reduced ? 1000 : 0);
 
   const digits = view !== "pasek";
-  const bar = view !== "cyfry";
+  const seconds = view === "cyfry_sek" || view === "cyfry_pasek";
+  const bar = view === "cyfry_pasek" || view === "pasek";
   return (
     <div role="timer" aria-label={label} className="flex flex-col items-center select-none max-w-full"
       style={small ? { "--cisza-digits": "28px" } : undefined}>
       {digits && (
         <div className="shop-heading digits text-[#F5EFE1] leading-none whitespace-nowrap" style={{ fontSize: "var(--cisza-digits)" }}>
-          {minutesOnly ? <span ref={txt} /> : (
+          {seconds ? (
             <><span ref={mm}>00</span><span className={`text-[#C9A24A] ${reduced ? "" : "breathe"}`}>:</span><span ref={ss}>00</span></>
-          )}
+          ) : <span ref={txt} />}
         </div>
       )}
       {bar && (

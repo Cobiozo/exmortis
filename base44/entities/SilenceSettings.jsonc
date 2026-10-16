@@ -34,6 +34,7 @@
       "type": "string",
       "enum": [
         "cyfry_pasek",
+        "cyfry_sek",
         "cyfry",
         "pasek"
       ],
