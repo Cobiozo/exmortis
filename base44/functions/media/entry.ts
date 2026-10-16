@@ -1,5 +1,6 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.52';
 import { clientIp } from '../../shared/supabase.ts';
+import { verifyMediaSignature } from '../../shared/mediaSign.ts';
 
 // Proxy obrazów z prywatnej biblioteki: sprawdza pochodzenie, limit żądań, zwraca wersję WebP z cache przeglądarki.
 const ALLOWED = [/^exmortis\.pl$/, /^www\.exmortis\.pl$/, /\.base44\.app$/, /\.base44\.com$/, /^localhost$/];
@@ -39,7 +40,15 @@ export default async function (req) {
     const url = new URL(req.url);
     const id = url.searchParams.get('id') || '';
     if (!/^[a-f0-9]{32}$/.test(id)) return deny(404);
-    if (!fromSite(req)) return deny(403);
+    // Podpis z funkcji serwera (audyt W6): obecny — decyduje sam (ważny do terminu), błędny/wygasły — odmowa.
+    // Nieobecny — dawna droga po pochodzeniu żądania (statyczne obrazy CMS-a w treści stron).
+    const sig = url.searchParams.get('s') || '';
+    const exp = url.searchParams.get('e') || '';
+    if (sig || exp) {
+      if (!(await verifyMediaSignature(id, exp, sig))) return deny(403);
+    } else if (!fromSite(req)) {
+      return deny(403);
+    }
     const ip = clientIp(req);
     if (limited(ip)) return deny(429);
 

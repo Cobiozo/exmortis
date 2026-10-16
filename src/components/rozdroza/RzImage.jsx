@@ -22,13 +22,18 @@ export function prefetchImages(urls) {
 // Kadr z zarezerwowanym miejscem (bez przesunięć układu). Brak lub błąd obrazu → gradient EXMORTIS.
 export default function RzImage({ url, alt = "", ratio = "aspect-video", eager = false, sizes = "(min-width: 760px) 720px, 100vw", className = "", shade = true }) {
   const [bad, setBad] = useState(false);
-  const s = !bad ? imgSources(url) : null;
+  // Kopia z pamięci przeglądarki może mieć wygasły podpis adresu (audyt W6): po błędzie próbuję
+  // jeszcze raz bez podpisu — działa w aplikacji po pochodzeniu żądania; dopiero potem rezygnuję.
+  const [noSig, setNoSig] = useState(false);
+  const base = noSig && url ? String(url).replace(/&e=\d+/, "").replace(/&s=[0-9a-f]{64}/, "") : url;
+  const s = !bad && base ? imgSources(base) : null;
   return (
     <div className={`relative overflow-hidden ${ratio} ${className}`} style={{ background: "radial-gradient(120% 90% at 50% 20%, #2a1f12 0%, #14100c 45%, #0A0A0B 100%)" }}>
       {s && (
         <img src={s.src} srcSet={s.srcSet} sizes={s.srcSet ? sizes : undefined} alt={alt} loading={eager ? "eager" : "lazy"}
-          {...(eager ? { fetchpriority: "high" } : {})} decoding="async" draggable={false} onError={() => setBad(true)}
-          className="absolute inset-0 w-full h-full object-cover" />
+          {...(eager ? { fetchpriority: "high" } : {})} decoding="async" draggable={false}
+          className="absolute inset-0 w-full h-full object-cover"
+          onError={() => { if (!noSig && /&s=[0-9a-f]{64}/.test(String(url || ""))) setNoSig(true); else setBad(true); }} />
       )}
       {shade && <div className="absolute inset-0 bg-gradient-to-b from-transparent via-transparent to-[#0A0A0B]/80 pointer-events-none" aria-hidden="true" />}
     </div>
