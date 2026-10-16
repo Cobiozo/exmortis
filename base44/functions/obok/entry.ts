@@ -57,10 +57,24 @@ export default async function (req) {
 
     if (action === "home") {
       const all = await sr.ObokSeria.filter(admin ? {} : { status: "aktywna" }, "kolejnosc", 100);
+      const ok = [];
+      for (const s of all) if (await hasAccess(s)) ok.push(s);
+      // Dwa zbiorcze zapytania zamiast pary na serię (mniej wywołań bazy przy wielu seriach).
+      const ids = ok.map((s) => s.id);
+      const [recsAll, heardAll] = await Promise.all([
+        ids.length ? sr.ObokNagranie.filter({ seria_id: { $in: ids } }, "numer", 500) : Promise.resolve([]),
+        ids.length ? sr.ObokOdsluch.filter({ user_email: email, seria_id: { $in: ids } }, "-updated_date", 1000) : Promise.resolve([]),
+      ]);
+      const recsBy = new Map(ids.map((id) => [id, []]));
+      recsAll.forEach((r) => recsBy.get(r.seria_id)?.push(r));
+      const heardBy = new Map(ids.map((id) => [id, new Map()]));
+      heardAll.forEach((h) => heardBy.get(h.seria_id)?.set(h.nagranie_id, h));
       const tiles = [];
-      for (const s of all) {
-        if (!(await hasAccess(s))) continue;
-        const { recs, times, hm } = await load(s);
+      for (const s of ok) {
+        const recs = recsBy.get(s.id);
+        if (!admin && recs.length === 0) continue; // seria bez nagrań nie pokazuje pustego kafelka
+        const times = unlockTimes(s, recs, joinedMs(s));
+        const hm = heardBy.get(s.id);
         const open = recs.filter((r) => times.get(r.id) != null && (times.get(r.id) as number) <= now);
         const next = recs.filter((r) => times.get(r.id) != null && (times.get(r.id) as number) > now).sort((a, b) => (times.get(a.id) as number) - (times.get(b.id) as number))[0];
         tiles.push({ id: s.id, nazwa: s.nazwa, slug: s.slug, opis_krotki: s.opis_krotki || "", okladka: s.okladka || "", typ: s.typ,
@@ -88,8 +102,7 @@ export default async function (req) {
       const u = mine.find((x) => x.seria_id === String(body.seria_id || ""));
       if (!u) return Response.json({ error: "Nie należysz do tej serii" }, { status: 404 });
       if (action === "leave") {
-        const h = await sr.ObokOdsluch.filter({ user_email: email, seria_id: u.seria_id }, "-created_date", 500);
-        for (const x of h) await sr.ObokOdsluch.delete(x.id);
+        await sr.ObokOdsluch.deleteMany({ user_email: email, seria_id: u.seria_id });
         await sr.ObokUczestnik.delete(u.id);
       } else await sr.ObokUczestnik.update(u.id, { powiadomienia: !!body.on });
       return Response.json({ ok: true });

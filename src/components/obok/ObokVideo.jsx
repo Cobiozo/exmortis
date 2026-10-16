@@ -5,7 +5,8 @@ export default function ObokVideo({ n, poster, onSave }) {
   const v = useRef(null);
   const [audioOnly, setAudioOnly] = useState(false);
   const last = useRef(0);
-  useEffect(() => { const el = v.current; const go = () => { if (n.pozycja_s) el.currentTime = n.pozycja_s; }; el.addEventListener("loadedmetadata", go, { once: true }); return () => onSave(Math.floor(el.currentTime)); }, []);
+  useEffect(() => { const el = v.current; const go = () => { if (n.pozycja_s) el.currentTime = n.pozycja_s; }; el.addEventListener("loadedmetadata", go, { once: true }); return () => { const t = Math.floor(el.currentTime); if (t > 0) onSave(t); }; // 0 nie nadpisze zapisanej pozycji
+  }, []);
   const tick = (e) => { const t = e.currentTarget.currentTime; if (Math.abs(t - last.current) >= 15) { last.current = t; onSave(Math.floor(t)); } };
   return (
     <div>

@@ -15,7 +15,8 @@ export default async function (req) {
     }
     const ep = await base44.asServiceRole.entities.PodcastEpisode.get(id).catch(() => null);
     if (!ep || !ep.id) return Response.json({ error: "Nie ma takiego odcinka." }, { status: 404 });
-    await base44.asServiceRole.entities.PodcastEpisode.update(ep.id, { odtworzenia: (ep.odtworzenia || 0) + 1 });
+    // $inc zwiększa licznik w bazie — równoległe odtworzenia nie nadpisują się nawzajem.
+    await base44.asServiceRole.entities.PodcastEpisode.updateMany({ id: ep.id }, { $inc: { odtworzenia: 1 } });
     return Response.json({ ok: true });
   } catch (e) {
     return Response.json({ error: e.message }, { status: 500 });

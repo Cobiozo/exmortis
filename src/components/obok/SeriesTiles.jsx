@@ -15,7 +15,19 @@ export default function SeriesTiles() {
       <button onClick={load} className="btn-ghost !py-2 !px-4">Ponów</button>
     </div>
   );
-  if (!tiles) return <p className="technical text-[10px] text-foreground/55">WCZYTUJĘ…</p>;
+  if (!tiles) return (
+    <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6" aria-busy="true">
+      {Array.from({ length: 3 }, (_, i) => (
+        <div key={i} className="border hairline">
+          <div className="aspect-square bg-[#141416] animate-pulse motion-reduce:animate-none" />
+          <div className="p-5 space-y-3">
+            <div className="h-4 w-2/3 bg-[#141416] animate-pulse motion-reduce:animate-none" />
+            <div className="h-3 w-1/3 bg-[#141416] animate-pulse motion-reduce:animate-none" />
+          </div>
+        </div>
+      ))}
+    </div>
+  );
   if (!tiles.length) return <p className="text-foreground/60">Nie należysz jeszcze do żadnej serii.</p>;
   return (
     <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
