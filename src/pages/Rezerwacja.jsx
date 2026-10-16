@@ -11,17 +11,30 @@ const call = (p) => base44.functions.invoke("bookingPublic", p).then((r) => r.da
 export default function Rezerwacja() {
   const { slug } = useParams();
   const [type, setType] = useState(undefined);
+  const [typeErr, setTypeErr] = useState(false);
   const [slots, setSlots] = useState(null);
+  const [slotsErr, setSlotsErr] = useState(false);
   const [pick, setPick] = useState(null);
   const [notice, setNotice] = useState("");
   const [done, setDone] = useState(null);
 
-  const loadSlots = useCallback(() => call({ action: "slots", slug }).then((d) => setSlots(d.slots)).catch(() => setSlots([])), [slug]);
-  useEffect(() => {
-    call({ action: "type", slug }).then((d) => { setType(d.type); loadSlots(); }).catch(() => setType(null));
+  const loadSlots = useCallback(() => {
+    setSlotsErr(false); setSlots(null);
+    call({ action: "slots", slug }).then((d) => setSlots(d.slots)).catch(() => setSlotsErr(true));
+  }, [slug]);
+  const loadAll = useCallback(() => {
+    setTypeErr(false);
+    call({ action: "type", slug }).then((d) => { setType(d.type); loadSlots(); }).catch(() => setTypeErr(true));
   }, [slug, loadSlots]);
+  useEffect(() => { loadAll(); }, [slug, loadAll]);
 
-  if (type === undefined) return <div className="min-h-[60svh] pt-32 flex justify-center"><div className="w-8 h-8 border-4 border-[#3D3D3F] border-t-[#C9A24A] rounded-full animate-spin" /></div>;
+  if (type === undefined && !typeErr) return <div className="min-h-[60svh] pt-32 flex justify-center"><div className="w-8 h-8 border-4 border-[#3D3D3F] border-t-[#C9A24A] rounded-full animate-spin" /></div>;
+  if (typeErr) return (
+    <div className="pt-32 pb-24 container-exm max-w-2xl">
+      <p role="alert" className="text-sm text-[#E8C547]">Nie udało się wczytać rezerwacji. Sprawdź połączenie.</p>
+      <button onClick={loadAll} className="btn-ghost mt-6">SPRÓBUJ PONOWNIE</button>
+    </div>
+  );
   if (!type) return <NotFoundContent />;
 
   return (
@@ -44,7 +57,12 @@ export default function Rezerwacja() {
         ) : (
           <>
             {notice && <p className="mb-6 text-sm text-[#E8C547]" role="alert">{notice}</p>}
-            {slots ? <SlotPicker slots={slots} value={pick} onPick={(s) => { setNotice(""); setPick(s); }} /> : <p className="text-foreground/55">Ładowanie terminów…</p>}
+            {slotsErr ? (
+              <div className="border hairline p-6">
+                <p role="alert" className="text-sm text-[#E8C547]">Nie udało się wczytać terminów. Sprawdź połączenie.</p>
+                <button onClick={loadSlots} className="btn-ghost mt-4">SPRÓBUJ PONOWNIE</button>
+              </div>
+            ) : slots ? <SlotPicker slots={slots} value={pick} onPick={(s) => { setNotice(""); setPick(s); }} /> : <p className="text-foreground/55">Ładowanie terminów…</p>}
           </>
         )}
       </div>

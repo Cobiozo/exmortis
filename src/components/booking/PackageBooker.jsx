@@ -11,6 +11,7 @@ const inp = "w-full bg-[#0A0A0B] border hairline px-4 py-3 focus:border-[#C9A24A
 export default function PackageBooker({ packageId, token, purchasedAt, consent, firstName = "", onDone }) {
   const key = token ? { token } : { package_id: packageId };
   const [slots, setSlots] = useState(null);
+  const [slotsErr, setSlotsErr] = useState(false);
   const [earliest, setEarliest] = useState(null);
   const [pick, setPick] = useState(null);
   const [name, setName] = useState(firstName);
@@ -20,7 +21,8 @@ export default function PackageBooker({ packageId, token, purchasedAt, consent, 
   const [busy, setBusy] = useState(false);
 
   const load = useCallback(() => {
-    call({ action: "slots", ...key }).then((d) => { setSlots(d.slots || []); setEarliest(d.earliest || null); }).catch(() => setSlots([]));
+    setSlotsErr(false); setSlots(null);
+    call({ action: "slots", ...key }).then((d) => { setSlots(d.slots || []); setEarliest(d.earliest || null); }).catch(() => setSlotsErr(true));
   }, [token, packageId]);
   useEffect(() => { load(); }, [load]);
 
@@ -44,6 +46,12 @@ export default function PackageBooker({ packageId, token, purchasedAt, consent, 
     }
   };
 
+  if (slotsErr) return (
+    <div className="border hairline p-6">
+      <p role="alert" className="text-sm text-[#E8C547]">Nie udało się wczytać terminów. Sprawdź połączenie.</p>
+      <button onClick={load} className="btn-ghost mt-4">SPRÓBUJ PONOWNIE</button>
+    </div>
+  );
   if (slots === null) return <p className="text-foreground/55">Ładowanie terminów…</p>;
 
   if (!pick) {

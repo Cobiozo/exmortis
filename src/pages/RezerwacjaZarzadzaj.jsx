@@ -1,4 +1,5 @@
 import React, { useCallback, useEffect, useState } from "react";
+import { Link } from "react-router-dom";
 import { base44 } from "@/api/base44Client";
 import SlotPicker from "@/components/booking/SlotPicker";
 import { fullLabel, plNote, viewerTz } from "@/components/booking/bookingTime";
@@ -14,7 +15,9 @@ export default function RezerwacjaZarzadzaj() {
   const [msg, setMsg] = useState("");
   const [err, setErr] = useState("");
   const [busy, setBusy] = useState(false);
-  const [wantCancel, setWantCancel] = useState(false);
+  const [confirmCancel, setConfirmCancel] = useState(false);
+  const [slotsErr, setSlotsErr] = useState(false);
+  const [slotsLoading, setSlotsLoading] = useState(false);
 
   const load = useCallback(
     (tok) => call({ action: "manage", token: tok }).then((d) => setB(d.booking)).catch(() => setB(null)),
@@ -27,8 +30,8 @@ export default function RezerwacjaZarzadzaj() {
     document.head.appendChild(meta);
     const params = new URLSearchParams(window.location.hash.slice(1));
     const t = params.get("t") || "";
-    // Link „Anuluj” z e-maila prowadzi tu z &a=anuluj — podświetlamy przycisk anulowania.
-    setWantCancel(params.get("a") === "anuluj");
+    // Link „Anuluj” z e-maila prowadzi tu z &a=anuluj — od razu otwieram potwierdzenie anulowania.
+    setConfirmCancel(params.get("a") === "anuluj");
     setToken(t);
     window.history.replaceState(null, "", window.location.pathname);
     load(t);
@@ -36,8 +39,11 @@ export default function RezerwacjaZarzadzaj() {
   }, [load]);
 
   const wantChange = () => {
-    setErr(""); setMsg("");
-    call({ action: "slots", manage_token: token }).then((d) => setSlots(d.slots)).catch(() => setSlots([]));
+    setErr(""); setMsg(""); setSlotsErr(false); setSlotsLoading(true);
+    call({ action: "slots", manage_token: token })
+      .then((d) => setSlots(d.slots))
+      .catch(() => setSlotsErr(true))
+      .finally(() => setSlotsLoading(false));
   };
 
   const doChange = async () => {
@@ -53,7 +59,8 @@ export default function RezerwacjaZarzadzaj() {
   };
 
   const doCancel = async () => {
-    if (busy || !window.confirm("Anulować to spotkanie?")) return;
+    if (busy) return;
+    setConfirmCancel(false);
     setBusy(true); setErr("");
     try {
       const r = await call({ action: "cancel", token, change_window_h: b.change_window_h });
@@ -72,7 +79,14 @@ export default function RezerwacjaZarzadzaj() {
         <p className="technical text-[10px] gold-text">TWOJA REZERWACJA</p>
         {msg && <p className="text-sm gold-text" role="status">{msg}</p>}
         {b === undefined && <p className="text-foreground/55">Sprawdzam…</p>}
-        {b === null && <p className="text-foreground/70">Ten link jest nieważny albo rezerwacja została anulowana.</p>}
+        {b === null && (
+          <div>
+            <p className="text-foreground/70">Ten link jest nieważny albo rezerwacja została anulowana.</p>
+            <p className="text-sm text-foreground/55 mt-3">
+              Jeśli masz konto, swoje sesje zobaczysz w <Link to="/konto" className="gold-text underline">Moich sesjach</Link>.
+            </p>
+          </div>
+        )}
         {b && (
           <>
             <h1 className="relic-heading text-3xl">{b.type}</h1>
@@ -81,12 +95,30 @@ export default function RezerwacjaZarzadzaj() {
               ? <a href={b.zoom_link} target="_blank" rel="noreferrer" className="btn-relic text-[10px]">WEJDŹ NA SPOTKANIE</a>
               : <p className="text-xs text-foreground/55">Link do spotkania pojawi się 15 minut przed terminem.</p>}
             {b.can_change || b.can_cancel ? (
-              <div className="flex flex-wrap gap-3">
-                {b.can_change && <button onClick={wantChange} className="btn-ghost text-[10px]">PRZENIEŚ</button>}
-                {b.can_cancel && <button onClick={doCancel} disabled={busy} className={wantCancel ? "btn-blood text-[10px]" : "btn-ghost text-[10px]"}>{busy ? "ANULUJĘ…" : "ANULUJ"}</button>}
-              </div>
+              <>
+                <div className="flex flex-wrap gap-3">
+                  {b.can_change && <button onClick={wantChange} className="btn-ghost text-[10px]">PRZENIEŚ</button>}
+                  {b.can_cancel && !confirmCancel && <button onClick={() => setConfirmCancel(true)} disabled={busy} className="btn-ghost text-[10px]">ANULUJ</button>}
+                </div>
+                {b.can_cancel && confirmCancel && (
+                  <div className="border border-[#5C1A1B] p-5 space-y-3">
+                    <p className="text-sm">Anulować to spotkanie? Jeśli anulujesz w czasie dozwolonym, sesja wróci do pakietu.</p>
+                    <div className="flex flex-wrap gap-3">
+                      <button onClick={doCancel} disabled={busy} className="btn-blood text-[10px]">{busy ? "ANULUJĘ…" : "TAK, ANULUJ"}</button>
+                      <button onClick={() => setConfirmCancel(false)} disabled={busy} className="btn-ghost text-[10px]">ZOSTAW</button>
+                    </div>
+                  </div>
+                )}
+              </>
             ) : (
               <p className="text-sm text-[#E8C547]">Do sesji zostało mniej niż {b.change_window_h || 24} godziny — napisz do mnie.</p>
+            )}
+            {slotsLoading && slots === null && <p className="text-foreground/55">Ładuję terminy…</p>}
+            {slotsErr && (
+              <div className="border hairline p-6">
+                <p role="alert" className="text-sm text-[#E8C547]">Nie udało się wczytać terminów. Sprawdź połączenie.</p>
+                <button onClick={wantChange} className="btn-ghost mt-4 text-[10px]">SPRÓBUJ PONOWNIE</button>
+              </div>
             )}
             {slots && (
               <div className="border border-[#C9A24A] p-6 space-y-5">
