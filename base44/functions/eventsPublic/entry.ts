@@ -83,7 +83,11 @@ import { PUB_COLS, REG_COUNT, publicEvent } from "../../shared/publicData.ts";
 export default async function (req) {
   try {
     const base44 = createClientFromRequest(req);
-    const body = await req.json().catch(() => ({}));
+    // GET tylko dla pliku kalendarza (?action=ics&slug=…&t=…): telefon (iPhone/Android) otwiera wtedy od razu
+    // „Dodaj do kalendarza”, a komputer pobiera plik. Pozostałe akcje wyłącznie POST.
+    const isGet = req.method === "GET";
+    const body = isGet ? Object.fromEntries(new URL(req.url).searchParams) : await req.json().catch(() => ({}));
+    if (isGet && body.action !== "ics") return Response.json({ error: "Method not allowed" }, { status: 405 });
     if (body.ping) return Response.json({ ok: true });
 
     // --- Lista nadchodzących (Opublikowane + Odwołane) i minionych z nagraniami ---
@@ -218,7 +222,7 @@ export default async function (req) {
       if (!hit || Date.now() - hit.at > 30000 || (body.preview && admin)) {
         if (!joinColsReady) { await ensureJoinColumns(base44); joinColsReady = true; }
         const rows = await runSql(base44,
-          `SELECT id, title, slug, subtitle, format, status, start_datetime, duration_minutes, location, join_link, join_password,
+          `SELECT id, title, slug, subtitle, format, status, start_datetime, duration_minutes, location, join_link, join_password, price,
              recording_url, recording_until, open_minutes, short_path FROM public.events
            WHERE (slug = ${escStr(key)} OR short_path = ${escStr(key)}) ORDER BY slug = ${escStr(key)} DESC LIMIT 1`, true);
         hit = { at: Date.now(), ev: rows[0] || null };
@@ -228,7 +232,13 @@ export default async function (req) {
       if (!ev || !ev.start_datetime || (!admin && !["Opublikowane", "Odwołane"].includes(ev.status))) {
         return Response.json({ error: "Nie znaleziono spotkania" }, { status: 404 });
       }
-      if (body.action === "ics") { await loadAppUrl(base44); const it = /^[0-9a-f]{16,64}$/i.test(String(body.t || "")) ? String(body.t) : null; return Response.json({ ics: buildIcs(ev, it) }); }
+      if (body.action === "ics") {
+        await loadAppUrl(base44);
+        const it = /^[0-9a-f]{16,64}$/i.test(String(body.t || "")) ? String(body.t) : null;
+        const ics = buildIcs(ev, it);
+        if (isGet) return new Response(ics, { headers: { "Content-Type": "text/calendar; charset=utf-8", "Content-Disposition": 'inline; filename="exmortis-spotkanie.ics"', "Cache-Control": "no-store" } });
+        return Response.json({ ics });
+      }
       const base = { title: ev.title, slug: ev.slug, start_datetime: ev.start_datetime, duration_minutes: ev.duration_minutes, open_minutes: Number(ev.open_minutes) || 15 };
       if (ev.format !== "Online") return Response.json({ ...base, state: "stacjonarne" });
       const state = admin && ["przed", "otwarte", "po"].includes(body.preview) ? body.preview : joinState(ev);
@@ -240,18 +250,23 @@ export default async function (req) {
         const ip = clientIp(req);
         const t = String(body.t || "").trim().toLowerCase();
         const email = String(body.email || "").trim().toLowerCase().slice(0, 200);
+        // Spotkanie płatne: wejście wyłącznie osobistym linkiem z maila (sam e-mail nie wystarczy — adres łatwo poznać).
+        const paid = Number(ev.price) > 0;
+        if (paid && !t) return Response.json({ ...base, state, need: true, token_only: true });
         if (!t && !email) return Response.json({ ...base, state, need: true });
         if (tooManyMisses(ip)) return Response.json({ ...base, state, need: true, error: "Zbyt wiele prób. Spróbuj za kilka minut." });
         let acc = await regAccess(base44, ev.id);
-        let ok = (t && acc.tokens.has(t)) || (email && acc.emails.has(email));
-        if (!ok && Date.now() - acc.at > 10000) { acc = await regAccess(base44, ev.id, true); ok = (t && acc.tokens.has(t)) || (email && acc.emails.has(email)); }
+        const byEmail = !paid && !!email;
+        let ok = (t && acc.tokens.has(t)) || (byEmail && acc.emails.has(email));
+        if (!ok && Date.now() - acc.at > 10000) { acc = await regAccess(base44, ev.id, true); ok = (t && acc.tokens.has(t)) || (byEmail && acc.emails.has(email)); }
         if (!ok) {
           addMiss(ip);
+          if (paid) return Response.json({ ...base, state, need: true, token_only: true, error: "Ten link jest nieaktualny. Otwórz osobisty link z e-maila potwierdzającego zakup biletu." });
           return Response.json({ ...base, state, need: true, error: email ? "Nie znajduję zapisu na ten adres. Sprawdź pisownię albo użyj linku z e-maila." : "Ten link jest nieaktualny. Wpisz e-mail podany przy zapisie." });
         }
         okToken = t && acc.tokens.has(t) ? t : null;
-        markJoined(base44, (t && acc.byToken?.get(t)) || (email && acc.byEmail?.get(email)) || null);
-        if (!okToken && email) {
+        markJoined(base44, (t && acc.byToken?.get(t)) || (byEmail && acc.byEmail?.get(email)) || null);
+        if (!okToken && byEmail) {
           const r = (await runSql(base44, `SELECT cancel_token FROM public.registrations WHERE event_id = ${escStr(String(ev.id))} AND lower(email) = ${escStr(email)} AND status IN ('Zapisany', 'Obecny') LIMIT 1`, true).catch(() => []))[0];
           okToken = r ? await joinToken(r.cancel_token) : null;
         }
