@@ -130,12 +130,12 @@ function exmInlineCss() {
         // pierwszym malowaniem i PageSpeed doliczał cały jego czas do FCP/LCP (opóźnienie renderowania ~2 s).
         // Plik aplikacji pobiera się równolegle (modulepreload); na pozostałych stronach start bez zmian (od razu).
         // Bezpiecznik: najpóźniej po 1,5 s aplikacja startuje niezależnie od zdjęcia.
-        html = html.replace(/<script type="module" crossorigin src="(\/assets\/index-[^"]+\.js)"><\/script>/, (tag, src) => {
+        const entry = html.match(/<script type="module" crossorigin src="(\/assets\/index-[^"]+\.js)"><\/script>/);
+        if (entry && html.includes("</body>")) {
+          const [tag, src] = entry;
           const boot = `<script>(function(){var go=function(){if(go.d)return;go.d=1;var s=document.createElement("script");s.type="module";s.crossOrigin="";s.src=${JSON.stringify(src)};document.head.appendChild(s)};try{var o=document.getElementById("exm-shell-root");if(!o){go();return}var im=o.querySelector("img[srcset]");var paint=function(){requestAnimationFrame(function(){setTimeout(go,0)})};var ready=function(){if(im.decode)im.decode().then(paint,paint);else paint()};if(!im||im.complete){im?ready():paint()}else{im.addEventListener("load",ready);im.addEventListener("error",paint)}setTimeout(go,1500)}catch(e){go()}})()</script>`;
-          if (!html.includes("</body>")) return tag;
-          html = html.replace("</body>", `  ${boot}\n  </body>`);
-          return `<link rel="modulepreload" crossorigin href="${src}">`;
-        });
+          html = html.replace(tag, `<link rel="modulepreload" crossorigin href="${src}">`).replace("</body>", `  ${boot}\n  </body>`);
+        }
         return html.replace(/<link rel="stylesheet"(?: crossorigin)? href="\/(assets\/[^"]+\.css)">/g, (tag, file) => {
           const asset = ctx.bundle[file];
           const css = asset && asset.type === "asset" ? String(asset.source) : "";
