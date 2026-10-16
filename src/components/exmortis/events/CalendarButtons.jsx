@@ -1,24 +1,23 @@
 import React from "react";
-import { CalendarPlus, FileDown } from "lucide-react";
+import { CalendarPlus } from "lucide-react";
 
-import { googleCalendarUrl, downloadIcs } from "./time";
+import { googleCalendarUrl, outlookCalendarUrl, icsUrl } from "./time";
 
-// Dodaj do kalendarza: Google Calendar i plik .ics (Apple / Outlook).
-export default function CalendarButtons({ event }) {
-  if (!event.start_datetime) return null;
+// Dodaj do kalendarza jednym kliknięciem: Google, Outlook albo Apple / inny (plik .ics otwierany od razu).
+// joinUrl i t — osobisty link dołączenia po zapisie (trafia do opisu wydarzenia w kalendarzu).
+export default function CalendarButtons({ event, joinUrl = null, t = null, className = "" }) {
+  if (!event?.start_datetime) return null;
+  const btn = "btn-ghost !px-4 !py-3 justify-center";
   return (
-    <div className="flex flex-col sm:flex-row sm:flex-wrap gap-3 [&>*]:w-full sm:[&>*]:w-auto">
-      <a
-        href={googleCalendarUrl(event)}
-        target="_blank"
-        rel="noreferrer"
-        className="btn-ghost !px-5 !py-3"
-      >
-        <CalendarPlus className="h-4 w-4" /> GOOGLE CALENDAR
-      </a>
-      <button onClick={() => downloadIcs(event)} className="btn-ghost !px-5 !py-3">
-        <FileDown className="h-4 w-4" /> PLIK .ICS (APPLE / OUTLOOK)
-      </button>
+    <div className={className}>
+      <p className="technical text-[10px] text-foreground/55 mb-3 flex items-center gap-2">
+        <CalendarPlus className="h-3.5 w-3.5" /> DODAJ DO KALENDARZA
+      </p>
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
+        <a href={googleCalendarUrl(event, joinUrl)} target="_blank" rel="noopener noreferrer" className={btn}>GOOGLE</a>
+        <a href={outlookCalendarUrl(event, joinUrl)} target="_blank" rel="noopener noreferrer" className={btn}>OUTLOOK</a>
+        <a href={icsUrl(event, t)} className={btn}>APPLE / INNY</a>
+      </div>
     </div>
   );
 }

@@ -100,19 +100,45 @@ function icsEsc(s) {
   return String(s || "").replace(/\\/g, "\\\\").replace(/;/g, "\\;").replace(/,/g, "\\,").replace(/\r?\n/g, "\\n");
 }
 
-export function googleCalendarUrl(ev) {
-  const start = new Date(ev.start_datetime);
-  const end = new Date(start.getTime() + (Number(ev.duration_minutes) || 60) * 60000);
+// Adres dołączenia do opisu w kalendarzu: osobisty (po zapisie) albo ogólny strony wydarzenia.
+const joinHref = (ev, joinUrl) => (joinUrl ? (/^https?:/.test(joinUrl) ? joinUrl : `${SITE_URL}${joinUrl}`) : `${SITE_URL}/spotkania/${ev.slug}/dolacz`);
+const calDetails = (ev, joinUrl) => (ev.format === "Online"
+  ? [ev.subtitle || "", `Dołącz do spotkania (pokój otwiera się kilka minut przed startem):\n${joinHref(ev, joinUrl)}`].filter(Boolean).join("\n\n")
+  : ev.subtitle || "");
+const calEnd = (ev) => new Date(new Date(ev.start_datetime).getTime() + (Number(ev.duration_minutes) || 60) * 60000);
+
+// Spotkanie online: bez pola „miejsce” — każda wartość w nim daje w kalendarzu przycisk „Trasa” (Mapy Google).
+export function googleCalendarUrl(ev, joinUrl = null) {
   const params = new URLSearchParams({
     action: "TEMPLATE",
     text: ev.title,
-    dates: `${icsStamp(start)}/${icsStamp(end)}`,
-    details: ev.format === "Online"
-      ? [ev.subtitle || "", `Dołącz do spotkania: ${SITE_URL}/spotkania/${ev.slug}/dolacz`].filter(Boolean).join("\n\n")
-      : ev.subtitle || "",
-    location: ev.format === "Online" ? "Online · Zoom (link w opisie)" : ev.location || "",
+    dates: `${icsStamp(ev.start_datetime)}/${icsStamp(calEnd(ev))}`,
+    details: calDetails(ev, joinUrl),
+    ctz: PL,
   });
+  if (ev.format !== "Online" && ev.location) params.set("location", ev.location);
   return `https://calendar.google.com/calendar/render?${params.toString()}`;
+}
+
+// Outlook (konto Microsoft: outlook.com / Hotmail / Microsoft 365 w przeglądarce).
+export function outlookCalendarUrl(ev, joinUrl = null) {
+  const params = new URLSearchParams({
+    path: "/calendar/action/compose",
+    rru: "addevent",
+    subject: ev.title,
+    startdt: new Date(ev.start_datetime).toISOString(),
+    enddt: calEnd(ev).toISOString(),
+    body: calDetails(ev, joinUrl),
+  });
+  if (ev.format !== "Online" && ev.location) params.set("location", ev.location);
+  return `https://outlook.live.com/calendar/0/deeplink/compose?${params.toString()}`;
+}
+
+// Apple / inne kalendarze: plik .ics z serwera pod zwykłym adresem — iPhone i Android od razu proponują
+// „Dodaj do kalendarza”, komputer otwiera go w swoim kalendarzu. t — osobisty klucz dołączenia (po zapisie).
+export function icsUrl(ev, t = null) {
+  const q = new URLSearchParams({ action: "ics", slug: ev.slug, ...(t ? { t } : {}) });
+  return `${SITE_URL}/functions/eventsPublic?${q.toString()}`;
 }
 
 // Plik .ics budowany na serwerze z aktualnych danych spotkania (stały UID, stały adres dołączenia).
