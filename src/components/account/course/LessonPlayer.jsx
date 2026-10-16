@@ -13,6 +13,7 @@ export default function LessonPlayer({ accessId, lesson, onDone, onNext, nextTit
   const ref = useRef(null);
   const box = useRef(null);
   const lastSave = useRef(0);
+  const posRef = useRef(0);
   const resumeAt = useRef(null);
   const retried = useRef(false);
   const [src, setSrc] = useState(null);
@@ -28,6 +29,13 @@ export default function LessonPlayer({ accessId, lesson, onDone, onNext, nextTit
     .catch((e) => setErr(e?.response?.data?.error || "Wideo nie chce się wczytać. Spróbuj za chwilę."));
 
   useEffect(() => { if (lesson.has_video) loadUrl(); }, [lesson.id]);
+
+  // Zapis pozycji przy opuszczeniu lekcji — przejście do innej nie zapisuje jej samo.
+  useEffect(() => {
+    posRef.current = lesson.position_s || 0;
+    return () => { if (posRef.current > 0) call("progress", { position_s: posRef.current }); };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [lesson.id]);
 
   // Link wygasa po 60 min — odświeżamy co 50 min, zachowując pozycję.
   useEffect(() => {
@@ -70,6 +78,7 @@ export default function LessonPlayer({ accessId, lesson, onDone, onNext, nextTit
 
   const onTime = () => {
     const v = ref.current;
+    posRef.current = v.currentTime;
     if (Date.now() - lastSave.current > 15000) { lastSave.current = Date.now(); send(); }
     if (!done && v.duration && v.currentTime / v.duration > 0.9) { setDone(true); onDone(lesson.id); send({ completed: true }); }
   };
