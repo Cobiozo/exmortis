@@ -73,12 +73,17 @@ export function esc(value) {
   return escStr(value);
 }
 
-// IP klienta wyłącznie z nagłówka ustawianego przez brzeg platformy (Cloudflare).
-// cf-connecting-ip i x-real-ip są nadpisywane przy każdym żądaniu — klient nie może ich podrobić.
-// X-Forwarded-For pomijamy: jego wartość pochodzi od klienta (można podać dowolną).
+// IP klienta. Brzeg platformy (Cloudflare przed exmortis.pl i *.base44.app) ustawia True-Client-IP na prawdziwy
+// adres odwiedzającego i nadpisuje wartość podaną przez klienta (sprawdzone 16.10.2026: podrobiony nagłówek
+// nie przechodzi). cf-connecting-ip / x-real-ip zawierają tu adres WEWNĘTRZNEGO pośrednika platformy (74.220.48.x),
+// wspólny dla wielu odwiedzających — limity liczone po nim blokowały obcych sobie ludzi naraz. Zostają tylko jako zapas.
+// X-Forwarded-For pomijamy: jego pierwsza wartość pochodzi od klienta (można podać dowolną).
 export function clientIp(req) {
+  const ok = (v) => /^[0-9a-fA-F:.]{3,45}$/.test(v);
+  const t = (req.headers.get("true-client-ip") || "").trim();
+  if (ok(t)) return t;
   const v = (req.headers.get("cf-connecting-ip") || req.headers.get("x-real-ip") || "").trim();
-  return /^[0-9a-fA-F:.]{3,45}$/.test(v) ? v : "brak";
+  return ok(v) ? v : "brak";
 }
 
 export const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
