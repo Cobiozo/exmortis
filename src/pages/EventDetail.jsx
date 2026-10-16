@@ -154,10 +154,7 @@ export default function EventDetail() {
           );
         })()}
 
-        <div className="mt-12">
-          <p className="technical text-[10px] text-foreground/55 mb-5">DODAJ DO KALENDARZA</p>
-          <CalendarButtons event={event} />
-        </div>
+        <CalendarButtons event={event} className="mt-12" />
         <ZoomFaq event={event} />
        </div>
 

@@ -2,8 +2,7 @@ import React, { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { sendForm } from "@/lib/outbox";
 import useSystemText from "@/content/useSystemText";
-import { CalendarPlus } from "lucide-react";
-import { downloadIcs } from "./time";
+import CalendarButtons from "./CalendarButtons";
 import { track } from "@/lib/track";
 import { visitSource } from "@/lib/firstTouch";
 
@@ -108,16 +107,14 @@ export default function RegistrationForm({ event: ev }) {
             <a href={result.join_url} className="btn-relic !px-6 !py-3 mt-3">DOŁĄCZ DO SPOTKANIA</a>
             <p className="text-foreground/60 text-sm mt-4 leading-relaxed">
               Zachęcam do zapisania linku lub dodania wydarzenia do kalendarza. Ponieważ jest to link spersonalizowany, proszę o nieudostępnianie go osobom trzecim.
-              Do spotkania możesz dołączyć również bezpośrednio przez stronę wydarzenia, podając adres e-mail użyty podczas rejestracji.
+              {Number(ev.price) > 0 ? null : " Do spotkania możesz dołączyć również bezpośrednio przez stronę wydarzenia, podając adres e-mail użyty podczas rejestracji."}
             </p>
           </>
         ) : ev.format !== "Online" ? null : (
           <p className="text-foreground/60 mt-4 leading-relaxed">Link do spotkania przyjdzie e-mailem.</p>
         )}
         {ev.start_datetime && (
-          <button type="button" onClick={() => downloadIcs(ev, joinT)} className="btn-ghost !px-5 !py-3 mt-5">
-            <CalendarPlus className="h-4 w-4" /> DODAJ DO KALENDARZA
-          </button>
+          <CalendarButtons event={ev} joinUrl={result.join_url || null} t={joinT} className="mt-6" />
         )}
         {result.checkout_url && (
           <p className="technical text-[10px] gold-text mt-5">ZA CHWILĘ PROWADZĘ CIĘ DO PŁATNOŚCI…</p>
