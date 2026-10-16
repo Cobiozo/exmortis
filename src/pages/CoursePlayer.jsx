@@ -18,18 +18,33 @@ export default function CoursePlayer() {
   useEffect(() => { if (user?.license_consent_at) setConsented(true); }, [user]);
   useNoIndex();
 
-  const load = () =>
-    base44.functions.invoke("course", { action: "outline", access_id: accessId })
+  const load = () => {
+    setErr("");
+    return base44.functions.invoke("course", { action: "outline", access_id: accessId })
       .then((r) => {
         setData(r.data);
         setCurrent((c) => c || (r.data.lessons.find((l) => !l.completed) || r.data.lessons[0])?.id || null);
       })
-      .catch(() => setErr("Nie masz dostępu do tego kursu albo dostęp wygasł."));
+      .catch((e) => {
+        const status = e?.response?.status || e?.status || 0;
+        setErr(status === 403 || status === 401
+          ? "Nie masz dostępu do tego kursu albo dostęp wygasł."
+          : "Nie udało się wczytać kursu. Sprawdź połączenie i spróbuj ponownie.");
+      });
+  };
   useEffect(() => { load(); }, [accessId]);
 
   const markDone = (id) => setData((d) => ({ ...d, lessons: d.lessons.map((l) => (l.id === id ? { ...l, completed: true } : l)) }));
 
-  if (err) return <div className="min-h-[60vh] flex flex-col items-center justify-center gap-6 px-5 text-center pt-28"><p className="text-foreground/60">{err}</p><Link to="/konto" className="btn-ghost">MOJE PRODUKTY</Link></div>;
+  if (err) return (
+    <div className="min-h-[60vh] flex flex-col items-center justify-center gap-6 px-5 text-center pt-28">
+      <p className="text-foreground/60">{err}</p>
+      <div className="flex flex-wrap justify-center gap-4">
+        {/Nie udało się/.test(err) && <button onClick={load} className="btn-relic !px-5 !py-3 text-[10px]">SPRÓBUJ PONOWNIE</button>}
+        <Link to="/konto" className="btn-ghost">MOJE PRODUKTY</Link>
+      </div>
+    </div>
+  );
   if (!data) return <div className="min-h-[60vh] flex items-center justify-center pt-28"><Loader2 className="h-6 w-6 animate-spin gold-text" /></div>;
 
   const idx = data.lessons.findIndex((l) => l.id === current);
