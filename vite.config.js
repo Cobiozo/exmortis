@@ -6,6 +6,7 @@ import path from "path"
 import { fileURLToPath } from "url"
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
 import { SITE_URL, OG_SPOTKANIE, OG_MARKA, metaMode } from './src/config/site.js'
+import { criticalCss } from './build/criticalCss.js'
 
 // Wspólny nagłówek dla robotów: wstawiany przy publikacji wg src/config/site.js (bez og:url).
 const esc = (s) => s.replace(/&/g, "&amp;").replace(/"/g, "&quot;").replace(/</g, "&lt;");
@@ -127,22 +128,40 @@ function exmInlineCss() {
           const fontsCss = fs.readFileSync(path.resolve(process.cwd(), "public/fonts/fonts.css"), "utf8");
           if (fontsCss && !fontsCss.includes("</style")) html = html.replace(/<link rel="stylesheet" href="\/fonts\/fonts\.css"\s*\/?>/, `<style>${fontsCss}</style>`);
         } catch { /* zostaje zwykły link */ }
+        // Krytyczny CSS (PageSpeed, FCP): przy powłoce startowej w HTML ląduje tylko ~12 KB reguł potrzebnych do jej
+        // narysowania (build/criticalCss.js, wygląd sprawdzony piksel w piksel), zamiast całego arkusza ~120 KB, który
+        // przeglądarka musiała przeliczyć przed pierwszym obrazem. Pełny arkusz: preload w nagłówku, dołączany przez
+        // skrypt startowy niżej — aplikacja rusza dopiero, gdy jest wczytany (bez mignięcia niestylowanej strony).
+        // Bez powłoki (po premierze) — jak dawniej: cały arkusz w HTML.
+        const shellSrc = (() => { try { return fs.readFileSync(path.resolve(process.cwd(), "src/content/landingShell.html"), "utf8"); } catch { return ""; } })();
+        const hasShell = html.includes('id="exm-shell"') && !!shellSrc;
+        let lateCss = null;
+        html = html.replace(/<link rel="stylesheet"(?: crossorigin)? href="\/(assets\/[^"]+\.css)">/g, (tag, file) => {
+          const asset = ctx.bundle[file];
+          const css = asset && asset.type === "asset" ? String(asset.source) : "";
+          if (!css || css.length >= 200000 || css.includes("</style")) return tag;
+          if (hasShell && !lateCss && /^assets\/index-/.test(file)) {
+            let crit = "";
+            try { crit = criticalCss(css, shellSrc); } catch (e) { this?.warn?.(`Krytyczny CSS: ${e.message}`); }
+            if (crit && crit.length < css.length && !crit.includes("</style")) {
+              lateCss = "/" + file;
+              return `<style>${crit}</style>\n    <link rel="preload" as="style" href="${lateCss}">`;
+            }
+          }
+          return `<style>${css}</style>`;
+        });
         // Start aplikacji PO pierwszym obrazie powłoki: na „/” i „/1-listopada” (do premiery) przeglądarka najpierw maluje
         // gotowy nagłówek i główne zdjęcie, a dopiero potem uruchamia JavaScript. Bez tego skrypt zdążał się wykonać przed
         // pierwszym malowaniem i PageSpeed doliczał cały jego czas do FCP/LCP (opóźnienie renderowania ~2 s).
-        // Plik aplikacji pobiera się równolegle (modulepreload); na pozostałych stronach start bez zmian (od razu).
-        // Bezpiecznik: najpóźniej po 1,5 s aplikacja startuje niezależnie od zdjęcia.
+        // Plik aplikacji pobiera się równolegle (modulepreload); na pozostałych stronach start od razu.
+        // Bezpiecznik: najpóźniej po 1,5 s aplikacja startuje niezależnie od zdjęcia; arkusz CSS — najpóźniej po 4 s.
         const entry = html.match(/<script type="module" crossorigin src="(\/assets\/index-[^"]+\.js)"><\/script>/);
         if (entry && html.includes("</body>")) {
           const [tag, src] = entry;
-          const boot = `<script>(function(){var go=function(){if(go.d)return;go.d=1;var s=document.createElement("script");s.type="module";s.crossOrigin="";s.src=${JSON.stringify(src)};document.head.appendChild(s)};try{var o=document.getElementById("exm-shell-root");if(!o){go();return}var im=o.querySelector("img[srcset]");var paint=function(){requestAnimationFrame(function(){setTimeout(go,0)})};var ready=function(){if(im.decode)im.decode().then(paint,paint);else paint()};if(!im||im.complete){im?ready():paint()}else{im.addEventListener("load",ready);im.addEventListener("error",paint)}setTimeout(go,1500)}catch(e){go()}})()</script>`;
+          const boot = `<script>(function(){var css=${JSON.stringify(lateCss)},cssOn=false,cssOk=!css,wait=[];var done=function(){if(cssOk)return;cssOk=true;for(var k=0;k<wait.length;k++)wait[k]()};var loadCss=function(){if(cssOn||!css)return;cssOn=true;var l=document.createElement("link");l.rel="stylesheet";l.href=css;l.onload=done;l.onerror=done;document.head.appendChild(l);setTimeout(done,4000)};var run=function(){var s=document.createElement("script");s.type="module";s.crossOrigin="";s.src=${JSON.stringify(src)};document.head.appendChild(s)};var go=function(){if(go.d)return;go.d=1;loadCss();if(cssOk)run();else wait.push(run)};try{var o=document.getElementById("exm-shell-root");if(!o){go();return}var im=o.querySelector("img[srcset]");var paint=function(){requestAnimationFrame(function(){setTimeout(go,0)})};var ready=function(){if(im.decode)im.decode().then(paint,paint);else paint()};if(!im||im.complete){im?ready():paint()}else{im.addEventListener("load",ready);im.addEventListener("error",paint)}setTimeout(go,1500)}catch(e){go()}})()</script>`;
           html = html.replace(tag, `<link rel="modulepreload" crossorigin href="${src}">`).replace("</body>", `  ${boot}\n  </body>`);
         }
-        return html.replace(/<link rel="stylesheet"(?: crossorigin)? href="\/(assets\/[^"]+\.css)">/g, (tag, file) => {
-          const asset = ctx.bundle[file];
-          const css = asset && asset.type === "asset" ? String(asset.source) : "";
-          return css && css.length < 200000 && !css.includes("</style") ? `<style>${css}</style>` : tag;
-        });
+        return html;
       },
     },
   };
