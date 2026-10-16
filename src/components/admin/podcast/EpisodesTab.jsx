@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { Copy, Pencil, Trash2 } from "lucide-react";
+import { Copy, Pencil, Trash2, X } from "lucide-react";
 import { EP, GU, PL, STATUS } from "./podAdmin";
 import EpisodeForm from "./EpisodeForm";
 
@@ -8,6 +8,7 @@ export default function EpisodesTab() {
   const [guests, setGuests] = useState([]);
   const [pls, setPls] = useState([]);
   const [edit, setEdit] = useState(null);
+  const [confirmId, setConfirmId] = useState(null);
   const [status, setStatus] = useState("");
   const [q, setQ] = useState("");
 
@@ -27,7 +28,7 @@ export default function EpisodesTab() {
     await EP.create({ ...d, tytul: `${e.tytul} (kopia)`, slug: `${e.slug}-kopia`, status: "szkic", odtworzenia: 0 });
     load();
   };
-  const del = async (e) => { if (window.confirm(`Usunąć „${e.tytul}”?`)) { await EP.delete(e.id); load(); } };
+  const del = async (e) => { await EP.delete(e.id); setConfirmId(null); load(); };
   const nextNum = Math.max(0, ...(eps || []).map((e) => e.numer || 0)) + 1;
 
   if (!eps) return <p className="text-sm text-foreground/50">Ładowanie…</p>;
@@ -49,7 +50,14 @@ export default function EpisodesTab() {
           </div>
           <button onClick={() => setEdit(e)} aria-label="Edytuj" className="p-1.5 text-foreground/50 hover:text-[#C9A24A]"><Pencil className="h-4 w-4" /></button>
           <button onClick={() => dup(e)} aria-label="Duplikuj" className="p-1.5 text-foreground/50 hover:text-[#C9A24A]"><Copy className="h-4 w-4" /></button>
-          <button onClick={() => del(e)} aria-label="Usuń" className="p-1.5 text-foreground/50 hover:text-[#BC1E22]"><Trash2 className="h-4 w-4" /></button>
+          {confirmId === e.id ? (
+            <>
+              <button onClick={() => del(e)} aria-label="Potwierdź usunięcie" className="p-1.5 border border-[#BC1E22]/60 text-[#BC1E22] hover:bg-[#BC1E22]/10"><Trash2 className="h-4 w-4" /></button>
+              <button onClick={() => setConfirmId(null)} aria-label="Anuluj" className="p-1.5 text-foreground/50 hover:text-foreground"><X className="h-4 w-4" /></button>
+            </>
+          ) : (
+            <button onClick={() => setConfirmId(e.id)} aria-label="Usuń" className="p-1.5 text-foreground/50 hover:text-[#BC1E22]"><Trash2 className="h-4 w-4" /></button>
+          )}
         </div>
       ))}
     </div>

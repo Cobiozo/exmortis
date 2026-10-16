@@ -15,7 +15,7 @@ export default function EpisodeList({ episodes, playlists }) {
     let l = ids ? ids.map((id) => episodes.find((e) => e.id === id)).filter(Boolean) : episodes;
     if (topic) l = l.filter((e) => e.tematy?.includes(topic));
     const s = q.trim().toLowerCase();
-    if (s) l = l.filter((e) => [e.tytul, e.gosc_nazwa, e.transkrypcja].some((x) => x?.toLowerCase().includes(s)));
+    if (s) l = l.filter((e) => [e.tytul, e.gosc_nazwa, e.opis_krotki].some((x) => x?.toLowerCase().includes(s)));
     return l;
   }, [episodes, playlists, pl, topic, q]);
 
@@ -32,7 +32,7 @@ export default function EpisodeList({ episodes, playlists }) {
           {TEMATY.map(([v, l]) => <option key={v} value={v}>{l}</option>)}
         </select>
         <label className="flex-1 flex items-center gap-2 border hairline px-4"><Search className="h-4 w-4 text-foreground/55" />
-          <input value={q} onChange={(e) => setQ(e.target.value)} placeholder="Szukaj w tytułach, gościach i transkrypcjach" className="flex-1 bg-transparent py-3 text-sm focus:outline-none" />
+          <input value={q} onChange={(e) => setQ(e.target.value)} placeholder="Szukaj w tytułach, gościach i opisach" className="flex-1 bg-transparent py-3 text-sm focus:outline-none" />
         </label>
       </div>
       <ul className="divide-y hairline border-y hairline">

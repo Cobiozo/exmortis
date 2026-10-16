@@ -74,7 +74,7 @@ export default function PodcastGuestForm() {
       <L t="LINK DO TWOJEGO PROFILU W SOCIAL MEDIACH" hint="opcjonalnie"><input type="url" value={f.social} onChange={set("social")} className={inp} /></L>
       <label className="flex gap-3 text-sm text-foreground/65"><input required type="checkbox" checked={f.consent_adult} onChange={set("consent_adult")} className="mt-0.5 h-5 w-5 shrink-0 accent-[#C9A24A]" />Mam ukończone 18 lat.</label>
       <label className="flex gap-3 text-sm text-foreground/65 leading-relaxed"><input required type="checkbox" checked={f.consent_art9} onChange={set("consent_art9")} className="mt-0.5 h-5 w-5 shrink-0 accent-[#C9A24A]" />Wyrażam wyraźną zgodę na przetwarzanie informacji, które opisałem(-am) — w tym dotyczących mojego zdrowia, samopoczucia i przekonań — w celu rozpatrzenia zgłoszenia do podcastu. Wiem, że mogę ją wycofać w każdej chwili.</label>
-      {error && <p className="text-sm blood-text">{error}</p>}
+      {error && <p role="alert" className="text-sm blood-text">{error}</p>}
       <button disabled={sending} className="btn-relic w-full sm:w-auto">{sending && <Loader2 className="h-4 w-4 animate-spin" />}Wyślij zgłoszenie</button>
       <p className="text-xs text-foreground/55 leading-relaxed">
         {firma.nazwa && `Administratorem danych jest ${firma.nazwa}. `}Zgłoszenia, które nie zakończą się nagraniem, usuwam po 6 miesiącach. Więcej: <Link to="/polityka-prywatnosci" className="underline hover:gold-text">Polityka prywatności</Link>.

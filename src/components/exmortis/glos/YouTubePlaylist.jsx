@@ -14,7 +14,7 @@ export default function YouTubePlaylist() {
   useEffect(() => {
     base44.entities.Utwor
       .filter({ widoczny: true }, { sort: "kolejnosc", limit: 100 })
-      .then((r) => setSongs(r.items || []))
+      .then((r) => setSongs((r.items || []).filter((s) => extractVideoId(s.youtube_url))))
       .catch(() => setSongs([]));
   }, []);
 

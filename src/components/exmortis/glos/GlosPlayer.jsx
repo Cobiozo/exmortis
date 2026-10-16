@@ -28,6 +28,8 @@ export default function GlosPlayer({ videoId, started, onStart, onEnded }) {
   const holderRef = useRef(null);
   const playerRef = useRef(null);
   const loadedRef = useRef(null);
+  const videoIdRef = useRef(videoId); // najnowsze ID — jeśli API YouTube doładuje się już po zmianie utworu
+  videoIdRef.current = videoId;
   const endedRef = useRef(onEnded);
   endedRef.current = onEnded;
 
@@ -36,7 +38,7 @@ export default function GlosPlayer({ videoId, started, onStart, onEnded }) {
     loadYT(() => {
       if (playerRef.current) return;
       playerRef.current = new window.YT.Player(holderRef.current, {
-        videoId,
+        videoId: videoIdRef.current,
         width: "100%",
         height: "100%",
         playerVars: { autoplay: 1, rel: 0, modestbranding: 1, playsinline: 1 },

@@ -1,5 +1,6 @@
 import React, { createContext, useContext, useEffect, useRef, useState } from "react";
 import { useLocation } from "react-router-dom";
+import { base44 } from "@/api/base44Client";
 import MiniPlayer from "./MiniPlayer";
 
 // Jeden odtwarzacz podcastu dla całej strony — gra dalej między podstronami.
@@ -42,6 +43,8 @@ export function PodcastPlayerProvider({ children }) {
     const el = a.current;
     if (ep?.id !== episode.id) {
       el.src = episode.audio; el.dataset.id = episode.id; setEp(episode); setT(0); setDur(episode.dlugosc_s || 0);
+      // Licznik odtworzeń — tylko start nowego odcinka (wznowienie nie liczy się drugi raz).
+      if (episode.audio) { try { base44.functions.invoke("podcastPlay", { id: episode.id }).catch(() => {}); } catch { /* bez licznika */ } }
     }
     if (from != null) el.currentTime = from;
     el.playbackRate = rate;

@@ -21,6 +21,7 @@ export default function EpisodeMedia({ ep, startAt }) {
       {mode === "video" && yt && (
         <iframe src={`https://www.youtube-nocookie.com/embed/${yt}${startAt ? `?start=${startAt}` : ""}`} title={ep.tytul} allowFullScreen loading="lazy" className="w-full aspect-video border hairline" />
       )}
+      {!ep.audio && !ep.spotify && !yt && <p className="text-sm text-foreground/55">Nagranie pojawi się wkrótce.</p>}
     </div>
   );
 }

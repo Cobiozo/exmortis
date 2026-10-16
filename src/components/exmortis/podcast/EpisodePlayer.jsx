@@ -29,7 +29,7 @@ export default function EpisodePlayer({ ep, startAt }) {
         {RATES.map((r) => (
           <button key={r} onClick={() => p.setRate(r)} className={`technical text-[10px] px-2 py-1 border ${p.rate === r ? "border-[#C9A24A] gold-text" : "hairline text-foreground/55"}`}>{r}×</button>
         ))}
-        {resume > 0 && <button onClick={() => p.play(ep, resume)} className="ml-auto text-xs gold-text underline">Kontynuuj od {fmtT(resume)}</button>}
+        {!mine && resume > 0 && <button onClick={() => p.play(ep, resume)} className="ml-auto text-xs gold-text underline">Kontynuuj od {fmtT(resume)}</button>}
       </div>
     </div>
   );

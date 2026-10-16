@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { ArrowDown, ArrowUp, Eye, EyeOff, Plus, Save, Trash2, X } from "lucide-react";
+import { ArrowDown, ArrowUp, Eye, EyeOff, Plus, Trash2, X } from "lucide-react";
 import { base44 } from "@/api/base44Client";
 import { useAuth } from "@/lib/AuthContext";
 import { extractVideoId } from "./youtube";
@@ -241,7 +241,7 @@ export default function PlaylistManager({ onMutate }) {
                       className="p-2 border border-[#BC1E22]/60 text-[#BC1E22] hover:bg-[#BC1E22]/10 transition-colors"
                       aria-label="Potwierdź usunięcie"
                     >
-                      <Save className="h-4 w-4" />
+                      <Trash2 className="h-4 w-4" />
                     </button>
                     <button
                       onClick={() => setConfirmId(null)}

@@ -26,7 +26,13 @@ export default function EpisodeForm({ ep, guests, nextNum, onDone, onCancel }) {
     const rec = { ...data, slug: f.slug || slugify(f.tytul), numer: Number(f.numer) || null, opis_krotki: (f.opis_krotki || "").slice(0, 200),
       gosc_nazwa: g.map((x) => (x.forma === "anonimowo" ? "Gość anonimowy" : x.nazwa)).join(", "), gosc_bio: g.map((x) => x.bio).filter(Boolean).join("\n\n"),
       cytaty: (f.cytaty || []).filter(Boolean).slice(0, 5), materialy: (f.materialy || []).filter((m) => m.url) };
-    if (id) await EP.update(id, rec); else await EP.create(rec);
+    try {
+      if (id) await EP.update(id, rec); else await EP.create(rec);
+    } catch (x) {
+      setErr(x.message || "Nie udało się zapisać odcinka.");
+      setBusy("");
+      return;
+    }
     onDone();
   };
 

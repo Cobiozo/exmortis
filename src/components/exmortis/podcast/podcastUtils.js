@@ -18,7 +18,7 @@ export async function loadPublished() {
   const now = new Date().toISOString();
   const p = await base44.entities.PodcastEpisode.filter(
     { status: { $in: ["opublikowany", "zaplanowany"] }, publikacja: { $lte: now } },
-    { sort: "-publikacja", limit: 200, fields: ["numer", "tytul", "slug", "opis_krotki", "publikacja", "dlugosc_s", "okladka", "gosc_nazwa", "tematy", "audio", "transkrypcja"] }
+    { sort: "-publikacja", limit: 200, fields: ["numer", "tytul", "slug", "opis_krotki", "publikacja", "dlugosc_s", "okladka", "gosc_nazwa", "tematy", "audio"] }
   );
   return p.items;
 }
