@@ -50,7 +50,7 @@ export default function YouTubePlaylist() {
             videoId={currentId}
             started={started}
             onStart={() => setStarted(true)}
-            onEnded={() => setIdx((i) => (i + 1 < songs.length ? i + 1 : 0))}
+            onEnded={() => setIdx((i) => (i + 1 < songs.length ? i + 1 : i))} // ostatni utwór nie zapętla playlisty
           />
           <div className="mt-4 flex items-baseline justify-between gap-4">
             <p className="relic-heading text-lg md:text-xl gold-text">{current.tytul}</p>

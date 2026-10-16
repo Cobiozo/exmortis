@@ -23,7 +23,13 @@ export default function PodcastEpisode() {
 
   useEffect(() => {
     setEp(undefined);
-    base44.entities.PodcastEpisode.filter({ slug }, { limit: 1 }).then((r) => setEp(r.items[0] || null));
+    // Jak na liście: tylko odcinki, których data publikacji już nadeszła —
+    // zaplanowany odcinek nie może być dostępny pod bezpośrednim adresem.
+    const now = new Date().toISOString();
+    base44.entities.PodcastEpisode.filter(
+      { slug, status: { $in: ["opublikowany", "zaplanowany"] }, publikacja: { $lte: now } },
+      { limit: 1 }
+    ).then((r) => setEp(r.items[0] || null));
     loadSettings().then(setSettings);
   }, [slug]);
   useEffect(() => {

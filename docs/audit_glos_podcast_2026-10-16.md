@@ -23,6 +23,14 @@ Zakres: /glos (playlisty, podcast, zostań gościem), /glos/:slug (odcinek), min
 - Cisza: wejście na /cisza pauzuje podcast i chowa mini‑odtwarzacz; pozycja zapisywana co 5 s, koniec czyści zapis.
 - Udostępnianie: link z `?src=`, kopiowanie „od momentu", WhatsApp/Facebook/Messenger.
 
+## Runda 2 (2026-10-16) — ostrzeżenia przeniesione do napraw
+
+1. **Wyciek zaplanowanych odcinków** — strona odcinka brała rekord tylko po slugu, więc odcinek „zaplanowany" z datą w przyszłości był dostępny pod bezpośrednim adresem, choć nie na liście. Teraz odcinek pobiera się na tych samych warunkach co lista: status opublikowany/zaplanowany i data publikacji już nadeszła (ostrzeżenie 3 z listy niżej).
+2. **Pętlanie playlisty Głosu** — po ostatnim utworze playlista wracała na pierwszy i grała w nieskończoność; teraz zatrzymuje się na ostatnim utworze (ostrzeżenie 2).
+3. **Messenger na desktopie** — link `fb-messenger://` otwierał się tylko z aplikacją Messenger (telefony); na komputerze przycisk kopiuje link odcinka do schowka (ostrzeżenie 1).
+
+Do decyzji (bez zmian): panel nadal nie ma podglądu odcinka przed publikacją; administrator nie podejrzy zaplanowanego odcinka pod publicznym adresem (zabezpieczenie z punktu 1 dotyczy wszystkich).
+
 ## Ostrzeżenia (bez zmian w kodzie)
 
 - **Messenger na desktopie**: link `fb-messenger://` działa tylko na urządzeniach z aplikacją Messenger; na komputerze nic się nie otworzy — do rozważenia podmiana na adres www.
