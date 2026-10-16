@@ -1,8 +1,10 @@
 import React, { useEffect, useState } from "react";
-import { CalendarPlus, Lock } from "lucide-react";
+import { Lock } from "lucide-react";
+import CalendarButtons from "../CalendarButtons";
 import useOnlineText from "@/content/useOnlineText";
-import { downloadIcs, timeText } from "../time";
+import { timeText } from "../time";
 
+const personalT = () => { try { const v = new URLSearchParams(window.location.search).get("t") || ""; return /^[0-9a-f]{16,64}$/i.test(v) ? v : null; } catch { return null; } };
 const unit = (n, a, b, c) => `${n} ${n === 1 ? a : n % 10 >= 2 && n % 10 <= 4 && (n % 100 < 10 || n % 100 >= 20) ? b : c}`;
 
 // Odliczanie do startu (dni, godziny, minuty); przy otwarciu pokoju — onOpen().
@@ -26,8 +28,9 @@ export default function JoinBefore({ data, onOpen }) {
         <button type="button" disabled aria-disabled="true" className="btn-relic opacity-45 cursor-not-allowed">
           <Lock className="h-4 w-4" /> DOŁĄCZ — AKTYWNY OD {timeText(new Date(openAt).toISOString())}
         </button>
-        <button type="button" onClick={() => downloadIcs(data)} className="btn-ghost"><CalendarPlus className="h-4 w-4" /> DODAJ DO KALENDARZA</button>
       </div>
+      {/* Osobisty klucz z adresu (?t=) trafia do kalendarza, żeby wpis prowadził prosto do pokoju. */}
+      <CalendarButtons event={{ ...data, format: "Online" }} t={personalT()} joinUrl={personalT() ? `${window.location.pathname}?t=${personalT()}` : null} className="mt-8" />
     </>
   );
 }
