@@ -2,7 +2,7 @@ import React, { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { Check, Clock } from "lucide-react";
 import { useAuth } from "@/lib/AuthContext";
-import { listStories, cachedList, nextAt, plWhen, CATEGORY_LABEL } from "./api";
+import { listStories, cachedList, listMeta, nextAt, plWhen, CATEGORY_LABEL } from "./api";
 import { readProgress } from "./engine";
 import RzImage from "./RzImage";
 import RzProblem from "./RzProblem";
@@ -14,9 +14,10 @@ export default function RzLibrary() {
   const { user } = useAuth();
   const uid = user?.id || user?.email;
   const [items, setItems] = useState(() => cachedList());
+  const [stale, setStale] = useState(false);
   const [err, setErr] = useState("");
   const [cat, setCat] = useState(() => { try { return sessionStorage.getItem("exm_rz_cat") || ""; } catch { return ""; } });
-  const load = () => { setErr(""); listStories().then(setItems).catch((e) => { if (!cachedList()) setErr(e.message); }); };
+  const load = () => { setErr(""); listStories().then((i) => { setItems(i); setStale(listMeta.offline); }).catch((e) => { if (!cachedList()) setErr(e.message); }); };
   useEffect(load, []);
   const pick = (v) => { setCat(v); try { sessionStorage.setItem("exm_rz_cat", v); } catch { /* */ } };
 
@@ -32,6 +33,7 @@ export default function RzLibrary() {
         <div>
           <p className="technical text-[11px] gold-text">ROZDROŻA · BIBLIOTEKA</p>
           <h1 className="shop-heading text-3xl md:text-4xl text-[#F5EFE1] mt-3">Wybierz historię</h1>
+          {stale && <p role="status" className="text-sm text-[#E8C547] mt-2">Pokazuję zapisaną kopię — brak połączenia.</p>}
         </div>
         {items && items.length > 1 && cats.size > 1 && (
           <div role="radiogroup" aria-label="Kategoria" className="flex flex-wrap gap-2">

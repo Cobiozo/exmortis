@@ -1,7 +1,7 @@
 import { base44 } from "@/api/base44Client";
 
 // ROZDROŻA — pobieranie opublikowanych treści z pamięcią podręczną.
-// Biblioteka: same metadane (5 min w pamięci, kopia w przeglądarce na wypadek braku sieci).
+// Biblioteka: same metadane (20 s w pamięci, kopia w przeglądarce na wypadek braku sieci).
 // Historia: kopia powiązana z numerem wersji — przy tej samej wersji serwer nie przesyła tekstu ponownie.
 const LIST_KEY = "exm_rz_list";
 const snapKey = (slug) => `exm_rz_snap:${slug}`;
@@ -16,6 +16,8 @@ const message = (e, fb) => e?.response?.data?.error || fb;
 let list = null;
 let pvList = null; // lista w podglądzie administratora (z historiami zaplanowanymi) — tylko w pamięci
 const snaps = new Map();
+// Czy pokazana właśnie lista pochodzi z kopii przeglądarki (odświeżenie się nie udało).
+export const listMeta = { offline: false };
 
 const call = (p) => base44.functions.invoke("rozdroza", p).then((r) => r.data);
 
@@ -49,15 +51,16 @@ export async function listStories({ fresh = false } = {}) {
       return pvList.items;
     } catch (e) { throw new Error(message(e, "Nie udało się wczytać biblioteki.")); }
   }
-  if (!fresh && list && Date.now() - list.at < 300000) return list.items;
+  if (!fresh && list && Date.now() - list.at < 20000) return list.items;
   try {
     const d = await call({ action: "list" });
     list = { at: Date.now(), items: d.items || [], next_at: d.next_at || null };
     store.set(LIST_KEY, list);
+    listMeta.offline = false;
     return list.items;
   } catch (e) {
     const c = cachedList();
-    if (c && status(e) !== 401) return c;
+    if (c && status(e) !== 401) { listMeta.offline = true; return c; }
     throw new Error(status(e) === 401 ? "Sesja wygasła — zaloguj się ponownie." : message(e, "Nie udało się wczytać biblioteki. Sprawdź połączenie."));
   }
 }
