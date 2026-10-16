@@ -74,7 +74,7 @@ export default function RegistrationBlock({ event: ev }) {
   }
 
   // Wydarzenie płatne z biletami na stronie: zakup biletu zamiast formularza zapisu.
-  if (ev.tickets && Number(ev.price) > 0 && ev.format !== "Online") return <TicketBuy event={ev} />;
+  if (ev.tickets && Number(ev.price) > 0) return <TicketBuy event={ev} />;
 
   return <RegistrationForm event={ev} />;
 }

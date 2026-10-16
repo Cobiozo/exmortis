@@ -1,12 +1,12 @@
 import { base44 } from "@/api/base44Client";
 
-// Kolejka wysyłek formularzy w przeglądarce: gdy serwer nie odpowiada (503, limit, sieć),
+// Kolejka wysyłek formularzy w przeglądarce: gdy serwer nie odpowiada (503, sieć),
 // zgłoszenie czeka tutaj i jest ponawiane po 5, 15, 60 s oraz przy każdej kolejnej wizycie.
-// Błędy walidacji (4xx poza 429) wracają do formularza jak dotąd.
+// Błędy walidacji i limit zapisów (4xx, w tym 429) wracają do formularza jak dotąd.
 const KEY = "exm_outbox";
 const read = () => { try { return JSON.parse(localStorage.getItem(KEY)) || []; } catch { return []; } };
 const write = (q) => { try { localStorage.setItem(KEY, JSON.stringify(q)); } catch { /* pełna pamięć */ } };
-const transient = (e) => { const s = e?.response?.status; return !s || s >= 500 || s === 429; };
+const transient = (e) => { const s = e?.response?.status; return !s || s >= 500; };
 
 let busy = false;
 export async function flushOutbox() {
