@@ -8,7 +8,7 @@ export const LISTOPAD_OG = "https://exmortis.pl/exmortis-og-1-listopada-v2.jpg";
 export const LISTOPAD_BANNER = "/functions/media?id=0c90920dcc1c8fe2c4162b9ac7a8cf3b";
 export const LISTOPAD_INDEX_FROM = "2026-10-16T00:00:00+02:00";
 // Start zapisów (czas polski): do tej chwili informacja w nagłówku i komunikat zamiast formularza.
-export const LISTOPAD_ZAPISY_OD = "2026-10-16T00:00";
+export const LISTOPAD_ZAPISY_OD = "2026-10-21T00:00";
 
 const b = (id, typ, dane, uklad = {}) => ({ id, typ, widoczny: true, dane, uklad: { ...L, numer: "brak", ...uklad } });
 
@@ -17,7 +17,7 @@ export const LISTOPAD_BLOCKS = [
     lead: "Wieczór Wszystkich Świętych. Dwie godziny o trzech śmierciach i czterech etapach powrotu — z czasem na Twoje pytania.",
     przyciski: [{ etykieta: "ZAPISZ SIĘ", link: "#zapis", styl: "zloty", strzalka: true },
       { etykieta: "DOWIEDZ SIĘ WIĘCEJ", link: "#o-spotkaniu", styl: "obrys" }], przyciski_pion: true,
-    zapowiedz: "ZAPISY RUSZAJĄ 16 PAŹDZIERNIKA", zapowiedz_do: LISTOPAD_ZAPISY_OD, dopisek: "Bezpłatnie. Link do spotkania przyjdzie e-mailem.",
+    zapowiedz: "ZAPISY RUSZAJĄ 21 PAŹDZIERNIKA", zapowiedz_do: LISTOPAD_ZAPISY_OD, dopisek: "Bezpłatnie. Link do spotkania przyjdzie e-mailem.",
     tlo: { url: LISTOPAD_COVER }, przyciemnienie: 55 }),
   b("lis-baner", "zdjecie", { zdjecie: { url: LISTOPAD_BANNER, alt: "exmortis — ze śmierci", fx: 50, fy: 42 }, proporcja: "21:9" }, { odstep: "maly" }),
   b("lis-tekst", "tekst", { etykieta: "O SPOTKANIU", tytul: "Wieczór Wszystkich Świętych",
