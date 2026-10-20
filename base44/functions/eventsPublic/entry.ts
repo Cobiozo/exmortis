@@ -18,7 +18,7 @@ const JOIN_CACHE = new Map();
 
 // Start zapisów na wybrane spotkania (adres spotkania → chwila otwarcia). Na stronie to samo pole:
 // listopadDefault.js → LISTOPAD_ZAPISY_OD (formularz ukryty do tej chwili).
-const REG_OPENS = { "ze-smierci-o-powrotach-o-ktorych-swiat-nie-mowi": "2026-10-21T00:00:00+02:00" };
+const REG_OPENS = { "ze-smierci-o-powrotach-o-ktorych-swiat-nie-mowi": "2026-10-20T00:00:00+02:00" };
 
 // Kto może zobaczyć link / nagranie: zapisani (status Zapisany/Obecny). Lista w pamięci instancji (60 s),
 // więc w szczycie każde wejście nie odpytuje bazy. Klucz: e-mail (małe litery) albo osobisty klucz z maila.
