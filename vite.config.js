@@ -7,6 +7,7 @@ import { fileURLToPath } from "url"
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
 import { SITE_URL, OG_SPOTKANIE, OG_MARKA, metaMode } from './src/config/site.js'
 import { criticalCss } from './src/config/criticalCss.js'
+import portableBuild from './src/config/portableBuild.js'
 
 // Wspólny nagłówek dla robotów: wstawiany przy publikacji wg src/config/site.js (bez og:url).
 const esc = (s) => s.replace(/&/g, "&amp;").replace(/"/g, "&quot;").replace(/</g, "&lt;");
@@ -50,7 +51,8 @@ function exmJoinFallback() {
     resolveId(id) { return id === FB_ID ? "\0" + FB_ID : null; },
     async load(id) {
       if (id !== "\0" + FB_ID) return null;
-      const saved = `export { FALLBACK_AT, FALLBACK_EVENTS } from "/src/content/joinFallbackData.js";`;
+      const savedPath = path.resolve(__dirname, "src/content/joinFallbackData.js").replace(/\\/g, "/");
+      const saved = `export { FALLBACK_AT, FALLBACK_EVENTS } from ${JSON.stringify(savedPath)};`;
       if (!build || process.env.EXM_FALLBACK_OFFLINE === "1") return saved;
       try {
         const get = () => fetch(`${SITE_URL}/functions/eventsPublic`, { method: "POST", headers: { "Content-Type": "application/json" },
@@ -192,5 +194,6 @@ export default defineConfig({
     exmFastStart(),
     exmInlineCss(),
     exmJoinFallback(),
+    portableBuild(__dirname),
   ]
 });
