@@ -1,6 +1,6 @@
 import { waitUntil } from "base44:runtime";
 import { runSql, escStr, rpc } from "./supabase.ts";
-import { mirrorRecord } from "./mirror.ts";
+import { mirrorRecord, consentFilter } from "./mirror.ts";
 import { getSetting, loadAppUrl } from "./settings.ts";
 import { sendConfirmationMail } from "./events.ts";
 import { sendMail } from "./smtp.ts";
@@ -120,7 +120,7 @@ export async function flushQueue(base44, { simulateDown = false } = {}) {
       const reg = res.reg || null;
       const ev = res.ev;
       const regId = reg?.id || res.reg_id;
-      const affected = await base44.asServiceRole.entities.Consent.filter({ ref_id: `kolejka:${p.id}` });
+      const affected = await consentFilter(base44, { ref_id: `kolejka:${p.id}` });
       await base44.asServiceRole.entities.Consent.updateMany({ ref_id: `kolejka:${p.id}` }, { $set: { ref_id: regId } });
       for (const c of affected) await mirrorRecord(base44, "Consent", c.id);
       await Q.update(p.id, { status: "przeniesione", reg_id: regId, przeniesiono_at: new Date().toISOString() });

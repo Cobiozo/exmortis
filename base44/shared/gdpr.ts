@@ -1,4 +1,5 @@
 import { runSql, rpc, escStr } from "./supabase.ts";
+import { consentFilter } from "./mirror.ts";
 
 // RODO art. 15 i 17 — wspólne dla narzędzia administratora i „Twoich danych” w koncie klienta.
 // Zostają (art. 17 ust. 3 lit. b i e): zamówienia, odstąpienia, licencje i dowody zgód.
@@ -48,7 +49,9 @@ export async function collectPerson(base44, email) {
   }));
   const appData = {};
   for (const [e, f] of Object.entries(APP)) {
-    appData[e] = await sr[e].filter({ [f]: rx(email) }, "-created_date", 1000);
+    appData[e] = e === "Consent"
+      ? await consentFilter(base44, { [f]: rx(email) }, "-created_date", 1000)
+      : await sr[e].filter({ [f]: rx(email) }, "-created_date", 1000);
   }
   // Zwroty PayU: dowód księgowy przypisany do zamówienia (bez adresu w wierszu) — szukamy po numerach zamówień osoby.
   const ords = sbData.orders || [];

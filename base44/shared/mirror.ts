@@ -61,7 +61,14 @@ function cond(field, c) {
     const [op, v] = Object.entries(c)[0];
     if (op === "$in") return `${col}=in.(${(Array.isArray(v) ? v : [v]).map((x) => `"${x}"`).join(",")})`;
     if (op === "$ne") return `${col}=neq.${enc(String(v))}`;
-    if (op === "$regex") return `${col}=like.*${enc(String(v).replace(/\$$/, ""))}`;
+    if (op === "$regex") {
+      // Zgody zapisują adresy z różną wielkością liter — wyszukiwanie po adresie bez rozróżniania liter.
+      const nocase = String(c.$options || "").includes("i");
+      const like = nocase ? "ilike" : "like";
+      const p = String(v);
+      if (p.startsWith("^") && p.endsWith("$")) return `${col}=${like}.${enc(p.slice(1, -1))}`;
+      return `${col}=${like}.*${enc(p.replace(/\$$/, ""))}`;
+    }
     throw new Error(`Nieobsługiwany operator kopii: ${op}`);
   }
   return `${col}=eq.${enc(String(c))}`;
@@ -100,6 +107,16 @@ export async function accessFilter(base44, query = {}, sort, limit) {
   } catch (e) {
     console.error("odczyt:Access:", String(e?.message || e).slice(0, 200));
     return base44.asServiceRole.entities.Access.filter(query, sort, limit);
+  }
+}
+
+// Zgody (Consent): najpierw kopia, w razie problemu Base44.
+export async function consentFilter(base44, query = {}, sort, limit) {
+  try {
+    return await mirrorFilter(base44, "Consent", query, sort, limit);
+  } catch (e) {
+    console.error("odczyt:Consent:", String(e?.message || e).slice(0, 200));
+    return base44.asServiceRole.entities.Consent.filter(query, sort, limit);
   }
 }
 

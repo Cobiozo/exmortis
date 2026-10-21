@@ -1,4 +1,5 @@
 import { runSql, escStr } from "./supabase.ts";
+import { consentFilter } from "./mirror.ts";
 import { purgeUnconfirmed } from "./newsletter.ts";
 
 // Okresy przechowywania (polityka prywatności §3), uruchamiane w ticku co 15 min.
@@ -13,7 +14,7 @@ const purgeLogs = (E, before) =>
     .catch(() => 0);
 
 export async function runRetention(base44) {
-  const withdrawn = await base44.asServiceRole.entities.Consent.filter({ kind: "test_art9", status: "wycofana" }, "-created_date", 1000);
+  const withdrawn = await consentFilter(base44, { kind: "test_art9", status: "wycofana" }, "-created_date", 1000);
   const emails = [...new Set(withdrawn.map((c) => String(c.email).toLowerCase()))];
   const [quiz, quizW, powrot, listy] = await Promise.all([
     runSql(base44, `DELETE FROM public.quiz_result WHERE created_at < now() - interval '12 months' RETURNING 1`),

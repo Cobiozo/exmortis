@@ -3,6 +3,7 @@ import { runSql, escStr, clientIp } from "../../shared/supabase.ts";
 import { sendConfirmMail } from "../../shared/newsletter.ts";
 import { LISTY_TEXT } from "../../shared/registrations.ts";
 import { collectPerson, deletePerson, maskEmail } from "../../shared/gdpr.ts";
+import { consentFilter } from "../../shared/mirror.ts";
 
 // Ustawienia konta klienta: Listy powrotu (stan z bazy), eksport i usunięcie własnych danych.
 export default async function (req) {
@@ -38,7 +39,7 @@ export default async function (req) {
     if (body.action === "listy_off") {
       await runSql(base44, `UPDATE public.subscribers SET status = 'unsubscribed', confirm_token = NULL, updated_date = now() WHERE lower(email) = ${escStr(email)}`);
       const at = new Date().toISOString();
-      const given = await sr.Consent.filter({ email, kind: "newsletter", status: "udzielona" }, "-created_date", 50);
+      const given = await consentFilter(base44, { email, kind: "newsletter", status: "udzielona" }, "-created_date", 50);
       if (given.length) await sr.Consent.bulkUpdate(given.map((c) => ({ id: c.id, status: "wycofana", withdrawn_at: at })));
       else await sr.Consent.create({ email, kind: "newsletter", text: `Wycofanie: ${LISTY_TEXT}`, source: "konto:ustawienia", given_at: at, ip, status: "wycofana", withdrawn_at: at, doc_version: "1.1" });
       return Response.json({ state: "off", withdrawn_at: at });

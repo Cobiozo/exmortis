@@ -1,5 +1,6 @@
 import { createClientFromRequest } from "npm:@base44/sdk@0.8.52";
 import { runSql, escStr, requireAdmin, EMAIL_RE } from "../../shared/supabase.ts";
+import { consentFilter } from "../../shared/mirror.ts";
 import { safeEqual } from "../../shared/libraryAccess.ts";
 import { getSetting, saveSetting, loadAppUrl } from "../../shared/settings.ts";
 import { sendMail, mailConfig, mailReady } from "../../shared/smtp.ts";
@@ -41,7 +42,9 @@ async function collect(base44, email) {
   await Promise.all(Object.entries(SB).map(async ([t, c]) => { sb[t] = await runSql(base44, `SELECT * FROM public.${t} WHERE lower(${c}) = ${escStr(email)}`, true); }));
   keep.orders = (await runSql(base44, `SELECT id FROM public.orders WHERE lower(buyer_email) = ${escStr(email)}`, true)).length;
   for (const [e, f] of Object.entries(APP)) app[e] = await sr[e].filter({ [f]: rx(email) }, "-created_date", 5000);
-  for (const e of ["Consent", "License", "Withdrawal"]) keep[e] = (await sr[e].filter({ [KEEP[e]]: rx(email) }, "-created_date", 5000)).length;
+  for (const e of ["Consent", "License", "Withdrawal"]) keep[e] = (await (e === "Consent"
+    ? consentFilter(base44, { [KEEP[e]]: rx(email) }, "-created_date", 5000)
+    : sr[e].filter({ [KEEP[e]]: rx(email) }, "-created_date", 5000))).length;
   const user = (await sr.User.filter({ email }))[0] || null;
   return { sb, app, keep, user };
 }
