@@ -9,10 +9,17 @@
 // logowanie (Supabase Auth), wywołania funkcji (Edge Functions).
 
 import { base44 as raw } from "./rawBase44";
+import { hasSupabase, supabaseEntityOps } from "./exmSupabase";
 
-function wrapEntity(entity) {
+// Przełącznik odczytu encji: "base44" (domyślnie) albo "supabase" (statyczny build).
+export const ENTITY_BACKEND = import.meta.env.VITE_EXM_ENTITY_BACKEND === "supabase" ? "supabase" : "base44";
+const READ_OPS = ["get", "filter", "list", "count"];
+
+function wrapEntity(entity, name) {
+  const ops = ENTITY_BACKEND === "supabase" && hasSupabase ? supabaseEntityOps(name) : null;
   return new Proxy(entity, {
     get(target, prop) {
+      if (ops && READ_OPS.includes(prop)) return ops[prop];
       const value = target[prop];
       return typeof value === "function" ? value.bind(target) : value;
     },
@@ -24,7 +31,7 @@ function wrapEntities(entities) {
     get(target, name) {
       const entity = target[name];
       if (!entity) throw new Error(`Nieznana kolekcja danych: ${String(name)}`);
-      return wrapEntity(entity);
+      return wrapEntity(entity, String(name));
     },
   });
 }
