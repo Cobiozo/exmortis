@@ -1,21 +1,8 @@
-import { createClient } from '@base44/sdk';
-import { appParams } from '@/lib/app-params';
-import { readConsent } from '@/components/legal/cookieStore';
+// Punkt wejścia danych dla całej aplikacji — wszystkie pliki importują stąd:
+// `import { base44 } from "@/api/base44Client"`.
+// Faktyczna implementacja jest w adapterze (./exmAdapter); przy przejściu na Supabase
+// zmienia się adapter, a miejsca wywołań w kodzie pozostają bez zmian.
 
-const { appId, token, functionsVersion, appBaseUrl } = appParams;
+import { base44 } from "./exmAdapter";
 
-// Analityka Base44 działa dopiero po zgodzie na cookies „Analityczne” (od następnego wczytania strony).
-export const base44 = createClient({
-  appId,
-  token,
-  functionsVersion,
-  serverUrl: '',
-  appBaseUrl,
-  analytics: { enabled: readConsent()?.analytics === true }
-});
-
-// Bez zgody analitycznej nie zostawiamy identyfikatora sesji platformy w pamięci przeglądarki.
-if (readConsent()?.analytics !== true) {
-  const drop = () => localStorage.removeItem("base44_analytics_session_id");
-  drop(); setTimeout(drop, 0); window.addEventListener("load", drop, { once: true });
-}
+export { base44 };
