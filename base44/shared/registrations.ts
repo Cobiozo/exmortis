@@ -1,5 +1,6 @@
 import { waitUntil } from "base44:runtime";
 import { runSql, escStr, rpc } from "./supabase.ts";
+import { mirrorRecord } from "./mirror.ts";
 import { getSetting, loadAppUrl } from "./settings.ts";
 import { sendConfirmationMail } from "./events.ts";
 import { sendMail } from "./smtp.ts";
@@ -73,7 +74,8 @@ export async function saveConsents(base44, d, refId) {
   const base = { email: d.email, source: `spotkanie:${d.slug}`, ref_id: refId, ip: d.ip, given_at: d.at };
   const list = [{ ...base, kind: "wydarzenie", text: REGULAMIN_TEXT, doc_version: `regulamin ${await regulaminVersion(base44)}` }];
   if (d.listy) list.push({ ...base, kind: "newsletter", text: LISTY_TEXT });
-  await base44.asServiceRole.entities.Consent.bulkCreate(list);
+  const made = await base44.asServiceRole.entities.Consent.bulkCreate(list);
+  for (const c of made || []) await mirrorRecord(base44, "Consent", c.id);
 }
 
 // Po udanym zapisie: newsletter (jeśli zgoda) i e-mail potwierdzający.
@@ -118,7 +120,9 @@ export async function flushQueue(base44, { simulateDown = false } = {}) {
       const reg = res.reg || null;
       const ev = res.ev;
       const regId = reg?.id || res.reg_id;
+      const affected = await base44.asServiceRole.entities.Consent.filter({ ref_id: `kolejka:${p.id}` });
       await base44.asServiceRole.entities.Consent.updateMany({ ref_id: `kolejka:${p.id}` }, { $set: { ref_id: regId } });
+      for (const c of affected) await mirrorRecord(base44, "Consent", c.id);
       await Q.update(p.id, { status: "przeniesione", reg_id: regId, przeniesiono_at: new Date().toISOString() });
       if (reg) await afterSaved(base44, ev, reg, p);
       moved++;

@@ -5,6 +5,7 @@ import { ipAllowed, TOO_MANY } from "../../shared/rateLimit.ts";
 import { getSetting, loadAppUrl, APP_URL } from "../../shared/settings.ts";
 import { insertOrder, getOrderStatus, getOrderByPayuId, claimCompletion } from "../../shared/orders.ts";
 import { errorResponse } from "../../shared/errors.ts";
+import { mirrorRecord } from "../../shared/mirror.ts";
 import { fulfillOrder } from "../../shared/fulfillOrder.ts";
 import { addSubscriber } from "../../shared/newsletter.ts";
 import { DIGITAL } from "../../shared/access.ts";
@@ -24,7 +25,8 @@ async function saveConsents(base44, req, orderId, email, hasDigital, newsletterC
   const consents = [{ ...cBase, kind: "regulamin", text: "Akceptuję Regulamin. Znam Politykę prywatności." }];
   if (hasDigital) consents.push({ ...cBase, kind: "tresci_cyfrowe", text: DIGITAL_CONSENT });
   if (newsletterConsent) consents.push({ ...cBase, kind: "newsletter", text: "Chcę otrzymywać Listy powrotu — newsletter exmortis z treściami oraz informacjami o produktach i wydarzeniach — na podany adres e-mail. Zgodę mogę wycofać w każdej chwili." });
-  await base44.asServiceRole.entities.Consent.bulkCreate(consents);
+  const made = await base44.asServiceRole.entities.Consent.bulkCreate(consents);
+  for (const c of made || []) await mirrorRecord(base44, "Consent", c.id);
 }
 
 // PayU przy awarii potrafi zwrócić HTML albo puste body — parsuj bezpiecznie, żeby błąd bramki był czytelny.

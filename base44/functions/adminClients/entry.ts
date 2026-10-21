@@ -1,6 +1,7 @@
 import { createClientFromRequest } from "npm:@base44/sdk@0.8.53";
 import { runSql, escStr, requireAdmin } from "../../shared/supabase.ts";
 import { grantAccess, isActive, ensureAccount } from "../../shared/access.ts";
+import { mirrorRecord } from "../../shared/mirror.ts";
 import { expandBundles } from "../../shared/bundles.ts";
 import { sendMail } from "../../shared/smtp.ts";
 import { APP_URL } from "../../shared/settings.ts";
@@ -124,12 +125,14 @@ export default async function (req) {
       const base = a.valid_until && a.valid_until >= today ? a.valid_until : today;
       const until = addMonths(base, m);
       await sr.Access.update(a.id, { valid_until: until, revoked: false, history: hist({ source: "przedluzenie", valid_until: until }) });
+      await mirrorRecord(base44, "Access", a.id);
       return Response.json({ ok: true });
     }
 
     if (body.action === "revoke" || body.action === "restore") {
       const revoked = body.action === "revoke";
       await sr.Access.update(a.id, { revoked, history: hist({ source: revoked ? "odebrany" : "przywrocony" }) });
+      await mirrorRecord(base44, "Access", a.id);
       return Response.json({ ok: true });
     }
 

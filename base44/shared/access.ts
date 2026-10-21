@@ -1,4 +1,5 @@
-// Dostępy klientów do produktów cyfrowych (encja Access w Base44).
+// Dostępy klientów do produktów cyfrowych (encja Access w Base44 + lustro w Supabase).
+import { mirrorRecord } from "./mirror.ts";
 
 export const DIGITAL = ["pdf", "audio", "wideo", "kurs"];
 
@@ -44,11 +45,13 @@ export async function grantAccess(base44, { email, product, source, orderId = nu
     revoked: false,
   };
   if (!until) delete data.valid_until;
+  let recId = existing?.id;
   if (existing) {
     await E.update(existing.id, { ...data, history: [...(existing.history || []), entry] });
     if (!until && existing.valid_until) await E.updateMany({ id: existing.id }, { $unset: { valid_until: "" } });
   }
-  else await E.create({ ...data, valid_from: today, history: [entry] });
+  else recId = (await E.create({ ...data, valid_from: today, history: [entry] })).id;
+  await mirrorRecord(base44, "Access", recId);
   return until;
 }
 

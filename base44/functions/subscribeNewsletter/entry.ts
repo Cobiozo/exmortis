@@ -1,5 +1,6 @@
 import { createClientFromRequest } from "npm:@base44/sdk@0.8.44";
 import { emailField, clientIp } from "../../shared/supabase.ts";
+import { mirrorRecord } from "../../shared/mirror.ts";
 import { addSubscriber, confirmSubscriber, unsubscribeByToken } from "../../shared/newsletter.ts";
 import { LISTY_TEXT } from "../../shared/registrations.ts";
 import { ipAllowed, TOO_MANY } from "../../shared/rateLimit.ts";
@@ -16,10 +17,11 @@ export default async function (req) {
       if (res.already) return Response.json({ ok: true, already: true });
       const row = res.row;
       const ip = clientIp(req);
-      await base44.asServiceRole.entities.Consent.create({
+      const made = await base44.asServiceRole.entities.Consent.create({
         email: row.email, kind: "newsletter", text: `${LISTY_TEXT} (potwierdzone kliknięciem linku z e-maila)`,
         source: "listy:potwierdzenie", given_at: new Date(row.confirmed_at).toISOString(), ip, status: "udzielona", doc_version: "1.1",
       });
+      await mirrorRecord(base44, "Consent", made?.id);
       return Response.json({ ok: true });
     }
     // Wypis z listy (link w mailu kampanii) — bez logowania, po samym kluczu.
