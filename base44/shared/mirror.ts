@@ -2,7 +2,7 @@
 // Base44 pozostaje na razie źródłem prawdy (odczyty idą z Base44); kopia w Supabase przygotowuje
 // przełączenie odczytów, nic więc nie ginie między krokami. Awaria lustra NIE przerywa
 // operacji aplikacji — ślad zostaje w logach serwera i kopia jest dopełniana przy następnej zmianie.
-import { runSql, escStr } from "./supabase.ts";
+import { runSql, escStr, restGet } from "./supabase.ts";
 
 const READY = new Set();
 
@@ -47,4 +47,68 @@ export async function mirrorRecord(base44, entity, id) {
   } catch (e) {
     console.error(`mirror:${entity}:${id}:`, String(e?.message || e).slice(0, 200));
   }
+}
+
+// ==== ODCZYT Z KOPII (Supabase jako pierwsze źródło, Base44 awaryjnie) ====
+
+const enc = encodeURIComponent;
+
+// Proste warunki: równość, null, $in, $ne, $regex (kotwica $ = koniec tekstu).
+function cond(field, c) {
+  const col = field === "id" ? "id" : `data->>${enc(field)}`;
+  if (c === null) return `${col}=is.null`;
+  if (typeof c === "object" && !Array.isArray(c)) {
+    const [op, v] = Object.entries(c)[0];
+    if (op === "$in") return `${col}=in.(${(Array.isArray(v) ? v : [v]).map((x) => `"${x}"`).join(",")})`;
+    if (op === "$ne") return `${col}=neq.${enc(String(v))}`;
+    if (op === "$regex") return `${col}=like.*${enc(String(v).replace(/\$$/, ""))}`;
+    throw new Error(`Nieobsługiwany operator kopii: ${op}`);
+  }
+  return `${col}=eq.${enc(String(c))}`;
+}
+
+function qs(query, sort, limit) {
+  const parts = [];
+  for (const [f, c] of Object.entries(query || {})) parts.push(cond(f, c));
+  if (sort) {
+    const dir = String(sort).startsWith("-") ? "desc" : "asc";
+    const field = String(sort).replace(/^-/, "");
+    const built = ["created_date", "updated_date"].includes(field);
+    parts.push(`order=${built ? field : enc("data->>" + field)}.${dir}`);
+  }
+  if (limit) parts.push(`limit=${limit}`);
+  return parts.join("&");
+}
+
+const row2rec = (r) => ({ ...(r.data || {}), id: r.id, created_date: r.created_date, updated_date: r.updated_date, created_by_id: r.created_by_id });
+
+// Odczyt z kopii — rzuca błąd, gdy Supabase nie odpowiada (wywołujący ma awaryjny odczyt z Base44).
+export async function mirrorFilter(base44, entity, query = {}, sort, limit) {
+  const rows = await restGet(base44, `exm_${entity.toLowerCase()}?${qs(query, sort, limit)}`);
+  return rows.map(row2rec);
+}
+
+export async function mirrorGet(base44, entity, id) {
+  const rows = await restGet(base44, `exm_${entity.toLowerCase()}?id=eq.${enc(String(id))}&limit=1`);
+  return rows[0] ? row2rec(rows[0]) : null;
+}
+
+// Dostęp do produktu: najpierw kopia, w razie problemu Base44.
+export async function accessFilter(base44, query = {}, sort, limit) {
+  try {
+    return await mirrorFilter(base44, "Access", query, sort, limit);
+  } catch (e) {
+    console.error("odczyt:Access:", String(e?.message || e).slice(0, 200));
+    return base44.asServiceRole.entities.Access.filter(query, sort, limit);
+  }
+}
+
+export async function accessGet(base44, id) {
+  try {
+    const r = await mirrorGet(base44, "Access", id);
+    if (r) return r;
+  } catch (e) {
+    console.error("odczyt:Access:", String(e?.message || e).slice(0, 200));
+  }
+  return base44.asServiceRole.entities.Access.get(id);
 }

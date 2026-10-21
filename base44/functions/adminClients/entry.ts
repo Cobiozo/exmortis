@@ -1,7 +1,7 @@
 import { createClientFromRequest } from "npm:@base44/sdk@0.8.53";
 import { runSql, escStr, requireAdmin } from "../../shared/supabase.ts";
 import { grantAccess, isActive, ensureAccount } from "../../shared/access.ts";
-import { mirrorRecord } from "../../shared/mirror.ts";
+import { mirrorRecord, accessFilter, accessGet } from "../../shared/mirror.ts";
 import { expandBundles } from "../../shared/bundles.ts";
 import { sendMail } from "../../shared/smtp.ts";
 import { APP_URL } from "../../shared/settings.ts";
@@ -27,7 +27,7 @@ export default async function (req) {
     }
 
     if (body.action === "detail") {
-      const access = await sr.Access.filter({ user_email: email }, "-created_date", 200);
+      const access = await accessFilter(base44, { user_email: email }, "-created_date", 200);
       const logs = await sr.PlaybackLog.filter({ user_email: email }, "-created_date", 50);
       const progress = await sr.LessonProgress.filter({ user_email: email, completed: true }, "-updated_date", 300);
       const user = (await sr.User.filter({ email }))[0];
@@ -85,14 +85,14 @@ export default async function (req) {
       if (!lic.length && q.includes("@")) lic = await sr.License.filter({ user_email: q.toLowerCase() });
       // Wideo: identyfikator = ostatnie 8 znaków id dostępu
       let acc = [];
-      if (!lic.length && /^[A-Z0-9]{8}$/.test(qu)) acc = (await sr.Access.filter({ id: { $regex: `${qu.toLowerCase()}$` } }).catch(() => []));
+      if (!lic.length && /^[A-Z0-9]{8}$/.test(qu)) acc = (await accessFilter(base44, { id: { $regex: `${qu.toLowerCase()}$` } }).catch(() => []));
       const emails = [...new Set([...lic.map((l) => l.user_email), ...acc.map((a) => a.user_email), ...(q.includes("@") ? [q.toLowerCase()] : [])])].slice(0, 5);
       const people = [];
       for (const em of emails) {
         people.push({
           email: em,
           licenses: lic.filter((l) => l.user_email === em),
-          access: await sr.Access.filter({ user_email: em }, "-created_date", 50),
+          access: await accessFilter(base44, { user_email: em }, "-created_date", 50),
           plays: await sr.PlaybackLog.filter({ user_email: em }, "-created_date", 20),
           pdfs: await sr.SecurityLog.filter({ user_email: em, type: "pdf" }, "-created_date", 20),
         });
@@ -115,7 +115,7 @@ export default async function (req) {
       return Response.json({ ok: true, valid_until: until });
     }
 
-    const a = await sr.Access.get(String(body.access_id || "")).catch(() => null);
+    const a = await accessGet(base44, String(body.access_id || "")).catch(() => null);
     if (!a) return Response.json({ error: "Nie ma takiego dostępu" }, { status: 404 });
     const hist = (x) => [...(a.history || []), { date: new Date().toISOString(), by: admin.email, ...x }];
 

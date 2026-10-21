@@ -34,7 +34,7 @@ export async function runSql(base44, query, readOnly = false) {
 // Bezpośrednie wywołanie funkcji bazy (PostgREST RPC) — ok. 4× szybsze niż Management API.
 // Klucz service_role pobierany przez łącznik i trzymany tylko w pamięci instancji (1 h), nigdy nie zapisywany.
 let SKEY: { v: string; at: number } | null = null;
-export async function rpc(base44, fn, args) {
+export async function serviceKey(base44) {
   if (!SKEY || Date.now() - SKEY.at > 3600000) {
     const { accessToken } = await base44.asServiceRole.connectors.getConnection("supabase");
     const r = await fetch(`https://api.supabase.com/v1/projects/${PROJECT_REF}/api-keys?reveal=true`, {
@@ -44,6 +44,22 @@ export async function rpc(base44, fn, args) {
     if (!k) throw new Error("Supabase: brak klucza");
     SKEY = { v: k, at: Date.now() };
   }
+  return SKEY.v;
+}
+
+// Zwykłe zapytanie do tabel przez PostgREST (restGet("exm_access?user_email=eq...")).
+export async function restGet(base44, path) {
+  const key = await serviceKey(base44);
+  const res = await fetch(`https://${PROJECT_REF}.supabase.co/rest/v1/${path}`, {
+    headers: { apikey: key, Authorization: `Bearer ${key}` }, signal: AbortSignal.timeout(8000),
+  });
+  if (!res.ok) throw new Error(`Supabase REST ${res.status}: ${(await res.text()).slice(0, 200)}`);
+  const text = await res.text();
+  return text ? JSON.parse(text) : [];
+}
+
+export async function rpc(base44, fn, args) {
+  const key = await serviceKey(base44);
   const res = await fetch(`https://${PROJECT_REF}.supabase.co/rest/v1/rpc/${fn}`, {
     method: "POST",
     headers: { apikey: SKEY.v, Authorization: `Bearer ${SKEY.v}`, "Content-Type": "application/json" },

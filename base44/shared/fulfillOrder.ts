@@ -9,6 +9,7 @@ import { markCodeUsed } from "./discounts.ts";
 import { issueOrderTickets, ticketsHtml, loadEvent } from "./tickets.ts";
 import { runSql, rpc, escStr } from "./supabase.ts";
 import { DIGITAL, grantAccess, ensureAccount } from "./access.ts";
+import { accessFilter } from "./mirror.ts";
 import { expandBundles } from "./bundles.ts";
 import { issueInvoice } from "./invoices.ts";
 import { randomToken, sha256hex } from "./booking.ts";
@@ -142,7 +143,7 @@ export async function fulfillOrder(base44, stored, payuOrderId) {
       // „Następny krok” dotyczy tego, co osoba kupiła dla siebie — karta podarunkowa go nie wyznacza,
       // a produkty, które już ma, są pomijane.
       const own = ids.map(String).filter((id) => !cardIds.includes(id) && !id.startsWith("bilet:"));
-      const owned = await base44.asServiceRole.entities.Access.filter({ user_email: String(stored.buyer_email).toLowerCase() }, "-created_date", 200)
+      const owned = await accessFilter(base44, { user_email: String(stored.buyer_email).toLowerCase() }, "-created_date", 200)
         .then((l) => l.filter((a) => !a.revoked).map((a) => String(a.product_id))).catch(() => []);
       const step = own.length ? await nextStep(base44, own, owned).then((s) => nextStepHtml(base44, s)).catch(() => "") : "";
       await sendMail(base44, {

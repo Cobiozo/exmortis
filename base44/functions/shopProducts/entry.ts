@@ -4,6 +4,7 @@ import { withSteps, unitPrice, omnibusPrices, omnibusFrom, warsawToday } from ".
 import { getSnap } from "../../shared/snapshot.ts";
 import { ratingMap } from "../../shared/reviews.ts";
 import { productSeats } from "../../shared/seats.ts";
+import { accessFilter } from "../../shared/mirror.ts";
 
 // Katalog z kopii (PublicSnapshot, odświeżanej w tle co minutę) — bez czekania na Supabase przy każdym wejściu.
 // Klucz zawiera dzisiejszą datę (czas polski), więc po północy ceny z drabinki nigdy nie są wczorajsze.
@@ -116,7 +117,7 @@ export default async function (req) {
       const me = await base44.auth.me().catch(() => null);
       const mail = me?.email ? String(me.email).toLowerCase() : "";
       if (mail) {
-        const access = await base44.asServiceRole.entities.Access.filter({ user_email: mail }, "-created_date", 300).catch(() => []);
+        const access = await accessFilter(base44, { user_email: mail }, "-created_date", 300).catch(() => []);
         const owned = new Set(access.filter((a) => !a.revoked).map((a) => String(a.product_id)));
         out = out.map((p) => p.bundle
           ? { ...p, bundle: { ...p.bundle, items: p.bundle.items.map((c) => ({ ...c, owned: owned.has(String(c.id)) })) } }

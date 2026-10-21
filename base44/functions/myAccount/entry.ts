@@ -1,6 +1,7 @@
 import { createClientFromRequest } from "npm:@base44/sdk@0.8.44";
 import { runSql, escStr, clientIp } from "../../shared/supabase.ts";
 import { isActive } from "../../shared/access.ts";
+import { accessFilter, accessGet } from "../../shared/mirror.ts";
 import { nextStep } from "../../shared/nextStep.ts";
 import { personalizePdf, newLicenseId, WM_VERSION } from "../../shared/pdfLicense.ts";
 
@@ -13,10 +14,9 @@ export default async function (req) {
     if (me.role === "zablokowane") return Response.json({ error: "To konto jest zablokowane." }, { status: 403 }); // stare konto po zmianie adresu
     const email = String(me.email).toLowerCase();
     const body = await req.json().catch(() => ({}));
-    const Access = base44.asServiceRole.entities.Access;
 
     if (body.action === "products") {
-      const list = (await Access.filter({ user_email: email }, "-created_date", 200)).filter((a) => !a.revoked);
+      const list = (await accessFilter(base44, { user_email: email }, "-created_date", 200)).filter((a) => !a.revoked);
       if (!list.length) return Response.json({ products: [] });
       const ids = [...new Set(list.map((a) => a.product_id))].map(escStr).join(",");
       const rows = await runSql(
@@ -95,7 +95,7 @@ export default async function (req) {
     }
 
     if (body.action === "file") {
-      const a = await Access.get(String(body.access_id || "")).catch(() => null);
+      const a = await accessGet(base44, String(body.access_id || "")).catch(() => null);
       if (!a || a.user_email !== email || !isActive(a)) {
         return Response.json({ error: "Brak dostępu" }, { status: 403 });
       }

@@ -1,4 +1,5 @@
 import { runSql, escStr } from "./supabase.ts";
+import { accessFilter } from "./mirror.ts";
 
 // Ogłoszenia na koncie: status i to, czy ogłoszenie trafia do danej osoby (wspólne dla „announcements” i „notifications”).
 
@@ -18,7 +19,7 @@ async function audienceSets(sr, base44, me, all) {
   const prodIds = idsOf("produkt"), obokIds = idsOf("obok"), evIds = idsOf("spotkanie");
   const today = new Date().toISOString().slice(0, 10);
   const [acc, obok, regs] = await Promise.all([
-    prodIds.length ? sr.entities.Access.filter({ user_email: email, product_id: { $in: prodIds } }, "-created_date", 500) : [],
+    prodIds.length ? accessFilter(base44, { user_email: email, product_id: { $in: prodIds } }, "-created_date", 500) : [],
     obokIds.length ? sr.entities.ObokUczestnik.filter({ user_email: email, seria_id: { $in: obokIds } }, "-created_date", 500) : [],
     evIds.length
       ? runSql(base44, `SELECT DISTINCT event_id::text AS id FROM public.registrations
