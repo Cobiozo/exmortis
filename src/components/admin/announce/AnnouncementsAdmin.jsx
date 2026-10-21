@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { ann } from "@/components/account/announce/annApi";
-import AnnForm from "./AnnForm";
+import AnnForm from "@/components/admin/announce/AnnForm.jsx";
 import AnnRow from "./AnnRow";
 import { EMPTY, fmtPl } from "./annForm";
 
