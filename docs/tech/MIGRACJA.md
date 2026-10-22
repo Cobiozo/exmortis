@@ -35,6 +35,34 @@ Liczby wywołań: `grep -rn "base44\." src base44 | wc -l`. Szczegóły funkcji:
 6. **Funkcje → Supabase Edge Functions (Deno).** Większość kodu przenosi się 1:1; podmienić `createClientFromRequest` na adapter, `secrets.get` na `Deno.env.get`, łącznik Supabase na klucz z env. Adresy `/functions/<nazwa>` zachować przez reverse proxy (PayU ma zapisany `https://exmortis.pl/functions/payuNotification`).
 7. **Zadania cykliczne → pg_cron / cron serwera.** Te same adresy i tokeny.
 8. **Logowanie → Supabase Auth.** Najtrudniejszy krok: import kont (e-mail, rola, imię), mapowanie identyfikatorów użytkownika w danych (`created_by`, `user_id`, e-maile w Access/License), komunikat do klientów o ustawieniu nowego hasła. Zrobić w spokojnym okresie, z mailem zapowiadającym.
+
+### Krok 8 — stan po przygotowaniu (2026-10-22)
+
+Gotowe i nieszkodliwe na obecnym hostingu:
+- `src/api/exmAuth.js` — logowanie na Supabase Auth z tym samym API co `base44.auth`
+  (register, OTP, login, Google, reset hasła, `me`, `updateMe`, `logout`). Sesja w
+  localStorage (`exm_supa_session`); linki z maili Supabase (sesja w `#hash`) są
+  przechwytywane przy starcie; strona `/reset-password` obsługuje oba formaty linków.
+- Adapter (`src/api/exmAdapter.js`) przełącza logowanie jedną zmienną:
+  `VITE_EXM_AUTH_BACKEND=supabase` (dziś: `base44` — na platformie zapisy i funkcje
+  identyfikują użytkownika po sesji platformy, więc przełączenie bez przenoszenia
+  hostingu odcina zapisy).
+- Konto administratora utworzone w Supabase Auth (potwierdzone); hasło ustawia się
+  przez „Nie pamiętam hasła” (mail poszedł na adres konta). Konta skopiowane do
+  tabeli `exm_user` (reguła RLS: tylko własny wiersz po adresie z sesji).
+- Adresy powrotów Supabase: `site_url=https://exmortis.pl`, lista: exmortis.pl,
+  podgląd na base44.app, localhost:5173.
+
+Do zrobienia przy przełączeniu (razem z krokami 5–7 i 9):
+1. `VITE_EXM_AUTH_BACKEND=supabase` w konfiguracji i AuthContext: sprawdzać sesję
+   zawsze (usunąć warunek `appParams.token`), bo token platformy przestanie istnieć.
+2. Import pozostałych kont: `POST /auth/v1/admin/users` (service key, `email_confirm`)
+   + wiersze w `exm_user`; klienci ustawiają hasła przez „Nie pamiętam hasła”.
+3. Szablony maili Supabase: potwierdzenie rejestracji na kod `{{ .Token }}`
+   (strona OTP czeka na kod 6-cyfrowy) i odzyskiwanie z powrotem na `/reset-password`.
+4. Provider Google w Supabase (Configure → Authentication) + adresy powrotu na liście.
+5. SMTP w Supabase (Brevo) zamiast wbudowanej poczty — limity testowej są niskie.
+6. Hasła nie są przenoszalne — mail zapowiadający do klientów przed przełączeniem.
 9. **Hosting strony + DNS.** Nowy hosting statyczny, przełączenie rekordów A/CNAME w Simply (krótki TTL dzień wcześniej). Sprawdzić: przekierowania, `robots.txt`, mapę strony, nagłówki bezpieczeństwa, adres powrotu PayU i powiadomień.
 
 ## 3. Pułapki

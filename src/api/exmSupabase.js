@@ -6,8 +6,8 @@
 // polityki w bazie (exm_read_public) odwzorowują reguły odczytu z Base44. Zapisy, aggregate
 // i operacje dla zalogowanych zostają na Base44 do czasu migracji logowania.
 
-const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL;
-const ANON_KEY = import.meta.env.VITE_SUPABASE_ANON_KEY;
+export const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL;
+export const ANON_KEY = import.meta.env.VITE_SUPABASE_ANON_KEY;
 
 export const hasSupabase = Boolean(SUPABASE_URL && ANON_KEY);
 

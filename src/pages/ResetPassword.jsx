@@ -11,6 +11,9 @@ import AuthLayout from "@/components/AuthLayout";
 export default function ResetPassword() {
   const [searchParams] = useSearchParams();
   const resetToken = searchParams.get("token");
+  // Link z Supabase (logowanie poza platformą) przynosi sesję w #hash zamiast ?token=
+  const hasSupaSession = typeof window !== "undefined" &&
+    new URLSearchParams(window.location.hash.slice(1)).has("access_token");
   const t = useLoginText();
 
   const [newPassword, setNewPassword] = useState("");
@@ -27,7 +30,7 @@ export default function ResetPassword() {
     }
     setLoading(true);
     try {
-      await base44.auth.resetPassword({ resetToken, newPassword });
+      await base44.auth.resetPassword({ resetToken: hasSupaSession ? null : resetToken, newPassword });
       window.location.href = "/login";
     } catch (err) {
       setError(t("nowe.blad"));
@@ -36,7 +39,7 @@ export default function ResetPassword() {
     }
   };
 
-  if (!resetToken) {
+  if (!resetToken && !hasSupaSession) {
     return (
       <AuthLayout
         icon={AlertTriangle}
