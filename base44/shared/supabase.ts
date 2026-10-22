@@ -1,7 +1,23 @@
-// Wspólny dostęp do projektu Supabase (exmortis) przez Management API łącznika.
+// Wspólny dostęp do projektu Supabase (exmortis). SQL przez Management API łącznika;
+// REST/RPC przez klucz service_role — najpierw sekret SUPABASE_SERVICE_KEY, zapasowo łącznik.
+import { secrets } from "base44:runtime";
 
-const PROJECT_REF = "fqhvxhnbeyvwubpnuzxe";
-const QUERY_URL = `https://api.supabase.com/v1/projects/${PROJECT_REF}/database/query`;
+let PROJECT_REF = "fqhvxhnbeyvwubpnuzxe";
+const QUERY_URL = () => `https://api.supabase.com/v1/projects/${PROJECT_REF}/database/query`;
+
+// Klucz service_role z sekretów aplikacji — bez odpytywania łącznika przy każdym REST/RPC.
+let ENV_KEY: string | null = null;
+try {
+  const v = (secrets as { get?: (k: string) => unknown }).get?.("SUPABASE_SERVICE_KEY");
+  if (typeof v === "string" && v.length > 40) {
+    ENV_KEY = v;
+    try {
+      const b = ENV_KEY.split(".")[1].replace(/-/g, "+").replace(/_/g, "/");
+      const payload = JSON.parse(atob(b + "=".repeat((4 - (b.length % 4)) % 4)));
+      if (payload && payload.ref) PROJECT_REF = String(payload.ref);
+    } catch {}
+  }
+} catch {}
 
 // Token łącznika trzymany 5 min w pamięci instancji — bez osobnego zapytania przy każdym SQL.
 let TOKEN: { v: string; at: number } | null = null;
@@ -12,7 +28,7 @@ export async function runSql(base44, query, readOnly = false) {
     TOKEN = { v: accessToken, at: Date.now() };
   }
   const accessToken = TOKEN.v;
-  const res = await fetch(readOnly ? `${QUERY_URL}/read-only` : QUERY_URL, {
+  const res = await fetch(readOnly ? `${QUERY_URL()}/read-only` : QUERY_URL(), {
     method: "POST",
     headers: {
       Authorization: `Bearer ${accessToken}`,
@@ -35,6 +51,7 @@ export async function runSql(base44, query, readOnly = false) {
 // Klucz service_role pobierany przez łącznik i trzymany tylko w pamięci instancji (1 h), nigdy nie zapisywany.
 let SKEY: { v: string; at: number } | null = null;
 export async function serviceKey(base44) {
+  if (ENV_KEY) return ENV_KEY;
   if (!SKEY || Date.now() - SKEY.at > 3600000) {
     const { accessToken } = await base44.asServiceRole.connectors.getConnection("supabase");
     const r = await fetch(`https://api.supabase.com/v1/projects/${PROJECT_REF}/api-keys?reveal=true`, {
@@ -62,7 +79,7 @@ export async function rpc(base44, fn, args) {
   const key = await serviceKey(base44);
   const res = await fetch(`https://${PROJECT_REF}.supabase.co/rest/v1/rpc/${fn}`, {
     method: "POST",
-    headers: { apikey: SKEY.v, Authorization: `Bearer ${SKEY.v}`, "Content-Type": "application/json" },
+    headers: { apikey: key, Authorization: `Bearer ${key}`, "Content-Type": "application/json" },
     body: JSON.stringify(args),
     signal: AbortSignal.timeout(8000),
   });

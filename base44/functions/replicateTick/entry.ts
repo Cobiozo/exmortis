@@ -23,7 +23,7 @@ export default async function (req) {
     if (!admin && !tokenOk) return Response.json({ error: "Forbidden" }, { status: 403 });
 
     if (body.action === "full") {
-      if (!admin) return Response.json({ error: "Forbidden" }, { status: 403 });
+      if (!admin && !tokenOk) return Response.json({ error: "Forbidden" }, { status: 403 });
       return Response.json(await replicateFull(base44, { only: body.entity }));
     }
     if (body.action === "status") return Response.json(await replikacjaStatus(base44));

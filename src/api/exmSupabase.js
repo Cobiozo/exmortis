@@ -67,7 +67,9 @@ function orderExpr(sort) {
 async function fetchRows(table, qs) {
   const res = await fetch(`${SUPABASE_URL}/rest/v1/${table}?${qs}`, { headers: headers(), signal: AbortSignal.timeout(15000) });
   if (!res.ok) throw new Error(`Supabase ${res.status}: ${(await res.text()).slice(0, 200)}`);
-  return (await res.json()).map((r) => r.data);
+  // Pełny kształt rekordu jak w aplikacji: pola we wnętrzu `data` + pola systemowe z kolumn.
+  const row2rec = (r) => ({ ...(r.data || {}), id: r.id, created_date: r.created_date, updated_date: r.updated_date, created_by_id: r.created_by_id });
+  return (await res.json()).map(row2rec);
 }
 
 export function supabaseEntityOps(entityName) {

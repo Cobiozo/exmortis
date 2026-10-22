@@ -15,11 +15,31 @@ import { hasSupabase, supabaseEntityOps } from "./exmSupabase";
 export const ENTITY_BACKEND = import.meta.env.VITE_EXM_ENTITY_BACKEND === "supabase" ? "supabase" : "base44";
 const READ_OPS = ["get", "filter", "list", "count"];
 
+// Odczyty z kopii tylko dla kolekcji publicznych — polityki w bazie (exm_read_public)
+// odwzorowują odczyt gościa. Panele administratora i dane kont (Access, Consent, postępy)
+// zostają na Base44 do czasu migracji logowania (docs/tech/MIGRACJA.md).
+const SUPABASE_READ = new Set([
+  "PublishedPage", "SiteNav", "PageRedirect", "LegalDocVersion", "PodcastSettings",
+  "PodcastEpisode", "PodcastPlaylist", "Utwor", "SilenceSettings",
+]);
+
 function wrapEntity(entity, name) {
-  const ops = ENTITY_BACKEND === "supabase" && hasSupabase ? supabaseEntityOps(name) : null;
+  const ops = ENTITY_BACKEND === "supabase" && hasSupabase && SUPABASE_READ.has(name) ? supabaseEntityOps(name) : null;
   return new Proxy(entity, {
     get(target, prop) {
-      if (ops && READ_OPS.includes(prop)) return ops[prop];
+      if (ops && READ_OPS.includes(prop)) {
+        // Kopia nie odpowiada → zapasowy odczyt z aplikacji (strona żyje bez Supabase).
+        const op = ops[prop];
+        return async (...args) => {
+          try {
+            return await op(...args);
+          } catch (e) {
+            console.error("odczyt:Supabase", name, String(prop), String(e?.message || e).slice(0, 200));
+            const fallback = target[prop];
+            return fallback.apply(target, args);
+          }
+        };
+      }
       const value = target[prop];
       return typeof value === "function" ? value.bind(target) : value;
     },

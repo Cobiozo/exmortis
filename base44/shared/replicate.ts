@@ -10,7 +10,7 @@ import { getSetting, saveSetting } from "./settings.ts";
 export const REPLICATE = [
   "PublishedPage", "SiteNav", "PageRedirect", "LegalDocVersion", "PodcastSettings",
   "PodcastEpisode", "PodcastPlaylist", "Utwor", "SilenceSettings",
-  "Product", "DiscountCode", "PodcastGuest", "PodcastPlaylist", "ObokSeria", "ObokNagranie",
+  "Product", "DiscountCode", "PodcastGuest", "ObokSeria", "ObokNagranie",
   "Access", "Consent", "License", "Withdrawal", "CourseLesson", "PodcastApplication",
   "PowrotApplication", "ContactMessage", "Announcement", "AnnouncementSeen", "AnnouncementLog",
   "PageVersion", "CmsSection", "ContentLog", "MediaAsset", "PublicSnapshot",
@@ -80,12 +80,10 @@ export async function upsertRows(base44, entity, recs) {
 // Wszystkie rekordy encji (strony po 500, od najnowszych).
 async function readAll(base44, entity) {
   const out = [];
-  let cursor;
-  for (;;) {
-    const page = await base44.asServiceRole.entities[entity].list(cursor ? { sort: "-updated_date", limit: 500, cursor } : { sort: "-updated_date", limit: 500 });
-    out.push(...(page.items || []));
-    cursor = page.next_cursor;
-    if (!page.has_more || !cursor) break;
+  for (let i = 0; ; i += 500) {
+    const rows = await base44.asServiceRole.entities[entity].list("-updated_date", 500, i);
+    out.push(...(rows || []));
+    if (!rows || rows.length < 500) break;
   }
   return out;
 }
@@ -123,10 +121,10 @@ export async function replicateDelta(base44, { limitMs = 90000 } = {}) {
   const start = Date.now();
   for (const e of REPLICATE) {
     if (!since[e]) continue; // pełna kopia tej kolekcji jeszcze nie gotowa
-    if (zmiany && Date.now() - start > limitMs) break;
+    if (Date.now() - start > limitMs) break;
     try {
-      const page = await base44.asServiceRole.entities[e].filter({ updated_date: { $gt: since[e] } }, { sort: "updated_date", limit: 500 });
-      const recs = (page.items || []).filter((r) => r && r.id);
+      const page = await base44.asServiceRole.entities[e].filter({ updated_date: { $gt: since[e] } }, "updated_date", 500);
+      const recs = (page || []).filter((r) => r && r.id);
       if (recs.length) {
         await upsertRows(base44, e, recs);
         zmiany[e] = recs.length;

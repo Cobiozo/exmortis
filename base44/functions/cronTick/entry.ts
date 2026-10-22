@@ -82,6 +82,7 @@ export default async function (req) {
       { label: "libraryTick", name: "libraryTick", args: { tick_token: stored } },
       { label: "bootstrap/ping", name: "bootstrap", args: { ping: true } },
       { label: "eventsPublic/ping", name: "eventsPublic", args: { ping: true } },
+      { label: "replikacja/delta", name: "replicateTick", args: { tick_token: stored } },
     ];
 
     // Co 15 minut: przypomnienia o spotkaniach, przypomnienia o rezerwacjach 1:1, ponowienia zmiany adresu.
