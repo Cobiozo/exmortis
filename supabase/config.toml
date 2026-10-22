@@ -1,0 +1,6 @@
+project_id = "exmortis"
+
+[functions]
+# verify_jwt zostaje włączone (domyślne): przeglądarka wysyła klucz anonimowy
+# (gość) albo własny token logowania (klient) w nagłówku Authorization/apikey.
+# Zadania cron (pg_cron) dołączały będą klucz service_role jako apikey.

@@ -1,0 +1,315 @@
+import { sendMail } from "./smtp.ts";
+
+// Wspólne narzędzia modułu Spotkań: daty w strefie Europe/Warsaw, pliki .ics
+// i szablony e-maili (potwierdzenia, przypomnienia, nagrania, lista rezerwowa).
+
+import { APP_URL } from "./settings.ts";
+import { emailButton } from "./emailLayout.ts";
+import { regTicket, showCode, ticketUrl, ticketPdfUrl } from "./tickets.ts";
+export { APP_URL };
+// APP_URL wczytuje loadAppUrl(base44) na początku każdej funkcji.
+
+const warsawFmt = (opts) => new Intl.DateTimeFormat("pl-PL", { timeZone: "Europe/Warsaw", ...opts });
+
+export function plDate(value) {
+  return warsawFmt({ weekday: "long", day: "numeric", month: "long" }).format(new Date(value));
+}
+
+export function plTime(value) {
+  return warsawFmt({ hour: "2-digit", minute: "2-digit", hour12: false }).format(new Date(value));
+}
+
+export function plWhen(value) {
+  return `${plDate(value)} · ${plTime(value)}`;
+}
+
+const CITY = { "Europe/London": "Londyn", "America/New_York": "Nowy Jork", "Asia/Tokyo": "Tokio", "Europe/Dublin": "Dublin",
+  "Europe/Berlin": "Berlin", "Europe/Paris": "Paryż", "America/Chicago": "Chicago", "America/Los_Angeles": "Los Angeles", "Europe/Oslo": "Oslo" };
+const validTz = (tz) => { try { return !!tz && !!new Intl.DateTimeFormat("pl-PL", { timeZone: tz }); } catch { return false; } };
+
+// Maile: godzina polska z dopiskiem; jeśli osoba zapisała się z innej strefy — dodatkowo jej czas (z bazy UTC, bez ręcznych przesunięć).
+export function mailWhen(value, tz) {
+  const pl = `${plDate(value)} · ${plTime(value)} (czas polski, Warszawa)`;
+  if (!validTz(tz) || tz === "Europe/Warsaw") return pl;
+  const f = (o) => new Intl.DateTimeFormat("pl-PL", { timeZone: tz, ...o }).format(new Date(value));
+  const local = f({ hour: "2-digit", minute: "2-digit", hour12: false });
+  if (local === plTime(value) && f({ day: "numeric" }) === warsawFmt({ day: "numeric" }).format(new Date(value))) return pl;
+  const day = f({ day: "numeric" }) !== warsawFmt({ day: "numeric" }).format(new Date(value)) ? `${f({ weekday: "long", day: "numeric", month: "long" })}, ` : "";
+  return `${pl} · ${day}${local} u Ciebie (${CITY[tz] || tz.split("/").pop().replace(/_/g, " ")})`;
+}
+
+function escHtml(s) {
+  return String(s || "").replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
+}
+
+function icsStamp(date) {
+  return new Date(date).toISOString().replace(/[-:]/g, "").replace(/\.\d{3}/, "");
+}
+
+// Stały adres strony dołączenia (spotkania online) — nigdy surowy link do Zooma.
+export const isOnline = (ev) => ev.format === "Online";
+export function joinUrl(ev, token = null) {
+  const q = token ? `?t=${token}` : "";
+  if (ev.short_path) return `${APP_URL}/${ev.short_path}/dolacz${q}`;
+  return ev.slug ? `${APP_URL}/spotkania/${ev.slug}/dolacz${q}` : null;
+}
+
+// Osobisty klucz dołączenia: skrót z tokenu zapisu (nie ujawnia tokenu rezygnacji).
+// Link z kluczem otwiera pokój bez wpisywania e-maila; bez klucza strona prosi o e-mail podany przy zapisie.
+export async function joinToken(cancelToken) {
+  if (!cancelToken) return null;
+  const buf = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(`join:${cancelToken}`));
+  return Array.from(new Uint8Array(buf), (b) => b.toString(16).padStart(2, "0")).join("").slice(0, 24);
+}
+
+// Stan pokoju liczony na serwerze: przed / otwarte / po / odwolane.
+export function joinState(ev, now = Date.now()) {
+  if (ev.status === "Odwołane") return "odwolane";
+  const start = new Date(ev.start_datetime).getTime();
+  const open = start - (Number(ev.open_minutes) || 15) * 60000;
+  const close = start + ((Number(ev.duration_minutes) || 60) + 30) * 60000;
+  return now < open ? "przed" : now <= close ? "otwarte" : "po";
+}
+
+// Czas lokalny Europe/Warsaw w formacie ICS (20261101T200000).
+function icsLocal(d) {
+  const o = {};
+  for (const p of warsawFmt({ year: "numeric", month: "2-digit", day: "2-digit", hour: "2-digit", minute: "2-digit", second: "2-digit", hour12: false }).formatToParts(d)) o[p.type] = p.value;
+  return `${o.year}${o.month}${o.day}T${o.hour === "24" ? "00" : o.hour}${o.minute}${o.second}`;
+}
+
+// UID stały dla spotkania → ponowny import aktualizuje wydarzenie; SEQUENCE rośnie z każdą wersją.
+export function buildIcs(ev, token = null) {
+  const start = new Date(ev.start_datetime);
+  const end = new Date(start.getTime() + (Number(ev.duration_minutes) || 60) * 60000);
+  const esc = (s) => String(s || "").replace(/\\/g, "\\\\").replace(/;/g, "\\;").replace(/,/g, "\\,").replace(/\r?\n/g, "\\n");
+  const url = isOnline(ev) ? joinUrl(ev, token) : null;
+  // Spotkanie online: BEZ pola „miejsce”. Każda wartość w nim (nawet opis) daje w Gmailu przycisk „Trasa”
+  // i otwiera Mapy Google. Link dołączenia jest w opisie wydarzenia i w polu URL.
+  const place = isOnline(ev) ? "" : ev.location || "";
+  const desc = [ev.subtitle || "", url ? `Dołącz do spotkania (pokój otwiera się kilka minut przed startem):\n${url}` : ""].filter(Boolean).join("\n\n");
+  return [
+    "BEGIN:VCALENDAR",
+    "VERSION:2.0",
+    "PRODID:-//EXMORTIS//Spotkania//PL",
+    "CALSCALE:GREGORIAN",
+    "METHOD:PUBLISH",
+    "BEGIN:VEVENT",
+    `UID:${ev.id}@exmortis`,
+    `SEQUENCE:${Math.floor(Date.now() / 1000) - 1700000000}`,
+    `DTSTAMP:${icsStamp(new Date())}`,
+    `DTSTART;TZID=Europe/Warsaw:${icsLocal(start)}`,
+    `DTEND;TZID=Europe/Warsaw:${icsLocal(end)}`,
+    `SUMMARY:${esc(ev.title)}`,
+    `DESCRIPTION:${esc(desc)}`,
+    ...(place ? [`LOCATION:${esc(place)}`] : []),
+    ...(url ? [`URL:${url}`] : []),
+    "BEGIN:VALARM",
+    "TRIGGER:-PT30M",
+    "ACTION:DISPLAY",
+    `DESCRIPTION:${esc(ev.title)}`,
+    "END:VALARM",
+    "END:VEVENT",
+    "END:VCALENDAR",
+  ].join("\r\n");
+}
+
+export function icsAttachment(ev, token = null) {
+  return {
+    filename: "exmortis-spotkanie.ics",
+    content: buildIcs(ev, token),
+    contentType: "text/calendar; charset=utf-8",
+  };
+}
+
+function coverOf(ev) {
+  let c = ev?.cover;
+  if (typeof c === "string") { try { c = JSON.parse(c); } catch { c = null; } }
+  return c && typeof c === "object" ? c : null;
+}
+
+// Nagłówek e-maila z okładką spotkania (z tekstem alternatywnym — mail czytelny bez obrazów).
+function shell(ev, content) {
+  const c = coverOf(ev);
+  const img = c?.crops?.mail
+    ? `<img src="${escHtml(c.crops.mail)}" alt="${escHtml(c.alt || ev.title)}" width="600" style="display:block;width:100%;max-width:600px;height:auto;border:0;margin:0 0 24px;${ev.status === "Odwołane" ? "filter:grayscale(1);" : ""}" />`
+    : "";
+  return `<div style="background:#0A0A0B;padding:32px;font-family:Georgia,serif;color:#E2E2E2;">
+    <p style="letter-spacing:4px;color:#C9A24A;font-size:13px;">EXMORTIS</p>${img}
+    ${content}
+    <p style="color:#8A8A8C;font-size:12px;line-height:1.7;margin-top:28px;">exmortis to mentoring, nie terapia. Jeśli jest Ci bardzo ciężko: 116 123 · 800 70 2222 (całą dobę, bezpłatnie) · w zagrożeniu życia 112.</p>
+    <p style="color:#5C5C5E;font-size:12px;letter-spacing:2px;margin-top:32px;">WRACAM Z SIEBIE · UCZĘ WRACAĆ</p>
+  </div>`;
+}
+
+function cancelLink(token) {
+  return `<p style="margin-top:28px;font-size:12px;"><a href="${APP_URL}/functions/eventsCancel?token=${token}" style="color:#8A8A8C;">Nie mogę przyjść — zwalniam miejsce</a></p>`;
+}
+
+function meetingLine(ev, reg) {
+  return `<p style="color:#C9A24A;letter-spacing:1px;">${escHtml(mailWhen(ev.start_datetime, reg?.tz))} · ${escHtml(ev.format || "")}</p>
+    <p style="color:#8A8A8C;">${escHtml(ev.location || "")}</p>`;
+}
+
+function joinBlock(ev, token = null) {
+  const url = isOnline(ev) && joinUrl(ev, token);
+  if (url) {
+    // Sam przycisk (adres ukryty w przycisku) — osobisty link nie leży w treści maila na widoku.
+    return `${emailButton("DOŁĄCZ DO SPOTKANIA", url)}<p style="margin-top:0;font-size:13px;color:#A3A3A6;line-height:1.6;">Przycisk prowadzi na Twoją stronę dołączenia. Pokój otwiera się kilka minut przed startem — wtedy pojawi się tam przycisk wejścia do Zoom. Zachowaj ten e-mail albo dodaj spotkanie do kalendarza.</p><p style="color:#8A8A8C;font-size:12px;line-height:1.6;">Przycisk jest przypisany do Twojego zapisu — nie przekazuj tego maila dalej. Na stronie spotkania wejdziesz też, wpisując adres e-mail podany przy zapisie.</p>`;
+  }
+  if (ev.format === "Online" && ev.external_url) {
+    return `<p style="margin-top:20px;"><a href="${escHtml(ev.external_url)}" style="color:#C9A24A;">Dołącz do spotkania tutaj</a></p>`;
+  }
+  return `<p style="margin-top:20px;color:#8A8A8C;">${escHtml(ev.location || "")} — przyjdź kilka minut wcześniej.</p>`;
+}
+
+// Bilet z kodem QR dla zapisu na darmowe spotkanie stacjonarne z włączonymi biletami (inaczej pusty).
+async function ticketBlock(base44, ev, reg) {
+  try {
+    const t = await regTicket(base44, ev?.id || reg?.event_id, reg);
+    if (!t) return "";
+    return `<div style="margin:22px 0;border:1px solid #C9A24A;padding:20px;"><p style="font-size:11px;letter-spacing:.22em;color:#C9A24A;margin:0 0 10px;">TWÓJ BILET</p>` +
+      `<p style="margin:0 0 8px;color:#E2E2E2;">${escHtml(t.holder_name)} · <b style="color:#C9A24A;letter-spacing:2px;">${escHtml(showCode(t.code))}</b></p>` +
+      emailButton("POBIERZ BILET (PDF)", ticketPdfUrl(t.token)) +
+      `<p style="margin:0;font-size:13px;color:#8A8A8C;line-height:1.6;"><a href="${ticketUrl(t.token)}" style="color:#C9A24A;">Otwórz bilet na telefonie</a>. Przy wejściu pokaż kod QR — na telefonie albo wydrukowany. Bilet jest imienny i ważny na jedno wejście. Znajdziesz go też w Moim koncie → Spotkania.</p></div>`;
+  } catch (e) {
+    console.error("bilet zapisu:", e?.message);
+    return "";
+  }
+}
+
+// „Co otrzymujesz” — lista z pola spotkania (pozycje rozdzielone średnikiem albo nową linią).
+function whatList(raw) {
+  const items = String(raw || "").split(/\s*[;\n]\s*/).map((x) => x.trim()).filter(Boolean);
+  if (!items.length) return "";
+  return `<p style="line-height:1.7;margin-bottom:6px;">W ramach uczestnictwa otrzymujesz:</p><ul style="margin:0 0 16px;padding-left:20px;line-height:1.7;">${items.map((x) => `<li>${escHtml(x)}</li>`).join("")}</ul>`;
+}
+
+// Potwierdzenie zapisu (z załączonym plikiem .ics).
+export async function sendConfirmationMail(base44, ev, reg) {
+  const jt = await joinToken(reg.cancel_token);
+  const waitlist = reg.status === "Lista rezerwowa";
+  const tix = waitlist ? "" : await ticketBlock(base44, ev, reg);
+  const lead = waitlist
+    ? `${escHtml(reg.first_name)}, wszystkie miejsca na «${escHtml(ev.title)}» są już zajęte. Zapisałem Cię na listę rezerwową — dam znać, jeśli ktoś zrezygnuje.`
+    : `${escHtml(reg.first_name)}, zapisuję Cię na «${escHtml(ev.title)}». ${ev.format === "Online" ? "Stały adres dołączenia masz poniżej — zadziała w dniu spotkania." : "Czekam na Ciebie na miejscu."}`;
+  return sendMail(base44, {
+    kind: "zapis", ref: reg.id, waznyDo: ev.start_datetime,
+    to: reg.email,
+    subject: `EXMORTIS · ${waitlist ? "Lista rezerwowa" : "Zapis potwierdzony"} — ${ev.title}`,
+    html: shell(ev, 
+      `<h1 style="font-size:24px;">${waitlist ? "Lista rezerwowa" : "Zapis potwierdzony"}</h1>${meetingLine(ev, reg)}` +
+        `<p style="line-height:1.7;">${lead}</p>` +
+        whatList(ev.what_registered) +
+        (waitlist ? "" : joinBlock(ev, jt)) + tix +
+        `<p style="color:#8A8A8C;font-size:13px;">Spotkanie masz w załączonym pliku kalendarza (.ics).</p>` +
+        cancelLink(reg.cancel_token)
+    ),
+    attachments: [icsAttachment(ev, waitlist ? null : jt)],
+  });
+}
+
+// Odwołanie spotkania: przeprosiny, powód, link do listy spotkań.
+export async function sendCancelledMail(base44, ev, reg, reason) {
+  return sendMail(base44, {
+    kind: "odwolanie", ref: reg.id, waznyDo: ev.start_datetime,
+    to: reg.email,
+    subject: `EXMORTIS · Odwołane — ${ev.title}`,
+    html: shell(ev, 
+      `<h1 style="font-size:24px;">To spotkanie się nie odbędzie</h1>${meetingLine(ev, reg)}` +
+        `<p style="line-height:1.7;">${escHtml(reg.first_name)}, przepraszam — spotkanie «${escHtml(ev.title)}» zostało odwołane.</p>` +
+        (reason ? `<p style="line-height:1.7;color:#8A8A8C;">${escHtml(reason)}</p>` : "") +
+        `<p style="margin-top:20px;"><a href="${APP_URL}/spotkania" style="color:#C9A24A;">Zobacz kolejne terminy</a></p>` +
+        cancelLink(reg.cancel_token)
+    ),
+  });
+}
+
+// Przypomnienie 24 h lub 1 h przed spotkaniem (z linkiem dołączania) —
+// albo wysyłane ręcznie z panelu (kind === "now").
+export async function sendReminderMail(base44, ev, reg, kind) {
+  const jt = await joinToken(reg.cancel_token);
+  const head = kind === "1h" ? "Za godzinę się widzimy" : kind === "now" ? "Do zobaczenia wkrótce" : "Jutro się widzimy";
+  const lead =
+    kind === "1h"
+      ? `${escHtml(reg.first_name)}, za godzinę spotykamy się na «${escHtml(ev.title)}». Zostaw wszystko i po prostu przyjdź.`
+      : kind === "now"
+        ? `${escHtml(reg.first_name)}, przypominam o spotkaniu «${escHtml(ev.title)}» — ${escHtml(mailWhen(ev.start_datetime, reg.tz))}. Czekam na Ciebie.`
+        : `${escHtml(reg.first_name)}, jutro o ${escHtml(plTime(ev.start_datetime))} (czas polski) spotykamy się na «${escHtml(ev.title)}». To krótkie przypomnienie — nic nie musisz robić, tylko przyjść.`;
+  return sendMail(base44, {
+    kind: "przypomnienie", ref: reg.id, waznyDo: ev.start_datetime,
+    to: reg.email,
+    subject: `EXMORTIS · ${head} — ${ev.title}`,
+    html: shell(ev, `<h1 style="font-size:24px;">${head}</h1>${meetingLine(ev, reg)}<p style="line-height:1.7;">${lead}</p>${joinBlock(ev, jt)}${await ticketBlock(base44, ev, reg)}${cancelLink(reg.cancel_token)}`),
+  });
+}
+
+// Nagranie udostępnione w koncie: tylko po zalogowaniu (Moje konto → Spotkania), do „dostępne do”.
+// Mail nie zawiera adresu pliku — wyłącznie link do konta.
+export async function sendRecordingMail(base44, ev, reg, inviteHtml) {
+  const konto = `${APP_URL}/konto?tab=spotkania`;
+  const rejestracja = `${APP_URL}/register?returnTo=${encodeURIComponent("/konto?tab=spotkania")}`;
+  const until = ev.recording_until ? escHtml(plWhen(ev.recording_until)) : "";
+  return sendMail(base44, {
+    kind: "nagranie", ref: reg.id, waznyDo: ev.recording_until || undefined,
+    to: reg.email,
+    subject: `EXMORTIS · Nagranie czeka w Twoim koncie — ${ev.title}`,
+    html: shell(ev,
+      `<h1 style="font-size:24px;">Nagranie czeka w Twoim koncie</h1>` +
+        `<p style="line-height:1.7;">${escHtml(reg.first_name)}, nagranie ze spotkania «${escHtml(ev.title)}» jest w Twoim koncie na exmortis.pl` +
+        (until ? `. Dostępne do: <strong>${until}</strong> (czasu polskiego) — potem zniknie.` : ".") + `</p>` +
+        `<p><a href="${escHtml(konto)}" style="display:inline-block;background:#C9A24A;color:#0A0A0B;text-decoration:none;padding:12px 22px;font-weight:bold;">Obejrzyj w koncie</a></p>` +
+        `<p style="color:#8A8A8C;font-size:13px;line-height:1.6;">Zaloguj się adresem <strong>${escHtml(reg.email)}</strong> — tym samym, który był podany przy zapisie. ` +
+        `Nie masz jeszcze konta? <a href="${escHtml(rejestracja)}" style="color:#C9A24A;">Załóż je na ten sam adres</a> — nagranie pojawi się od razu.</p>` +
+        inviteHtml
+    ),
+  });
+}
+
+// Awans z listy rezerwowej po zwolnieniu miejsca.
+export async function sendSpotFreedMail(base44, ev, reg) {
+  const jt = await joinToken(reg.cancel_token);
+  return sendMail(base44, {
+    kind: "miejsce", ref: reg.id, waznyDo: ev.start_datetime,
+    to: reg.email,
+    subject: `EXMORTIS · Zwolniło się miejsce — ${ev.title}`,
+    html: shell(ev, 
+      `<h1 style="font-size:24px;">Zwolniło się miejsce</h1>${meetingLine(ev, reg)}` +
+        `<p style="line-height:1.7;">${escHtml(reg.first_name)}, ktoś zrezygnował — miejsce na «${escHtml(ev.title)}» jest Twoje. Do zobaczenia na spotkaniu.</p>` +
+        joinBlock(ev, jt) +
+        (await ticketBlock(base44, ev, reg)) +
+        cancelLink(reg.cancel_token)
+    ),
+  });
+}
+
+// Zmiana terminu — nowy plik .ics (ten sam UID aktualizuje wydarzenie w kalendarzu).
+export async function sendRescheduleMail(base44, ev, reg) {
+  const jt = await joinToken(reg.cancel_token);
+  return sendMail(base44, {
+    kind: "zmiana_terminu", ref: reg.id, waznyDo: ev.start_datetime,
+    to: reg.email,
+    subject: `EXMORTIS · Nowy termin — ${ev.title}`,
+    html: shell(ev,
+      `<h1 style="font-size:24px;">Nowy termin spotkania</h1>${meetingLine(ev, reg)}` +
+        `<p style="line-height:1.7;">${escHtml(reg.first_name)}, termin spotkania «${escHtml(ev.title)}» się zmienił. Twój zapis jest aktualny. W załączniku nowy plik kalendarza — po otwarciu zaktualizuje wydarzenie.</p>` +
+        joinBlock(ev, jt) + cancelLink(reg.cancel_token)
+    ),
+    attachments: [icsAttachment(ev, jt)],
+  });
+}
+
+// Wiadomość od administratora do zapisanych (np. zmiana godziny).
+export async function sendBroadcastMail(base44, ev, reg, subject, text) {
+  return sendMail(base44, {
+    kind: "ogloszenie",
+    to: reg.email,
+    subject,
+    html: shell(ev, 
+      `<h1 style="font-size:24px;">${escHtml(ev.title)}</h1>` +
+        `<p style="line-height:1.7;">${escHtml(reg.first_name)},</p>` +
+        `<div style="line-height:1.7;">${escHtml(text).replace(/\r?\n/g, "<br/>")}</div>` +
+        cancelLink(reg.cancel_token)
+    ),
+  });
+}

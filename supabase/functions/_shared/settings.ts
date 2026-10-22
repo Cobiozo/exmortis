@@ -1,0 +1,98 @@
+import { runSql, rpc, escStr } from "./supabase.ts";
+import { clearSnap } from "./snapshot.ts";
+
+// Ustawienia integracji (payu / smtp) przechowywane jako jsonb w app_settings.
+
+// Tabela istnieje od wdrożenia — sprawdzamy najwyżej raz na instancję, nie przy każdym odczycie.
+// Struktura tabel jest zakładana migracją przy wdrożeniu — przy zapytaniach nic nie tworzymy.
+let TABLE_OK = true;
+export async function ensureSettingsTable(base44) {
+  if (TABLE_OK) return;
+  TABLE_OK = true;
+  await runSql(
+    base44,
+    `CREATE TABLE IF NOT EXISTS public.app_settings (
+      key text PRIMARY KEY,
+      value jsonb NOT NULL,
+      updated_date timestamptz DEFAULT now()
+    )`
+  );
+}
+
+// Dane firmy do stopek e-maili — wczytywane razem z ustawieniami SMTP.
+export let FIRMA = null;
+
+export async function getSetting(base44, key) {
+  await ensureSettingsTable(base44);
+  const rows = await runSql(
+    base44,
+    `SELECT value FROM public.app_settings WHERE key = ${escStr(key)}`,
+    true
+  );
+  const value = rows && rows.length > 0 ? rows[0].value : null;
+  if (key === "smtp") FIRMA = await getSetting(base44, "firma").catch(() => null);
+  return value;
+}
+
+// Adres aplikacji (APP_URL) — ustawiany w panelu admina, używany we wszystkich linkach w e-mailach i przekierowaniach.
+// Uczestnicy nigdy nie dostają adresu podglądu: pusty albo „preview--” → adres opublikowany.
+export const DEFAULT_APP_URL = "https://exmortis-return-path.base44.app";
+export let APP_URL = DEFAULT_APP_URL;
+export const safeAppUrl = (u) => (!u || /preview--/i.test(String(u)) ? DEFAULT_APP_URL : String(u).replace(/\/+$/, ""));
+
+export function cleanAppUrl(v) {
+  const s = String(v || "").trim().replace(/\/+$/, "");
+  if (!/^https:\/\/[^\s/]+\.[^\s/]+$/.test(s)) throw new Error("Podaj adres w formie https://twojadomena.pl (bez ścieżki)");
+  if (/preview--/i.test(s)) throw new Error("To adres podglądu — wpisz adres opublikowanej strony.");
+  return s;
+}
+
+let APP_URL_AT = 0;
+export async function loadAppUrl(base44) {
+  if (Date.now() - APP_URL_AT < 300000) return APP_URL;
+  const s = await getSetting(base44, "app").catch(() => null);
+  APP_URL = safeAppUrl(s?.url);
+  APP_URL_AT = Date.now();
+  return APP_URL;
+}
+
+// Kilka kluczy jednym zapytaniem tylko do odczytu (bez CREATE TABLE), z pamięcią 60 s w instancji.
+const CACHE = new Map<string, { v: unknown; at: number }>();
+export async function getSettingsFast(base44, keys: string[]) {
+  const ck = keys.join(",");
+  const hit = CACHE.get(ck);
+  if (hit && Date.now() - hit.at < 60000) return hit.v as Record<string, any>;
+  // ETAP 2A: najpierw PostgREST (jedno szybkie wywołanie). Gdyby funkcji jeszcze nie było,
+  // zostaje dotychczasowa ścieżka przez Management API — zachowanie bez zmian.
+  let out: Record<string, any> | null = await rpc(base44, "app_settings_get", { p_keys: keys }).catch(() => null);
+  if (!out || typeof out !== "object" || Array.isArray(out)) {
+    const rows = await runSql(
+      base44,
+      `SELECT key, value FROM public.app_settings WHERE key IN (${keys.map(escStr).join(",")})`,
+      true
+    ).catch(() => []);
+    out = {};
+    for (const r of rows || []) out[r.key] = r.value;
+  }
+  CACHE.set(ck, { v: out, at: Date.now() });
+  return out;
+}
+
+export async function saveSetting(base44, key, value) {
+  CACHE.clear();
+  APP_URL_AT = 0;
+  await clearSnap(base44, "settings");
+  await ensureSettingsTable(base44);
+  const json = JSON.stringify(value);
+  await runSql(
+    base44,
+    `INSERT INTO public.app_settings (key, value)
+     VALUES (${escStr(key)}, ${escStr(json)}::jsonb)
+     ON CONFLICT (key) DO UPDATE SET value = ${escStr(json)}::jsonb, updated_date = now()`
+  );
+}
+
+export async function deleteSetting(base44, key) {
+  await ensureSettingsTable(base44);
+  await runSql(base44, `DELETE FROM public.app_settings WHERE key = ${escStr(key)}`);
+}

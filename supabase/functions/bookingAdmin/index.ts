@@ -1,0 +1,450 @@
+import { createClientFromRequest } from "../_shared/compat.ts";
+import { runSql, rpc, esc, escStr, requireAdmin, emailField, textField } from "../_shared/supabase.ts";
+import { loadKeys, getMode, safeErr, KEYS_MSG, randomToken } from "../_shared/booking.ts";
+import { loadAppUrl, getSetting, saveSetting } from "../_shared/settings.ts";
+import { onBookingCreated, onBookingMoved, loadBooking, sendBookingMail, mailTexts, DEFAULT_TEXTS } from "../_shared/bookingNotify.ts";
+import { decryptHealth } from "../_shared/bookingCrypto.ts";
+import { SCHEMA_SQL, SEED_SQL } from "../_shared/bookingSchema.ts";
+import { googleStatus, ensureCalendar, syncBooking, dropBusy, takenByGoogle, typeDuration } from "../_shared/bookingGoogle.ts";
+
+// Panel rezerwacji 1:1 — wyłącznie administrator. Jedyne miejsce odszyfrowania odpowiedzi o zdrowiu.
+const int = (v, min, max, def = null) => { const n = Math.round(Number(v)); return Number.isFinite(n) && v !== "" && v !== null ? Math.min(max, Math.max(min, n)) : def; };
+const TIME = /^([01]\d|2[0-3]):[0-5]\d$/;
+const iso = (v) => { const d = new Date(v); if (isNaN(d.getTime())) throw new Error("Niepoprawna data"); return d.toISOString(); };
+const uuidOrNull = (v) => { const s = String(v || "").trim(); return /^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$/.test(s) ? s : null; };
+const log = (base44, actor, action, type, id, summary) => runSql(base44,
+  `INSERT INTO public.bk_log (actor, action, object_type, object_id, summary) VALUES (${escStr(actor)}, ${escStr(action)}, ${esc(type)}, ${esc(id)}, ${esc(summary)})`);
+
+// Dostęp do spotkań indywidualnych w programie POWRÓT — domyślne parametry (zmieniane w panelu, także dla każdej osoby osobno).
+const POWROT_KEY = "powrot_sesje";
+const POWROT_DEFAULTS = { type_slug: "sesja-powrot", sessions: 8, gap_days: 14, valid_months: 6 };
+async function powrotDefaults(base44) {
+  const s = await getSetting(base44, POWROT_KEY).catch(() => null);
+  return { ...POWROT_DEFAULTS, ...(s && typeof s === "object" ? s : {}) };
+}
+// Nowe rodzaje spotkań dodawane raz (nieaktywne — Dawid ustawia godziny i włącza w „Rodzaje i godziny”).
+let typesEnsured = false;
+async function ensureTypes(base44) {
+  if (typesEnsured) return;
+  await runSql(base44, `INSERT INTO public.bk_types (slug, name, description, duration_min, buffer_before, buffer_after, step_min, horizon_days, access, monthly_limit, sort, questions, active)
+    VALUES ('indywidualne-konsultacje', 'Indywidualne konsultacje', 'Spotkanie jeden na jeden: rozmowa o tym, z czym przychodzisz, i o najbliższym kroku.', 60, 15, 15, 30, 60, 'PAKIET', NULL, 5, '[]', false)
+    ON CONFLICT (slug) DO NOTHING`).catch(() => {});
+  typesEnsured = true;
+}
+
+const handler = async function (req) {
+  try {
+    const base44 = createClientFromRequest(req);
+    const me = await requireAdmin(base44);
+    const body = await req.json().catch(() => ({}));
+    const a = body.action;
+
+    if (a === "migrate") {
+      await runSql(base44, SCHEMA_SQL);
+      await runSql(base44, SEED_SQL);
+      return Response.json({ ok: true });
+    }
+
+    if (a === "status") {
+      const keys = await loadKeys(body.simulate_missing_keys === true);
+      return Response.json({ keys_ok: keys.ok, keys: keys.info, mode: await getMode(base44, true) });
+    }
+
+    if (a === "get") {
+      await ensureTypes(base44);
+      const [s, types, hours, blocks, hol] = await Promise.all([
+        runSql(base44, `SELECT mode, min_notice_h, daily_limit, weekly_limit, late_cancel_policy, threshold_product_id, threshold_type_id, threshold_sessions, threshold_valid_days, service_consent_version, service_consent_text FROM public.bk_settings WHERE id = 1`, true),
+        runSql(base44, `SELECT id, slug, name, description, duration_min, buffer_before, buffer_after, step_min, horizon_days, access, zoom_link, questions, change_window_h, monthly_limit, active FROM public.bk_types ORDER BY sort, name`, true),
+        runSql(base44, `SELECT id, type_id, weekday, to_char(start_local,'HH24:MI') AS "from", to_char(end_local,'HH24:MI') AS "to" FROM public.bk_hours ORDER BY weekday, start_local`, true),
+        runSql(base44, `SELECT id, kind, starts_at, ends_at, rep_weekday, to_char(rep_from,'HH24:MI') AS rep_from, to_char(rep_to,'HH24:MI') AS rep_to, note FROM public.bk_blocks WHERE NOT disabled AND ends_at > now() ORDER BY starts_at LIMIT 200`, true),
+        runSql(base44, `SELECT d, name, blocked FROM public.bk_holidays WHERE d >= date_trunc('year', now())::date ORDER BY d`, true),
+      ]);
+      return Response.json({ settings: s[0], types: types.map((t) => ({ ...t, hours: hours.filter((h) => h.type_id === t.id) })), blocks, holidays: hol });
+    }
+
+    if (a === "save_settings") {
+      const mode = ["off", "admin", "on"].includes(body.mode) ? body.mode : "off";
+      const daily = int(body.daily_limit, 1, 20, 3), weekly = int(body.weekly_limit, 1, 100, null);
+      const policy = body.late_cancel_policy === "przepada" ? "przepada" : "admin";
+      const prodId = uuidOrNull(body.threshold_product_id), typeId = uuidOrNull(body.threshold_type_id);
+      const thSessions = int(body.threshold_sessions, 1, 20, 1), thDays = int(body.threshold_valid_days, 1, 365, 60);
+      const svcText = String(body.service_consent_text || "").trim().slice(0, 2000);
+      if (!svcText) throw new Error("Treść zgody nie może być pusta");
+      const svcVer = String(body.service_consent_version || "").trim().slice(0, 40) || "rez-2026-11";
+      await runSql(base44, `UPDATE public.bk_settings SET mode = ${escStr(mode)}, daily_limit = ${daily}, weekly_limit = ${esc(weekly)},
+        late_cancel_policy = ${escStr(policy)}, threshold_product_id = ${esc(prodId)}, threshold_type_id = ${esc(typeId)},
+        threshold_sessions = ${thSessions}, threshold_valid_days = ${thDays},
+        service_consent_text = ${escStr(svcText)}, service_consent_version = ${escStr(svcVer)}, updated_at = now() WHERE id = 1`);
+      await log(base44, me.email, "ustawienia", "settings", "1", `tryb=${mode} dzien=${daily} tydzien=${weekly ?? "-"} pozne=${policy} prog=${prodId ? "tak" : "nie"}`);
+      await getMode(base44, true);
+      return Response.json({ ok: true });
+    }
+
+    if (a === "save_type") {
+      const t = body.type || {};
+      const name = textField(t, "name", { max: 120 });
+      const access = ["PUBLICZNY", "PO_ZAKUPIE", "PAKIET"].includes(t.access) ? t.access : "PAKIET";
+      const zoom = t.zoom_link ? String(t.zoom_link).trim() : null;
+      if (zoom && !/^https:\/\/\S+$/.test(zoom)) throw new Error("Link Zoom musi zaczynać się od https://");
+      const qs = Array.isArray(t.questions) ? t.questions.slice(0, 10).map((q, i) => ({
+        id: /^[a-z0-9]{1,10}$/.test(q.id) ? q.id : `q${i + 1}`, label: String(q.label || "").slice(0, 300), required: !!q.required, health: !!q.health,
+      })).filter((q) => q.label) : [];
+      const cols = {
+        name: escStr(name), description: esc(t.description ? String(t.description).slice(0, 2000) : null),
+        duration_min: int(t.duration_min, 10, 480, 60), buffer_before: int(t.buffer_before, 0, 240, 0), buffer_after: int(t.buffer_after, 0, 240, 0),
+        step_min: int(t.step_min, 5, 240, 30), horizon_days: int(t.horizon_days, 1, 365, 60), access: escStr(access), zoom_link: esc(zoom),
+        questions: `${escStr(JSON.stringify(qs))}::jsonb`, change_window_h: int(t.change_window_h, 0, 720, 24),
+        monthly_limit: esc(int(t.monthly_limit, 1, 100, null)), active: t.active === true ? "TRUE" : "FALSE",
+      };
+      let id = t.id;
+      if (id) {
+        await runSql(base44, `UPDATE public.bk_types SET ${Object.entries(cols).map(([k, v]) => `${k} = ${v}`).join(", ")} WHERE id = ${escStr(id)}`);
+      } else {
+        const slug = String(t.slug || "").toLowerCase();
+        if (!/^[a-z0-9-]{2,60}$/.test(slug)) throw new Error("Adres: małe litery, cyfry i myślniki");
+        id = (await runSql(base44, `INSERT INTO public.bk_types (slug, ${Object.keys(cols).join(", ")}) VALUES (${escStr(slug)}, ${Object.values(cols).join(", ")}) RETURNING id`))[0].id;
+      }
+      await log(base44, me.email, "rodzaj", "type", id, `${name} aktywny=${t.active === true}`);
+      return Response.json({ ok: true, id });
+    }
+
+    if (a === "save_hours") {
+      const typeId = textField(body, "type_id", { max: 40 });
+      const rows = (Array.isArray(body.hours) ? body.hours : []).slice(0, 50).map((h) => {
+        const w = int(h.weekday, 1, 7);
+        if (!w || !TIME.test(h.from) || !TIME.test(h.to) || h.to <= h.from) throw new Error("Godziny: koniec musi być po początku");
+        return `(${escStr(typeId)}::uuid, ${w}, ${escStr(h.from)}::time, ${escStr(h.to)}::time)`;
+      });
+      await runSql(base44, `WITH d AS (DELETE FROM public.bk_hours WHERE type_id = ${escStr(typeId)}::uuid)
+        ${rows.length ? `INSERT INTO public.bk_hours (type_id, weekday, start_local, end_local) VALUES ${rows.join(", ")}` : "SELECT 1"}`);
+      await log(base44, me.email, "godziny", "type", typeId, `${rows.length} przedzialow`);
+      return Response.json({ ok: true });
+    }
+
+    if (a === "save_block") {
+      const b = body.block || {};
+      const kind = ["jednorazowa", "calodniowa", "powtarzalna"].includes(b.kind) ? b.kind : "jednorazowa";
+      const st = iso(b.starts_at), en = iso(b.ends_at);
+      if (en <= st) throw new Error("Koniec musi być po początku");
+      let rep = "NULL, NULL, NULL";
+      if (kind === "powtarzalna") {
+        const w = int(b.rep_weekday, 1, 7);
+        if (!w || !TIME.test(b.rep_from) || !TIME.test(b.rep_to) || b.rep_to <= b.rep_from) throw new Error("Podaj dzień tygodnia i godziny");
+        rep = `${w}, ${escStr(b.rep_from)}::time, ${escStr(b.rep_to)}::time`;
+      }
+      const id = (await runSql(base44, `INSERT INTO public.bk_blocks (kind, starts_at, ends_at, rep_weekday, rep_from, rep_to, note, created_by)
+        VALUES (${escStr(kind)}, ${escStr(st)}, ${escStr(en)}, ${rep}, ${esc(b.note ? String(b.note).slice(0, 500) : null)}, ${escStr(me.email)}) RETURNING id`))[0].id;
+      // Rezerwacje, które wypadają w blokadzie, zostają — panel pokazuje listę kolizji.
+      const coll = await runSql(base44, `SELECT k.id, t.name AS type, k.starts_at, k.first_name FROM public.bk_bookings k JOIN public.bk_types t ON t.id = k.type_id
+        JOIN public.bk_blocks x ON x.id = ${escStr(id)}::uuid
+        WHERE k.status = 'POTWIERDZONA' AND k.busy && tstzrange(x.starts_at, x.ends_at, '[)')
+          AND (x.kind <> 'powtarzalna' OR (extract(isodow FROM (k.starts_at AT TIME ZONE 'Europe/Warsaw'))::int = x.rep_weekday
+            AND k.busy && tstzrange(((k.starts_at AT TIME ZONE 'Europe/Warsaw')::date + x.rep_from) AT TIME ZONE 'Europe/Warsaw',
+              ((k.starts_at AT TIME ZONE 'Europe/Warsaw')::date + x.rep_to) AT TIME ZONE 'Europe/Warsaw', '[)')))
+        ORDER BY k.starts_at`, true);
+      await log(base44, me.email, "blokada", "block", id, `${kind} ${st}–${en}`);
+      return Response.json({ ok: true, id, collisions: coll });
+    }
+
+    if (a === "delete_block") {
+      const id = textField(body, "id", { max: 40 });
+      await runSql(base44, `UPDATE public.bk_blocks SET disabled = TRUE WHERE id = ${escStr(id)}::uuid`);
+      await log(base44, me.email, "blokada_usunieta", "block", id, null);
+      return Response.json({ ok: true });
+    }
+
+    if (a === "toggle_holiday") {
+      const d = textField(body, "d", { max: 10 });
+      if (!/^\d{4}-\d{2}-\d{2}$/.test(d)) throw new Error("Niepoprawna data");
+      await runSql(base44, `UPDATE public.bk_holidays SET blocked = ${body.blocked === true ? "TRUE" : "FALSE"} WHERE d = ${escStr(d)}::date`);
+      await log(base44, me.email, body.blocked === true ? "swieto_zablokowane" : "swieto_odblokowane", "holiday", d, null);
+      return Response.json({ ok: true });
+    }
+
+    if (a === "bookings") {
+      const rows = await runSql(base44, `SELECT k.id, t.name AS type, k.starts_at, k.ends_at, k.first_name, k.email, k.status, k.source, k.client_tz
+        FROM public.bk_bookings k JOIN public.bk_types t ON t.id = k.type_id
+        WHERE k.ends_at > now() - interval '7 days' ORDER BY k.starts_at LIMIT 200`, true);
+      return Response.json({ bookings: rows });
+    }
+
+    if (a === "detail") {
+      const keys = await loadKeys();
+      if (!keys.ok) throw new Error(KEYS_MSG);
+      const id = textField(body, "id", { max: 40 });
+      // Pytania rodzaju spotkania wracają razem z rezerwacją — panel pokazuje treść pytania, nie samo „q1”.
+      const [booking] = await runSql(base44, `SELECT k.id, t.name AS type, t.zoom_link, t.questions, k.starts_at, k.first_name, k.email, k.status FROM public.bk_bookings k
+        JOIN public.bk_types t ON t.id = k.type_id WHERE k.id = ${escStr(id)}::uuid`, true);
+      if (!booking) return Response.json({ error: "Nie znaleziono" }, { status: 404 });
+      const d = await rpc(base44, "bk_admin_detail", { p_id: id });
+      const health = d?.health_enc ? await decryptHealth(keys.enc, d.health_enc).catch(() => null) : null;
+      await log(base44, me.email, "odczyt_odpowiedzi", "booking", id, null);
+      return Response.json({ booking, detail: { answers: d?.answers ?? null, health_consent: d?.health_consent ?? false, deleted_at: d?.deleted_at ?? null, health } });
+    }
+
+    // Produkty skarbca — wybór „Rozmowy na progu” po identyfikatorze, nie po nazwie.
+    if (a === "products") {
+      const rows = await runSql(base44, `SELECT id, name, active, product_type FROM public.products ORDER BY name LIMIT 500`, true);
+      return Response.json({ products: rows });
+    }
+
+    if (a === "packages") {
+      await ensureTypes(base44);
+      const types = await runSql(base44, `SELECT id, slug, name, active FROM public.bk_types WHERE access = 'PAKIET' ORDER BY sort, name`, true);
+      const rows = await runSql(base44, `SELECT pk.id, t.name AS type, t.id AS type_id, pk.email_display AS email, pk.sessions_total, pk.sessions_used,
+          pk.valid_until, pk.min_gap_days, pk.payment_status, pk.source, pk.order_id, pk.created_at,
+          (SELECT max(k.starts_at) FROM public.bk_bookings k WHERE k.package_id = pk.id AND k.status IN ('POTWIERDZONA','ODBYLA_SIE')) AS last_start
+        FROM public.bk_packages pk JOIN public.bk_types t ON t.id = pk.type_id ORDER BY pk.created_at DESC LIMIT 500`, true);
+      return Response.json({ packages: rows || [], types: types || [], defaults: await powrotDefaults(base44) });
+    }
+
+    // Domyślne parametry dostępu POWRÓT (rodzaj spotkania, liczba spotkań, odstęp, ważność).
+    if (a === "powrot_defaults") {
+      const cur = await powrotDefaults(base44);
+      const slug = /^[a-z0-9-]{2,60}$/.test(String(body.type_slug || "")) ? String(body.type_slug) : cur.type_slug;
+      const next = { type_slug: slug, sessions: int(body.sessions, 1, 100, cur.sessions), gap_days: int(body.gap_days, 0, 90, cur.gap_days), valid_months: int(body.valid_months, 1, 36, cur.valid_months) };
+      await saveSetting(base44, POWROT_KEY, next);
+      await log(base44, me.email, "powrot_domyslne", "settings", POWROT_KEY, `${next.sessions} spotkań, co ${next.gap_days} dni, ${next.valid_months} mies.`);
+      return Response.json({ ok: true, defaults: next });
+    }
+
+    // Potwierdzenie uczestnictwa: nadanie dostępu do umawiania spotkań (pakiet ręczny, opłacony).
+    if (a === "grant_package") {
+      const email = emailField(body).toLowerCase();
+      const d = await powrotDefaults(base44);
+      const typeId = uuidOrNull(body.type_id) || (await runSql(base44, `SELECT id FROM public.bk_types WHERE slug = ${escStr(d.type_slug)}`, true))?.[0]?.id;
+      if (!typeId) throw new Error("Brak rodzaju spotkania — wybierz go albo ustaw w parametrach domyślnych.");
+      const sessions = int(body.sessions_total, 1, 100, d.sessions), gap = int(body.min_gap_days, 0, 90, d.gap_days);
+      const until = body.valid_until ? iso(`${String(body.valid_until).slice(0, 10)}T21:59:59Z`) : new Date(Date.now() + d.valid_months * 30.5 * 864e5).toISOString();
+      if (new Date(until).getTime() < Date.now()) throw new Error("Data ważności jest w przeszłości.");
+      const users = await base44.asServiceRole.entities.User.filter({ email }, "-created_date", 1).catch(() => []);
+      const uid = users?.[0]?.id || `email:${email}`;
+      const dup = await runSql(base44, `SELECT id FROM public.bk_packages WHERE type_id = ${escStr(typeId)}::uuid AND lower(email_display) = ${escStr(email)}
+        AND valid_until > now() AND sessions_used < sessions_total AND payment_status = 'oplacony' LIMIT 1`, true);
+      if (dup?.length && body.force !== true) return Response.json({ error: "Ta osoba ma już aktywny dostęp do tego rodzaju spotkań — zmień jego parametry na liście poniżej.", duplicate: dup[0].id }, { status: 409 });
+      const [row] = await runSql(base44, `INSERT INTO public.bk_packages (user_id, email_display, type_id, sessions_total, valid_until, min_gap_days, source, payment_status)
+        VALUES (${escStr(uid)}, ${escStr(email)}, ${escStr(typeId)}::uuid, ${sessions}, ${escStr(until)}::timestamptz, ${gap}, 'reczny', 'oplacony') RETURNING id`);
+      await log(base44, me.email, "pakiet_nadany", "package", row?.id, `${email}: ${sessions} spotkań, co ${gap} dni, do ${until.slice(0, 10)}${users?.[0] ? "" : " (bez konta — dopasowanie po e-mailu)"}`);
+      return Response.json({ ok: true, id: row?.id, has_account: !!users?.[0] });
+    }
+
+    // Zmiana parametrów dostępu jednej osoby (liczba spotkań, odstęp, ważność) albo zakończenie dostępu.
+    if (a === "update_package") {
+      const id = uuidOrNull(body.package_id);
+      if (!id) throw new Error("Brak pakietu");
+      const [p] = await runSql(base44, `SELECT sessions_used FROM public.bk_packages WHERE id = ${escStr(id)}::uuid`, true);
+      if (!p) return Response.json({ error: "Nie znaleziono pakietu" }, { status: 404 });
+      const sets = [];
+      if (body.sessions_total !== undefined) sets.push(`sessions_total = ${Math.max(int(body.sessions_total, 1, 100, 1), Number(p.sessions_used) || 0, 1)}`);
+      if (body.min_gap_days !== undefined) sets.push(`min_gap_days = ${int(body.min_gap_days, 0, 90, 0)}`);
+      if (body.end_now === true) sets.push(`valid_until = now()`);
+      else if (body.valid_until) sets.push(`valid_until = ${escStr(iso(`${String(body.valid_until).slice(0, 10)}T21:59:59Z`))}::timestamptz`);
+      if (!sets.length) return Response.json({ ok: true });
+      await runSql(base44, `UPDATE public.bk_packages SET ${sets.join(", ")} WHERE id = ${escStr(id)}::uuid`);
+      await log(base44, me.email, "pakiet_zmiana", "package", id, sets.join("; ").slice(0, 300));
+      return Response.json({ ok: true });
+    }
+
+    // Polityka „decyduje admin”: ręczne oddanie sesji do pakietu.
+    if (a === "return_session") {
+      const r = await rpc(base44, "bk_return_session", { p: {
+        package_id: textField(body, "package_id", { max: 40 }), actor: me.email,
+        note: String(body.note || "").slice(0, 200) || null,
+      } });
+      return Response.json(r, { status: r?.error ? 404 : 200 });
+    }
+
+    // Rezerwacja przez admina: może pominąć 24 h, ale nie zająć zajętego terminu (te same reguły w bk_book).
+    if (a === "book") {
+      const typeId = textField(body, "type_id", { max: 40 });
+      const st = iso(body.starts_at);
+      const dur = await typeDuration(base44, typeId);
+      if (dur && await takenByGoogle(base44, st, new Date(new Date(st).getTime() + dur * 60000).toISOString())) {
+        return Response.json({ error: "Ten termin jest zajęty w Twoim kalendarzu Google." }, { status: 409 });
+      }
+      const r = await rpc(base44, "bk_book", { p: {
+        type_id: typeId, starts_at: st, email: emailField(body).toLowerCase(),
+        first_name: textField(body, "first_name", { max: 120 }), viewer_admin: true, source: "admin", actor: me.email,
+      } });
+      // Klient dostaje standardowe potwierdzenie (MUSI 13) — ten sam mechanizm co przy zapisie własnym.
+      if (!r?.error && r?.id) await onBookingCreated(base44, r.id, null, "admin").catch(() => {});
+      if (!r?.error && r?.id) await syncBooking(base44, r.id, "upsert").catch(() => {});
+      return Response.json(r, { status: r?.error ? 409 : 200 });
+    }
+
+    // ---- KROK 3: kalendarz, statusy po spotkaniu, „Umów klienta”, eksport, iCal, treści e-maili ----
+
+    // Terminy dla „Umów klienta”: administrator pomija regułę 24 h, ale nie zajmuje zajętego terminu.
+    if (a === "slots") {
+      const from = new Date(body.from || Date.now());
+      const to = new Date(Math.min(new Date(body.to || Date.now() + 31 * 864e5).getTime(), from.getTime() + 62 * 864e5));
+      if (isNaN(from.getTime()) || isNaN(to.getTime())) throw new Error("Niepoprawny zakres");
+      const rows = await rpc(base44, "bk_free_slots", { p_type: textField(body, "type_id", { max: 40 }),
+        p_from: from.toISOString(), p_to: to.toISOString(), p_admin: true, p_ignore: null });
+      const slots = (rows || []).map((r) => ({ start: r.slot_start, end: r.slot_end }));
+      return Response.json({ slots: await dropBusy(base44, slots, from.toISOString(), to.toISOString()) });
+    }
+
+    if (a === "calendar") {
+      const from = new Date(body.from || Date.now());
+      const to = new Date(body.to || Date.now() + 7 * 864e5);
+      if (isNaN(from.getTime()) || isNaN(to.getTime())) throw new Error("Niepoprawny zakres");
+      const r = await rpc(base44, "bk_admin_calendar", { p_from: from.toISOString(), p_to: to.toISOString() });
+      return Response.json(r || { bookings: [], events: [], blocks: [], unmarked: 0 });
+    }
+
+    // Pulpit: „Dziś i jutro”, przypomnienie o nieoznaczonych spotkaniach, ostatnie zdarzenia.
+    if (a === "dashboard") {
+      const cal = await rpc(base44, "bk_admin_calendar", { p_from: new Date().toISOString(), p_to: new Date(Date.now() + 2 * 864e5).toISOString() });
+      const log = await runSql(base44, `SELECT at, actor, action, summary FROM public.bk_log
+        WHERE action IN ('rezerwacja','rezerwacja_z_pakietu','przeniesienie','anulowanie_klient','anulowanie_admin','status_po_spotkaniu','sesja_oddana')
+        ORDER BY at DESC LIMIT 12`, true);
+      const g = await googleStatus(base44);
+      return Response.json({ ...(cal || { bookings: [], events: [], blocks: [], unmarked: 0 }), log,
+        google: { status: g.status, error: g.error, pending: g.pending, busy: g.busy } });
+    }
+
+    if (a === "mark_status") {
+      const r = await rpc(base44, "bk_mark_status", { p: {
+        booking_id: textField(body, "booking_id", { max: 40 }),
+        status: textField(body, "status", { max: 20 }), actor: me.email,
+      } });
+      const map = { bad: "Nieznany status.", not_found: "Nie znaleziono rezerwacji.", closed: "Ta rezerwacja jest już zamknięta.", future: "Termin jeszcze się nie odbył." };
+      if (r?.error) return Response.json({ error: map[r.error] || "Nie udało się oznaczyć." }, { status: 409 });
+      return Response.json(r);
+    }
+
+    // Przeniesienie przez administratora (bez granicy 24 h) + powiadomienie z SEQUENCE + 1.
+    if (a === "reschedule") {
+      const bookingId = textField(body, "booking_id", { max: 40 });
+      const r = await rpc(base44, "bk_reschedule", { p: { booking_id: bookingId, starts_at: iso(body.starts_at), viewer_admin: true, actor: me.email } });
+      if (r?.error) return Response.json({ error: r.error === "taken" ? "Ten termin jest zajęty." : "Nie udało się przenieść." }, { status: 409 });
+      await runSql(base44, `UPDATE public.bk_bookings SET ics_sequence = ics_sequence + 1 WHERE id = ${escStr(bookingId)}::uuid`);
+      await onBookingMoved(base44, bookingId).catch(() => {});
+      await syncBooking(base44, bookingId, "upsert").catch(() => {});
+      return Response.json(r);
+    }
+
+    // Ponowne wysłanie wybranej wiadomości (potwierdzenie / przypomnienie 24 h / przypomnienie 1 h).
+    if (a === "send_mail") {
+      const kind = ["potwierdzenie", "przypomnienie24", "przypomnienie1"].includes(body.kind) ? body.kind : "potwierdzenie";
+      const booking = await loadBooking(base44, textField(body, "booking_id", { max: 40 }));
+      if (!booking) return Response.json({ error: "Nie znaleziono" }, { status: 404 });
+      const res = await sendBookingMail(base44, { kind, booking, token: null });
+      await log(base44, me.email, "wysylka_reczna", "booking", booking.id, kind);
+      return Response.json({ ok: true, result: res });
+    }
+
+    // „Jestem niedostępny” — trzy gotowe zakresy, maksymalnie trzy kliknięcia z telefonu.
+    if (a === "unavailable") {
+      const preset = ["do-konca-dnia", "2h", "jutro"].includes(body.preset) ? body.preset : "2h";
+      const note = String(body.note || "").slice(0, 200) || null;
+      const range = {
+        "do-konca-dnia": `(date_trunc('day', now() AT TIME ZONE 'Europe/Warsaw')) AT TIME ZONE 'Europe/Warsaw',
+          ((date_trunc('day', now() AT TIME ZONE 'Europe/Warsaw') + interval '1 day') - interval '1 minute') AT TIME ZONE 'Europe/Warsaw'`,
+        "2h": `now(), now() + interval '2 hours'`,
+        "jutro": `(date_trunc('day', now() AT TIME ZONE 'Europe/Warsaw') + interval '1 day') AT TIME ZONE 'Europe/Warsaw',
+          (date_trunc('day', now() AT TIME ZONE 'Europe/Warsaw') + interval '2 days') AT TIME ZONE 'Europe/Warsaw'`,
+      }[preset];
+      const id = (await runSql(base44, `INSERT INTO public.bk_blocks (kind, starts_at, ends_at, note, created_by)
+        VALUES (${preset === "2h" ? "'jednorazowa'" : "'calodniowa'"}, ${range}, ${esc(note)}, ${escStr(me.email)}) RETURNING id`))[0].id;
+      await log(base44, me.email, "blokada", "block", id, `niedostepny: ${preset}`);
+      return Response.json({ ok: true, id, preset });
+    }
+
+    // Eksport CSV — z ochroną przed wstrzyknięciem formuł w arkuszu.
+    if (a === "export_csv") {
+      const from = new Date(body.from || Date.now() - 30 * 864e5);
+      const to = new Date(body.to || Date.now() + 90 * 864e5);
+      const rows = await rpc(base44, "bk_export_rows", { p_from: from.toISOString(), p_to: to.toISOString() });
+      const cols = ["starts_at", "koniec", "rodzaj", "imie", "email", "status", "zrodlo", "strefa"];
+      const cell = (v) => {
+        let s = v === null || v === undefined ? "" : String(v);
+        if (/^[=+\-@\t\r]/.test(s)) s = `'${s}`;   // komórka nie może zacząć się jak formuła
+        return `"${s.replace(/"/g, '""')}"`;
+      };
+      const csv = [cols.join(","), ...(rows || []).map((r) => cols.map((c) => cell(r[c])).join(","))].join("\r\n");
+      await log(base44, me.email, "eksport", "csv", null, `${(rows || []).length} wierszy`);
+      return Response.json({ csv, rows: (rows || []).length });
+    }
+
+    // Prywatny kanał iCal: tajny adres (token tylko w bazie) i obrót.
+    if (a === "ical") {
+      const r = await runSql(base44, `SELECT ical_token, ical_rotated_at FROM public.bk_settings WHERE id = 1`, true);
+      const had = r?.[0]?.ical_token;
+      let token = had;
+      if (body.rotate === true || !had) {
+        token = randomToken();
+        await rpc(base44, "bk_rotate_ical", { p_token: token });
+        await log(base44, me.email, "ical_obrot", "settings", "1", null);
+      }
+      const appUrl = await loadAppUrl(base44);
+      return Response.json({ url: `${appUrl}/functions/bookingPublic?ical=${token}`, rotated_at: r?.[0]?.ical_rotated_at || null, fresh: body.rotate === true || !had });
+    }
+
+    if (a === "mail_texts") return Response.json({ texts: await mailTexts(base44), defaults: DEFAULT_TEXTS });
+
+    if (a === "save_mail_texts") {
+      const src = body.texts && typeof body.texts === "object" ? body.texts : {};
+      const out = {};
+      for (const k of Object.keys(DEFAULT_TEXTS)) {
+        out[k] = {
+          subject: String(src?.[k]?.subject || "").slice(0, 200).trim() || DEFAULT_TEXTS[k].subject,
+          body: String(src?.[k]?.body || "").slice(0, 8000).trim() || DEFAULT_TEXTS[k].body,
+        };
+      }
+      await runSql(base44, `UPDATE public.bk_settings SET mail_texts = ${escStr(JSON.stringify(out))}::jsonb, updated_at = now() WHERE id = 1`);
+      await log(base44, me.email, "tresci_maili", "settings", "1", null);
+      return Response.json({ ok: true, texts: out });
+    }
+
+    // ---- KROK 4: Kalendarz Google (tylko calendar.app.created + calendar.freebusy) ----
+
+    if (a === "google_status") return Response.json({ google: await googleStatus(base44) });
+
+    // Zakłada własny kalendarz „exmortis · sesje”, jeśli jeszcze go nie ma.
+    if (a === "google_calendar") {
+      try {
+        const id = await ensureCalendar(base44);
+        await log(base44, me.email, "google_kalendarz", "settings", "1", id || null);
+        return Response.json({ ok: true, calendar_id: id });
+      } catch {
+        return Response.json({ error: "Nie udało się utworzyć kalendarza w Google." }, { status: 400 });
+      }
+    }
+
+    if (a === "save_google") {
+      await runSql(base44, `UPDATE public.bk_settings SET google_busy = ${body.busy === true ? "TRUE" : "FALSE"}, updated_at = now() WHERE id = 1`);
+      await log(base44, me.email, "google_zajetosc", "settings", "1", body.busy === true ? "wlaczona" : "wylaczona");
+      return Response.json({ ok: true });
+    }
+
+    return Response.json({ error: "Nieznana akcja" }, { status: 400 });
+  } catch (e) {
+    if (e.message === "FORBIDDEN") return Response.json({ error: "Forbidden" }, { status: 403 });
+    console.error("bookingAdmin:", safeErr(e));
+    const userMsg = /^(Niepoprawn|Koniec|Podaj|Godziny|Link Zoom|Adres|Brak pola|Pole|Rezerwacje)/.test(e.message) ? e.message : "Nie udało się zapisać.";
+    return Response.json({ error: userMsg }, { status: 400 });
+  }
+}
+
+// === Supabase Edge (wygenerowane przez docs/tech/migruj.mjs) ===
+const CORS = {
+  "Access-Control-Allow-Origin": "*",
+  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
+  "Access-Control-Allow-Methods": "POST, GET, OPTIONS",
+};
+Deno.serve(async (req) => {
+  if (req.method === "OPTIONS") return new Response("ok", { headers: CORS });
+  try {
+    const res = await handler(req);
+    const h = new Headers(res.headers);
+    for (const [k, v] of Object.entries(CORS)) h.set(k, v);
+    return new Response(res.body, { status: res.status, statusText: res.statusText, headers: h });
+  } catch (e) {
+    const msg = String(e?.message || e);
+    const status = msg === "FORBIDDEN" ? 403 : e && e.isValidation ? 400 : 500;
+    console.error("edge:", msg.slice(0, 300));
+    return Response.json({ error: msg.slice(0, 300) }, { status, headers: CORS });
+  }
+});
