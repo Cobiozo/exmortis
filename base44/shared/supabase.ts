@@ -75,6 +75,19 @@ export async function restGet(base44, path) {
   return text ? JSON.parse(text) : [];
 }
 
+// Liczba wierszy zapytania (PostgREST, nagłówek Content-Range) — bez pobierania danych.
+export async function restCount(base44, path) {
+  const key = await serviceKey(base44);
+  const res = await fetch(`https://${PROJECT_REF}.supabase.co/rest/v1/${path}`, {
+    method: "HEAD",
+    headers: { apikey: key, Authorization: `Bearer ${key}`, Prefer: "count=exact" },
+    signal: AbortSignal.timeout(8000),
+  });
+  if (!res.ok) throw new Error(`Supabase REST ${res.status}`);
+  const range = res.headers.get("content-range") || "/0";
+  return Number(range.split("/")[1]) || 0;
+}
+
 export async function rpc(base44, fn, args) {
   const key = await serviceKey(base44);
   const res = await fetch(`https://${PROJECT_REF}.supabase.co/rest/v1/rpc/${fn}`, {
