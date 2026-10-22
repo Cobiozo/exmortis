@@ -79,3 +79,29 @@ Do zrobienia przy przełączeniu (razem z krokami 5–7 i 9):
 - Podpisy wideo (`videoSign.ts`) i `stream.php` na serwerze Dawida — ten sam klucz.
 - Obowiązki prawne: dowody zgód (Consent), wersje dokumentów (LegalDocVersion), odstąpienia (Withdrawal) i zamówienia trzeba przenieść w całości (nie czyścić).
 - Funkcje SQL po stronie Supabase (lista w DANE_SUPABASE.md) są częścią logiki — migrują razem z bazą (`pg_dump` je obejmuje).
+
+## Krok 6 — zestaw migracyjny (2026-10-22)
+
+W repo leży wygenerowany katalog `supabase/functions/` — wszystkie 51 funkcji i 75 modułów
+wspólnych w formacie Supabase Edge Functions (Deno.serve + CORS). Zawartość:
+
+- `_shared/compat.ts` — zamiennik `@base44/sdk`: auth.me z tokenu Supabase Auth + profil
+  z `exm_user`, encje na PostgREST (tabele `exm_*`, jsonb `data`), integracje Core
+  (maile: SMTP, pliki: Storage, obrazy: OpenAI), `users.inviteUser`, `functions.invoke`.
+- `_shared/supabase.ts` — natywny runSql (npm:pg, `SUPABASE_DB_URL`), restGet/restCount/rpc.
+- `_shared/shim.ts` — zamiennik `base44:runtime` (secrets, waitUntil).
+- `docs/tech/migruj.mjs` — generuje katalog z `base44/` (uruchomić po każdej zmianie w funkcjach).
+
+Do dokończenia:
+1. Sekrety w Supabase (Dashboard → Edge Functions → Secrets): `OPENAI_API_KEY`,
+   `SMTP_HOST/SMTP_PORT/SMTP_USER/SMTP_PASS`, `BOOKING_ENC_KEY`, `BOOKING_HMAC_KEY`
+   (te same wartości co w Base44 — zaszyfrowane rezerwacje muszą się odszyfrować).
+   `SUPABASE_DB_URL` wstrzykuje runtime; `SUPABASE_URL`/`SUPABASE_SERVICE_ROLE_KEY` też.
+2. Buckety Storage: `private` i `public` + migracja plików (krok 5 planu).
+3. Wdrożenie: GitHub Actions `.github/workflows/supabase.yml` (sekret `SUPABASE_ACCESS_TOKEN`
+   i `SUPABASE_PROJECT_ID` w repo) albo ręcznie `supabase functions deploy`.
+4. Ręczna decyzja: `adminDashboard` (googlecalendar), `instagramFeed` (instagram),
+   `rozdrozaAdmin` (aiGateway) — łączniki Base44 nie istnieją na Supabase; tokeny do sekretów.
+5. Crony: pg_cron/net.http_post z apikey = service_role, adresy `…/functions/v1/<nazwa>`.
+6. Po wdrożeniu: frontend — adapter przestaje wołać Base44 (dopiero wtedy usuwamy
+   `VITE_BASE44_*` z `.env`).
