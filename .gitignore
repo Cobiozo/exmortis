@@ -1,4 +1,12 @@
-z{ޞ���� ��h��h�zf�כ�	h�&���^n�%������+��)���u��Z ���k�^n�%�	�u��ۥz�b��b�߬��hq�M���n�v����h�ǭ�+��Z������aj��z�z��y��z��ɻ��֧v�^u�e�*��'y�����y�b�azj.���¶��W�ح��b��-������~)^���׿��(u���ק�*'�;(�'^h4�J�+z˨���;)���{0z{�כjǸ����;(�
+node_modules/
+dist/
+.env.local
+.env.*.local
+*.log
+.DS_Store
+supabase/.branches
+supabase/.temp
 
 # wzorzec i gotowe .env idą do repo (same VITE_ — bez sekretów serwerowych)
 !/.env
+!/.env.example
