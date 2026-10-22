@@ -1,7 +1,7 @@
-import React, { Suspense, useEffect, useState } from "react";
+import React, { Suspense } from "react";
 import lazyPage from "@/lib/lazyPage";
 import { Link, useParams } from "react-router-dom";
-import { base44 } from "@/api/base44Client";
+import { useAuth } from "@/lib/AuthContext";
 import Logo from "@/components/exmortis/Logo";
 const ProductsManager = lazyPage(() => import("@/components/admin/ProductsManager"));
 const NewsletterManager = lazyPage(() => import("@/components/admin/NewsletterManager"));
@@ -71,13 +71,9 @@ const TECH = ["tresci", "menu", "ustawienia", "integracje", "cisza"];
 export default function Admin() {
   useNoIndex();
   const { section } = useParams();
-  const [me, setMe] = useState(undefined);
+  const { user: me, isLoadingAuth, authChecked } = useAuth();
 
-  useEffect(() => {
-    base44.auth.me().then(setMe).catch(() => setMe(null));
-  }, []);
-
-  if (me === undefined) {
+  if (isLoadingAuth || !authChecked) {
     return (
       <div className="min-h-screen flex items-center justify-center pt-20">
         <div className="w-8 h-8 border-4 border-[#3D3D3F] border-t-[#C9A24A] rounded-full animate-spin" />

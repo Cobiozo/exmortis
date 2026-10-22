@@ -1,6 +1,6 @@
 import React, { createContext, useState, useContext, useEffect } from 'react';
 import { base44 } from '@/api/base44Client';
-import { appParams } from '@/lib/app-params';
+import { AUTH_BACKEND } from '@/api/exmAdapter';
 
 const AuthContext = createContext();
 
@@ -25,6 +25,13 @@ export const AuthProvider = ({ children }) => {
     try {
       setIsLoadingPublicSettings(true);
       setAuthError(null);
+
+      // Przy Supabase sesja nie zależy od ustawień ani tokena aplikacji Base44.
+      if (AUTH_BACKEND === 'supabase') {
+        await checkUserAuth();
+        setIsLoadingPublicSettings(false);
+        return;
+      }
       
       try {
         const publicSettings = await base44.app.getPublicSettings();

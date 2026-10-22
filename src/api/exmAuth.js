@@ -78,14 +78,19 @@ export async function supaBearer() {
 }
 
 // --- profil (rola, imię) z tabeli kont ---
+// Email i rola są w JSONB data, nie w osobnych kolumnach tabeli.
+const profileQuery = (email) => `data->>email=eq.${encodeURIComponent(String(email || "").trim().toLowerCase())}`;
+
 async function profile(s, supaUser) {
-  let row = null;
-  try {
-    const res = await fetch(`${restUrl()}/exm_user?email=ilike.${encodeURIComponent(supaUser.email || "")}&select=data&limit=1`, {
-      headers: headers(s.access_token),
-    });
-    row = (await res.json())?.[0]?.data;
-  } catch { /* profil dogoni przy następnym odświeżeniu */ }
+  const res = await fetch(`${restUrl()}/exm_user?${profileQuery(supaUser.email)}&select=data&limit=1`, {
+    headers: headers(s.access_token),
+  });
+  if (!res.ok) {
+    const error = new Error("Nie udało się odczytać uprawnień konta. Odśwież stronę i spróbuj ponownie.");
+    error.status = res.status;
+    throw error;
+  }
+  const row = (await res.json())?.[0]?.data;
   return {
     id: supaUser.id,
     email: supaUser.email,
@@ -194,11 +199,12 @@ export const supaAuth = {
     // profil aplikacyjny (rola, imię widoczne dla całej aplikacji)
     const u = await api("/user", { headers: headers(s.access_token) });
     const prof = await profile(s, u);
-    await fetch(`${restUrl()}/exm_user?email=eq.${encodeURIComponent(String(u.email || "").toLowerCase())}`, {
+    const result = await fetch(`${restUrl()}/exm_user?${profileQuery(u.email)}`, {
       method: "PATCH",
       headers: headers(s.access_token),
       body: JSON.stringify({ data: { email: String(u.email || "").toLowerCase(), full_name: data.full_name ?? prof.full_name, role: prof.role } }),
     });
+    if (!result.ok) throw new Error("Nie udało się zapisać profilu konta.");
     return { ...prof, ...data };
   },
 
