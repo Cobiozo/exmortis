@@ -15,7 +15,7 @@ Cel: platforma działa dalej tak samo, a kod i dane są pod pełną kontrolą w�
 | Logowanie | `base44.auth.*` (rejestracja z OTP, logowanie, Google, reset hasła, `me`, `updateMe`, `logout`), rola w `User.role` | ok. 50 wywołań | Supabase Auth (e-mail + OTP, Google). Hasła nie są przenoszalne → klienci ustawiają nowe przez „Nie pamiętam hasła” albo logują się linkiem | wysoka (wpływ na klientów) |
 | Pliki | `integrations.Core.UploadPublicFile/UploadPrivateFile/CreateFileSignedUrl` | 15 miejsc + istniejące pliki | Supabase Storage (bucket publiczny + prywatny z podpisanymi linkami) albo S3/R2; skrypt kopiujący pliki i podmieniający adresy w danych | średnia |
 | E-mail systemowy | `integrations.Core.SendEmail` (2 miejsca); reszta przez własny SMTP | małe | Wyłącznie SMTP (Brevo) — już jest | niska |
-| Zadania cykliczne | 9 workflow (cron) wołających funkcje z `tick_token` | 9 | Cron Supabase (`pg_cron` + `net.http_post`), GitHub Actions albo cron na serwerze | niska |
+| Zadania cykliczne | 9 workflow (cron) wołających funkcje z `tick_token` | 9 | Cron Supabase (`pg_cron` + `net.http_post`) | niska |
 | Łącznik Supabase | Token Management API przez OAuth Base44; `runSql` przez Management API, `rpc` przez PostgREST z kluczem service_role pobieranym w locie | wszystkie funkcje | Bezpośrednio: zmienna środowiskowa `SUPABASE_SERVICE_ROLE_KEY`, klient `postgres`/`supabase-js`; `runSql` → zwykłe zapytania (zachować `escStr` albo przejść na parametry) | niska–średnia |
 | Łącznik Google Calendar | OAuth Base44 (`calendar.app.created`, `calendar.freebusy`) — rezerwacje 1:1 | 1 moduł | Własny klient OAuth Google (projekt w Google Cloud) | średnia |
 | Łącznik Instagram | Feed na stronie | 1 funkcja | Instagram Graph API z własnym tokenem albo usunięcie | niska |
@@ -68,7 +68,7 @@ Do zrobienia przy przełączeniu (razem z krokami 5–7 i 9):
 5. SMTP w Supabase (Brevo) zamiast wbudowanej poczty — limity testowej są niskie
    (kilka maili na godzinę); konfiguracja SMTP odblokuje też własne szablony.
 6. Hasła nie są przenoszonalne — klienci ustawiają nowe przez „Nie pamiętam hasła”.
-9. **Hosting strony + DNS.** Nowy hosting statyczny, przełączenie rekordów A/CNAME w Simply (krótki TTL dzień wcześniej). Sprawdzić: przekierowania, `robots.txt`, mapę strony, nagłówki bezpieczeństwa, adres powrotu PayU i powiadomień.
+9. **Hosting strony + DNS (cyberfolks.pl).** Build statyczny (`npm run build` → `dist/`) serwuje aplikacja Node.js `server.js` z katalogu głównego repo (Passenger, port z `PORT`, SPA-fallback na `index.html`, brak cache dla `sw.js`/manifestu). Uruchomienie w panelu cyberfolks: aplikacja Node.js, katalog główny repo, `npm install`, start: `node server.js`. Połączenie z backendem wyłącznie przez `.env` (VITE_SUPABASE_URL + klucz anon — klucz publiczny, chroni go RLS). Przełączenie rekordów A/CNAME w Simply (krótki TTL dzień wcześniej). Sprawdzić: przekierowania, `robots.txt`, mapę strony, nagłówki bezpieczeństwa, adres powrotu PayU i powiadomień.
 
 ## 3. Pułapki
 
@@ -98,8 +98,8 @@ Do dokończenia:
    (te same wartości co w Base44 — zaszyfrowane rezerwacje muszą się odszyfrować).
    `SUPABASE_DB_URL` wstrzykuje runtime; `SUPABASE_URL`/`SUPABASE_SERVICE_ROLE_KEY` też.
 2. Buckety Storage: `private` i `public` + migracja plików (krok 5 planu).
-3. Wdrożenie: GitHub Actions `.github/workflows/supabase.yml` (sekret `SUPABASE_ACCESS_TOKEN`
-   i `SUPABASE_PROJECT_ID` w repo) albo ręcznie `supabase functions deploy`.
+3. Wdrożenie: lokalnie z komputera — `npx supabase login`, `npx supabase link --project-ref fqhvxhnbeyvwubpnuzxe`,
+   `npx supabase functions deploy`. Token (`supabase access-token`) zostaje tylko na swoim dysku, w GitHubie NIE ustawiamy żadnych sekretów.
 4. Ręczna decyzja: `adminDashboard` (googlecalendar), `instagramFeed` (instagram),
    `rozdrozaAdmin` (aiGateway) — łączniki Base44 nie istnieją na Supabase; tokeny do sekretów.
 5. Crony: pg_cron/net.http_post z apikey = service_role, adresy `…/functions/v1/<nazwa>`.
