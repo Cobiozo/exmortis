@@ -1,4 +1,3 @@
-import base44 from "@base44/vite-plugin"
 import react from '@vitejs/plugin-react'
 import { defineConfig } from 'vite'
 import fs from "fs"
@@ -176,19 +175,11 @@ function exmInlineCss() {
 
 // Drobne ikony lucide w jednym pliku zamiast kilkunastu osobnych chunków na ścieżce startowej.
 export default defineConfig({
+  resolve: { alias: { "@": path.resolve(__dirname, "src") } },
   build: {
     rollupOptions: { output: { manualChunks: (id) => (id.includes("lucide-react") ? "icons" : undefined) } },
   },
   plugins: [
-    base44({
-      // Support for legacy code that imports the base44 SDK with @/integrations, @/entities, etc.
-      // can be removed if the code has been updated to use the new SDK imports from @base44/sdk
-      legacySDKImports: process.env.BASE44_LEGACY_SDK_IMPORTS === 'true',
-      hmrNotifier: true,
-      navigationNotifier: true,
-      analyticsTracker: true,
-      visualEditAgent: true
-    }),
     react(),
     exmMeta(),
     exmFastStart(),
