@@ -13,14 +13,17 @@
 // go po ok. sekundzie. Live aktualizacje (subscribe) zostają w bazie aplikacji.
 
 import { base44 as raw } from "./rawBase44";
-import { hasSupabase, supabaseEntityOps } from "./exmSupabase";
-import { supaAuth } from "./exmAuth";
+import { hasSupabase, supabaseEntityOps, SUPABASE_URL, ANON_KEY } from "./exmSupabase";
+import { supaAuth, supaBearer } from "./exmAuth";
 
 export const ENTITY_BACKEND = import.meta.env.VITE_EXM_ENTITY_BACKEND === "supabase" ? "supabase" : "base44";
 // Logowanie na Supabase po przeniesieniu hostingu (krok 8 migracji); zmienna pozwala wrócić.
 export const AUTH_BACKEND = import.meta.env.VITE_EXM_AUTH_BACKEND === "base44" ? "base44"
   : hasSupabase ? "supabase" : "base44";
 const READ_OPS = ["get", "filter", "list", "count", "aggregate"];
+const WRITE_OPS = ["create", "bulkCreate", "update", "updateMany", "bulkUpdate", "delete", "deleteMany"];
+// Funkcje serwerowe na Supabase (krok 6 migracji) — VITE_EXM_FN_BACKEND=base44 wraca na Base44.
+export const FN_BACKEND = import.meta.env.VITE_EXM_FN_BACKEND === "supabase" && hasSupabase ? "supabase" : "base44";
 
 // Kolekcje publiczne: odczyt wprost z kopii (anon) — polityki w bazie odwzorowują reguły aplikacji.
 const SUPABASE_READ = new Set([
@@ -46,8 +49,28 @@ function parseArgs(args) {
   return { query: query || {}, sort: second, limit: third, cursor: fourth, array: true };
 }
 
+// Wywołanie funkcji na Supabase (gość — klucz anonimowy, klient — token sesji).
+async function supaInvoke(name, payload) {
+  const token = await supaBearer().catch(() => null);
+  const res = await fetch(`${SUPABASE_URL}/functions/v1/${name}`, {
+    method: "POST",
+    headers: { apikey: ANON_KEY, Authorization: `Bearer ${token || ANON_KEY}`, "Content-Type": "application/json" },
+    body: JSON.stringify(payload || {}),
+  });
+  const data = await res.json().catch(() => null);
+  if (!res.ok) {
+    const e = new Error((data && data.error) || `Funkcja ${name}: ${res.status}`);
+    e.status = res.status;
+    e.response = { status: res.status };
+    throw e;
+  }
+  return { data };
+}
+
 async function gatewayRead(name, op, args) {
-  const res = await raw.functions.invoke("supabaseData", { entity: name, op, args });
+  const res = FN_BACKEND === "supabase"
+    ? await supaInvoke("supabaseData", { entity: name, op, args })
+    : await raw.functions.invoke("supabaseData", { entity: name, op, args });
   return res.data && res.data.result;
 }
 
@@ -66,7 +89,7 @@ function wrapEntity(entity, name) {
         // Kopia nie odpowiada → zapasowy odczyt z aplikacji (strona żyje bez Supabase).
         const op = ops[prop];
         return async (...args) => {
-          if (isFresh(name)) return target[prop].apply(target, args);
+          if (FN_BACKEND !== "supabase" && isFresh(name)) return target[prop].apply(target, args);
           try {
             return await op(...args);
           } catch (e) {
@@ -78,7 +101,7 @@ function wrapEntity(entity, name) {
       if (READ_OPS.includes(prop) && ENTITY_BACKEND === "supabase") {
         // Dane kont i panele: odczyt z kopii przez bramkę (reguły dostępu na serwerze).
         return async (...args) => {
-          if (isFresh(name) || gatewayGuest) return target[prop].apply(target, args);
+          if ((FN_BACKEND !== "supabase" && isFresh(name)) || gatewayGuest) return target[prop].apply(target, args);
           try {
             const norm = prop === "get" ? { id: String(args[0]) }
               : prop === "count" ? { query: args[0] || {} }
@@ -92,7 +115,22 @@ function wrapEntity(entity, name) {
           }
         };
       }
-      if (["create", "bulkCreate", "update", "updateMany", "bulkUpdate", "delete", "deleteMany"].includes(prop)) {
+      if (WRITE_OPS.includes(prop)) {
+        if (FN_BACKEND === "supabase") {
+          // Zapisy przez bramkę supabaseData (reguły dostępu na serwerze) — prosto do kopii.
+          return async (...args) => {
+            const norm = prop === "create" ? { rec: args[0] }
+              : prop === "update" ? { id: args[0], patch: args[1] }
+              : prop === "delete" ? { id: args[0] }
+              : prop === "bulkCreate" ? { recs: args[0] }
+              : prop === "bulkUpdate" ? { list: args[0] }
+              : prop === "updateMany" ? { query: args[0], ops: args[1] }
+              : { query: args[0] || {} };
+            const res = await gatewayRead(name, prop, norm);
+            markFresh(name);
+            return res;
+          };
+        }
         return async (...args) => {
           const res = await target[prop].apply(target, args);
           markFresh(name);
@@ -130,6 +168,7 @@ export function createExmClient(raw) {
     get(target, prop) {
       if (prop === "entities") return wrapEntities(target.entities);
       if (prop === "auth" && AUTH_BACKEND === "supabase") return supaAuth;
+      if (prop === "functions" && FN_BACKEND === "supabase") return { invoke: supaInvoke };
       const value = target[prop];
       return typeof value === "function" ? value.bind(target) : value;
     },

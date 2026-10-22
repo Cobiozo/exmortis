@@ -4,3 +4,11 @@ project_id = "exmortis"
 # verify_jwt zostaje włączone (domyślne): przeglądarka wysyła klucz anonimowy
 # (gość) albo własny token logowania (klient) w nagłówku Authorization/apikey.
 # Zadania cron (pg_cron) dołączały będą klucz service_role jako apikey.
+
+# PayU i robocik Google nie mają tokena — dla nich weryfikacja JWT wyłączona
+# (funkcja sama sprawdza podpis / odpowiedź).
+[functions.payuNotification]
+verify_jwt = false
+
+[functions.sitemap]
+verify_jwt = false

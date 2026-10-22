@@ -71,6 +71,12 @@ async function session() {
   return s;
 }
 
+// Aktualny token sesji (null dla gościa) — do wywołań funkcji i bramki.
+export async function supaBearer() {
+  const s = await session();
+  return s ? s.access_token : null;
+}
+
 // --- profil (rola, imię) z tabeli kont ---
 async function profile(s, supaUser) {
   let row = null;

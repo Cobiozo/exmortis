@@ -12,6 +12,8 @@ const ANON = Deno.env.get("SUPABASE_ANON_KEY") || "";
 
 const PRIV_BUCKET = "private";
 const PUB_BUCKET = "public";
+// Stare miejsce plików (Base44) — podpisy plików sprzed migracji przechodzą przez legacySign.
+const LEGACY_BASE44_URL = () => Deno.env.get("EXM_LEGACY_BASE44_URL") || "https://exmortis-return-path.base44.app";
 
 // ---- pomocnicze: PostgREST
 const H = () => ({ apikey: SRK, Authorization: `Bearer ${SRK}`, "Content-Type": "application/json" });
@@ -279,14 +281,35 @@ const Core = {
     if (m) { bucket = m[1]; path = m[2]; }
     else { const [head, ...rest] = String(file_uri).split("/"); bucket = /privat/i.test(head) ? PRIV_BUCKET : PUB_BUCKET; path = rest.join("/"); }
     const exp = Math.max(60, Math.min(Number(expires_in) || 300, 604800));
-    const res = await fetch(`${SUPA_URL}/storage/v1/object/sign/${bucket}/${encodeURI(path)}`, {
-      method: "POST", headers: { ...H() }, body: JSON.stringify({ expiresIn: exp }), signal: AbortSignal.timeout(20000),
-    });
-    if (!res.ok) throw new Error(`Storage sign ${res.status}: ${(await res.text()).slice(0, 200)}`);
-    const j = await res.json();
-    const rel = j.signedURL || j.token ? (j.signedURL || `/object/sign/${bucket}/${path}?token=${j.token}`) : null;
-    if (!rel) throw new Error("Storage sign: brak ścieżki");
-    return { signed_url: `${SUPA_URL}/storage/v1${rel}` };
+    // Pliki sprzed migracji leżą w starym magazynie (Base44) — podpisuje je funkcja legacySign.
+    const legacy = async () => {
+      const key = Deno.env.get("BOOKING_HMAC_KEY");
+      if (!key) throw new Error("Podpis pliku: brak sekretu BOOKING_HMAC_KEY");
+      const enc = new TextEncoder();
+      const k = await crypto.subtle.importKey("raw", enc.encode(key), { name: "HMAC", hash: "SHA-256" }, false, ["sign"]);
+      const mac = [...new Uint8Array(await crypto.subtle.sign("HMAC", k, enc.encode(`sign:${file_uri}`)))]
+        .map((b) => b.toString(16).padStart(2, "0")).join("");
+      const res = await fetch(`${LEGACY_BASE44_URL()}/functions/legacySign`, {
+        method: "POST", headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ uri: file_uri, sig: mac, expires_in: exp }), signal: AbortSignal.timeout(15000),
+      });
+      if (!res.ok) throw new Error(`Podpis pliku (stare miejsce): ${res.status}`);
+      const j = await res.json().catch(() => null);
+      if (!j || !j.signed_url) throw new Error("Podpis pliku: brak linku");
+      return { signed_url: j.signed_url };
+    };
+    try {
+      const res = await fetch(`${SUPA_URL}/storage/v1/object/sign/${bucket}/${encodeURI(path)}`, {
+        method: "POST", headers: { ...H() }, body: JSON.stringify({ expiresIn: exp }), signal: AbortSignal.timeout(20000),
+      });
+      if (!res.ok) return await legacy();
+      const j = await res.json();
+      const rel = j.signedURL || j.token ? (j.signedURL || `/object/sign/${bucket}/${path}?token=${j.token}`) : null;
+      if (!rel) return await legacy();
+      return { signed_url: `${SUPA_URL}/storage/v1${rel}` };
+    } catch {
+      return await legacy();
+    }
   },
 
   async UploadPrivateFile({ file }: { file: File | Blob }) {

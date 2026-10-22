@@ -1,7 +1,11 @@
-// Bramka odczytów z kopii Supabase dla zalogowanych (dane kont i panele).
-// Reguły dostępu egzekwuje moduł supaRead — identycznie jak reguły encji aplikacji.
+// Bramka danych z kopii Supabase dla zalogowanych (dane kont i panele).
+// Reguły dostępu egzekwują moduły supaRead (odczyt) i supaWrite (zapis) —
+// identycznie jak reguły encji aplikacji.
 import { createClientFromRequest } from "../_shared/compat.ts";
 import { supaRead } from "../_shared/supaRead.ts";
+import { supaWrite } from "../_shared/supaWrite.ts";
+
+const READ_OPS = new Set(["get", "filter", "list", "count", "aggregate"]);
 
 const handler = async function(req) {
   try {
@@ -14,13 +18,15 @@ const handler = async function(req) {
       return Response.json({ error: 'Błędne żądanie' }, { status: 400 });
     }
 
-    const result = await supaRead(base44, user, payload);
+    const result = READ_OPS.has(payload.op)
+      ? await supaRead(base44, user, payload)
+      : await supaWrite(base44, user, payload);
     return Response.json({ ok: true, result });
   } catch (e) {
     const forbidden = e && e.forbidden === true;
     console.error('supabaseData:', String(e?.message || e).slice(0, 200));
     return Response.json(
-      { error: forbidden ? 'Brak dostępu' : 'Odczyt z kopii nie powiódł się' },
+      { error: forbidden ? 'Brak dostępu' : 'Operacja na kopii nie powiodła się' },
       { status: forbidden ? 403 : 500 }
     );
   }
