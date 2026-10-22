@@ -1,0 +1,12 @@
+User-agent: *
+Disallow: /admin
+Disallow: /konto
+Disallow: /login
+Disallow: /register
+Disallow: /forgot-password
+Disallow: /reset-password
+Disallow: /kasa
+Disallow: /rezerwacja/termin
+Disallow: /rezerwacja/zarzadzaj
+
+Sitemap: https://exmortis.pl/functions/sitemap

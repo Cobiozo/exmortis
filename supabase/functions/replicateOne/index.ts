@@ -6,7 +6,7 @@ import { mirrorRecord } from "../_shared/mirror.ts";
 import { REPLICATE, TABLE } from "../_shared/replicate.ts";
 import { runSql, escStr } from "../_shared/supabase.ts";
 
-export default async function(req) {
+const handler = async function(req) {
   try {
     const base44 = createClientFromRequest(req);
     const user = await base44.auth.me();

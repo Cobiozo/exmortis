@@ -1,0 +1,1 @@
+import{i as e,s as t}from"./image-helpers-Dbqhsvct.js";var n=[480,720,960,1600,2e3];function r(r){let i=null;try{i=r?t(r):null}catch{i=null}if(!i?.baseUrl)return null;let a=t=>e(i,{width:t,quality:80});return{src:a(960),srcSet:n.map(e=>`${a(e)} ${e}w`).join(`, `)}}export{r as t};

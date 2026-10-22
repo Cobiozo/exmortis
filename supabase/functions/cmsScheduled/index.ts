@@ -86,7 +86,7 @@ async function releaseDue(base44) {
 
 // Publikuje strony zaplanowane na termin, który już minął (wywoływane cyklicznie).
 // Działa tylko na tym, co admin zaplanował — bezpieczne do wywołania bez logowania.
-export default async function(req) {
+const handler = async function(req) {
   try {
     const base44 = createClientFromRequest(req);
     // Dostęp: administrator albo zadanie cykliczne z tokenem (mb_settings.tick_token).

@@ -45,7 +45,7 @@ function rewriteEntry(t) {
     .replace(/from\s+["']npm:@base44\/sdk@[0-9.]+["']/g, 'from "../_shared/compat.ts"')
     .replace(/from\s+["']base44:runtime["']/g, 'from "../_shared/shim.ts"')
     .replace(/from\s+["']\.\.\/\.\.\/shared\/([A-Za-z0-9_]+)\.ts["']/g, 'from "../_shared/$1.ts"')
-    .replace(/export\s+default\s+(async\s+function\s+[A-Za-z0-9_$]*\s*\()/, "const handler = $1")
+    .replace(/export\s+default\s+(async\s+function\s*[A-Za-z0-9_$]*\s*\()/, "const handler = $1")
     .replace(/export\s+default\s+async\s*\(/, "const handler = async (");
 }
 

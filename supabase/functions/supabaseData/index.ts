@@ -3,7 +3,7 @@
 import { createClientFromRequest } from "../_shared/compat.ts";
 import { supaRead } from "../_shared/supaRead.ts";
 
-export default async function(req) {
+const handler = async function(req) {
   try {
     const base44 = createClientFromRequest(req);
     const user = await base44.auth.me();
