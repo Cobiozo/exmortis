@@ -78,11 +78,13 @@ export async function upsertRows(base44, entity, recs) {
 }
 
 // Wszystkie rekordy encji (strony po 500, od najnowszych).
+// Strony offsetowe bez stabilnego sortowania mogą zdublować rekord o tej samej dacie — deduplikacja po id.
 async function readAll(base44, entity) {
+  const seen = new Set();
   const out = [];
   for (let i = 0; ; i += 500) {
     const rows = await base44.asServiceRole.entities[entity].list("-updated_date", 500, i);
-    out.push(...(rows || []));
+    for (const r of rows || []) if (r && r.id && !seen.has(r.id)) { seen.add(r.id); out.push(r); }
     if (!rows || rows.length < 500) break;
   }
   return out;
