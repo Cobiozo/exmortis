@@ -1,1 +1,0 @@
-import{t as e}from"./base44Client-BY3blyBA.js";async function t(t,n,r){let i=await e.auth.me();await e.entities.DataAccessLog.create({kto:i.email,akcja:t,zakres:n,liczba:r,at:new Date().toISOString()})}export{t};
