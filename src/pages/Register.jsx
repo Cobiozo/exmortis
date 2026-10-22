@@ -1,8 +1,7 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import { Loader2 } from "lucide-react";
 import { base44 } from "@/api/base44Client";
-import { InputOTP, InputOTPGroup, InputOTPSlot } from "@/components/ui/input-otp";
 import AuthLayout from "@/components/AuthLayout";
 import AuthField from "@/components/auth/AuthField";
 import GoogleButton from "@/components/auth/GoogleButton";
@@ -22,7 +21,6 @@ export default function Register() {
   const [info, setInfo] = useState("");
   const [loading, setLoading] = useState(false);
   const [showOtp, setShowOtp] = useState(false);
-  const [otpCode, setOtpCode] = useState("");
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -31,7 +29,7 @@ export default function Register() {
     if (!terms) return setError("Zaakceptuj regulamin i politykę prywatności.");
     setLoading(true);
     try {
-      await base44.auth.register({ email, password });
+      await base44.auth.register({ email, password, name: name.trim(), letters });
       setShowOtp(true);
     } catch (err) {
       setError(err.message || "Nie udało się założyć konta.");
@@ -40,20 +38,26 @@ export default function Register() {
     }
   };
 
-  const handleVerify = async () => {
-    setError("");
-    setLoading(true);
-    try {
-      const result = await base44.auth.verifyOtp({ email, otpCode });
-      if (result?.access_token) base44.auth.setToken(result.access_token);
-      await base44.auth.updateMe({ imie: name.trim(), terms_accepted_at: new Date().toISOString() }).catch(() => {});
-      if (letters) await base44.functions.invoke("subscribeNewsletter", { email, name }).then(() => track("Lead", { content_name: "newsletter" })).catch(() => {});
-      window.location.href = await afterLoginTarget();
-    } catch (err) {
-      setError(err.message || "Niepoprawny kod.");
-      setLoading(false);
-    }
-  };
+  // Link z maila wraca tutaj z sesją w adresie — dokańczamy rejestrację (zgody, newsletter).
+  useEffect(() => {
+    let alive = true;
+    (async () => {
+      try {
+        if (!(await base44.auth.isAuthenticated())) return;
+        const pending = JSON.parse(sessionStorage.getItem("exm_pending_reg") || "null");
+        if (!pending) return;
+        sessionStorage.removeItem("exm_pending_reg");
+        if (!alive) return;
+        await base44.auth.updateMe({ imie: pending.name, terms_accepted_at: new Date().toISOString() }).catch(() => {});
+        if (pending.letters) {
+          await base44.functions.invoke("subscribeNewsletter", { email: pending.email, name: pending.name })
+            .then(() => track("Lead", { content_name: "newsletter" })).catch(() => {});
+        }
+        window.location.href = await afterLoginTarget();
+      } catch { /* zostaje na stronie rejestracji */ }
+    })();
+    return () => { alive = false; };
+  }, []);
 
   const handleResend = async () => {
     setError("");
@@ -67,22 +71,16 @@ export default function Register() {
 
   if (showOtp) {
     return (
-      <AuthLayout title="Potwierdź adres e-mail" subtitle={`Wysłałem kod na ${email}.`}>
+      <AuthLayout title="Potwierdź adres e-mail" subtitle={`Wysłałem link potwierdzenia na ${email}.`}>
         {error && <p className="mb-5 text-sm text-[#E8C547]">{error}</p>}
         {info && <p className="mb-5 text-sm gold-text">{info}</p>}
-        <div className="flex justify-center mb-6">
-          <InputOTP maxLength={6} value={otpCode} onChange={setOtpCode} autoFocus autoComplete="one-time-code">
-            <InputOTPGroup>
-              {[0, 1, 2, 3, 4, 5].map((i) => <InputOTPSlot key={i} index={i} />)}
-            </InputOTPGroup>
-          </InputOTP>
-        </div>
-        <button onClick={handleVerify} disabled={loading || otpCode.length < 6} className="btn-relic w-full disabled:opacity-60">
-          {loading && <Loader2 className="h-4 w-4 animate-spin" />} POTWIERDŹ
-        </button>
-        <p className="text-center text-sm text-foreground/55 mt-5">
-          Nie dotarł? <button onClick={handleResend} className="gold-text hover:underline">Wyślij ponownie</button>
+        <p className="mb-5 text-sm text-foreground/70 leading-relaxed">
+          Otwórz wiadomość i kliknij link w niej — rejestracja zakończy się sama, a wrócisz tu na moment.
         </p>
+        <button onClick={handleResend} disabled={loading} className="btn-ghost w-full disabled:opacity-60">
+          {loading && <Loader2 className="h-4 w-4 animate-spin" />} WYŚLIJ PONOWNIE
+        </button>
+        <p className="text-center text-sm text-foreground/45 mt-5">Nie widzisz wiadomości? Sprawdź folder spam.</p>
       </AuthLayout>
     );
   }

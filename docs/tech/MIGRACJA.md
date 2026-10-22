@@ -54,15 +54,20 @@ Gotowe i nieszkodliwe na obecnym hostingu:
   podgląd na base44.app, localhost:5173.
 
 Do zrobienia przy przełączeniu (razem z krokami 5–7 i 9):
-1. `VITE_EXM_AUTH_BACKEND=supabase` w konfiguracji i AuthContext: sprawdzać sesję
-   zawsze (usunąć warunek `appParams.token`), bo token platformy przestanie istnieć.
-2. Import pozostałych kont: `POST /auth/v1/admin/users` (service key, `email_confirm`)
-   + wiersze w `exm_user`; klienci ustawiają hasła przez „Nie pamiętam hasła”.
-3. Szablony maili Supabase: potwierdzenie rejestracji na kod `{{ .Token }}`
-   (strona OTP czeka na kod 6-cyfrowy) i odzyskiwanie z powrotem na `/reset-password`.
-4. Provider Google w Supabase (Configure → Authentication) + adresy powrotu na liście.
-5. SMTP w Supabase (Brevo) zamiast wbudowanej poczty — limity testowej są niskie.
-6. Hasła nie są przenoszalne — mail zapowiadający do klientów przed przełączeniem.
+1. ✅ Zrobione 2026-10-22: logowanie przełączone na Supabase (domyślnie, gdy skonfigurowany;
+   powrót zmienną `VITE_EXM_AUTH_BACKEND=base44`); AuthContext sprawdza sesję zawsze,
+   gość zostaje na stronie publicznej (chronione strony pilnuje ProtectedRoute).
+2. ✅ Kont: konto jest jedno (administratora) — już w Supabase Auth i `exm_user`;
+   przy większej liczbie kont: `POST /auth/v1/admin/users` (service key) + wiersz `exm_user`.
+3. ⚠️ Szablony maili Supabase: plan darmowy z domyślną pocztą ich nie pozwala zmienić —
+   maile są po angielsku i zawierają LINK (nie kod). Strona rejestracji przerobiona na
+   link: link wraca na /register, sesja jest w adresie i zgody dokańczają się same.
+   Po konfiguracji SMTP i wyższym planie można wrócić na kody (szablony z `{{ .Token }}`).
+4. Provider Google w Supabase (Configure → Authentication) + adresy powrotu na liście —
+   do zrobienia, dopóki go nie ma przycisk Google w logowaniu nie zadziała.
+5. SMTP w Supabase (Brevo) zamiast wbudowanej poczty — limity testowej są niskie
+   (kilka maili na godzinę); konfiguracja SMTP odblokuje też własne szablony.
+6. Hasła nie są przenoszonalne — klienci ustawiają nowe przez „Nie pamiętam hasła”.
 9. **Hosting strony + DNS.** Nowy hosting statyczny, przełączenie rekordów A/CNAME w Simply (krótki TTL dzień wcześniej). Sprawdzić: przekierowania, `robots.txt`, mapę strony, nagłówki bezpieczeństwa, adres powrotu PayU i powiadomień.
 
 ## 3. Pułapki

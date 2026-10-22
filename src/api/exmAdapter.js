@@ -17,7 +17,9 @@ import { hasSupabase, supabaseEntityOps } from "./exmSupabase";
 import { supaAuth } from "./exmAuth";
 
 export const ENTITY_BACKEND = import.meta.env.VITE_EXM_ENTITY_BACKEND === "supabase" ? "supabase" : "base44";
-export const AUTH_BACKEND = import.meta.env.VITE_EXM_AUTH_BACKEND === "supabase" ? "supabase" : "base44";
+// Logowanie na Supabase po przeniesieniu hostingu (krok 8 migracji); zmienna pozwala wrócić.
+export const AUTH_BACKEND = import.meta.env.VITE_EXM_AUTH_BACKEND === "base44" ? "base44"
+  : hasSupabase ? "supabase" : "base44";
 const READ_OPS = ["get", "filter", "list", "count", "aggregate"];
 
 // Kolekcje publiczne: odczyt wprost z kopii (anon) — polityki w bazie odwzorowują reguły aplikacji.

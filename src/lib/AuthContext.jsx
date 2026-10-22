@@ -30,14 +30,8 @@ export const AuthProvider = ({ children }) => {
         const publicSettings = await base44.app.getPublicSettings();
         setAppPublicSettings(publicSettings);
         
-        // If we got the app public settings successfully, check if user is authenticated
-        if (appParams.token) {
-          await checkUserAuth();
-        } else {
-          setIsLoadingAuth(false);
-          setIsAuthenticated(false);
-          setAuthChecked(true);
-        }
+        // Sesja zawsze jest sprawdzana (po wyjściu z platformy token platformy nie istnieje).
+        await checkUserAuth();
         setIsLoadingPublicSettings(false);
       } catch (appError) {
         console.error('App state check failed:', appError);
@@ -105,14 +99,7 @@ export const AuthProvider = ({ children }) => {
       setIsAuthenticated(!!offlineUser);
       setIsLoadingAuth(false);
       setAuthChecked(true);
-
-      // If user auth fails, it might be an expired token
-      if (!offlineUser && (error.status === 401 || error.status === 403)) {
-        setAuthError({
-          type: 'auth_required',
-          message: 'Authentication required'
-        });
-      }
+      // Brak sesji = gość — strony prywatne sam pilnuje ProtectedRoute, bez przekierowania całej strony.
     }
   };
 

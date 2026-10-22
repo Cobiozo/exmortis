@@ -107,9 +107,15 @@ async function api(path, init) {
 }
 
 export const supaAuth = {
-  // Rejestracja nie loguje — konto czeka na potwierdzenie z maila (jak na platformie).
-  async register({ email, password }) {
-    await api("/signup", { method: "POST", headers: headers(), body: JSON.stringify({ email, password }) });
+  // Rejestracja nie loguje — konto czeka na kliknięcie linku z maila; link wraca na /register.
+  async register({ email, password, name, letters }) {
+    try {
+      sessionStorage.setItem("exm_pending_reg", JSON.stringify({ email, name, letters: !!letters, ts: Date.now() }));
+    } catch { /* brak pamięci */ }
+    const redirect = window.location.origin + "/register";
+    await api(`/signup?redirect_to=${encodeURIComponent(redirect)}`, {
+      method: "POST", headers: headers(), body: JSON.stringify({ email, password }),
+    });
     return { email };
   },
 
