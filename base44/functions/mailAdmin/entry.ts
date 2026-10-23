@@ -20,7 +20,7 @@ async function txt(name) {
 async function dnsCheck(domain) {
   if (!domain) return null;
   const [root, dmarc] = await Promise.all([txt(domain), txt(`_dmarc.${domain}`)]);
-  const sels = ["simplycom1", "simplycom2", "default", "dkim", "mail", "google", "selector1", "selector2", "k1", "s1", "s2", "smtp", "resend", "brevo1", "mailjet", "pm", "zoho"];
+  const sels = ["simplycom1", "simplycom2", "default", "dkim", "mail", "google", "selector1", "selector2", "k1", "s1", "s2", "smtp", "resend", "brevo1", "mailjet", "pm", "zoho", "x"];
   const dk = await Promise.all(sels.map(async (s) => ((await txt(`${s}._domainkey.${domain}`)).some((t) => /v=DKIM1|k=rsa|p=/.test(t)) ? s : null)));
   return {
     domain,
