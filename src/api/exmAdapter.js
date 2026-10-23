@@ -15,6 +15,7 @@
 import { base44 as raw } from "./rawBase44";
 import { hasSupabase, supabaseEntityOps, SUPABASE_URL, ANON_KEY } from "./exmSupabase";
 import { supaAuth, supaBearer } from "./exmAuth";
+import * as storage from "./exmStorage";
 
 export const ENTITY_BACKEND = import.meta.env.VITE_EXM_ENTITY_BACKEND === "supabase" ? "supabase" : "base44";
 // Logowanie na Supabase po przeniesieniu hostingu (krok 8 migracji); zmienna pozwala wrócić.
@@ -163,12 +164,30 @@ function wrapEntities(entities) {
   });
 }
 
+function wrapIntegrations(integrations) {
+  const rawCore = integrations && integrations.Core;
+  const Core = new Proxy(rawCore || {}, {
+    get(target, name) {
+      if (name === "UploadPublicFile") return storage.UploadPublicFile;
+      if (name === "UploadPrivateFile") return storage.UploadPrivateFile;
+      if (name === "CreateFileSignedUrl") {
+        return async (args) => (await storage.CreateFileSignedUrl(args)) || target.CreateFileSignedUrl(args);
+      }
+      const value = target[name];
+      return typeof value === "function" ? value.bind(target) : value;
+    },
+  });
+  return new Proxy(integrations || {}, { get: (t, n) => (n === "Core" ? Core : t[n]) });
+}
+
 export function createExmClient(raw) {
   return new Proxy(raw, {
     get(target, prop) {
       if (prop === "entities") return wrapEntities(target.entities);
       if (prop === "auth" && AUTH_BACKEND === "supabase") return supaAuth;
       if (prop === "functions" && FN_BACKEND === "supabase") return { invoke: supaInvoke };
+      // Pliki (wgrywanie, podpisane linki) → Supabase Storage. Pozostałe integracje bez zmian.
+      if (prop === "integrations" && FN_BACKEND === "supabase") return wrapIntegrations(target.integrations);
       const value = target[prop];
       return typeof value === "function" ? value.bind(target) : value;
     },
