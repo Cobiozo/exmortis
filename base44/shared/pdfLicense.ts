@@ -1,13 +1,14 @@
 import { PDFDocument, StandardFonts, rgb, degrees } from "npm:@cantoo/pdf-lib@2.4.1";
 
 // Wersja oznaczeń — zmiana wymusza ponowne wygenerowanie zapisanych kopii.
-export const WM_VERSION = "wm2";
+export const WM_VERSION = "wm3";
 
 // Osobista kopia PDF: napis licencji na każdej stronie, ukryte znaczniki, metadane, blokada edycji.
 export async function personalizePdf(bytes: Uint8Array, o: { email: string; orderNo: string; date: string; licenseId: string; title: string }) {
   const doc = await PDFDocument.load(bytes, { ignoreEncryption: true });
   const font = await doc.embedFont(StandardFonts.Helvetica);
-  const label = `Licencja osobista: ${o.email} · zam. ${o.orderNo} · ${o.date}`;
+  // Lewy górny róg: zaczyna się od adresu e-mail osoby, która kupiła lub pobrała plik.
+  const label = `${o.email} · licencja osobista · zam. ${o.orderNo} · ${o.date}`;
   const pages = doc.getPages();
   const hidden = new Set<number>();
   for (let i = 0; i < Math.min(3, pages.length); i++) hidden.add(Math.floor(Math.random() * pages.length));
@@ -17,7 +18,9 @@ export async function personalizePdf(bytes: Uint8Array, o: { email: string; orde
     const { width, height } = page.getSize();
     // Okładka (strona 1) zwykle ciemna — kolor kremowy; pozostałe szare.
     const color = i === 0 ? rgb(0.96, 0.94, 0.88) : rgb(0.45, 0.45, 0.45);
-    page.drawText(label, { x: 14, y: height - 14, size: 7, font, color, opacity: 0.55 });
+    // Uwzględnia przycięcie strony (CropBox) — napis zawsze tuż przy widocznej krawędzi, nie poza nią.
+    const box = page.getCropBox ? page.getCropBox() : { x: 0, y: 0, width, height };
+    page.drawText(label, { x: box.x + 4, y: box.y + box.height - 8, size: 7, font, color, opacity: 0.7 });
     page.drawText(label, { x: 14, y: 8, size: 6, font, color, opacity: 0.45 });
     // Znak wodny po przekątnej przez środek strony — adres zamawiającego, trudny do wycięcia.
     const size = Math.max(14, Math.min(28, (Math.hypot(width, height) * 0.7) / Math.max(1, diag.length) * 1.9));
