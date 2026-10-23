@@ -489,7 +489,7 @@ const handler = async function (req) {
       // Bilet z zapisu (darmowe stacjonarne): wypisanie anuluje, przywrócenie wydaje/przywraca.
       const r0 = upd?.[0];
       if (r0) {
-        const tk = await import("../../shared/tickets.ts");
+        const tk = await import("../_shared/tickets.ts");
         await (status === "Wypisany" ? tk.cancelRegTicket(base44, r0.id) : status === "Lista rezerwowa" ? Promise.resolve() : tk.regTicket(base44, r0.event_id, r0)).catch((e) => console.error("bilet zapisu:", e?.message));
       }
       return Response.json({ ok: true });
