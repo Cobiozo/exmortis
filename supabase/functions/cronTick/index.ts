@@ -17,23 +17,21 @@ import { onboardingTick } from "../_shared/onboarding.ts";
 
 const LIMIT_MS = 110000; // jeden krok nie może zjeść całego limitu funkcji (5 minut)
 
-// Po migracji adres aplikacji to adres funkcji Supabase (przeglądarka i tak ich tu nie woła).
-async function appOrigin(_base44, _req) {
-  return String(Deno.env.get("SUPABASE_URL") || "").replace(/\/+$/, "");
+// Adres aplikacji: nagłówek ustawiany przez platformę, a gdy go nie ma — adres z ustawień.
+async function appOrigin(base44, req) {
+  const h = req.headers.get("X-Base44-App-Url");
+  if (h) return String(h).replace(/\/+$/, "");
+  const u = await loadAppUrl(base44).catch(() => null);
+  return String(u || APP_URL || DEFAULT_APP_URL).replace(/\/+$/, "");
 }
-
-const SUB_HEADERS = () => {
-  const k = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") || "";
-  return { "Content-Type": "application/json", apikey: k, Authorization: `Bearer ${k}` };
-};
 
 // Jedno wywołanie funkcji po HTTP: liczy się kod odpowiedzi i czas. Treści nie zapisujemy.
 async function call(origin, job) {
   const t0 = Date.now();
   try {
-    const r = await fetch(`${origin}/functions/v1/${job.name}`, {
+    const r = await fetch(`${origin}/functions/${job.name}`, {
       method: "POST",
-      headers: SUB_HEADERS(),
+      headers: { "Content-Type": "application/json" },
       body: JSON.stringify(job.args || {}),
       signal: AbortSignal.timeout(LIMIT_MS),
     });
@@ -113,9 +111,9 @@ const handler = async function (req) {
       if (lock && lock.length) {
         kopia = true;
         waitUntil(
-          fetch(`${origin}/functions/v1/backupAdmin`, {
+          fetch(`${origin}/functions/backupAdmin`, {
             method: "POST",
-            headers: SUB_HEADERS(),
+            headers: { "Content-Type": "application/json" },
             body: JSON.stringify({ action: "weekly", tick_token: stored }),
             signal: AbortSignal.timeout(240000),
           }).catch(() => {})

@@ -6,12 +6,12 @@ const VIMEO_HASH = /^[0-9a-f]{6,20}$/;
 const BUNNY_ID = /^\d{3,12}\/[A-Za-z0-9_-]{1,40}$/;
 
 // Limity platformy dla prywatnych plików (potwierdzone w dokumentacji).
-export const MAX_BYTES = { PDF: 10 * 1024 * 1024, AUDIO: 100 * 1024 * 1024, WIDEO: 100 * 1024 * 1024 };
+export const MAX_BYTES = { PDF: 100 * 1024 * 1024, AUDIO: 500 * 1024 * 1024, WIDEO: 500 * 1024 * 1024 };
 export const ALLOWED_EXT = { PDF: ["pdf"], AUDIO: ["mp3", "m4a"], WIDEO: ["mp4", "m4v", "webm"] };
 // Ile bajtów pobieramy do sprawdzenia sygnatury (i skanu PDF).
 export const SNIFF_BYTES = 262144;
 
-export const MAX_MB = { PDF: 10, AUDIO: 100, WIDEO: 100 };
+export const MAX_MB = { PDF: 100, AUDIO: 500, WIDEO: 500 };
 
 // ---- Własne wideo (2B): plik wgrany albo adres z serwera właściciela ----
 

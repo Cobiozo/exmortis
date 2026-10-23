@@ -246,7 +246,7 @@ const handler = async function (req) {
     }
 
     if (body.newsletter_consent === true) {
-      await (await import("../_shared/newsletter.ts")).addSubscriber(base44, { email, name: firstName }).catch(() => {});
+      await (await import("../../shared/newsletter.ts")).addSubscriber(base44, { email, name: firstName }).catch(() => {});
     }
 
     const productRows = await runSql(base44, `SELECT slug, name, status FROM public.products WHERE active = true`, true).catch(() => []);

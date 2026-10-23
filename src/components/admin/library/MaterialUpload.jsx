@@ -42,7 +42,7 @@ export default function MaterialUpload({ kind, id, onDone }) {
       </p>
       {kind === "WIDEO" && (
         <p className="text-xs text-foreground/45">
-          {lim.mb} MB to ok. 10–15 min w Full HD; dłuższe nagrania wgraj na własny serwer i podaj adres.
+          Limit {lim.mb} MB na plik; dłuższe lub cięższe nagrania wgraj na własny serwer i podaj adres.
         </p>
       )}
       <input ref={ref} type="file" accept={ACCEPT[kind]}

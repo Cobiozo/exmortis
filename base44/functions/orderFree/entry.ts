@@ -99,8 +99,10 @@ export default async function (req) {
         )}</strong>.</p>
         ${
           fileUrl
-            ? `<p style="line-height:1.7;color:#E2E2E2;">Twój plik pobierzesz tutaj:<br>
-               <a href="${escapeHtml(fileUrl)}" style="color:#C9A24A;">${escapeHtml(fileUrl)}</a></p>`
+            ? `<p style="line-height:1.7;color:#E2E2E2;">Twój plik jest gotowy do pobrania.</p>
+               <table role="presentation" cellpadding="0" cellspacing="0" border="0" style="margin:24px 0;"><tr><td style="background:#C9A24A;">
+                 <a href="${escapeHtml(fileUrl)}" style="display:inline-block;padding:14px 30px;color:#0A0A0B;text-decoration:none;font-family:Arial,Helvetica,sans-serif;font-size:13px;letter-spacing:3px;font-weight:bold;">POBIERZ PLIK</a>
+               </td></tr></table>`
             : ""
         }
         <p style="line-height:1.7;color:#8A8A8C;">Powrót nie kończy się na jednym kroku — dopiero się nim zaczyna.</p>

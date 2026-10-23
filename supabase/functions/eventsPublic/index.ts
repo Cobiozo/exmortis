@@ -348,7 +348,7 @@ const handler = async function (req) {
 
       await ensureTzColumn(base44);
       const queue = await flushQueue(base44).catch((e) => ({ error: e.message }));
-      const retention = await (await import("../_shared/retention.ts")).runRetention(base44).catch((e) => ({ error: e.message }));
+      const retention = await (await import("../../shared/retention.ts")).runRetention(base44).catch((e) => ({ error: e.message }));
       const removed = await runSql(
         base44,
         `DELETE FROM public.registrations r USING public.events e
