@@ -105,14 +105,15 @@ const handler = async function (req) {
         true
       );
       const p = rows[0];
-      const paidPdf = p?.private_file_uri && p.product_type === "pdf" && a.source !== "darmowy" && Number(p.price) > 0;
-      if (paidPdf) {
+      // Każdy PDF (kupiony i darmowy) dostaje osobistą kopię ze znakiem wodnym (e-mail konta).
+      const pdfSrc = p?.product_type === "pdf" ? (p.private_file_uri || (/\.pdf(\?|$)/i.test(String(p.file_url || "")) ? p.file_url : null)) : null;
+      if (pdfSrc) {
         const sr = base44.asServiceRole;
         const orderNo = a.order_id ? String(a.order_id).slice(0, 8).toUpperCase() : "R-" + a.id.slice(-6).toUpperCase();
         let lic = (await sr.entities.License.filter({ access_id: a.id }))[0];
-        const srcKey = `${p.private_file_uri}#${WM_VERSION}`;
+        const srcKey = `${pdfSrc}#${WM_VERSION}`;
         if (!lic || lic.source_uri !== srcKey || !lic.file_uri) {
-          const { signed_url } = await sr.integrations.Core.CreateFileSignedUrl({ file_uri: p.private_file_uri, expires_in: 120 });
+          const { signed_url } = await sr.integrations.Core.CreateFileSignedUrl({ file_uri: pdfSrc, expires_in: 120 });
           const orig = new Uint8Array(await (await fetch(signed_url)).arrayBuffer());
           const licenseId = lic?.license_id || newLicenseId();
           const out = await personalizePdf(orig, {

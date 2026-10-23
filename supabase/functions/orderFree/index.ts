@@ -4,9 +4,10 @@ import { ipAllowed, TOO_MANY } from "../_shared/rateLimit.ts";
 import { insertOrder } from "../_shared/orders.ts";
 import { addSubscriber } from "../_shared/newsletter.ts";
 import { getSetting } from "../_shared/settings.ts";
-import { sendMail } from "../_shared/smtp.ts";
+import { sendMail, adminTo } from "../_shared/smtp.ts";
 import { grantAccess } from "../_shared/access.ts";
 import { expandBundles } from "../_shared/bundles.ts";
+import { personalizePdf, newLicenseId } from "../_shared/pdfLicense.ts";
 
 function escapeHtml(s) {
   return String(s)
@@ -34,7 +35,7 @@ const handler = async function (req) {
 
     const rows = await runSql(
       base44,
-      `SELECT id, name, is_free, active, COALESCE(status, 'dostępny') AS status, file_url, product_type, access_months
+      `SELECT id, name, is_free, active, COALESCE(status, 'dostępny') AS status, file_url, private_file_uri, product_type, access_months
        FROM public.products WHERE slug = ${escStr(slug)} LIMIT 1`,
       true
     );
@@ -52,8 +53,9 @@ const handler = async function (req) {
     if (!(await ipAllowed(base44, clientIp(req), "darmowy", 5, 3600000, slug))) return Response.json({ error: TOO_MANY }, { status: 429 });
 
     const firstName = name.split(" ")[0] || name;
+    const orderId = crypto.randomUUID();
     await insertOrder(base44, {
-      id: crypto.randomUUID(),
+      id: orderId,
       buyerName: name,
       buyerEmail: email,
       buyerPhone: phone || null,
@@ -85,7 +87,33 @@ const handler = async function (req) {
       }
     }
 
-    const fileUrl = String(product.file_url || "").trim();
+    // PDF: osobista kopia ze znakiem wodnym (e-mail pobierającego w lewym górnym rogu każdej strony),
+    // wysyłana podpisanym linkiem ważnym 7 dni. Surowy plik nie trafia do maila.
+    let fileUrl = String(product.file_url || "").trim();
+    let linkDays = 0;
+    const src = product.private_file_uri || fileUrl;
+    if (src && (product.product_type === "pdf" || /\.pdf(\?|$)/i.test(src))) {
+      try {
+        const sr = base44.asServiceRole;
+        const { signed_url } = await sr.integrations.Core.CreateFileSignedUrl({ file_uri: src, expires_in: 300 });
+        const orig = new Uint8Array(await (await fetch(signed_url, { signal: AbortSignal.timeout(60000) })).arrayBuffer());
+        const out = await personalizePdf(orig, {
+          email, orderNo: orderId.slice(0, 8).toUpperCase(), licenseId: newLicenseId(), title: product.name,
+          date: new Date().toISOString().slice(0, 10),
+        });
+        const safe = String(product.name).normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/ł/g, "l").replace(/Ł/g, "L").replace(/[^A-Za-z0-9]+/g, "_").replace(/^_|_$/g, "").slice(0, 60) || "material";
+        const { file_uri } = await sr.integrations.Core.UploadPrivateFile({ file: new File([out], `${safe}_exmortis.pdf`, { type: "application/pdf" }) });
+        fileUrl = (await sr.integrations.Core.CreateFileSignedUrl({ file_uri, expires_in: 604800 })).signed_url;
+        linkDays = 7;
+        await sr.entities.SecurityLog.create({ type: "pdf", user_email: email, ip: clientIp(req), details: `darmowy: ${product.name}` }).catch(() => {});
+      } catch (e) {
+        // Bez kopii ze znakiem wodnym nie wysyłamy surowego pliku — mail informuje, że plik dojdzie osobno.
+        console.error("orderFree: znak wodny", e?.message || e);
+        fileUrl = "";
+        await sendMail(base44, { kind: "alarm_pdf", to: await adminTo(base44).catch(() => null), subject: `Darmowy PDF nie wysłany: ${product.name}`,
+          html: `<p>Nie udało się przygotować kopii ze znakiem wodnym dla ${escapeHtml(email)} (${escapeHtml(String(e?.message || e).slice(0, 200))}). Wyślij plik ręcznie.</p>` }).catch(() => {});
+      }
+    }
     await sendMail(base44, {
       kind: "zamowienie",
       to: email,
@@ -102,8 +130,8 @@ const handler = async function (req) {
             ? `<p style="line-height:1.7;color:#E2E2E2;">Twój plik jest gotowy do pobrania.</p>
                <table role="presentation" cellpadding="0" cellspacing="0" border="0" style="margin:24px 0;"><tr><td style="background:#C9A24A;">
                  <a href="${escapeHtml(fileUrl)}" style="display:inline-block;padding:14px 30px;color:#0A0A0B;text-decoration:none;font-family:Arial,Helvetica,sans-serif;font-size:13px;letter-spacing:3px;font-weight:bold;">POBIERZ PLIK</a>
-               </td></tr></table>`
-            : ""
+               </td></tr></table>${linkDays ? `<p style="font-size:12px;color:#8A8A8C;line-height:1.6;">Link jest ważny ${linkDays} dni. Plik jest Twoją osobistą kopią — oznaczoną Twoim adresem e-mail.</p>` : ""}`
+            : `<p style="line-height:1.7;color:#E2E2E2;">Przygotowuję Twoją osobistą kopię — wyślę ją w osobnej wiadomości.</p>`
         }
         <p style="line-height:1.7;color:#8A8A8C;">Powrót nie kończy się na jednym kroku — dopiero się nim zaczyna.</p>
         <p style="color:#5C5C5E;font-size:12px;letter-spacing:2px;margin-top:32px;">WRACAM Z SIEBIE · UCZĘ WRACAĆ</p>

@@ -110,7 +110,7 @@ export default async function (req) {
         // Bez kopii ze znakiem wodnym nie wysyłamy surowego pliku — mail informuje, że plik dojdzie osobno.
         console.error("orderFree: znak wodny", e?.message || e);
         fileUrl = "";
-        await sendMail(base44, { kind: "alert", to: await adminTo(base44).catch(() => null), subject: `Darmowy PDF nie wysłany: ${product.name}`,
+        await sendMail(base44, { kind: "alarm_pdf", to: await adminTo(base44).catch(() => null), subject: `Darmowy PDF nie wysłany: ${product.name}`,
           html: `<p>Nie udało się przygotować kopii ze znakiem wodnym dla ${escapeHtml(email)} (${escapeHtml(String(e?.message || e).slice(0, 200))}). Wyślij plik ręcznie.</p>` }).catch(() => {});
       }
     }
