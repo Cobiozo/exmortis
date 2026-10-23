@@ -37,7 +37,7 @@ export default function LessonsManager({ productId }) {
       <p className="technical text-[10px] gold-text">LEKCJE / WIDEO{lessons ? ` · WIDOCZNE ${lessons.filter((l) => l.published).length} / ${lessons.length}` : ""}</p>
       <p className="text-xs text-foreground/50 leading-relaxed">
         Kupujący dostaje dostęp od razu po płatności (Moje konto → Moje produkty → Otwórz kurs). Widzi tylko lekcje oznaczone „Widoczna dla klientów”.
-        Wideo: wklej adres filmu z własnego serwera (https, .mp4 lub .webm) i kliknij „Sprawdź odtwarzanie”. Krótkie filmy (do 100 MB) można też wgrać. Kolejność = pole z numerem; „Moduł” grupuje lekcje w spisie.
+        Wideo: wklej adres filmu z własnego serwera (https, .mp4 lub .webm) i kliknij „Sprawdź odtwarzanie”. Filmy do 500 MB można też wgrać. Kolejność = pole z numerem; „Moduł” grupuje lekcje w spisie.
         Podgląd jak klient: nadaj sobie dostęp w „Klienci i dostępy”.
       </p>
       {!lessons ? <Loader2 className="h-5 w-5 animate-spin gold-text" /> : lessons.length === 0 && (

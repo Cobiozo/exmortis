@@ -40,7 +40,7 @@ export default function AddSoundtrackForm({ minutes, order, isFirst, onDone, onC
           <input type="file" accept=".mp3,.m4a,audio/mpeg,audio/mp4,audio/x-m4a" onChange={(e) => setFiles({ ...files, [s.key]: e.target.files?.[0] })} className="text-xs" />
         </label>
       ))}
-      <p className="text-xs text-foreground/40">MP3 lub M4A, do 50 MB na plik. Pliki możesz też wgrać później.</p>
+      <p className="text-xs text-foreground/40">MP3 lub M4A, do 500 MB na plik. Pliki możesz też wgrać później.</p>
       {err && <p className="text-xs text-[#E8C547]">{err}</p>}
       <div className="flex gap-3">
         <button disabled={busy} className="btn-relic !py-3 !px-5">{busy && <Loader2 className="h-4 w-4 animate-spin" />} Zapisz</button>

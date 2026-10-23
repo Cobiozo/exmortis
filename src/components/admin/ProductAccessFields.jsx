@@ -31,14 +31,18 @@ export default function ProductAccessFields({ form, set }) {
     const file = e.target.files?.[0];
     e.target.value = "";
     if (!file) return;
+    // Limity: PDF do 100 MB, pozostałe pliki (audio, wideo) do 500 MB.
+    const pdf = /\.pdf$/i.test(file.name) || file.type === "application/pdf";
+    const maxMb = pdf ? 100 : 500;
+    if (file.size > maxMb * 1048576) { setErr(`Plik ma ${Math.round(file.size / 1048576)} MB — limit to ${maxMb} MB (${pdf ? "PDF" : "audio i wideo"}).`); return; }
     setBusy(true);
     setErr("");
     try {
       const { file_uri } = await base44.integrations.Core.UploadPrivateFile({ file });
       set("private_file_uri", file_uri);
       set("private_file_name", file.name);
-    } catch {
-      setErr("Nie udało się wgrać pliku. PDF do 10 MB, audio do 100 MB.");
+    } catch (e) {
+      setErr(`${e?.message || "Nie udało się wgrać pliku."} Limity: PDF do 100 MB, audio i wideo do 500 MB.`);
     }
     setBusy(false);
   };

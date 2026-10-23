@@ -1,6 +1,6 @@
 import { base44 } from "@/api/base44Client";
 
-export const MAX_MB = 50;
+export const MAX_MB = 500;
 export const TRACK = base44.entities.SilenceTrack;
 export const SIGNAL = base44.entities.SilenceSignal;
 export const TIMES = [3, 5, 10, 15, 30, 45, 60];

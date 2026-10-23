@@ -51,7 +51,7 @@ export default function LessonRow({ lesson, onChange, domains, onAddDomain }) {
     if (!file) return;
     setBusy("up"); setMsg("");
     try {
-      if (file.size > 100 * 1024 * 1024) { setBusy(""); setMsg("Plik ma ponad 100 MB. Wgraj go na swój serwer albo Vimeo i wklej adres powyżej."); return; }
+      if (file.size > 500 * 1024 * 1024) { setBusy(""); setMsg("Plik ma ponad 500 MB. Wgraj go na swój serwer albo Vimeo i wklej adres powyżej."); return; }
       const { file_uri } = await base44.integrations.Core.UploadPrivateFile({ file });
       set("video_name", file.name);
       await save({ video_uri: file_uri, video_name: file.name });

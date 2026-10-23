@@ -1,6 +1,6 @@
 import { base44 } from "@/api/base44Client";
 
-export const MAX_MB = 50; // limit Base44 dla plików audio
+export const MAX_MB = 500; // limit plików audio (Supabase Storage)
 export const TIMES = [3, 5, 10, 15, 30, 45, 60];
 export const SLOTS = [
   { key: "wstep", label: "WSTĘP" },
