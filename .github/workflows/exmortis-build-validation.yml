@@ -1,37 +1,91 @@
-name: Exmortis frontend build validation
+name: Exmortis GitHub build and compiled-dist publication
 on:
   pull_request:
     branches: [main]
+  push:
+    branches: [main]
+    paths-ignore:
+      - "dist/**"
   workflow_dispatch:
 
-permissions:
-  contents: read
+concurrency:
+  group: exmortis-build-and-dist-main
+  cancel-in-progress: false
 
 jobs:
   build:
     runs-on: ubuntu-24.04
     timeout-minutes: 15
+    permissions:
+      contents: read
     env:
       CI: "1"
       EXM_FALLBACK_OFFLINE: "1"
       NODE_OPTIONS: "--max-old-space-size=4096"
     steps:
-      - name: Checkout pinned source
+      - name: Checkout pinned Exmortis source
         uses: actions/checkout@v4
+        with:
+          persist-credentials: false
       - name: Use Node 22
         uses: actions/setup-node@v4
         with:
           node-version: "22"
           cache: npm
-      - name: Install pinned dependencies
+      - name: Install exact locked dependencies
         run: npm ci --no-audit --no-fund
-      - name: Print compiler versions
+      - name: Run pinned Vite without CyberFolks npm wrapper
         run: |
-          node --version
           node node_modules/vite/bin/vite.js --version
-      - name: Build via Vite entrypoint, no npm wrapper
-        run: node node_modules/vite/bin/vite.js build
-      - name: Check frontend artifact
+          node node_modules/vite/bin/vite.js build
+      - name: Validate complete release
         run: |
           test -s dist/index.html
-          echo "Built assets: $(find dist -type f | wc -l)"
+          test -d dist/assets
+          echo "Build files: $(find dist -type f | wc -l)"
+      - name: Save compiled release for publishing
+        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+        uses: actions/upload-artifact@v4
+        with:
+          name: exmortis-dist
+          path: dist/
+          include-hidden-files: true
+          retention-days: 3
+
+  publish-compiled-dist:
+    needs: build
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    permissions:
+      contents: write
+    steps:
+      - name: Checkout same pinned source commit
+        uses: actions/checkout@v4
+      - name: Retrieve compiled release
+        uses: actions/download-artifact@v4
+        with:
+          name: exmortis-dist
+          path: dist/
+      - name: Publish immutable compiled assets to source repo
+        shell: bash
+        run: |
+          set -euo pipefail
+          test -s dist/index.html
+          test -d dist/assets
+          git fetch --no-tags origin main --depth=1
+          current="$(git rev-parse FETCH_HEAD)"
+          if [ "$current" != "$GITHUB_SHA" ]; then
+            echo "::error::main moved during build; refusing to publish a stale release"
+            exit 1
+          fi
+          git add -f dist
+          if git diff --cached --quiet; then
+            echo "Compiled dist already matches this source"
+            exit 0
+          fi
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git commit -m "build(exmortis): publish verified dist for ${GITHUB_SHA:0:12} [skip ci]"
+          git push origin HEAD:main
+          echo "Published compiled dist without requiring Node build on CyberFolks"
