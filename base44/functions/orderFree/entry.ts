@@ -4,7 +4,7 @@ import { ipAllowed, TOO_MANY } from "../../shared/rateLimit.ts";
 import { insertOrder } from "../../shared/orders.ts";
 import { addSubscriber } from "../../shared/newsletter.ts";
 import { getSetting } from "../../shared/settings.ts";
-import { sendMail } from "../../shared/smtp.ts";
+import { sendMail, adminTo } from "../../shared/smtp.ts";
 import { grantAccess } from "../../shared/access.ts";
 import { expandBundles } from "../../shared/bundles.ts";
 import { personalizePdf, newLicenseId } from "../../shared/pdfLicense.ts";
