@@ -1,0 +1,1 @@
+import{n as e}from"./base44Client-DAIDvK6A.js";async function t(t,n,r){let i=await e.auth.me();await e.entities.DataAccessLog.create({kto:i.email,akcja:t,zakres:n,liczba:r,at:new Date().toISOString()})}export{t};
