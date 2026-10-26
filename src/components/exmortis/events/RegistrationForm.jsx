@@ -111,7 +111,7 @@ export default function RegistrationForm({ event: ev }) {
             </p>
           </>
         ) : ev.format !== "Online" ? null : (
-          <p className="text-foreground/60 mt-4 leading-relaxed">Link do spotkania przyjdzie e-mailem.</p>
+          <p className="text-foreground/60 mt-4 leading-relaxed">Link do spotkania otrzymasz na podany adres e-mail.</p>
         )}
         {ev.start_datetime && (
           <CalendarButtons event={ev} joinUrl={result.join_url || null} t={joinT} className="mt-6" />
