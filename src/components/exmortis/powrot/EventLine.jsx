@@ -1,7 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { base44 } from "@/api/base44Client";
-import { plWhen } from "@/components/exmortis/events/time";
 
 // POWRÓT: jedna linia nad przyciskiem kwalifikacyjnym — pokazywana tylko,
 // gdy istnieje nadchodzące bezpłatne „Spotkanie otwarte".
@@ -24,11 +23,11 @@ export default function EventLine() {
 
   return (
     <p className="text-foreground/60 leading-relaxed">
-      Chcesz najpierw zobaczyć, jak pracuję? Przyjdź na najbliższy{" "}
+      Chcesz najpierw zobaczyć, jak pracuję? Weź udział w najbliższym otwartym spotkaniu{" "}
       <Link to={`/spotkania/${event.slug}?src=powrot`} className="gold-text hover:underline">
-        Wieczór powrotu
-      </Link>{" "}
-      — {plWhen(event.start_datetime)}, bezpłatnie.
+        SPOTKANIA
+      </Link>
+      .
     </p>
   );
 }
