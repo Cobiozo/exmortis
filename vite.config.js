@@ -1,12 +1,16 @@
 import react from '@vitejs/plugin-react'
-import { defineConfig } from 'vite'
+import { defineConfig, loadEnv } from 'vite'
 import fs from "fs"
 import path from "path"
 import { fileURLToPath } from "url"
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
-import { SITE_URL, OG_SPOTKANIE, OG_MARKA, metaMode } from './src/config/site.js'
+import { OG_SPOTKANIE, OG_MARKA, metaMode } from './src/config/site.js'
 import { criticalCss } from './src/config/criticalCss.js'
 import portableBuild from './src/config/portableBuild.js'
+
+// Adres aplikacji przy budowaniu. Vite ładuje .env do import.meta.env, a nie do process.env —
+// dlatego process.env działa tylko na serwerze/CI, a lokalnie bierzemy wartość z pliku .env.
+const APP_URL_BUILD = (process.env.VITE_APP_URL || loadEnv("production", process.cwd(), "").VITE_APP_URL || "").replace(/\/+$/, "");
 
 // Wspólny nagłówek dla robotów: wstawiany przy publikacji wg src/config/site.js (bez og:url).
 const esc = (s) => s.replace(/&/g, "&amp;").replace(/"/g, "&quot;").replace(/</g, "&lt;");
@@ -15,7 +19,7 @@ function exmMeta() {
     name: "exm-meta",
     transformIndexHtml(html) {
       const og = metaMode() === "spotkanie" ? OG_SPOTKANIE : OG_MARKA;
-      const img = SITE_URL + og.img;
+      const img = APP_URL_BUILD + og.img;
       const tags = [
         `<title>${esc(og.pageTitle)}</title>`,
         `<meta name="description" content="${esc(og.d)}" />`,
@@ -52,9 +56,9 @@ function exmJoinFallback() {
       if (id !== "\0" + FB_ID) return null;
       const savedPath = path.resolve(__dirname, "src/content/joinFallbackData.js").replace(/\\/g, "/");
       const saved = `export { FALLBACK_AT, FALLBACK_EVENTS } from ${JSON.stringify(savedPath)};`;
-      if (!build || process.env.EXM_FALLBACK_OFFLINE === "1") return saved;
+      if (!build || !APP_URL_BUILD || process.env.EXM_FALLBACK_OFFLINE === "1") return saved;
       try {
-        const get = () => fetch(`${SITE_URL}/functions/eventsPublic`, { method: "POST", headers: { "Content-Type": "application/json" },
+        const get = () => fetch(`${APP_URL_BUILD}/functions/eventsPublic`, { method: "POST", headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ action: "list" }), signal: AbortSignal.timeout(10000) });
         const r = await get().catch(() => get()); // drugie podejście po zimnym starcie funkcji
         if (!r.ok) throw new Error(String(r.status));
