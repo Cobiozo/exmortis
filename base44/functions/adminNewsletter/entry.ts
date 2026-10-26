@@ -228,7 +228,7 @@ export default async function (req) {
       const firma = await getSetting(base44, "firma").catch(() => null);
       const html = emailLayout(campaignEmailHtml(String(body.content || ""), "Anna", "", { cta_label, cta_url }), {
         firma, kind: "listy", preheader: String(body.preheader || ""), unsubUrl: `${appUrl}/listy/wypis?t=podglad`,
-        appUrl: /base44\.app/.test(appUrl) ? "https://exmortis.pl" : appUrl,
+        appUrl,
       });
       return Response.json({ html });
     }

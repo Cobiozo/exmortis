@@ -418,7 +418,7 @@ const handler = async function (req) {
             try { await sendReminderMail(base44, row, regOf(row), "24h"); } catch { await release("reminder_24h_sent", row); }
           });
           if (dueFollow.length > 0) {
-            const site = /base44\.app/.test(APP_URL) ? "https://exmortis.pl" : APP_URL;
+            const site = APP_URL;
             const nexts = new Map();
             for (const row of dueFollow) {
               if (!nexts.has(row.event_id)) nexts.set(row.event_id, await nextEventAfter(base44, row.event_id));

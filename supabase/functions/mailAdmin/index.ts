@@ -1,6 +1,6 @@
 import { createClientFromRequest } from "../_shared/compat.ts";
 import { requireStaff, requireAdmin, emailField } from "../_shared/supabase.ts";
-import { getSetting, saveSetting } from "../_shared/settings.ts";
+import { getSetting, saveSetting, loadAppUrl } from "../_shared/settings.ts";
 import { smtpSend, mailReady, resetMailConfig, flushMailQueue } from "../_shared/smtp.ts";
 import { onboardingOn, setOnboarding, onboardingMail } from "../_shared/onboarding.ts";
 import { emailLayout } from "../_shared/emailLayout.ts";
@@ -118,7 +118,8 @@ const handler = async function (req) {
     if (body.action === "followup_preview") {
       const variant = body.variant === "nieobecny" ? "nieobecny" : "obecny";
       const firma = await getSetting(base44, "firma").catch(() => null);
-      const m = followupMail(variant, { name: "Anna", title: "Ze śmierci — o powrotach, o których świat nie mówi", site: "https://exmortis.pl",
+      const appUrl = await loadAppUrl(base44);
+      const m = followupMail(variant, { name: "Anna", title: "Ze śmierci — o powrotach, o których świat nie mówi", site: appUrl,
         next: { title: "Wieczór powrotu", slug: "wieczor-powrotu", start_datetime: "2026-12-03T18:00:00Z" } });
       return Response.json({ subject: m.subject, html: emailLayout(m.html, { firma, kind: `po_spotkaniu_${variant}` }) });
     }
@@ -126,9 +127,10 @@ const handler = async function (req) {
       const step = [1, 3, 7, 14].includes(Number(body.step)) ? Number(body.step) : 1;
       const type = ["pdf", "audio", "kurs", "pakiet"].includes(body.type) ? body.type : "pdf";
       const firma = await getSetting(base44, "firma").catch(() => null);
+      const appUrl = await loadAppUrl(base44);
       const m = onboardingMail(step, { name: "Anna", product: type === "kurs" ? "Kurs: Cztery etapy powrotu" : type === "audio" ? "Wracam inny — audiobook" : "Wracam inny",
-        type, site: "https://exmortis.pl", next: step === 14 ? { name: "Rozmowa na progu", slug: "rozmowa-na-progu", text: "Jedna sesja, jedna decyzja, pełna uwaga." } : null,
-        optoutUrl: "https://exmortis.pl/listy/wypis?d=podglad" });
+        type, site: appUrl, next: step === 14 ? { name: "Rozmowa na progu", slug: "rozmowa-na-progu", text: "Jedna sesja, jedna decyzja, pełna uwaga." } : null,
+        optoutUrl: `${appUrl}/listy/wypis?d=podglad` });
       return Response.json({ subject: m.subject, html: emailLayout(m.html, { firma, kind: `prowadzenie_${step}` }) });
     }
 

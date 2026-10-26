@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import { Copy, Check } from "lucide-react";
+import { SITE_URL } from "@/config/site";
 
 // Skąd przychodzą zapisy: zestawienie źródeł (oznaczenie ?src= w linku albo rozpoznana strona, z której ktoś przyszedł)
 // i obecność (wejście do pokoju przez osobisty link). Plus gotowe linki z oznaczeniem do wklejenia w kanałach.
@@ -75,7 +76,7 @@ export default function SourcesReport({ event, parts }) {
         <p className="technical text-[9px] text-foreground/45 mb-2">LINKI Z OZNACZENIEM — wklejaj w danym kanale, żeby raport wiedział, skąd jest zapis</p>
         <div className="flex flex-wrap gap-2">
           {CHANNELS.map(([k, l]) => {
-            const url = `https://exmortis.pl${path}?src=${k}`;
+            const url = `${SITE_URL}${path}?src=${k}`;
             return (
               <button key={k} onClick={() => copy(url, k)} className="btn-ghost !px-3 !py-1.5 text-[11px]" title={url}>
                 {copied === k ? <Check className="h-3.5 w-3.5" /> : <Copy className="h-3.5 w-3.5" />} {l}

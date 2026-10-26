@@ -7,6 +7,7 @@ import ParticipantsPanel from "@/components/admin/events/ParticipantsPanel";
 import TicketsPanel from "@/components/admin/tickets/TicketsPanel";
 import ScannersPanel from "@/components/admin/tickets/ScannersPanel";
 import { whenText } from "@/components/exmortis/events/time";
+import { SITE_URL } from "@/config/site";
 
 const STATUS_STYLE = {
   Opublikowane: "text-[#C9A24A]",
@@ -121,7 +122,7 @@ export default function EventsManager() {
 
   const copyLink = (ev) =>
     run(async () => {
-      const url = `https://exmortis.pl/spotkania/${ev.slug}`;
+      const url = `${SITE_URL}/spotkania/${ev.slug}`;
       try {
         await navigator.clipboard.writeText(url);
         setInfo(`Skopiowano link: ${url}`);

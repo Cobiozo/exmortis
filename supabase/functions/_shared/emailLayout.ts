@@ -8,6 +8,9 @@
 // żeby nic się nie dublowało, a samodzielne linki („Wybierz termin”, „Otwórz w Moich produktach”…)
 // zamieniamy na przyciski.
 
+// Adres aplikacji pochodzi z ustawień (panel: Adres aplikacji) — bez wpisu na stałe.
+import { APP_URL } from "./settings.ts";
+
 export const BRAND = {
   bg: "#0A0A0B",
   card: "#111113",
@@ -87,9 +90,9 @@ function textOf(html) {
     .replace(/&nbsp;/g, " ").replace(/&amp;/g, "&").replace(/&[a-z]+;/g, " ").replace(/\s+/g, " ").trim();
 }
 
-export function emailLayout(html, { firma = null, appUrl = "https://exmortis.pl", kind = "", preheader = "", unsubUrl = "" } = {}) {
+export function emailLayout(html, { firma = null, appUrl = APP_URL, kind = "", preheader = "", unsubUrl = "" } = {}) {
   const body = normalizeBody(html);
-  const site = String(appUrl || "https://exmortis.pl").replace(/\/+$/, "");
+  const site = String(appUrl || APP_URL).replace(/\/+$/, "");
   const pre = (preheader || textOf(body).replace(/^(EXMORTIS\s*)+/, "")).slice(0, 140);
   const marketing = MARKETING.has(kind) || !!unsubUrl;
   const hasCrisis = /116\s?123/.test(body);

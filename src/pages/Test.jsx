@@ -6,8 +6,9 @@ import { sanitizeHtml } from "@/lib/sanitizeHtml";
 import useSystemText from "@/content/useSystemText";
 import ShopProductCard from "@/components/exmortis/shop/ShopProductCard";
 import { track } from "@/lib/track";
+import { SITE_URL } from "@/config/site";
 
-const SHARE_URL = "https://exmortis.pl/test?src=polecenie";
+const SHARE_URL = `${SITE_URL}/test?src=polecenie`;
 const N = 15;
 
 // Wersja 2: 15 stwierdzeń o ostatnich czterech tygodniach, po 5 na obszar, w kolejności M, D, Ż.

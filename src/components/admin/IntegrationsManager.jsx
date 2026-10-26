@@ -43,6 +43,9 @@ export default function IntegrationsManager() {
   const [smtpBusy, setSmtpBusy] = useState(false);
   const [payuMsg, setPayuMsg] = useState(null);
   const [smtpMsg, setSmtpMsg] = useState(null);
+  const [copied, setCopied] = useState(false);
+  // Adres powiadomień PayU bierze się z adresu aplikacji (Ustawienia → Adres aplikacji), nie z wpisu na stałe.
+  const notifyUrl = appUrl ? `${String(appUrl).replace(/\/+$/, "")}/functions/payuNotification` : "";
   const load = () =>
     base44.functions
       .invoke("adminSettings", { action: "get" })
@@ -86,6 +89,16 @@ export default function IntegrationsManager() {
       setMsg({ ok: false, text: errText(err, "Nie udało się usunąć.") });
     } finally {
       setBusy(false);
+    }
+  };
+
+  const copyNotify = async () => {
+    try {
+      await navigator.clipboard.writeText(notifyUrl);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2500);
+    } catch {
+      window.prompt("Skopiuj adres powiadomień:", notifyUrl);
     }
   };
 
@@ -143,9 +156,25 @@ export default function IntegrationsManager() {
           </div>
         </div>
         <p className="technical text-[9px] text-foreground/40 mt-5 leading-relaxed">
-          KLUCZE SĄ MASKOWANE — ZOSTAW BEZ ZMIAN, ABY UTRZYMAĆ ZAPISANE. ADRES POWIADOMIEŃ
-          DO PANELU PAYU: EXMORTIS-RETURN-PATH.BASE44.APP/FUNCTIONS/PAYUNOTIFICATION
+          KLUCZE SĄ MASKOWANE — ZOSTAW BEZ ZMIAN, ABY UTRZYMAĆ ZAPISANE.
         </p>
+        <div className="mt-2 flex flex-wrap items-center gap-3">
+          <span className="technical text-[9px] text-foreground/40">ADRES POWIADOMIEŃ DO PANELU PAYU:</span>
+          {notifyUrl ? (
+            <>
+              <span className="technical text-[10px] gold-text break-all">{notifyUrl}</span>
+              <button
+                type="button"
+                onClick={copyNotify}
+                className="btn-ghost !px-3 !py-1.5 !text-[10px]"
+              >
+                {copied ? "SKOPIOWANO" : "KOPIUJ"}
+              </button>
+            </>
+          ) : (
+            <span className="technical text-[10px] text-foreground/40">NAJPIERW UZUPEŁNIJ ADRES APLIKACJI</span>
+          )}
+        </div>
         <div className="flex gap-3 mt-6">
           <button
             onClick={() => save("payu", payu, setPayuBusy, setPayuMsg)}

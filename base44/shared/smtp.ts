@@ -1,5 +1,5 @@
 import nodemailer from "npm:nodemailer@6.9.13";
-import { FIRMA, getSetting, APP_URL, DEFAULT_APP_URL } from "./settings.ts";
+import { FIRMA, getSetting, APP_URL } from "./settings.ts";
 import { emailLayout, cleanEmailHtml } from "./emailLayout.ts";
 import { runSql, escStr } from "./supabase.ts";
 
@@ -85,7 +85,7 @@ export async function smtpSend(smtp, { to, subject, html, attachments, headers, 
   const unsubUrl = String(headers?.["List-Unsubscribe"] || "").replace(/^<|>$/g, "");
   const full = emailLayout(html, {
     firma: FIRMA, kind, preheader, unsubUrl,
-    appUrl: APP_URL && APP_URL !== DEFAULT_APP_URL ? APP_URL : "https://exmortis.pl",
+    appUrl: APP_URL,
   });
   await transporter.sendMail({
     from: `"${String(smtp.from_name || "exmortis").replace(/"/g, "")}" <${addr}>`,

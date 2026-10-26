@@ -1,6 +1,10 @@
 // JEDYNE miejsce na adres strony i tryb nagłówka dla robotów (Facebook, Google).
-// Domena podpięta 12.10.2026.
-export const SITE_URL = "https://exmortis.pl";
+// Adresu nie wpisujemy na stałe: w przeglądarce to adres, na którym działa aplikacja,
+// poza przeglądarką (build, vite.config.js) — VITE_APP_URL z .env.
+const NODE_ENV_VARS = typeof globalThis !== "undefined" ? globalThis.process : undefined;
+const ENV_URL = (NODE_ENV_VARS && NODE_ENV_VARS.env && NODE_ENV_VARS.env.VITE_APP_URL) || "";
+export const SITE_URL =
+  typeof window !== "undefined" && window.location ? window.location.origin : ENV_URL;
 
 // Tryb nagłówka: "auto" (spotkanie do MARKA_OD, potem marka), "spotkanie" albo "marka".
 // Wspólny nagłówek HTML powstaje przy publikacji, więc w trybie "auto" wystarczy kliknąć „Publikuj” 2.11 rano.

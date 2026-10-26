@@ -1,9 +1,9 @@
 import { createClientFromRequest } from "../_shared/compat.ts";
 import { runSql } from "../_shared/supabase.ts";
+import { loadAppUrl } from "../_shared/settings.ts";
 
 // Mapa strony dla wyszukiwarek (https://exmortis.pl/functions/sitemap, wpisana w robots.txt).
 // Strony stałe + produkty Skarbca + opublikowane spotkania + opublikowane odcinki podcastu. Pamięć 1 h w instancji.
-const SITE = "https://exmortis.pl";
 const STATIC = [
   ["/", "weekly", "1.0"], ["/1-listopada", "daily", "0.9"], ["/o-mnie", "monthly", "0.8"], ["/powrot", "monthly", "0.8"],
   ["/skarbiec", "weekly", "0.8"], ["/spotkania", "weekly", "0.7"], ["/glos", "weekly", "0.6"], ["/test", "monthly", "0.6"],
@@ -18,6 +18,7 @@ const handler = async function (req) {
   try {
     if (CACHE && Date.now() - CACHE.at < 3600000) return xmlResponse(CACHE.xml);
     const base44 = createClientFromRequest(req);
+    const SITE = String(await loadAppUrl(base44)).replace(/\/+$/, "");
     const [products, events, episodes] = await Promise.all([
       runSql(base44, `SELECT slug, updated_date FROM public.products WHERE active = TRUE AND COALESCE(status, 'dostępny') <> 'ukryty' AND slug IS NOT NULL AND COALESCE(checkout_url, '') = '' ORDER BY sort_order NULLS LAST LIMIT 300`, true).catch(() => []),
       runSql(base44, `SELECT e.slug, COALESCE(to_jsonb(e)->>'updated_at', to_jsonb(e)->>'updated_date', to_jsonb(e)->>'created_at') AS updated_at FROM public.events e WHERE e.status = 'Opublikowane' AND e.slug IS NOT NULL AND e.start_datetime > now() - interval '30 days' LIMIT 200`, true).catch(() => []),

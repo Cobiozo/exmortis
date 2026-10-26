@@ -2,6 +2,7 @@ import React, { useEffect, useRef, useState } from "react";
 import QRCode from "qrcode";
 import { ImagePlus, Eye, Save, RotateCcw, Loader2 } from "lucide-react";
 import { base44 } from "@/api/base44Client";
+import { SITE_URL } from "@/config/site";
 
 // Wzór biletu: obraz (np. z Canvy) + pola przeciągane myszą/palcem: imię i nazwisko, kod QR, numer biletu.
 // Położenie zapisywane w ułamkach strony — PDF na serwerze rysuje dokładnie w tych miejscach.
@@ -38,7 +39,7 @@ export default function TemplateEditor({ event, reload }) {
   const [box, setBox] = useState(0);
   const wrap = useRef(null), fileRef = useRef(null), drag = useRef(null);
 
-  useEffect(() => { QRCode.toDataURL("https://exmortis.pl/bilet#t=PrzykladowyKlucz", { margin: 2, width: 300 }).then(setQrImg).catch(() => {}); }, []);
+  useEffect(() => { QRCode.toDataURL(`${SITE_URL}/bilet#t=PrzykladowyKlucz`, { margin: 2, width: 300 }).then(setQrImg).catch(() => {}); }, []);
   useEffect(() => {
     if (!wrap.current) return undefined;
     const ro = new ResizeObserver(([e]) => setBox(e.contentRect.width));

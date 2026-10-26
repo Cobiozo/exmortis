@@ -194,7 +194,7 @@ export async function onboardingTick(base44, { limit = 25 } = {}) {
   const P_ = Object.fromEntries((prows || []).map((p) => [p.id, p]));
 
   const site = String(await loadAppUrl(base44)).replace(/\/+$/, "");
-  const siteUrl = /base44\.app/.test(site) ? "https://exmortis.pl" : site;
+  const siteUrl = site;
   let n = 0;
   for (const { o, step } of due) {
     if (n >= limit) break;
