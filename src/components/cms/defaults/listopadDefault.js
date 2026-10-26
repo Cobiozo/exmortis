@@ -4,8 +4,6 @@ import { LAYOUT_DEFAULT as L } from "../blockTypes";
 export const LISTOPAD_EVENT = "ze-smierci-o-powrotach-o-ktorych-swiat-nie-mowi";
 export const LISTOPAD_COVER = "https://media.base44.com/images/public/6aa08bc6318b0f886cc3b9a3/6af0c5c2f_generated_image.png";
 export const LISTOPAD_OG = "https://exmortis.pl/exmortis-og-1-listopada-v2.jpg"; // grafika udostępniania 1200×630 (public/)
-// Baner pod nagłówkiem: „Złota Brama” z biblioteki mediów (wersje WebP przez /functions/media).
-export const LISTOPAD_BANNER = "/functions/media?id=0c90920dcc1c8fe2c4162b9ac7a8cf3b";
 export const LISTOPAD_INDEX_FROM = "2026-10-16T00:00:00+02:00";
 // Start zapisów (czas polski): do tej chwili informacja w nagłówku i komunikat zamiast formularza.
 export const LISTOPAD_ZAPISY_OD = "2026-10-20T00:00";
@@ -19,7 +17,6 @@ export const LISTOPAD_BLOCKS = [
       { etykieta: "DOWIEDZ SIĘ WIĘCEJ", link: "#o-spotkaniu", styl: "obrys" }], przyciski_pion: true,
     zapowiedz: "ZAPISY JUŻ OTWARTE", zapowiedz_do: LISTOPAD_ZAPISY_OD, dopisek: "Bezpłatnie. Link do spotkania otrzymasz na podany adres e-mail.",
     tlo: { url: LISTOPAD_COVER }, przyciemnienie: 55 }),
-  b("lis-baner", "zdjecie", { zdjecie: { url: LISTOPAD_BANNER, alt: "exmortis — ze śmierci", fx: 50, fy: 42 }, proporcja: "21:9" }, { odstep: "maly" }),
   b("lis-tekst", "tekst", { etykieta: "O SPOTKANIU", tytul: "Wieczór Wszystkich Świętych",
     tresc: "<p>To spotkanie dla tych, w których coś umarło — sens, wiara, dawne życie — i którzy chcą zrozumieć, jak się z tego wraca. Opowiem o trzech śmierciach, przez które przechodzi człowiek, i o czterech etapach powrotu: Śmierć, Próg, Powrót, Inny.</p><p>Bez gotowych recept i bez pośpiechu. Na końcu zostaje czas na Twoje pytania — możesz zadać je już przy zapisie.</p>" }, { kotwica: "o-spotkaniu" }),
   // „Kto prowadzi” — wyłącznie teksty i zdjęcia z zakładki „O mnie”.
