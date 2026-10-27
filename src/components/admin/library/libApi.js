@@ -5,7 +5,7 @@ export async function lib(action, payload = {}) {
   try {
     return (await base44.functions.invoke("libraryAdmin", { action, ...payload })).data;
   } catch (e) {
-    throw new Error(e?.response?.data?.error || "Nie udało się zapisać.");
+    throw new Error(e?.response?.data?.error || e?.message || "Nie udało się zapisać.");
   }
 }
 
