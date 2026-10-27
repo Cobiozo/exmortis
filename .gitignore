@@ -1,5 +1,7 @@
 node_modules/
 dist/
+# magazyn plików hostingu (multer) — poza repozytorium
+/media/
 .env.local
 .env.*.local
 *.log

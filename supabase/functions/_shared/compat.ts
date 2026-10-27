@@ -257,6 +257,24 @@ function entities() {
   }) as Record<string, ReturnType<typeof makeEntity>>;
 }
 
+// Adres strony do linków plików w magazynie hostingu: zmienne środowiskowe, a gdy ich brak — ustawienie app.
+let HOSTING_BASE = "";
+let HOSTING_BASE_AT = 0;
+async function hostingBase(): Promise<string> {
+  if (HOSTING_BASE && Date.now() - HOSTING_BASE_AT < 300000) return HOSTING_BASE;
+  let url = String(Deno.env.get("APP_URL") || Deno.env.get("SITE_URL") || "").replace(/\/+$/, "");
+  if (!url || /preview--/i.test(url)) {
+    const r = await fetch(`${SUPA_URL}/rest/v1/app_settings?key=eq.app&select=value&limit=1`, {
+      headers: H(), signal: AbortSignal.timeout(10000),
+    }).catch(() => null);
+    const j = r && r.ok ? await r.json().catch(() => null) : null;
+    url = String(j?.[0]?.value?.url || "").replace(/\/+$/, "");
+    if (/preview--/i.test(url)) url = "";
+  }
+  if (url) { HOSTING_BASE = url; HOSTING_BASE_AT = Date.now(); }
+  return url;
+}
+
 // ---- integracje Core
 const Core = {
   async SendEmail(opts: { to: string; subject?: string; html?: string; body?: string; text?: string; from_name?: string }) {
@@ -276,6 +294,22 @@ const Core = {
 
   async CreateFileSignedUrl({ file_uri, expires_in = 300 }: { file_uri: string; expires_in?: number }) {
     if (/^https?:\/\//.test(file_uri)) return { signed_url: file_uri };
+    // Pliki w magazynie hostingu (cyberfolks.pl, katalog ./media, server.js + multer): link podpisujemy tutaj
+    // tym samym kluczem, którego używa serwer Node (MEDIA_SECRET, zapasowo BOOKING_HMAC_KEY).
+    if (/^cf\//.test(String(file_uri))) {
+      const name = String(file_uri).replace(/^cf\/(private|public)\//, "");
+      if (!/^[A-Za-z0-9._-]{1,160}$/.test(name)) throw new Error("Podpis pliku: nieprawidłowa nazwa pliku");
+      const key = Deno.env.get("MEDIA_SECRET") || Deno.env.get("BOOKING_HMAC_KEY");
+      if (!key) throw new Error("Podpis pliku: brak sekretu MEDIA_SECRET");
+      const base = await hostingBase();
+      if (!base) throw new Error("Podpis pliku: brak adresu aplikacji (ustawienie app)");
+      const exp = Math.floor(Date.now() / 1000) + Math.max(60, Math.min(Number(expires_in) || 300, 604800));
+      const enc = new TextEncoder();
+      const k = await crypto.subtle.importKey("raw", enc.encode(key), { name: "HMAC", hash: "SHA-256" }, false, ["sign"]);
+      const mac = [...new Uint8Array(await crypto.subtle.sign("HMAC", k, enc.encode(`${name}.${exp}`)))]
+        .map((b) => b.toString(16).padStart(2, "0")).join("");
+      return { signed_url: `${base}/media/private/${encodeURIComponent(name)}?e=${exp}&s=${mac}` };
+    }
     let bucket = "", path = "";
     const m = file_uri.match(/^(?:supabase:\/\/)([^/]+)\/(.+)$/);
     if (m) { bucket = m[1]; path = m[2]; }
