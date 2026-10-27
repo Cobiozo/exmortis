@@ -1,11 +1,12 @@
-name: Exmortis GitHub build and compiled-dist publication
+name: Exmortis — buduj i publikuj dist
 on:
   pull_request:
     branches: [main]
+  # Any source commit or dist-only removal must restore the compiled release.
+  # GitHub's own GITHUB_TOKEN commit does not start a recursive push workflow.
   push:
     branches: [main]
-    paths-ignore:
-      - "dist/**"
+  # Actions → Exmortis — buduj i publikuj dist → Run workflow (branch: main).
   workflow_dispatch:
 
 concurrency:
@@ -38,13 +39,41 @@ jobs:
         run: |
           node node_modules/vite/bin/vite.js --version
           node node_modules/vite/bin/vite.js build
-      - name: Validate complete release
+      - name: Validate complete dist and HTML entry assets
+        shell: bash
         run: |
+          set -euo pipefail
           test -s dist/index.html
           test -d dist/assets
+          node --input-type=module <<'NODE'
+          import fs from 'node:fs';
+          import path from 'node:path';
+          const root = path.resolve('dist');
+          const html = fs.readFileSync(path.join(root, 'index.html'), 'utf8');
+          const assets = [...new Set(
+            [...html.matchAll(/(?:src|href)=["']\/?(assets\/[^"'?#]+)["']/g)].map(m => m[1])
+          )];
+          if (!assets.some(asset => asset.endsWith('.js'))) {
+            throw new Error('dist/index.html does not reference a compiled JS bundle');
+          }
+          for (const asset of assets) {
+            const target = path.resolve(root, asset);
+            if (!target.startsWith(root + path.sep) ||
+                !fs.existsSync(target) || fs.statSync(target).size === 0) {
+              throw new Error('Missing or empty dist asset: ' + asset);
+            }
+          }
+          console.log('Verified ' + assets.length + ' entry assets');
+          NODE
           echo "Build files: $(find dist -type f | wc -l)"
+          {
+            echo "### Exmortis dist build"
+            echo "- Source commit: \`$GITHUB_SHA\`"
+            echo "- Compiled files: $(find dist -type f | wc -l)"
+            echo "- Referenced index.html assets: verified"
+          } >> "$GITHUB_STEP_SUMMARY"
       - name: Save compiled release for publishing
-        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+        if: github.event_name != 'pull_request' && github.ref == 'refs/heads/main'
         uses: actions/upload-artifact@v4
         with:
           name: exmortis-dist
@@ -54,7 +83,7 @@ jobs:
 
   publish-compiled-dist:
     needs: build
-    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    if: github.event_name != 'pull_request' && github.ref == 'refs/heads/main'
     runs-on: ubuntu-24.04
     timeout-minutes: 10
     permissions:
@@ -79,7 +108,9 @@ jobs:
             echo "::error::main moved during build; refusing to publish a stale release"
             exit 1
           fi
-          git add -f dist
+          # -A also stages removals of obsolete hashed assets from older builds.
+          # -f is necessary because dist/ is gitignored for local development.
+          git add --all --force -- dist/
           if git diff --cached --quiet; then
             echo "Compiled dist already matches this source"
             exit 0
@@ -89,3 +120,9 @@ jobs:
           git commit -m "build(exmortis): publish verified dist for ${GITHUB_SHA:0:12} [skip ci]"
           git push origin HEAD:main
           echo "Published compiled dist without requiring Node build on CyberFolks"
+          {
+            echo "### Published dist to this repository"
+            echo "- Built from: \`$GITHUB_SHA\`"
+            echo "- Publish commit: \`$(git rev-parse HEAD)\`"
+            echo "- Deleted stale assets: included in the commit"
+          } >> "$GITHUB_STEP_SUMMARY"
