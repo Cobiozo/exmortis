@@ -37,17 +37,18 @@ async function send(file, scope) {
   if (!res.ok) throw new Error(await failText(res, "Nie udało się wgrać pliku"));
   const j = await res.json();
   if (!j || !j.name) throw new Error("Nie udało się wgrać pliku: serwer nie zwrócił nazwy pliku.");
-  return j.name;
+  return j;
 }
 
 export async function UploadPublicFile({ file }) {
-  const name = await send(file, "public");
-  return { file_url: `${SITE_URL}/media/public/${encodeURIComponent(name)}` };
+  const j = await send(file, "public");
+  return { file_url: `${SITE_URL}/media/public/${encodeURIComponent(j.name)}` };
 }
 
+// pdf_js — ostrzeżenie dla panelu, że PDF ma aktywną treść (sprawdzone przez serwer przy wgraniu).
 export async function UploadPrivateFile({ file }) {
-  const name = await send(file, "private");
-  return { file_uri: `cf/private/${name}` };
+  const j = await send(file, "private");
+  return { file_uri: `cf/private/${j.name}`, size: j.size, pdf_js: j.pdf_js === true };
 }
 
 // Podpisany link do pliku prywatnego (podgląd w panelu). Adresy http zwracamy bez zmian.

@@ -29,12 +29,20 @@ const lower = (v) => String(v || "").trim().toLowerCase();
 // (mb_admin_groups) liczy baza — bez osobnego zapytania na grupę i bez zapytań po Management API.
 
 // Sprawdzenie wgranego pliku: rozszerzenie, sygnatura, rozmiar; dla PDF dodatkowo aktywna zawartość (ostrzeżenie).
-async function verifyUpload(base44, kind, fileUri, fileName, declaredSize) {
+async function verifyUpload(base44, kind, fileUri, fileName, declaredSize, pdfJsHint) {
   const allowed = ALLOWED_EXT[kind];
   if (!allowed) throw new Error("Ten rodzaj materiału nie przyjmuje pliku.");
   const ext = extOf(fileName);
   if (!allowed.includes(ext)) throw new Error(`Dozwolone rozszerzenia: ${allowed.map((x) => "." + x).join(", ")}.`);
   if (String(fileUri).includes("@")) throw new Error("Klucz pliku nie może zawierać adresu e-mail.");
+  // Pliki w magazynie hostingu (cf/private/…) sprawdza serwer przy wgraniu: sygnatura, rozmiar, limit rodzaju
+  // i aktywna treść PDF. Panel nie podpisuje do nich dostępu, więc nie potrzebuje wspólnego klucza z serwerem.
+  if (/^cf\/private\//.test(String(fileUri))) {
+    const size = Number(declaredSize) || 0;
+    if (!size) throw new Error("Nie udało się odczytać wgranego pliku.");
+    if (size > MAX_BYTES[kind]) throw new Error(`Plik jest za duży: ${mb(size)} MB, a limit to ${MAX_MB[kind]} MB.`);
+    return { size, pdfJs: kind === "PDF" && pdfJsHint === true };
+  }
   const signed = await base44.asServiceRole.integrations.Core.CreateFileSignedUrl({ file_uri: fileUri, expires_in: 60 });
   if (!signed || !signed.signed_url) throw new Error("Nie udało się odczytać wgranego pliku.");
   const res = await fetch(signed.signed_url, {
@@ -221,7 +229,7 @@ const handler = async function (req) {
       const fileName = textField(body, "file_name", { max: 300 });
       const title = String(body.title || fileName.replace(/\.[a-z0-9]{1,8}$/i, "")).trim().slice(0, 200);
       if (!title) return bad("Wpisz tytuł materiału.");
-      const v = await verifyUpload(base44, kind, fileUri, fileName, body.file_size).catch((e) => ({ err: e.message }));
+      const v = await verifyUpload(base44, kind, fileUri, fileName, body.file_size, body.pdf_js).catch((e) => ({ err: e.message }));
       if (v.err) {
         await libLog(base44, me.email, "plik_odrzucony", "material", null, `${kind}: ${v.err}`);
         return bad(v.err);
@@ -295,7 +303,7 @@ const handler = async function (req) {
       if (m.kind !== "PDF" && m.kind !== "AUDIO" && m.kind !== "WIDEO") return bad("Plik można zamienić tylko w materiale PDF, audio albo wideo.");
       const fileUri = textField(body, "file_uri", { max: 500 });
       const fileName = textField(body, "file_name", { max: 300 });
-      const v = await verifyUpload(base44, m.kind, fileUri, fileName, body.file_size).catch((e) => ({ err: e.message }));
+      const v = await verifyUpload(base44, m.kind, fileUri, fileName, body.file_size, body.pdf_js).catch((e) => ({ err: e.message }));
       if (v.err) {
         await libLog(base44, me.email, "plik_odrzucony", "material", id, `${m.kind}: ${v.err}`);
         return bad(v.err);

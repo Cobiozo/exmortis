@@ -76,6 +76,33 @@ const MIME_EXT = {
   "application/pdf": ".pdf", "audio/mpeg": ".mp3", "audio/mp4": ".m4a", "audio/ogg": ".ogg", "audio/wav": ".wav",
   "video/mp4": ".mp4", "video/webm": ".webm", "video/quicktime": ".mov",
 };
+// Sprawdzenie sygnatury pliku zaraz po zapisie — zła treść pod innym rozszerzeniem jest odrzucana.
+// Te same zasady co w panelu biblioteki (PDF „%PDF-", MP3 ID3/0xFFEx, MP4 „ftyp", WebM 1A 45 DF A3).
+const SNIFF_BYTES = 262144;
+const sniffKind = (ext, b) => {
+  const ascii = (o, n) => b.toString("latin1", o, o + n);
+  if (b.length < 12) return false;
+  if (ext === ".pdf") return ascii(0, 5) === "%PDF-";
+  if (ext === ".mp3" || ext === ".m4a") {
+    if (ascii(0, 3) === "ID3") return true;
+    if (b[0] === 0xff && (b[1] & 0xe0) === 0xe0) return true;
+    return ascii(4, 4) === "ftyp";
+  }
+  if (ext === ".mp4" || ext === ".m4v") return ascii(4, 4) === "ftyp";
+  if (ext === ".webm") return b[0] === 0x1a && b[1] === 0x45 && b[2] === 0xdf && b[3] === 0xa3;
+  return true;
+};
+const pdfHasJs = (b) => /\/JavaScript|\/JS[\s/<>[\]]/.test(b.toString("latin1"));
+
+// Pierwsze kilobajty pliku — do sygnatury i skanu PDF.
+function headOf(file, want = SNIFF_BYTES) {
+  const len = Math.min(file.size, want);
+  const buf = Buffer.alloc(len);
+  const fd = fs.openSync(file.path, "r");
+  try { fs.readSync(fd, buf, 0, len, 0); } finally { fs.closeSync(fd); }
+  return buf;
+}
+
 // Obsługiwane pliki: zdjęcia, PDF-y, e-booki (epub/mobi), paczki zip, audio i wideo.
 const ALLOWED_MIME = /^(image\/|audio\/|video\/|application\/pdf$|application\/epub\+zip$|application\/zip$|application\/x-mobipocket-ebook$)/;
 const ALLOWED_EXT = /\.(jpe?g|png|webp|gif|avif|pdf|epub|mobi|zip|mp3|m4a|m4b|aac|ogg|oga|opus|wav|flac|mp4|webm|mov|m4v)$/i;
@@ -147,8 +174,16 @@ app.post("/api/media/upload", requireUser, async (req, res) => {
       return res.status(413).json({ error: "PDF może mieć najwyżej 100 MB." });
     }
     const name = path.basename(file.path);
-    if (req.query.scope === "private") return res.json({ file_uri: `cf/private/${name}`, name });
-    return res.json({ file_url: `/media/public/${name}`, name });
+    const ext = path.extname(name).toLowerCase();
+    const head = headOf(file);
+    if (!sniffKind(ext, head)) {
+      fs.unlink(file.path, () => {});
+      return res.status(400).json({ error: "Sygnatura pliku nie zgadza się z rozszerzeniem — plik odrzucony." });
+    }
+    const pdf_js = ext === ".pdf" ? pdfHasJs(head) : false;
+    const meta = { name, size: file.size, pdf_js };
+    if (req.query.scope === "private") return res.json({ ...meta, file_uri: `cf/private/${name}` });
+    return res.json({ ...meta, file_url: `/media/public/${name}` });
   });
 });
 

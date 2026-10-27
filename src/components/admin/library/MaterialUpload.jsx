@@ -27,10 +27,10 @@ export default function MaterialUpload({ kind, id, onDone }) {
     if (file.size > lim.mb * 1048576) { setErr(`Plik ma ${mb1(file.size)} MB, a limit to ${lim.mb} MB.`); return; }
     setBusy(true);
     try {
-      const { file_uri } = await base44.integrations.Core.UploadPrivateFile({ file });
+      const { file_uri, pdf_js } = await base44.integrations.Core.UploadPrivateFile({ file });
       const r = id
-        ? await lib("material_replace", { id, file_uri, file_name: file.name, file_size: file.size })
-        : await lib("material_register", { kind, file_uri, file_name: file.name, file_size: file.size });
+        ? await lib("material_replace", { id, file_uri, file_name: file.name, file_size: file.size, pdf_js })
+        : await lib("material_register", { kind, file_uri, file_name: file.name, file_size: file.size, pdf_js });
       onDone(r, file.name);
     } catch (e) { setErr(e.message); } finally { setBusy(false); if (ref.current) ref.current.value = ""; }
   };
