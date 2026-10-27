@@ -353,6 +353,29 @@ const handler = async function (req) {
       return Response.json({ ok: true });
     }
 
+    // Podgląd materiału w panelu: adres pliku podpisany na 15 minut, klucz pliku nie opuszcza serwera.
+    if (a === "material_preview") {
+      const id = uuidOrNull(body.id);
+      if (!id) return NOT_FOUND();
+      const [m] = await runSql(base44, `SELECT kind, file_key, file_name, external_url, video_provider, video_id, body_html
+        FROM public.mb_materials WHERE id = ${escStr(id)}::uuid AND deleted_at IS NULL`, true);
+      if (!m) return NOT_FOUND();
+      let url = null;
+      let problem = null;
+      if (m.file_key && (m.kind === "PDF" || m.kind === "AUDIO" || m.kind === "WIDEO")) {
+        const s = await base44.asServiceRole.integrations.Core
+          .CreateFileSignedUrl({ file_uri: m.file_key, expires_in: 900 })
+          .catch((e) => ({ problem: String((e && e.message) || e) }));
+        url = s && s.signed_url ? s.signed_url : null;
+        problem = url ? null : (s && s.problem) || "Nie udało się przygotować pliku.";
+      }
+      return Response.json({
+        kind: m.kind, url, problem, file_name: m.file_name, external: m.external_url || null,
+        video_provider: m.video_provider, video_id: m.video_id,
+        text: m.kind === "TEKST" ? sanitizeHtml(m.body_html) : null,
+      });
+    }
+
     // ---- kolekcje ----
     if (a === "collections_list") {
       const items = await rpc(base44, "mb_admin_collections", {});

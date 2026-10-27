@@ -1,13 +1,15 @@
 import React, { useState } from "react";
-import { Pencil, Trash2, Send, Loader2 } from "lucide-react";
+import { Pencil, Trash2, Send, Eye, Loader2 } from "lucide-react";
 import { lib, KIND_LABEL, mb1 } from "./libApi";
 import LibModal from "./LibModal";
+import MaterialPreview from "./MaterialPreview";
 
 // Jeden materiał na liście. Na telefonie karta, na szerokim ekranie wiersz.
 export default function MaterialRow({ item, selected, onSelect, onEdit, onAssign, onDone }) {
   const [del, setDel] = useState(null);
   const [busy, setBusy] = useState(false);
   const [err, setErr] = useState("");
+  const [prev, setPrev] = useState(false);
 
   const askDelete = async () => {
     setErr("");
@@ -38,6 +40,7 @@ export default function MaterialRow({ item, selected, onSelect, onEdit, onAssign
           {item.description && <p className="text-xs text-foreground/45 mt-1 line-clamp-2">{item.description}</p>}
         </div>
         <div className="flex flex-wrap gap-2">
+          <button onClick={() => setPrev(true)} className="btn-ghost !px-3 !py-2" title="Podgląd"><Eye className="h-4 w-4" /></button>
           <button onClick={() => onAssign(item)} className="btn-ghost !px-3 !py-2" title="Przydziel"><Send className="h-4 w-4" /></button>
           <button onClick={() => onEdit(item)} className="btn-ghost !px-3 !py-2" title="Edytuj"><Pencil className="h-4 w-4" /></button>
           <button onClick={askDelete} className="btn-ghost !px-3 !py-2" title="Usuń"><Trash2 className="h-4 w-4" /></button>
@@ -49,6 +52,8 @@ export default function MaterialRow({ item, selected, onSelect, onEdit, onAssign
         <span>Ukończone: {item.ukonczone}</span>
       </div>
       {err && <p className="text-xs blood-text">{err}</p>}
+
+      <MaterialPreview open={prev} item={item} onClose={() => setPrev(false)} />
 
       <LibModal
         open={!!del} onClose={() => setDel(null)} title="Usunąć materiał?"
