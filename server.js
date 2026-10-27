@@ -12,7 +12,7 @@ import crypto from "crypto";
 import { fileURLToPath } from "url";
 import express from "express";
 import compression from "compression";
-import multer from "multer";
+// multer wczytywany dopiero przy pierwszym wgraniu (niżej) — brak pakietu nie zatrzymuje startu strony.
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const dist = path.join(__dirname, "dist");
@@ -80,25 +80,34 @@ const MIME_EXT = {
 const ALLOWED_MIME = /^(image\/|audio\/|video\/|application\/pdf$|application\/epub\+zip$|application\/zip$|application\/x-mobipocket-ebook$)/;
 const ALLOWED_EXT = /\.(jpe?g|png|webp|gif|avif|pdf|epub|mobi|zip|mp3|m4a|m4b|aac|ogg|oga|opus|wav|flac|mp4|webm|mov|m4v)$/i;
 
-const upload = multer({
-  storage: multer.diskStorage({
-    destination: (req, _file, cb) => cb(null, req.query.scope === "private" ? MEDIA_PRIVATE : MEDIA_PUBLIC),
-    filename: (_req, file, cb) => {
-      const own = path.extname(String(file.originalname || "")).toLowerCase().replace(/[^a-z0-9.]/g, "");
-      const ext = own.length <= 6 && own ? own : MIME_EXT[file.mimetype] || "";
-      cb(null, `${crypto.randomBytes(8).toString("hex")}${ext}`);
+let uploader = null;
+// Wgrywanie plików wymaga pakietu multer — wczytujemy go dopiero przy pierwszym zapisie.
+// Dzięki temu deploy bez `npm install` nie wywraca strony (i panel nie widzi jej jako niedostępnej).
+async function getUpload() {
+  if (uploader) return uploader;
+  const multer = await import("multer").then((m) => m.default || m).catch(() => null);
+  if (!multer) return null;
+  uploader = multer({
+    storage: multer.diskStorage({
+      destination: (req, _file, cb) => cb(null, req.query.scope === "private" ? MEDIA_PRIVATE : MEDIA_PUBLIC),
+      filename: (_req, file, cb) => {
+        const own = path.extname(String(file.originalname || "")).toLowerCase().replace(/[^a-z0-9.]/g, "");
+        const ext = own.length <= 6 && own ? own : MIME_EXT[file.mimetype] || "";
+        cb(null, `${crypto.randomBytes(8).toString("hex")}${ext}`);
+      },
+    }),
+    limits: { fileSize: MAX_FILE, files: 1 },
+    fileFilter: (_req, file, cb) => {
+      const ok = ALLOWED_MIME.test(String(file.mimetype || "")) || ALLOWED_EXT.test(String(file.originalname || ""));
+      if (!ok) {
+        cb(new Error("Ten typ pliku nie jest obsługiwany (zdjęcia, PDF, e-booki, audio, wideo)."));
+        return;
+      }
+      cb(null, true);
     },
-  }),
-  limits: { fileSize: MAX_FILE, files: 1 },
-  fileFilter: (_req, file, cb) => {
-    const ok = ALLOWED_MIME.test(String(file.mimetype || "")) || ALLOWED_EXT.test(String(file.originalname || ""));
-    if (!ok) {
-      cb(new Error("Ten typ pliku nie jest obsługiwany (zdjęcia, PDF, e-booki, audio, wideo)."));
-      return;
-    }
-    cb(null, true);
-  },
-});
+  });
+  return uploader;
+}
 
 // Zalogowany użytkownik aplikacji (token sesji Supabase) — wgrywać może tylko konto zalogowane.
 async function requireUser(req, res, next) {
@@ -123,7 +132,9 @@ const mediaName = (v) => {
 const mediaSig = (name, exp) => crypto.createHmac("sha256", MEDIA_SECRET).update(`${name}.${exp}`).digest("hex");
 
 // Zapis pliku. ?scope=private → magazyn prywatny (link tylko podpisany), bez → publiczny.
-app.post("/api/media/upload", requireUser, (req, res) => {
+app.post("/api/media/upload", requireUser, async (req, res) => {
+  const upload = await getUpload();
+  if (!upload) return res.status(503).json({ error: "Magazyn plików: brak pakietu multer — uruchom npm install na serwerze." });
   upload.single("file")(req, res, (err) => {
     if (err) {
       const big = err.code === "LIMIT_FILE_SIZE";
