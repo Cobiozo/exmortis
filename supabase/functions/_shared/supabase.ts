@@ -1,25 +1,18 @@
 // Natywny dostęp do Supabase dla funkcji edge — zamiennik base44/shared/supabase.ts
 // (w Base44 SQL szedł przez Management API łącznika; tu bezpośrednio do Postgres).
-import pg from "npm:pg@8.13.1";
-
 const SUPA_URL = Deno.env.get("SUPABASE_URL") || "";
 const SRK = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") || "";
 const PROJECT_REF = (SUPA_URL.replace(/^https:\/\//, "").split(".")[0]) || "fqhvxhnbeyvwubpnuzxe";
 
-// Pula połączeń do bazy — SUPABASE_DB_URL wstrzykuje runtime edge (pooler, port 6543).
-let POOL: import("npm:pg@8.13.1").Pool | null = null;
-function pool() {
-  if (!POOL) {
-    const cs = Deno.env.get("SUPABASE_DB_URL");
-    if (!cs) throw new Error("Brak zmiennej SUPABASE_DB_URL (wstrzykiwana przez runtime Supabase)");
-    POOL = new pg.Pool({ connectionString: cs, max: 5, idleTimeoutMillis: 20000 });
-  }
-  return POOL;
-}
+// SQL wykonuje baza — funkcja public.exm_exec_sql (SECURITY DEFINER, dostęp tylko dla service_role).
+// Runtime edge nie udostępnia połączenia TCP do Postgres, więc idziemy przez API Supabase (RPC).
+const READ_RE = /^\s*(select|with|values|show|explain)\b/i;
 
-export async function runSql(_base44: unknown, query: string, _readOnly = false) {
-  const res = await pool().query(query);
-  return res.rows ?? [];
+export async function runSql(_base44: unknown, query: string, readOnly = false) {
+  const q = String(query || "").trim().replace(/;+\s*$/, "");
+  if (!q) return [];
+  const rows = await rpc(null, "exm_exec_sql", { q, read_only: readOnly || READ_RE.test(q) });
+  return Array.isArray(rows) ? rows : [];
 }
 
 export async function serviceKey(_base44?: unknown) {
