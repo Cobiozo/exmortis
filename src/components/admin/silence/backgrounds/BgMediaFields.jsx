@@ -12,26 +12,40 @@ export default function BgMediaFields({ f, set }) {
   const [notes, setNotes] = useState([]);
 
   const pickImage = async (key, file, maxW, kb, minW) => {
-    setBusy(key);
-    const r = await compressImage(file, maxW, kb);
-    const n = [];
-    if (r.width < minW) n.push(`Obraz ma ${r.width}px szerokości — zalecane min. ${minW}px.`);
-    set({ [key]: await upload(r.file) });
-    setNotes(n); setBusy("");
+    setBusy(key); setNotes([]);
+    try {
+      const r = await compressImage(file, maxW, kb);
+      const n = [];
+      if (r.width < minW) n.push(`Obraz ma ${r.width}px szerokości — zalecane min. ${minW}px.`);
+      const url = await upload(r.file);
+      set({ [key]: url });
+      setNotes(n);
+    } catch (x) {
+      setNotes([String((x && x.message) || x)]);
+    } finally {
+      setBusy("");
+    }
   };
 
   const pickVideo = async (key, file) => {
     if (file.size > 15 * 1024 * 1024) { setNotes(["Plik przekracza 15 MB — wybierz mniejszy."]); return; }
-    setBusy(key);
-    const info = await inspectVideo(file);
-    const n = [];
-    if (file.size > 8 * 1024 * 1024) n.push("Plik ma ponad 8 MB — zalecane do 8 MB.");
-    if (info.duration < 10 || info.duration > 60) n.push(`Długość ${info.duration} s — zalecane 10–60 s.`);
-    if (key === "wideo_mobile" && info.height > 720 && info.width > 720) n.push("Wersja na telefon powinna mieć max 720p.");
-    if (info.audio) n.push("Plik ma ścieżkę dźwiękową — na stronie zawsze gra wyciszony.");
-    const patch = { [key]: await upload(file) };
-    if (key === "wideo_mp4") Object.assign(patch, { dlugosc_s: info.duration, ma_dzwiek: info.audio, poster: f.poster || (await upload(info.poster)) });
-    set(patch); setNotes(n); setBusy("");
+    setBusy(key); setNotes([]);
+    try {
+      const info = await inspectVideo(file);
+      const n = [];
+      if (file.size > 8 * 1024 * 1024) n.push("Plik ma ponad 8 MB — zalecane do 8 MB.");
+      if (info.duration < 10 || info.duration > 60) n.push(`Długość ${info.duration} s — zalecane 10–60 s.`);
+      if (key === "wideo_mobile" && info.height > 720 && info.width > 720) n.push("Wersja na telefon powinna mieć max 720p.");
+      if (info.audio) n.push("Plik ma ścieżkę dźwiękową — na stronie zawsze gra wyciszony.");
+      const patch = { [key]: await upload(file) };
+      if (key === "wideo_mp4") Object.assign(patch, { dlugosc_s: info.duration, ma_dzwiek: info.audio, poster: f.poster || (await upload(info.poster)) });
+      set(patch);
+      setNotes(n);
+    } catch (x) {
+      setNotes([String((x && x.message) || x)]);
+    } finally {
+      setBusy("");
+    }
   };
 
   const fileRow = (label, key, accept, onFile) => (

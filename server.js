@@ -200,13 +200,31 @@ app.post("/api/media/sign", express.json({ limit: "16kb" }), requireUser, (req, 
 const appBase = (req) => `${req.protocol}://${req.get("host")}`;
 
 // Odczyt: publiczne pliki — długi cache przeglądarki; prywatne — tylko z ważnym podpisem.
+// Typ pliku według rozszerzenia — audio i wideo muszą mieć poprawny Content-Type,
+// inaczej Safari/iOS nie odtwarza pliku (a m4a bez audio/mp4 trafia do pobrania).
+const MEDIA_TYPE = {
+  ".mp3": "audio/mpeg", ".m4a": "audio/mp4", ".aac": "audio/aac", ".ogg": "audio/ogg", ".oga": "audio/ogg",
+  ".opus": "audio/ogg", ".wav": "audio/wav", ".flac": "audio/flac",
+  ".mp4": "video/mp4", ".m4v": "video/mp4", ".webm": "video/webm", ".mov": "video/quicktime",
+  ".jpg": "image/jpeg", ".jpeg": "image/jpeg", ".png": "image/png", ".webp": "image/webp",
+  ".gif": "image/gif", ".avif": "image/avif", ".pdf": "application/pdf",
+};
+
+// Wysyłka pliku z magazynu. acceptRanges → obsługa nagłówka Range (przewijanie audio i wideo,
+// odtwarzanie na iPhonie), sendFile sam odpowiada wtedy 206 Partial Content.
+const sendMedia = (res, dir, name, cache) => {
+  const type = MEDIA_TYPE[path.extname(name).toLowerCase()];
+  res.sendFile(path.join(dir, name), {
+    dotfiles: "deny",
+    acceptRanges: true,
+    headers: { "Cache-Control": cache, "X-Content-Type-Options": "nosniff", ...(type ? { "Content-Type": type } : {}) },
+  }, (e) => { if (e && !res.headersSent) res.status(404).end(); });
+};
+
 app.get("/media/public/:name", (req, res) => {
   const name = mediaName(req.params.name);
   if (!name) return res.status(404).end();
-  res.sendFile(path.join(MEDIA_PUBLIC, name), {
-    dotfiles: "deny",
-    headers: { "Cache-Control": "public, max-age=31536000, immutable", "X-Content-Type-Options": "nosniff" },
-  }, (e) => { if (e && !res.headersSent) res.status(404).end(); });
+  sendMedia(res, MEDIA_PUBLIC, name, "public, max-age=31536000, immutable");
 });
 
 app.get("/media/private/:name", (req, res) => {
@@ -217,10 +235,7 @@ app.get("/media/private/:name", (req, res) => {
   const want = Buffer.from(mediaSig(name, exp));
   const have = Buffer.from(sig);
   if (have.length !== want.length || !crypto.timingSafeEqual(have, want)) return res.status(403).end();
-  res.sendFile(path.join(MEDIA_PRIVATE, name), {
-    dotfiles: "deny",
-    headers: { "Cache-Control": "private, no-store", "X-Content-Type-Options": "nosniff" },
-  }, (e) => { if (e && !res.headersSent) res.status(404).end(); });
+  sendMedia(res, MEDIA_PRIVATE, name, "private, no-store");
 });
 
 // /functions/<nazwa> → Supabase Edge Functions (obrazy, PayU, bilety PDF, ics, mapa strony…).

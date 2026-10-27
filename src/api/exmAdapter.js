@@ -187,7 +187,9 @@ export function createExmClient(raw) {
       if (prop === "auth" && AUTH_BACKEND === "supabase") return supaAuth;
       if (prop === "functions" && FN_BACKEND === "supabase") return { invoke: supaInvoke };
       // Pliki (wgrywanie, podpisane linki) → Supabase Storage. Pozostałe integracje bez zmian.
-      if (prop === "integrations" && FN_BACKEND === "supabase") return wrapIntegrations(target.integrations);
+      // Pliki zawsze przez magazyn hostingu (src/api/exmStorage.js) — niezależnie od tego,
+      // którędy idą funkcje serwerowe. Inaczej panel Ciszy wgrywał do starego magazynu.
+      if (prop === "integrations") return wrapIntegrations(target.integrations);
       const value = target[prop];
       return typeof value === "function" ? value.bind(target) : value;
     },

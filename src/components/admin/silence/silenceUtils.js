@@ -1,6 +1,6 @@
 import { base44 } from "@/api/base44Client";
 
-export const MAX_MB = 500; // limit plików audio (Supabase Storage)
+export const MAX_MB = 500; // limit plików audio w magazynie hostingu (server.js + multer)
 export const TIMES = [3, 5, 10, 15, 30, 45, 60];
 export const SLOTS = [
   { key: "wstep", label: "WSTĘP" },
@@ -27,7 +27,8 @@ function readDuration(file) {
 // Wgrywa plik i zwraca pola slotu gotowe do zapisu.
 export async function uploadSlot(key, file) {
   if (!/\.(mp3|m4a)$/i.test(file.name)) throw new Error("Dozwolone formaty: MP3 i M4A.");
-  if (file.size > MAX_MB * 1024 * 1024) throw new Error("Plik jest za duży — wgraj krótszą melodię i zostaw zapętlanie");
+  if (file.size > MAX_MB * 1024 * 1024)
+    throw new Error(`Plik ma ${Math.round(file.size / 1048576)} MB — limit magazynu to ${MAX_MB} MB.`);
   const [dur, { file_url }] = await Promise.all([
     readDuration(file),
     base44.integrations.Core.UploadPublicFile({ file }),
