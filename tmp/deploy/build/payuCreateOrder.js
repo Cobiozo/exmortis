@@ -1,0 +1,21179 @@
+var __create = Object.create;
+var __defProp = Object.defineProperty;
+var __getOwnPropDesc = Object.getOwnPropertyDescriptor;
+var __getOwnPropNames = Object.getOwnPropertyNames;
+var __getProtoOf = Object.getPrototypeOf;
+var __hasOwnProp = Object.prototype.hasOwnProperty;
+import { createRequire as __deno_internal_createRequire } from "node:module";
+var __require = __deno_internal_createRequire(import.meta.url);
+
+var __commonJS = (cb, mod) => function __require2() {
+  return mod || (0, cb[__getOwnPropNames(cb)[0]])((mod = { exports: {} }).exports, mod), mod.exports;
+};
+var __copyProps = (to, from, except, desc) => {
+  if (from && typeof from === "object" || typeof from === "function") {
+    for (let key of __getOwnPropNames(from))
+      if (!__hasOwnProp.call(to, key) && key !== except)
+        __defProp(to, key, { get: () => from[key], enumerable: !(desc = __getOwnPropDesc(from, key)) || desc.enumerable });
+  }
+  return to;
+};
+var __toESM = (mod, isNodeMode, target) => (target = mod != null ? __create(__getProtoOf(mod)) : {}, __copyProps(
+  // If the importer is in node compatibility mode or this is not an ESM
+  // file that has been converted to a CommonJS file using a Babel-
+  // compatible transform (i.e. "__esModule" has not been set), then set
+  // "default" to the CommonJS "module.exports" for node compatibility.
+  1 ? __defProp(target, "default", { value: mod, enumerable: true }) : target,
+  mod
+));
+
+// node_modules/.deno/nodemailer@6.9.13/node_modules/nodemailer/lib/fetch/cookies.js
+var require_cookies = __commonJS({
+  "node_modules/.deno/nodemailer@6.9.13/node_modules/nodemailer/lib/fetch/cookies.js"(exports, module) {
+    "use strict";
+    var urllib = __require("node:url");
+    var SESSION_TIMEOUT = 1800;
+    var Cookies = class {
+      constructor(options) {
+        this.options = options || {};
+        this.cookies = [];
+      }
+      /**
+         * Stores a cookie string to the cookie storage
+         *
+         * @param {String} cookieStr Value from the 'Set-Cookie:' header
+         * @param {String} url Current URL
+         */
+      set(cookieStr, url) {
+        let urlparts = urllib.parse(url || "");
+        let cookie = this.parse(cookieStr);
+        let domain;
+        if (cookie.domain) {
+          domain = cookie.domain.replace(/^\./, "");
+          if (
+            // can't be valid if the requested domain is shorter than current hostname
+            urlparts.hostname.length < domain.length || // prefix domains with dot to be sure that partial matches are not used
+            ("." + urlparts.hostname).substr(-domain.length + 1) !== "." + domain
+          ) {
+            cookie.domain = urlparts.hostname;
+          }
+        } else {
+          cookie.domain = urlparts.hostname;
+        }
+        if (!cookie.path) {
+          cookie.path = this.getPath(urlparts.pathname);
+        }
+        if (!cookie.expires) {
+          cookie.expires = new Date(Date.now() + (Number(this.options.sessionTimeout || SESSION_TIMEOUT) || SESSION_TIMEOUT) * 1e3);
+        }
+        return this.add(cookie);
+      }
+      /**
+         * Returns cookie string for the 'Cookie:' header.
+         *
+         * @param {String} url URL to check for
+         * @returns {String} Cookie header or empty string if no matches were found
+         */
+      get(url) {
+        return this.list(url).map((cookie) => cookie.name + "=" + cookie.value).join("; ");
+      }
+      /**
+         * Lists all valied cookie objects for the specified URL
+         *
+         * @param {String} url URL to check for
+         * @returns {Array} An array of cookie objects
+         */
+      list(url) {
+        let result = [];
+        let i;
+        let cookie;
+        for (i = this.cookies.length - 1; i >= 0; i--) {
+          cookie = this.cookies[i];
+          if (this.isExpired(cookie)) {
+            this.cookies.splice(i, i);
+            continue;
+          }
+          if (this.match(cookie, url)) {
+            result.unshift(cookie);
+          }
+        }
+        return result;
+      }
+      /**
+         * Parses cookie string from the 'Set-Cookie:' header
+         *
+         * @param {String} cookieStr String from the 'Set-Cookie:' header
+         * @returns {Object} Cookie object
+         */
+      parse(cookieStr) {
+        let cookie = {};
+        (cookieStr || "").toString().split(";").forEach((cookiePart) => {
+          let valueParts = cookiePart.split("=");
+          let key = valueParts.shift().trim().toLowerCase();
+          let value = valueParts.join("=").trim();
+          let domain;
+          if (!key) {
+            return;
+          }
+          switch (key) {
+            case "expires":
+              value = new Date(value);
+              if (value.toString() !== "Invalid Date") {
+                cookie.expires = value;
+              }
+              break;
+            case "path":
+              cookie.path = value;
+              break;
+            case "domain":
+              domain = value.toLowerCase();
+              if (domain.length && domain.charAt(0) !== ".") {
+                domain = "." + domain;
+              }
+              cookie.domain = domain;
+              break;
+            case "max-age":
+              cookie.expires = new Date(Date.now() + (Number(value) || 0) * 1e3);
+              break;
+            case "secure":
+              cookie.secure = true;
+              break;
+            case "httponly":
+              cookie.httponly = true;
+              break;
+            default:
+              if (!cookie.name) {
+                cookie.name = key;
+                cookie.value = value;
+              }
+          }
+        });
+        return cookie;
+      }
+      /**
+         * Checks if a cookie object is valid for a specified URL
+         *
+         * @param {Object} cookie Cookie object
+         * @param {String} url URL to check for
+         * @returns {Boolean} true if cookie is valid for specifiec URL
+         */
+      match(cookie, url) {
+        let urlparts = urllib.parse(url || "");
+        if (urlparts.hostname !== cookie.domain && (cookie.domain.charAt(0) !== "." || ("." + urlparts.hostname).substr(-cookie.domain.length) !== cookie.domain)) {
+          return false;
+        }
+        let path = this.getPath(urlparts.pathname);
+        if (path.substr(0, cookie.path.length) !== cookie.path) {
+          return false;
+        }
+        if (cookie.secure && urlparts.protocol !== "https:") {
+          return false;
+        }
+        return true;
+      }
+      /**
+         * Adds (or updates/removes if needed) a cookie object to the cookie storage
+         *
+         * @param {Object} cookie Cookie value to be stored
+         */
+      add(cookie) {
+        let i;
+        let len;
+        if (!cookie || !cookie.name) {
+          return false;
+        }
+        for (i = 0, len = this.cookies.length; i < len; i++) {
+          if (this.compare(this.cookies[i], cookie)) {
+            if (this.isExpired(cookie)) {
+              this.cookies.splice(i, 1);
+              return false;
+            }
+            this.cookies[i] = cookie;
+            return true;
+          }
+        }
+        if (!this.isExpired(cookie)) {
+          this.cookies.push(cookie);
+        }
+        return true;
+      }
+      /**
+         * Checks if two cookie objects are the same
+         *
+         * @param {Object} a Cookie to check against
+         * @param {Object} b Cookie to check against
+         * @returns {Boolean} True, if the cookies are the same
+         */
+      compare(a, b) {
+        return a.name === b.name && a.path === b.path && a.domain === b.domain && a.secure === b.secure && a.httponly === a.httponly;
+      }
+      /**
+         * Checks if a cookie is expired
+         *
+         * @param {Object} cookie Cookie object to check against
+         * @returns {Boolean} True, if the cookie is expired
+         */
+      isExpired(cookie) {
+        return cookie.expires && cookie.expires < /* @__PURE__ */ new Date() || !cookie.value;
+      }
+      /**
+         * Returns normalized cookie path for an URL path argument
+         *
+         * @param {String} pathname
+         * @returns {String} Normalized path
+         */
+      getPath(pathname) {
+        let path = (pathname || "/").split("/");
+        path.pop();
+        path = path.join("/").trim();
+        if (path.charAt(0) !== "/") {
+          path = "/" + path;
+        }
+        if (path.substr(-1) !== "/") {
+          path += "/";
+        }
+        return path;
+      }
+    };
+    module.exports = Cookies;
+  }
+});
+
+// node_modules/.deno/nodemailer@6.9.13/node_modules/nodemailer/package.json
+var require_package = __commonJS({
+  "node_modules/.deno/nodemailer@6.9.13/node_modules/nodemailer/package.json"(exports, module) {
+    module.exports = {
+      name: "nodemailer",
+      version: "6.9.13",
+      description: "Easy as cake e-mail sending from your Node.js applications",
+      main: "lib/nodemailer.js",
+      scripts: {
+        test: "node --test --test-concurrency=1 test/**/*.test.js test/**/*-test.js",
+        "test:coverage": "c8 node --test --test-concurrency=1 test/**/*.test.js test/**/*-test.js",
+        lint: "eslint .",
+        update: "rm -rf node_modules/ package-lock.json && ncu -u && npm install"
+      },
+      repository: {
+        type: "git",
+        url: "https://github.com/nodemailer/nodemailer.git"
+      },
+      keywords: [
+        "Nodemailer"
+      ],
+      author: "Andris Reinman",
+      license: "MIT-0",
+      bugs: {
+        url: "https://github.com/nodemailer/nodemailer/issues"
+      },
+      homepage: "https://nodemailer.com/",
+      devDependencies: {
+        "@aws-sdk/client-ses": "3.529.1",
+        bunyan: "1.8.15",
+        c8: "9.1.0",
+        eslint: "8.57.0",
+        "eslint-config-nodemailer": "1.2.0",
+        "eslint-config-prettier": "9.1.0",
+        libbase64: "1.3.0",
+        libmime: "5.3.4",
+        libqp: "2.1.0",
+        "nodemailer-ntlm-auth": "1.0.4",
+        proxy: "1.0.2",
+        "proxy-test-server": "1.0.0",
+        "smtp-server": "3.13.3"
+      },
+      engines: {
+        node: ">=6.0.0"
+      }
+    };
+  }
+});
+
+// node_modules/.deno/nodemailer@6.9.13/node_modules/nodemailer/lib/fetch/index.js
+var require_fetch = __commonJS({
+  "node_modules/.deno/nodemailer@6.9.13/node_modules/nodemailer/lib/fetch/index.js"(exports, module) {
+    "use strict";
+    var http = __require("node:http");
+    var https = __require("node:https");
+    var urllib = __require("node:url");
+    var zlib = __require("node:zlib");
+    var PassThrough = __require("node:stream").PassThrough;
+    var Cookies = require_cookies();
+    var packageData = require_package();
+    var net = __require("node:net");
+    var MAX_REDIRECTS = 5;
+    module.exports = function(url, options) {
+      return nmfetch(url, options);
+    };
+    module.exports.Cookies = Cookies;
+    function nmfetch(url, options) {
+      options = options || {};
+      options.fetchRes = options.fetchRes || new PassThrough();
+      options.cookies = options.cookies || new Cookies();
+      options.redirects = options.redirects || 0;
+      options.maxRedirects = isNaN(options.maxRedirects) ? MAX_REDIRECTS : options.maxRedirects;
+      if (options.cookie) {
+        [].concat(options.cookie || []).forEach((cookie) => {
+          options.cookies.set(cookie, url);
+        });
+        options.cookie = false;
+      }
+      let fetchRes = options.fetchRes;
+      let parsed = urllib.parse(url);
+      let method = (options.method || "").toString().trim().toUpperCase() || "GET";
+      let finished = false;
+      let cookies;
+      let body;
+      let handler2 = parsed.protocol === "https:" ? https : http;
+      let headers = {
+        "accept-encoding": "gzip,deflate",
+        "user-agent": "nodemailer/" + packageData.version
+      };
+      Object.keys(options.headers || {}).forEach((key) => {
+        headers[key.toLowerCase().trim()] = options.headers[key];
+      });
+      if (options.userAgent) {
+        headers["user-agent"] = options.userAgent;
+      }
+      if (parsed.auth) {
+        headers.Authorization = "Basic " + Buffer.from(parsed.auth).toString("base64");
+      }
+      if (cookies = options.cookies.get(url)) {
+        headers.cookie = cookies;
+      }
+      if (options.body) {
+        if (options.contentType !== false) {
+          headers["Content-Type"] = options.contentType || "application/x-www-form-urlencoded";
+        }
+        if (typeof options.body.pipe === "function") {
+          headers["Transfer-Encoding"] = "chunked";
+          body = options.body;
+          body.on("error", (err) => {
+            if (finished) {
+              return;
+            }
+            finished = true;
+            err.type = "FETCH";
+            err.sourceUrl = url;
+            fetchRes.emit("error", err);
+          });
+        } else {
+          if (options.body instanceof Buffer) {
+            body = options.body;
+          } else if (typeof options.body === "object") {
+            try {
+              body = Buffer.from(Object.keys(options.body).map((key) => {
+                let value = options.body[key].toString().trim();
+                return encodeURIComponent(key) + "=" + encodeURIComponent(value);
+              }).join("&"));
+            } catch (E) {
+              if (finished) {
+                return;
+              }
+              finished = true;
+              E.type = "FETCH";
+              E.sourceUrl = url;
+              fetchRes.emit("error", E);
+              return;
+            }
+          } else {
+            body = Buffer.from(options.body.toString().trim());
+          }
+          headers["Content-Type"] = options.contentType || "application/x-www-form-urlencoded";
+          headers["Content-Length"] = body.length;
+        }
+        method = (options.method || "").toString().trim().toUpperCase() || "POST";
+      }
+      let req;
+      let reqOptions = {
+        method,
+        host: parsed.hostname,
+        path: parsed.path,
+        port: parsed.port ? parsed.port : parsed.protocol === "https:" ? 443 : 80,
+        headers,
+        rejectUnauthorized: false,
+        agent: false
+      };
+      if (options.tls) {
+        Object.keys(options.tls).forEach((key) => {
+          reqOptions[key] = options.tls[key];
+        });
+      }
+      if (parsed.protocol === "https:" && parsed.hostname && parsed.hostname !== reqOptions.host && !net.isIP(parsed.hostname) && !reqOptions.servername) {
+        reqOptions.servername = parsed.hostname;
+      }
+      try {
+        req = handler2.request(reqOptions);
+      } catch (E) {
+        finished = true;
+        setImmediate(() => {
+          E.type = "FETCH";
+          E.sourceUrl = url;
+          fetchRes.emit("error", E);
+        });
+        return fetchRes;
+      }
+      if (options.timeout) {
+        req.setTimeout(options.timeout, () => {
+          if (finished) {
+            return;
+          }
+          finished = true;
+          req.abort();
+          let err = new Error("Request Timeout");
+          err.type = "FETCH";
+          err.sourceUrl = url;
+          fetchRes.emit("error", err);
+        });
+      }
+      req.on("error", (err) => {
+        if (finished) {
+          return;
+        }
+        finished = true;
+        err.type = "FETCH";
+        err.sourceUrl = url;
+        fetchRes.emit("error", err);
+      });
+      req.on("response", (res) => {
+        let inflate;
+        if (finished) {
+          return;
+        }
+        switch (res.headers["content-encoding"]) {
+          case "gzip":
+          case "deflate":
+            inflate = zlib.createUnzip();
+            break;
+        }
+        if (res.headers["set-cookie"]) {
+          [].concat(res.headers["set-cookie"] || []).forEach((cookie) => {
+            options.cookies.set(cookie, url);
+          });
+        }
+        if ([
+          301,
+          302,
+          303,
+          307,
+          308
+        ].includes(res.statusCode) && res.headers.location) {
+          options.redirects++;
+          if (options.redirects > options.maxRedirects) {
+            finished = true;
+            let err = new Error("Maximum redirect count exceeded");
+            err.type = "FETCH";
+            err.sourceUrl = url;
+            fetchRes.emit("error", err);
+            req.abort();
+            return;
+          }
+          options.method = "GET";
+          options.body = false;
+          return nmfetch(urllib.resolve(url, res.headers.location), options);
+        }
+        fetchRes.statusCode = res.statusCode;
+        fetchRes.headers = res.headers;
+        if (res.statusCode >= 300 && !options.allowErrorResponse) {
+          finished = true;
+          let err = new Error("Invalid status code " + res.statusCode);
+          err.type = "FETCH";
+          err.sourceUrl = url;
+          fetchRes.emit("error", err);
+          req.abort();
+          return;
+        }
+        res.on("error", (err) => {
+          if (finished) {
+            return;
+          }
+          finished = true;
+          err.type = "FETCH";
+          err.sourceUrl = url;
+          fetchRes.emit("error", err);
+          req.abort();
+        });
+        if (inflate) {
+          res.pipe(inflate).pipe(fetchRes);
+          inflate.on("error", (err) => {
+            if (finished) {
+              return;
+            }
+            finished = true;
+            err.type = "FETCH";
+            err.sourceUrl = url;
+            fetchRes.emit("error", err);
+            req.abort();
+          });
+        } else {
+          res.pipe(fetchRes);
+        }
+      });
+      setImmediate(() => {
+        if (body) {
+          try {
+            if (typeof body.pipe === "function") {
+              return body.pipe(req);
+            } else {
+              req.write(body);
+            }
+          } catch (err) {
+            finished = true;
+            err.type = "FETCH";
+            err.sourceUrl = url;
+            fetchRes.emit("error", err);
+            return;
+          }
+        }
+        req.end();
+      });
+      return fetchRes;
+    }
+  }
+});
+
+// node_modules/.deno/nodemailer@6.9.13/node_modules/nodemailer/lib/shared/index.js
+var require_shared = __commonJS({
+  "node_modules/.deno/nodemailer@6.9.13/node_modules/nodemailer/lib/shared/index.js"(exports, module) {
+    "use strict";
+    var urllib = __require("node:url");
+    var util = __require("node:util");
+    var fs = __require("node:fs");
+    var nmfetch = require_fetch();
+    var dns = __require("node:dns");
+    var net = __require("node:net");
+    var os = __require("node:os");
+    var DNS_TTL = 5 * 60 * 1e3;
+    var networkInterfaces;
+    try {
+      networkInterfaces = os.networkInterfaces();
+    } catch (err) {
+    }
+    module.exports.networkInterfaces = networkInterfaces;
+    var isFamilySupported = (family, allowInternal) => {
+      let networkInterfaces2 = module.exports.networkInterfaces;
+      if (!networkInterfaces2) {
+        return true;
+      }
+      const familySupported = (
+        // crux that replaces Object.values(networkInterfaces) as Object.values is not supported in nodejs v6
+        Object.keys(networkInterfaces2).map((key) => networkInterfaces2[key]).reduce((acc, val2) => acc.concat(val2), []).filter((i) => !i.internal || allowInternal).filter((i) => i.family === "IPv" + family || i.family === family).length > 0
+      );
+      return familySupported;
+    };
+    var resolver = (family, hostname, options, callback) => {
+      options = options || {};
+      const familySupported = isFamilySupported(family, options.allowInternalNetworkInterfaces);
+      if (!familySupported) {
+        return callback(null, []);
+      }
+      const resolver2 = dns.Resolver ? new dns.Resolver(options) : dns;
+      resolver2["resolve" + family](hostname, (err, addresses) => {
+        if (err) {
+          switch (err.code) {
+            case dns.NODATA:
+            case dns.NOTFOUND:
+            case dns.NOTIMP:
+            case dns.SERVFAIL:
+            case dns.CONNREFUSED:
+            case dns.REFUSED:
+            case "EAI_AGAIN":
+              return callback(null, []);
+          }
+          return callback(err);
+        }
+        return callback(null, Array.isArray(addresses) ? addresses : [].concat(addresses || []));
+      });
+    };
+    var dnsCache = module.exports.dnsCache = /* @__PURE__ */ new Map();
+    var formatDNSValue = (value, extra) => {
+      if (!value) {
+        return Object.assign({}, extra || {});
+      }
+      return Object.assign({
+        servername: value.servername,
+        host: !value.addresses || !value.addresses.length ? null : value.addresses.length === 1 ? value.addresses[0] : value.addresses[Math.floor(Math.random() * value.addresses.length)]
+      }, extra || {});
+    };
+    module.exports.resolveHostname = (options, callback) => {
+      options = options || {};
+      if (!options.host && options.servername) {
+        options.host = options.servername;
+      }
+      if (!options.host || net.isIP(options.host)) {
+        let value = {
+          addresses: [
+            options.host
+          ],
+          servername: options.servername || false
+        };
+        return callback(null, formatDNSValue(value, {
+          cached: false
+        }));
+      }
+      let cached;
+      if (dnsCache.has(options.host)) {
+        cached = dnsCache.get(options.host);
+        if (!cached.expires || cached.expires >= Date.now()) {
+          return callback(null, formatDNSValue(cached.value, {
+            cached: true
+          }));
+        }
+      }
+      resolver(4, options.host, options, (err, addresses) => {
+        if (err) {
+          if (cached) {
+            return callback(null, formatDNSValue(cached.value, {
+              cached: true,
+              error: err
+            }));
+          }
+          return callback(err);
+        }
+        if (addresses && addresses.length) {
+          let value = {
+            addresses,
+            servername: options.servername || options.host
+          };
+          dnsCache.set(options.host, {
+            value,
+            expires: Date.now() + (options.dnsTtl || DNS_TTL)
+          });
+          return callback(null, formatDNSValue(value, {
+            cached: false
+          }));
+        }
+        resolver(6, options.host, options, (err2, addresses2) => {
+          if (err2) {
+            if (cached) {
+              return callback(null, formatDNSValue(cached.value, {
+                cached: true,
+                error: err2
+              }));
+            }
+            return callback(err2);
+          }
+          if (addresses2 && addresses2.length) {
+            let value = {
+              addresses: addresses2,
+              servername: options.servername || options.host
+            };
+            dnsCache.set(options.host, {
+              value,
+              expires: Date.now() + (options.dnsTtl || DNS_TTL)
+            });
+            return callback(null, formatDNSValue(value, {
+              cached: false
+            }));
+          }
+          try {
+            dns.lookup(options.host, {
+              all: true
+            }, (err3, addresses3) => {
+              if (err3) {
+                if (cached) {
+                  return callback(null, formatDNSValue(cached.value, {
+                    cached: true,
+                    error: err3
+                  }));
+                }
+                return callback(err3);
+              }
+              let address = addresses3 ? addresses3.filter((addr) => isFamilySupported(addr.family)).map((addr) => addr.address).shift() : false;
+              if (addresses3 && addresses3.length && !address) {
+                console.warn(`Failed to resolve IPv${addresses3[0].family} addresses with current network`);
+              }
+              if (!address && cached) {
+                return callback(null, formatDNSValue(cached.value, {
+                  cached: true
+                }));
+              }
+              let value = {
+                addresses: address ? [
+                  address
+                ] : [
+                  options.host
+                ],
+                servername: options.servername || options.host
+              };
+              dnsCache.set(options.host, {
+                value,
+                expires: Date.now() + (options.dnsTtl || DNS_TTL)
+              });
+              return callback(null, formatDNSValue(value, {
+                cached: false
+              }));
+            });
+          } catch (err3) {
+            if (cached) {
+              return callback(null, formatDNSValue(cached.value, {
+                cached: true,
+                error: err3
+              }));
+            }
+            return callback(err3);
+          }
+        });
+      });
+    };
+    module.exports.parseConnectionUrl = (str) => {
+      str = str || "";
+      let options = {};
+      [
+        urllib.parse(str, true)
+      ].forEach((url) => {
+        let auth;
+        switch (url.protocol) {
+          case "smtp:":
+            options.secure = false;
+            break;
+          case "smtps:":
+            options.secure = true;
+            break;
+          case "direct:":
+            options.direct = true;
+            break;
+        }
+        if (!isNaN(url.port) && Number(url.port)) {
+          options.port = Number(url.port);
+        }
+        if (url.hostname) {
+          options.host = url.hostname;
+        }
+        if (url.auth) {
+          auth = url.auth.split(":");
+          if (!options.auth) {
+            options.auth = {};
+          }
+          options.auth.user = auth.shift();
+          options.auth.pass = auth.join(":");
+        }
+        Object.keys(url.query || {}).forEach((key) => {
+          let obj = options;
+          let lKey = key;
+          let value = url.query[key];
+          if (!isNaN(value)) {
+            value = Number(value);
+          }
+          switch (value) {
+            case "true":
+              value = true;
+              break;
+            case "false":
+              value = false;
+              break;
+          }
+          if (key.indexOf("tls.") === 0) {
+            lKey = key.substr(4);
+            if (!options.tls) {
+              options.tls = {};
+            }
+            obj = options.tls;
+          } else if (key.indexOf(".") >= 0) {
+            return;
+          }
+          if (!(lKey in obj)) {
+            obj[lKey] = value;
+          }
+        });
+      });
+      return options;
+    };
+    module.exports._logFunc = (logger, level, defaults, data, message, ...args) => {
+      let entry = {};
+      Object.keys(defaults || {}).forEach((key) => {
+        if (key !== "level") {
+          entry[key] = defaults[key];
+        }
+      });
+      Object.keys(data || {}).forEach((key) => {
+        if (key !== "level") {
+          entry[key] = data[key];
+        }
+      });
+      logger[level](entry, message, ...args);
+    };
+    module.exports.getLogger = (options, defaults) => {
+      options = options || {};
+      let response = {};
+      let levels = [
+        "trace",
+        "debug",
+        "info",
+        "warn",
+        "error",
+        "fatal"
+      ];
+      if (!options.logger) {
+        levels.forEach((level) => {
+          response[level] = () => false;
+        });
+        return response;
+      }
+      let logger = options.logger;
+      if (options.logger === true) {
+        logger = createDefaultLogger(levels);
+      }
+      levels.forEach((level) => {
+        response[level] = (data, message, ...args) => {
+          module.exports._logFunc(logger, level, defaults, data, message, ...args);
+        };
+      });
+      return response;
+    };
+    module.exports.callbackPromise = (resolve, reject) => function() {
+      let args = Array.from(arguments);
+      let err = args.shift();
+      if (err) {
+        reject(err);
+      } else {
+        resolve(...args);
+      }
+    };
+    module.exports.parseDataURI = (uri) => {
+      let input = uri;
+      let commaPos = input.indexOf(",");
+      if (!commaPos) {
+        return uri;
+      }
+      let data = input.substring(commaPos + 1);
+      let metaStr = input.substring("data:".length, commaPos);
+      let encoding;
+      let metaEntries = metaStr.split(";");
+      let lastMetaEntry = metaEntries.length > 1 ? metaEntries[metaEntries.length - 1] : false;
+      if (lastMetaEntry && lastMetaEntry.indexOf("=") < 0) {
+        encoding = lastMetaEntry.toLowerCase();
+        metaEntries.pop();
+      }
+      let contentType = metaEntries.shift() || "application/octet-stream";
+      let params = {};
+      for (let entry of metaEntries) {
+        let sep = entry.indexOf("=");
+        if (sep >= 0) {
+          let key = entry.substring(0, sep);
+          let value = entry.substring(sep + 1);
+          params[key] = value;
+        }
+      }
+      switch (encoding) {
+        case "base64":
+          data = Buffer.from(data, "base64");
+          break;
+        case "utf8":
+          data = Buffer.from(data);
+          break;
+        default:
+          try {
+            data = Buffer.from(decodeURIComponent(data));
+          } catch (err) {
+            data = Buffer.from(data);
+          }
+          data = Buffer.from(data);
+      }
+      return {
+        data,
+        encoding,
+        contentType,
+        params
+      };
+    };
+    module.exports.resolveContent = (data, key, callback) => {
+      let promise;
+      if (!callback) {
+        promise = new Promise((resolve, reject) => {
+          callback = module.exports.callbackPromise(resolve, reject);
+        });
+      }
+      let content = data && data[key] && data[key].content || data[key];
+      let contentStream;
+      let encoding = (typeof data[key] === "object" && data[key].encoding || "utf8").toString().toLowerCase().replace(/[-_\s]/g, "");
+      if (!content) {
+        return callback(null, content);
+      }
+      if (typeof content === "object") {
+        if (typeof content.pipe === "function") {
+          return resolveStream(content, (err, value) => {
+            if (err) {
+              return callback(err);
+            }
+            if (data[key].content) {
+              data[key].content = value;
+            } else {
+              data[key] = value;
+            }
+            callback(null, value);
+          });
+        } else if (/^https?:\/\//i.test(content.path || content.href)) {
+          contentStream = nmfetch(content.path || content.href);
+          return resolveStream(contentStream, callback);
+        } else if (/^data:/i.test(content.path || content.href)) {
+          let parsedDataUri = module.exports.parseDataURI(content.path || content.href);
+          if (!parsedDataUri || !parsedDataUri.data) {
+            return callback(null, Buffer.from(0));
+          }
+          return callback(null, parsedDataUri.data);
+        } else if (content.path) {
+          return resolveStream(fs.createReadStream(content.path), callback);
+        }
+      }
+      if (typeof data[key].content === "string" && ![
+        "utf8",
+        "usascii",
+        "ascii"
+      ].includes(encoding)) {
+        content = Buffer.from(data[key].content, encoding);
+      }
+      setImmediate(() => callback(null, content));
+      return promise;
+    };
+    module.exports.assign = function() {
+      let args = Array.from(arguments);
+      let target = args.shift() || {};
+      args.forEach((source) => {
+        Object.keys(source || {}).forEach((key) => {
+          if ([
+            "tls",
+            "auth"
+          ].includes(key) && source[key] && typeof source[key] === "object") {
+            if (!target[key]) {
+              target[key] = {};
+            }
+            Object.keys(source[key]).forEach((subKey) => {
+              target[key][subKey] = source[key][subKey];
+            });
+          } else {
+            target[key] = source[key];
+          }
+        });
+      });
+      return target;
+    };
+    module.exports.encodeXText = (str) => {
+      if (!/[^\x21-\x2A\x2C-\x3C\x3E-\x7E]/.test(str)) {
+        return str;
+      }
+      let buf = Buffer.from(str);
+      let result = "";
+      for (let i = 0, len = buf.length; i < len; i++) {
+        let c = buf[i];
+        if (c < 33 || c > 126 || c === 43 || c === 61) {
+          result += "+" + (c < 16 ? "0" : "") + c.toString(16).toUpperCase();
+        } else {
+          result += String.fromCharCode(c);
+        }
+      }
+      return result;
+    };
+    function resolveStream(stream, callback) {
+      let responded = false;
+      let chunks = [];
+      let chunklen = 0;
+      stream.on("error", (err) => {
+        if (responded) {
+          return;
+        }
+        responded = true;
+        callback(err);
+      });
+      stream.on("readable", () => {
+        let chunk;
+        while ((chunk = stream.read()) !== null) {
+          chunks.push(chunk);
+          chunklen += chunk.length;
+        }
+      });
+      stream.on("end", () => {
+        if (responded) {
+          return;
+        }
+        responded = true;
+        let value;
+        try {
+          value = Buffer.concat(chunks, chunklen);
+        } catch (E) {
+          return callback(E);
+        }
+        callback(null, value);
+      });
+    }
+    function createDefaultLogger(levels) {
+      let levelMaxLen = 0;
+      let levelNames = /* @__PURE__ */ new Map();
+      levels.forEach((level) => {
+        if (level.length > levelMaxLen) {
+          levelMaxLen = level.length;
+        }
+      });
+      levels.forEach((level) => {
+        let levelName = level.toUpperCase();
+        if (levelName.length < levelMaxLen) {
+          levelName += " ".repeat(levelMaxLen - levelName.length);
+        }
+        levelNames.set(level, levelName);
+      });
+      let print = (level, entry, message, ...args) => {
+        let prefix = "";
+        if (entry) {
+          if (entry.tnx === "server") {
+            prefix = "S: ";
+          } else if (entry.tnx === "client") {
+            prefix = "C: ";
+          }
+          if (entry.sid) {
+            prefix = "[" + entry.sid + "] " + prefix;
+          }
+          if (entry.cid) {
+            prefix = "[#" + entry.cid + "] " + prefix;
+          }
+        }
+        message = util.format(message, ...args);
+        message.split(/\r?\n/).forEach((line) => {
+          console.log("[%s] %s %s", (/* @__PURE__ */ new Date()).toISOString().substr(0, 19).replace(/T/, " "), levelNames.get(level), prefix + line);
+        });
+      };
+      let logger = {};
+      levels.forEach((level) => {
+        logger[level] = print.bind(null, level);
+      });
+      return logger;
+    }
+  }
+});
+
+// node_modules/.deno/nodemailer@6.9.13/node_modules/nodemailer/lib/mime-funcs/mime-types.js
+var require_mime_types = __commonJS({
+  "node_modules/.deno/nodemailer@6.9.13/node_modules/nodemailer/lib/mime-funcs/mime-types.js"(exports, module) {
+    "use strict";
+    var path = __require("node:path");
+    var defaultMimeType = "application/octet-stream";
+    var defaultExtension = "bin";
+    var mimeTypes = /* @__PURE__ */ new Map([
+      [
+        "application/acad",
+        "dwg"
+      ],
+      [
+        "application/applixware",
+        "aw"
+      ],
+      [
+        "application/arj",
+        "arj"
+      ],
+      [
+        "application/atom+xml",
+        "xml"
+      ],
+      [
+        "application/atomcat+xml",
+        "atomcat"
+      ],
+      [
+        "application/atomsvc+xml",
+        "atomsvc"
+      ],
+      [
+        "application/base64",
+        [
+          "mm",
+          "mme"
+        ]
+      ],
+      [
+        "application/binhex",
+        "hqx"
+      ],
+      [
+        "application/binhex4",
+        "hqx"
+      ],
+      [
+        "application/book",
+        [
+          "book",
+          "boo"
+        ]
+      ],
+      [
+        "application/ccxml+xml,",
+        "ccxml"
+      ],
+      [
+        "application/cdf",
+        "cdf"
+      ],
+      [
+        "application/cdmi-capability",
+        "cdmia"
+      ],
+      [
+        "application/cdmi-container",
+        "cdmic"
+      ],
+      [
+        "application/cdmi-domain",
+        "cdmid"
+      ],
+      [
+        "application/cdmi-object",
+        "cdmio"
+      ],
+      [
+        "application/cdmi-queue",
+        "cdmiq"
+      ],
+      [
+        "application/clariscad",
+        "ccad"
+      ],
+      [
+        "application/commonground",
+        "dp"
+      ],
+      [
+        "application/cu-seeme",
+        "cu"
+      ],
+      [
+        "application/davmount+xml",
+        "davmount"
+      ],
+      [
+        "application/drafting",
+        "drw"
+      ],
+      [
+        "application/dsptype",
+        "tsp"
+      ],
+      [
+        "application/dssc+der",
+        "dssc"
+      ],
+      [
+        "application/dssc+xml",
+        "xdssc"
+      ],
+      [
+        "application/dxf",
+        "dxf"
+      ],
+      [
+        "application/ecmascript",
+        [
+          "js",
+          "es"
+        ]
+      ],
+      [
+        "application/emma+xml",
+        "emma"
+      ],
+      [
+        "application/envoy",
+        "evy"
+      ],
+      [
+        "application/epub+zip",
+        "epub"
+      ],
+      [
+        "application/excel",
+        [
+          "xls",
+          "xl",
+          "xla",
+          "xlb",
+          "xlc",
+          "xld",
+          "xlk",
+          "xll",
+          "xlm",
+          "xlt",
+          "xlv",
+          "xlw"
+        ]
+      ],
+      [
+        "application/exi",
+        "exi"
+      ],
+      [
+        "application/font-tdpfr",
+        "pfr"
+      ],
+      [
+        "application/fractals",
+        "fif"
+      ],
+      [
+        "application/freeloader",
+        "frl"
+      ],
+      [
+        "application/futuresplash",
+        "spl"
+      ],
+      [
+        "application/gnutar",
+        "tgz"
+      ],
+      [
+        "application/groupwise",
+        "vew"
+      ],
+      [
+        "application/hlp",
+        "hlp"
+      ],
+      [
+        "application/hta",
+        "hta"
+      ],
+      [
+        "application/hyperstudio",
+        "stk"
+      ],
+      [
+        "application/i-deas",
+        "unv"
+      ],
+      [
+        "application/iges",
+        [
+          "iges",
+          "igs"
+        ]
+      ],
+      [
+        "application/inf",
+        "inf"
+      ],
+      [
+        "application/internet-property-stream",
+        "acx"
+      ],
+      [
+        "application/ipfix",
+        "ipfix"
+      ],
+      [
+        "application/java",
+        "class"
+      ],
+      [
+        "application/java-archive",
+        "jar"
+      ],
+      [
+        "application/java-byte-code",
+        "class"
+      ],
+      [
+        "application/java-serialized-object",
+        "ser"
+      ],
+      [
+        "application/java-vm",
+        "class"
+      ],
+      [
+        "application/javascript",
+        "js"
+      ],
+      [
+        "application/json",
+        "json"
+      ],
+      [
+        "application/lha",
+        "lha"
+      ],
+      [
+        "application/lzx",
+        "lzx"
+      ],
+      [
+        "application/mac-binary",
+        "bin"
+      ],
+      [
+        "application/mac-binhex",
+        "hqx"
+      ],
+      [
+        "application/mac-binhex40",
+        "hqx"
+      ],
+      [
+        "application/mac-compactpro",
+        "cpt"
+      ],
+      [
+        "application/macbinary",
+        "bin"
+      ],
+      [
+        "application/mads+xml",
+        "mads"
+      ],
+      [
+        "application/marc",
+        "mrc"
+      ],
+      [
+        "application/marcxml+xml",
+        "mrcx"
+      ],
+      [
+        "application/mathematica",
+        "ma"
+      ],
+      [
+        "application/mathml+xml",
+        "mathml"
+      ],
+      [
+        "application/mbedlet",
+        "mbd"
+      ],
+      [
+        "application/mbox",
+        "mbox"
+      ],
+      [
+        "application/mcad",
+        "mcd"
+      ],
+      [
+        "application/mediaservercontrol+xml",
+        "mscml"
+      ],
+      [
+        "application/metalink4+xml",
+        "meta4"
+      ],
+      [
+        "application/mets+xml",
+        "mets"
+      ],
+      [
+        "application/mime",
+        "aps"
+      ],
+      [
+        "application/mods+xml",
+        "mods"
+      ],
+      [
+        "application/mp21",
+        "m21"
+      ],
+      [
+        "application/mp4",
+        "mp4"
+      ],
+      [
+        "application/mspowerpoint",
+        [
+          "ppt",
+          "pot",
+          "pps",
+          "ppz"
+        ]
+      ],
+      [
+        "application/msword",
+        [
+          "doc",
+          "dot",
+          "w6w",
+          "wiz",
+          "word"
+        ]
+      ],
+      [
+        "application/mswrite",
+        "wri"
+      ],
+      [
+        "application/mxf",
+        "mxf"
+      ],
+      [
+        "application/netmc",
+        "mcp"
+      ],
+      [
+        "application/octet-stream",
+        [
+          "*"
+        ]
+      ],
+      [
+        "application/oda",
+        "oda"
+      ],
+      [
+        "application/oebps-package+xml",
+        "opf"
+      ],
+      [
+        "application/ogg",
+        "ogx"
+      ],
+      [
+        "application/olescript",
+        "axs"
+      ],
+      [
+        "application/onenote",
+        "onetoc"
+      ],
+      [
+        "application/patch-ops-error+xml",
+        "xer"
+      ],
+      [
+        "application/pdf",
+        "pdf"
+      ],
+      [
+        "application/pgp-encrypted",
+        "asc"
+      ],
+      [
+        "application/pgp-signature",
+        "pgp"
+      ],
+      [
+        "application/pics-rules",
+        "prf"
+      ],
+      [
+        "application/pkcs-12",
+        "p12"
+      ],
+      [
+        "application/pkcs-crl",
+        "crl"
+      ],
+      [
+        "application/pkcs10",
+        "p10"
+      ],
+      [
+        "application/pkcs7-mime",
+        [
+          "p7c",
+          "p7m"
+        ]
+      ],
+      [
+        "application/pkcs7-signature",
+        "p7s"
+      ],
+      [
+        "application/pkcs8",
+        "p8"
+      ],
+      [
+        "application/pkix-attr-cert",
+        "ac"
+      ],
+      [
+        "application/pkix-cert",
+        [
+          "cer",
+          "crt"
+        ]
+      ],
+      [
+        "application/pkix-crl",
+        "crl"
+      ],
+      [
+        "application/pkix-pkipath",
+        "pkipath"
+      ],
+      [
+        "application/pkixcmp",
+        "pki"
+      ],
+      [
+        "application/plain",
+        "text"
+      ],
+      [
+        "application/pls+xml",
+        "pls"
+      ],
+      [
+        "application/postscript",
+        [
+          "ps",
+          "ai",
+          "eps"
+        ]
+      ],
+      [
+        "application/powerpoint",
+        "ppt"
+      ],
+      [
+        "application/pro_eng",
+        [
+          "part",
+          "prt"
+        ]
+      ],
+      [
+        "application/prs.cww",
+        "cww"
+      ],
+      [
+        "application/pskc+xml",
+        "pskcxml"
+      ],
+      [
+        "application/rdf+xml",
+        "rdf"
+      ],
+      [
+        "application/reginfo+xml",
+        "rif"
+      ],
+      [
+        "application/relax-ng-compact-syntax",
+        "rnc"
+      ],
+      [
+        "application/resource-lists+xml",
+        "rl"
+      ],
+      [
+        "application/resource-lists-diff+xml",
+        "rld"
+      ],
+      [
+        "application/ringing-tones",
+        "rng"
+      ],
+      [
+        "application/rls-services+xml",
+        "rs"
+      ],
+      [
+        "application/rsd+xml",
+        "rsd"
+      ],
+      [
+        "application/rss+xml",
+        "xml"
+      ],
+      [
+        "application/rtf",
+        [
+          "rtf",
+          "rtx"
+        ]
+      ],
+      [
+        "application/sbml+xml",
+        "sbml"
+      ],
+      [
+        "application/scvp-cv-request",
+        "scq"
+      ],
+      [
+        "application/scvp-cv-response",
+        "scs"
+      ],
+      [
+        "application/scvp-vp-request",
+        "spq"
+      ],
+      [
+        "application/scvp-vp-response",
+        "spp"
+      ],
+      [
+        "application/sdp",
+        "sdp"
+      ],
+      [
+        "application/sea",
+        "sea"
+      ],
+      [
+        "application/set",
+        "set"
+      ],
+      [
+        "application/set-payment-initiation",
+        "setpay"
+      ],
+      [
+        "application/set-registration-initiation",
+        "setreg"
+      ],
+      [
+        "application/shf+xml",
+        "shf"
+      ],
+      [
+        "application/sla",
+        "stl"
+      ],
+      [
+        "application/smil",
+        [
+          "smi",
+          "smil"
+        ]
+      ],
+      [
+        "application/smil+xml",
+        "smi"
+      ],
+      [
+        "application/solids",
+        "sol"
+      ],
+      [
+        "application/sounder",
+        "sdr"
+      ],
+      [
+        "application/sparql-query",
+        "rq"
+      ],
+      [
+        "application/sparql-results+xml",
+        "srx"
+      ],
+      [
+        "application/srgs",
+        "gram"
+      ],
+      [
+        "application/srgs+xml",
+        "grxml"
+      ],
+      [
+        "application/sru+xml",
+        "sru"
+      ],
+      [
+        "application/ssml+xml",
+        "ssml"
+      ],
+      [
+        "application/step",
+        [
+          "step",
+          "stp"
+        ]
+      ],
+      [
+        "application/streamingmedia",
+        "ssm"
+      ],
+      [
+        "application/tei+xml",
+        "tei"
+      ],
+      [
+        "application/thraud+xml",
+        "tfi"
+      ],
+      [
+        "application/timestamped-data",
+        "tsd"
+      ],
+      [
+        "application/toolbook",
+        "tbk"
+      ],
+      [
+        "application/vda",
+        "vda"
+      ],
+      [
+        "application/vnd.3gpp.pic-bw-large",
+        "plb"
+      ],
+      [
+        "application/vnd.3gpp.pic-bw-small",
+        "psb"
+      ],
+      [
+        "application/vnd.3gpp.pic-bw-var",
+        "pvb"
+      ],
+      [
+        "application/vnd.3gpp2.tcap",
+        "tcap"
+      ],
+      [
+        "application/vnd.3m.post-it-notes",
+        "pwn"
+      ],
+      [
+        "application/vnd.accpac.simply.aso",
+        "aso"
+      ],
+      [
+        "application/vnd.accpac.simply.imp",
+        "imp"
+      ],
+      [
+        "application/vnd.acucobol",
+        "acu"
+      ],
+      [
+        "application/vnd.acucorp",
+        "atc"
+      ],
+      [
+        "application/vnd.adobe.air-application-installer-package+zip",
+        "air"
+      ],
+      [
+        "application/vnd.adobe.fxp",
+        "fxp"
+      ],
+      [
+        "application/vnd.adobe.xdp+xml",
+        "xdp"
+      ],
+      [
+        "application/vnd.adobe.xfdf",
+        "xfdf"
+      ],
+      [
+        "application/vnd.ahead.space",
+        "ahead"
+      ],
+      [
+        "application/vnd.airzip.filesecure.azf",
+        "azf"
+      ],
+      [
+        "application/vnd.airzip.filesecure.azs",
+        "azs"
+      ],
+      [
+        "application/vnd.amazon.ebook",
+        "azw"
+      ],
+      [
+        "application/vnd.americandynamics.acc",
+        "acc"
+      ],
+      [
+        "application/vnd.amiga.ami",
+        "ami"
+      ],
+      [
+        "application/vnd.android.package-archive",
+        "apk"
+      ],
+      [
+        "application/vnd.anser-web-certificate-issue-initiation",
+        "cii"
+      ],
+      [
+        "application/vnd.anser-web-funds-transfer-initiation",
+        "fti"
+      ],
+      [
+        "application/vnd.antix.game-component",
+        "atx"
+      ],
+      [
+        "application/vnd.apple.installer+xml",
+        "mpkg"
+      ],
+      [
+        "application/vnd.apple.mpegurl",
+        "m3u8"
+      ],
+      [
+        "application/vnd.aristanetworks.swi",
+        "swi"
+      ],
+      [
+        "application/vnd.audiograph",
+        "aep"
+      ],
+      [
+        "application/vnd.blueice.multipass",
+        "mpm"
+      ],
+      [
+        "application/vnd.bmi",
+        "bmi"
+      ],
+      [
+        "application/vnd.businessobjects",
+        "rep"
+      ],
+      [
+        "application/vnd.chemdraw+xml",
+        "cdxml"
+      ],
+      [
+        "application/vnd.chipnuts.karaoke-mmd",
+        "mmd"
+      ],
+      [
+        "application/vnd.cinderella",
+        "cdy"
+      ],
+      [
+        "application/vnd.claymore",
+        "cla"
+      ],
+      [
+        "application/vnd.cloanto.rp9",
+        "rp9"
+      ],
+      [
+        "application/vnd.clonk.c4group",
+        "c4g"
+      ],
+      [
+        "application/vnd.cluetrust.cartomobile-config",
+        "c11amc"
+      ],
+      [
+        "application/vnd.cluetrust.cartomobile-config-pkg",
+        "c11amz"
+      ],
+      [
+        "application/vnd.commonspace",
+        "csp"
+      ],
+      [
+        "application/vnd.contact.cmsg",
+        "cdbcmsg"
+      ],
+      [
+        "application/vnd.cosmocaller",
+        "cmc"
+      ],
+      [
+        "application/vnd.crick.clicker",
+        "clkx"
+      ],
+      [
+        "application/vnd.crick.clicker.keyboard",
+        "clkk"
+      ],
+      [
+        "application/vnd.crick.clicker.palette",
+        "clkp"
+      ],
+      [
+        "application/vnd.crick.clicker.template",
+        "clkt"
+      ],
+      [
+        "application/vnd.crick.clicker.wordbank",
+        "clkw"
+      ],
+      [
+        "application/vnd.criticaltools.wbs+xml",
+        "wbs"
+      ],
+      [
+        "application/vnd.ctc-posml",
+        "pml"
+      ],
+      [
+        "application/vnd.cups-ppd",
+        "ppd"
+      ],
+      [
+        "application/vnd.curl.car",
+        "car"
+      ],
+      [
+        "application/vnd.curl.pcurl",
+        "pcurl"
+      ],
+      [
+        "application/vnd.data-vision.rdz",
+        "rdz"
+      ],
+      [
+        "application/vnd.denovo.fcselayout-link",
+        "fe_launch"
+      ],
+      [
+        "application/vnd.dna",
+        "dna"
+      ],
+      [
+        "application/vnd.dolby.mlp",
+        "mlp"
+      ],
+      [
+        "application/vnd.dpgraph",
+        "dpg"
+      ],
+      [
+        "application/vnd.dreamfactory",
+        "dfac"
+      ],
+      [
+        "application/vnd.dvb.ait",
+        "ait"
+      ],
+      [
+        "application/vnd.dvb.service",
+        "svc"
+      ],
+      [
+        "application/vnd.dynageo",
+        "geo"
+      ],
+      [
+        "application/vnd.ecowin.chart",
+        "mag"
+      ],
+      [
+        "application/vnd.enliven",
+        "nml"
+      ],
+      [
+        "application/vnd.epson.esf",
+        "esf"
+      ],
+      [
+        "application/vnd.epson.msf",
+        "msf"
+      ],
+      [
+        "application/vnd.epson.quickanime",
+        "qam"
+      ],
+      [
+        "application/vnd.epson.salt",
+        "slt"
+      ],
+      [
+        "application/vnd.epson.ssf",
+        "ssf"
+      ],
+      [
+        "application/vnd.eszigno3+xml",
+        "es3"
+      ],
+      [
+        "application/vnd.ezpix-album",
+        "ez2"
+      ],
+      [
+        "application/vnd.ezpix-package",
+        "ez3"
+      ],
+      [
+        "application/vnd.fdf",
+        "fdf"
+      ],
+      [
+        "application/vnd.fdsn.seed",
+        "seed"
+      ],
+      [
+        "application/vnd.flographit",
+        "gph"
+      ],
+      [
+        "application/vnd.fluxtime.clip",
+        "ftc"
+      ],
+      [
+        "application/vnd.framemaker",
+        "fm"
+      ],
+      [
+        "application/vnd.frogans.fnc",
+        "fnc"
+      ],
+      [
+        "application/vnd.frogans.ltf",
+        "ltf"
+      ],
+      [
+        "application/vnd.fsc.weblaunch",
+        "fsc"
+      ],
+      [
+        "application/vnd.fujitsu.oasys",
+        "oas"
+      ],
+      [
+        "application/vnd.fujitsu.oasys2",
+        "oa2"
+      ],
+      [
+        "application/vnd.fujitsu.oasys3",
+        "oa3"
+      ],
+      [
+        "application/vnd.fujitsu.oasysgp",
+        "fg5"
+      ],
+      [
+        "application/vnd.fujitsu.oasysprs",
+        "bh2"
+      ],
+      [
+        "application/vnd.fujixerox.ddd",
+        "ddd"
+      ],
+      [
+        "application/vnd.fujixerox.docuworks",
+        "xdw"
+      ],
+      [
+        "application/vnd.fujixerox.docuworks.binder",
+        "xbd"
+      ],
+      [
+        "application/vnd.fuzzysheet",
+        "fzs"
+      ],
+      [
+        "application/vnd.genomatix.tuxedo",
+        "txd"
+      ],
+      [
+        "application/vnd.geogebra.file",
+        "ggb"
+      ],
+      [
+        "application/vnd.geogebra.tool",
+        "ggt"
+      ],
+      [
+        "application/vnd.geometry-explorer",
+        "gex"
+      ],
+      [
+        "application/vnd.geonext",
+        "gxt"
+      ],
+      [
+        "application/vnd.geoplan",
+        "g2w"
+      ],
+      [
+        "application/vnd.geospace",
+        "g3w"
+      ],
+      [
+        "application/vnd.gmx",
+        "gmx"
+      ],
+      [
+        "application/vnd.google-earth.kml+xml",
+        "kml"
+      ],
+      [
+        "application/vnd.google-earth.kmz",
+        "kmz"
+      ],
+      [
+        "application/vnd.grafeq",
+        "gqf"
+      ],
+      [
+        "application/vnd.groove-account",
+        "gac"
+      ],
+      [
+        "application/vnd.groove-help",
+        "ghf"
+      ],
+      [
+        "application/vnd.groove-identity-message",
+        "gim"
+      ],
+      [
+        "application/vnd.groove-injector",
+        "grv"
+      ],
+      [
+        "application/vnd.groove-tool-message",
+        "gtm"
+      ],
+      [
+        "application/vnd.groove-tool-template",
+        "tpl"
+      ],
+      [
+        "application/vnd.groove-vcard",
+        "vcg"
+      ],
+      [
+        "application/vnd.hal+xml",
+        "hal"
+      ],
+      [
+        "application/vnd.handheld-entertainment+xml",
+        "zmm"
+      ],
+      [
+        "application/vnd.hbci",
+        "hbci"
+      ],
+      [
+        "application/vnd.hhe.lesson-player",
+        "les"
+      ],
+      [
+        "application/vnd.hp-hpgl",
+        [
+          "hgl",
+          "hpg",
+          "hpgl"
+        ]
+      ],
+      [
+        "application/vnd.hp-hpid",
+        "hpid"
+      ],
+      [
+        "application/vnd.hp-hps",
+        "hps"
+      ],
+      [
+        "application/vnd.hp-jlyt",
+        "jlt"
+      ],
+      [
+        "application/vnd.hp-pcl",
+        "pcl"
+      ],
+      [
+        "application/vnd.hp-pclxl",
+        "pclxl"
+      ],
+      [
+        "application/vnd.hydrostatix.sof-data",
+        "sfd-hdstx"
+      ],
+      [
+        "application/vnd.hzn-3d-crossword",
+        "x3d"
+      ],
+      [
+        "application/vnd.ibm.minipay",
+        "mpy"
+      ],
+      [
+        "application/vnd.ibm.modcap",
+        "afp"
+      ],
+      [
+        "application/vnd.ibm.rights-management",
+        "irm"
+      ],
+      [
+        "application/vnd.ibm.secure-container",
+        "sc"
+      ],
+      [
+        "application/vnd.iccprofile",
+        "icc"
+      ],
+      [
+        "application/vnd.igloader",
+        "igl"
+      ],
+      [
+        "application/vnd.immervision-ivp",
+        "ivp"
+      ],
+      [
+        "application/vnd.immervision-ivu",
+        "ivu"
+      ],
+      [
+        "application/vnd.insors.igm",
+        "igm"
+      ],
+      [
+        "application/vnd.intercon.formnet",
+        "xpw"
+      ],
+      [
+        "application/vnd.intergeo",
+        "i2g"
+      ],
+      [
+        "application/vnd.intu.qbo",
+        "qbo"
+      ],
+      [
+        "application/vnd.intu.qfx",
+        "qfx"
+      ],
+      [
+        "application/vnd.ipunplugged.rcprofile",
+        "rcprofile"
+      ],
+      [
+        "application/vnd.irepository.package+xml",
+        "irp"
+      ],
+      [
+        "application/vnd.is-xpr",
+        "xpr"
+      ],
+      [
+        "application/vnd.isac.fcs",
+        "fcs"
+      ],
+      [
+        "application/vnd.jam",
+        "jam"
+      ],
+      [
+        "application/vnd.jcp.javame.midlet-rms",
+        "rms"
+      ],
+      [
+        "application/vnd.jisp",
+        "jisp"
+      ],
+      [
+        "application/vnd.joost.joda-archive",
+        "joda"
+      ],
+      [
+        "application/vnd.kahootz",
+        "ktz"
+      ],
+      [
+        "application/vnd.kde.karbon",
+        "karbon"
+      ],
+      [
+        "application/vnd.kde.kchart",
+        "chrt"
+      ],
+      [
+        "application/vnd.kde.kformula",
+        "kfo"
+      ],
+      [
+        "application/vnd.kde.kivio",
+        "flw"
+      ],
+      [
+        "application/vnd.kde.kontour",
+        "kon"
+      ],
+      [
+        "application/vnd.kde.kpresenter",
+        "kpr"
+      ],
+      [
+        "application/vnd.kde.kspread",
+        "ksp"
+      ],
+      [
+        "application/vnd.kde.kword",
+        "kwd"
+      ],
+      [
+        "application/vnd.kenameaapp",
+        "htke"
+      ],
+      [
+        "application/vnd.kidspiration",
+        "kia"
+      ],
+      [
+        "application/vnd.kinar",
+        "kne"
+      ],
+      [
+        "application/vnd.koan",
+        "skp"
+      ],
+      [
+        "application/vnd.kodak-descriptor",
+        "sse"
+      ],
+      [
+        "application/vnd.las.las+xml",
+        "lasxml"
+      ],
+      [
+        "application/vnd.llamagraphics.life-balance.desktop",
+        "lbd"
+      ],
+      [
+        "application/vnd.llamagraphics.life-balance.exchange+xml",
+        "lbe"
+      ],
+      [
+        "application/vnd.lotus-1-2-3",
+        "123"
+      ],
+      [
+        "application/vnd.lotus-approach",
+        "apr"
+      ],
+      [
+        "application/vnd.lotus-freelance",
+        "pre"
+      ],
+      [
+        "application/vnd.lotus-notes",
+        "nsf"
+      ],
+      [
+        "application/vnd.lotus-organizer",
+        "org"
+      ],
+      [
+        "application/vnd.lotus-screencam",
+        "scm"
+      ],
+      [
+        "application/vnd.lotus-wordpro",
+        "lwp"
+      ],
+      [
+        "application/vnd.macports.portpkg",
+        "portpkg"
+      ],
+      [
+        "application/vnd.mcd",
+        "mcd"
+      ],
+      [
+        "application/vnd.medcalcdata",
+        "mc1"
+      ],
+      [
+        "application/vnd.mediastation.cdkey",
+        "cdkey"
+      ],
+      [
+        "application/vnd.mfer",
+        "mwf"
+      ],
+      [
+        "application/vnd.mfmp",
+        "mfm"
+      ],
+      [
+        "application/vnd.micrografx.flo",
+        "flo"
+      ],
+      [
+        "application/vnd.micrografx.igx",
+        "igx"
+      ],
+      [
+        "application/vnd.mif",
+        "mif"
+      ],
+      [
+        "application/vnd.mobius.daf",
+        "daf"
+      ],
+      [
+        "application/vnd.mobius.dis",
+        "dis"
+      ],
+      [
+        "application/vnd.mobius.mbk",
+        "mbk"
+      ],
+      [
+        "application/vnd.mobius.mqy",
+        "mqy"
+      ],
+      [
+        "application/vnd.mobius.msl",
+        "msl"
+      ],
+      [
+        "application/vnd.mobius.plc",
+        "plc"
+      ],
+      [
+        "application/vnd.mobius.txf",
+        "txf"
+      ],
+      [
+        "application/vnd.mophun.application",
+        "mpn"
+      ],
+      [
+        "application/vnd.mophun.certificate",
+        "mpc"
+      ],
+      [
+        "application/vnd.mozilla.xul+xml",
+        "xul"
+      ],
+      [
+        "application/vnd.ms-artgalry",
+        "cil"
+      ],
+      [
+        "application/vnd.ms-cab-compressed",
+        "cab"
+      ],
+      [
+        "application/vnd.ms-excel",
+        [
+          "xls",
+          "xla",
+          "xlc",
+          "xlm",
+          "xlt",
+          "xlw",
+          "xlb",
+          "xll"
+        ]
+      ],
+      [
+        "application/vnd.ms-excel.addin.macroenabled.12",
+        "xlam"
+      ],
+      [
+        "application/vnd.ms-excel.sheet.binary.macroenabled.12",
+        "xlsb"
+      ],
+      [
+        "application/vnd.ms-excel.sheet.macroenabled.12",
+        "xlsm"
+      ],
+      [
+        "application/vnd.ms-excel.template.macroenabled.12",
+        "xltm"
+      ],
+      [
+        "application/vnd.ms-fontobject",
+        "eot"
+      ],
+      [
+        "application/vnd.ms-htmlhelp",
+        "chm"
+      ],
+      [
+        "application/vnd.ms-ims",
+        "ims"
+      ],
+      [
+        "application/vnd.ms-lrm",
+        "lrm"
+      ],
+      [
+        "application/vnd.ms-officetheme",
+        "thmx"
+      ],
+      [
+        "application/vnd.ms-outlook",
+        "msg"
+      ],
+      [
+        "application/vnd.ms-pki.certstore",
+        "sst"
+      ],
+      [
+        "application/vnd.ms-pki.pko",
+        "pko"
+      ],
+      [
+        "application/vnd.ms-pki.seccat",
+        "cat"
+      ],
+      [
+        "application/vnd.ms-pki.stl",
+        "stl"
+      ],
+      [
+        "application/vnd.ms-pkicertstore",
+        "sst"
+      ],
+      [
+        "application/vnd.ms-pkiseccat",
+        "cat"
+      ],
+      [
+        "application/vnd.ms-pkistl",
+        "stl"
+      ],
+      [
+        "application/vnd.ms-powerpoint",
+        [
+          "ppt",
+          "pot",
+          "pps",
+          "ppa",
+          "pwz"
+        ]
+      ],
+      [
+        "application/vnd.ms-powerpoint.addin.macroenabled.12",
+        "ppam"
+      ],
+      [
+        "application/vnd.ms-powerpoint.presentation.macroenabled.12",
+        "pptm"
+      ],
+      [
+        "application/vnd.ms-powerpoint.slide.macroenabled.12",
+        "sldm"
+      ],
+      [
+        "application/vnd.ms-powerpoint.slideshow.macroenabled.12",
+        "ppsm"
+      ],
+      [
+        "application/vnd.ms-powerpoint.template.macroenabled.12",
+        "potm"
+      ],
+      [
+        "application/vnd.ms-project",
+        "mpp"
+      ],
+      [
+        "application/vnd.ms-word.document.macroenabled.12",
+        "docm"
+      ],
+      [
+        "application/vnd.ms-word.template.macroenabled.12",
+        "dotm"
+      ],
+      [
+        "application/vnd.ms-works",
+        [
+          "wks",
+          "wcm",
+          "wdb",
+          "wps"
+        ]
+      ],
+      [
+        "application/vnd.ms-wpl",
+        "wpl"
+      ],
+      [
+        "application/vnd.ms-xpsdocument",
+        "xps"
+      ],
+      [
+        "application/vnd.mseq",
+        "mseq"
+      ],
+      [
+        "application/vnd.musician",
+        "mus"
+      ],
+      [
+        "application/vnd.muvee.style",
+        "msty"
+      ],
+      [
+        "application/vnd.neurolanguage.nlu",
+        "nlu"
+      ],
+      [
+        "application/vnd.noblenet-directory",
+        "nnd"
+      ],
+      [
+        "application/vnd.noblenet-sealer",
+        "nns"
+      ],
+      [
+        "application/vnd.noblenet-web",
+        "nnw"
+      ],
+      [
+        "application/vnd.nokia.configuration-message",
+        "ncm"
+      ],
+      [
+        "application/vnd.nokia.n-gage.data",
+        "ngdat"
+      ],
+      [
+        "application/vnd.nokia.n-gage.symbian.install",
+        "n-gage"
+      ],
+      [
+        "application/vnd.nokia.radio-preset",
+        "rpst"
+      ],
+      [
+        "application/vnd.nokia.radio-presets",
+        "rpss"
+      ],
+      [
+        "application/vnd.nokia.ringing-tone",
+        "rng"
+      ],
+      [
+        "application/vnd.novadigm.edm",
+        "edm"
+      ],
+      [
+        "application/vnd.novadigm.edx",
+        "edx"
+      ],
+      [
+        "application/vnd.novadigm.ext",
+        "ext"
+      ],
+      [
+        "application/vnd.oasis.opendocument.chart",
+        "odc"
+      ],
+      [
+        "application/vnd.oasis.opendocument.chart-template",
+        "otc"
+      ],
+      [
+        "application/vnd.oasis.opendocument.database",
+        "odb"
+      ],
+      [
+        "application/vnd.oasis.opendocument.formula",
+        "odf"
+      ],
+      [
+        "application/vnd.oasis.opendocument.formula-template",
+        "odft"
+      ],
+      [
+        "application/vnd.oasis.opendocument.graphics",
+        "odg"
+      ],
+      [
+        "application/vnd.oasis.opendocument.graphics-template",
+        "otg"
+      ],
+      [
+        "application/vnd.oasis.opendocument.image",
+        "odi"
+      ],
+      [
+        "application/vnd.oasis.opendocument.image-template",
+        "oti"
+      ],
+      [
+        "application/vnd.oasis.opendocument.presentation",
+        "odp"
+      ],
+      [
+        "application/vnd.oasis.opendocument.presentation-template",
+        "otp"
+      ],
+      [
+        "application/vnd.oasis.opendocument.spreadsheet",
+        "ods"
+      ],
+      [
+        "application/vnd.oasis.opendocument.spreadsheet-template",
+        "ots"
+      ],
+      [
+        "application/vnd.oasis.opendocument.text",
+        "odt"
+      ],
+      [
+        "application/vnd.oasis.opendocument.text-master",
+        "odm"
+      ],
+      [
+        "application/vnd.oasis.opendocument.text-template",
+        "ott"
+      ],
+      [
+        "application/vnd.oasis.opendocument.text-web",
+        "oth"
+      ],
+      [
+        "application/vnd.olpc-sugar",
+        "xo"
+      ],
+      [
+        "application/vnd.oma.dd2+xml",
+        "dd2"
+      ],
+      [
+        "application/vnd.openofficeorg.extension",
+        "oxt"
+      ],
+      [
+        "application/vnd.openxmlformats-officedocument.presentationml.presentation",
+        "pptx"
+      ],
+      [
+        "application/vnd.openxmlformats-officedocument.presentationml.slide",
+        "sldx"
+      ],
+      [
+        "application/vnd.openxmlformats-officedocument.presentationml.slideshow",
+        "ppsx"
+      ],
+      [
+        "application/vnd.openxmlformats-officedocument.presentationml.template",
+        "potx"
+      ],
+      [
+        "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+        "xlsx"
+      ],
+      [
+        "application/vnd.openxmlformats-officedocument.spreadsheetml.template",
+        "xltx"
+      ],
+      [
+        "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+        "docx"
+      ],
+      [
+        "application/vnd.openxmlformats-officedocument.wordprocessingml.template",
+        "dotx"
+      ],
+      [
+        "application/vnd.osgeo.mapguide.package",
+        "mgp"
+      ],
+      [
+        "application/vnd.osgi.dp",
+        "dp"
+      ],
+      [
+        "application/vnd.palm",
+        "pdb"
+      ],
+      [
+        "application/vnd.pawaafile",
+        "paw"
+      ],
+      [
+        "application/vnd.pg.format",
+        "str"
+      ],
+      [
+        "application/vnd.pg.osasli",
+        "ei6"
+      ],
+      [
+        "application/vnd.picsel",
+        "efif"
+      ],
+      [
+        "application/vnd.pmi.widget",
+        "wg"
+      ],
+      [
+        "application/vnd.pocketlearn",
+        "plf"
+      ],
+      [
+        "application/vnd.powerbuilder6",
+        "pbd"
+      ],
+      [
+        "application/vnd.previewsystems.box",
+        "box"
+      ],
+      [
+        "application/vnd.proteus.magazine",
+        "mgz"
+      ],
+      [
+        "application/vnd.publishare-delta-tree",
+        "qps"
+      ],
+      [
+        "application/vnd.pvi.ptid1",
+        "ptid"
+      ],
+      [
+        "application/vnd.quark.quarkxpress",
+        "qxd"
+      ],
+      [
+        "application/vnd.realvnc.bed",
+        "bed"
+      ],
+      [
+        "application/vnd.recordare.musicxml",
+        "mxl"
+      ],
+      [
+        "application/vnd.recordare.musicxml+xml",
+        "musicxml"
+      ],
+      [
+        "application/vnd.rig.cryptonote",
+        "cryptonote"
+      ],
+      [
+        "application/vnd.rim.cod",
+        "cod"
+      ],
+      [
+        "application/vnd.rn-realmedia",
+        "rm"
+      ],
+      [
+        "application/vnd.rn-realplayer",
+        "rnx"
+      ],
+      [
+        "application/vnd.route66.link66+xml",
+        "link66"
+      ],
+      [
+        "application/vnd.sailingtracker.track",
+        "st"
+      ],
+      [
+        "application/vnd.seemail",
+        "see"
+      ],
+      [
+        "application/vnd.sema",
+        "sema"
+      ],
+      [
+        "application/vnd.semd",
+        "semd"
+      ],
+      [
+        "application/vnd.semf",
+        "semf"
+      ],
+      [
+        "application/vnd.shana.informed.formdata",
+        "ifm"
+      ],
+      [
+        "application/vnd.shana.informed.formtemplate",
+        "itp"
+      ],
+      [
+        "application/vnd.shana.informed.interchange",
+        "iif"
+      ],
+      [
+        "application/vnd.shana.informed.package",
+        "ipk"
+      ],
+      [
+        "application/vnd.simtech-mindmapper",
+        "twd"
+      ],
+      [
+        "application/vnd.smaf",
+        "mmf"
+      ],
+      [
+        "application/vnd.smart.teacher",
+        "teacher"
+      ],
+      [
+        "application/vnd.solent.sdkm+xml",
+        "sdkm"
+      ],
+      [
+        "application/vnd.spotfire.dxp",
+        "dxp"
+      ],
+      [
+        "application/vnd.spotfire.sfs",
+        "sfs"
+      ],
+      [
+        "application/vnd.stardivision.calc",
+        "sdc"
+      ],
+      [
+        "application/vnd.stardivision.draw",
+        "sda"
+      ],
+      [
+        "application/vnd.stardivision.impress",
+        "sdd"
+      ],
+      [
+        "application/vnd.stardivision.math",
+        "smf"
+      ],
+      [
+        "application/vnd.stardivision.writer",
+        "sdw"
+      ],
+      [
+        "application/vnd.stardivision.writer-global",
+        "sgl"
+      ],
+      [
+        "application/vnd.stepmania.stepchart",
+        "sm"
+      ],
+      [
+        "application/vnd.sun.xml.calc",
+        "sxc"
+      ],
+      [
+        "application/vnd.sun.xml.calc.template",
+        "stc"
+      ],
+      [
+        "application/vnd.sun.xml.draw",
+        "sxd"
+      ],
+      [
+        "application/vnd.sun.xml.draw.template",
+        "std"
+      ],
+      [
+        "application/vnd.sun.xml.impress",
+        "sxi"
+      ],
+      [
+        "application/vnd.sun.xml.impress.template",
+        "sti"
+      ],
+      [
+        "application/vnd.sun.xml.math",
+        "sxm"
+      ],
+      [
+        "application/vnd.sun.xml.writer",
+        "sxw"
+      ],
+      [
+        "application/vnd.sun.xml.writer.global",
+        "sxg"
+      ],
+      [
+        "application/vnd.sun.xml.writer.template",
+        "stw"
+      ],
+      [
+        "application/vnd.sus-calendar",
+        "sus"
+      ],
+      [
+        "application/vnd.svd",
+        "svd"
+      ],
+      [
+        "application/vnd.symbian.install",
+        "sis"
+      ],
+      [
+        "application/vnd.syncml+xml",
+        "xsm"
+      ],
+      [
+        "application/vnd.syncml.dm+wbxml",
+        "bdm"
+      ],
+      [
+        "application/vnd.syncml.dm+xml",
+        "xdm"
+      ],
+      [
+        "application/vnd.tao.intent-module-archive",
+        "tao"
+      ],
+      [
+        "application/vnd.tmobile-livetv",
+        "tmo"
+      ],
+      [
+        "application/vnd.trid.tpt",
+        "tpt"
+      ],
+      [
+        "application/vnd.triscape.mxs",
+        "mxs"
+      ],
+      [
+        "application/vnd.trueapp",
+        "tra"
+      ],
+      [
+        "application/vnd.ufdl",
+        "ufd"
+      ],
+      [
+        "application/vnd.uiq.theme",
+        "utz"
+      ],
+      [
+        "application/vnd.umajin",
+        "umj"
+      ],
+      [
+        "application/vnd.unity",
+        "unityweb"
+      ],
+      [
+        "application/vnd.uoml+xml",
+        "uoml"
+      ],
+      [
+        "application/vnd.vcx",
+        "vcx"
+      ],
+      [
+        "application/vnd.visio",
+        "vsd"
+      ],
+      [
+        "application/vnd.visionary",
+        "vis"
+      ],
+      [
+        "application/vnd.vsf",
+        "vsf"
+      ],
+      [
+        "application/vnd.wap.wbxml",
+        "wbxml"
+      ],
+      [
+        "application/vnd.wap.wmlc",
+        "wmlc"
+      ],
+      [
+        "application/vnd.wap.wmlscriptc",
+        "wmlsc"
+      ],
+      [
+        "application/vnd.webturbo",
+        "wtb"
+      ],
+      [
+        "application/vnd.wolfram.player",
+        "nbp"
+      ],
+      [
+        "application/vnd.wordperfect",
+        "wpd"
+      ],
+      [
+        "application/vnd.wqd",
+        "wqd"
+      ],
+      [
+        "application/vnd.wt.stf",
+        "stf"
+      ],
+      [
+        "application/vnd.xara",
+        [
+          "web",
+          "xar"
+        ]
+      ],
+      [
+        "application/vnd.xfdl",
+        "xfdl"
+      ],
+      [
+        "application/vnd.yamaha.hv-dic",
+        "hvd"
+      ],
+      [
+        "application/vnd.yamaha.hv-script",
+        "hvs"
+      ],
+      [
+        "application/vnd.yamaha.hv-voice",
+        "hvp"
+      ],
+      [
+        "application/vnd.yamaha.openscoreformat",
+        "osf"
+      ],
+      [
+        "application/vnd.yamaha.openscoreformat.osfpvg+xml",
+        "osfpvg"
+      ],
+      [
+        "application/vnd.yamaha.smaf-audio",
+        "saf"
+      ],
+      [
+        "application/vnd.yamaha.smaf-phrase",
+        "spf"
+      ],
+      [
+        "application/vnd.yellowriver-custom-menu",
+        "cmp"
+      ],
+      [
+        "application/vnd.zul",
+        "zir"
+      ],
+      [
+        "application/vnd.zzazz.deck+xml",
+        "zaz"
+      ],
+      [
+        "application/vocaltec-media-desc",
+        "vmd"
+      ],
+      [
+        "application/vocaltec-media-file",
+        "vmf"
+      ],
+      [
+        "application/voicexml+xml",
+        "vxml"
+      ],
+      [
+        "application/widget",
+        "wgt"
+      ],
+      [
+        "application/winhlp",
+        "hlp"
+      ],
+      [
+        "application/wordperfect",
+        [
+          "wp",
+          "wp5",
+          "wp6",
+          "wpd"
+        ]
+      ],
+      [
+        "application/wordperfect6.0",
+        [
+          "w60",
+          "wp5"
+        ]
+      ],
+      [
+        "application/wordperfect6.1",
+        "w61"
+      ],
+      [
+        "application/wsdl+xml",
+        "wsdl"
+      ],
+      [
+        "application/wspolicy+xml",
+        "wspolicy"
+      ],
+      [
+        "application/x-123",
+        "wk1"
+      ],
+      [
+        "application/x-7z-compressed",
+        "7z"
+      ],
+      [
+        "application/x-abiword",
+        "abw"
+      ],
+      [
+        "application/x-ace-compressed",
+        "ace"
+      ],
+      [
+        "application/x-aim",
+        "aim"
+      ],
+      [
+        "application/x-authorware-bin",
+        "aab"
+      ],
+      [
+        "application/x-authorware-map",
+        "aam"
+      ],
+      [
+        "application/x-authorware-seg",
+        "aas"
+      ],
+      [
+        "application/x-bcpio",
+        "bcpio"
+      ],
+      [
+        "application/x-binary",
+        "bin"
+      ],
+      [
+        "application/x-binhex40",
+        "hqx"
+      ],
+      [
+        "application/x-bittorrent",
+        "torrent"
+      ],
+      [
+        "application/x-bsh",
+        [
+          "bsh",
+          "sh",
+          "shar"
+        ]
+      ],
+      [
+        "application/x-bytecode.elisp",
+        "elc"
+      ],
+      [
+        "application/x-bytecode.python",
+        "pyc"
+      ],
+      [
+        "application/x-bzip",
+        "bz"
+      ],
+      [
+        "application/x-bzip2",
+        [
+          "boz",
+          "bz2"
+        ]
+      ],
+      [
+        "application/x-cdf",
+        "cdf"
+      ],
+      [
+        "application/x-cdlink",
+        "vcd"
+      ],
+      [
+        "application/x-chat",
+        [
+          "cha",
+          "chat"
+        ]
+      ],
+      [
+        "application/x-chess-pgn",
+        "pgn"
+      ],
+      [
+        "application/x-cmu-raster",
+        "ras"
+      ],
+      [
+        "application/x-cocoa",
+        "cco"
+      ],
+      [
+        "application/x-compactpro",
+        "cpt"
+      ],
+      [
+        "application/x-compress",
+        "z"
+      ],
+      [
+        "application/x-compressed",
+        [
+          "tgz",
+          "gz",
+          "z",
+          "zip"
+        ]
+      ],
+      [
+        "application/x-conference",
+        "nsc"
+      ],
+      [
+        "application/x-cpio",
+        "cpio"
+      ],
+      [
+        "application/x-cpt",
+        "cpt"
+      ],
+      [
+        "application/x-csh",
+        "csh"
+      ],
+      [
+        "application/x-debian-package",
+        "deb"
+      ],
+      [
+        "application/x-deepv",
+        "deepv"
+      ],
+      [
+        "application/x-director",
+        [
+          "dir",
+          "dcr",
+          "dxr"
+        ]
+      ],
+      [
+        "application/x-doom",
+        "wad"
+      ],
+      [
+        "application/x-dtbncx+xml",
+        "ncx"
+      ],
+      [
+        "application/x-dtbook+xml",
+        "dtb"
+      ],
+      [
+        "application/x-dtbresource+xml",
+        "res"
+      ],
+      [
+        "application/x-dvi",
+        "dvi"
+      ],
+      [
+        "application/x-elc",
+        "elc"
+      ],
+      [
+        "application/x-envoy",
+        [
+          "env",
+          "evy"
+        ]
+      ],
+      [
+        "application/x-esrehber",
+        "es"
+      ],
+      [
+        "application/x-excel",
+        [
+          "xls",
+          "xla",
+          "xlb",
+          "xlc",
+          "xld",
+          "xlk",
+          "xll",
+          "xlm",
+          "xlt",
+          "xlv",
+          "xlw"
+        ]
+      ],
+      [
+        "application/x-font-bdf",
+        "bdf"
+      ],
+      [
+        "application/x-font-ghostscript",
+        "gsf"
+      ],
+      [
+        "application/x-font-linux-psf",
+        "psf"
+      ],
+      [
+        "application/x-font-otf",
+        "otf"
+      ],
+      [
+        "application/x-font-pcf",
+        "pcf"
+      ],
+      [
+        "application/x-font-snf",
+        "snf"
+      ],
+      [
+        "application/x-font-ttf",
+        "ttf"
+      ],
+      [
+        "application/x-font-type1",
+        "pfa"
+      ],
+      [
+        "application/x-font-woff",
+        "woff"
+      ],
+      [
+        "application/x-frame",
+        "mif"
+      ],
+      [
+        "application/x-freelance",
+        "pre"
+      ],
+      [
+        "application/x-futuresplash",
+        "spl"
+      ],
+      [
+        "application/x-gnumeric",
+        "gnumeric"
+      ],
+      [
+        "application/x-gsp",
+        "gsp"
+      ],
+      [
+        "application/x-gss",
+        "gss"
+      ],
+      [
+        "application/x-gtar",
+        "gtar"
+      ],
+      [
+        "application/x-gzip",
+        [
+          "gz",
+          "gzip"
+        ]
+      ],
+      [
+        "application/x-hdf",
+        "hdf"
+      ],
+      [
+        "application/x-helpfile",
+        [
+          "help",
+          "hlp"
+        ]
+      ],
+      [
+        "application/x-httpd-imap",
+        "imap"
+      ],
+      [
+        "application/x-ima",
+        "ima"
+      ],
+      [
+        "application/x-internet-signup",
+        [
+          "ins",
+          "isp"
+        ]
+      ],
+      [
+        "application/x-internett-signup",
+        "ins"
+      ],
+      [
+        "application/x-inventor",
+        "iv"
+      ],
+      [
+        "application/x-ip2",
+        "ip"
+      ],
+      [
+        "application/x-iphone",
+        "iii"
+      ],
+      [
+        "application/x-java-class",
+        "class"
+      ],
+      [
+        "application/x-java-commerce",
+        "jcm"
+      ],
+      [
+        "application/x-java-jnlp-file",
+        "jnlp"
+      ],
+      [
+        "application/x-javascript",
+        "js"
+      ],
+      [
+        "application/x-koan",
+        [
+          "skd",
+          "skm",
+          "skp",
+          "skt"
+        ]
+      ],
+      [
+        "application/x-ksh",
+        "ksh"
+      ],
+      [
+        "application/x-latex",
+        [
+          "latex",
+          "ltx"
+        ]
+      ],
+      [
+        "application/x-lha",
+        "lha"
+      ],
+      [
+        "application/x-lisp",
+        "lsp"
+      ],
+      [
+        "application/x-livescreen",
+        "ivy"
+      ],
+      [
+        "application/x-lotus",
+        "wq1"
+      ],
+      [
+        "application/x-lotusscreencam",
+        "scm"
+      ],
+      [
+        "application/x-lzh",
+        "lzh"
+      ],
+      [
+        "application/x-lzx",
+        "lzx"
+      ],
+      [
+        "application/x-mac-binhex40",
+        "hqx"
+      ],
+      [
+        "application/x-macbinary",
+        "bin"
+      ],
+      [
+        "application/x-magic-cap-package-1.0",
+        "mc$"
+      ],
+      [
+        "application/x-mathcad",
+        "mcd"
+      ],
+      [
+        "application/x-meme",
+        "mm"
+      ],
+      [
+        "application/x-midi",
+        [
+          "mid",
+          "midi"
+        ]
+      ],
+      [
+        "application/x-mif",
+        "mif"
+      ],
+      [
+        "application/x-mix-transfer",
+        "nix"
+      ],
+      [
+        "application/x-mobipocket-ebook",
+        "prc"
+      ],
+      [
+        "application/x-mplayer2",
+        "asx"
+      ],
+      [
+        "application/x-ms-application",
+        "application"
+      ],
+      [
+        "application/x-ms-wmd",
+        "wmd"
+      ],
+      [
+        "application/x-ms-wmz",
+        "wmz"
+      ],
+      [
+        "application/x-ms-xbap",
+        "xbap"
+      ],
+      [
+        "application/x-msaccess",
+        "mdb"
+      ],
+      [
+        "application/x-msbinder",
+        "obd"
+      ],
+      [
+        "application/x-mscardfile",
+        "crd"
+      ],
+      [
+        "application/x-msclip",
+        "clp"
+      ],
+      [
+        "application/x-msdownload",
+        [
+          "exe",
+          "dll"
+        ]
+      ],
+      [
+        "application/x-msexcel",
+        [
+          "xls",
+          "xla",
+          "xlw"
+        ]
+      ],
+      [
+        "application/x-msmediaview",
+        [
+          "mvb",
+          "m13",
+          "m14"
+        ]
+      ],
+      [
+        "application/x-msmetafile",
+        "wmf"
+      ],
+      [
+        "application/x-msmoney",
+        "mny"
+      ],
+      [
+        "application/x-mspowerpoint",
+        "ppt"
+      ],
+      [
+        "application/x-mspublisher",
+        "pub"
+      ],
+      [
+        "application/x-msschedule",
+        "scd"
+      ],
+      [
+        "application/x-msterminal",
+        "trm"
+      ],
+      [
+        "application/x-mswrite",
+        "wri"
+      ],
+      [
+        "application/x-navi-animation",
+        "ani"
+      ],
+      [
+        "application/x-navidoc",
+        "nvd"
+      ],
+      [
+        "application/x-navimap",
+        "map"
+      ],
+      [
+        "application/x-navistyle",
+        "stl"
+      ],
+      [
+        "application/x-netcdf",
+        [
+          "cdf",
+          "nc"
+        ]
+      ],
+      [
+        "application/x-newton-compatible-pkg",
+        "pkg"
+      ],
+      [
+        "application/x-nokia-9000-communicator-add-on-software",
+        "aos"
+      ],
+      [
+        "application/x-omc",
+        "omc"
+      ],
+      [
+        "application/x-omcdatamaker",
+        "omcd"
+      ],
+      [
+        "application/x-omcregerator",
+        "omcr"
+      ],
+      [
+        "application/x-pagemaker",
+        [
+          "pm4",
+          "pm5"
+        ]
+      ],
+      [
+        "application/x-pcl",
+        "pcl"
+      ],
+      [
+        "application/x-perfmon",
+        [
+          "pma",
+          "pmc",
+          "pml",
+          "pmr",
+          "pmw"
+        ]
+      ],
+      [
+        "application/x-pixclscript",
+        "plx"
+      ],
+      [
+        "application/x-pkcs10",
+        "p10"
+      ],
+      [
+        "application/x-pkcs12",
+        [
+          "p12",
+          "pfx"
+        ]
+      ],
+      [
+        "application/x-pkcs7-certificates",
+        [
+          "p7b",
+          "spc"
+        ]
+      ],
+      [
+        "application/x-pkcs7-certreqresp",
+        "p7r"
+      ],
+      [
+        "application/x-pkcs7-mime",
+        [
+          "p7m",
+          "p7c"
+        ]
+      ],
+      [
+        "application/x-pkcs7-signature",
+        [
+          "p7s",
+          "p7a"
+        ]
+      ],
+      [
+        "application/x-pointplus",
+        "css"
+      ],
+      [
+        "application/x-portable-anymap",
+        "pnm"
+      ],
+      [
+        "application/x-project",
+        [
+          "mpc",
+          "mpt",
+          "mpv",
+          "mpx"
+        ]
+      ],
+      [
+        "application/x-qpro",
+        "wb1"
+      ],
+      [
+        "application/x-rar-compressed",
+        "rar"
+      ],
+      [
+        "application/x-rtf",
+        "rtf"
+      ],
+      [
+        "application/x-sdp",
+        "sdp"
+      ],
+      [
+        "application/x-sea",
+        "sea"
+      ],
+      [
+        "application/x-seelogo",
+        "sl"
+      ],
+      [
+        "application/x-sh",
+        "sh"
+      ],
+      [
+        "application/x-shar",
+        [
+          "shar",
+          "sh"
+        ]
+      ],
+      [
+        "application/x-shockwave-flash",
+        "swf"
+      ],
+      [
+        "application/x-silverlight-app",
+        "xap"
+      ],
+      [
+        "application/x-sit",
+        "sit"
+      ],
+      [
+        "application/x-sprite",
+        [
+          "spr",
+          "sprite"
+        ]
+      ],
+      [
+        "application/x-stuffit",
+        "sit"
+      ],
+      [
+        "application/x-stuffitx",
+        "sitx"
+      ],
+      [
+        "application/x-sv4cpio",
+        "sv4cpio"
+      ],
+      [
+        "application/x-sv4crc",
+        "sv4crc"
+      ],
+      [
+        "application/x-tar",
+        "tar"
+      ],
+      [
+        "application/x-tbook",
+        [
+          "sbk",
+          "tbk"
+        ]
+      ],
+      [
+        "application/x-tcl",
+        "tcl"
+      ],
+      [
+        "application/x-tex",
+        "tex"
+      ],
+      [
+        "application/x-tex-tfm",
+        "tfm"
+      ],
+      [
+        "application/x-texinfo",
+        [
+          "texi",
+          "texinfo"
+        ]
+      ],
+      [
+        "application/x-troff",
+        [
+          "roff",
+          "t",
+          "tr"
+        ]
+      ],
+      [
+        "application/x-troff-man",
+        "man"
+      ],
+      [
+        "application/x-troff-me",
+        "me"
+      ],
+      [
+        "application/x-troff-ms",
+        "ms"
+      ],
+      [
+        "application/x-troff-msvideo",
+        "avi"
+      ],
+      [
+        "application/x-ustar",
+        "ustar"
+      ],
+      [
+        "application/x-visio",
+        [
+          "vsd",
+          "vst",
+          "vsw"
+        ]
+      ],
+      [
+        "application/x-vnd.audioexplosion.mzz",
+        "mzz"
+      ],
+      [
+        "application/x-vnd.ls-xpix",
+        "xpix"
+      ],
+      [
+        "application/x-vrml",
+        "vrml"
+      ],
+      [
+        "application/x-wais-source",
+        [
+          "src",
+          "wsrc"
+        ]
+      ],
+      [
+        "application/x-winhelp",
+        "hlp"
+      ],
+      [
+        "application/x-wintalk",
+        "wtk"
+      ],
+      [
+        "application/x-world",
+        [
+          "wrl",
+          "svr"
+        ]
+      ],
+      [
+        "application/x-wpwin",
+        "wpd"
+      ],
+      [
+        "application/x-wri",
+        "wri"
+      ],
+      [
+        "application/x-x509-ca-cert",
+        [
+          "cer",
+          "crt",
+          "der"
+        ]
+      ],
+      [
+        "application/x-x509-user-cert",
+        "crt"
+      ],
+      [
+        "application/x-xfig",
+        "fig"
+      ],
+      [
+        "application/x-xpinstall",
+        "xpi"
+      ],
+      [
+        "application/x-zip-compressed",
+        "zip"
+      ],
+      [
+        "application/xcap-diff+xml",
+        "xdf"
+      ],
+      [
+        "application/xenc+xml",
+        "xenc"
+      ],
+      [
+        "application/xhtml+xml",
+        "xhtml"
+      ],
+      [
+        "application/xml",
+        "xml"
+      ],
+      [
+        "application/xml-dtd",
+        "dtd"
+      ],
+      [
+        "application/xop+xml",
+        "xop"
+      ],
+      [
+        "application/xslt+xml",
+        "xslt"
+      ],
+      [
+        "application/xspf+xml",
+        "xspf"
+      ],
+      [
+        "application/xv+xml",
+        "mxml"
+      ],
+      [
+        "application/yang",
+        "yang"
+      ],
+      [
+        "application/yin+xml",
+        "yin"
+      ],
+      [
+        "application/ynd.ms-pkipko",
+        "pko"
+      ],
+      [
+        "application/zip",
+        "zip"
+      ],
+      [
+        "audio/adpcm",
+        "adp"
+      ],
+      [
+        "audio/aiff",
+        [
+          "aiff",
+          "aif",
+          "aifc"
+        ]
+      ],
+      [
+        "audio/basic",
+        [
+          "snd",
+          "au"
+        ]
+      ],
+      [
+        "audio/it",
+        "it"
+      ],
+      [
+        "audio/make",
+        [
+          "funk",
+          "my",
+          "pfunk"
+        ]
+      ],
+      [
+        "audio/make.my.funk",
+        "pfunk"
+      ],
+      [
+        "audio/mid",
+        [
+          "mid",
+          "rmi"
+        ]
+      ],
+      [
+        "audio/midi",
+        [
+          "midi",
+          "kar",
+          "mid"
+        ]
+      ],
+      [
+        "audio/mod",
+        "mod"
+      ],
+      [
+        "audio/mp4",
+        "mp4a"
+      ],
+      [
+        "audio/mpeg",
+        [
+          "mpga",
+          "mp3",
+          "m2a",
+          "mp2",
+          "mpa",
+          "mpg"
+        ]
+      ],
+      [
+        "audio/mpeg3",
+        "mp3"
+      ],
+      [
+        "audio/nspaudio",
+        [
+          "la",
+          "lma"
+        ]
+      ],
+      [
+        "audio/ogg",
+        "oga"
+      ],
+      [
+        "audio/s3m",
+        "s3m"
+      ],
+      [
+        "audio/tsp-audio",
+        "tsi"
+      ],
+      [
+        "audio/tsplayer",
+        "tsp"
+      ],
+      [
+        "audio/vnd.dece.audio",
+        "uva"
+      ],
+      [
+        "audio/vnd.digital-winds",
+        "eol"
+      ],
+      [
+        "audio/vnd.dra",
+        "dra"
+      ],
+      [
+        "audio/vnd.dts",
+        "dts"
+      ],
+      [
+        "audio/vnd.dts.hd",
+        "dtshd"
+      ],
+      [
+        "audio/vnd.lucent.voice",
+        "lvp"
+      ],
+      [
+        "audio/vnd.ms-playready.media.pya",
+        "pya"
+      ],
+      [
+        "audio/vnd.nuera.ecelp4800",
+        "ecelp4800"
+      ],
+      [
+        "audio/vnd.nuera.ecelp7470",
+        "ecelp7470"
+      ],
+      [
+        "audio/vnd.nuera.ecelp9600",
+        "ecelp9600"
+      ],
+      [
+        "audio/vnd.qcelp",
+        "qcp"
+      ],
+      [
+        "audio/vnd.rip",
+        "rip"
+      ],
+      [
+        "audio/voc",
+        "voc"
+      ],
+      [
+        "audio/voxware",
+        "vox"
+      ],
+      [
+        "audio/wav",
+        "wav"
+      ],
+      [
+        "audio/webm",
+        "weba"
+      ],
+      [
+        "audio/x-aac",
+        "aac"
+      ],
+      [
+        "audio/x-adpcm",
+        "snd"
+      ],
+      [
+        "audio/x-aiff",
+        [
+          "aiff",
+          "aif",
+          "aifc"
+        ]
+      ],
+      [
+        "audio/x-au",
+        "au"
+      ],
+      [
+        "audio/x-gsm",
+        [
+          "gsd",
+          "gsm"
+        ]
+      ],
+      [
+        "audio/x-jam",
+        "jam"
+      ],
+      [
+        "audio/x-liveaudio",
+        "lam"
+      ],
+      [
+        "audio/x-mid",
+        [
+          "mid",
+          "midi"
+        ]
+      ],
+      [
+        "audio/x-midi",
+        [
+          "midi",
+          "mid"
+        ]
+      ],
+      [
+        "audio/x-mod",
+        "mod"
+      ],
+      [
+        "audio/x-mpeg",
+        "mp2"
+      ],
+      [
+        "audio/x-mpeg-3",
+        "mp3"
+      ],
+      [
+        "audio/x-mpegurl",
+        "m3u"
+      ],
+      [
+        "audio/x-mpequrl",
+        "m3u"
+      ],
+      [
+        "audio/x-ms-wax",
+        "wax"
+      ],
+      [
+        "audio/x-ms-wma",
+        "wma"
+      ],
+      [
+        "audio/x-nspaudio",
+        [
+          "la",
+          "lma"
+        ]
+      ],
+      [
+        "audio/x-pn-realaudio",
+        [
+          "ra",
+          "ram",
+          "rm",
+          "rmm",
+          "rmp"
+        ]
+      ],
+      [
+        "audio/x-pn-realaudio-plugin",
+        [
+          "ra",
+          "rmp",
+          "rpm"
+        ]
+      ],
+      [
+        "audio/x-psid",
+        "sid"
+      ],
+      [
+        "audio/x-realaudio",
+        "ra"
+      ],
+      [
+        "audio/x-twinvq",
+        "vqf"
+      ],
+      [
+        "audio/x-twinvq-plugin",
+        [
+          "vqe",
+          "vql"
+        ]
+      ],
+      [
+        "audio/x-vnd.audioexplosion.mjuicemediafile",
+        "mjf"
+      ],
+      [
+        "audio/x-voc",
+        "voc"
+      ],
+      [
+        "audio/x-wav",
+        "wav"
+      ],
+      [
+        "audio/xm",
+        "xm"
+      ],
+      [
+        "chemical/x-cdx",
+        "cdx"
+      ],
+      [
+        "chemical/x-cif",
+        "cif"
+      ],
+      [
+        "chemical/x-cmdf",
+        "cmdf"
+      ],
+      [
+        "chemical/x-cml",
+        "cml"
+      ],
+      [
+        "chemical/x-csml",
+        "csml"
+      ],
+      [
+        "chemical/x-pdb",
+        [
+          "pdb",
+          "xyz"
+        ]
+      ],
+      [
+        "chemical/x-xyz",
+        "xyz"
+      ],
+      [
+        "drawing/x-dwf",
+        "dwf"
+      ],
+      [
+        "i-world/i-vrml",
+        "ivr"
+      ],
+      [
+        "image/bmp",
+        [
+          "bmp",
+          "bm"
+        ]
+      ],
+      [
+        "image/cgm",
+        "cgm"
+      ],
+      [
+        "image/cis-cod",
+        "cod"
+      ],
+      [
+        "image/cmu-raster",
+        [
+          "ras",
+          "rast"
+        ]
+      ],
+      [
+        "image/fif",
+        "fif"
+      ],
+      [
+        "image/florian",
+        [
+          "flo",
+          "turbot"
+        ]
+      ],
+      [
+        "image/g3fax",
+        "g3"
+      ],
+      [
+        "image/gif",
+        "gif"
+      ],
+      [
+        "image/ief",
+        [
+          "ief",
+          "iefs"
+        ]
+      ],
+      [
+        "image/jpeg",
+        [
+          "jpeg",
+          "jpe",
+          "jpg",
+          "jfif",
+          "jfif-tbnl"
+        ]
+      ],
+      [
+        "image/jutvision",
+        "jut"
+      ],
+      [
+        "image/ktx",
+        "ktx"
+      ],
+      [
+        "image/naplps",
+        [
+          "nap",
+          "naplps"
+        ]
+      ],
+      [
+        "image/pict",
+        [
+          "pic",
+          "pict"
+        ]
+      ],
+      [
+        "image/pipeg",
+        "jfif"
+      ],
+      [
+        "image/pjpeg",
+        [
+          "jfif",
+          "jpe",
+          "jpeg",
+          "jpg"
+        ]
+      ],
+      [
+        "image/png",
+        [
+          "png",
+          "x-png"
+        ]
+      ],
+      [
+        "image/prs.btif",
+        "btif"
+      ],
+      [
+        "image/svg+xml",
+        "svg"
+      ],
+      [
+        "image/tiff",
+        [
+          "tif",
+          "tiff"
+        ]
+      ],
+      [
+        "image/vasa",
+        "mcf"
+      ],
+      [
+        "image/vnd.adobe.photoshop",
+        "psd"
+      ],
+      [
+        "image/vnd.dece.graphic",
+        "uvi"
+      ],
+      [
+        "image/vnd.djvu",
+        "djvu"
+      ],
+      [
+        "image/vnd.dvb.subtitle",
+        "sub"
+      ],
+      [
+        "image/vnd.dwg",
+        [
+          "dwg",
+          "dxf",
+          "svf"
+        ]
+      ],
+      [
+        "image/vnd.dxf",
+        "dxf"
+      ],
+      [
+        "image/vnd.fastbidsheet",
+        "fbs"
+      ],
+      [
+        "image/vnd.fpx",
+        "fpx"
+      ],
+      [
+        "image/vnd.fst",
+        "fst"
+      ],
+      [
+        "image/vnd.fujixerox.edmics-mmr",
+        "mmr"
+      ],
+      [
+        "image/vnd.fujixerox.edmics-rlc",
+        "rlc"
+      ],
+      [
+        "image/vnd.ms-modi",
+        "mdi"
+      ],
+      [
+        "image/vnd.net-fpx",
+        [
+          "fpx",
+          "npx"
+        ]
+      ],
+      [
+        "image/vnd.rn-realflash",
+        "rf"
+      ],
+      [
+        "image/vnd.rn-realpix",
+        "rp"
+      ],
+      [
+        "image/vnd.wap.wbmp",
+        "wbmp"
+      ],
+      [
+        "image/vnd.xiff",
+        "xif"
+      ],
+      [
+        "image/webp",
+        "webp"
+      ],
+      [
+        "image/x-cmu-raster",
+        "ras"
+      ],
+      [
+        "image/x-cmx",
+        "cmx"
+      ],
+      [
+        "image/x-dwg",
+        [
+          "dwg",
+          "dxf",
+          "svf"
+        ]
+      ],
+      [
+        "image/x-freehand",
+        "fh"
+      ],
+      [
+        "image/x-icon",
+        "ico"
+      ],
+      [
+        "image/x-jg",
+        "art"
+      ],
+      [
+        "image/x-jps",
+        "jps"
+      ],
+      [
+        "image/x-niff",
+        [
+          "niff",
+          "nif"
+        ]
+      ],
+      [
+        "image/x-pcx",
+        "pcx"
+      ],
+      [
+        "image/x-pict",
+        [
+          "pct",
+          "pic"
+        ]
+      ],
+      [
+        "image/x-portable-anymap",
+        "pnm"
+      ],
+      [
+        "image/x-portable-bitmap",
+        "pbm"
+      ],
+      [
+        "image/x-portable-graymap",
+        "pgm"
+      ],
+      [
+        "image/x-portable-greymap",
+        "pgm"
+      ],
+      [
+        "image/x-portable-pixmap",
+        "ppm"
+      ],
+      [
+        "image/x-quicktime",
+        [
+          "qif",
+          "qti",
+          "qtif"
+        ]
+      ],
+      [
+        "image/x-rgb",
+        "rgb"
+      ],
+      [
+        "image/x-tiff",
+        [
+          "tif",
+          "tiff"
+        ]
+      ],
+      [
+        "image/x-windows-bmp",
+        "bmp"
+      ],
+      [
+        "image/x-xbitmap",
+        "xbm"
+      ],
+      [
+        "image/x-xbm",
+        "xbm"
+      ],
+      [
+        "image/x-xpixmap",
+        [
+          "xpm",
+          "pm"
+        ]
+      ],
+      [
+        "image/x-xwd",
+        "xwd"
+      ],
+      [
+        "image/x-xwindowdump",
+        "xwd"
+      ],
+      [
+        "image/xbm",
+        "xbm"
+      ],
+      [
+        "image/xpm",
+        "xpm"
+      ],
+      [
+        "message/rfc822",
+        [
+          "eml",
+          "mht",
+          "mhtml",
+          "nws",
+          "mime"
+        ]
+      ],
+      [
+        "model/iges",
+        [
+          "iges",
+          "igs"
+        ]
+      ],
+      [
+        "model/mesh",
+        "msh"
+      ],
+      [
+        "model/vnd.collada+xml",
+        "dae"
+      ],
+      [
+        "model/vnd.dwf",
+        "dwf"
+      ],
+      [
+        "model/vnd.gdl",
+        "gdl"
+      ],
+      [
+        "model/vnd.gtw",
+        "gtw"
+      ],
+      [
+        "model/vnd.mts",
+        "mts"
+      ],
+      [
+        "model/vnd.vtu",
+        "vtu"
+      ],
+      [
+        "model/vrml",
+        [
+          "vrml",
+          "wrl",
+          "wrz"
+        ]
+      ],
+      [
+        "model/x-pov",
+        "pov"
+      ],
+      [
+        "multipart/x-gzip",
+        "gzip"
+      ],
+      [
+        "multipart/x-ustar",
+        "ustar"
+      ],
+      [
+        "multipart/x-zip",
+        "zip"
+      ],
+      [
+        "music/crescendo",
+        [
+          "mid",
+          "midi"
+        ]
+      ],
+      [
+        "music/x-karaoke",
+        "kar"
+      ],
+      [
+        "paleovu/x-pv",
+        "pvu"
+      ],
+      [
+        "text/asp",
+        "asp"
+      ],
+      [
+        "text/calendar",
+        "ics"
+      ],
+      [
+        "text/css",
+        "css"
+      ],
+      [
+        "text/csv",
+        "csv"
+      ],
+      [
+        "text/ecmascript",
+        "js"
+      ],
+      [
+        "text/h323",
+        "323"
+      ],
+      [
+        "text/html",
+        [
+          "html",
+          "htm",
+          "stm",
+          "acgi",
+          "htmls",
+          "htx",
+          "shtml"
+        ]
+      ],
+      [
+        "text/iuls",
+        "uls"
+      ],
+      [
+        "text/javascript",
+        "js"
+      ],
+      [
+        "text/mcf",
+        "mcf"
+      ],
+      [
+        "text/n3",
+        "n3"
+      ],
+      [
+        "text/pascal",
+        "pas"
+      ],
+      [
+        "text/plain",
+        [
+          "txt",
+          "bas",
+          "c",
+          "h",
+          "c++",
+          "cc",
+          "com",
+          "conf",
+          "cxx",
+          "def",
+          "f",
+          "f90",
+          "for",
+          "g",
+          "hh",
+          "idc",
+          "jav",
+          "java",
+          "list",
+          "log",
+          "lst",
+          "m",
+          "mar",
+          "pl",
+          "sdml",
+          "text"
+        ]
+      ],
+      [
+        "text/plain-bas",
+        "par"
+      ],
+      [
+        "text/prs.lines.tag",
+        "dsc"
+      ],
+      [
+        "text/richtext",
+        [
+          "rtx",
+          "rt",
+          "rtf"
+        ]
+      ],
+      [
+        "text/scriplet",
+        "wsc"
+      ],
+      [
+        "text/scriptlet",
+        "sct"
+      ],
+      [
+        "text/sgml",
+        [
+          "sgm",
+          "sgml"
+        ]
+      ],
+      [
+        "text/tab-separated-values",
+        "tsv"
+      ],
+      [
+        "text/troff",
+        "t"
+      ],
+      [
+        "text/turtle",
+        "ttl"
+      ],
+      [
+        "text/uri-list",
+        [
+          "uni",
+          "unis",
+          "uri",
+          "uris"
+        ]
+      ],
+      [
+        "text/vnd.abc",
+        "abc"
+      ],
+      [
+        "text/vnd.curl",
+        "curl"
+      ],
+      [
+        "text/vnd.curl.dcurl",
+        "dcurl"
+      ],
+      [
+        "text/vnd.curl.mcurl",
+        "mcurl"
+      ],
+      [
+        "text/vnd.curl.scurl",
+        "scurl"
+      ],
+      [
+        "text/vnd.fly",
+        "fly"
+      ],
+      [
+        "text/vnd.fmi.flexstor",
+        "flx"
+      ],
+      [
+        "text/vnd.graphviz",
+        "gv"
+      ],
+      [
+        "text/vnd.in3d.3dml",
+        "3dml"
+      ],
+      [
+        "text/vnd.in3d.spot",
+        "spot"
+      ],
+      [
+        "text/vnd.rn-realtext",
+        "rt"
+      ],
+      [
+        "text/vnd.sun.j2me.app-descriptor",
+        "jad"
+      ],
+      [
+        "text/vnd.wap.wml",
+        "wml"
+      ],
+      [
+        "text/vnd.wap.wmlscript",
+        "wmls"
+      ],
+      [
+        "text/webviewhtml",
+        "htt"
+      ],
+      [
+        "text/x-asm",
+        [
+          "asm",
+          "s"
+        ]
+      ],
+      [
+        "text/x-audiosoft-intra",
+        "aip"
+      ],
+      [
+        "text/x-c",
+        [
+          "c",
+          "cc",
+          "cpp"
+        ]
+      ],
+      [
+        "text/x-component",
+        "htc"
+      ],
+      [
+        "text/x-fortran",
+        [
+          "for",
+          "f",
+          "f77",
+          "f90"
+        ]
+      ],
+      [
+        "text/x-h",
+        [
+          "h",
+          "hh"
+        ]
+      ],
+      [
+        "text/x-java-source",
+        [
+          "java",
+          "jav"
+        ]
+      ],
+      [
+        "text/x-java-source,java",
+        "java"
+      ],
+      [
+        "text/x-la-asf",
+        "lsx"
+      ],
+      [
+        "text/x-m",
+        "m"
+      ],
+      [
+        "text/x-pascal",
+        "p"
+      ],
+      [
+        "text/x-script",
+        "hlb"
+      ],
+      [
+        "text/x-script.csh",
+        "csh"
+      ],
+      [
+        "text/x-script.elisp",
+        "el"
+      ],
+      [
+        "text/x-script.guile",
+        "scm"
+      ],
+      [
+        "text/x-script.ksh",
+        "ksh"
+      ],
+      [
+        "text/x-script.lisp",
+        "lsp"
+      ],
+      [
+        "text/x-script.perl",
+        "pl"
+      ],
+      [
+        "text/x-script.perl-module",
+        "pm"
+      ],
+      [
+        "text/x-script.phyton",
+        "py"
+      ],
+      [
+        "text/x-script.rexx",
+        "rexx"
+      ],
+      [
+        "text/x-script.scheme",
+        "scm"
+      ],
+      [
+        "text/x-script.sh",
+        "sh"
+      ],
+      [
+        "text/x-script.tcl",
+        "tcl"
+      ],
+      [
+        "text/x-script.tcsh",
+        "tcsh"
+      ],
+      [
+        "text/x-script.zsh",
+        "zsh"
+      ],
+      [
+        "text/x-server-parsed-html",
+        [
+          "shtml",
+          "ssi"
+        ]
+      ],
+      [
+        "text/x-setext",
+        "etx"
+      ],
+      [
+        "text/x-sgml",
+        [
+          "sgm",
+          "sgml"
+        ]
+      ],
+      [
+        "text/x-speech",
+        [
+          "spc",
+          "talk"
+        ]
+      ],
+      [
+        "text/x-uil",
+        "uil"
+      ],
+      [
+        "text/x-uuencode",
+        [
+          "uu",
+          "uue"
+        ]
+      ],
+      [
+        "text/x-vcalendar",
+        "vcs"
+      ],
+      [
+        "text/x-vcard",
+        "vcf"
+      ],
+      [
+        "text/xml",
+        "xml"
+      ],
+      [
+        "video/3gpp",
+        "3gp"
+      ],
+      [
+        "video/3gpp2",
+        "3g2"
+      ],
+      [
+        "video/animaflex",
+        "afl"
+      ],
+      [
+        "video/avi",
+        "avi"
+      ],
+      [
+        "video/avs-video",
+        "avs"
+      ],
+      [
+        "video/dl",
+        "dl"
+      ],
+      [
+        "video/fli",
+        "fli"
+      ],
+      [
+        "video/gl",
+        "gl"
+      ],
+      [
+        "video/h261",
+        "h261"
+      ],
+      [
+        "video/h263",
+        "h263"
+      ],
+      [
+        "video/h264",
+        "h264"
+      ],
+      [
+        "video/jpeg",
+        "jpgv"
+      ],
+      [
+        "video/jpm",
+        "jpm"
+      ],
+      [
+        "video/mj2",
+        "mj2"
+      ],
+      [
+        "video/mp4",
+        "mp4"
+      ],
+      [
+        "video/mpeg",
+        [
+          "mpeg",
+          "mp2",
+          "mpa",
+          "mpe",
+          "mpg",
+          "mpv2",
+          "m1v",
+          "m2v",
+          "mp3"
+        ]
+      ],
+      [
+        "video/msvideo",
+        "avi"
+      ],
+      [
+        "video/ogg",
+        "ogv"
+      ],
+      [
+        "video/quicktime",
+        [
+          "mov",
+          "qt",
+          "moov"
+        ]
+      ],
+      [
+        "video/vdo",
+        "vdo"
+      ],
+      [
+        "video/vivo",
+        [
+          "viv",
+          "vivo"
+        ]
+      ],
+      [
+        "video/vnd.dece.hd",
+        "uvh"
+      ],
+      [
+        "video/vnd.dece.mobile",
+        "uvm"
+      ],
+      [
+        "video/vnd.dece.pd",
+        "uvp"
+      ],
+      [
+        "video/vnd.dece.sd",
+        "uvs"
+      ],
+      [
+        "video/vnd.dece.video",
+        "uvv"
+      ],
+      [
+        "video/vnd.fvt",
+        "fvt"
+      ],
+      [
+        "video/vnd.mpegurl",
+        "mxu"
+      ],
+      [
+        "video/vnd.ms-playready.media.pyv",
+        "pyv"
+      ],
+      [
+        "video/vnd.rn-realvideo",
+        "rv"
+      ],
+      [
+        "video/vnd.uvvu.mp4",
+        "uvu"
+      ],
+      [
+        "video/vnd.vivo",
+        [
+          "viv",
+          "vivo"
+        ]
+      ],
+      [
+        "video/vosaic",
+        "vos"
+      ],
+      [
+        "video/webm",
+        "webm"
+      ],
+      [
+        "video/x-amt-demorun",
+        "xdr"
+      ],
+      [
+        "video/x-amt-showrun",
+        "xsr"
+      ],
+      [
+        "video/x-atomic3d-feature",
+        "fmf"
+      ],
+      [
+        "video/x-dl",
+        "dl"
+      ],
+      [
+        "video/x-dv",
+        [
+          "dif",
+          "dv"
+        ]
+      ],
+      [
+        "video/x-f4v",
+        "f4v"
+      ],
+      [
+        "video/x-fli",
+        "fli"
+      ],
+      [
+        "video/x-flv",
+        "flv"
+      ],
+      [
+        "video/x-gl",
+        "gl"
+      ],
+      [
+        "video/x-isvideo",
+        "isu"
+      ],
+      [
+        "video/x-la-asf",
+        [
+          "lsf",
+          "lsx"
+        ]
+      ],
+      [
+        "video/x-m4v",
+        "m4v"
+      ],
+      [
+        "video/x-motion-jpeg",
+        "mjpg"
+      ],
+      [
+        "video/x-mpeg",
+        [
+          "mp3",
+          "mp2"
+        ]
+      ],
+      [
+        "video/x-mpeq2a",
+        "mp2"
+      ],
+      [
+        "video/x-ms-asf",
+        [
+          "asf",
+          "asr",
+          "asx"
+        ]
+      ],
+      [
+        "video/x-ms-asf-plugin",
+        "asx"
+      ],
+      [
+        "video/x-ms-wm",
+        "wm"
+      ],
+      [
+        "video/x-ms-wmv",
+        "wmv"
+      ],
+      [
+        "video/x-ms-wmx",
+        "wmx"
+      ],
+      [
+        "video/x-ms-wvx",
+        "wvx"
+      ],
+      [
+        "video/x-msvideo",
+        "avi"
+      ],
+      [
+        "video/x-qtc",
+        "qtc"
+      ],
+      [
+        "video/x-scm",
+        "scm"
+      ],
+      [
+        "video/x-sgi-movie",
+        [
+          "movie",
+          "mv"
+        ]
+      ],
+      [
+        "windows/metafile",
+        "wmf"
+      ],
+      [
+        "www/mime",
+        "mime"
+      ],
+      [
+        "x-conference/x-cooltalk",
+        "ice"
+      ],
+      [
+        "x-music/x-midi",
+        [
+          "mid",
+          "midi"
+        ]
+      ],
+      [
+        "x-world/x-3dmf",
+        [
+          "3dm",
+          "3dmf",
+          "qd3",
+          "qd3d"
+        ]
+      ],
+      [
+        "x-world/x-svr",
+        "svr"
+      ],
+      [
+        "x-world/x-vrml",
+        [
+          "flr",
+          "vrml",
+          "wrl",
+          "wrz",
+          "xaf",
+          "xof"
+        ]
+      ],
+      [
+        "x-world/x-vrt",
+        "vrt"
+      ],
+      [
+        "xgl/drawing",
+        "xgz"
+      ],
+      [
+        "xgl/movie",
+        "xmz"
+      ]
+    ]);
+    var extensions = /* @__PURE__ */ new Map([
+      [
+        "123",
+        "application/vnd.lotus-1-2-3"
+      ],
+      [
+        "323",
+        "text/h323"
+      ],
+      [
+        "*",
+        "application/octet-stream"
+      ],
+      [
+        "3dm",
+        "x-world/x-3dmf"
+      ],
+      [
+        "3dmf",
+        "x-world/x-3dmf"
+      ],
+      [
+        "3dml",
+        "text/vnd.in3d.3dml"
+      ],
+      [
+        "3g2",
+        "video/3gpp2"
+      ],
+      [
+        "3gp",
+        "video/3gpp"
+      ],
+      [
+        "7z",
+        "application/x-7z-compressed"
+      ],
+      [
+        "a",
+        "application/octet-stream"
+      ],
+      [
+        "aab",
+        "application/x-authorware-bin"
+      ],
+      [
+        "aac",
+        "audio/x-aac"
+      ],
+      [
+        "aam",
+        "application/x-authorware-map"
+      ],
+      [
+        "aas",
+        "application/x-authorware-seg"
+      ],
+      [
+        "abc",
+        "text/vnd.abc"
+      ],
+      [
+        "abw",
+        "application/x-abiword"
+      ],
+      [
+        "ac",
+        "application/pkix-attr-cert"
+      ],
+      [
+        "acc",
+        "application/vnd.americandynamics.acc"
+      ],
+      [
+        "ace",
+        "application/x-ace-compressed"
+      ],
+      [
+        "acgi",
+        "text/html"
+      ],
+      [
+        "acu",
+        "application/vnd.acucobol"
+      ],
+      [
+        "acx",
+        "application/internet-property-stream"
+      ],
+      [
+        "adp",
+        "audio/adpcm"
+      ],
+      [
+        "aep",
+        "application/vnd.audiograph"
+      ],
+      [
+        "afl",
+        "video/animaflex"
+      ],
+      [
+        "afp",
+        "application/vnd.ibm.modcap"
+      ],
+      [
+        "ahead",
+        "application/vnd.ahead.space"
+      ],
+      [
+        "ai",
+        "application/postscript"
+      ],
+      [
+        "aif",
+        [
+          "audio/aiff",
+          "audio/x-aiff"
+        ]
+      ],
+      [
+        "aifc",
+        [
+          "audio/aiff",
+          "audio/x-aiff"
+        ]
+      ],
+      [
+        "aiff",
+        [
+          "audio/aiff",
+          "audio/x-aiff"
+        ]
+      ],
+      [
+        "aim",
+        "application/x-aim"
+      ],
+      [
+        "aip",
+        "text/x-audiosoft-intra"
+      ],
+      [
+        "air",
+        "application/vnd.adobe.air-application-installer-package+zip"
+      ],
+      [
+        "ait",
+        "application/vnd.dvb.ait"
+      ],
+      [
+        "ami",
+        "application/vnd.amiga.ami"
+      ],
+      [
+        "ani",
+        "application/x-navi-animation"
+      ],
+      [
+        "aos",
+        "application/x-nokia-9000-communicator-add-on-software"
+      ],
+      [
+        "apk",
+        "application/vnd.android.package-archive"
+      ],
+      [
+        "application",
+        "application/x-ms-application"
+      ],
+      [
+        "apr",
+        "application/vnd.lotus-approach"
+      ],
+      [
+        "aps",
+        "application/mime"
+      ],
+      [
+        "arc",
+        "application/octet-stream"
+      ],
+      [
+        "arj",
+        [
+          "application/arj",
+          "application/octet-stream"
+        ]
+      ],
+      [
+        "art",
+        "image/x-jg"
+      ],
+      [
+        "asf",
+        "video/x-ms-asf"
+      ],
+      [
+        "asm",
+        "text/x-asm"
+      ],
+      [
+        "aso",
+        "application/vnd.accpac.simply.aso"
+      ],
+      [
+        "asp",
+        "text/asp"
+      ],
+      [
+        "asr",
+        "video/x-ms-asf"
+      ],
+      [
+        "asx",
+        [
+          "video/x-ms-asf",
+          "application/x-mplayer2",
+          "video/x-ms-asf-plugin"
+        ]
+      ],
+      [
+        "atc",
+        "application/vnd.acucorp"
+      ],
+      [
+        "atomcat",
+        "application/atomcat+xml"
+      ],
+      [
+        "atomsvc",
+        "application/atomsvc+xml"
+      ],
+      [
+        "atx",
+        "application/vnd.antix.game-component"
+      ],
+      [
+        "au",
+        [
+          "audio/basic",
+          "audio/x-au"
+        ]
+      ],
+      [
+        "avi",
+        [
+          "video/avi",
+          "video/msvideo",
+          "application/x-troff-msvideo",
+          "video/x-msvideo"
+        ]
+      ],
+      [
+        "avs",
+        "video/avs-video"
+      ],
+      [
+        "aw",
+        "application/applixware"
+      ],
+      [
+        "axs",
+        "application/olescript"
+      ],
+      [
+        "azf",
+        "application/vnd.airzip.filesecure.azf"
+      ],
+      [
+        "azs",
+        "application/vnd.airzip.filesecure.azs"
+      ],
+      [
+        "azw",
+        "application/vnd.amazon.ebook"
+      ],
+      [
+        "bas",
+        "text/plain"
+      ],
+      [
+        "bcpio",
+        "application/x-bcpio"
+      ],
+      [
+        "bdf",
+        "application/x-font-bdf"
+      ],
+      [
+        "bdm",
+        "application/vnd.syncml.dm+wbxml"
+      ],
+      [
+        "bed",
+        "application/vnd.realvnc.bed"
+      ],
+      [
+        "bh2",
+        "application/vnd.fujitsu.oasysprs"
+      ],
+      [
+        "bin",
+        [
+          "application/octet-stream",
+          "application/mac-binary",
+          "application/macbinary",
+          "application/x-macbinary",
+          "application/x-binary"
+        ]
+      ],
+      [
+        "bm",
+        "image/bmp"
+      ],
+      [
+        "bmi",
+        "application/vnd.bmi"
+      ],
+      [
+        "bmp",
+        [
+          "image/bmp",
+          "image/x-windows-bmp"
+        ]
+      ],
+      [
+        "boo",
+        "application/book"
+      ],
+      [
+        "book",
+        "application/book"
+      ],
+      [
+        "box",
+        "application/vnd.previewsystems.box"
+      ],
+      [
+        "boz",
+        "application/x-bzip2"
+      ],
+      [
+        "bsh",
+        "application/x-bsh"
+      ],
+      [
+        "btif",
+        "image/prs.btif"
+      ],
+      [
+        "bz",
+        "application/x-bzip"
+      ],
+      [
+        "bz2",
+        "application/x-bzip2"
+      ],
+      [
+        "c",
+        [
+          "text/plain",
+          "text/x-c"
+        ]
+      ],
+      [
+        "c++",
+        "text/plain"
+      ],
+      [
+        "c11amc",
+        "application/vnd.cluetrust.cartomobile-config"
+      ],
+      [
+        "c11amz",
+        "application/vnd.cluetrust.cartomobile-config-pkg"
+      ],
+      [
+        "c4g",
+        "application/vnd.clonk.c4group"
+      ],
+      [
+        "cab",
+        "application/vnd.ms-cab-compressed"
+      ],
+      [
+        "car",
+        "application/vnd.curl.car"
+      ],
+      [
+        "cat",
+        [
+          "application/vnd.ms-pkiseccat",
+          "application/vnd.ms-pki.seccat"
+        ]
+      ],
+      [
+        "cc",
+        [
+          "text/plain",
+          "text/x-c"
+        ]
+      ],
+      [
+        "ccad",
+        "application/clariscad"
+      ],
+      [
+        "cco",
+        "application/x-cocoa"
+      ],
+      [
+        "ccxml",
+        "application/ccxml+xml,"
+      ],
+      [
+        "cdbcmsg",
+        "application/vnd.contact.cmsg"
+      ],
+      [
+        "cdf",
+        [
+          "application/cdf",
+          "application/x-cdf",
+          "application/x-netcdf"
+        ]
+      ],
+      [
+        "cdkey",
+        "application/vnd.mediastation.cdkey"
+      ],
+      [
+        "cdmia",
+        "application/cdmi-capability"
+      ],
+      [
+        "cdmic",
+        "application/cdmi-container"
+      ],
+      [
+        "cdmid",
+        "application/cdmi-domain"
+      ],
+      [
+        "cdmio",
+        "application/cdmi-object"
+      ],
+      [
+        "cdmiq",
+        "application/cdmi-queue"
+      ],
+      [
+        "cdx",
+        "chemical/x-cdx"
+      ],
+      [
+        "cdxml",
+        "application/vnd.chemdraw+xml"
+      ],
+      [
+        "cdy",
+        "application/vnd.cinderella"
+      ],
+      [
+        "cer",
+        [
+          "application/pkix-cert",
+          "application/x-x509-ca-cert"
+        ]
+      ],
+      [
+        "cgm",
+        "image/cgm"
+      ],
+      [
+        "cha",
+        "application/x-chat"
+      ],
+      [
+        "chat",
+        "application/x-chat"
+      ],
+      [
+        "chm",
+        "application/vnd.ms-htmlhelp"
+      ],
+      [
+        "chrt",
+        "application/vnd.kde.kchart"
+      ],
+      [
+        "cif",
+        "chemical/x-cif"
+      ],
+      [
+        "cii",
+        "application/vnd.anser-web-certificate-issue-initiation"
+      ],
+      [
+        "cil",
+        "application/vnd.ms-artgalry"
+      ],
+      [
+        "cla",
+        "application/vnd.claymore"
+      ],
+      [
+        "class",
+        [
+          "application/octet-stream",
+          "application/java",
+          "application/java-byte-code",
+          "application/java-vm",
+          "application/x-java-class"
+        ]
+      ],
+      [
+        "clkk",
+        "application/vnd.crick.clicker.keyboard"
+      ],
+      [
+        "clkp",
+        "application/vnd.crick.clicker.palette"
+      ],
+      [
+        "clkt",
+        "application/vnd.crick.clicker.template"
+      ],
+      [
+        "clkw",
+        "application/vnd.crick.clicker.wordbank"
+      ],
+      [
+        "clkx",
+        "application/vnd.crick.clicker"
+      ],
+      [
+        "clp",
+        "application/x-msclip"
+      ],
+      [
+        "cmc",
+        "application/vnd.cosmocaller"
+      ],
+      [
+        "cmdf",
+        "chemical/x-cmdf"
+      ],
+      [
+        "cml",
+        "chemical/x-cml"
+      ],
+      [
+        "cmp",
+        "application/vnd.yellowriver-custom-menu"
+      ],
+      [
+        "cmx",
+        "image/x-cmx"
+      ],
+      [
+        "cod",
+        [
+          "image/cis-cod",
+          "application/vnd.rim.cod"
+        ]
+      ],
+      [
+        "com",
+        [
+          "application/octet-stream",
+          "text/plain"
+        ]
+      ],
+      [
+        "conf",
+        "text/plain"
+      ],
+      [
+        "cpio",
+        "application/x-cpio"
+      ],
+      [
+        "cpp",
+        "text/x-c"
+      ],
+      [
+        "cpt",
+        [
+          "application/mac-compactpro",
+          "application/x-compactpro",
+          "application/x-cpt"
+        ]
+      ],
+      [
+        "crd",
+        "application/x-mscardfile"
+      ],
+      [
+        "crl",
+        [
+          "application/pkix-crl",
+          "application/pkcs-crl"
+        ]
+      ],
+      [
+        "crt",
+        [
+          "application/pkix-cert",
+          "application/x-x509-user-cert",
+          "application/x-x509-ca-cert"
+        ]
+      ],
+      [
+        "cryptonote",
+        "application/vnd.rig.cryptonote"
+      ],
+      [
+        "csh",
+        [
+          "text/x-script.csh",
+          "application/x-csh"
+        ]
+      ],
+      [
+        "csml",
+        "chemical/x-csml"
+      ],
+      [
+        "csp",
+        "application/vnd.commonspace"
+      ],
+      [
+        "css",
+        [
+          "text/css",
+          "application/x-pointplus"
+        ]
+      ],
+      [
+        "csv",
+        "text/csv"
+      ],
+      [
+        "cu",
+        "application/cu-seeme"
+      ],
+      [
+        "curl",
+        "text/vnd.curl"
+      ],
+      [
+        "cww",
+        "application/prs.cww"
+      ],
+      [
+        "cxx",
+        "text/plain"
+      ],
+      [
+        "dae",
+        "model/vnd.collada+xml"
+      ],
+      [
+        "daf",
+        "application/vnd.mobius.daf"
+      ],
+      [
+        "davmount",
+        "application/davmount+xml"
+      ],
+      [
+        "dcr",
+        "application/x-director"
+      ],
+      [
+        "dcurl",
+        "text/vnd.curl.dcurl"
+      ],
+      [
+        "dd2",
+        "application/vnd.oma.dd2+xml"
+      ],
+      [
+        "ddd",
+        "application/vnd.fujixerox.ddd"
+      ],
+      [
+        "deb",
+        "application/x-debian-package"
+      ],
+      [
+        "deepv",
+        "application/x-deepv"
+      ],
+      [
+        "def",
+        "text/plain"
+      ],
+      [
+        "der",
+        "application/x-x509-ca-cert"
+      ],
+      [
+        "dfac",
+        "application/vnd.dreamfactory"
+      ],
+      [
+        "dif",
+        "video/x-dv"
+      ],
+      [
+        "dir",
+        "application/x-director"
+      ],
+      [
+        "dis",
+        "application/vnd.mobius.dis"
+      ],
+      [
+        "djvu",
+        "image/vnd.djvu"
+      ],
+      [
+        "dl",
+        [
+          "video/dl",
+          "video/x-dl"
+        ]
+      ],
+      [
+        "dll",
+        "application/x-msdownload"
+      ],
+      [
+        "dms",
+        "application/octet-stream"
+      ],
+      [
+        "dna",
+        "application/vnd.dna"
+      ],
+      [
+        "doc",
+        "application/msword"
+      ],
+      [
+        "docm",
+        "application/vnd.ms-word.document.macroenabled.12"
+      ],
+      [
+        "docx",
+        "application/vnd.openxmlformats-officedocument.wordprocessingml.document"
+      ],
+      [
+        "dot",
+        "application/msword"
+      ],
+      [
+        "dotm",
+        "application/vnd.ms-word.template.macroenabled.12"
+      ],
+      [
+        "dotx",
+        "application/vnd.openxmlformats-officedocument.wordprocessingml.template"
+      ],
+      [
+        "dp",
+        [
+          "application/commonground",
+          "application/vnd.osgi.dp"
+        ]
+      ],
+      [
+        "dpg",
+        "application/vnd.dpgraph"
+      ],
+      [
+        "dra",
+        "audio/vnd.dra"
+      ],
+      [
+        "drw",
+        "application/drafting"
+      ],
+      [
+        "dsc",
+        "text/prs.lines.tag"
+      ],
+      [
+        "dssc",
+        "application/dssc+der"
+      ],
+      [
+        "dtb",
+        "application/x-dtbook+xml"
+      ],
+      [
+        "dtd",
+        "application/xml-dtd"
+      ],
+      [
+        "dts",
+        "audio/vnd.dts"
+      ],
+      [
+        "dtshd",
+        "audio/vnd.dts.hd"
+      ],
+      [
+        "dump",
+        "application/octet-stream"
+      ],
+      [
+        "dv",
+        "video/x-dv"
+      ],
+      [
+        "dvi",
+        "application/x-dvi"
+      ],
+      [
+        "dwf",
+        [
+          "model/vnd.dwf",
+          "drawing/x-dwf"
+        ]
+      ],
+      [
+        "dwg",
+        [
+          "application/acad",
+          "image/vnd.dwg",
+          "image/x-dwg"
+        ]
+      ],
+      [
+        "dxf",
+        [
+          "application/dxf",
+          "image/vnd.dwg",
+          "image/vnd.dxf",
+          "image/x-dwg"
+        ]
+      ],
+      [
+        "dxp",
+        "application/vnd.spotfire.dxp"
+      ],
+      [
+        "dxr",
+        "application/x-director"
+      ],
+      [
+        "ecelp4800",
+        "audio/vnd.nuera.ecelp4800"
+      ],
+      [
+        "ecelp7470",
+        "audio/vnd.nuera.ecelp7470"
+      ],
+      [
+        "ecelp9600",
+        "audio/vnd.nuera.ecelp9600"
+      ],
+      [
+        "edm",
+        "application/vnd.novadigm.edm"
+      ],
+      [
+        "edx",
+        "application/vnd.novadigm.edx"
+      ],
+      [
+        "efif",
+        "application/vnd.picsel"
+      ],
+      [
+        "ei6",
+        "application/vnd.pg.osasli"
+      ],
+      [
+        "el",
+        "text/x-script.elisp"
+      ],
+      [
+        "elc",
+        [
+          "application/x-elc",
+          "application/x-bytecode.elisp"
+        ]
+      ],
+      [
+        "eml",
+        "message/rfc822"
+      ],
+      [
+        "emma",
+        "application/emma+xml"
+      ],
+      [
+        "env",
+        "application/x-envoy"
+      ],
+      [
+        "eol",
+        "audio/vnd.digital-winds"
+      ],
+      [
+        "eot",
+        "application/vnd.ms-fontobject"
+      ],
+      [
+        "eps",
+        "application/postscript"
+      ],
+      [
+        "epub",
+        "application/epub+zip"
+      ],
+      [
+        "es",
+        [
+          "application/ecmascript",
+          "application/x-esrehber"
+        ]
+      ],
+      [
+        "es3",
+        "application/vnd.eszigno3+xml"
+      ],
+      [
+        "esf",
+        "application/vnd.epson.esf"
+      ],
+      [
+        "etx",
+        "text/x-setext"
+      ],
+      [
+        "evy",
+        [
+          "application/envoy",
+          "application/x-envoy"
+        ]
+      ],
+      [
+        "exe",
+        [
+          "application/octet-stream",
+          "application/x-msdownload"
+        ]
+      ],
+      [
+        "exi",
+        "application/exi"
+      ],
+      [
+        "ext",
+        "application/vnd.novadigm.ext"
+      ],
+      [
+        "ez2",
+        "application/vnd.ezpix-album"
+      ],
+      [
+        "ez3",
+        "application/vnd.ezpix-package"
+      ],
+      [
+        "f",
+        [
+          "text/plain",
+          "text/x-fortran"
+        ]
+      ],
+      [
+        "f4v",
+        "video/x-f4v"
+      ],
+      [
+        "f77",
+        "text/x-fortran"
+      ],
+      [
+        "f90",
+        [
+          "text/plain",
+          "text/x-fortran"
+        ]
+      ],
+      [
+        "fbs",
+        "image/vnd.fastbidsheet"
+      ],
+      [
+        "fcs",
+        "application/vnd.isac.fcs"
+      ],
+      [
+        "fdf",
+        "application/vnd.fdf"
+      ],
+      [
+        "fe_launch",
+        "application/vnd.denovo.fcselayout-link"
+      ],
+      [
+        "fg5",
+        "application/vnd.fujitsu.oasysgp"
+      ],
+      [
+        "fh",
+        "image/x-freehand"
+      ],
+      [
+        "fif",
+        [
+          "application/fractals",
+          "image/fif"
+        ]
+      ],
+      [
+        "fig",
+        "application/x-xfig"
+      ],
+      [
+        "fli",
+        [
+          "video/fli",
+          "video/x-fli"
+        ]
+      ],
+      [
+        "flo",
+        [
+          "image/florian",
+          "application/vnd.micrografx.flo"
+        ]
+      ],
+      [
+        "flr",
+        "x-world/x-vrml"
+      ],
+      [
+        "flv",
+        "video/x-flv"
+      ],
+      [
+        "flw",
+        "application/vnd.kde.kivio"
+      ],
+      [
+        "flx",
+        "text/vnd.fmi.flexstor"
+      ],
+      [
+        "fly",
+        "text/vnd.fly"
+      ],
+      [
+        "fm",
+        "application/vnd.framemaker"
+      ],
+      [
+        "fmf",
+        "video/x-atomic3d-feature"
+      ],
+      [
+        "fnc",
+        "application/vnd.frogans.fnc"
+      ],
+      [
+        "for",
+        [
+          "text/plain",
+          "text/x-fortran"
+        ]
+      ],
+      [
+        "fpx",
+        [
+          "image/vnd.fpx",
+          "image/vnd.net-fpx"
+        ]
+      ],
+      [
+        "frl",
+        "application/freeloader"
+      ],
+      [
+        "fsc",
+        "application/vnd.fsc.weblaunch"
+      ],
+      [
+        "fst",
+        "image/vnd.fst"
+      ],
+      [
+        "ftc",
+        "application/vnd.fluxtime.clip"
+      ],
+      [
+        "fti",
+        "application/vnd.anser-web-funds-transfer-initiation"
+      ],
+      [
+        "funk",
+        "audio/make"
+      ],
+      [
+        "fvt",
+        "video/vnd.fvt"
+      ],
+      [
+        "fxp",
+        "application/vnd.adobe.fxp"
+      ],
+      [
+        "fzs",
+        "application/vnd.fuzzysheet"
+      ],
+      [
+        "g",
+        "text/plain"
+      ],
+      [
+        "g2w",
+        "application/vnd.geoplan"
+      ],
+      [
+        "g3",
+        "image/g3fax"
+      ],
+      [
+        "g3w",
+        "application/vnd.geospace"
+      ],
+      [
+        "gac",
+        "application/vnd.groove-account"
+      ],
+      [
+        "gdl",
+        "model/vnd.gdl"
+      ],
+      [
+        "geo",
+        "application/vnd.dynageo"
+      ],
+      [
+        "gex",
+        "application/vnd.geometry-explorer"
+      ],
+      [
+        "ggb",
+        "application/vnd.geogebra.file"
+      ],
+      [
+        "ggt",
+        "application/vnd.geogebra.tool"
+      ],
+      [
+        "ghf",
+        "application/vnd.groove-help"
+      ],
+      [
+        "gif",
+        "image/gif"
+      ],
+      [
+        "gim",
+        "application/vnd.groove-identity-message"
+      ],
+      [
+        "gl",
+        [
+          "video/gl",
+          "video/x-gl"
+        ]
+      ],
+      [
+        "gmx",
+        "application/vnd.gmx"
+      ],
+      [
+        "gnumeric",
+        "application/x-gnumeric"
+      ],
+      [
+        "gph",
+        "application/vnd.flographit"
+      ],
+      [
+        "gqf",
+        "application/vnd.grafeq"
+      ],
+      [
+        "gram",
+        "application/srgs"
+      ],
+      [
+        "grv",
+        "application/vnd.groove-injector"
+      ],
+      [
+        "grxml",
+        "application/srgs+xml"
+      ],
+      [
+        "gsd",
+        "audio/x-gsm"
+      ],
+      [
+        "gsf",
+        "application/x-font-ghostscript"
+      ],
+      [
+        "gsm",
+        "audio/x-gsm"
+      ],
+      [
+        "gsp",
+        "application/x-gsp"
+      ],
+      [
+        "gss",
+        "application/x-gss"
+      ],
+      [
+        "gtar",
+        "application/x-gtar"
+      ],
+      [
+        "gtm",
+        "application/vnd.groove-tool-message"
+      ],
+      [
+        "gtw",
+        "model/vnd.gtw"
+      ],
+      [
+        "gv",
+        "text/vnd.graphviz"
+      ],
+      [
+        "gxt",
+        "application/vnd.geonext"
+      ],
+      [
+        "gz",
+        [
+          "application/x-gzip",
+          "application/x-compressed"
+        ]
+      ],
+      [
+        "gzip",
+        [
+          "multipart/x-gzip",
+          "application/x-gzip"
+        ]
+      ],
+      [
+        "h",
+        [
+          "text/plain",
+          "text/x-h"
+        ]
+      ],
+      [
+        "h261",
+        "video/h261"
+      ],
+      [
+        "h263",
+        "video/h263"
+      ],
+      [
+        "h264",
+        "video/h264"
+      ],
+      [
+        "hal",
+        "application/vnd.hal+xml"
+      ],
+      [
+        "hbci",
+        "application/vnd.hbci"
+      ],
+      [
+        "hdf",
+        "application/x-hdf"
+      ],
+      [
+        "help",
+        "application/x-helpfile"
+      ],
+      [
+        "hgl",
+        "application/vnd.hp-hpgl"
+      ],
+      [
+        "hh",
+        [
+          "text/plain",
+          "text/x-h"
+        ]
+      ],
+      [
+        "hlb",
+        "text/x-script"
+      ],
+      [
+        "hlp",
+        [
+          "application/winhlp",
+          "application/hlp",
+          "application/x-helpfile",
+          "application/x-winhelp"
+        ]
+      ],
+      [
+        "hpg",
+        "application/vnd.hp-hpgl"
+      ],
+      [
+        "hpgl",
+        "application/vnd.hp-hpgl"
+      ],
+      [
+        "hpid",
+        "application/vnd.hp-hpid"
+      ],
+      [
+        "hps",
+        "application/vnd.hp-hps"
+      ],
+      [
+        "hqx",
+        [
+          "application/mac-binhex40",
+          "application/binhex",
+          "application/binhex4",
+          "application/mac-binhex",
+          "application/x-binhex40",
+          "application/x-mac-binhex40"
+        ]
+      ],
+      [
+        "hta",
+        "application/hta"
+      ],
+      [
+        "htc",
+        "text/x-component"
+      ],
+      [
+        "htke",
+        "application/vnd.kenameaapp"
+      ],
+      [
+        "htm",
+        "text/html"
+      ],
+      [
+        "html",
+        "text/html"
+      ],
+      [
+        "htmls",
+        "text/html"
+      ],
+      [
+        "htt",
+        "text/webviewhtml"
+      ],
+      [
+        "htx",
+        "text/html"
+      ],
+      [
+        "hvd",
+        "application/vnd.yamaha.hv-dic"
+      ],
+      [
+        "hvp",
+        "application/vnd.yamaha.hv-voice"
+      ],
+      [
+        "hvs",
+        "application/vnd.yamaha.hv-script"
+      ],
+      [
+        "i2g",
+        "application/vnd.intergeo"
+      ],
+      [
+        "icc",
+        "application/vnd.iccprofile"
+      ],
+      [
+        "ice",
+        "x-conference/x-cooltalk"
+      ],
+      [
+        "ico",
+        "image/x-icon"
+      ],
+      [
+        "ics",
+        "text/calendar"
+      ],
+      [
+        "idc",
+        "text/plain"
+      ],
+      [
+        "ief",
+        "image/ief"
+      ],
+      [
+        "iefs",
+        "image/ief"
+      ],
+      [
+        "ifm",
+        "application/vnd.shana.informed.formdata"
+      ],
+      [
+        "iges",
+        [
+          "application/iges",
+          "model/iges"
+        ]
+      ],
+      [
+        "igl",
+        "application/vnd.igloader"
+      ],
+      [
+        "igm",
+        "application/vnd.insors.igm"
+      ],
+      [
+        "igs",
+        [
+          "application/iges",
+          "model/iges"
+        ]
+      ],
+      [
+        "igx",
+        "application/vnd.micrografx.igx"
+      ],
+      [
+        "iif",
+        "application/vnd.shana.informed.interchange"
+      ],
+      [
+        "iii",
+        "application/x-iphone"
+      ],
+      [
+        "ima",
+        "application/x-ima"
+      ],
+      [
+        "imap",
+        "application/x-httpd-imap"
+      ],
+      [
+        "imp",
+        "application/vnd.accpac.simply.imp"
+      ],
+      [
+        "ims",
+        "application/vnd.ms-ims"
+      ],
+      [
+        "inf",
+        "application/inf"
+      ],
+      [
+        "ins",
+        [
+          "application/x-internet-signup",
+          "application/x-internett-signup"
+        ]
+      ],
+      [
+        "ip",
+        "application/x-ip2"
+      ],
+      [
+        "ipfix",
+        "application/ipfix"
+      ],
+      [
+        "ipk",
+        "application/vnd.shana.informed.package"
+      ],
+      [
+        "irm",
+        "application/vnd.ibm.rights-management"
+      ],
+      [
+        "irp",
+        "application/vnd.irepository.package+xml"
+      ],
+      [
+        "isp",
+        "application/x-internet-signup"
+      ],
+      [
+        "isu",
+        "video/x-isvideo"
+      ],
+      [
+        "it",
+        "audio/it"
+      ],
+      [
+        "itp",
+        "application/vnd.shana.informed.formtemplate"
+      ],
+      [
+        "iv",
+        "application/x-inventor"
+      ],
+      [
+        "ivp",
+        "application/vnd.immervision-ivp"
+      ],
+      [
+        "ivr",
+        "i-world/i-vrml"
+      ],
+      [
+        "ivu",
+        "application/vnd.immervision-ivu"
+      ],
+      [
+        "ivy",
+        "application/x-livescreen"
+      ],
+      [
+        "jad",
+        "text/vnd.sun.j2me.app-descriptor"
+      ],
+      [
+        "jam",
+        [
+          "application/vnd.jam",
+          "audio/x-jam"
+        ]
+      ],
+      [
+        "jar",
+        "application/java-archive"
+      ],
+      [
+        "jav",
+        [
+          "text/plain",
+          "text/x-java-source"
+        ]
+      ],
+      [
+        "java",
+        [
+          "text/plain",
+          "text/x-java-source,java",
+          "text/x-java-source"
+        ]
+      ],
+      [
+        "jcm",
+        "application/x-java-commerce"
+      ],
+      [
+        "jfif",
+        [
+          "image/pipeg",
+          "image/jpeg",
+          "image/pjpeg"
+        ]
+      ],
+      [
+        "jfif-tbnl",
+        "image/jpeg"
+      ],
+      [
+        "jisp",
+        "application/vnd.jisp"
+      ],
+      [
+        "jlt",
+        "application/vnd.hp-jlyt"
+      ],
+      [
+        "jnlp",
+        "application/x-java-jnlp-file"
+      ],
+      [
+        "joda",
+        "application/vnd.joost.joda-archive"
+      ],
+      [
+        "jpe",
+        [
+          "image/jpeg",
+          "image/pjpeg"
+        ]
+      ],
+      [
+        "jpeg",
+        [
+          "image/jpeg",
+          "image/pjpeg"
+        ]
+      ],
+      [
+        "jpg",
+        [
+          "image/jpeg",
+          "image/pjpeg"
+        ]
+      ],
+      [
+        "jpgv",
+        "video/jpeg"
+      ],
+      [
+        "jpm",
+        "video/jpm"
+      ],
+      [
+        "jps",
+        "image/x-jps"
+      ],
+      [
+        "js",
+        [
+          "application/javascript",
+          "application/ecmascript",
+          "text/javascript",
+          "text/ecmascript",
+          "application/x-javascript"
+        ]
+      ],
+      [
+        "json",
+        "application/json"
+      ],
+      [
+        "jut",
+        "image/jutvision"
+      ],
+      [
+        "kar",
+        [
+          "audio/midi",
+          "music/x-karaoke"
+        ]
+      ],
+      [
+        "karbon",
+        "application/vnd.kde.karbon"
+      ],
+      [
+        "kfo",
+        "application/vnd.kde.kformula"
+      ],
+      [
+        "kia",
+        "application/vnd.kidspiration"
+      ],
+      [
+        "kml",
+        "application/vnd.google-earth.kml+xml"
+      ],
+      [
+        "kmz",
+        "application/vnd.google-earth.kmz"
+      ],
+      [
+        "kne",
+        "application/vnd.kinar"
+      ],
+      [
+        "kon",
+        "application/vnd.kde.kontour"
+      ],
+      [
+        "kpr",
+        "application/vnd.kde.kpresenter"
+      ],
+      [
+        "ksh",
+        [
+          "application/x-ksh",
+          "text/x-script.ksh"
+        ]
+      ],
+      [
+        "ksp",
+        "application/vnd.kde.kspread"
+      ],
+      [
+        "ktx",
+        "image/ktx"
+      ],
+      [
+        "ktz",
+        "application/vnd.kahootz"
+      ],
+      [
+        "kwd",
+        "application/vnd.kde.kword"
+      ],
+      [
+        "la",
+        [
+          "audio/nspaudio",
+          "audio/x-nspaudio"
+        ]
+      ],
+      [
+        "lam",
+        "audio/x-liveaudio"
+      ],
+      [
+        "lasxml",
+        "application/vnd.las.las+xml"
+      ],
+      [
+        "latex",
+        "application/x-latex"
+      ],
+      [
+        "lbd",
+        "application/vnd.llamagraphics.life-balance.desktop"
+      ],
+      [
+        "lbe",
+        "application/vnd.llamagraphics.life-balance.exchange+xml"
+      ],
+      [
+        "les",
+        "application/vnd.hhe.lesson-player"
+      ],
+      [
+        "lha",
+        [
+          "application/octet-stream",
+          "application/lha",
+          "application/x-lha"
+        ]
+      ],
+      [
+        "lhx",
+        "application/octet-stream"
+      ],
+      [
+        "link66",
+        "application/vnd.route66.link66+xml"
+      ],
+      [
+        "list",
+        "text/plain"
+      ],
+      [
+        "lma",
+        [
+          "audio/nspaudio",
+          "audio/x-nspaudio"
+        ]
+      ],
+      [
+        "log",
+        "text/plain"
+      ],
+      [
+        "lrm",
+        "application/vnd.ms-lrm"
+      ],
+      [
+        "lsf",
+        "video/x-la-asf"
+      ],
+      [
+        "lsp",
+        [
+          "application/x-lisp",
+          "text/x-script.lisp"
+        ]
+      ],
+      [
+        "lst",
+        "text/plain"
+      ],
+      [
+        "lsx",
+        [
+          "video/x-la-asf",
+          "text/x-la-asf"
+        ]
+      ],
+      [
+        "ltf",
+        "application/vnd.frogans.ltf"
+      ],
+      [
+        "ltx",
+        "application/x-latex"
+      ],
+      [
+        "lvp",
+        "audio/vnd.lucent.voice"
+      ],
+      [
+        "lwp",
+        "application/vnd.lotus-wordpro"
+      ],
+      [
+        "lzh",
+        [
+          "application/octet-stream",
+          "application/x-lzh"
+        ]
+      ],
+      [
+        "lzx",
+        [
+          "application/lzx",
+          "application/octet-stream",
+          "application/x-lzx"
+        ]
+      ],
+      [
+        "m",
+        [
+          "text/plain",
+          "text/x-m"
+        ]
+      ],
+      [
+        "m13",
+        "application/x-msmediaview"
+      ],
+      [
+        "m14",
+        "application/x-msmediaview"
+      ],
+      [
+        "m1v",
+        "video/mpeg"
+      ],
+      [
+        "m21",
+        "application/mp21"
+      ],
+      [
+        "m2a",
+        "audio/mpeg"
+      ],
+      [
+        "m2v",
+        "video/mpeg"
+      ],
+      [
+        "m3u",
+        [
+          "audio/x-mpegurl",
+          "audio/x-mpequrl"
+        ]
+      ],
+      [
+        "m3u8",
+        "application/vnd.apple.mpegurl"
+      ],
+      [
+        "m4v",
+        "video/x-m4v"
+      ],
+      [
+        "ma",
+        "application/mathematica"
+      ],
+      [
+        "mads",
+        "application/mads+xml"
+      ],
+      [
+        "mag",
+        "application/vnd.ecowin.chart"
+      ],
+      [
+        "man",
+        "application/x-troff-man"
+      ],
+      [
+        "map",
+        "application/x-navimap"
+      ],
+      [
+        "mar",
+        "text/plain"
+      ],
+      [
+        "mathml",
+        "application/mathml+xml"
+      ],
+      [
+        "mbd",
+        "application/mbedlet"
+      ],
+      [
+        "mbk",
+        "application/vnd.mobius.mbk"
+      ],
+      [
+        "mbox",
+        "application/mbox"
+      ],
+      [
+        "mc$",
+        "application/x-magic-cap-package-1.0"
+      ],
+      [
+        "mc1",
+        "application/vnd.medcalcdata"
+      ],
+      [
+        "mcd",
+        [
+          "application/mcad",
+          "application/vnd.mcd",
+          "application/x-mathcad"
+        ]
+      ],
+      [
+        "mcf",
+        [
+          "image/vasa",
+          "text/mcf"
+        ]
+      ],
+      [
+        "mcp",
+        "application/netmc"
+      ],
+      [
+        "mcurl",
+        "text/vnd.curl.mcurl"
+      ],
+      [
+        "mdb",
+        "application/x-msaccess"
+      ],
+      [
+        "mdi",
+        "image/vnd.ms-modi"
+      ],
+      [
+        "me",
+        "application/x-troff-me"
+      ],
+      [
+        "meta4",
+        "application/metalink4+xml"
+      ],
+      [
+        "mets",
+        "application/mets+xml"
+      ],
+      [
+        "mfm",
+        "application/vnd.mfmp"
+      ],
+      [
+        "mgp",
+        "application/vnd.osgeo.mapguide.package"
+      ],
+      [
+        "mgz",
+        "application/vnd.proteus.magazine"
+      ],
+      [
+        "mht",
+        "message/rfc822"
+      ],
+      [
+        "mhtml",
+        "message/rfc822"
+      ],
+      [
+        "mid",
+        [
+          "audio/mid",
+          "audio/midi",
+          "music/crescendo",
+          "x-music/x-midi",
+          "audio/x-midi",
+          "application/x-midi",
+          "audio/x-mid"
+        ]
+      ],
+      [
+        "midi",
+        [
+          "audio/midi",
+          "music/crescendo",
+          "x-music/x-midi",
+          "audio/x-midi",
+          "application/x-midi",
+          "audio/x-mid"
+        ]
+      ],
+      [
+        "mif",
+        [
+          "application/vnd.mif",
+          "application/x-mif",
+          "application/x-frame"
+        ]
+      ],
+      [
+        "mime",
+        [
+          "message/rfc822",
+          "www/mime"
+        ]
+      ],
+      [
+        "mj2",
+        "video/mj2"
+      ],
+      [
+        "mjf",
+        "audio/x-vnd.audioexplosion.mjuicemediafile"
+      ],
+      [
+        "mjpg",
+        "video/x-motion-jpeg"
+      ],
+      [
+        "mlp",
+        "application/vnd.dolby.mlp"
+      ],
+      [
+        "mm",
+        [
+          "application/base64",
+          "application/x-meme"
+        ]
+      ],
+      [
+        "mmd",
+        "application/vnd.chipnuts.karaoke-mmd"
+      ],
+      [
+        "mme",
+        "application/base64"
+      ],
+      [
+        "mmf",
+        "application/vnd.smaf"
+      ],
+      [
+        "mmr",
+        "image/vnd.fujixerox.edmics-mmr"
+      ],
+      [
+        "mny",
+        "application/x-msmoney"
+      ],
+      [
+        "mod",
+        [
+          "audio/mod",
+          "audio/x-mod"
+        ]
+      ],
+      [
+        "mods",
+        "application/mods+xml"
+      ],
+      [
+        "moov",
+        "video/quicktime"
+      ],
+      [
+        "mov",
+        "video/quicktime"
+      ],
+      [
+        "movie",
+        "video/x-sgi-movie"
+      ],
+      [
+        "mp2",
+        [
+          "video/mpeg",
+          "audio/mpeg",
+          "video/x-mpeg",
+          "audio/x-mpeg",
+          "video/x-mpeq2a"
+        ]
+      ],
+      [
+        "mp3",
+        [
+          "audio/mpeg",
+          "audio/mpeg3",
+          "video/mpeg",
+          "audio/x-mpeg-3",
+          "video/x-mpeg"
+        ]
+      ],
+      [
+        "mp4",
+        [
+          "video/mp4",
+          "application/mp4"
+        ]
+      ],
+      [
+        "mp4a",
+        "audio/mp4"
+      ],
+      [
+        "mpa",
+        [
+          "video/mpeg",
+          "audio/mpeg"
+        ]
+      ],
+      [
+        "mpc",
+        [
+          "application/vnd.mophun.certificate",
+          "application/x-project"
+        ]
+      ],
+      [
+        "mpe",
+        "video/mpeg"
+      ],
+      [
+        "mpeg",
+        "video/mpeg"
+      ],
+      [
+        "mpg",
+        [
+          "video/mpeg",
+          "audio/mpeg"
+        ]
+      ],
+      [
+        "mpga",
+        "audio/mpeg"
+      ],
+      [
+        "mpkg",
+        "application/vnd.apple.installer+xml"
+      ],
+      [
+        "mpm",
+        "application/vnd.blueice.multipass"
+      ],
+      [
+        "mpn",
+        "application/vnd.mophun.application"
+      ],
+      [
+        "mpp",
+        "application/vnd.ms-project"
+      ],
+      [
+        "mpt",
+        "application/x-project"
+      ],
+      [
+        "mpv",
+        "application/x-project"
+      ],
+      [
+        "mpv2",
+        "video/mpeg"
+      ],
+      [
+        "mpx",
+        "application/x-project"
+      ],
+      [
+        "mpy",
+        "application/vnd.ibm.minipay"
+      ],
+      [
+        "mqy",
+        "application/vnd.mobius.mqy"
+      ],
+      [
+        "mrc",
+        "application/marc"
+      ],
+      [
+        "mrcx",
+        "application/marcxml+xml"
+      ],
+      [
+        "ms",
+        "application/x-troff-ms"
+      ],
+      [
+        "mscml",
+        "application/mediaservercontrol+xml"
+      ],
+      [
+        "mseq",
+        "application/vnd.mseq"
+      ],
+      [
+        "msf",
+        "application/vnd.epson.msf"
+      ],
+      [
+        "msg",
+        "application/vnd.ms-outlook"
+      ],
+      [
+        "msh",
+        "model/mesh"
+      ],
+      [
+        "msl",
+        "application/vnd.mobius.msl"
+      ],
+      [
+        "msty",
+        "application/vnd.muvee.style"
+      ],
+      [
+        "mts",
+        "model/vnd.mts"
+      ],
+      [
+        "mus",
+        "application/vnd.musician"
+      ],
+      [
+        "musicxml",
+        "application/vnd.recordare.musicxml+xml"
+      ],
+      [
+        "mv",
+        "video/x-sgi-movie"
+      ],
+      [
+        "mvb",
+        "application/x-msmediaview"
+      ],
+      [
+        "mwf",
+        "application/vnd.mfer"
+      ],
+      [
+        "mxf",
+        "application/mxf"
+      ],
+      [
+        "mxl",
+        "application/vnd.recordare.musicxml"
+      ],
+      [
+        "mxml",
+        "application/xv+xml"
+      ],
+      [
+        "mxs",
+        "application/vnd.triscape.mxs"
+      ],
+      [
+        "mxu",
+        "video/vnd.mpegurl"
+      ],
+      [
+        "my",
+        "audio/make"
+      ],
+      [
+        "mzz",
+        "application/x-vnd.audioexplosion.mzz"
+      ],
+      [
+        "n-gage",
+        "application/vnd.nokia.n-gage.symbian.install"
+      ],
+      [
+        "n3",
+        "text/n3"
+      ],
+      [
+        "nap",
+        "image/naplps"
+      ],
+      [
+        "naplps",
+        "image/naplps"
+      ],
+      [
+        "nbp",
+        "application/vnd.wolfram.player"
+      ],
+      [
+        "nc",
+        "application/x-netcdf"
+      ],
+      [
+        "ncm",
+        "application/vnd.nokia.configuration-message"
+      ],
+      [
+        "ncx",
+        "application/x-dtbncx+xml"
+      ],
+      [
+        "ngdat",
+        "application/vnd.nokia.n-gage.data"
+      ],
+      [
+        "nif",
+        "image/x-niff"
+      ],
+      [
+        "niff",
+        "image/x-niff"
+      ],
+      [
+        "nix",
+        "application/x-mix-transfer"
+      ],
+      [
+        "nlu",
+        "application/vnd.neurolanguage.nlu"
+      ],
+      [
+        "nml",
+        "application/vnd.enliven"
+      ],
+      [
+        "nnd",
+        "application/vnd.noblenet-directory"
+      ],
+      [
+        "nns",
+        "application/vnd.noblenet-sealer"
+      ],
+      [
+        "nnw",
+        "application/vnd.noblenet-web"
+      ],
+      [
+        "npx",
+        "image/vnd.net-fpx"
+      ],
+      [
+        "nsc",
+        "application/x-conference"
+      ],
+      [
+        "nsf",
+        "application/vnd.lotus-notes"
+      ],
+      [
+        "nvd",
+        "application/x-navidoc"
+      ],
+      [
+        "nws",
+        "message/rfc822"
+      ],
+      [
+        "o",
+        "application/octet-stream"
+      ],
+      [
+        "oa2",
+        "application/vnd.fujitsu.oasys2"
+      ],
+      [
+        "oa3",
+        "application/vnd.fujitsu.oasys3"
+      ],
+      [
+        "oas",
+        "application/vnd.fujitsu.oasys"
+      ],
+      [
+        "obd",
+        "application/x-msbinder"
+      ],
+      [
+        "oda",
+        "application/oda"
+      ],
+      [
+        "odb",
+        "application/vnd.oasis.opendocument.database"
+      ],
+      [
+        "odc",
+        "application/vnd.oasis.opendocument.chart"
+      ],
+      [
+        "odf",
+        "application/vnd.oasis.opendocument.formula"
+      ],
+      [
+        "odft",
+        "application/vnd.oasis.opendocument.formula-template"
+      ],
+      [
+        "odg",
+        "application/vnd.oasis.opendocument.graphics"
+      ],
+      [
+        "odi",
+        "application/vnd.oasis.opendocument.image"
+      ],
+      [
+        "odm",
+        "application/vnd.oasis.opendocument.text-master"
+      ],
+      [
+        "odp",
+        "application/vnd.oasis.opendocument.presentation"
+      ],
+      [
+        "ods",
+        "application/vnd.oasis.opendocument.spreadsheet"
+      ],
+      [
+        "odt",
+        "application/vnd.oasis.opendocument.text"
+      ],
+      [
+        "oga",
+        "audio/ogg"
+      ],
+      [
+        "ogv",
+        "video/ogg"
+      ],
+      [
+        "ogx",
+        "application/ogg"
+      ],
+      [
+        "omc",
+        "application/x-omc"
+      ],
+      [
+        "omcd",
+        "application/x-omcdatamaker"
+      ],
+      [
+        "omcr",
+        "application/x-omcregerator"
+      ],
+      [
+        "onetoc",
+        "application/onenote"
+      ],
+      [
+        "opf",
+        "application/oebps-package+xml"
+      ],
+      [
+        "org",
+        "application/vnd.lotus-organizer"
+      ],
+      [
+        "osf",
+        "application/vnd.yamaha.openscoreformat"
+      ],
+      [
+        "osfpvg",
+        "application/vnd.yamaha.openscoreformat.osfpvg+xml"
+      ],
+      [
+        "otc",
+        "application/vnd.oasis.opendocument.chart-template"
+      ],
+      [
+        "otf",
+        "application/x-font-otf"
+      ],
+      [
+        "otg",
+        "application/vnd.oasis.opendocument.graphics-template"
+      ],
+      [
+        "oth",
+        "application/vnd.oasis.opendocument.text-web"
+      ],
+      [
+        "oti",
+        "application/vnd.oasis.opendocument.image-template"
+      ],
+      [
+        "otp",
+        "application/vnd.oasis.opendocument.presentation-template"
+      ],
+      [
+        "ots",
+        "application/vnd.oasis.opendocument.spreadsheet-template"
+      ],
+      [
+        "ott",
+        "application/vnd.oasis.opendocument.text-template"
+      ],
+      [
+        "oxt",
+        "application/vnd.openofficeorg.extension"
+      ],
+      [
+        "p",
+        "text/x-pascal"
+      ],
+      [
+        "p10",
+        [
+          "application/pkcs10",
+          "application/x-pkcs10"
+        ]
+      ],
+      [
+        "p12",
+        [
+          "application/pkcs-12",
+          "application/x-pkcs12"
+        ]
+      ],
+      [
+        "p7a",
+        "application/x-pkcs7-signature"
+      ],
+      [
+        "p7b",
+        "application/x-pkcs7-certificates"
+      ],
+      [
+        "p7c",
+        [
+          "application/pkcs7-mime",
+          "application/x-pkcs7-mime"
+        ]
+      ],
+      [
+        "p7m",
+        [
+          "application/pkcs7-mime",
+          "application/x-pkcs7-mime"
+        ]
+      ],
+      [
+        "p7r",
+        "application/x-pkcs7-certreqresp"
+      ],
+      [
+        "p7s",
+        [
+          "application/pkcs7-signature",
+          "application/x-pkcs7-signature"
+        ]
+      ],
+      [
+        "p8",
+        "application/pkcs8"
+      ],
+      [
+        "par",
+        "text/plain-bas"
+      ],
+      [
+        "part",
+        "application/pro_eng"
+      ],
+      [
+        "pas",
+        "text/pascal"
+      ],
+      [
+        "paw",
+        "application/vnd.pawaafile"
+      ],
+      [
+        "pbd",
+        "application/vnd.powerbuilder6"
+      ],
+      [
+        "pbm",
+        "image/x-portable-bitmap"
+      ],
+      [
+        "pcf",
+        "application/x-font-pcf"
+      ],
+      [
+        "pcl",
+        [
+          "application/vnd.hp-pcl",
+          "application/x-pcl"
+        ]
+      ],
+      [
+        "pclxl",
+        "application/vnd.hp-pclxl"
+      ],
+      [
+        "pct",
+        "image/x-pict"
+      ],
+      [
+        "pcurl",
+        "application/vnd.curl.pcurl"
+      ],
+      [
+        "pcx",
+        "image/x-pcx"
+      ],
+      [
+        "pdb",
+        [
+          "application/vnd.palm",
+          "chemical/x-pdb"
+        ]
+      ],
+      [
+        "pdf",
+        "application/pdf"
+      ],
+      [
+        "pfa",
+        "application/x-font-type1"
+      ],
+      [
+        "pfr",
+        "application/font-tdpfr"
+      ],
+      [
+        "pfunk",
+        [
+          "audio/make",
+          "audio/make.my.funk"
+        ]
+      ],
+      [
+        "pfx",
+        "application/x-pkcs12"
+      ],
+      [
+        "pgm",
+        [
+          "image/x-portable-graymap",
+          "image/x-portable-greymap"
+        ]
+      ],
+      [
+        "pgn",
+        "application/x-chess-pgn"
+      ],
+      [
+        "pgp",
+        "application/pgp-signature"
+      ],
+      [
+        "pic",
+        [
+          "image/pict",
+          "image/x-pict"
+        ]
+      ],
+      [
+        "pict",
+        "image/pict"
+      ],
+      [
+        "pkg",
+        "application/x-newton-compatible-pkg"
+      ],
+      [
+        "pki",
+        "application/pkixcmp"
+      ],
+      [
+        "pkipath",
+        "application/pkix-pkipath"
+      ],
+      [
+        "pko",
+        [
+          "application/ynd.ms-pkipko",
+          "application/vnd.ms-pki.pko"
+        ]
+      ],
+      [
+        "pl",
+        [
+          "text/plain",
+          "text/x-script.perl"
+        ]
+      ],
+      [
+        "plb",
+        "application/vnd.3gpp.pic-bw-large"
+      ],
+      [
+        "plc",
+        "application/vnd.mobius.plc"
+      ],
+      [
+        "plf",
+        "application/vnd.pocketlearn"
+      ],
+      [
+        "pls",
+        "application/pls+xml"
+      ],
+      [
+        "plx",
+        "application/x-pixclscript"
+      ],
+      [
+        "pm",
+        [
+          "text/x-script.perl-module",
+          "image/x-xpixmap"
+        ]
+      ],
+      [
+        "pm4",
+        "application/x-pagemaker"
+      ],
+      [
+        "pm5",
+        "application/x-pagemaker"
+      ],
+      [
+        "pma",
+        "application/x-perfmon"
+      ],
+      [
+        "pmc",
+        "application/x-perfmon"
+      ],
+      [
+        "pml",
+        [
+          "application/vnd.ctc-posml",
+          "application/x-perfmon"
+        ]
+      ],
+      [
+        "pmr",
+        "application/x-perfmon"
+      ],
+      [
+        "pmw",
+        "application/x-perfmon"
+      ],
+      [
+        "png",
+        "image/png"
+      ],
+      [
+        "pnm",
+        [
+          "application/x-portable-anymap",
+          "image/x-portable-anymap"
+        ]
+      ],
+      [
+        "portpkg",
+        "application/vnd.macports.portpkg"
+      ],
+      [
+        "pot",
+        [
+          "application/vnd.ms-powerpoint",
+          "application/mspowerpoint"
+        ]
+      ],
+      [
+        "potm",
+        "application/vnd.ms-powerpoint.template.macroenabled.12"
+      ],
+      [
+        "potx",
+        "application/vnd.openxmlformats-officedocument.presentationml.template"
+      ],
+      [
+        "pov",
+        "model/x-pov"
+      ],
+      [
+        "ppa",
+        "application/vnd.ms-powerpoint"
+      ],
+      [
+        "ppam",
+        "application/vnd.ms-powerpoint.addin.macroenabled.12"
+      ],
+      [
+        "ppd",
+        "application/vnd.cups-ppd"
+      ],
+      [
+        "ppm",
+        "image/x-portable-pixmap"
+      ],
+      [
+        "pps",
+        [
+          "application/vnd.ms-powerpoint",
+          "application/mspowerpoint"
+        ]
+      ],
+      [
+        "ppsm",
+        "application/vnd.ms-powerpoint.slideshow.macroenabled.12"
+      ],
+      [
+        "ppsx",
+        "application/vnd.openxmlformats-officedocument.presentationml.slideshow"
+      ],
+      [
+        "ppt",
+        [
+          "application/vnd.ms-powerpoint",
+          "application/mspowerpoint",
+          "application/powerpoint",
+          "application/x-mspowerpoint"
+        ]
+      ],
+      [
+        "pptm",
+        "application/vnd.ms-powerpoint.presentation.macroenabled.12"
+      ],
+      [
+        "pptx",
+        "application/vnd.openxmlformats-officedocument.presentationml.presentation"
+      ],
+      [
+        "ppz",
+        "application/mspowerpoint"
+      ],
+      [
+        "prc",
+        "application/x-mobipocket-ebook"
+      ],
+      [
+        "pre",
+        [
+          "application/vnd.lotus-freelance",
+          "application/x-freelance"
+        ]
+      ],
+      [
+        "prf",
+        "application/pics-rules"
+      ],
+      [
+        "prt",
+        "application/pro_eng"
+      ],
+      [
+        "ps",
+        "application/postscript"
+      ],
+      [
+        "psb",
+        "application/vnd.3gpp.pic-bw-small"
+      ],
+      [
+        "psd",
+        [
+          "application/octet-stream",
+          "image/vnd.adobe.photoshop"
+        ]
+      ],
+      [
+        "psf",
+        "application/x-font-linux-psf"
+      ],
+      [
+        "pskcxml",
+        "application/pskc+xml"
+      ],
+      [
+        "ptid",
+        "application/vnd.pvi.ptid1"
+      ],
+      [
+        "pub",
+        "application/x-mspublisher"
+      ],
+      [
+        "pvb",
+        "application/vnd.3gpp.pic-bw-var"
+      ],
+      [
+        "pvu",
+        "paleovu/x-pv"
+      ],
+      [
+        "pwn",
+        "application/vnd.3m.post-it-notes"
+      ],
+      [
+        "pwz",
+        "application/vnd.ms-powerpoint"
+      ],
+      [
+        "py",
+        "text/x-script.phyton"
+      ],
+      [
+        "pya",
+        "audio/vnd.ms-playready.media.pya"
+      ],
+      [
+        "pyc",
+        "application/x-bytecode.python"
+      ],
+      [
+        "pyv",
+        "video/vnd.ms-playready.media.pyv"
+      ],
+      [
+        "qam",
+        "application/vnd.epson.quickanime"
+      ],
+      [
+        "qbo",
+        "application/vnd.intu.qbo"
+      ],
+      [
+        "qcp",
+        "audio/vnd.qcelp"
+      ],
+      [
+        "qd3",
+        "x-world/x-3dmf"
+      ],
+      [
+        "qd3d",
+        "x-world/x-3dmf"
+      ],
+      [
+        "qfx",
+        "application/vnd.intu.qfx"
+      ],
+      [
+        "qif",
+        "image/x-quicktime"
+      ],
+      [
+        "qps",
+        "application/vnd.publishare-delta-tree"
+      ],
+      [
+        "qt",
+        "video/quicktime"
+      ],
+      [
+        "qtc",
+        "video/x-qtc"
+      ],
+      [
+        "qti",
+        "image/x-quicktime"
+      ],
+      [
+        "qtif",
+        "image/x-quicktime"
+      ],
+      [
+        "qxd",
+        "application/vnd.quark.quarkxpress"
+      ],
+      [
+        "ra",
+        [
+          "audio/x-realaudio",
+          "audio/x-pn-realaudio",
+          "audio/x-pn-realaudio-plugin"
+        ]
+      ],
+      [
+        "ram",
+        "audio/x-pn-realaudio"
+      ],
+      [
+        "rar",
+        "application/x-rar-compressed"
+      ],
+      [
+        "ras",
+        [
+          "image/cmu-raster",
+          "application/x-cmu-raster",
+          "image/x-cmu-raster"
+        ]
+      ],
+      [
+        "rast",
+        "image/cmu-raster"
+      ],
+      [
+        "rcprofile",
+        "application/vnd.ipunplugged.rcprofile"
+      ],
+      [
+        "rdf",
+        "application/rdf+xml"
+      ],
+      [
+        "rdz",
+        "application/vnd.data-vision.rdz"
+      ],
+      [
+        "rep",
+        "application/vnd.businessobjects"
+      ],
+      [
+        "res",
+        "application/x-dtbresource+xml"
+      ],
+      [
+        "rexx",
+        "text/x-script.rexx"
+      ],
+      [
+        "rf",
+        "image/vnd.rn-realflash"
+      ],
+      [
+        "rgb",
+        "image/x-rgb"
+      ],
+      [
+        "rif",
+        "application/reginfo+xml"
+      ],
+      [
+        "rip",
+        "audio/vnd.rip"
+      ],
+      [
+        "rl",
+        "application/resource-lists+xml"
+      ],
+      [
+        "rlc",
+        "image/vnd.fujixerox.edmics-rlc"
+      ],
+      [
+        "rld",
+        "application/resource-lists-diff+xml"
+      ],
+      [
+        "rm",
+        [
+          "application/vnd.rn-realmedia",
+          "audio/x-pn-realaudio"
+        ]
+      ],
+      [
+        "rmi",
+        "audio/mid"
+      ],
+      [
+        "rmm",
+        "audio/x-pn-realaudio"
+      ],
+      [
+        "rmp",
+        [
+          "audio/x-pn-realaudio-plugin",
+          "audio/x-pn-realaudio"
+        ]
+      ],
+      [
+        "rms",
+        "application/vnd.jcp.javame.midlet-rms"
+      ],
+      [
+        "rnc",
+        "application/relax-ng-compact-syntax"
+      ],
+      [
+        "rng",
+        [
+          "application/ringing-tones",
+          "application/vnd.nokia.ringing-tone"
+        ]
+      ],
+      [
+        "rnx",
+        "application/vnd.rn-realplayer"
+      ],
+      [
+        "roff",
+        "application/x-troff"
+      ],
+      [
+        "rp",
+        "image/vnd.rn-realpix"
+      ],
+      [
+        "rp9",
+        "application/vnd.cloanto.rp9"
+      ],
+      [
+        "rpm",
+        "audio/x-pn-realaudio-plugin"
+      ],
+      [
+        "rpss",
+        "application/vnd.nokia.radio-presets"
+      ],
+      [
+        "rpst",
+        "application/vnd.nokia.radio-preset"
+      ],
+      [
+        "rq",
+        "application/sparql-query"
+      ],
+      [
+        "rs",
+        "application/rls-services+xml"
+      ],
+      [
+        "rsd",
+        "application/rsd+xml"
+      ],
+      [
+        "rt",
+        [
+          "text/richtext",
+          "text/vnd.rn-realtext"
+        ]
+      ],
+      [
+        "rtf",
+        [
+          "application/rtf",
+          "text/richtext",
+          "application/x-rtf"
+        ]
+      ],
+      [
+        "rtx",
+        [
+          "text/richtext",
+          "application/rtf"
+        ]
+      ],
+      [
+        "rv",
+        "video/vnd.rn-realvideo"
+      ],
+      [
+        "s",
+        "text/x-asm"
+      ],
+      [
+        "s3m",
+        "audio/s3m"
+      ],
+      [
+        "saf",
+        "application/vnd.yamaha.smaf-audio"
+      ],
+      [
+        "saveme",
+        "application/octet-stream"
+      ],
+      [
+        "sbk",
+        "application/x-tbook"
+      ],
+      [
+        "sbml",
+        "application/sbml+xml"
+      ],
+      [
+        "sc",
+        "application/vnd.ibm.secure-container"
+      ],
+      [
+        "scd",
+        "application/x-msschedule"
+      ],
+      [
+        "scm",
+        [
+          "application/vnd.lotus-screencam",
+          "video/x-scm",
+          "text/x-script.guile",
+          "application/x-lotusscreencam",
+          "text/x-script.scheme"
+        ]
+      ],
+      [
+        "scq",
+        "application/scvp-cv-request"
+      ],
+      [
+        "scs",
+        "application/scvp-cv-response"
+      ],
+      [
+        "sct",
+        "text/scriptlet"
+      ],
+      [
+        "scurl",
+        "text/vnd.curl.scurl"
+      ],
+      [
+        "sda",
+        "application/vnd.stardivision.draw"
+      ],
+      [
+        "sdc",
+        "application/vnd.stardivision.calc"
+      ],
+      [
+        "sdd",
+        "application/vnd.stardivision.impress"
+      ],
+      [
+        "sdkm",
+        "application/vnd.solent.sdkm+xml"
+      ],
+      [
+        "sdml",
+        "text/plain"
+      ],
+      [
+        "sdp",
+        [
+          "application/sdp",
+          "application/x-sdp"
+        ]
+      ],
+      [
+        "sdr",
+        "application/sounder"
+      ],
+      [
+        "sdw",
+        "application/vnd.stardivision.writer"
+      ],
+      [
+        "sea",
+        [
+          "application/sea",
+          "application/x-sea"
+        ]
+      ],
+      [
+        "see",
+        "application/vnd.seemail"
+      ],
+      [
+        "seed",
+        "application/vnd.fdsn.seed"
+      ],
+      [
+        "sema",
+        "application/vnd.sema"
+      ],
+      [
+        "semd",
+        "application/vnd.semd"
+      ],
+      [
+        "semf",
+        "application/vnd.semf"
+      ],
+      [
+        "ser",
+        "application/java-serialized-object"
+      ],
+      [
+        "set",
+        "application/set"
+      ],
+      [
+        "setpay",
+        "application/set-payment-initiation"
+      ],
+      [
+        "setreg",
+        "application/set-registration-initiation"
+      ],
+      [
+        "sfd-hdstx",
+        "application/vnd.hydrostatix.sof-data"
+      ],
+      [
+        "sfs",
+        "application/vnd.spotfire.sfs"
+      ],
+      [
+        "sgl",
+        "application/vnd.stardivision.writer-global"
+      ],
+      [
+        "sgm",
+        [
+          "text/sgml",
+          "text/x-sgml"
+        ]
+      ],
+      [
+        "sgml",
+        [
+          "text/sgml",
+          "text/x-sgml"
+        ]
+      ],
+      [
+        "sh",
+        [
+          "application/x-shar",
+          "application/x-bsh",
+          "application/x-sh",
+          "text/x-script.sh"
+        ]
+      ],
+      [
+        "shar",
+        [
+          "application/x-bsh",
+          "application/x-shar"
+        ]
+      ],
+      [
+        "shf",
+        "application/shf+xml"
+      ],
+      [
+        "shtml",
+        [
+          "text/html",
+          "text/x-server-parsed-html"
+        ]
+      ],
+      [
+        "sid",
+        "audio/x-psid"
+      ],
+      [
+        "sis",
+        "application/vnd.symbian.install"
+      ],
+      [
+        "sit",
+        [
+          "application/x-stuffit",
+          "application/x-sit"
+        ]
+      ],
+      [
+        "sitx",
+        "application/x-stuffitx"
+      ],
+      [
+        "skd",
+        "application/x-koan"
+      ],
+      [
+        "skm",
+        "application/x-koan"
+      ],
+      [
+        "skp",
+        [
+          "application/vnd.koan",
+          "application/x-koan"
+        ]
+      ],
+      [
+        "skt",
+        "application/x-koan"
+      ],
+      [
+        "sl",
+        "application/x-seelogo"
+      ],
+      [
+        "sldm",
+        "application/vnd.ms-powerpoint.slide.macroenabled.12"
+      ],
+      [
+        "sldx",
+        "application/vnd.openxmlformats-officedocument.presentationml.slide"
+      ],
+      [
+        "slt",
+        "application/vnd.epson.salt"
+      ],
+      [
+        "sm",
+        "application/vnd.stepmania.stepchart"
+      ],
+      [
+        "smf",
+        "application/vnd.stardivision.math"
+      ],
+      [
+        "smi",
+        [
+          "application/smil",
+          "application/smil+xml"
+        ]
+      ],
+      [
+        "smil",
+        "application/smil"
+      ],
+      [
+        "snd",
+        [
+          "audio/basic",
+          "audio/x-adpcm"
+        ]
+      ],
+      [
+        "snf",
+        "application/x-font-snf"
+      ],
+      [
+        "sol",
+        "application/solids"
+      ],
+      [
+        "spc",
+        [
+          "text/x-speech",
+          "application/x-pkcs7-certificates"
+        ]
+      ],
+      [
+        "spf",
+        "application/vnd.yamaha.smaf-phrase"
+      ],
+      [
+        "spl",
+        [
+          "application/futuresplash",
+          "application/x-futuresplash"
+        ]
+      ],
+      [
+        "spot",
+        "text/vnd.in3d.spot"
+      ],
+      [
+        "spp",
+        "application/scvp-vp-response"
+      ],
+      [
+        "spq",
+        "application/scvp-vp-request"
+      ],
+      [
+        "spr",
+        "application/x-sprite"
+      ],
+      [
+        "sprite",
+        "application/x-sprite"
+      ],
+      [
+        "src",
+        "application/x-wais-source"
+      ],
+      [
+        "sru",
+        "application/sru+xml"
+      ],
+      [
+        "srx",
+        "application/sparql-results+xml"
+      ],
+      [
+        "sse",
+        "application/vnd.kodak-descriptor"
+      ],
+      [
+        "ssf",
+        "application/vnd.epson.ssf"
+      ],
+      [
+        "ssi",
+        "text/x-server-parsed-html"
+      ],
+      [
+        "ssm",
+        "application/streamingmedia"
+      ],
+      [
+        "ssml",
+        "application/ssml+xml"
+      ],
+      [
+        "sst",
+        [
+          "application/vnd.ms-pkicertstore",
+          "application/vnd.ms-pki.certstore"
+        ]
+      ],
+      [
+        "st",
+        "application/vnd.sailingtracker.track"
+      ],
+      [
+        "stc",
+        "application/vnd.sun.xml.calc.template"
+      ],
+      [
+        "std",
+        "application/vnd.sun.xml.draw.template"
+      ],
+      [
+        "step",
+        "application/step"
+      ],
+      [
+        "stf",
+        "application/vnd.wt.stf"
+      ],
+      [
+        "sti",
+        "application/vnd.sun.xml.impress.template"
+      ],
+      [
+        "stk",
+        "application/hyperstudio"
+      ],
+      [
+        "stl",
+        [
+          "application/vnd.ms-pkistl",
+          "application/sla",
+          "application/vnd.ms-pki.stl",
+          "application/x-navistyle"
+        ]
+      ],
+      [
+        "stm",
+        "text/html"
+      ],
+      [
+        "stp",
+        "application/step"
+      ],
+      [
+        "str",
+        "application/vnd.pg.format"
+      ],
+      [
+        "stw",
+        "application/vnd.sun.xml.writer.template"
+      ],
+      [
+        "sub",
+        "image/vnd.dvb.subtitle"
+      ],
+      [
+        "sus",
+        "application/vnd.sus-calendar"
+      ],
+      [
+        "sv4cpio",
+        "application/x-sv4cpio"
+      ],
+      [
+        "sv4crc",
+        "application/x-sv4crc"
+      ],
+      [
+        "svc",
+        "application/vnd.dvb.service"
+      ],
+      [
+        "svd",
+        "application/vnd.svd"
+      ],
+      [
+        "svf",
+        [
+          "image/vnd.dwg",
+          "image/x-dwg"
+        ]
+      ],
+      [
+        "svg",
+        "image/svg+xml"
+      ],
+      [
+        "svr",
+        [
+          "x-world/x-svr",
+          "application/x-world"
+        ]
+      ],
+      [
+        "swf",
+        "application/x-shockwave-flash"
+      ],
+      [
+        "swi",
+        "application/vnd.aristanetworks.swi"
+      ],
+      [
+        "sxc",
+        "application/vnd.sun.xml.calc"
+      ],
+      [
+        "sxd",
+        "application/vnd.sun.xml.draw"
+      ],
+      [
+        "sxg",
+        "application/vnd.sun.xml.writer.global"
+      ],
+      [
+        "sxi",
+        "application/vnd.sun.xml.impress"
+      ],
+      [
+        "sxm",
+        "application/vnd.sun.xml.math"
+      ],
+      [
+        "sxw",
+        "application/vnd.sun.xml.writer"
+      ],
+      [
+        "t",
+        [
+          "text/troff",
+          "application/x-troff"
+        ]
+      ],
+      [
+        "talk",
+        "text/x-speech"
+      ],
+      [
+        "tao",
+        "application/vnd.tao.intent-module-archive"
+      ],
+      [
+        "tar",
+        "application/x-tar"
+      ],
+      [
+        "tbk",
+        [
+          "application/toolbook",
+          "application/x-tbook"
+        ]
+      ],
+      [
+        "tcap",
+        "application/vnd.3gpp2.tcap"
+      ],
+      [
+        "tcl",
+        [
+          "text/x-script.tcl",
+          "application/x-tcl"
+        ]
+      ],
+      [
+        "tcsh",
+        "text/x-script.tcsh"
+      ],
+      [
+        "teacher",
+        "application/vnd.smart.teacher"
+      ],
+      [
+        "tei",
+        "application/tei+xml"
+      ],
+      [
+        "tex",
+        "application/x-tex"
+      ],
+      [
+        "texi",
+        "application/x-texinfo"
+      ],
+      [
+        "texinfo",
+        "application/x-texinfo"
+      ],
+      [
+        "text",
+        [
+          "application/plain",
+          "text/plain"
+        ]
+      ],
+      [
+        "tfi",
+        "application/thraud+xml"
+      ],
+      [
+        "tfm",
+        "application/x-tex-tfm"
+      ],
+      [
+        "tgz",
+        [
+          "application/gnutar",
+          "application/x-compressed"
+        ]
+      ],
+      [
+        "thmx",
+        "application/vnd.ms-officetheme"
+      ],
+      [
+        "tif",
+        [
+          "image/tiff",
+          "image/x-tiff"
+        ]
+      ],
+      [
+        "tiff",
+        [
+          "image/tiff",
+          "image/x-tiff"
+        ]
+      ],
+      [
+        "tmo",
+        "application/vnd.tmobile-livetv"
+      ],
+      [
+        "torrent",
+        "application/x-bittorrent"
+      ],
+      [
+        "tpl",
+        "application/vnd.groove-tool-template"
+      ],
+      [
+        "tpt",
+        "application/vnd.trid.tpt"
+      ],
+      [
+        "tr",
+        "application/x-troff"
+      ],
+      [
+        "tra",
+        "application/vnd.trueapp"
+      ],
+      [
+        "trm",
+        "application/x-msterminal"
+      ],
+      [
+        "tsd",
+        "application/timestamped-data"
+      ],
+      [
+        "tsi",
+        "audio/tsp-audio"
+      ],
+      [
+        "tsp",
+        [
+          "application/dsptype",
+          "audio/tsplayer"
+        ]
+      ],
+      [
+        "tsv",
+        "text/tab-separated-values"
+      ],
+      [
+        "ttf",
+        "application/x-font-ttf"
+      ],
+      [
+        "ttl",
+        "text/turtle"
+      ],
+      [
+        "turbot",
+        "image/florian"
+      ],
+      [
+        "twd",
+        "application/vnd.simtech-mindmapper"
+      ],
+      [
+        "txd",
+        "application/vnd.genomatix.tuxedo"
+      ],
+      [
+        "txf",
+        "application/vnd.mobius.txf"
+      ],
+      [
+        "txt",
+        "text/plain"
+      ],
+      [
+        "ufd",
+        "application/vnd.ufdl"
+      ],
+      [
+        "uil",
+        "text/x-uil"
+      ],
+      [
+        "uls",
+        "text/iuls"
+      ],
+      [
+        "umj",
+        "application/vnd.umajin"
+      ],
+      [
+        "uni",
+        "text/uri-list"
+      ],
+      [
+        "unis",
+        "text/uri-list"
+      ],
+      [
+        "unityweb",
+        "application/vnd.unity"
+      ],
+      [
+        "unv",
+        "application/i-deas"
+      ],
+      [
+        "uoml",
+        "application/vnd.uoml+xml"
+      ],
+      [
+        "uri",
+        "text/uri-list"
+      ],
+      [
+        "uris",
+        "text/uri-list"
+      ],
+      [
+        "ustar",
+        [
+          "application/x-ustar",
+          "multipart/x-ustar"
+        ]
+      ],
+      [
+        "utz",
+        "application/vnd.uiq.theme"
+      ],
+      [
+        "uu",
+        [
+          "application/octet-stream",
+          "text/x-uuencode"
+        ]
+      ],
+      [
+        "uue",
+        "text/x-uuencode"
+      ],
+      [
+        "uva",
+        "audio/vnd.dece.audio"
+      ],
+      [
+        "uvh",
+        "video/vnd.dece.hd"
+      ],
+      [
+        "uvi",
+        "image/vnd.dece.graphic"
+      ],
+      [
+        "uvm",
+        "video/vnd.dece.mobile"
+      ],
+      [
+        "uvp",
+        "video/vnd.dece.pd"
+      ],
+      [
+        "uvs",
+        "video/vnd.dece.sd"
+      ],
+      [
+        "uvu",
+        "video/vnd.uvvu.mp4"
+      ],
+      [
+        "uvv",
+        "video/vnd.dece.video"
+      ],
+      [
+        "vcd",
+        "application/x-cdlink"
+      ],
+      [
+        "vcf",
+        "text/x-vcard"
+      ],
+      [
+        "vcg",
+        "application/vnd.groove-vcard"
+      ],
+      [
+        "vcs",
+        "text/x-vcalendar"
+      ],
+      [
+        "vcx",
+        "application/vnd.vcx"
+      ],
+      [
+        "vda",
+        "application/vda"
+      ],
+      [
+        "vdo",
+        "video/vdo"
+      ],
+      [
+        "vew",
+        "application/groupwise"
+      ],
+      [
+        "vis",
+        "application/vnd.visionary"
+      ],
+      [
+        "viv",
+        [
+          "video/vivo",
+          "video/vnd.vivo"
+        ]
+      ],
+      [
+        "vivo",
+        [
+          "video/vivo",
+          "video/vnd.vivo"
+        ]
+      ],
+      [
+        "vmd",
+        "application/vocaltec-media-desc"
+      ],
+      [
+        "vmf",
+        "application/vocaltec-media-file"
+      ],
+      [
+        "voc",
+        [
+          "audio/voc",
+          "audio/x-voc"
+        ]
+      ],
+      [
+        "vos",
+        "video/vosaic"
+      ],
+      [
+        "vox",
+        "audio/voxware"
+      ],
+      [
+        "vqe",
+        "audio/x-twinvq-plugin"
+      ],
+      [
+        "vqf",
+        "audio/x-twinvq"
+      ],
+      [
+        "vql",
+        "audio/x-twinvq-plugin"
+      ],
+      [
+        "vrml",
+        [
+          "model/vrml",
+          "x-world/x-vrml",
+          "application/x-vrml"
+        ]
+      ],
+      [
+        "vrt",
+        "x-world/x-vrt"
+      ],
+      [
+        "vsd",
+        [
+          "application/vnd.visio",
+          "application/x-visio"
+        ]
+      ],
+      [
+        "vsf",
+        "application/vnd.vsf"
+      ],
+      [
+        "vst",
+        "application/x-visio"
+      ],
+      [
+        "vsw",
+        "application/x-visio"
+      ],
+      [
+        "vtu",
+        "model/vnd.vtu"
+      ],
+      [
+        "vxml",
+        "application/voicexml+xml"
+      ],
+      [
+        "w60",
+        "application/wordperfect6.0"
+      ],
+      [
+        "w61",
+        "application/wordperfect6.1"
+      ],
+      [
+        "w6w",
+        "application/msword"
+      ],
+      [
+        "wad",
+        "application/x-doom"
+      ],
+      [
+        "wav",
+        [
+          "audio/wav",
+          "audio/x-wav"
+        ]
+      ],
+      [
+        "wax",
+        "audio/x-ms-wax"
+      ],
+      [
+        "wb1",
+        "application/x-qpro"
+      ],
+      [
+        "wbmp",
+        "image/vnd.wap.wbmp"
+      ],
+      [
+        "wbs",
+        "application/vnd.criticaltools.wbs+xml"
+      ],
+      [
+        "wbxml",
+        "application/vnd.wap.wbxml"
+      ],
+      [
+        "wcm",
+        "application/vnd.ms-works"
+      ],
+      [
+        "wdb",
+        "application/vnd.ms-works"
+      ],
+      [
+        "web",
+        "application/vnd.xara"
+      ],
+      [
+        "weba",
+        "audio/webm"
+      ],
+      [
+        "webm",
+        "video/webm"
+      ],
+      [
+        "webp",
+        "image/webp"
+      ],
+      [
+        "wg",
+        "application/vnd.pmi.widget"
+      ],
+      [
+        "wgt",
+        "application/widget"
+      ],
+      [
+        "wiz",
+        "application/msword"
+      ],
+      [
+        "wk1",
+        "application/x-123"
+      ],
+      [
+        "wks",
+        "application/vnd.ms-works"
+      ],
+      [
+        "wm",
+        "video/x-ms-wm"
+      ],
+      [
+        "wma",
+        "audio/x-ms-wma"
+      ],
+      [
+        "wmd",
+        "application/x-ms-wmd"
+      ],
+      [
+        "wmf",
+        [
+          "windows/metafile",
+          "application/x-msmetafile"
+        ]
+      ],
+      [
+        "wml",
+        "text/vnd.wap.wml"
+      ],
+      [
+        "wmlc",
+        "application/vnd.wap.wmlc"
+      ],
+      [
+        "wmls",
+        "text/vnd.wap.wmlscript"
+      ],
+      [
+        "wmlsc",
+        "application/vnd.wap.wmlscriptc"
+      ],
+      [
+        "wmv",
+        "video/x-ms-wmv"
+      ],
+      [
+        "wmx",
+        "video/x-ms-wmx"
+      ],
+      [
+        "wmz",
+        "application/x-ms-wmz"
+      ],
+      [
+        "woff",
+        "application/x-font-woff"
+      ],
+      [
+        "word",
+        "application/msword"
+      ],
+      [
+        "wp",
+        "application/wordperfect"
+      ],
+      [
+        "wp5",
+        [
+          "application/wordperfect",
+          "application/wordperfect6.0"
+        ]
+      ],
+      [
+        "wp6",
+        "application/wordperfect"
+      ],
+      [
+        "wpd",
+        [
+          "application/wordperfect",
+          "application/vnd.wordperfect",
+          "application/x-wpwin"
+        ]
+      ],
+      [
+        "wpl",
+        "application/vnd.ms-wpl"
+      ],
+      [
+        "wps",
+        "application/vnd.ms-works"
+      ],
+      [
+        "wq1",
+        "application/x-lotus"
+      ],
+      [
+        "wqd",
+        "application/vnd.wqd"
+      ],
+      [
+        "wri",
+        [
+          "application/mswrite",
+          "application/x-wri",
+          "application/x-mswrite"
+        ]
+      ],
+      [
+        "wrl",
+        [
+          "model/vrml",
+          "x-world/x-vrml",
+          "application/x-world"
+        ]
+      ],
+      [
+        "wrz",
+        [
+          "model/vrml",
+          "x-world/x-vrml"
+        ]
+      ],
+      [
+        "wsc",
+        "text/scriplet"
+      ],
+      [
+        "wsdl",
+        "application/wsdl+xml"
+      ],
+      [
+        "wspolicy",
+        "application/wspolicy+xml"
+      ],
+      [
+        "wsrc",
+        "application/x-wais-source"
+      ],
+      [
+        "wtb",
+        "application/vnd.webturbo"
+      ],
+      [
+        "wtk",
+        "application/x-wintalk"
+      ],
+      [
+        "wvx",
+        "video/x-ms-wvx"
+      ],
+      [
+        "x-png",
+        "image/png"
+      ],
+      [
+        "x3d",
+        "application/vnd.hzn-3d-crossword"
+      ],
+      [
+        "xaf",
+        "x-world/x-vrml"
+      ],
+      [
+        "xap",
+        "application/x-silverlight-app"
+      ],
+      [
+        "xar",
+        "application/vnd.xara"
+      ],
+      [
+        "xbap",
+        "application/x-ms-xbap"
+      ],
+      [
+        "xbd",
+        "application/vnd.fujixerox.docuworks.binder"
+      ],
+      [
+        "xbm",
+        [
+          "image/xbm",
+          "image/x-xbm",
+          "image/x-xbitmap"
+        ]
+      ],
+      [
+        "xdf",
+        "application/xcap-diff+xml"
+      ],
+      [
+        "xdm",
+        "application/vnd.syncml.dm+xml"
+      ],
+      [
+        "xdp",
+        "application/vnd.adobe.xdp+xml"
+      ],
+      [
+        "xdr",
+        "video/x-amt-demorun"
+      ],
+      [
+        "xdssc",
+        "application/dssc+xml"
+      ],
+      [
+        "xdw",
+        "application/vnd.fujixerox.docuworks"
+      ],
+      [
+        "xenc",
+        "application/xenc+xml"
+      ],
+      [
+        "xer",
+        "application/patch-ops-error+xml"
+      ],
+      [
+        "xfdf",
+        "application/vnd.adobe.xfdf"
+      ],
+      [
+        "xfdl",
+        "application/vnd.xfdl"
+      ],
+      [
+        "xgz",
+        "xgl/drawing"
+      ],
+      [
+        "xhtml",
+        "application/xhtml+xml"
+      ],
+      [
+        "xif",
+        "image/vnd.xiff"
+      ],
+      [
+        "xl",
+        "application/excel"
+      ],
+      [
+        "xla",
+        [
+          "application/vnd.ms-excel",
+          "application/excel",
+          "application/x-msexcel",
+          "application/x-excel"
+        ]
+      ],
+      [
+        "xlam",
+        "application/vnd.ms-excel.addin.macroenabled.12"
+      ],
+      [
+        "xlb",
+        [
+          "application/excel",
+          "application/vnd.ms-excel",
+          "application/x-excel"
+        ]
+      ],
+      [
+        "xlc",
+        [
+          "application/vnd.ms-excel",
+          "application/excel",
+          "application/x-excel"
+        ]
+      ],
+      [
+        "xld",
+        [
+          "application/excel",
+          "application/x-excel"
+        ]
+      ],
+      [
+        "xlk",
+        [
+          "application/excel",
+          "application/x-excel"
+        ]
+      ],
+      [
+        "xll",
+        [
+          "application/excel",
+          "application/vnd.ms-excel",
+          "application/x-excel"
+        ]
+      ],
+      [
+        "xlm",
+        [
+          "application/vnd.ms-excel",
+          "application/excel",
+          "application/x-excel"
+        ]
+      ],
+      [
+        "xls",
+        [
+          "application/vnd.ms-excel",
+          "application/excel",
+          "application/x-msexcel",
+          "application/x-excel"
+        ]
+      ],
+      [
+        "xlsb",
+        "application/vnd.ms-excel.sheet.binary.macroenabled.12"
+      ],
+      [
+        "xlsm",
+        "application/vnd.ms-excel.sheet.macroenabled.12"
+      ],
+      [
+        "xlsx",
+        "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+      ],
+      [
+        "xlt",
+        [
+          "application/vnd.ms-excel",
+          "application/excel",
+          "application/x-excel"
+        ]
+      ],
+      [
+        "xltm",
+        "application/vnd.ms-excel.template.macroenabled.12"
+      ],
+      [
+        "xltx",
+        "application/vnd.openxmlformats-officedocument.spreadsheetml.template"
+      ],
+      [
+        "xlv",
+        [
+          "application/excel",
+          "application/x-excel"
+        ]
+      ],
+      [
+        "xlw",
+        [
+          "application/vnd.ms-excel",
+          "application/excel",
+          "application/x-msexcel",
+          "application/x-excel"
+        ]
+      ],
+      [
+        "xm",
+        "audio/xm"
+      ],
+      [
+        "xml",
+        [
+          "application/xml",
+          "text/xml",
+          "application/atom+xml",
+          "application/rss+xml"
+        ]
+      ],
+      [
+        "xmz",
+        "xgl/movie"
+      ],
+      [
+        "xo",
+        "application/vnd.olpc-sugar"
+      ],
+      [
+        "xof",
+        "x-world/x-vrml"
+      ],
+      [
+        "xop",
+        "application/xop+xml"
+      ],
+      [
+        "xpi",
+        "application/x-xpinstall"
+      ],
+      [
+        "xpix",
+        "application/x-vnd.ls-xpix"
+      ],
+      [
+        "xpm",
+        [
+          "image/xpm",
+          "image/x-xpixmap"
+        ]
+      ],
+      [
+        "xpr",
+        "application/vnd.is-xpr"
+      ],
+      [
+        "xps",
+        "application/vnd.ms-xpsdocument"
+      ],
+      [
+        "xpw",
+        "application/vnd.intercon.formnet"
+      ],
+      [
+        "xslt",
+        "application/xslt+xml"
+      ],
+      [
+        "xsm",
+        "application/vnd.syncml+xml"
+      ],
+      [
+        "xspf",
+        "application/xspf+xml"
+      ],
+      [
+        "xsr",
+        "video/x-amt-showrun"
+      ],
+      [
+        "xul",
+        "application/vnd.mozilla.xul+xml"
+      ],
+      [
+        "xwd",
+        [
+          "image/x-xwd",
+          "image/x-xwindowdump"
+        ]
+      ],
+      [
+        "xyz",
+        [
+          "chemical/x-xyz",
+          "chemical/x-pdb"
+        ]
+      ],
+      [
+        "yang",
+        "application/yang"
+      ],
+      [
+        "yin",
+        "application/yin+xml"
+      ],
+      [
+        "z",
+        [
+          "application/x-compressed",
+          "application/x-compress"
+        ]
+      ],
+      [
+        "zaz",
+        "application/vnd.zzazz.deck+xml"
+      ],
+      [
+        "zip",
+        [
+          "application/zip",
+          "multipart/x-zip",
+          "application/x-zip-compressed",
+          "application/x-compressed"
+        ]
+      ],
+      [
+        "zir",
+        "application/vnd.zul"
+      ],
+      [
+        "zmm",
+        "application/vnd.handheld-entertainment+xml"
+      ],
+      [
+        "zoo",
+        "application/octet-stream"
+      ],
+      [
+        "zsh",
+        "text/x-script.zsh"
+      ]
+    ]);
+    module.exports = {
+      detectMimeType(filename) {
+        if (!filename) {
+          return defaultMimeType;
+        }
+        let parsed = path.parse(filename);
+        let extension = (parsed.ext.substr(1) || parsed.name || "").split("?").shift().trim().toLowerCase();
+        let value = defaultMimeType;
+        if (extensions.has(extension)) {
+          value = extensions.get(extension);
+        }
+        if (Array.isArray(value)) {
+          return value[0];
+        }
+        return value;
+      },
+      detectExtension(mimeType) {
+        if (!mimeType) {
+          return defaultExtension;
+        }
+        let parts = (mimeType || "").toLowerCase().trim().split("/");
+        let rootType = parts.shift().trim();
+        let subType = parts.join("/").trim();
+        if (mimeTypes.has(rootType + "/" + subType)) {
+          let value = mimeTypes.get(rootType + "/" + subType);
+          if (Array.isArray(value)) {
+            return value[0];
+          }
+          return value;
+        }
+        switch (rootType) {
+          case "text":
+            return "txt";
+          default:
+            return "bin";
+        }
+      }
+    };
+  }
+});
+
+// node_modules/.deno/nodemailer@6.9.13/node_modules/nodemailer/lib/punycode/index.js
+var require_punycode = __commonJS({
+  "node_modules/.deno/nodemailer@6.9.13/node_modules/nodemailer/lib/punycode/index.js"(exports, module) {
+    "use strict";
+    var maxInt = 2147483647;
+    var base = 36;
+    var tMin = 1;
+    var tMax = 26;
+    var skew = 38;
+    var damp = 700;
+    var initialBias = 72;
+    var initialN = 128;
+    var delimiter = "-";
+    var regexPunycode = /^xn--/;
+    var regexNonASCII = /[^\0-\x7F]/;
+    var regexSeparators = /[\x2E\u3002\uFF0E\uFF61]/g;
+    var errors = {
+      overflow: "Overflow: input needs wider integers to process",
+      "not-basic": "Illegal input >= 0x80 (not a basic code point)",
+      "invalid-input": "Invalid input"
+    };
+    var baseMinusTMin = base - tMin;
+    var floor = Math.floor;
+    var stringFromCharCode = String.fromCharCode;
+    function error(type) {
+      throw new RangeError(errors[type]);
+    }
+    function map(array, callback) {
+      const result = [];
+      let length = array.length;
+      while (length--) {
+        result[length] = callback(array[length]);
+      }
+      return result;
+    }
+    function mapDomain(domain, callback) {
+      const parts = domain.split("@");
+      let result = "";
+      if (parts.length > 1) {
+        result = parts[0] + "@";
+        domain = parts[1];
+      }
+      domain = domain.replace(regexSeparators, ".");
+      const labels = domain.split(".");
+      const encoded = map(labels, callback).join(".");
+      return result + encoded;
+    }
+    function ucs2decode(string) {
+      const output = [];
+      let counter = 0;
+      const length = string.length;
+      while (counter < length) {
+        const value = string.charCodeAt(counter++);
+        if (value >= 55296 && value <= 56319 && counter < length) {
+          const extra = string.charCodeAt(counter++);
+          if ((extra & 64512) == 56320) {
+            output.push(((value & 1023) << 10) + (extra & 1023) + 65536);
+          } else {
+            output.push(value);
+            counter--;
+          }
+        } else {
+          output.push(value);
+        }
+      }
+      return output;
+    }
+    var ucs2encode = (codePoints) => String.fromCodePoint(...codePoints);
+    var basicToDigit = function(codePoint) {
+      if (codePoint >= 48 && codePoint < 58) {
+        return 26 + (codePoint - 48);
+      }
+      if (codePoint >= 65 && codePoint < 91) {
+        return codePoint - 65;
+      }
+      if (codePoint >= 97 && codePoint < 123) {
+        return codePoint - 97;
+      }
+      return base;
+    };
+    var digitToBasic = function(digit, flag) {
+      return digit + 22 + 75 * (digit < 26) - ((flag != 0) << 5);
+    };
+    var adapt = function(delta, numPoints, firstTime) {
+      let k = 0;
+      delta = firstTime ? floor(delta / damp) : delta >> 1;
+      delta += floor(delta / numPoints);
+      for (; delta > baseMinusTMin * tMax >> 1; k += base) {
+        delta = floor(delta / baseMinusTMin);
+      }
+      return floor(k + (baseMinusTMin + 1) * delta / (delta + skew));
+    };
+    var decode = function(input) {
+      const output = [];
+      const inputLength = input.length;
+      let i = 0;
+      let n = initialN;
+      let bias = initialBias;
+      let basic = input.lastIndexOf(delimiter);
+      if (basic < 0) {
+        basic = 0;
+      }
+      for (let j = 0; j < basic; ++j) {
+        if (input.charCodeAt(j) >= 128) {
+          error("not-basic");
+        }
+        output.push(input.charCodeAt(j));
+      }
+      for (let index = basic > 0 ? basic + 1 : 0; index < inputLength; ) {
+        const oldi = i;
+        for (let w = 1, k = base; ; k += base) {
+          if (index >= inputLength) {
+            error("invalid-input");
+          }
+          const digit = basicToDigit(input.charCodeAt(index++));
+          if (digit >= base) {
+            error("invalid-input");
+          }
+          if (digit > floor((maxInt - i) / w)) {
+            error("overflow");
+          }
+          i += digit * w;
+          const t = k <= bias ? tMin : k >= bias + tMax ? tMax : k - bias;
+          if (digit < t) {
+            break;
+          }
+          const baseMinusT = base - t;
+          if (w > floor(maxInt / baseMinusT)) {
+            error("overflow");
+          }
+          w *= baseMinusT;
+        }
+        const out = output.length + 1;
+        bias = adapt(i - oldi, out, oldi == 0);
+        if (floor(i / out) > maxInt - n) {
+          error("overflow");
+        }
+        n += floor(i / out);
+        i %= out;
+        output.splice(i++, 0, n);
+      }
+      return String.fromCodePoint(...output);
+    };
+    var encode = function(input) {
+      const output = [];
+      input = ucs2decode(input);
+      const inputLength = input.length;
+      let n = initialN;
+      let delta = 0;
+      let bias = initialBias;
+      for (const currentValue of input) {
+        if (currentValue < 128) {
+          output.push(stringFromCharCode(currentValue));
+        }
+      }
+      const basicLength = output.length;
+      let handledCPCount = basicLength;
+      if (basicLength) {
+        output.push(delimiter);
+      }
+      while (handledCPCount < inputLength) {
+        let m = maxInt;
+        for (const currentValue of input) {
+          if (currentValue >= n && currentValue < m) {
+            m = currentValue;
+          }
+        }
+        const handledCPCountPlusOne = handledCPCount + 1;
+        if (m - n > floor((maxInt - delta) / handledCPCountPlusOne)) {
+          error("overflow");
+        }
+        delta += (m - n) * handledCPCountPlusOne;
+        n = m;
+        for (const currentValue of input) {
+          if (currentValue < n && ++delta > maxInt) {
+            error("overflow");
+          }
+          if (currentValue === n) {
+            let q = delta;
+            for (let k = base; ; k += base) {
+              const t = k <= bias ? tMin : k >= bias + tMax ? tMax : k - bias;
+              if (q < t) {
+                break;
+              }
+              const qMinusT = q - t;
+              const baseMinusT = base - t;
+              output.push(stringFromCharCode(digitToBasic(t + qMinusT % baseMinusT, 0)));
+              q = floor(qMinusT / baseMinusT);
+            }
+            output.push(stringFromCharCode(digitToBasic(q, 0)));
+            bias = adapt(delta, handledCPCountPlusOne, handledCPCount === basicLength);
+            delta = 0;
+            ++handledCPCount;
+          }
+        }
+        ++delta;
+        ++n;
+      }
+      return output.join("");
+    };
+    var toUnicode = function(input) {
+      return mapDomain(input, function(string) {
+        return regexPunycode.test(string) ? decode(string.slice(4).toLowerCase()) : string;
+      });
+    };
+    var toASCII = function(input) {
+      return mapDomain(input, function(string) {
+        return regexNonASCII.test(string) ? "xn--" + encode(string) : string;
+      });
+    };
+    var punycode = {
+      /**
+         * A string representing the current Punycode.js version number.
+         * @memberOf punycode
+         * @type String
+         */
+      version: "2.3.1",
+      /**
+         * An object of methods to convert from JavaScript's internal character
+         * representation (UCS-2) to Unicode code points, and back.
+         * @see <https://mathiasbynens.be/notes/javascript-encoding>
+         * @memberOf punycode
+         * @type Object
+         */
+      ucs2: {
+        decode: ucs2decode,
+        encode: ucs2encode
+      },
+      decode,
+      encode,
+      toASCII,
+      toUnicode
+    };
+    module.exports = punycode;
+  }
+});
+
+// node_modules/.deno/nodemailer@6.9.13/node_modules/nodemailer/lib/base64/index.js
+var require_base64 = __commonJS({
+  "node_modules/.deno/nodemailer@6.9.13/node_modules/nodemailer/lib/base64/index.js"(exports, module) {
+    "use strict";
+    var Transform = __require("node:stream").Transform;
+    function encode(buffer) {
+      if (typeof buffer === "string") {
+        buffer = Buffer.from(buffer, "utf-8");
+      }
+      return buffer.toString("base64");
+    }
+    function wrap(str, lineLength) {
+      str = (str || "").toString();
+      lineLength = lineLength || 76;
+      if (str.length <= lineLength) {
+        return str;
+      }
+      let result = [];
+      let pos = 0;
+      let chunkLength = lineLength * 1024;
+      while (pos < str.length) {
+        let wrappedLines = str.substr(pos, chunkLength).replace(new RegExp(".{" + lineLength + "}", "g"), "$&\r\n").trim();
+        result.push(wrappedLines);
+        pos += chunkLength;
+      }
+      return result.join("\r\n").trim();
+    }
+    var Encoder = class extends Transform {
+      constructor(options) {
+        super();
+        this.options = options || {};
+        if (this.options.lineLength !== false) {
+          this.options.lineLength = this.options.lineLength || 76;
+        }
+        this._curLine = "";
+        this._remainingBytes = false;
+        this.inputBytes = 0;
+        this.outputBytes = 0;
+      }
+      _transform(chunk, encoding, done) {
+        if (encoding !== "buffer") {
+          chunk = Buffer.from(chunk, encoding);
+        }
+        if (!chunk || !chunk.length) {
+          return setImmediate(done);
+        }
+        this.inputBytes += chunk.length;
+        if (this._remainingBytes && this._remainingBytes.length) {
+          chunk = Buffer.concat([
+            this._remainingBytes,
+            chunk
+          ], this._remainingBytes.length + chunk.length);
+          this._remainingBytes = false;
+        }
+        if (chunk.length % 3) {
+          this._remainingBytes = chunk.slice(chunk.length - chunk.length % 3);
+          chunk = chunk.slice(0, chunk.length - chunk.length % 3);
+        } else {
+          this._remainingBytes = false;
+        }
+        let b64 = this._curLine + encode(chunk);
+        if (this.options.lineLength) {
+          b64 = wrap(b64, this.options.lineLength);
+          let lastLF = b64.lastIndexOf("\n");
+          if (lastLF < 0) {
+            this._curLine = b64;
+            b64 = "";
+          } else if (lastLF === b64.length - 1) {
+            this._curLine = "";
+          } else {
+            this._curLine = b64.substr(lastLF + 1);
+            b64 = b64.substr(0, lastLF + 1);
+          }
+        }
+        if (b64) {
+          this.outputBytes += b64.length;
+          this.push(Buffer.from(b64, "ascii"));
+        }
+        setImmediate(done);
+      }
+      _flush(done) {
+        if (this._remainingBytes && this._remainingBytes.length) {
+          this._curLine += encode(this._remainingBytes);
+        }
+        if (this._curLine) {
+          this._curLine = wrap(this._curLine, this.options.lineLength);
+          this.outputBytes += this._curLine.length;
+          this.push(this._curLine, "ascii");
+          this._curLine = "";
+        }
+        done();
+      }
+    };
+    module.exports = {
+      encode,
+      wrap,
+      Encoder
+    };
+  }
+});
+
+// node_modules/.deno/nodemailer@6.9.13/node_modules/nodemailer/lib/qp/index.js
+var require_qp = __commonJS({
+  "node_modules/.deno/nodemailer@6.9.13/node_modules/nodemailer/lib/qp/index.js"(exports, module) {
+    "use strict";
+    var Transform = __require("node:stream").Transform;
+    function encode(buffer) {
+      if (typeof buffer === "string") {
+        buffer = Buffer.from(buffer, "utf-8");
+      }
+      let ranges = [
+        // https://tools.ietf.org/html/rfc2045#section-6.7
+        [
+          9
+        ],
+        [
+          10
+        ],
+        [
+          13
+        ],
+        [
+          32,
+          60
+        ],
+        [
+          62,
+          126
+        ]
+        // >?@ABCDEFGHIJKLMNOPQRSTUVWXYZ[\]^_`abcdefghijklmnopqrstuvwxyz{|}
+      ];
+      let result = "";
+      let ord;
+      for (let i = 0, len = buffer.length; i < len; i++) {
+        ord = buffer[i];
+        if (checkRanges(ord, ranges) && !((ord === 32 || ord === 9) && (i === len - 1 || buffer[i + 1] === 10 || buffer[i + 1] === 13))) {
+          result += String.fromCharCode(ord);
+          continue;
+        }
+        result += "=" + (ord < 16 ? "0" : "") + ord.toString(16).toUpperCase();
+      }
+      return result;
+    }
+    function wrap(str, lineLength) {
+      str = (str || "").toString();
+      lineLength = lineLength || 76;
+      if (str.length <= lineLength) {
+        return str;
+      }
+      let pos = 0;
+      let len = str.length;
+      let match, code, line;
+      let lineMargin = Math.floor(lineLength / 3);
+      let result = "";
+      while (pos < len) {
+        line = str.substr(pos, lineLength);
+        if (match = line.match(/\r\n/)) {
+          line = line.substr(0, match.index + match[0].length);
+          result += line;
+          pos += line.length;
+          continue;
+        }
+        if (line.substr(-1) === "\n") {
+          result += line;
+          pos += line.length;
+          continue;
+        } else if (match = line.substr(-lineMargin).match(/\n.*?$/)) {
+          line = line.substr(0, line.length - (match[0].length - 1));
+          result += line;
+          pos += line.length;
+          continue;
+        } else if (line.length > lineLength - lineMargin && (match = line.substr(-lineMargin).match(/[ \t.,!?][^ \t.,!?]*$/))) {
+          line = line.substr(0, line.length - (match[0].length - 1));
+        } else if (line.match(/[=][\da-f]{0,2}$/i)) {
+          if (match = line.match(/[=][\da-f]{0,1}$/i)) {
+            line = line.substr(0, line.length - match[0].length);
+          }
+          while (line.length > 3 && line.length < len - pos && !line.match(/^(?:=[\da-f]{2}){1,4}$/i) && (match = line.match(/[=][\da-f]{2}$/gi))) {
+            code = parseInt(match[0].substr(1, 2), 16);
+            if (code < 128) {
+              break;
+            }
+            line = line.substr(0, line.length - 3);
+            if (code >= 192) {
+              break;
+            }
+          }
+        }
+        if (pos + line.length < len && line.substr(-1) !== "\n") {
+          if (line.length === lineLength && line.match(/[=][\da-f]{2}$/i)) {
+            line = line.substr(0, line.length - 3);
+          } else if (line.length === lineLength) {
+            line = line.substr(0, line.length - 1);
+          }
+          pos += line.length;
+          line += "=\r\n";
+        } else {
+          pos += line.length;
+        }
+        result += line;
+      }
+      return result;
+    }
+    function checkRanges(nr, ranges) {
+      for (let i = ranges.length - 1; i >= 0; i--) {
+        if (!ranges[i].length) {
+          continue;
+        }
+        if (ranges[i].length === 1 && nr === ranges[i][0]) {
+          return true;
+        }
+        if (ranges[i].length === 2 && nr >= ranges[i][0] && nr <= ranges[i][1]) {
+          return true;
+        }
+      }
+      return false;
+    }
+    var Encoder = class extends Transform {
+      constructor(options) {
+        super();
+        this.options = options || {};
+        if (this.options.lineLength !== false) {
+          this.options.lineLength = this.options.lineLength || 76;
+        }
+        this._curLine = "";
+        this.inputBytes = 0;
+        this.outputBytes = 0;
+      }
+      _transform(chunk, encoding, done) {
+        let qp;
+        if (encoding !== "buffer") {
+          chunk = Buffer.from(chunk, encoding);
+        }
+        if (!chunk || !chunk.length) {
+          return done();
+        }
+        this.inputBytes += chunk.length;
+        if (this.options.lineLength) {
+          qp = this._curLine + encode(chunk);
+          qp = wrap(qp, this.options.lineLength);
+          qp = qp.replace(/(^|\n)([^\n]*)$/, (match, lineBreak, lastLine) => {
+            this._curLine = lastLine;
+            return lineBreak;
+          });
+          if (qp) {
+            this.outputBytes += qp.length;
+            this.push(qp);
+          }
+        } else {
+          qp = encode(chunk);
+          this.outputBytes += qp.length;
+          this.push(qp, "ascii");
+        }
+        done();
+      }
+      _flush(done) {
+        if (this._curLine) {
+          this.outputBytes += this._curLine.length;
+          this.push(this._curLine, "ascii");
+        }
+        done();
+      }
+    };
+    module.exports = {
+      encode,
+      wrap,
+      Encoder
+    };
+  }
+});
+
+// node_modules/.deno/nodemailer@6.9.13/node_modules/nodemailer/lib/mime-funcs/index.js
+var require_mime_funcs = __commonJS({
+  "node_modules/.deno/nodemailer@6.9.13/node_modules/nodemailer/lib/mime-funcs/index.js"(exports, module) {
+    "use strict";
+    var base64 = require_base64();
+    var qp = require_qp();
+    var mimeTypes = require_mime_types();
+    module.exports = {
+      /**
+         * Checks if a value is plaintext string (uses only printable 7bit chars)
+         *
+         * @param {String} value String to be tested
+         * @returns {Boolean} true if it is a plaintext string
+         */
+      isPlainText(value, isParam) {
+        const re = isParam ? /[\x00-\x08\x0b\x0c\x0e-\x1f"\u0080-\uFFFF]/ : /[\x00-\x08\x0b\x0c\x0e-\x1f\u0080-\uFFFF]/;
+        if (typeof value !== "string" || re.test(value)) {
+          return false;
+        } else {
+          return true;
+        }
+      },
+      /**
+         * Checks if a multi line string containes lines longer than the selected value.
+         *
+         * Useful when detecting if a mail message needs any processing at all –
+         * if only plaintext characters are used and lines are short, then there is
+         * no need to encode the values in any way. If the value is plaintext but has
+         * longer lines then allowed, then use format=flowed
+         *
+         * @param {Number} lineLength Max line length to check for
+         * @returns {Boolean} Returns true if there is at least one line longer than lineLength chars
+         */
+      hasLongerLines(str, lineLength) {
+        if (str.length > 128 * 1024) {
+          return true;
+        }
+        return new RegExp("^.{" + (lineLength + 1) + ",}", "m").test(str);
+      },
+      /**
+         * Encodes a string or an Buffer to an UTF-8 MIME Word (rfc2047)
+         *
+         * @param {String|Buffer} data String to be encoded
+         * @param {String} mimeWordEncoding='Q' Encoding for the mime word, either Q or B
+         * @param {Number} [maxLength=0] If set, split mime words into several chunks if needed
+         * @return {String} Single or several mime words joined together
+         */
+      encodeWord(data, mimeWordEncoding, maxLength) {
+        mimeWordEncoding = (mimeWordEncoding || "Q").toString().toUpperCase().trim().charAt(0);
+        maxLength = maxLength || 0;
+        let encodedStr;
+        let toCharset = "UTF-8";
+        if (maxLength && maxLength > 7 + toCharset.length) {
+          maxLength -= 7 + toCharset.length;
+        }
+        if (mimeWordEncoding === "Q") {
+          encodedStr = qp.encode(data).replace(/[^a-z0-9!*+\-/=]/gi, (chr) => {
+            let ord = chr.charCodeAt(0).toString(16).toUpperCase();
+            if (chr === " ") {
+              return "_";
+            } else {
+              return "=" + (ord.length === 1 ? "0" + ord : ord);
+            }
+          });
+        } else if (mimeWordEncoding === "B") {
+          encodedStr = typeof data === "string" ? data : base64.encode(data);
+          maxLength = maxLength ? Math.max(3, (maxLength - maxLength % 4) / 4 * 3) : 0;
+        }
+        if (maxLength && (mimeWordEncoding !== "B" ? encodedStr : base64.encode(data)).length > maxLength) {
+          if (mimeWordEncoding === "Q") {
+            encodedStr = this.splitMimeEncodedString(encodedStr, maxLength).join("?= =?" + toCharset + "?" + mimeWordEncoding + "?");
+          } else {
+            let parts = [];
+            let lpart = "";
+            for (let i = 0, len = encodedStr.length; i < len; i++) {
+              let chr = encodedStr.charAt(i);
+              if (/[\ud83c\ud83d\ud83e]/.test(chr) && i < len - 1) {
+                chr += encodedStr.charAt(++i);
+              }
+              if (Buffer.byteLength(lpart + chr) <= maxLength || i === 0) {
+                lpart += chr;
+              } else {
+                parts.push(base64.encode(lpart));
+                lpart = chr;
+              }
+            }
+            if (lpart) {
+              parts.push(base64.encode(lpart));
+            }
+            if (parts.length > 1) {
+              encodedStr = parts.join("?= =?" + toCharset + "?" + mimeWordEncoding + "?");
+            } else {
+              encodedStr = parts.join("");
+            }
+          }
+        } else if (mimeWordEncoding === "B") {
+          encodedStr = base64.encode(data);
+        }
+        return "=?" + toCharset + "?" + mimeWordEncoding + "?" + encodedStr + (encodedStr.substr(-2) === "?=" ? "" : "?=");
+      },
+      /**
+         * Finds word sequences with non ascii text and converts these to mime words
+         *
+         * @param {String} value String to be encoded
+         * @param {String} mimeWordEncoding='Q' Encoding for the mime word, either Q or B
+         * @param {Number} [maxLength=0] If set, split mime words into several chunks if needed
+         * @param {Boolean} [encodeAll=false] If true and the value needs encoding then encodes entire string, not just the smallest match
+         * @return {String} String with possible mime words
+         */
+      encodeWords(value, mimeWordEncoding, maxLength, encodeAll) {
+        maxLength = maxLength || 0;
+        let encodedValue;
+        let firstMatch = value.match(/(?:^|\s)([^\s]*["\u0080-\uFFFF])/);
+        if (!firstMatch) {
+          return value;
+        }
+        if (encodeAll) {
+          return this.encodeWord(value, mimeWordEncoding, maxLength);
+        }
+        let lastMatch = value.match(/(["\u0080-\uFFFF][^\s]*)[^"\u0080-\uFFFF]*$/);
+        if (!lastMatch) {
+          return value;
+        }
+        let startIndex = firstMatch.index + (firstMatch[0].match(/[^\s]/) || {
+          index: 0
+        }).index;
+        let endIndex = lastMatch.index + (lastMatch[1] || "").length;
+        encodedValue = (startIndex ? value.substr(0, startIndex) : "") + this.encodeWord(value.substring(startIndex, endIndex), mimeWordEncoding || "Q", maxLength) + (endIndex < value.length ? value.substr(endIndex) : "");
+        return encodedValue;
+      },
+      /**
+         * Joins parsed header value together as 'value; param1=value1; param2=value2'
+         * PS: We are following RFC 822 for the list of special characters that we need to keep in quotes.
+         *      Refer: https://www.w3.org/Protocols/rfc1341/4_Content-Type.html
+         * @param {Object} structured Parsed header value
+         * @return {String} joined header value
+         */
+      buildHeaderValue(structured) {
+        let paramsArray = [];
+        Object.keys(structured.params || {}).forEach((param) => {
+          let value = structured.params[param];
+          if (!this.isPlainText(value, true) || value.length >= 75) {
+            this.buildHeaderParam(param, value, 50).forEach((encodedParam) => {
+              if (!/[\s"\\;:/=(),<>@[\]?]|^[-']|'$/.test(encodedParam.value) || encodedParam.key.substr(-1) === "*") {
+                paramsArray.push(encodedParam.key + "=" + encodedParam.value);
+              } else {
+                paramsArray.push(encodedParam.key + "=" + JSON.stringify(encodedParam.value));
+              }
+            });
+          } else if (/[\s'"\\;:/=(),<>@[\]?]|^-/.test(value)) {
+            paramsArray.push(param + "=" + JSON.stringify(value));
+          } else {
+            paramsArray.push(param + "=" + value);
+          }
+        });
+        return structured.value + (paramsArray.length ? "; " + paramsArray.join("; ") : "");
+      },
+      /**
+         * Encodes a string or an Buffer to an UTF-8 Parameter Value Continuation encoding (rfc2231)
+         * Useful for splitting long parameter values.
+         *
+         * For example
+         *      title="unicode string"
+         * becomes
+         *     title*0*=utf-8''unicode
+         *     title*1*=%20string
+         *
+         * @param {String|Buffer} data String to be encoded
+         * @param {Number} [maxLength=50] Max length for generated chunks
+         * @param {String} [fromCharset='UTF-8'] Source sharacter set
+         * @return {Array} A list of encoded keys and headers
+         */
+      buildHeaderParam(key, data, maxLength) {
+        let list = [];
+        let encodedStr = typeof data === "string" ? data : (data || "").toString();
+        let encodedStrArr;
+        let chr, ord;
+        let line;
+        let startPos = 0;
+        let i, len;
+        maxLength = maxLength || 50;
+        if (this.isPlainText(data, true)) {
+          if (encodedStr.length <= maxLength) {
+            return [
+              {
+                key,
+                value: encodedStr
+              }
+            ];
+          }
+          encodedStr = encodedStr.replace(new RegExp(".{" + maxLength + "}", "g"), (str) => {
+            list.push({
+              line: str
+            });
+            return "";
+          });
+          if (encodedStr) {
+            list.push({
+              line: encodedStr
+            });
+          }
+        } else {
+          if (/[\uD800-\uDBFF]/.test(encodedStr)) {
+            encodedStrArr = [];
+            for (i = 0, len = encodedStr.length; i < len; i++) {
+              chr = encodedStr.charAt(i);
+              ord = chr.charCodeAt(0);
+              if (ord >= 55296 && ord <= 56319 && i < len - 1) {
+                chr += encodedStr.charAt(i + 1);
+                encodedStrArr.push(chr);
+                i++;
+              } else {
+                encodedStrArr.push(chr);
+              }
+            }
+            encodedStr = encodedStrArr;
+          }
+          line = "utf-8''";
+          let encoded = true;
+          startPos = 0;
+          for (i = 0, len = encodedStr.length; i < len; i++) {
+            chr = encodedStr[i];
+            if (encoded) {
+              chr = this.safeEncodeURIComponent(chr);
+            } else {
+              chr = chr === " " ? chr : this.safeEncodeURIComponent(chr);
+              if (chr !== encodedStr[i]) {
+                if ((this.safeEncodeURIComponent(line) + chr).length >= maxLength) {
+                  list.push({
+                    line,
+                    encoded
+                  });
+                  line = "";
+                  startPos = i - 1;
+                } else {
+                  encoded = true;
+                  i = startPos;
+                  line = "";
+                  continue;
+                }
+              }
+            }
+            if ((line + chr).length >= maxLength) {
+              list.push({
+                line,
+                encoded
+              });
+              line = chr = encodedStr[i] === " " ? " " : this.safeEncodeURIComponent(encodedStr[i]);
+              if (chr === encodedStr[i]) {
+                encoded = false;
+                startPos = i - 1;
+              } else {
+                encoded = true;
+              }
+            } else {
+              line += chr;
+            }
+          }
+          if (line) {
+            list.push({
+              line,
+              encoded
+            });
+          }
+        }
+        return list.map((item, i2) => ({
+          // encoded lines: {name}*{part}*
+          // unencoded lines: {name}*{part}
+          // if any line needs to be encoded then the first line (part==0) is always encoded
+          key: key + "*" + i2 + (item.encoded ? "*" : ""),
+          value: item.line
+        }));
+      },
+      /**
+         * Parses a header value with key=value arguments into a structured
+         * object.
+         *
+         *   parseHeaderValue('content-type: text/plain; CHARSET='UTF-8'') ->
+         *   {
+         *     'value': 'text/plain',
+         *     'params': {
+         *       'charset': 'UTF-8'
+         *     }
+         *   }
+         *
+         * @param {String} str Header value
+         * @return {Object} Header value as a parsed structure
+         */
+      parseHeaderValue(str) {
+        let response = {
+          value: false,
+          params: {}
+        };
+        let key = false;
+        let value = "";
+        let type = "value";
+        let quote = false;
+        let escaped = false;
+        let chr;
+        for (let i = 0, len = str.length; i < len; i++) {
+          chr = str.charAt(i);
+          if (type === "key") {
+            if (chr === "=") {
+              key = value.trim().toLowerCase();
+              type = "value";
+              value = "";
+              continue;
+            }
+            value += chr;
+          } else {
+            if (escaped) {
+              value += chr;
+            } else if (chr === "\\") {
+              escaped = true;
+              continue;
+            } else if (quote && chr === quote) {
+              quote = false;
+            } else if (!quote && chr === '"') {
+              quote = chr;
+            } else if (!quote && chr === ";") {
+              if (key === false) {
+                response.value = value.trim();
+              } else {
+                response.params[key] = value.trim();
+              }
+              type = "key";
+              value = "";
+            } else {
+              value += chr;
+            }
+            escaped = false;
+          }
+        }
+        if (type === "value") {
+          if (key === false) {
+            response.value = value.trim();
+          } else {
+            response.params[key] = value.trim();
+          }
+        } else if (value.trim()) {
+          response.params[value.trim().toLowerCase()] = "";
+        }
+        Object.keys(response.params).forEach((key2) => {
+          let actualKey, nr, match, value2;
+          if (match = key2.match(/(\*(\d+)|\*(\d+)\*|\*)$/)) {
+            actualKey = key2.substr(0, match.index);
+            nr = Number(match[2] || match[3]) || 0;
+            if (!response.params[actualKey] || typeof response.params[actualKey] !== "object") {
+              response.params[actualKey] = {
+                charset: false,
+                values: []
+              };
+            }
+            value2 = response.params[key2];
+            if (nr === 0 && match[0].substr(-1) === "*" && (match = value2.match(/^([^']*)'[^']*'(.*)$/))) {
+              response.params[actualKey].charset = match[1] || "iso-8859-1";
+              value2 = match[2];
+            }
+            response.params[actualKey].values[nr] = value2;
+            delete response.params[key2];
+          }
+        });
+        Object.keys(response.params).forEach((key2) => {
+          let value2;
+          if (response.params[key2] && Array.isArray(response.params[key2].values)) {
+            value2 = response.params[key2].values.map((val2) => val2 || "").join("");
+            if (response.params[key2].charset) {
+              response.params[key2] = "=?" + response.params[key2].charset + "?Q?" + value2.replace(/[=?_\s]/g, (s) => {
+                let c = s.charCodeAt(0).toString(16);
+                if (s === " ") {
+                  return "_";
+                } else {
+                  return "%" + (c.length < 2 ? "0" : "") + c;
+                }
+              }).replace(/%/g, "=") + "?=";
+            } else {
+              response.params[key2] = value2;
+            }
+          }
+        });
+        return response;
+      },
+      /**
+         * Returns file extension for a content type string. If no suitable extensions
+         * are found, 'bin' is used as the default extension
+         *
+         * @param {String} mimeType Content type to be checked for
+         * @return {String} File extension
+         */
+      detectExtension: (mimeType) => mimeTypes.detectExtension(mimeType),
+      /**
+         * Returns content type for a file extension. If no suitable content types
+         * are found, 'application/octet-stream' is used as the default content type
+         *
+         * @param {String} extension Extension to be checked for
+         * @return {String} File extension
+         */
+      detectMimeType: (extension) => mimeTypes.detectMimeType(extension),
+      /**
+         * Folds long lines, useful for folding header lines (afterSpace=false) and
+         * flowed text (afterSpace=true)
+         *
+         * @param {String} str String to be folded
+         * @param {Number} [lineLength=76] Maximum length of a line
+         * @param {Boolean} afterSpace If true, leave a space in th end of a line
+         * @return {String} String with folded lines
+         */
+      foldLines(str, lineLength, afterSpace) {
+        str = (str || "").toString();
+        lineLength = lineLength || 76;
+        let pos = 0, len = str.length, result = "", line, match;
+        while (pos < len) {
+          line = str.substr(pos, lineLength);
+          if (line.length < lineLength) {
+            result += line;
+            break;
+          }
+          if (match = line.match(/^[^\n\r]*(\r?\n|\r)/)) {
+            line = match[0];
+            result += line;
+            pos += line.length;
+            continue;
+          } else if ((match = line.match(/(\s+)[^\s]*$/)) && match[0].length - (afterSpace ? (match[1] || "").length : 0) < line.length) {
+            line = line.substr(0, line.length - (match[0].length - (afterSpace ? (match[1] || "").length : 0)));
+          } else if (match = str.substr(pos + line.length).match(/^[^\s]+(\s*)/)) {
+            line = line + match[0].substr(0, match[0].length - (!afterSpace ? (match[1] || "").length : 0));
+          }
+          result += line;
+          pos += line.length;
+          if (pos < len) {
+            result += "\r\n";
+          }
+        }
+        return result;
+      },
+      /**
+         * Splits a mime encoded string. Needed for dividing mime words into smaller chunks
+         *
+         * @param {String} str Mime encoded string to be split up
+         * @param {Number} maxlen Maximum length of characters for one part (minimum 12)
+         * @return {Array} Split string
+         */
+      splitMimeEncodedString: (str, maxlen) => {
+        let curLine, match, chr, done, lines = [];
+        maxlen = Math.max(maxlen || 0, 12);
+        while (str.length) {
+          curLine = str.substr(0, maxlen);
+          if (match = curLine.match(/[=][0-9A-F]?$/i)) {
+            curLine = curLine.substr(0, match.index);
+          }
+          done = false;
+          while (!done) {
+            done = true;
+            if (match = str.substr(curLine.length).match(/^[=]([0-9A-F]{2})/i)) {
+              chr = parseInt(match[1], 16);
+              if (chr < 194 && chr > 127) {
+                curLine = curLine.substr(0, curLine.length - 3);
+                done = false;
+              }
+            }
+          }
+          if (curLine.length) {
+            lines.push(curLine);
+          }
+          str = str.substr(curLine.length);
+        }
+        return lines;
+      },
+      encodeURICharComponent: (chr) => {
+        let res = "";
+        let ord = chr.charCodeAt(0).toString(16).toUpperCase();
+        if (ord.length % 2) {
+          ord = "0" + ord;
+        }
+        if (ord.length > 2) {
+          for (let i = 0, len = ord.length / 2; i < len; i++) {
+            res += "%" + ord.substr(i, 2);
+          }
+        } else {
+          res += "%" + ord;
+        }
+        return res;
+      },
+      safeEncodeURIComponent(str) {
+        str = (str || "").toString();
+        try {
+          str = encodeURIComponent(str);
+        } catch (E) {
+          return str.replace(/[^\x00-\x1F *'()<>@,;:\\"[\]?=\u007F-\uFFFF]+/g, "");
+        }
+        return str.replace(/[\x00-\x1F *'()<>@,;:\\"[\]?=\u007F-\uFFFF]/g, (chr) => this.encodeURICharComponent(chr));
+      }
+    };
+  }
+});
+
+// node_modules/.deno/nodemailer@6.9.13/node_modules/nodemailer/lib/addressparser/index.js
+var require_addressparser = __commonJS({
+  "node_modules/.deno/nodemailer@6.9.13/node_modules/nodemailer/lib/addressparser/index.js"(exports, module) {
+    "use strict";
+    function _handleAddress(tokens) {
+      let token;
+      let isGroup = false;
+      let state = "text";
+      let address;
+      let addresses = [];
+      let data = {
+        address: [],
+        comment: [],
+        group: [],
+        text: []
+      };
+      let i;
+      let len;
+      for (i = 0, len = tokens.length; i < len; i++) {
+        token = tokens[i];
+        if (token.type === "operator") {
+          switch (token.value) {
+            case "<":
+              state = "address";
+              break;
+            case "(":
+              state = "comment";
+              break;
+            case ":":
+              state = "group";
+              isGroup = true;
+              break;
+            default:
+              state = "text";
+          }
+        } else if (token.value) {
+          if (state === "address") {
+            token.value = token.value.replace(/^[^<]*<\s*/, "");
+          }
+          data[state].push(token.value);
+        }
+      }
+      if (!data.text.length && data.comment.length) {
+        data.text = data.comment;
+        data.comment = [];
+      }
+      if (isGroup) {
+        data.text = data.text.join(" ");
+        addresses.push({
+          name: data.text || address && address.name,
+          group: data.group.length ? addressparser(data.group.join(",")) : []
+        });
+      } else {
+        if (!data.address.length && data.text.length) {
+          for (i = data.text.length - 1; i >= 0; i--) {
+            if (data.text[i].match(/^[^@\s]+@[^@\s]+$/)) {
+              data.address = data.text.splice(i, 1);
+              break;
+            }
+          }
+          let _regexHandler = function(address2) {
+            if (!data.address.length) {
+              data.address = [
+                address2.trim()
+              ];
+              return " ";
+            } else {
+              return address2;
+            }
+          };
+          if (!data.address.length) {
+            for (i = data.text.length - 1; i >= 0; i--) {
+              data.text[i] = data.text[i].replace(/\s*\b[^@\s]+@[^\s]+\b\s*/, _regexHandler).trim();
+              if (data.address.length) {
+                break;
+              }
+            }
+          }
+        }
+        if (!data.text.length && data.comment.length) {
+          data.text = data.comment;
+          data.comment = [];
+        }
+        if (data.address.length > 1) {
+          data.text = data.text.concat(data.address.splice(1));
+        }
+        data.text = data.text.join(" ");
+        data.address = data.address.join(" ");
+        if (!data.address && isGroup) {
+          return [];
+        } else {
+          address = {
+            address: data.address || data.text || "",
+            name: data.text || data.address || ""
+          };
+          if (address.address === address.name) {
+            if ((address.address || "").match(/@/)) {
+              address.name = "";
+            } else {
+              address.address = "";
+            }
+          }
+          addresses.push(address);
+        }
+      }
+      return addresses;
+    }
+    var Tokenizer = class {
+      constructor(str) {
+        this.str = (str || "").toString();
+        this.operatorCurrent = "";
+        this.operatorExpecting = "";
+        this.node = null;
+        this.escaped = false;
+        this.list = [];
+        this.operators = {
+          '"': '"',
+          "(": ")",
+          "<": ">",
+          ",": "",
+          ":": ";",
+          // Semicolons are not a legal delimiter per the RFC2822 grammar other
+          // than for terminating a group, but they are also not valid for any
+          // other use in this context.  Given that some mail clients have
+          // historically allowed the semicolon as a delimiter equivalent to the
+          // comma in their UI, it makes sense to treat them the same as a comma
+          // when used outside of a group.
+          ";": ""
+        };
+      }
+      /**
+         * Tokenizes the original input string
+         *
+         * @return {Array} An array of operator|text tokens
+         */
+      tokenize() {
+        let chr, list = [];
+        for (let i = 0, len = this.str.length; i < len; i++) {
+          chr = this.str.charAt(i);
+          this.checkChar(chr);
+        }
+        this.list.forEach((node) => {
+          node.value = (node.value || "").toString().trim();
+          if (node.value) {
+            list.push(node);
+          }
+        });
+        return list;
+      }
+      /**
+         * Checks if a character is an operator or text and acts accordingly
+         *
+         * @param {String} chr Character from the address field
+         */
+      checkChar(chr) {
+        if (this.escaped) {
+        } else if (chr === this.operatorExpecting) {
+          this.node = {
+            type: "operator",
+            value: chr
+          };
+          this.list.push(this.node);
+          this.node = null;
+          this.operatorExpecting = "";
+          this.escaped = false;
+          return;
+        } else if (!this.operatorExpecting && chr in this.operators) {
+          this.node = {
+            type: "operator",
+            value: chr
+          };
+          this.list.push(this.node);
+          this.node = null;
+          this.operatorExpecting = this.operators[chr];
+          this.escaped = false;
+          return;
+        } else if ([
+          '"',
+          "'"
+        ].includes(this.operatorExpecting) && chr === "\\") {
+          this.escaped = true;
+          return;
+        }
+        if (!this.node) {
+          this.node = {
+            type: "text",
+            value: ""
+          };
+          this.list.push(this.node);
+        }
+        if (chr === "\n") {
+          chr = " ";
+        }
+        if (chr.charCodeAt(0) >= 33 || [
+          " ",
+          "	"
+        ].includes(chr)) {
+          this.node.value += chr;
+        }
+        this.escaped = false;
+      }
+    };
+    function addressparser(str, options) {
+      options = options || {};
+      let tokenizer = new Tokenizer(str);
+      let tokens = tokenizer.tokenize();
+      let addresses = [];
+      let address = [];
+      let parsedAddresses = [];
+      tokens.forEach((token) => {
+        if (token.type === "operator" && (token.value === "," || token.value === ";")) {
+          if (address.length) {
+            addresses.push(address);
+          }
+          address = [];
+        } else {
+          address.push(token);
+        }
+      });
+      if (address.length) {
+        addresses.push(address);
+      }
+      addresses.forEach((address2) => {
+        address2 = _handleAddress(address2);
+        if (address2.length) {
+          parsedAddresses = parsedAddresses.concat(address2);
+        }
+      });
+      if (options.flatten) {
+        let addresses2 = [];
+        let walkAddressList = (list) => {
+          list.forEach((address2) => {
+            if (address2.group) {
+              return walkAddressList(address2.group);
+            } else {
+              addresses2.push(address2);
+            }
+          });
+        };
+        walkAddressList(parsedAddresses);
+        return addresses2;
+      }
+      return parsedAddresses;
+    }
+    module.exports = addressparser;
+  }
+});
+
+// node_modules/.deno/nodemailer@6.9.13/node_modules/nodemailer/lib/mime-node/last-newline.js
+var require_last_newline = __commonJS({
+  "node_modules/.deno/nodemailer@6.9.13/node_modules/nodemailer/lib/mime-node/last-newline.js"(exports, module) {
+    "use strict";
+    var Transform = __require("node:stream").Transform;
+    var LastNewline = class extends Transform {
+      constructor() {
+        super();
+        this.lastByte = false;
+      }
+      _transform(chunk, encoding, done) {
+        if (chunk.length) {
+          this.lastByte = chunk[chunk.length - 1];
+        }
+        this.push(chunk);
+        done();
+      }
+      _flush(done) {
+        if (this.lastByte === 10) {
+          return done();
+        }
+        if (this.lastByte === 13) {
+          this.push(Buffer.from("\n"));
+          return done();
+        }
+        this.push(Buffer.from("\r\n"));
+        return done();
+      }
+    };
+    module.exports = LastNewline;
+  }
+});
+
+// node_modules/.deno/nodemailer@6.9.13/node_modules/nodemailer/lib/mime-node/le-windows.js
+var require_le_windows = __commonJS({
+  "node_modules/.deno/nodemailer@6.9.13/node_modules/nodemailer/lib/mime-node/le-windows.js"(exports, module) {
+    "use strict";
+    var stream = __require("node:stream");
+    var Transform = stream.Transform;
+    var LeWindows = class extends Transform {
+      constructor(options) {
+        super(options);
+        this.options = options || {};
+        this.lastByte = false;
+      }
+      /**
+         * Escapes dots
+         */
+      _transform(chunk, encoding, done) {
+        let buf;
+        let lastPos = 0;
+        for (let i = 0, len = chunk.length; i < len; i++) {
+          if (chunk[i] === 10) {
+            if (i && chunk[i - 1] !== 13 || !i && this.lastByte !== 13) {
+              if (i > lastPos) {
+                buf = chunk.slice(lastPos, i);
+                this.push(buf);
+              }
+              this.push(Buffer.from("\r\n"));
+              lastPos = i + 1;
+            }
+          }
+        }
+        if (lastPos && lastPos < chunk.length) {
+          buf = chunk.slice(lastPos);
+          this.push(buf);
+        } else if (!lastPos) {
+          this.push(chunk);
+        }
+        this.lastByte = chunk[chunk.length - 1];
+        done();
+      }
+    };
+    module.exports = LeWindows;
+  }
+});
+
+// node_modules/.deno/nodemailer@6.9.13/node_modules/nodemailer/lib/mime-node/le-unix.js
+var require_le_unix = __commonJS({
+  "node_modules/.deno/nodemailer@6.9.13/node_modules/nodemailer/lib/mime-node/le-unix.js"(exports, module) {
+    "use strict";
+    var stream = __require("node:stream");
+    var Transform = stream.Transform;
+    var LeWindows = class extends Transform {
+      constructor(options) {
+        super(options);
+        this.options = options || {};
+      }
+      /**
+         * Escapes dots
+         */
+      _transform(chunk, encoding, done) {
+        let buf;
+        let lastPos = 0;
+        for (let i = 0, len = chunk.length; i < len; i++) {
+          if (chunk[i] === 13) {
+            buf = chunk.slice(lastPos, i);
+            lastPos = i + 1;
+            this.push(buf);
+          }
+        }
+        if (lastPos && lastPos < chunk.length) {
+          buf = chunk.slice(lastPos);
+          this.push(buf);
+        } else if (!lastPos) {
+          this.push(chunk);
+        }
+        done();
+      }
+    };
+    module.exports = LeWindows;
+  }
+});
+
+// node_modules/.deno/nodemailer@6.9.13/node_modules/nodemailer/lib/mime-node/index.js
+var require_mime_node = __commonJS({
+  "node_modules/.deno/nodemailer@6.9.13/node_modules/nodemailer/lib/mime-node/index.js"(exports, module) {
+    "use strict";
+    var crypto2 = __require("node:crypto");
+    var fs = __require("node:fs");
+    var punycode = require_punycode();
+    var PassThrough = __require("node:stream").PassThrough;
+    var shared = require_shared();
+    var mimeFuncs = require_mime_funcs();
+    var qp = require_qp();
+    var base64 = require_base64();
+    var addressparser = require_addressparser();
+    var nmfetch = require_fetch();
+    var LastNewline = require_last_newline();
+    var LeWindows = require_le_windows();
+    var LeUnix = require_le_unix();
+    var MimeNode = class _MimeNode {
+      constructor(contentType, options) {
+        this.nodeCounter = 0;
+        options = options || {};
+        this.baseBoundary = options.baseBoundary || crypto2.randomBytes(8).toString("hex");
+        this.boundaryPrefix = options.boundaryPrefix || "--_NmP";
+        this.disableFileAccess = !!options.disableFileAccess;
+        this.disableUrlAccess = !!options.disableUrlAccess;
+        this.normalizeHeaderKey = options.normalizeHeaderKey;
+        this.date = /* @__PURE__ */ new Date();
+        this.rootNode = options.rootNode || this;
+        this.keepBcc = !!options.keepBcc;
+        if (options.filename) {
+          this.filename = options.filename;
+          if (!contentType) {
+            contentType = mimeFuncs.detectMimeType(this.filename.split(".").pop());
+          }
+        }
+        this.textEncoding = (options.textEncoding || "").toString().trim().charAt(0).toUpperCase();
+        this.parentNode = options.parentNode;
+        this.hostname = options.hostname;
+        this.newline = options.newline;
+        this.childNodes = [];
+        this._nodeId = ++this.rootNode.nodeCounter;
+        this._headers = [];
+        this._isPlainText = false;
+        this._hasLongLines = false;
+        this._envelope = false;
+        this._raw = false;
+        this._transforms = [];
+        this._processFuncs = [];
+        if (contentType) {
+          this.setHeader("Content-Type", contentType);
+        }
+      }
+      /////// PUBLIC METHODS
+      /**
+         * Creates and appends a child node.Arguments provided are passed to MimeNode constructor
+         *
+         * @param {String} [contentType] Optional content type
+         * @param {Object} [options] Optional options object
+         * @return {Object} Created node object
+         */
+      createChild(contentType, options) {
+        if (!options && typeof contentType === "object") {
+          options = contentType;
+          contentType = void 0;
+        }
+        let node = new _MimeNode(contentType, options);
+        this.appendChild(node);
+        return node;
+      }
+      /**
+         * Appends an existing node to the mime tree. Removes the node from an existing
+         * tree if needed
+         *
+         * @param {Object} childNode node to be appended
+         * @return {Object} Appended node object
+         */
+      appendChild(childNode) {
+        if (childNode.rootNode !== this.rootNode) {
+          childNode.rootNode = this.rootNode;
+          childNode._nodeId = ++this.rootNode.nodeCounter;
+        }
+        childNode.parentNode = this;
+        this.childNodes.push(childNode);
+        return childNode;
+      }
+      /**
+         * Replaces current node with another node
+         *
+         * @param {Object} node Replacement node
+         * @return {Object} Replacement node
+         */
+      replace(node) {
+        if (node === this) {
+          return this;
+        }
+        this.parentNode.childNodes.forEach((childNode, i) => {
+          if (childNode === this) {
+            node.rootNode = this.rootNode;
+            node.parentNode = this.parentNode;
+            node._nodeId = this._nodeId;
+            this.rootNode = this;
+            this.parentNode = void 0;
+            node.parentNode.childNodes[i] = node;
+          }
+        });
+        return node;
+      }
+      /**
+         * Removes current node from the mime tree
+         *
+         * @return {Object} removed node
+         */
+      remove() {
+        if (!this.parentNode) {
+          return this;
+        }
+        for (let i = this.parentNode.childNodes.length - 1; i >= 0; i--) {
+          if (this.parentNode.childNodes[i] === this) {
+            this.parentNode.childNodes.splice(i, 1);
+            this.parentNode = void 0;
+            this.rootNode = this;
+            return this;
+          }
+        }
+      }
+      /**
+         * Sets a header value. If the value for selected key exists, it is overwritten.
+         * You can set multiple values as well by using [{key:'', value:''}] or
+         * {key: 'value'} as the first argument.
+         *
+         * @param {String|Array|Object} key Header key or a list of key value pairs
+         * @param {String} value Header value
+         * @return {Object} current node
+         */
+      setHeader(key, value) {
+        let added = false, headerValue;
+        if (!value && key && typeof key === "object") {
+          if (key.key && "value" in key) {
+            this.setHeader(key.key, key.value);
+          } else if (Array.isArray(key)) {
+            key.forEach((i) => {
+              this.setHeader(i.key, i.value);
+            });
+          } else {
+            Object.keys(key).forEach((i) => {
+              this.setHeader(i, key[i]);
+            });
+          }
+          return this;
+        }
+        key = this._normalizeHeaderKey(key);
+        headerValue = {
+          key,
+          value
+        };
+        for (let i = 0, len = this._headers.length; i < len; i++) {
+          if (this._headers[i].key === key) {
+            if (!added) {
+              this._headers[i] = headerValue;
+              added = true;
+            } else {
+              this._headers.splice(i, 1);
+              i--;
+              len--;
+            }
+          }
+        }
+        if (!added) {
+          this._headers.push(headerValue);
+        }
+        return this;
+      }
+      /**
+         * Adds a header value. If the value for selected key exists, the value is appended
+         * as a new field and old one is not touched.
+         * You can set multiple values as well by using [{key:'', value:''}] or
+         * {key: 'value'} as the first argument.
+         *
+         * @param {String|Array|Object} key Header key or a list of key value pairs
+         * @param {String} value Header value
+         * @return {Object} current node
+         */
+      addHeader(key, value) {
+        if (!value && key && typeof key === "object") {
+          if (key.key && key.value) {
+            this.addHeader(key.key, key.value);
+          } else if (Array.isArray(key)) {
+            key.forEach((i) => {
+              this.addHeader(i.key, i.value);
+            });
+          } else {
+            Object.keys(key).forEach((i) => {
+              this.addHeader(i, key[i]);
+            });
+          }
+          return this;
+        } else if (Array.isArray(value)) {
+          value.forEach((val2) => {
+            this.addHeader(key, val2);
+          });
+          return this;
+        }
+        this._headers.push({
+          key: this._normalizeHeaderKey(key),
+          value
+        });
+        return this;
+      }
+      /**
+         * Retrieves the first mathcing value of a selected key
+         *
+         * @param {String} key Key to search for
+         * @retun {String} Value for the key
+         */
+      getHeader(key) {
+        key = this._normalizeHeaderKey(key);
+        for (let i = 0, len = this._headers.length; i < len; i++) {
+          if (this._headers[i].key === key) {
+            return this._headers[i].value;
+          }
+        }
+      }
+      /**
+         * Sets body content for current node. If the value is a string, charset is added automatically
+         * to Content-Type (if it is text/*). If the value is a Buffer, you need to specify
+         * the charset yourself
+         *
+         * @param (String|Buffer) content Body content
+         * @return {Object} current node
+         */
+      setContent(content) {
+        this.content = content;
+        if (typeof this.content.pipe === "function") {
+          this._contentErrorHandler = (err) => {
+            this.content.removeListener("error", this._contentErrorHandler);
+            this.content = err;
+          };
+          this.content.once("error", this._contentErrorHandler);
+        } else if (typeof this.content === "string") {
+          this._isPlainText = mimeFuncs.isPlainText(this.content);
+          if (this._isPlainText && mimeFuncs.hasLongerLines(this.content, 76)) {
+            this._hasLongLines = true;
+          }
+        }
+        return this;
+      }
+      build(callback) {
+        let promise;
+        if (!callback) {
+          promise = new Promise((resolve, reject) => {
+            callback = shared.callbackPromise(resolve, reject);
+          });
+        }
+        let stream = this.createReadStream();
+        let buf = [];
+        let buflen = 0;
+        let returned = false;
+        stream.on("readable", () => {
+          let chunk;
+          while ((chunk = stream.read()) !== null) {
+            buf.push(chunk);
+            buflen += chunk.length;
+          }
+        });
+        stream.once("error", (err) => {
+          if (returned) {
+            return;
+          }
+          returned = true;
+          return callback(err);
+        });
+        stream.once("end", (chunk) => {
+          if (returned) {
+            return;
+          }
+          returned = true;
+          if (chunk && chunk.length) {
+            buf.push(chunk);
+            buflen += chunk.length;
+          }
+          return callback(null, Buffer.concat(buf, buflen));
+        });
+        return promise;
+      }
+      getTransferEncoding() {
+        let transferEncoding = false;
+        let contentType = (this.getHeader("Content-Type") || "").toString().toLowerCase().trim();
+        if (this.content) {
+          transferEncoding = (this.getHeader("Content-Transfer-Encoding") || "").toString().toLowerCase().trim();
+          if (!transferEncoding || ![
+            "base64",
+            "quoted-printable"
+          ].includes(transferEncoding)) {
+            if (/^text\//i.test(contentType)) {
+              if (this._isPlainText && !this._hasLongLines) {
+                transferEncoding = "7bit";
+              } else if (typeof this.content === "string" || this.content instanceof Buffer) {
+                transferEncoding = this._getTextEncoding(this.content) === "Q" ? "quoted-printable" : "base64";
+              } else {
+                transferEncoding = this.textEncoding === "B" ? "base64" : "quoted-printable";
+              }
+            } else if (!/^(multipart|message)\//i.test(contentType)) {
+              transferEncoding = transferEncoding || "base64";
+            }
+          }
+        }
+        return transferEncoding;
+      }
+      /**
+         * Builds the header block for the mime node. Append \r\n\r\n before writing the content
+         *
+         * @returns {String} Headers
+         */
+      buildHeaders() {
+        let transferEncoding = this.getTransferEncoding();
+        let headers = [];
+        if (transferEncoding) {
+          this.setHeader("Content-Transfer-Encoding", transferEncoding);
+        }
+        if (this.filename && !this.getHeader("Content-Disposition")) {
+          this.setHeader("Content-Disposition", "attachment");
+        }
+        if (this.rootNode === this) {
+          if (!this.getHeader("Date")) {
+            this.setHeader("Date", this.date.toUTCString().replace(/GMT/, "+0000"));
+          }
+          this.messageId();
+          if (!this.getHeader("MIME-Version")) {
+            this.setHeader("MIME-Version", "1.0");
+          }
+          for (let i = this._headers.length - 2; i >= 0; i--) {
+            let header = this._headers[i];
+            if (header.key === "Content-Type") {
+              this._headers.splice(i, 1);
+              this._headers.push(header);
+            }
+          }
+        }
+        this._headers.forEach((header) => {
+          let key = header.key;
+          let value = header.value;
+          let structured;
+          let param;
+          let options = {};
+          let formattedHeaders = [
+            "From",
+            "Sender",
+            "To",
+            "Cc",
+            "Bcc",
+            "Reply-To",
+            "Date",
+            "References"
+          ];
+          if (value && typeof value === "object" && !formattedHeaders.includes(key)) {
+            Object.keys(value).forEach((key2) => {
+              if (key2 !== "value") {
+                options[key2] = value[key2];
+              }
+            });
+            value = (value.value || "").toString();
+            if (!value.trim()) {
+              return;
+            }
+          }
+          if (options.prepared) {
+            if (options.foldLines) {
+              headers.push(mimeFuncs.foldLines(key + ": " + value));
+            } else {
+              headers.push(key + ": " + value);
+            }
+            return;
+          }
+          switch (header.key) {
+            case "Content-Disposition":
+              structured = mimeFuncs.parseHeaderValue(value);
+              if (this.filename) {
+                structured.params.filename = this.filename;
+              }
+              value = mimeFuncs.buildHeaderValue(structured);
+              break;
+            case "Content-Type":
+              structured = mimeFuncs.parseHeaderValue(value);
+              this._handleContentType(structured);
+              if (structured.value.match(/^text\/plain\b/) && typeof this.content === "string" && /[\u0080-\uFFFF]/.test(this.content)) {
+                structured.params.charset = "utf-8";
+              }
+              value = mimeFuncs.buildHeaderValue(structured);
+              if (this.filename) {
+                param = this._encodeWords(this.filename);
+                if (param !== this.filename || /[\s'"\\;:/=(),<>@[\]?]|^-/.test(param)) {
+                  param = '"' + param + '"';
+                }
+                value += "; name=" + param;
+              }
+              break;
+            case "Bcc":
+              if (!this.keepBcc) {
+                return;
+              }
+              break;
+          }
+          value = this._encodeHeaderValue(key, value);
+          if (!(value || "").toString().trim()) {
+            return;
+          }
+          if (typeof this.normalizeHeaderKey === "function") {
+            let normalized = this.normalizeHeaderKey(key, value);
+            if (normalized && typeof normalized === "string" && normalized.length) {
+              key = normalized;
+            }
+          }
+          headers.push(mimeFuncs.foldLines(key + ": " + value, 76));
+        });
+        return headers.join("\r\n");
+      }
+      /**
+         * Streams the rfc2822 message from the current node. If this is a root node,
+         * mandatory header fields are set if missing (Date, Message-Id, MIME-Version)
+         *
+         * @return {String} Compiled message
+         */
+      createReadStream(options) {
+        options = options || {};
+        let stream = new PassThrough(options);
+        let outputStream = stream;
+        let transform;
+        this.stream(stream, options, (err) => {
+          if (err) {
+            outputStream.emit("error", err);
+            return;
+          }
+          stream.end();
+        });
+        for (let i = 0, len = this._transforms.length; i < len; i++) {
+          transform = typeof this._transforms[i] === "function" ? this._transforms[i]() : this._transforms[i];
+          outputStream.once("error", (err) => {
+            transform.emit("error", err);
+          });
+          outputStream = outputStream.pipe(transform);
+        }
+        transform = new LastNewline();
+        outputStream.once("error", (err) => {
+          transform.emit("error", err);
+        });
+        outputStream = outputStream.pipe(transform);
+        for (let i = 0, len = this._processFuncs.length; i < len; i++) {
+          transform = this._processFuncs[i];
+          outputStream = transform(outputStream);
+        }
+        if (this.newline) {
+          const winbreak = [
+            "win",
+            "windows",
+            "dos",
+            "\r\n"
+          ].includes(this.newline.toString().toLowerCase());
+          const newlineTransform = winbreak ? new LeWindows() : new LeUnix();
+          const stream2 = outputStream.pipe(newlineTransform);
+          outputStream.on("error", (err) => stream2.emit("error", err));
+          return stream2;
+        }
+        return outputStream;
+      }
+      /**
+         * Appends a transform stream object to the transforms list. Final output
+         * is passed through this stream before exposing
+         *
+         * @param {Object} transform Read-Write stream
+         */
+      transform(transform) {
+        this._transforms.push(transform);
+      }
+      /**
+         * Appends a post process function. The functon is run after transforms and
+         * uses the following syntax
+         *
+         *   processFunc(input) -> outputStream
+         *
+         * @param {Object} processFunc Read-Write stream
+         */
+      processFunc(processFunc) {
+        this._processFuncs.push(processFunc);
+      }
+      stream(outputStream, options, done) {
+        let transferEncoding = this.getTransferEncoding();
+        let contentStream;
+        let localStream;
+        let returned = false;
+        let callback = (err) => {
+          if (returned) {
+            return;
+          }
+          returned = true;
+          done(err);
+        };
+        let finalize = () => {
+          let childId = 0;
+          let processChildNode = () => {
+            if (childId >= this.childNodes.length) {
+              outputStream.write("\r\n--" + this.boundary + "--\r\n");
+              return callback();
+            }
+            let child = this.childNodes[childId++];
+            outputStream.write((childId > 1 ? "\r\n" : "") + "--" + this.boundary + "\r\n");
+            child.stream(outputStream, options, (err) => {
+              if (err) {
+                return callback(err);
+              }
+              setImmediate(processChildNode);
+            });
+          };
+          if (this.multipart) {
+            setImmediate(processChildNode);
+          } else {
+            return callback();
+          }
+        };
+        let sendContent = () => {
+          if (this.content) {
+            if (Object.prototype.toString.call(this.content) === "[object Error]") {
+              return callback(this.content);
+            }
+            if (typeof this.content.pipe === "function") {
+              this.content.removeListener("error", this._contentErrorHandler);
+              this._contentErrorHandler = (err) => callback(err);
+              this.content.once("error", this._contentErrorHandler);
+            }
+            let createStream = () => {
+              if ([
+                "quoted-printable",
+                "base64"
+              ].includes(transferEncoding)) {
+                contentStream = new (transferEncoding === "base64" ? base64 : qp).Encoder(options);
+                contentStream.pipe(outputStream, {
+                  end: false
+                });
+                contentStream.once("end", finalize);
+                contentStream.once("error", (err) => callback(err));
+                localStream = this._getStream(this.content);
+                localStream.pipe(contentStream);
+              } else {
+                localStream = this._getStream(this.content);
+                localStream.pipe(outputStream, {
+                  end: false
+                });
+                localStream.once("end", finalize);
+              }
+              localStream.once("error", (err) => callback(err));
+            };
+            if (this.content._resolve) {
+              let chunks = [];
+              let chunklen = 0;
+              let returned2 = false;
+              let sourceStream = this._getStream(this.content);
+              sourceStream.on("error", (err) => {
+                if (returned2) {
+                  return;
+                }
+                returned2 = true;
+                callback(err);
+              });
+              sourceStream.on("readable", () => {
+                let chunk;
+                while ((chunk = sourceStream.read()) !== null) {
+                  chunks.push(chunk);
+                  chunklen += chunk.length;
+                }
+              });
+              sourceStream.on("end", () => {
+                if (returned2) {
+                  return;
+                }
+                returned2 = true;
+                this.content._resolve = false;
+                this.content._resolvedValue = Buffer.concat(chunks, chunklen);
+                setImmediate(createStream);
+              });
+            } else {
+              setImmediate(createStream);
+            }
+            return;
+          } else {
+            return setImmediate(finalize);
+          }
+        };
+        if (this._raw) {
+          setImmediate(() => {
+            if (Object.prototype.toString.call(this._raw) === "[object Error]") {
+              return callback(this._raw);
+            }
+            if (typeof this._raw.pipe === "function") {
+              this._raw.removeListener("error", this._contentErrorHandler);
+            }
+            let raw = this._getStream(this._raw);
+            raw.pipe(outputStream, {
+              end: false
+            });
+            raw.on("error", (err) => outputStream.emit("error", err));
+            raw.on("end", finalize);
+          });
+        } else {
+          outputStream.write(this.buildHeaders() + "\r\n\r\n");
+          setImmediate(sendContent);
+        }
+      }
+      /**
+         * Sets envelope to be used instead of the generated one
+         *
+         * @return {Object} SMTP envelope in the form of {from: 'from@example.com', to: ['to@example.com']}
+         */
+      setEnvelope(envelope) {
+        let list;
+        this._envelope = {
+          from: false,
+          to: []
+        };
+        if (envelope.from) {
+          list = [];
+          this._convertAddresses(this._parseAddresses(envelope.from), list);
+          list = list.filter((address) => address && address.address);
+          if (list.length && list[0]) {
+            this._envelope.from = list[0].address;
+          }
+        }
+        [
+          "to",
+          "cc",
+          "bcc"
+        ].forEach((key) => {
+          if (envelope[key]) {
+            this._convertAddresses(this._parseAddresses(envelope[key]), this._envelope.to);
+          }
+        });
+        this._envelope.to = this._envelope.to.map((to) => to.address).filter((address) => address);
+        let standardFields = [
+          "to",
+          "cc",
+          "bcc",
+          "from"
+        ];
+        Object.keys(envelope).forEach((key) => {
+          if (!standardFields.includes(key)) {
+            this._envelope[key] = envelope[key];
+          }
+        });
+        return this;
+      }
+      /**
+         * Generates and returns an object with parsed address fields
+         *
+         * @return {Object} Address object
+         */
+      getAddresses() {
+        let addresses = {};
+        this._headers.forEach((header) => {
+          let key = header.key.toLowerCase();
+          if ([
+            "from",
+            "sender",
+            "reply-to",
+            "to",
+            "cc",
+            "bcc"
+          ].includes(key)) {
+            if (!Array.isArray(addresses[key])) {
+              addresses[key] = [];
+            }
+            this._convertAddresses(this._parseAddresses(header.value), addresses[key]);
+          }
+        });
+        return addresses;
+      }
+      /**
+         * Generates and returns SMTP envelope with the sender address and a list of recipients addresses
+         *
+         * @return {Object} SMTP envelope in the form of {from: 'from@example.com', to: ['to@example.com']}
+         */
+      getEnvelope() {
+        if (this._envelope) {
+          return this._envelope;
+        }
+        let envelope = {
+          from: false,
+          to: []
+        };
+        this._headers.forEach((header) => {
+          let list = [];
+          if (header.key === "From" || !envelope.from && [
+            "Reply-To",
+            "Sender"
+          ].includes(header.key)) {
+            this._convertAddresses(this._parseAddresses(header.value), list);
+            if (list.length && list[0]) {
+              envelope.from = list[0].address;
+            }
+          } else if ([
+            "To",
+            "Cc",
+            "Bcc"
+          ].includes(header.key)) {
+            this._convertAddresses(this._parseAddresses(header.value), envelope.to);
+          }
+        });
+        envelope.to = envelope.to.map((to) => to.address);
+        return envelope;
+      }
+      /**
+         * Returns Message-Id value. If it does not exist, then creates one
+         *
+         * @return {String} Message-Id value
+         */
+      messageId() {
+        let messageId = this.getHeader("Message-ID");
+        if (!messageId) {
+          messageId = this._generateMessageId();
+          this.setHeader("Message-ID", messageId);
+        }
+        return messageId;
+      }
+      /**
+         * Sets pregenerated content that will be used as the output of this node
+         *
+         * @param {String|Buffer|Stream} Raw MIME contents
+         */
+      setRaw(raw) {
+        this._raw = raw;
+        if (this._raw && typeof this._raw.pipe === "function") {
+          this._contentErrorHandler = (err) => {
+            this._raw.removeListener("error", this._contentErrorHandler);
+            this._raw = err;
+          };
+          this._raw.once("error", this._contentErrorHandler);
+        }
+        return this;
+      }
+      /////// PRIVATE METHODS
+      /**
+         * Detects and returns handle to a stream related with the content.
+         *
+         * @param {Mixed} content Node content
+         * @returns {Object} Stream object
+         */
+      _getStream(content) {
+        let contentStream;
+        if (content._resolvedValue) {
+          contentStream = new PassThrough();
+          setImmediate(() => {
+            try {
+              contentStream.end(content._resolvedValue);
+            } catch (err) {
+              contentStream.emit("error", err);
+            }
+          });
+          return contentStream;
+        } else if (typeof content.pipe === "function") {
+          return content;
+        } else if (content && typeof content.path === "string" && !content.href) {
+          if (this.disableFileAccess) {
+            contentStream = new PassThrough();
+            setImmediate(() => contentStream.emit("error", new Error("File access rejected for " + content.path)));
+            return contentStream;
+          }
+          return fs.createReadStream(content.path);
+        } else if (content && typeof content.href === "string") {
+          if (this.disableUrlAccess) {
+            contentStream = new PassThrough();
+            setImmediate(() => contentStream.emit("error", new Error("Url access rejected for " + content.href)));
+            return contentStream;
+          }
+          return nmfetch(content.href, {
+            headers: content.httpHeaders
+          });
+        } else {
+          contentStream = new PassThrough();
+          setImmediate(() => {
+            try {
+              contentStream.end(content || "");
+            } catch (err) {
+              contentStream.emit("error", err);
+            }
+          });
+          return contentStream;
+        }
+      }
+      /**
+         * Parses addresses. Takes in a single address or an array or an
+         * array of address arrays (eg. To: [[first group], [second group],...])
+         *
+         * @param {Mixed} addresses Addresses to be parsed
+         * @return {Array} An array of address objects
+         */
+      _parseAddresses(addresses) {
+        return [].concat.apply([], [].concat(addresses).map((address) => {
+          if (address && address.address) {
+            address.address = this._normalizeAddress(address.address);
+            address.name = address.name || "";
+            return [
+              address
+            ];
+          }
+          return addressparser(address);
+        }));
+      }
+      /**
+         * Normalizes a header key, uses Camel-Case form, except for uppercase MIME-
+         *
+         * @param {String} key Key to be normalized
+         * @return {String} key in Camel-Case form
+         */
+      _normalizeHeaderKey(key) {
+        key = (key || "").toString().replace(/\r?\n|\r/g, " ").trim().toLowerCase().replace(/^X-SMTPAPI$|^(MIME|DKIM|ARC|BIMI)\b|^[a-z]|-(SPF|FBL|ID|MD5)$|-[a-z]/gi, (c) => c.toUpperCase()).replace(/^Content-Features$/i, "Content-features");
+        return key;
+      }
+      /**
+         * Checks if the content type is multipart and defines boundary if needed.
+         * Doesn't return anything, modifies object argument instead.
+         *
+         * @param {Object} structured Parsed header value for 'Content-Type' key
+         */
+      _handleContentType(structured) {
+        this.contentType = structured.value.trim().toLowerCase();
+        this.multipart = /^multipart\//i.test(this.contentType) ? this.contentType.substr(this.contentType.indexOf("/") + 1) : false;
+        if (this.multipart) {
+          this.boundary = structured.params.boundary = structured.params.boundary || this.boundary || this._generateBoundary();
+        } else {
+          this.boundary = false;
+        }
+      }
+      /**
+         * Generates a multipart boundary value
+         *
+         * @return {String} boundary value
+         */
+      _generateBoundary() {
+        return this.rootNode.boundaryPrefix + "-" + this.rootNode.baseBoundary + "-Part_" + this._nodeId;
+      }
+      /**
+         * Encodes a header value for use in the generated rfc2822 email.
+         *
+         * @param {String} key Header key
+         * @param {String} value Header value
+         */
+      _encodeHeaderValue(key, value) {
+        key = this._normalizeHeaderKey(key);
+        switch (key) {
+          // Structured headers
+          case "From":
+          case "Sender":
+          case "To":
+          case "Cc":
+          case "Bcc":
+          case "Reply-To":
+            return this._convertAddresses(this._parseAddresses(value));
+          // values enclosed in <>
+          case "Message-ID":
+          case "In-Reply-To":
+          case "Content-Id":
+            value = (value || "").toString().replace(/\r?\n|\r/g, " ");
+            if (value.charAt(0) !== "<") {
+              value = "<" + value;
+            }
+            if (value.charAt(value.length - 1) !== ">") {
+              value = value + ">";
+            }
+            return value;
+          // space separated list of values enclosed in <>
+          case "References":
+            value = [].concat.apply([], [].concat(value || "").map((elm) => {
+              elm = (elm || "").toString().replace(/\r?\n|\r/g, " ").trim();
+              return elm.replace(/<[^>]*>/g, (str) => str.replace(/\s/g, "")).split(/\s+/);
+            })).map((elm) => {
+              if (elm.charAt(0) !== "<") {
+                elm = "<" + elm;
+              }
+              if (elm.charAt(elm.length - 1) !== ">") {
+                elm = elm + ">";
+              }
+              return elm;
+            });
+            return value.join(" ").trim();
+          case "Date":
+            if (Object.prototype.toString.call(value) === "[object Date]") {
+              return value.toUTCString().replace(/GMT/, "+0000");
+            }
+            value = (value || "").toString().replace(/\r?\n|\r/g, " ");
+            return this._encodeWords(value);
+          case "Content-Type":
+          case "Content-Disposition":
+            return (value || "").toString().replace(/\r?\n|\r/g, " ");
+          default:
+            value = (value || "").toString().replace(/\r?\n|\r/g, " ");
+            return this._encodeWords(value);
+        }
+      }
+      /**
+         * Rebuilds address object using punycode and other adjustments
+         *
+         * @param {Array} addresses An array of address objects
+         * @param {Array} [uniqueList] An array to be populated with addresses
+         * @return {String} address string
+         */
+      _convertAddresses(addresses, uniqueList) {
+        let values = [];
+        uniqueList = uniqueList || [];
+        [].concat(addresses || []).forEach((address) => {
+          if (address.address) {
+            address.address = this._normalizeAddress(address.address);
+            if (!address.name) {
+              values.push(address.address.indexOf(" ") >= 0 ? `<${address.address}>` : `${address.address}`);
+            } else if (address.name) {
+              values.push(`${this._encodeAddressName(address.name)} <${address.address}>`);
+            }
+            if (address.address) {
+              if (!uniqueList.filter((a) => a.address === address.address).length) {
+                uniqueList.push(address);
+              }
+            }
+          } else if (address.group) {
+            let groupListAddresses = (address.group.length ? this._convertAddresses(address.group, uniqueList) : "").trim();
+            values.push(`${this._encodeAddressName(address.name)}:${groupListAddresses};`);
+          }
+        });
+        return values.join(", ");
+      }
+      /**
+         * Normalizes an email address
+         *
+         * @param {Array} address An array of address objects
+         * @return {String} address string
+         */
+      _normalizeAddress(address) {
+        address = (address || "").toString().replace(/[\x00-\x1F<>]+/g, " ").trim();
+        let lastAt = address.lastIndexOf("@");
+        if (lastAt < 0) {
+          return address;
+        }
+        let user = address.substr(0, lastAt);
+        let domain = address.substr(lastAt + 1);
+        let encodedDomain;
+        try {
+          encodedDomain = punycode.toASCII(domain.toLowerCase());
+        } catch (err) {
+        }
+        if (user.indexOf(" ") >= 0) {
+          if (user.charAt(0) !== '"') {
+            user = '"' + user;
+          }
+          if (user.substr(-1) !== '"') {
+            user = user + '"';
+          }
+        }
+        return `${user}@${encodedDomain}`;
+      }
+      /**
+         * If needed, mime encodes the name part
+         *
+         * @param {String} name Name part of an address
+         * @returns {String} Mime word encoded string if needed
+         */
+      _encodeAddressName(name) {
+        if (!/^[\w ]*$/.test(name)) {
+          if (/^[\x20-\x7e]*$/.test(name)) {
+            return '"' + name.replace(/([\\"])/g, "\\$1") + '"';
+          } else {
+            return mimeFuncs.encodeWord(name, this._getTextEncoding(name), 52);
+          }
+        }
+        return name;
+      }
+      /**
+         * If needed, mime encodes the name part
+         *
+         * @param {String} name Name part of an address
+         * @returns {String} Mime word encoded string if needed
+         */
+      _encodeWords(value) {
+        return mimeFuncs.encodeWords(value, this._getTextEncoding(value), 52, true);
+      }
+      /**
+         * Detects best mime encoding for a text value
+         *
+         * @param {String} value Value to check for
+         * @return {String} either 'Q' or 'B'
+         */
+      _getTextEncoding(value) {
+        value = (value || "").toString();
+        let encoding = this.textEncoding;
+        let latinLen;
+        let nonLatinLen;
+        if (!encoding) {
+          nonLatinLen = (value.match(/[\x00-\x08\x0B\x0C\x0E-\x1F\u0080-\uFFFF]/g) || []).length;
+          latinLen = (value.match(/[a-z]/gi) || []).length;
+          encoding = nonLatinLen < latinLen ? "Q" : "B";
+        }
+        return encoding;
+      }
+      /**
+         * Generates a message id
+         *
+         * @return {String} Random Message-ID value
+         */
+      _generateMessageId() {
+        return "<" + [
+          2,
+          2,
+          2,
+          6
+        ].reduce(
+          // crux to generate UUID-like random strings
+          (prev, len) => prev + "-" + crypto2.randomBytes(len).toString("hex"),
+          crypto2.randomBytes(4).toString("hex")
+        ) + "@" + // try to use the domain of the FROM address or fallback to server hostname
+        (this.getEnvelope().from || this.hostname || "localhost").split("@").pop() + ">";
+      }
+    };
+    module.exports = MimeNode;
+  }
+});
+
+// node_modules/.deno/nodemailer@6.9.13/node_modules/nodemailer/lib/mail-composer/index.js
+var require_mail_composer = __commonJS({
+  "node_modules/.deno/nodemailer@6.9.13/node_modules/nodemailer/lib/mail-composer/index.js"(exports, module) {
+    "use strict";
+    var MimeNode = require_mime_node();
+    var mimeFuncs = require_mime_funcs();
+    var parseDataURI = require_shared().parseDataURI;
+    var MailComposer = class {
+      constructor(mail) {
+        this.mail = mail || {};
+        this.message = false;
+      }
+      /**
+         * Builds MimeNode instance
+         */
+      compile() {
+        this._alternatives = this.getAlternatives();
+        this._htmlNode = this._alternatives.filter((alternative) => /^text\/html\b/i.test(alternative.contentType)).pop();
+        this._attachments = this.getAttachments(!!this._htmlNode);
+        this._useRelated = !!(this._htmlNode && this._attachments.related.length);
+        this._useAlternative = this._alternatives.length > 1;
+        this._useMixed = this._attachments.attached.length > 1 || this._alternatives.length && this._attachments.attached.length === 1;
+        if (this.mail.raw) {
+          this.message = new MimeNode("message/rfc822", {
+            newline: this.mail.newline
+          }).setRaw(this.mail.raw);
+        } else if (this._useMixed) {
+          this.message = this._createMixed();
+        } else if (this._useAlternative) {
+          this.message = this._createAlternative();
+        } else if (this._useRelated) {
+          this.message = this._createRelated();
+        } else {
+          this.message = this._createContentNode(false, [].concat(this._alternatives || []).concat(this._attachments.attached || []).shift() || {
+            contentType: "text/plain",
+            content: ""
+          });
+        }
+        if (this.mail.headers) {
+          this.message.addHeader(this.mail.headers);
+        }
+        [
+          "from",
+          "sender",
+          "to",
+          "cc",
+          "bcc",
+          "reply-to",
+          "in-reply-to",
+          "references",
+          "subject",
+          "message-id",
+          "date"
+        ].forEach((header) => {
+          let key = header.replace(/-(\w)/g, (o, c) => c.toUpperCase());
+          if (this.mail[key]) {
+            this.message.setHeader(header, this.mail[key]);
+          }
+        });
+        if (this.mail.envelope) {
+          this.message.setEnvelope(this.mail.envelope);
+        }
+        this.message.messageId();
+        return this.message;
+      }
+      /**
+         * List all attachments. Resulting attachment objects can be used as input for MimeNode nodes
+         *
+         * @param {Boolean} findRelated If true separate related attachments from attached ones
+         * @returns {Object} An object of arrays (`related` and `attached`)
+         */
+      getAttachments(findRelated) {
+        let icalEvent, eventObject;
+        let attachments = [].concat(this.mail.attachments || []).map((attachment, i) => {
+          let data;
+          let isMessageNode = /^message\//i.test(attachment.contentType);
+          if (/^data:/i.test(attachment.path || attachment.href)) {
+            attachment = this._processDataUrl(attachment);
+          }
+          let contentType = attachment.contentType || mimeFuncs.detectMimeType(attachment.filename || attachment.path || attachment.href || "bin");
+          let isImage = /^image\//i.test(contentType);
+          let contentDisposition = attachment.contentDisposition || (isMessageNode || isImage && attachment.cid ? "inline" : "attachment");
+          data = {
+            contentType,
+            contentDisposition,
+            contentTransferEncoding: "contentTransferEncoding" in attachment ? attachment.contentTransferEncoding : "base64"
+          };
+          if (attachment.filename) {
+            data.filename = attachment.filename;
+          } else if (!isMessageNode && attachment.filename !== false) {
+            data.filename = (attachment.path || attachment.href || "").split("/").pop().split("?").shift() || "attachment-" + (i + 1);
+            if (data.filename.indexOf(".") < 0) {
+              data.filename += "." + mimeFuncs.detectExtension(data.contentType);
+            }
+          }
+          if (/^https?:\/\//i.test(attachment.path)) {
+            attachment.href = attachment.path;
+            attachment.path = void 0;
+          }
+          if (attachment.cid) {
+            data.cid = attachment.cid;
+          }
+          if (attachment.raw) {
+            data.raw = attachment.raw;
+          } else if (attachment.path) {
+            data.content = {
+              path: attachment.path
+            };
+          } else if (attachment.href) {
+            data.content = {
+              href: attachment.href,
+              httpHeaders: attachment.httpHeaders
+            };
+          } else {
+            data.content = attachment.content || "";
+          }
+          if (attachment.encoding) {
+            data.encoding = attachment.encoding;
+          }
+          if (attachment.headers) {
+            data.headers = attachment.headers;
+          }
+          return data;
+        });
+        if (this.mail.icalEvent) {
+          if (typeof this.mail.icalEvent === "object" && (this.mail.icalEvent.content || this.mail.icalEvent.path || this.mail.icalEvent.href || this.mail.icalEvent.raw)) {
+            icalEvent = this.mail.icalEvent;
+          } else {
+            icalEvent = {
+              content: this.mail.icalEvent
+            };
+          }
+          eventObject = {};
+          Object.keys(icalEvent).forEach((key) => {
+            eventObject[key] = icalEvent[key];
+          });
+          eventObject.contentType = "application/ics";
+          if (!eventObject.headers) {
+            eventObject.headers = {};
+          }
+          eventObject.filename = eventObject.filename || "invite.ics";
+          eventObject.headers["Content-Disposition"] = "attachment";
+          eventObject.headers["Content-Transfer-Encoding"] = "base64";
+        }
+        if (!findRelated) {
+          return {
+            attached: attachments.concat(eventObject || []),
+            related: []
+          };
+        } else {
+          return {
+            attached: attachments.filter((attachment) => !attachment.cid).concat(eventObject || []),
+            related: attachments.filter((attachment) => !!attachment.cid)
+          };
+        }
+      }
+      /**
+         * List alternatives. Resulting objects can be used as input for MimeNode nodes
+         *
+         * @returns {Array} An array of alternative elements. Includes the `text` and `html` values as well
+         */
+      getAlternatives() {
+        let alternatives = [], text, html, watchHtml, amp, icalEvent, eventObject;
+        if (this.mail.text) {
+          if (typeof this.mail.text === "object" && (this.mail.text.content || this.mail.text.path || this.mail.text.href || this.mail.text.raw)) {
+            text = this.mail.text;
+          } else {
+            text = {
+              content: this.mail.text
+            };
+          }
+          text.contentType = "text/plain; charset=utf-8";
+        }
+        if (this.mail.watchHtml) {
+          if (typeof this.mail.watchHtml === "object" && (this.mail.watchHtml.content || this.mail.watchHtml.path || this.mail.watchHtml.href || this.mail.watchHtml.raw)) {
+            watchHtml = this.mail.watchHtml;
+          } else {
+            watchHtml = {
+              content: this.mail.watchHtml
+            };
+          }
+          watchHtml.contentType = "text/watch-html; charset=utf-8";
+        }
+        if (this.mail.amp) {
+          if (typeof this.mail.amp === "object" && (this.mail.amp.content || this.mail.amp.path || this.mail.amp.href || this.mail.amp.raw)) {
+            amp = this.mail.amp;
+          } else {
+            amp = {
+              content: this.mail.amp
+            };
+          }
+          amp.contentType = "text/x-amp-html; charset=utf-8";
+        }
+        if (this.mail.icalEvent) {
+          if (typeof this.mail.icalEvent === "object" && (this.mail.icalEvent.content || this.mail.icalEvent.path || this.mail.icalEvent.href || this.mail.icalEvent.raw)) {
+            icalEvent = this.mail.icalEvent;
+          } else {
+            icalEvent = {
+              content: this.mail.icalEvent
+            };
+          }
+          eventObject = {};
+          Object.keys(icalEvent).forEach((key) => {
+            eventObject[key] = icalEvent[key];
+          });
+          if (eventObject.content && typeof eventObject.content === "object") {
+            eventObject.content._resolve = true;
+          }
+          eventObject.filename = false;
+          eventObject.contentType = "text/calendar; charset=utf-8; method=" + (eventObject.method || "PUBLISH").toString().trim().toUpperCase();
+          if (!eventObject.headers) {
+            eventObject.headers = {};
+          }
+        }
+        if (this.mail.html) {
+          if (typeof this.mail.html === "object" && (this.mail.html.content || this.mail.html.path || this.mail.html.href || this.mail.html.raw)) {
+            html = this.mail.html;
+          } else {
+            html = {
+              content: this.mail.html
+            };
+          }
+          html.contentType = "text/html; charset=utf-8";
+        }
+        [].concat(text || []).concat(watchHtml || []).concat(amp || []).concat(html || []).concat(eventObject || []).concat(this.mail.alternatives || []).forEach((alternative) => {
+          let data;
+          if (/^data:/i.test(alternative.path || alternative.href)) {
+            alternative = this._processDataUrl(alternative);
+          }
+          data = {
+            contentType: alternative.contentType || mimeFuncs.detectMimeType(alternative.filename || alternative.path || alternative.href || "txt"),
+            contentTransferEncoding: alternative.contentTransferEncoding
+          };
+          if (alternative.filename) {
+            data.filename = alternative.filename;
+          }
+          if (/^https?:\/\//i.test(alternative.path)) {
+            alternative.href = alternative.path;
+            alternative.path = void 0;
+          }
+          if (alternative.raw) {
+            data.raw = alternative.raw;
+          } else if (alternative.path) {
+            data.content = {
+              path: alternative.path
+            };
+          } else if (alternative.href) {
+            data.content = {
+              href: alternative.href
+            };
+          } else {
+            data.content = alternative.content || "";
+          }
+          if (alternative.encoding) {
+            data.encoding = alternative.encoding;
+          }
+          if (alternative.headers) {
+            data.headers = alternative.headers;
+          }
+          alternatives.push(data);
+        });
+        return alternatives;
+      }
+      /**
+         * Builds multipart/mixed node. It should always contain different type of elements on the same level
+         * eg. text + attachments
+         *
+         * @param {Object} parentNode Parent for this note. If it does not exist, a root node is created
+         * @returns {Object} MimeNode node element
+         */
+      _createMixed(parentNode) {
+        let node;
+        if (!parentNode) {
+          node = new MimeNode("multipart/mixed", {
+            baseBoundary: this.mail.baseBoundary,
+            textEncoding: this.mail.textEncoding,
+            boundaryPrefix: this.mail.boundaryPrefix,
+            disableUrlAccess: this.mail.disableUrlAccess,
+            disableFileAccess: this.mail.disableFileAccess,
+            normalizeHeaderKey: this.mail.normalizeHeaderKey,
+            newline: this.mail.newline
+          });
+        } else {
+          node = parentNode.createChild("multipart/mixed", {
+            disableUrlAccess: this.mail.disableUrlAccess,
+            disableFileAccess: this.mail.disableFileAccess,
+            normalizeHeaderKey: this.mail.normalizeHeaderKey,
+            newline: this.mail.newline
+          });
+        }
+        if (this._useAlternative) {
+          this._createAlternative(node);
+        } else if (this._useRelated) {
+          this._createRelated(node);
+        }
+        [].concat(!this._useAlternative && this._alternatives || []).concat(this._attachments.attached || []).forEach((element) => {
+          if (!this._useRelated || element !== this._htmlNode) {
+            this._createContentNode(node, element);
+          }
+        });
+        return node;
+      }
+      /**
+         * Builds multipart/alternative node. It should always contain same type of elements on the same level
+         * eg. text + html view of the same data
+         *
+         * @param {Object} parentNode Parent for this note. If it does not exist, a root node is created
+         * @returns {Object} MimeNode node element
+         */
+      _createAlternative(parentNode) {
+        let node;
+        if (!parentNode) {
+          node = new MimeNode("multipart/alternative", {
+            baseBoundary: this.mail.baseBoundary,
+            textEncoding: this.mail.textEncoding,
+            boundaryPrefix: this.mail.boundaryPrefix,
+            disableUrlAccess: this.mail.disableUrlAccess,
+            disableFileAccess: this.mail.disableFileAccess,
+            normalizeHeaderKey: this.mail.normalizeHeaderKey,
+            newline: this.mail.newline
+          });
+        } else {
+          node = parentNode.createChild("multipart/alternative", {
+            disableUrlAccess: this.mail.disableUrlAccess,
+            disableFileAccess: this.mail.disableFileAccess,
+            normalizeHeaderKey: this.mail.normalizeHeaderKey,
+            newline: this.mail.newline
+          });
+        }
+        this._alternatives.forEach((alternative) => {
+          if (this._useRelated && this._htmlNode === alternative) {
+            this._createRelated(node);
+          } else {
+            this._createContentNode(node, alternative);
+          }
+        });
+        return node;
+      }
+      /**
+         * Builds multipart/related node. It should always contain html node with related attachments
+         *
+         * @param {Object} parentNode Parent for this note. If it does not exist, a root node is created
+         * @returns {Object} MimeNode node element
+         */
+      _createRelated(parentNode) {
+        let node;
+        if (!parentNode) {
+          node = new MimeNode('multipart/related; type="text/html"', {
+            baseBoundary: this.mail.baseBoundary,
+            textEncoding: this.mail.textEncoding,
+            boundaryPrefix: this.mail.boundaryPrefix,
+            disableUrlAccess: this.mail.disableUrlAccess,
+            disableFileAccess: this.mail.disableFileAccess,
+            normalizeHeaderKey: this.mail.normalizeHeaderKey,
+            newline: this.mail.newline
+          });
+        } else {
+          node = parentNode.createChild('multipart/related; type="text/html"', {
+            disableUrlAccess: this.mail.disableUrlAccess,
+            disableFileAccess: this.mail.disableFileAccess,
+            normalizeHeaderKey: this.mail.normalizeHeaderKey,
+            newline: this.mail.newline
+          });
+        }
+        this._createContentNode(node, this._htmlNode);
+        this._attachments.related.forEach((alternative) => this._createContentNode(node, alternative));
+        return node;
+      }
+      /**
+         * Creates a regular node with contents
+         *
+         * @param {Object} parentNode Parent for this note. If it does not exist, a root node is created
+         * @param {Object} element Node data
+         * @returns {Object} MimeNode node element
+         */
+      _createContentNode(parentNode, element) {
+        element = element || {};
+        element.content = element.content || "";
+        let node;
+        let encoding = (element.encoding || "utf8").toString().toLowerCase().replace(/[-_\s]/g, "");
+        if (!parentNode) {
+          node = new MimeNode(element.contentType, {
+            filename: element.filename,
+            baseBoundary: this.mail.baseBoundary,
+            textEncoding: this.mail.textEncoding,
+            boundaryPrefix: this.mail.boundaryPrefix,
+            disableUrlAccess: this.mail.disableUrlAccess,
+            disableFileAccess: this.mail.disableFileAccess,
+            normalizeHeaderKey: this.mail.normalizeHeaderKey,
+            newline: this.mail.newline
+          });
+        } else {
+          node = parentNode.createChild(element.contentType, {
+            filename: element.filename,
+            textEncoding: this.mail.textEncoding,
+            disableUrlAccess: this.mail.disableUrlAccess,
+            disableFileAccess: this.mail.disableFileAccess,
+            normalizeHeaderKey: this.mail.normalizeHeaderKey,
+            newline: this.mail.newline
+          });
+        }
+        if (element.headers) {
+          node.addHeader(element.headers);
+        }
+        if (element.cid) {
+          node.setHeader("Content-Id", "<" + element.cid.replace(/[<>]/g, "") + ">");
+        }
+        if (element.contentTransferEncoding) {
+          node.setHeader("Content-Transfer-Encoding", element.contentTransferEncoding);
+        } else if (this.mail.encoding && /^text\//i.test(element.contentType)) {
+          node.setHeader("Content-Transfer-Encoding", this.mail.encoding);
+        }
+        if (!/^text\//i.test(element.contentType) || element.contentDisposition) {
+          node.setHeader("Content-Disposition", element.contentDisposition || (element.cid && /^image\//i.test(element.contentType) ? "inline" : "attachment"));
+        }
+        if (typeof element.content === "string" && ![
+          "utf8",
+          "usascii",
+          "ascii"
+        ].includes(encoding)) {
+          element.content = Buffer.from(element.content, encoding);
+        }
+        if (element.raw) {
+          node.setRaw(element.raw);
+        } else {
+          node.setContent(element.content);
+        }
+        return node;
+      }
+      /**
+         * Parses data uri and converts it to a Buffer
+         *
+         * @param {Object} element Content element
+         * @return {Object} Parsed element
+         */
+      _processDataUrl(element) {
+        let parsedDataUri;
+        if ((element.path || element.href).match(/^data:/)) {
+          parsedDataUri = parseDataURI(element.path || element.href);
+        }
+        if (!parsedDataUri) {
+          return element;
+        }
+        element.content = parsedDataUri.data;
+        element.contentType = element.contentType || parsedDataUri.contentType;
+        if ("path" in element) {
+          element.path = false;
+        }
+        if ("href" in element) {
+          element.href = false;
+        }
+        return element;
+      }
+    };
+    module.exports = MailComposer;
+  }
+});
+
+// node_modules/.deno/nodemailer@6.9.13/node_modules/nodemailer/lib/dkim/message-parser.js
+var require_message_parser = __commonJS({
+  "node_modules/.deno/nodemailer@6.9.13/node_modules/nodemailer/lib/dkim/message-parser.js"(exports, module) {
+    "use strict";
+    var Transform = __require("node:stream").Transform;
+    var MessageParser = class extends Transform {
+      constructor(options) {
+        super(options);
+        this.lastBytes = Buffer.alloc(4);
+        this.headersParsed = false;
+        this.headerBytes = 0;
+        this.headerChunks = [];
+        this.rawHeaders = false;
+        this.bodySize = 0;
+      }
+      /**
+         * Keeps count of the last 4 bytes in order to detect line breaks on chunk boundaries
+         *
+         * @param {Buffer} data Next data chunk from the stream
+         */
+      updateLastBytes(data) {
+        let lblen = this.lastBytes.length;
+        let nblen = Math.min(data.length, lblen);
+        for (let i = 0, len = lblen - nblen; i < len; i++) {
+          this.lastBytes[i] = this.lastBytes[i + nblen];
+        }
+        for (let i = 1; i <= nblen; i++) {
+          this.lastBytes[lblen - i] = data[data.length - i];
+        }
+      }
+      /**
+         * Finds and removes message headers from the remaining body. We want to keep
+         * headers separated until final delivery to be able to modify these
+         *
+         * @param {Buffer} data Next chunk of data
+         * @return {Boolean} Returns true if headers are already found or false otherwise
+         */
+      checkHeaders(data) {
+        if (this.headersParsed) {
+          return true;
+        }
+        let lblen = this.lastBytes.length;
+        let headerPos = 0;
+        this.curLinePos = 0;
+        for (let i = 0, len = this.lastBytes.length + data.length; i < len; i++) {
+          let chr;
+          if (i < lblen) {
+            chr = this.lastBytes[i];
+          } else {
+            chr = data[i - lblen];
+          }
+          if (chr === 10 && i) {
+            let pr1 = i - 1 < lblen ? this.lastBytes[i - 1] : data[i - 1 - lblen];
+            let pr2 = i > 1 ? i - 2 < lblen ? this.lastBytes[i - 2] : data[i - 2 - lblen] : false;
+            if (pr1 === 10) {
+              this.headersParsed = true;
+              headerPos = i - lblen + 1;
+              this.headerBytes += headerPos;
+              break;
+            } else if (pr1 === 13 && pr2 === 10) {
+              this.headersParsed = true;
+              headerPos = i - lblen + 1;
+              this.headerBytes += headerPos;
+              break;
+            }
+          }
+        }
+        if (this.headersParsed) {
+          this.headerChunks.push(data.slice(0, headerPos));
+          this.rawHeaders = Buffer.concat(this.headerChunks, this.headerBytes);
+          this.headerChunks = null;
+          this.emit("headers", this.parseHeaders());
+          if (data.length - 1 > headerPos) {
+            let chunk = data.slice(headerPos);
+            this.bodySize += chunk.length;
+            setImmediate(() => this.push(chunk));
+          }
+          return false;
+        } else {
+          this.headerBytes += data.length;
+          this.headerChunks.push(data);
+        }
+        this.updateLastBytes(data);
+        return false;
+      }
+      _transform(chunk, encoding, callback) {
+        if (!chunk || !chunk.length) {
+          return callback();
+        }
+        if (typeof chunk === "string") {
+          chunk = Buffer.from(chunk, encoding);
+        }
+        let headersFound;
+        try {
+          headersFound = this.checkHeaders(chunk);
+        } catch (E) {
+          return callback(E);
+        }
+        if (headersFound) {
+          this.bodySize += chunk.length;
+          this.push(chunk);
+        }
+        setImmediate(callback);
+      }
+      _flush(callback) {
+        if (this.headerChunks) {
+          let chunk = Buffer.concat(this.headerChunks, this.headerBytes);
+          this.bodySize += chunk.length;
+          this.push(chunk);
+          this.headerChunks = null;
+        }
+        callback();
+      }
+      parseHeaders() {
+        let lines = (this.rawHeaders || "").toString().split(/\r?\n/);
+        for (let i = lines.length - 1; i > 0; i--) {
+          if (/^\s/.test(lines[i])) {
+            lines[i - 1] += "\n" + lines[i];
+            lines.splice(i, 1);
+          }
+        }
+        return lines.filter((line) => line.trim()).map((line) => ({
+          key: line.substr(0, line.indexOf(":")).trim().toLowerCase(),
+          line
+        }));
+      }
+    };
+    module.exports = MessageParser;
+  }
+});
+
+// node_modules/.deno/nodemailer@6.9.13/node_modules/nodemailer/lib/dkim/relaxed-body.js
+var require_relaxed_body = __commonJS({
+  "node_modules/.deno/nodemailer@6.9.13/node_modules/nodemailer/lib/dkim/relaxed-body.js"(exports, module) {
+    "use strict";
+    var Transform = __require("node:stream").Transform;
+    var crypto2 = __require("node:crypto");
+    var RelaxedBody = class extends Transform {
+      constructor(options) {
+        super();
+        options = options || {};
+        this.chunkBuffer = [];
+        this.chunkBufferLen = 0;
+        this.bodyHash = crypto2.createHash(options.hashAlgo || "sha1");
+        this.remainder = "";
+        this.byteLength = 0;
+        this.debug = options.debug;
+        this._debugBody = options.debug ? [] : false;
+      }
+      updateHash(chunk) {
+        let bodyStr;
+        let nextRemainder = "";
+        let state = "file";
+        for (let i = chunk.length - 1; i >= 0; i--) {
+          let c = chunk[i];
+          if (state === "file" && (c === 10 || c === 13)) {
+          } else if (state === "file" && (c === 9 || c === 32)) {
+            state = "line";
+          } else if (state === "line" && (c === 9 || c === 32)) {
+          } else if (state === "file" || state === "line") {
+            state = "body";
+            if (i === chunk.length - 1) {
+              break;
+            }
+          }
+          if (i === 0) {
+            if (state === "file" && (!this.remainder || /[\r\n]$/.test(this.remainder)) || state === "line" && (!this.remainder || /[ \t]$/.test(this.remainder))) {
+              this.remainder += chunk.toString("binary");
+              return;
+            } else if (state === "line" || state === "file") {
+              nextRemainder = chunk.toString("binary");
+              chunk = false;
+              break;
+            }
+          }
+          if (state !== "body") {
+            continue;
+          }
+          nextRemainder = chunk.slice(i + 1).toString("binary");
+          chunk = chunk.slice(0, i + 1);
+          break;
+        }
+        let needsFixing = !!this.remainder;
+        if (chunk && !needsFixing) {
+          for (let i = 0, len = chunk.length; i < len; i++) {
+            if (i && chunk[i] === 10 && chunk[i - 1] !== 13) {
+              needsFixing = true;
+              break;
+            } else if (i && chunk[i] === 13 && chunk[i - 1] === 32) {
+              needsFixing = true;
+              break;
+            } else if (i && chunk[i] === 32 && chunk[i - 1] === 32) {
+              needsFixing = true;
+              break;
+            } else if (chunk[i] === 9) {
+              needsFixing = true;
+              break;
+            }
+          }
+        }
+        if (needsFixing) {
+          bodyStr = this.remainder + (chunk ? chunk.toString("binary") : "");
+          this.remainder = nextRemainder;
+          bodyStr = bodyStr.replace(/\r?\n/g, "\n").replace(/[ \t]*$/gm, "").replace(/[ \t]+/gm, " ").replace(/\n/g, "\r\n");
+          chunk = Buffer.from(bodyStr, "binary");
+        } else if (nextRemainder) {
+          this.remainder = nextRemainder;
+        }
+        if (this.debug) {
+          this._debugBody.push(chunk);
+        }
+        this.bodyHash.update(chunk);
+      }
+      _transform(chunk, encoding, callback) {
+        if (!chunk || !chunk.length) {
+          return callback();
+        }
+        if (typeof chunk === "string") {
+          chunk = Buffer.from(chunk, encoding);
+        }
+        this.updateHash(chunk);
+        this.byteLength += chunk.length;
+        this.push(chunk);
+        callback();
+      }
+      _flush(callback) {
+        if (/[\r\n]$/.test(this.remainder) && this.byteLength > 2) {
+          this.bodyHash.update(Buffer.from("\r\n"));
+        }
+        if (!this.byteLength) {
+          this.push(Buffer.from("\r\n"));
+        }
+        this.emit("hash", this.bodyHash.digest("base64"), this.debug ? Buffer.concat(this._debugBody) : false);
+        callback();
+      }
+    };
+    module.exports = RelaxedBody;
+  }
+});
+
+// node_modules/.deno/nodemailer@6.9.13/node_modules/nodemailer/lib/dkim/sign.js
+var require_sign = __commonJS({
+  "node_modules/.deno/nodemailer@6.9.13/node_modules/nodemailer/lib/dkim/sign.js"(exports, module) {
+    "use strict";
+    var punycode = require_punycode();
+    var mimeFuncs = require_mime_funcs();
+    var crypto2 = __require("node:crypto");
+    module.exports = (headers, hashAlgo, bodyHash, options) => {
+      options = options || {};
+      let defaultFieldNames = "From:Sender:Reply-To:Subject:Date:Message-ID:To:Cc:MIME-Version:Content-Type:Content-Transfer-Encoding:Content-ID:Content-Description:Resent-Date:Resent-From:Resent-Sender:Resent-To:Resent-Cc:Resent-Message-ID:In-Reply-To:References:List-Id:List-Help:List-Unsubscribe:List-Subscribe:List-Post:List-Owner:List-Archive";
+      let fieldNames = options.headerFieldNames || defaultFieldNames;
+      let canonicalizedHeaderData = relaxedHeaders(headers, fieldNames, options.skipFields);
+      let dkimHeader = generateDKIMHeader(options.domainName, options.keySelector, canonicalizedHeaderData.fieldNames, hashAlgo, bodyHash);
+      let signer, signature;
+      canonicalizedHeaderData.headers += "dkim-signature:" + relaxedHeaderLine(dkimHeader);
+      signer = crypto2.createSign(("rsa-" + hashAlgo).toUpperCase());
+      signer.update(canonicalizedHeaderData.headers);
+      try {
+        signature = signer.sign(options.privateKey, "base64");
+      } catch (E) {
+        return false;
+      }
+      return dkimHeader + signature.replace(/(^.{73}|.{75}(?!\r?\n|\r))/g, "$&\r\n ").trim();
+    };
+    module.exports.relaxedHeaders = relaxedHeaders;
+    function generateDKIMHeader(domainName, keySelector, fieldNames, hashAlgo, bodyHash) {
+      let dkim = [
+        "v=1",
+        "a=rsa-" + hashAlgo,
+        "c=relaxed/relaxed",
+        "d=" + punycode.toASCII(domainName),
+        "q=dns/txt",
+        "s=" + keySelector,
+        "bh=" + bodyHash,
+        "h=" + fieldNames
+      ].join("; ");
+      return mimeFuncs.foldLines("DKIM-Signature: " + dkim, 76) + ";\r\n b=";
+    }
+    function relaxedHeaders(headers, fieldNames, skipFields) {
+      let includedFields = /* @__PURE__ */ new Set();
+      let skip = /* @__PURE__ */ new Set();
+      let headerFields = /* @__PURE__ */ new Map();
+      (skipFields || "").toLowerCase().split(":").forEach((field) => {
+        skip.add(field.trim());
+      });
+      (fieldNames || "").toLowerCase().split(":").filter((field) => !skip.has(field.trim())).forEach((field) => {
+        includedFields.add(field.trim());
+      });
+      for (let i = headers.length - 1; i >= 0; i--) {
+        let line = headers[i];
+        if (includedFields.has(line.key) && !headerFields.has(line.key)) {
+          headerFields.set(line.key, relaxedHeaderLine(line.line));
+        }
+      }
+      let headersList = [];
+      let fields = [];
+      includedFields.forEach((field) => {
+        if (headerFields.has(field)) {
+          fields.push(field);
+          headersList.push(field + ":" + headerFields.get(field));
+        }
+      });
+      return {
+        headers: headersList.join("\r\n") + "\r\n",
+        fieldNames: fields.join(":")
+      };
+    }
+    function relaxedHeaderLine(line) {
+      return line.substr(line.indexOf(":") + 1).replace(/\r?\n/g, "").replace(/\s+/g, " ").trim();
+    }
+  }
+});
+
+// node_modules/.deno/nodemailer@6.9.13/node_modules/nodemailer/lib/dkim/index.js
+var require_dkim = __commonJS({
+  "node_modules/.deno/nodemailer@6.9.13/node_modules/nodemailer/lib/dkim/index.js"(exports, module) {
+    "use strict";
+    var MessageParser = require_message_parser();
+    var RelaxedBody = require_relaxed_body();
+    var sign = require_sign();
+    var PassThrough = __require("node:stream").PassThrough;
+    var fs = __require("node:fs");
+    var path = __require("node:path");
+    var crypto2 = __require("node:crypto");
+    var DKIM_ALGO = "sha256";
+    var MAX_MESSAGE_SIZE = 128 * 1024;
+    var DKIMSigner = class {
+      constructor(options, keys, input, output) {
+        this.options = options || {};
+        this.keys = keys;
+        this.cacheTreshold = Number(this.options.cacheTreshold) || MAX_MESSAGE_SIZE;
+        this.hashAlgo = this.options.hashAlgo || DKIM_ALGO;
+        this.cacheDir = this.options.cacheDir || false;
+        this.chunks = [];
+        this.chunklen = 0;
+        this.readPos = 0;
+        this.cachePath = this.cacheDir ? path.join(this.cacheDir, "message." + Date.now() + "-" + crypto2.randomBytes(14).toString("hex")) : false;
+        this.cache = false;
+        this.headers = false;
+        this.bodyHash = false;
+        this.parser = false;
+        this.relaxedBody = false;
+        this.input = input;
+        this.output = output;
+        this.output.usingCache = false;
+        this.hasErrored = false;
+        this.input.on("error", (err) => {
+          this.hasErrored = true;
+          this.cleanup();
+          output.emit("error", err);
+        });
+      }
+      cleanup() {
+        if (!this.cache || !this.cachePath) {
+          return;
+        }
+        fs.unlink(this.cachePath, () => false);
+      }
+      createReadCache() {
+        this.cache = fs.createReadStream(this.cachePath);
+        this.cache.once("error", (err) => {
+          this.cleanup();
+          this.output.emit("error", err);
+        });
+        this.cache.once("close", () => {
+          this.cleanup();
+        });
+        this.cache.pipe(this.output);
+      }
+      sendNextChunk() {
+        if (this.hasErrored) {
+          return;
+        }
+        if (this.readPos >= this.chunks.length) {
+          if (!this.cache) {
+            return this.output.end();
+          }
+          return this.createReadCache();
+        }
+        let chunk = this.chunks[this.readPos++];
+        if (this.output.write(chunk) === false) {
+          return this.output.once("drain", () => {
+            this.sendNextChunk();
+          });
+        }
+        setImmediate(() => this.sendNextChunk());
+      }
+      sendSignedOutput() {
+        let keyPos = 0;
+        let signNextKey = () => {
+          if (keyPos >= this.keys.length) {
+            this.output.write(this.parser.rawHeaders);
+            return setImmediate(() => this.sendNextChunk());
+          }
+          let key = this.keys[keyPos++];
+          let dkimField = sign(this.headers, this.hashAlgo, this.bodyHash, {
+            domainName: key.domainName,
+            keySelector: key.keySelector,
+            privateKey: key.privateKey,
+            headerFieldNames: this.options.headerFieldNames,
+            skipFields: this.options.skipFields
+          });
+          if (dkimField) {
+            this.output.write(Buffer.from(dkimField + "\r\n"));
+          }
+          return setImmediate(signNextKey);
+        };
+        if (this.bodyHash && this.headers) {
+          return signNextKey();
+        }
+        this.output.write(this.parser.rawHeaders);
+        this.sendNextChunk();
+      }
+      createWriteCache() {
+        this.output.usingCache = true;
+        this.cache = fs.createWriteStream(this.cachePath);
+        this.cache.once("error", (err) => {
+          this.cleanup();
+          this.relaxedBody.unpipe(this.cache);
+          this.relaxedBody.on("readable", () => {
+            while (this.relaxedBody.read() !== null) {
+            }
+          });
+          this.hasErrored = true;
+          this.output.emit("error", err);
+        });
+        this.cache.once("close", () => {
+          this.sendSignedOutput();
+        });
+        this.relaxedBody.removeAllListeners("readable");
+        this.relaxedBody.pipe(this.cache);
+      }
+      signStream() {
+        this.parser = new MessageParser();
+        this.relaxedBody = new RelaxedBody({
+          hashAlgo: this.hashAlgo
+        });
+        this.parser.on("headers", (value) => {
+          this.headers = value;
+        });
+        this.relaxedBody.on("hash", (value) => {
+          this.bodyHash = value;
+        });
+        this.relaxedBody.on("readable", () => {
+          let chunk;
+          if (this.cache) {
+            return;
+          }
+          while ((chunk = this.relaxedBody.read()) !== null) {
+            this.chunks.push(chunk);
+            this.chunklen += chunk.length;
+            if (this.chunklen >= this.cacheTreshold && this.cachePath) {
+              return this.createWriteCache();
+            }
+          }
+        });
+        this.relaxedBody.on("end", () => {
+          if (this.cache) {
+            return;
+          }
+          this.sendSignedOutput();
+        });
+        this.parser.pipe(this.relaxedBody);
+        setImmediate(() => this.input.pipe(this.parser));
+      }
+    };
+    var DKIM = class {
+      constructor(options) {
+        this.options = options || {};
+        this.keys = [].concat(this.options.keys || {
+          domainName: options.domainName,
+          keySelector: options.keySelector,
+          privateKey: options.privateKey
+        });
+      }
+      sign(input, extraOptions) {
+        let output = new PassThrough();
+        let inputStream = input;
+        let writeValue = false;
+        if (Buffer.isBuffer(input)) {
+          writeValue = input;
+          inputStream = new PassThrough();
+        } else if (typeof input === "string") {
+          writeValue = Buffer.from(input);
+          inputStream = new PassThrough();
+        }
+        let options = this.options;
+        if (extraOptions && Object.keys(extraOptions).length) {
+          options = {};
+          Object.keys(this.options || {}).forEach((key) => {
+            options[key] = this.options[key];
+          });
+          Object.keys(extraOptions || {}).forEach((key) => {
+            if (!(key in options)) {
+              options[key] = extraOptions[key];
+            }
+          });
+        }
+        let signer = new DKIMSigner(options, this.keys, inputStream, output);
+        setImmediate(() => {
+          signer.signStream();
+          if (writeValue) {
+            setImmediate(() => {
+              inputStream.end(writeValue);
+            });
+          }
+        });
+        return output;
+      }
+    };
+    module.exports = DKIM;
+  }
+});
+
+// node_modules/.deno/nodemailer@6.9.13/node_modules/nodemailer/lib/smtp-connection/http-proxy-client.js
+var require_http_proxy_client = __commonJS({
+  "node_modules/.deno/nodemailer@6.9.13/node_modules/nodemailer/lib/smtp-connection/http-proxy-client.js"(exports, module) {
+    "use strict";
+    var net = __require("node:net");
+    var tls = __require("node:tls");
+    var urllib = __require("node:url");
+    function httpProxyClient(proxyUrl, destinationPort, destinationHost, callback) {
+      let proxy = urllib.parse(proxyUrl);
+      let options;
+      let connect;
+      let socket;
+      options = {
+        host: proxy.hostname,
+        port: Number(proxy.port) ? Number(proxy.port) : proxy.protocol === "https:" ? 443 : 80
+      };
+      if (proxy.protocol === "https:") {
+        options.rejectUnauthorized = false;
+        connect = tls.connect.bind(tls);
+      } else {
+        connect = net.connect.bind(net);
+      }
+      let finished = false;
+      let tempSocketErr = (err) => {
+        if (finished) {
+          return;
+        }
+        finished = true;
+        try {
+          socket.destroy();
+        } catch (E) {
+        }
+        callback(err);
+      };
+      let timeoutErr = () => {
+        let err = new Error("Proxy socket timed out");
+        err.code = "ETIMEDOUT";
+        tempSocketErr(err);
+      };
+      socket = connect(options, () => {
+        if (finished) {
+          return;
+        }
+        let reqHeaders = {
+          Host: destinationHost + ":" + destinationPort,
+          Connection: "close"
+        };
+        if (proxy.auth) {
+          reqHeaders["Proxy-Authorization"] = "Basic " + Buffer.from(proxy.auth).toString("base64");
+        }
+        socket.write(
+          // HTTP method
+          "CONNECT " + destinationHost + ":" + destinationPort + " HTTP/1.1\r\n" + // HTTP request headers
+          Object.keys(reqHeaders).map((key) => key + ": " + reqHeaders[key]).join("\r\n") + // End request
+          "\r\n\r\n"
+        );
+        let headers = "";
+        let onSocketData = (chunk) => {
+          let match;
+          let remainder;
+          if (finished) {
+            return;
+          }
+          headers += chunk.toString("binary");
+          if (match = headers.match(/\r\n\r\n/)) {
+            socket.removeListener("data", onSocketData);
+            remainder = headers.substr(match.index + match[0].length);
+            headers = headers.substr(0, match.index);
+            if (remainder) {
+              socket.unshift(Buffer.from(remainder, "binary"));
+            }
+            finished = true;
+            match = headers.match(/^HTTP\/\d+\.\d+ (\d+)/i);
+            if (!match || (match[1] || "").charAt(0) !== "2") {
+              try {
+                socket.destroy();
+              } catch (E) {
+              }
+              return callback(new Error("Invalid response from proxy" + (match && ": " + match[1] || "")));
+            }
+            socket.removeListener("error", tempSocketErr);
+            socket.removeListener("timeout", timeoutErr);
+            socket.setTimeout(0);
+            return callback(null, socket);
+          }
+        };
+        socket.on("data", onSocketData);
+      });
+      socket.setTimeout(httpProxyClient.timeout || 30 * 1e3);
+      socket.on("timeout", timeoutErr);
+      socket.once("error", tempSocketErr);
+    }
+    module.exports = httpProxyClient;
+  }
+});
+
+// node_modules/.deno/nodemailer@6.9.13/node_modules/nodemailer/lib/mailer/mail-message.js
+var require_mail_message = __commonJS({
+  "node_modules/.deno/nodemailer@6.9.13/node_modules/nodemailer/lib/mailer/mail-message.js"(exports, module) {
+    "use strict";
+    var shared = require_shared();
+    var MimeNode = require_mime_node();
+    var mimeFuncs = require_mime_funcs();
+    var MailMessage = class {
+      constructor(mailer, data) {
+        this.mailer = mailer;
+        this.data = {};
+        this.message = null;
+        data = data || {};
+        let options = mailer.options || {};
+        let defaults = mailer._defaults || {};
+        Object.keys(data).forEach((key) => {
+          this.data[key] = data[key];
+        });
+        this.data.headers = this.data.headers || {};
+        Object.keys(defaults).forEach((key) => {
+          if (!(key in this.data)) {
+            this.data[key] = defaults[key];
+          } else if (key === "headers") {
+            Object.keys(defaults.headers).forEach((key2) => {
+              if (!(key2 in this.data.headers)) {
+                this.data.headers[key2] = defaults.headers[key2];
+              }
+            });
+          }
+        });
+        [
+          "disableFileAccess",
+          "disableUrlAccess",
+          "normalizeHeaderKey"
+        ].forEach((key) => {
+          if (key in options) {
+            this.data[key] = options[key];
+          }
+        });
+      }
+      resolveContent(...args) {
+        return shared.resolveContent(...args);
+      }
+      resolveAll(callback) {
+        let keys = [
+          [
+            this.data,
+            "html"
+          ],
+          [
+            this.data,
+            "text"
+          ],
+          [
+            this.data,
+            "watchHtml"
+          ],
+          [
+            this.data,
+            "amp"
+          ],
+          [
+            this.data,
+            "icalEvent"
+          ]
+        ];
+        if (this.data.alternatives && this.data.alternatives.length) {
+          this.data.alternatives.forEach((alternative, i) => {
+            keys.push([
+              this.data.alternatives,
+              i
+            ]);
+          });
+        }
+        if (this.data.attachments && this.data.attachments.length) {
+          this.data.attachments.forEach((attachment, i) => {
+            if (!attachment.filename) {
+              attachment.filename = (attachment.path || attachment.href || "").split("/").pop().split("?").shift() || "attachment-" + (i + 1);
+              if (attachment.filename.indexOf(".") < 0) {
+                attachment.filename += "." + mimeFuncs.detectExtension(attachment.contentType);
+              }
+            }
+            if (!attachment.contentType) {
+              attachment.contentType = mimeFuncs.detectMimeType(attachment.filename || attachment.path || attachment.href || "bin");
+            }
+            keys.push([
+              this.data.attachments,
+              i
+            ]);
+          });
+        }
+        let mimeNode = new MimeNode();
+        let addressKeys = [
+          "from",
+          "to",
+          "cc",
+          "bcc",
+          "sender",
+          "replyTo"
+        ];
+        addressKeys.forEach((address) => {
+          let value;
+          if (this.message) {
+            value = [].concat(mimeNode._parseAddresses(this.message.getHeader(address === "replyTo" ? "reply-to" : address)) || []);
+          } else if (this.data[address]) {
+            value = [].concat(mimeNode._parseAddresses(this.data[address]) || []);
+          }
+          if (value && value.length) {
+            this.data[address] = value;
+          } else if (address in this.data) {
+            this.data[address] = null;
+          }
+        });
+        let singleKeys = [
+          "from",
+          "sender"
+        ];
+        singleKeys.forEach((address) => {
+          if (this.data[address]) {
+            this.data[address] = this.data[address].shift();
+          }
+        });
+        let pos = 0;
+        let resolveNext = () => {
+          if (pos >= keys.length) {
+            return callback(null, this.data);
+          }
+          let args = keys[pos++];
+          if (!args[0] || !args[0][args[1]]) {
+            return resolveNext();
+          }
+          shared.resolveContent(...args, (err, value) => {
+            if (err) {
+              return callback(err);
+            }
+            let node = {
+              content: value
+            };
+            if (args[0][args[1]] && typeof args[0][args[1]] === "object" && !Buffer.isBuffer(args[0][args[1]])) {
+              Object.keys(args[0][args[1]]).forEach((key) => {
+                if (!(key in node) && ![
+                  "content",
+                  "path",
+                  "href",
+                  "raw"
+                ].includes(key)) {
+                  node[key] = args[0][args[1]][key];
+                }
+              });
+            }
+            args[0][args[1]] = node;
+            resolveNext();
+          });
+        };
+        setImmediate(() => resolveNext());
+      }
+      normalize(callback) {
+        let envelope = this.data.envelope || this.message.getEnvelope();
+        let messageId = this.message.messageId();
+        this.resolveAll((err, data) => {
+          if (err) {
+            return callback(err);
+          }
+          data.envelope = envelope;
+          data.messageId = messageId;
+          [
+            "html",
+            "text",
+            "watchHtml",
+            "amp"
+          ].forEach((key) => {
+            if (data[key] && data[key].content) {
+              if (typeof data[key].content === "string") {
+                data[key] = data[key].content;
+              } else if (Buffer.isBuffer(data[key].content)) {
+                data[key] = data[key].content.toString();
+              }
+            }
+          });
+          if (data.icalEvent && Buffer.isBuffer(data.icalEvent.content)) {
+            data.icalEvent.content = data.icalEvent.content.toString("base64");
+            data.icalEvent.encoding = "base64";
+          }
+          if (data.alternatives && data.alternatives.length) {
+            data.alternatives.forEach((alternative) => {
+              if (alternative && alternative.content && Buffer.isBuffer(alternative.content)) {
+                alternative.content = alternative.content.toString("base64");
+                alternative.encoding = "base64";
+              }
+            });
+          }
+          if (data.attachments && data.attachments.length) {
+            data.attachments.forEach((attachment) => {
+              if (attachment && attachment.content && Buffer.isBuffer(attachment.content)) {
+                attachment.content = attachment.content.toString("base64");
+                attachment.encoding = "base64";
+              }
+            });
+          }
+          data.normalizedHeaders = {};
+          Object.keys(data.headers || {}).forEach((key) => {
+            let value = [].concat(data.headers[key] || []).shift();
+            value = value && value.value || value;
+            if (value) {
+              if ([
+                "references",
+                "in-reply-to",
+                "message-id",
+                "content-id"
+              ].includes(key)) {
+                value = this.message._encodeHeaderValue(key, value);
+              }
+              data.normalizedHeaders[key] = value;
+            }
+          });
+          if (data.list && typeof data.list === "object") {
+            let listHeaders = this._getListHeaders(data.list);
+            listHeaders.forEach((entry) => {
+              data.normalizedHeaders[entry.key] = entry.value.map((val2) => val2 && val2.value || val2).join(", ");
+            });
+          }
+          if (data.references) {
+            data.normalizedHeaders.references = this.message._encodeHeaderValue("references", data.references);
+          }
+          if (data.inReplyTo) {
+            data.normalizedHeaders["in-reply-to"] = this.message._encodeHeaderValue("in-reply-to", data.inReplyTo);
+          }
+          return callback(null, data);
+        });
+      }
+      setMailerHeader() {
+        if (!this.message || !this.data.xMailer) {
+          return;
+        }
+        this.message.setHeader("X-Mailer", this.data.xMailer);
+      }
+      setPriorityHeaders() {
+        if (!this.message || !this.data.priority) {
+          return;
+        }
+        switch ((this.data.priority || "").toString().toLowerCase()) {
+          case "high":
+            this.message.setHeader("X-Priority", "1 (Highest)");
+            this.message.setHeader("X-MSMail-Priority", "High");
+            this.message.setHeader("Importance", "High");
+            break;
+          case "low":
+            this.message.setHeader("X-Priority", "5 (Lowest)");
+            this.message.setHeader("X-MSMail-Priority", "Low");
+            this.message.setHeader("Importance", "Low");
+            break;
+          default:
+        }
+      }
+      setListHeaders() {
+        if (!this.message || !this.data.list || typeof this.data.list !== "object") {
+          return;
+        }
+        if (this.data.list && typeof this.data.list === "object") {
+          this._getListHeaders(this.data.list).forEach((listHeader) => {
+            listHeader.value.forEach((value) => {
+              this.message.addHeader(listHeader.key, value);
+            });
+          });
+        }
+      }
+      _getListHeaders(listData) {
+        return Object.keys(listData).map((key) => ({
+          key: "list-" + key.toLowerCase().trim(),
+          value: [].concat(listData[key] || []).map((value) => ({
+            prepared: true,
+            foldLines: true,
+            value: [].concat(value || []).map((value2) => {
+              if (typeof value2 === "string") {
+                value2 = {
+                  url: value2
+                };
+              }
+              if (value2 && value2.url) {
+                if (key.toLowerCase().trim() === "id") {
+                  let comment2 = value2.comment || "";
+                  if (mimeFuncs.isPlainText(comment2)) {
+                    comment2 = '"' + comment2 + '"';
+                  } else {
+                    comment2 = mimeFuncs.encodeWord(comment2);
+                  }
+                  return (value2.comment ? comment2 + " " : "") + this._formatListUrl(value2.url).replace(/^<[^:]+\/{,2}/, "");
+                }
+                let comment = value2.comment || "";
+                if (!mimeFuncs.isPlainText(comment)) {
+                  comment = mimeFuncs.encodeWord(comment);
+                }
+                return this._formatListUrl(value2.url) + (value2.comment ? " (" + comment + ")" : "");
+              }
+              return "";
+            }).filter((value2) => value2).join(", ")
+          }))
+        }));
+      }
+      _formatListUrl(url) {
+        url = url.replace(/[\s<]+|[\s>]+/g, "");
+        if (/^(https?|mailto|ftp):/.test(url)) {
+          return "<" + url + ">";
+        }
+        if (/^[^@]+@[^@]+$/.test(url)) {
+          return "<mailto:" + url + ">";
+        }
+        return "<http://" + url + ">";
+      }
+    };
+    module.exports = MailMessage;
+  }
+});
+
+// node_modules/.deno/nodemailer@6.9.13/node_modules/nodemailer/lib/mailer/index.js
+var require_mailer = __commonJS({
+  "node_modules/.deno/nodemailer@6.9.13/node_modules/nodemailer/lib/mailer/index.js"(exports, module) {
+    "use strict";
+    var EventEmitter = __require("node:events");
+    var shared = require_shared();
+    var mimeTypes = require_mime_types();
+    var MailComposer = require_mail_composer();
+    var DKIM = require_dkim();
+    var httpProxyClient = require_http_proxy_client();
+    var util = __require("node:util");
+    var urllib = __require("node:url");
+    var packageData = require_package();
+    var MailMessage = require_mail_message();
+    var net = __require("node:net");
+    var dns = __require("node:dns");
+    var crypto2 = __require("node:crypto");
+    var Mail = class extends EventEmitter {
+      constructor(transporter, options, defaults) {
+        super();
+        this.options = options || {};
+        this._defaults = defaults || {};
+        this._defaultPlugins = {
+          compile: [
+            (...args) => this._convertDataImages(...args)
+          ],
+          stream: []
+        };
+        this._userPlugins = {
+          compile: [],
+          stream: []
+        };
+        this.meta = /* @__PURE__ */ new Map();
+        this.dkim = this.options.dkim ? new DKIM(this.options.dkim) : false;
+        this.transporter = transporter;
+        this.transporter.mailer = this;
+        this.logger = shared.getLogger(this.options, {
+          component: this.options.component || "mail"
+        });
+        this.logger.debug({
+          tnx: "create"
+        }, "Creating transport: %s", this.getVersionString());
+        if (typeof this.transporter.on === "function") {
+          this.transporter.on("log", (log) => {
+            this.logger.debug({
+              tnx: "transport"
+            }, "%s: %s", log.type, log.message);
+          });
+          this.transporter.on("error", (err) => {
+            this.logger.error({
+              err,
+              tnx: "transport"
+            }, "Transport Error: %s", err.message);
+            this.emit("error", err);
+          });
+          this.transporter.on("idle", (...args) => {
+            this.emit("idle", ...args);
+          });
+        }
+        [
+          "close",
+          "isIdle",
+          "verify"
+        ].forEach((method) => {
+          this[method] = (...args) => {
+            if (typeof this.transporter[method] === "function") {
+              if (method === "verify" && typeof this.getSocket === "function") {
+                this.transporter.getSocket = this.getSocket;
+                this.getSocket = false;
+              }
+              return this.transporter[method](...args);
+            } else {
+              this.logger.warn({
+                tnx: "transport",
+                methodName: method
+              }, "Non existing method %s called for transport", method);
+              return false;
+            }
+          };
+        });
+        if (this.options.proxy && typeof this.options.proxy === "string") {
+          this.setupProxy(this.options.proxy);
+        }
+      }
+      use(step, plugin) {
+        step = (step || "").toString();
+        if (!this._userPlugins.hasOwnProperty(step)) {
+          this._userPlugins[step] = [
+            plugin
+          ];
+        } else {
+          this._userPlugins[step].push(plugin);
+        }
+        return this;
+      }
+      /**
+         * Sends an email using the preselected transport object
+         *
+         * @param {Object} data E-data description
+         * @param {Function?} callback Callback to run once the sending succeeded or failed
+         */
+      sendMail(data, callback = null) {
+        let promise;
+        if (!callback) {
+          promise = new Promise((resolve, reject) => {
+            callback = shared.callbackPromise(resolve, reject);
+          });
+        }
+        if (typeof this.getSocket === "function") {
+          this.transporter.getSocket = this.getSocket;
+          this.getSocket = false;
+        }
+        let mail = new MailMessage(this, data);
+        this.logger.debug({
+          tnx: "transport",
+          name: this.transporter.name,
+          version: this.transporter.version,
+          action: "send"
+        }, "Sending mail using %s/%s", this.transporter.name, this.transporter.version);
+        this._processPlugins("compile", mail, (err) => {
+          if (err) {
+            this.logger.error({
+              err,
+              tnx: "plugin",
+              action: "compile"
+            }, "PluginCompile Error: %s", err.message);
+            return callback(err);
+          }
+          mail.message = new MailComposer(mail.data).compile();
+          mail.setMailerHeader();
+          mail.setPriorityHeaders();
+          mail.setListHeaders();
+          this._processPlugins("stream", mail, (err2) => {
+            if (err2) {
+              this.logger.error({
+                err: err2,
+                tnx: "plugin",
+                action: "stream"
+              }, "PluginStream Error: %s", err2.message);
+              return callback(err2);
+            }
+            if (mail.data.dkim || this.dkim) {
+              mail.message.processFunc((input) => {
+                let dkim = mail.data.dkim ? new DKIM(mail.data.dkim) : this.dkim;
+                this.logger.debug({
+                  tnx: "DKIM",
+                  messageId: mail.message.messageId(),
+                  dkimDomains: dkim.keys.map((key) => key.keySelector + "." + key.domainName).join(", ")
+                }, "Signing outgoing message with %s keys", dkim.keys.length);
+                return dkim.sign(input, mail.data._dkim);
+              });
+            }
+            this.transporter.send(mail, (...args) => {
+              if (args[0]) {
+                this.logger.error({
+                  err: args[0],
+                  tnx: "transport",
+                  action: "send"
+                }, "Send Error: %s", args[0].message);
+              }
+              callback(...args);
+            });
+          });
+        });
+        return promise;
+      }
+      getVersionString() {
+        return util.format("%s (%s; +%s; %s/%s)", packageData.name, packageData.version, packageData.homepage, this.transporter.name, this.transporter.version);
+      }
+      _processPlugins(step, mail, callback) {
+        step = (step || "").toString();
+        if (!this._userPlugins.hasOwnProperty(step)) {
+          return callback();
+        }
+        let userPlugins = this._userPlugins[step] || [];
+        let defaultPlugins = this._defaultPlugins[step] || [];
+        if (userPlugins.length) {
+          this.logger.debug({
+            tnx: "transaction",
+            pluginCount: userPlugins.length,
+            step
+          }, "Using %s plugins for %s", userPlugins.length, step);
+        }
+        if (userPlugins.length + defaultPlugins.length === 0) {
+          return callback();
+        }
+        let pos = 0;
+        let block = "default";
+        let processPlugins = () => {
+          let curplugins = block === "default" ? defaultPlugins : userPlugins;
+          if (pos >= curplugins.length) {
+            if (block === "default" && userPlugins.length) {
+              block = "user";
+              pos = 0;
+              curplugins = userPlugins;
+            } else {
+              return callback();
+            }
+          }
+          let plugin = curplugins[pos++];
+          plugin(mail, (err) => {
+            if (err) {
+              return callback(err);
+            }
+            processPlugins();
+          });
+        };
+        processPlugins();
+      }
+      /**
+         * Sets up proxy handler for a Nodemailer object
+         *
+         * @param {String} proxyUrl Proxy configuration url
+         */
+      setupProxy(proxyUrl) {
+        let proxy = urllib.parse(proxyUrl);
+        this.getSocket = (options, callback) => {
+          let protocol = proxy.protocol.replace(/:$/, "").toLowerCase();
+          if (this.meta.has("proxy_handler_" + protocol)) {
+            return this.meta.get("proxy_handler_" + protocol)(proxy, options, callback);
+          }
+          switch (protocol) {
+            // Connect using a HTTP CONNECT method
+            case "http":
+            case "https":
+              httpProxyClient(proxy.href, options.port, options.host, (err, socket) => {
+                if (err) {
+                  return callback(err);
+                }
+                return callback(null, {
+                  connection: socket
+                });
+              });
+              return;
+            case "socks":
+            case "socks5":
+            case "socks4":
+            case "socks4a": {
+              if (!this.meta.has("proxy_socks_module")) {
+                return callback(new Error("Socks module not loaded"));
+              }
+              let connect = (ipaddress) => {
+                let proxyV2 = !!this.meta.get("proxy_socks_module").SocksClient;
+                let socksClient = proxyV2 ? this.meta.get("proxy_socks_module").SocksClient : this.meta.get("proxy_socks_module");
+                let proxyType = Number(proxy.protocol.replace(/\D/g, "")) || 5;
+                let connectionOpts = {
+                  proxy: {
+                    ipaddress,
+                    port: Number(proxy.port),
+                    type: proxyType
+                  },
+                  [proxyV2 ? "destination" : "target"]: {
+                    host: options.host,
+                    port: options.port
+                  },
+                  command: "connect"
+                };
+                if (proxy.auth) {
+                  let username = decodeURIComponent(proxy.auth.split(":").shift());
+                  let password = decodeURIComponent(proxy.auth.split(":").pop());
+                  if (proxyV2) {
+                    connectionOpts.proxy.userId = username;
+                    connectionOpts.proxy.password = password;
+                  } else if (proxyType === 4) {
+                    connectionOpts.userid = username;
+                  } else {
+                    connectionOpts.authentication = {
+                      username,
+                      password
+                    };
+                  }
+                }
+                socksClient.createConnection(connectionOpts, (err, info) => {
+                  if (err) {
+                    return callback(err);
+                  }
+                  return callback(null, {
+                    connection: info.socket || info
+                  });
+                });
+              };
+              if (net.isIP(proxy.hostname)) {
+                return connect(proxy.hostname);
+              }
+              return dns.resolve(proxy.hostname, (err, address) => {
+                if (err) {
+                  return callback(err);
+                }
+                connect(Array.isArray(address) ? address[0] : address);
+              });
+            }
+          }
+          callback(new Error("Unknown proxy configuration"));
+        };
+      }
+      _convertDataImages(mail, callback) {
+        if (!this.options.attachDataUrls && !mail.data.attachDataUrls || !mail.data.html) {
+          return callback();
+        }
+        mail.resolveContent(mail.data, "html", (err, html) => {
+          if (err) {
+            return callback(err);
+          }
+          let cidCounter = 0;
+          html = (html || "").toString().replace(/(<img\b[^<>]{0,1024} src\s{0,20}=[\s"']{0,20})(data:([^;]+);[^"'>\s]+)/gi, (match, prefix, dataUri, mimeType) => {
+            let cid = crypto2.randomBytes(10).toString("hex") + "@localhost";
+            if (!mail.data.attachments) {
+              mail.data.attachments = [];
+            }
+            if (!Array.isArray(mail.data.attachments)) {
+              mail.data.attachments = [].concat(mail.data.attachments || []);
+            }
+            mail.data.attachments.push({
+              path: dataUri,
+              cid,
+              filename: "image-" + ++cidCounter + "." + mimeTypes.detectExtension(mimeType)
+            });
+            return prefix + "cid:" + cid;
+          });
+          mail.data.html = html;
+          callback();
+        });
+      }
+      set(key, value) {
+        return this.meta.set(key, value);
+      }
+      get(key) {
+        return this.meta.get(key);
+      }
+    };
+    module.exports = Mail;
+  }
+});
+
+// node_modules/.deno/nodemailer@6.9.13/node_modules/nodemailer/lib/smtp-connection/data-stream.js
+var require_data_stream = __commonJS({
+  "node_modules/.deno/nodemailer@6.9.13/node_modules/nodemailer/lib/smtp-connection/data-stream.js"(exports, module) {
+    "use strict";
+    var stream = __require("node:stream");
+    var Transform = stream.Transform;
+    var DataStream = class extends Transform {
+      constructor(options) {
+        super(options);
+        this.options = options || {};
+        this._curLine = "";
+        this.inByteCount = 0;
+        this.outByteCount = 0;
+        this.lastByte = false;
+      }
+      /**
+         * Escapes dots
+         */
+      _transform(chunk, encoding, done) {
+        let chunks = [];
+        let chunklen = 0;
+        let i, len, lastPos = 0;
+        let buf;
+        if (!chunk || !chunk.length) {
+          return done();
+        }
+        if (typeof chunk === "string") {
+          chunk = Buffer.from(chunk);
+        }
+        this.inByteCount += chunk.length;
+        for (i = 0, len = chunk.length; i < len; i++) {
+          if (chunk[i] === 46) {
+            if (i && chunk[i - 1] === 10 || !i && (!this.lastByte || this.lastByte === 10)) {
+              buf = chunk.slice(lastPos, i + 1);
+              chunks.push(buf);
+              chunks.push(Buffer.from("."));
+              chunklen += buf.length + 1;
+              lastPos = i + 1;
+            }
+          } else if (chunk[i] === 10) {
+            if (i && chunk[i - 1] !== 13 || !i && this.lastByte !== 13) {
+              if (i > lastPos) {
+                buf = chunk.slice(lastPos, i);
+                chunks.push(buf);
+                chunklen += buf.length + 2;
+              } else {
+                chunklen += 2;
+              }
+              chunks.push(Buffer.from("\r\n"));
+              lastPos = i + 1;
+            }
+          }
+        }
+        if (chunklen) {
+          if (lastPos < chunk.length) {
+            buf = chunk.slice(lastPos);
+            chunks.push(buf);
+            chunklen += buf.length;
+          }
+          this.outByteCount += chunklen;
+          this.push(Buffer.concat(chunks, chunklen));
+        } else {
+          this.outByteCount += chunk.length;
+          this.push(chunk);
+        }
+        this.lastByte = chunk[chunk.length - 1];
+        done();
+      }
+      /**
+         * Finalizes the stream with a dot on a single line
+         */
+      _flush(done) {
+        let buf;
+        if (this.lastByte === 10) {
+          buf = Buffer.from(".\r\n");
+        } else if (this.lastByte === 13) {
+          buf = Buffer.from("\n.\r\n");
+        } else {
+          buf = Buffer.from("\r\n.\r\n");
+        }
+        this.outByteCount += buf.length;
+        this.push(buf);
+        done();
+      }
+    };
+    module.exports = DataStream;
+  }
+});
+
+// node_modules/.deno/nodemailer@6.9.13/node_modules/nodemailer/lib/smtp-connection/index.js
+var require_smtp_connection = __commonJS({
+  "node_modules/.deno/nodemailer@6.9.13/node_modules/nodemailer/lib/smtp-connection/index.js"(exports, module) {
+    "use strict";
+    var packageInfo = require_package();
+    var EventEmitter = __require("node:events").EventEmitter;
+    var net = __require("node:net");
+    var tls = __require("node:tls");
+    var os = __require("node:os");
+    var crypto2 = __require("node:crypto");
+    var DataStream = require_data_stream();
+    var PassThrough = __require("node:stream").PassThrough;
+    var shared = require_shared();
+    var CONNECTION_TIMEOUT = 2 * 60 * 1e3;
+    var SOCKET_TIMEOUT = 10 * 60 * 1e3;
+    var GREETING_TIMEOUT = 30 * 1e3;
+    var DNS_TIMEOUT = 30 * 1e3;
+    var SMTPConnection = class extends EventEmitter {
+      constructor(options) {
+        super(options);
+        this.id = crypto2.randomBytes(8).toString("base64").replace(/\W/g, "");
+        this.stage = "init";
+        this.options = options || {};
+        this.secureConnection = !!this.options.secure;
+        this.alreadySecured = !!this.options.secured;
+        this.port = Number(this.options.port) || (this.secureConnection ? 465 : 587);
+        this.host = this.options.host || "localhost";
+        this.servername = this.options.servername ? this.options.servername : !net.isIP(this.host) ? this.host : false;
+        this.allowInternalNetworkInterfaces = this.options.allowInternalNetworkInterfaces || false;
+        if (typeof this.options.secure === "undefined" && this.port === 465) {
+          this.secureConnection = true;
+        }
+        this.name = this.options.name || this._getHostname();
+        this.logger = shared.getLogger(this.options, {
+          component: this.options.component || "smtp-connection",
+          sid: this.id
+        });
+        this.customAuth = /* @__PURE__ */ new Map();
+        Object.keys(this.options.customAuth || {}).forEach((key) => {
+          let mapKey = (key || "").toString().trim().toUpperCase();
+          if (!mapKey) {
+            return;
+          }
+          this.customAuth.set(mapKey, this.options.customAuth[key]);
+        });
+        this.version = packageInfo.version;
+        this.authenticated = false;
+        this.destroyed = false;
+        this.secure = !!this.secureConnection;
+        this._remainder = "";
+        this._responseQueue = [];
+        this.lastServerResponse = false;
+        this._socket = false;
+        this._supportedAuth = [];
+        this.allowsAuth = false;
+        this._envelope = false;
+        this._supportedExtensions = [];
+        this._maxAllowedSize = 0;
+        this._responseActions = [];
+        this._recipientQueue = [];
+        this._greetingTimeout = false;
+        this._connectionTimeout = false;
+        this._destroyed = false;
+        this._closing = false;
+        this._onSocketData = (chunk) => this._onData(chunk);
+        this._onSocketError = (error) => this._onError(error, "ESOCKET", false, "CONN");
+        this._onSocketClose = () => this._onClose();
+        this._onSocketEnd = () => this._onEnd();
+        this._onSocketTimeout = () => this._onTimeout();
+      }
+      /**
+         * Creates a connection to a SMTP server and sets up connection
+         * listener
+         */
+      connect(connectCallback) {
+        if (typeof connectCallback === "function") {
+          this.once("connect", () => {
+            this.logger.debug({
+              tnx: "smtp"
+            }, "SMTP handshake finished");
+            connectCallback();
+          });
+          const isDestroyedMessage = this._isDestroyedMessage("connect");
+          if (isDestroyedMessage) {
+            return connectCallback(this._formatError(isDestroyedMessage, "ECONNECTION", false, "CONN"));
+          }
+        }
+        let opts = {
+          port: this.port,
+          host: this.host,
+          allowInternalNetworkInterfaces: this.allowInternalNetworkInterfaces,
+          timeout: this.options.dnsTimeout || DNS_TIMEOUT
+        };
+        if (this.options.localAddress) {
+          opts.localAddress = this.options.localAddress;
+        }
+        let setupConnectionHandlers = () => {
+          this._connectionTimeout = setTimeout(() => {
+            this._onError("Connection timeout", "ETIMEDOUT", false, "CONN");
+          }, this.options.connectionTimeout || CONNECTION_TIMEOUT);
+          this._socket.on("error", this._onSocketError);
+        };
+        if (this.options.connection) {
+          this._socket = this.options.connection;
+          if (this.secureConnection && !this.alreadySecured) {
+            setImmediate(() => this._upgradeConnection((err) => {
+              if (err) {
+                this._onError(new Error("Error initiating TLS - " + (err.message || err)), "ETLS", false, "CONN");
+                return;
+              }
+              this._onConnect();
+            }));
+          } else {
+            setImmediate(() => this._onConnect());
+          }
+          return;
+        } else if (this.options.socket) {
+          this._socket = this.options.socket;
+          return shared.resolveHostname(opts, (err, resolved) => {
+            if (err) {
+              return setImmediate(() => this._onError(err, "EDNS", false, "CONN"));
+            }
+            this.logger.debug({
+              tnx: "dns",
+              source: opts.host,
+              resolved: resolved.host,
+              cached: !!resolved.cached
+            }, "Resolved %s as %s [cache %s]", opts.host, resolved.host, resolved.cached ? "hit" : "miss");
+            Object.keys(resolved).forEach((key) => {
+              if (key.charAt(0) !== "_" && resolved[key]) {
+                opts[key] = resolved[key];
+              }
+            });
+            try {
+              this._socket.connect(this.port, this.host, () => {
+                this._socket.setKeepAlive(true);
+                this._onConnect();
+              });
+              setupConnectionHandlers();
+            } catch (E) {
+              return setImmediate(() => this._onError(E, "ECONNECTION", false, "CONN"));
+            }
+          });
+        } else if (this.secureConnection) {
+          if (this.options.tls) {
+            Object.keys(this.options.tls).forEach((key) => {
+              opts[key] = this.options.tls[key];
+            });
+          }
+          if (this.servername && !opts.servername) {
+            opts.servername = this.servername;
+          }
+          return shared.resolveHostname(opts, (err, resolved) => {
+            if (err) {
+              return setImmediate(() => this._onError(err, "EDNS", false, "CONN"));
+            }
+            this.logger.debug({
+              tnx: "dns",
+              source: opts.host,
+              resolved: resolved.host,
+              cached: !!resolved.cached
+            }, "Resolved %s as %s [cache %s]", opts.host, resolved.host, resolved.cached ? "hit" : "miss");
+            Object.keys(resolved).forEach((key) => {
+              if (key.charAt(0) !== "_" && resolved[key]) {
+                opts[key] = resolved[key];
+              }
+            });
+            try {
+              this._socket = tls.connect(opts, () => {
+                this._socket.setKeepAlive(true);
+                this._onConnect();
+              });
+              setupConnectionHandlers();
+            } catch (E) {
+              return setImmediate(() => this._onError(E, "ECONNECTION", false, "CONN"));
+            }
+          });
+        } else {
+          return shared.resolveHostname(opts, (err, resolved) => {
+            if (err) {
+              return setImmediate(() => this._onError(err, "EDNS", false, "CONN"));
+            }
+            this.logger.debug({
+              tnx: "dns",
+              source: opts.host,
+              resolved: resolved.host,
+              cached: !!resolved.cached
+            }, "Resolved %s as %s [cache %s]", opts.host, resolved.host, resolved.cached ? "hit" : "miss");
+            Object.keys(resolved).forEach((key) => {
+              if (key.charAt(0) !== "_" && resolved[key]) {
+                opts[key] = resolved[key];
+              }
+            });
+            try {
+              this._socket = net.connect(opts, () => {
+                this._socket.setKeepAlive(true);
+                this._onConnect();
+              });
+              setupConnectionHandlers();
+            } catch (E) {
+              return setImmediate(() => this._onError(E, "ECONNECTION", false, "CONN"));
+            }
+          });
+        }
+      }
+      /**
+         * Sends QUIT
+         */
+      quit() {
+        this._sendCommand("QUIT");
+        this._responseActions.push(this.close);
+      }
+      /**
+         * Closes the connection to the server
+         */
+      close() {
+        clearTimeout(this._connectionTimeout);
+        clearTimeout(this._greetingTimeout);
+        this._responseActions = [];
+        if (this._closing) {
+          return;
+        }
+        this._closing = true;
+        let closeMethod = "end";
+        if (this.stage === "init") {
+          closeMethod = "destroy";
+        }
+        this.logger.debug({
+          tnx: "smtp"
+        }, 'Closing connection to the server using "%s"', closeMethod);
+        let socket = this._socket && this._socket.socket || this._socket;
+        if (socket && !socket.destroyed) {
+          try {
+            this._socket[closeMethod]();
+          } catch (E) {
+          }
+        }
+        this._destroy();
+      }
+      /**
+         * Authenticate user
+         */
+      login(authData, callback) {
+        const isDestroyedMessage = this._isDestroyedMessage("login");
+        if (isDestroyedMessage) {
+          return callback(this._formatError(isDestroyedMessage, "ECONNECTION", false, "API"));
+        }
+        this._auth = authData || {};
+        this._authMethod = (this._auth.method || "").toString().trim().toUpperCase() || false;
+        if (!this._authMethod && this._auth.oauth2 && !this._auth.credentials) {
+          this._authMethod = "XOAUTH2";
+        } else if (!this._authMethod || this._authMethod === "XOAUTH2" && !this._auth.oauth2) {
+          this._authMethod = (this._supportedAuth[0] || "PLAIN").toUpperCase().trim();
+        }
+        if (this._authMethod !== "XOAUTH2" && (!this._auth.credentials || !this._auth.credentials.user || !this._auth.credentials.pass)) {
+          if (this._auth.user && this._auth.pass || this.customAuth.has(this._authMethod)) {
+            this._auth.credentials = {
+              user: this._auth.user,
+              pass: this._auth.pass,
+              options: this._auth.options
+            };
+          } else {
+            return callback(this._formatError('Missing credentials for "' + this._authMethod + '"', "EAUTH", false, "API"));
+          }
+        }
+        if (this.customAuth.has(this._authMethod)) {
+          let handler2 = this.customAuth.get(this._authMethod);
+          let lastResponse;
+          let returned = false;
+          let resolve = () => {
+            if (returned) {
+              return;
+            }
+            returned = true;
+            this.logger.info({
+              tnx: "smtp",
+              username: this._auth.user,
+              action: "authenticated",
+              method: this._authMethod
+            }, "User %s authenticated", JSON.stringify(this._auth.user));
+            this.authenticated = true;
+            callback(null, true);
+          };
+          let reject = (err) => {
+            if (returned) {
+              return;
+            }
+            returned = true;
+            callback(this._formatError(err, "EAUTH", lastResponse, "AUTH " + this._authMethod));
+          };
+          let handlerResponse = handler2({
+            auth: this._auth,
+            method: this._authMethod,
+            extensions: [].concat(this._supportedExtensions),
+            authMethods: [].concat(this._supportedAuth),
+            maxAllowedSize: this._maxAllowedSize || false,
+            sendCommand: (cmd, done) => {
+              let promise;
+              if (!done) {
+                promise = new Promise((resolve2, reject2) => {
+                  done = shared.callbackPromise(resolve2, reject2);
+                });
+              }
+              this._responseActions.push((str) => {
+                lastResponse = str;
+                let codes = str.match(/^(\d+)(?:\s(\d+\.\d+\.\d+))?\s/);
+                let data = {
+                  command: cmd,
+                  response: str
+                };
+                if (codes) {
+                  data.status = Number(codes[1]) || 0;
+                  if (codes[2]) {
+                    data.code = codes[2];
+                  }
+                  data.text = str.substr(codes[0].length);
+                } else {
+                  data.text = str;
+                  data.status = 0;
+                }
+                done(null, data);
+              });
+              setImmediate(() => this._sendCommand(cmd));
+              return promise;
+            },
+            resolve,
+            reject
+          });
+          if (handlerResponse && typeof handlerResponse.catch === "function") {
+            handlerResponse.then(resolve).catch(reject);
+          }
+          return;
+        }
+        switch (this._authMethod) {
+          case "XOAUTH2":
+            this._handleXOauth2Token(false, callback);
+            return;
+          case "LOGIN":
+            this._responseActions.push((str) => {
+              this._actionAUTH_LOGIN_USER(str, callback);
+            });
+            this._sendCommand("AUTH LOGIN");
+            return;
+          case "PLAIN":
+            this._responseActions.push((str) => {
+              this._actionAUTHComplete(str, callback);
+            });
+            this._sendCommand(
+              "AUTH PLAIN " + Buffer.from(
+                //this._auth.user+'\u0000'+
+                "\0" + // skip authorization identity as it causes problems with some servers
+                this._auth.credentials.user + "\0" + this._auth.credentials.pass,
+                "utf-8"
+              ).toString("base64"),
+              // log entry without passwords
+              "AUTH PLAIN " + Buffer.from(
+                //this._auth.user+'\u0000'+
+                "\0" + // skip authorization identity as it causes problems with some servers
+                this._auth.credentials.user + "\0/* secret */",
+                "utf-8"
+              ).toString("base64")
+            );
+            return;
+          case "CRAM-MD5":
+            this._responseActions.push((str) => {
+              this._actionAUTH_CRAM_MD5(str, callback);
+            });
+            this._sendCommand("AUTH CRAM-MD5");
+            return;
+        }
+        return callback(this._formatError('Unknown authentication method "' + this._authMethod + '"', "EAUTH", false, "API"));
+      }
+      /**
+         * Sends a message
+         *
+         * @param {Object} envelope Envelope object, {from: addr, to: [addr]}
+         * @param {Object} message String, Buffer or a Stream
+         * @param {Function} callback Callback to return once sending is completed
+         */
+      send(envelope, message, done) {
+        if (!message) {
+          return done(this._formatError("Empty message", "EMESSAGE", false, "API"));
+        }
+        const isDestroyedMessage = this._isDestroyedMessage("send message");
+        if (isDestroyedMessage) {
+          return done(this._formatError(isDestroyedMessage, "ECONNECTION", false, "API"));
+        }
+        if (this._maxAllowedSize && envelope.size > this._maxAllowedSize) {
+          return setImmediate(() => {
+            done(this._formatError("Message size larger than allowed " + this._maxAllowedSize, "EMESSAGE", false, "MAIL FROM"));
+          });
+        }
+        let returned = false;
+        let callback = function() {
+          if (returned) {
+            return;
+          }
+          returned = true;
+          done(...arguments);
+        };
+        if (typeof message.on === "function") {
+          message.on("error", (err) => callback(this._formatError(err, "ESTREAM", false, "API")));
+        }
+        let startTime = Date.now();
+        this._setEnvelope(envelope, (err, info) => {
+          if (err) {
+            return callback(err);
+          }
+          let envelopeTime = Date.now();
+          let stream = this._createSendStream((err2, str) => {
+            if (err2) {
+              return callback(err2);
+            }
+            info.envelopeTime = envelopeTime - startTime;
+            info.messageTime = Date.now() - envelopeTime;
+            info.messageSize = stream.outByteCount;
+            info.response = str;
+            return callback(null, info);
+          });
+          if (typeof message.pipe === "function") {
+            message.pipe(stream);
+          } else {
+            stream.write(message);
+            stream.end();
+          }
+        });
+      }
+      /**
+         * Resets connection state
+         *
+         * @param {Function} callback Callback to return once connection is reset
+         */
+      reset(callback) {
+        this._sendCommand("RSET");
+        this._responseActions.push((str) => {
+          if (str.charAt(0) !== "2") {
+            return callback(this._formatError("Could not reset session state. response=" + str, "EPROTOCOL", str, "RSET"));
+          }
+          this._envelope = false;
+          return callback(null, true);
+        });
+      }
+      /**
+         * Connection listener that is run when the connection to
+         * the server is opened
+         *
+         * @event
+         */
+      _onConnect() {
+        clearTimeout(this._connectionTimeout);
+        this.logger.info({
+          tnx: "network",
+          localAddress: this._socket.localAddress,
+          localPort: this._socket.localPort,
+          remoteAddress: this._socket.remoteAddress,
+          remotePort: this._socket.remotePort
+        }, "%s established to %s:%s", this.secure ? "Secure connection" : "Connection", this._socket.remoteAddress, this._socket.remotePort);
+        if (this._destroyed) {
+          this.close();
+          return;
+        }
+        this.stage = "connected";
+        this._socket.removeListener("data", this._onSocketData);
+        this._socket.removeListener("timeout", this._onSocketTimeout);
+        this._socket.removeListener("close", this._onSocketClose);
+        this._socket.removeListener("end", this._onSocketEnd);
+        this._socket.on("data", this._onSocketData);
+        this._socket.once("close", this._onSocketClose);
+        this._socket.once("end", this._onSocketEnd);
+        this._socket.setTimeout(this.options.socketTimeout || SOCKET_TIMEOUT);
+        this._socket.on("timeout", this._onSocketTimeout);
+        this._greetingTimeout = setTimeout(() => {
+          if (this._socket && !this._destroyed && this._responseActions[0] === this._actionGreeting) {
+            this._onError("Greeting never received", "ETIMEDOUT", false, "CONN");
+          }
+        }, this.options.greetingTimeout || GREETING_TIMEOUT);
+        this._responseActions.push(this._actionGreeting);
+        this._socket.resume();
+      }
+      /**
+         * 'data' listener for data coming from the server
+         *
+         * @event
+         * @param {Buffer} chunk Data chunk coming from the server
+         */
+      _onData(chunk) {
+        if (this._destroyed || !chunk || !chunk.length) {
+          return;
+        }
+        let data = (chunk || "").toString("binary");
+        let lines = (this._remainder + data).split(/\r?\n/);
+        let lastline;
+        this._remainder = lines.pop();
+        for (let i = 0, len = lines.length; i < len; i++) {
+          if (this._responseQueue.length) {
+            lastline = this._responseQueue[this._responseQueue.length - 1];
+            if (/^\d+-/.test(lastline.split("\n").pop())) {
+              this._responseQueue[this._responseQueue.length - 1] += "\n" + lines[i];
+              continue;
+            }
+          }
+          this._responseQueue.push(lines[i]);
+        }
+        if (this._responseQueue.length) {
+          lastline = this._responseQueue[this._responseQueue.length - 1];
+          if (/^\d+-/.test(lastline.split("\n").pop())) {
+            return;
+          }
+        }
+        this._processResponse();
+      }
+      /**
+         * 'error' listener for the socket
+         *
+         * @event
+         * @param {Error} err Error object
+         * @param {String} type Error name
+         */
+      _onError(err, type, data, command) {
+        clearTimeout(this._connectionTimeout);
+        clearTimeout(this._greetingTimeout);
+        if (this._destroyed) {
+          return;
+        }
+        err = this._formatError(err, type, data, command);
+        this.logger.error(data, err.message);
+        this.emit("error", err);
+        this.close();
+      }
+      _formatError(message, type, response, command) {
+        let err;
+        if (/Error\]$/i.test(Object.prototype.toString.call(message))) {
+          err = message;
+        } else {
+          err = new Error(message);
+        }
+        if (type && type !== "Error") {
+          err.code = type;
+        }
+        if (response) {
+          err.response = response;
+          err.message += ": " + response;
+        }
+        let responseCode = typeof response === "string" && Number((response.match(/^\d+/) || [])[0]) || false;
+        if (responseCode) {
+          err.responseCode = responseCode;
+        }
+        if (command) {
+          err.command = command;
+        }
+        return err;
+      }
+      /**
+         * 'close' listener for the socket
+         *
+         * @event
+         */
+      _onClose() {
+        let serverResponse = false;
+        if (this._remainder && this._remainder.trim()) {
+          if (this.options.debug || this.options.transactionLog) {
+            this.logger.debug({
+              tnx: "server"
+            }, this._remainder.replace(/\r?\n$/, ""));
+          }
+          this.lastServerResponse = serverResponse = this._remainder.trim();
+        }
+        this.logger.info({
+          tnx: "network"
+        }, "Connection closed");
+        if (this.upgrading && !this._destroyed) {
+          return this._onError(new Error("Connection closed unexpectedly"), "ETLS", serverResponse, "CONN");
+        } else if (![
+          this._actionGreeting,
+          this.close
+        ].includes(this._responseActions[0]) && !this._destroyed) {
+          return this._onError(new Error("Connection closed unexpectedly"), "ECONNECTION", serverResponse, "CONN");
+        } else if (/^[45]\d{2}\b/.test(serverResponse)) {
+          return this._onError(new Error("Connection closed unexpectedly"), "ECONNECTION", serverResponse, "CONN");
+        }
+        this._destroy();
+      }
+      /**
+         * 'end' listener for the socket
+         *
+         * @event
+         */
+      _onEnd() {
+        if (this._socket && !this._socket.destroyed) {
+          this._socket.destroy();
+        }
+      }
+      /**
+         * 'timeout' listener for the socket
+         *
+         * @event
+         */
+      _onTimeout() {
+        return this._onError(new Error("Timeout"), "ETIMEDOUT", false, "CONN");
+      }
+      /**
+         * Destroys the client, emits 'end'
+         */
+      _destroy() {
+        if (this._destroyed) {
+          return;
+        }
+        this._destroyed = true;
+        this.emit("end");
+      }
+      /**
+         * Upgrades the connection to TLS
+         *
+         * @param {Function} callback Callback function to run when the connection
+         *        has been secured
+         */
+      _upgradeConnection(callback) {
+        this._socket.removeListener("data", this._onSocketData);
+        this._socket.removeListener("timeout", this._onSocketTimeout);
+        let socketPlain = this._socket;
+        let opts = {
+          socket: this._socket,
+          host: this.host
+        };
+        Object.keys(this.options.tls || {}).forEach((key) => {
+          opts[key] = this.options.tls[key];
+        });
+        if (this.servername && !opts.servername) {
+          opts.servername = this.servername;
+        }
+        this.upgrading = true;
+        try {
+          this._socket = tls.connect(opts, () => {
+            this.secure = true;
+            this.upgrading = false;
+            this._socket.on("data", this._onSocketData);
+            socketPlain.removeListener("close", this._onSocketClose);
+            socketPlain.removeListener("end", this._onSocketEnd);
+            return callback(null, true);
+          });
+        } catch (err) {
+          return callback(err);
+        }
+        this._socket.on("error", this._onSocketError);
+        this._socket.once("close", this._onSocketClose);
+        this._socket.once("end", this._onSocketEnd);
+        this._socket.setTimeout(this.options.socketTimeout || SOCKET_TIMEOUT);
+        this._socket.on("timeout", this._onSocketTimeout);
+        socketPlain.resume();
+      }
+      /**
+         * Processes queued responses from the server
+         *
+         * @param {Boolean} force If true, ignores _processing flag
+         */
+      _processResponse() {
+        if (!this._responseQueue.length) {
+          return false;
+        }
+        let str = this.lastServerResponse = (this._responseQueue.shift() || "").toString();
+        if (/^\d+-/.test(str.split("\n").pop())) {
+          return;
+        }
+        if (this.options.debug || this.options.transactionLog) {
+          this.logger.debug({
+            tnx: "server"
+          }, str.replace(/\r?\n$/, ""));
+        }
+        if (!str.trim()) {
+          setImmediate(() => this._processResponse());
+        }
+        let action = this._responseActions.shift();
+        if (typeof action === "function") {
+          action.call(this, str);
+          setImmediate(() => this._processResponse());
+        } else {
+          return this._onError(new Error("Unexpected Response"), "EPROTOCOL", str, "CONN");
+        }
+      }
+      /**
+         * Send a command to the server, append \r\n
+         *
+         * @param {String} str String to be sent to the server
+         * @param {String} logStr Optional string to be used for logging instead of the actual string
+         */
+      _sendCommand(str, logStr) {
+        if (this._destroyed) {
+          return;
+        }
+        if (this._socket.destroyed) {
+          return this.close();
+        }
+        if (this.options.debug || this.options.transactionLog) {
+          this.logger.debug({
+            tnx: "client"
+          }, (logStr || str || "").toString().replace(/\r?\n$/, ""));
+        }
+        this._socket.write(Buffer.from(str + "\r\n", "utf-8"));
+      }
+      /**
+         * Initiates a new message by submitting envelope data, starting with
+         * MAIL FROM: command
+         *
+         * @param {Object} envelope Envelope object in the form of
+         *        {from:'...', to:['...']}
+         *        or
+         *        {from:{address:'...',name:'...'}, to:[address:'...',name:'...']}
+         */
+      _setEnvelope(envelope, callback) {
+        let args = [];
+        let useSmtpUtf8 = false;
+        this._envelope = envelope || {};
+        this._envelope.from = (this._envelope.from && this._envelope.from.address || this._envelope.from || "").toString().trim();
+        this._envelope.to = [].concat(this._envelope.to || []).map((to) => (to && to.address || to || "").toString().trim());
+        if (!this._envelope.to.length) {
+          return callback(this._formatError("No recipients defined", "EENVELOPE", false, "API"));
+        }
+        if (this._envelope.from && /[\r\n<>]/.test(this._envelope.from)) {
+          return callback(this._formatError("Invalid sender " + JSON.stringify(this._envelope.from), "EENVELOPE", false, "API"));
+        }
+        if (/[\x80-\uFFFF]/.test(this._envelope.from)) {
+          useSmtpUtf8 = true;
+        }
+        for (let i = 0, len = this._envelope.to.length; i < len; i++) {
+          if (!this._envelope.to[i] || /[\r\n<>]/.test(this._envelope.to[i])) {
+            return callback(this._formatError("Invalid recipient " + JSON.stringify(this._envelope.to[i]), "EENVELOPE", false, "API"));
+          }
+          if (/[\x80-\uFFFF]/.test(this._envelope.to[i])) {
+            useSmtpUtf8 = true;
+          }
+        }
+        this._envelope.rcptQueue = JSON.parse(JSON.stringify(this._envelope.to || []));
+        this._envelope.rejected = [];
+        this._envelope.rejectedErrors = [];
+        this._envelope.accepted = [];
+        if (this._envelope.dsn) {
+          try {
+            this._envelope.dsn = this._setDsnEnvelope(this._envelope.dsn);
+          } catch (err) {
+            return callback(this._formatError("Invalid DSN " + err.message, "EENVELOPE", false, "API"));
+          }
+        }
+        this._responseActions.push((str) => {
+          this._actionMAIL(str, callback);
+        });
+        if (useSmtpUtf8 && this._supportedExtensions.includes("SMTPUTF8")) {
+          args.push("SMTPUTF8");
+          this._usingSmtpUtf8 = true;
+        }
+        if (this._envelope.use8BitMime && this._supportedExtensions.includes("8BITMIME")) {
+          args.push("BODY=8BITMIME");
+          this._using8BitMime = true;
+        }
+        if (this._envelope.size && this._supportedExtensions.includes("SIZE")) {
+          args.push("SIZE=" + this._envelope.size);
+        }
+        if (this._envelope.dsn && this._supportedExtensions.includes("DSN")) {
+          if (this._envelope.dsn.ret) {
+            args.push("RET=" + shared.encodeXText(this._envelope.dsn.ret));
+          }
+          if (this._envelope.dsn.envid) {
+            args.push("ENVID=" + shared.encodeXText(this._envelope.dsn.envid));
+          }
+        }
+        this._sendCommand("MAIL FROM:<" + this._envelope.from + ">" + (args.length ? " " + args.join(" ") : ""));
+      }
+      _setDsnEnvelope(params) {
+        let ret = (params.ret || params.return || "").toString().toUpperCase() || null;
+        if (ret) {
+          switch (ret) {
+            case "HDRS":
+            case "HEADERS":
+              ret = "HDRS";
+              break;
+            case "FULL":
+            case "BODY":
+              ret = "FULL";
+              break;
+          }
+        }
+        if (ret && ![
+          "FULL",
+          "HDRS"
+        ].includes(ret)) {
+          throw new Error("ret: " + JSON.stringify(ret));
+        }
+        let envid = (params.envid || params.id || "").toString() || null;
+        let notify = params.notify || null;
+        if (notify) {
+          if (typeof notify === "string") {
+            notify = notify.split(",");
+          }
+          notify = notify.map((n) => n.trim().toUpperCase());
+          let validNotify = [
+            "NEVER",
+            "SUCCESS",
+            "FAILURE",
+            "DELAY"
+          ];
+          let invaliNotify = notify.filter((n) => !validNotify.includes(n));
+          if (invaliNotify.length || notify.length > 1 && notify.includes("NEVER")) {
+            throw new Error("notify: " + JSON.stringify(notify.join(",")));
+          }
+          notify = notify.join(",");
+        }
+        let orcpt = (params.recipient || params.orcpt || "").toString() || null;
+        if (orcpt && orcpt.indexOf(";") < 0) {
+          orcpt = "rfc822;" + orcpt;
+        }
+        return {
+          ret,
+          envid,
+          notify,
+          orcpt
+        };
+      }
+      _getDsnRcptToArgs() {
+        let args = [];
+        if (this._envelope.dsn && this._supportedExtensions.includes("DSN")) {
+          if (this._envelope.dsn.notify) {
+            args.push("NOTIFY=" + shared.encodeXText(this._envelope.dsn.notify));
+          }
+          if (this._envelope.dsn.orcpt) {
+            args.push("ORCPT=" + shared.encodeXText(this._envelope.dsn.orcpt));
+          }
+        }
+        return args.length ? " " + args.join(" ") : "";
+      }
+      _createSendStream(callback) {
+        let dataStream = new DataStream();
+        let logStream;
+        if (this.options.lmtp) {
+          this._envelope.accepted.forEach((recipient, i) => {
+            let final = i === this._envelope.accepted.length - 1;
+            this._responseActions.push((str) => {
+              this._actionLMTPStream(recipient, final, str, callback);
+            });
+          });
+        } else {
+          this._responseActions.push((str) => {
+            this._actionSMTPStream(str, callback);
+          });
+        }
+        dataStream.pipe(this._socket, {
+          end: false
+        });
+        if (this.options.debug) {
+          logStream = new PassThrough();
+          logStream.on("readable", () => {
+            let chunk;
+            while (chunk = logStream.read()) {
+              this.logger.debug({
+                tnx: "message"
+              }, chunk.toString("binary").replace(/\r?\n$/, ""));
+            }
+          });
+          dataStream.pipe(logStream);
+        }
+        dataStream.once("end", () => {
+          this.logger.info({
+            tnx: "message",
+            inByteCount: dataStream.inByteCount,
+            outByteCount: dataStream.outByteCount
+          }, "<%s bytes encoded mime message (source size %s bytes)>", dataStream.outByteCount, dataStream.inByteCount);
+        });
+        return dataStream;
+      }
+      /** ACTIONS **/
+      /**
+      * Will be run after the connection is created and the server sends
+      * a greeting. If the incoming message starts with 220 initiate
+      * SMTP session by sending EHLO command
+      *
+      * @param {String} str Message from the server
+      */
+      _actionGreeting(str) {
+        clearTimeout(this._greetingTimeout);
+        if (str.substr(0, 3) !== "220") {
+          this._onError(new Error("Invalid greeting. response=" + str), "EPROTOCOL", str, "CONN");
+          return;
+        }
+        if (this.options.lmtp) {
+          this._responseActions.push(this._actionLHLO);
+          this._sendCommand("LHLO " + this.name);
+        } else {
+          this._responseActions.push(this._actionEHLO);
+          this._sendCommand("EHLO " + this.name);
+        }
+      }
+      /**
+         * Handles server response for LHLO command. If it yielded in
+         * error, emit 'error', otherwise treat this as an EHLO response
+         *
+         * @param {String} str Message from the server
+         */
+      _actionLHLO(str) {
+        if (str.charAt(0) !== "2") {
+          this._onError(new Error("Invalid LHLO. response=" + str), "EPROTOCOL", str, "LHLO");
+          return;
+        }
+        this._actionEHLO(str);
+      }
+      /**
+         * Handles server response for EHLO command. If it yielded in
+         * error, try HELO instead, otherwise initiate TLS negotiation
+         * if STARTTLS is supported by the server or move into the
+         * authentication phase.
+         *
+         * @param {String} str Message from the server
+         */
+      _actionEHLO(str) {
+        let match;
+        if (str.substr(0, 3) === "421") {
+          this._onError(new Error("Server terminates connection. response=" + str), "ECONNECTION", str, "EHLO");
+          return;
+        }
+        if (str.charAt(0) !== "2") {
+          if (this.options.requireTLS) {
+            this._onError(new Error("EHLO failed but HELO does not support required STARTTLS. response=" + str), "ECONNECTION", str, "EHLO");
+            return;
+          }
+          this._responseActions.push(this._actionHELO);
+          this._sendCommand("HELO " + this.name);
+          return;
+        }
+        this._ehloLines = str.split(/\r?\n/).map((line) => line.replace(/^\d+[ -]/, "").trim()).filter((line) => line).slice(1);
+        if (!this.secure && !this.options.ignoreTLS && (/[ -]STARTTLS\b/im.test(str) || this.options.requireTLS)) {
+          this._sendCommand("STARTTLS");
+          this._responseActions.push(this._actionSTARTTLS);
+          return;
+        }
+        if (/[ -]SMTPUTF8\b/im.test(str)) {
+          this._supportedExtensions.push("SMTPUTF8");
+        }
+        if (/[ -]DSN\b/im.test(str)) {
+          this._supportedExtensions.push("DSN");
+        }
+        if (/[ -]8BITMIME\b/im.test(str)) {
+          this._supportedExtensions.push("8BITMIME");
+        }
+        if (/[ -]PIPELINING\b/im.test(str)) {
+          this._supportedExtensions.push("PIPELINING");
+        }
+        if (/[ -]AUTH\b/i.test(str)) {
+          this.allowsAuth = true;
+        }
+        if (/[ -]AUTH(?:(\s+|=)[^\n]*\s+|\s+|=)PLAIN/i.test(str)) {
+          this._supportedAuth.push("PLAIN");
+        }
+        if (/[ -]AUTH(?:(\s+|=)[^\n]*\s+|\s+|=)LOGIN/i.test(str)) {
+          this._supportedAuth.push("LOGIN");
+        }
+        if (/[ -]AUTH(?:(\s+|=)[^\n]*\s+|\s+|=)CRAM-MD5/i.test(str)) {
+          this._supportedAuth.push("CRAM-MD5");
+        }
+        if (/[ -]AUTH(?:(\s+|=)[^\n]*\s+|\s+|=)XOAUTH2/i.test(str)) {
+          this._supportedAuth.push("XOAUTH2");
+        }
+        if (match = str.match(/[ -]SIZE(?:[ \t]+(\d+))?/im)) {
+          this._supportedExtensions.push("SIZE");
+          this._maxAllowedSize = Number(match[1]) || 0;
+        }
+        this.emit("connect");
+      }
+      /**
+         * Handles server response for HELO command. If it yielded in
+         * error, emit 'error', otherwise move into the authentication phase.
+         *
+         * @param {String} str Message from the server
+         */
+      _actionHELO(str) {
+        if (str.charAt(0) !== "2") {
+          this._onError(new Error("Invalid HELO. response=" + str), "EPROTOCOL", str, "HELO");
+          return;
+        }
+        this.allowsAuth = true;
+        this.emit("connect");
+      }
+      /**
+         * Handles server response for STARTTLS command. If there's an error
+         * try HELO instead, otherwise initiate TLS upgrade. If the upgrade
+         * succeedes restart the EHLO
+         *
+         * @param {String} str Message from the server
+         */
+      _actionSTARTTLS(str) {
+        if (str.charAt(0) !== "2") {
+          if (this.options.opportunisticTLS) {
+            this.logger.info({
+              tnx: "smtp"
+            }, "Failed STARTTLS upgrade, continuing unencrypted");
+            return this.emit("connect");
+          }
+          this._onError(new Error("Error upgrading connection with STARTTLS"), "ETLS", str, "STARTTLS");
+          return;
+        }
+        this._upgradeConnection((err, secured) => {
+          if (err) {
+            this._onError(new Error("Error initiating TLS - " + (err.message || err)), "ETLS", false, "STARTTLS");
+            return;
+          }
+          this.logger.info({
+            tnx: "smtp"
+          }, "Connection upgraded with STARTTLS");
+          if (secured) {
+            if (this.options.lmtp) {
+              this._responseActions.push(this._actionLHLO);
+              this._sendCommand("LHLO " + this.name);
+            } else {
+              this._responseActions.push(this._actionEHLO);
+              this._sendCommand("EHLO " + this.name);
+            }
+          } else {
+            this.emit("connect");
+          }
+        });
+      }
+      /**
+         * Handle the response for AUTH LOGIN command. We are expecting
+         * '334 VXNlcm5hbWU6' (base64 for 'Username:'). Data to be sent as
+         * response needs to be base64 encoded username. We do not need
+         * exact match but settle with 334 response in general as some
+         * hosts invalidly use a longer message than VXNlcm5hbWU6
+         *
+         * @param {String} str Message from the server
+         */
+      _actionAUTH_LOGIN_USER(str, callback) {
+        if (!/^334[ -]/.test(str)) {
+          callback(this._formatError('Invalid login sequence while waiting for "334 VXNlcm5hbWU6"', "EAUTH", str, "AUTH LOGIN"));
+          return;
+        }
+        this._responseActions.push((str2) => {
+          this._actionAUTH_LOGIN_PASS(str2, callback);
+        });
+        this._sendCommand(Buffer.from(this._auth.credentials.user + "", "utf-8").toString("base64"));
+      }
+      /**
+         * Handle the response for AUTH CRAM-MD5 command. We are expecting
+         * '334 <challenge string>'. Data to be sent as response needs to be
+         * base64 decoded challenge string, MD5 hashed using the password as
+         * a HMAC key, prefixed by the username and a space, and finally all
+         * base64 encoded again.
+         *
+         * @param {String} str Message from the server
+         */
+      _actionAUTH_CRAM_MD5(str, callback) {
+        let challengeMatch = str.match(/^334\s+(.+)$/);
+        let challengeString = "";
+        if (!challengeMatch) {
+          return callback(this._formatError("Invalid login sequence while waiting for server challenge string", "EAUTH", str, "AUTH CRAM-MD5"));
+        } else {
+          challengeString = challengeMatch[1];
+        }
+        let base64decoded = Buffer.from(challengeString, "base64").toString("ascii"), hmacMD5 = crypto2.createHmac("md5", this._auth.credentials.pass);
+        hmacMD5.update(base64decoded);
+        let prepended = this._auth.credentials.user + " " + hmacMD5.digest("hex");
+        this._responseActions.push((str2) => {
+          this._actionAUTH_CRAM_MD5_PASS(str2, callback);
+        });
+        this._sendCommand(
+          Buffer.from(prepended).toString("base64"),
+          // hidden hash for logs
+          Buffer.from(this._auth.credentials.user + " /* secret */").toString("base64")
+        );
+      }
+      /**
+         * Handles the response to CRAM-MD5 authentication, if there's no error,
+         * the user can be considered logged in. Start waiting for a message to send
+         *
+         * @param {String} str Message from the server
+         */
+      _actionAUTH_CRAM_MD5_PASS(str, callback) {
+        if (!str.match(/^235\s+/)) {
+          return callback(this._formatError('Invalid login sequence while waiting for "235"', "EAUTH", str, "AUTH CRAM-MD5"));
+        }
+        this.logger.info({
+          tnx: "smtp",
+          username: this._auth.user,
+          action: "authenticated",
+          method: this._authMethod
+        }, "User %s authenticated", JSON.stringify(this._auth.user));
+        this.authenticated = true;
+        callback(null, true);
+      }
+      /**
+         * Handle the response for AUTH LOGIN command. We are expecting
+         * '334 UGFzc3dvcmQ6' (base64 for 'Password:'). Data to be sent as
+         * response needs to be base64 encoded password.
+         *
+         * @param {String} str Message from the server
+         */
+      _actionAUTH_LOGIN_PASS(str, callback) {
+        if (!/^334[ -]/.test(str)) {
+          return callback(this._formatError('Invalid login sequence while waiting for "334 UGFzc3dvcmQ6"', "EAUTH", str, "AUTH LOGIN"));
+        }
+        this._responseActions.push((str2) => {
+          this._actionAUTHComplete(str2, callback);
+        });
+        this._sendCommand(
+          Buffer.from((this._auth.credentials.pass || "").toString(), "utf-8").toString("base64"),
+          // Hidden pass for logs
+          Buffer.from("/* secret */", "utf-8").toString("base64")
+        );
+      }
+      /**
+         * Handles the response for authentication, if there's no error,
+         * the user can be considered logged in. Start waiting for a message to send
+         *
+         * @param {String} str Message from the server
+         */
+      _actionAUTHComplete(str, isRetry, callback) {
+        if (!callback && typeof isRetry === "function") {
+          callback = isRetry;
+          isRetry = false;
+        }
+        if (str.substr(0, 3) === "334") {
+          this._responseActions.push((str2) => {
+            if (isRetry || this._authMethod !== "XOAUTH2") {
+              this._actionAUTHComplete(str2, true, callback);
+            } else {
+              setImmediate(() => this._handleXOauth2Token(true, callback));
+            }
+          });
+          this._sendCommand("");
+          return;
+        }
+        if (str.charAt(0) !== "2") {
+          this.logger.info({
+            tnx: "smtp",
+            username: this._auth.user,
+            action: "authfail",
+            method: this._authMethod
+          }, "User %s failed to authenticate", JSON.stringify(this._auth.user));
+          return callback(this._formatError("Invalid login", "EAUTH", str, "AUTH " + this._authMethod));
+        }
+        this.logger.info({
+          tnx: "smtp",
+          username: this._auth.user,
+          action: "authenticated",
+          method: this._authMethod
+        }, "User %s authenticated", JSON.stringify(this._auth.user));
+        this.authenticated = true;
+        callback(null, true);
+      }
+      /**
+         * Handle response for a MAIL FROM: command
+         *
+         * @param {String} str Message from the server
+         */
+      _actionMAIL(str, callback) {
+        let message, curRecipient;
+        if (Number(str.charAt(0)) !== 2) {
+          if (this._usingSmtpUtf8 && /^550 /.test(str) && /[\x80-\uFFFF]/.test(this._envelope.from)) {
+            message = "Internationalized mailbox name not allowed";
+          } else {
+            message = "Mail command failed";
+          }
+          return callback(this._formatError(message, "EENVELOPE", str, "MAIL FROM"));
+        }
+        if (!this._envelope.rcptQueue.length) {
+          return callback(this._formatError("Can't send mail - no recipients defined", "EENVELOPE", false, "API"));
+        } else {
+          this._recipientQueue = [];
+          if (this._supportedExtensions.includes("PIPELINING")) {
+            while (this._envelope.rcptQueue.length) {
+              curRecipient = this._envelope.rcptQueue.shift();
+              this._recipientQueue.push(curRecipient);
+              this._responseActions.push((str2) => {
+                this._actionRCPT(str2, callback);
+              });
+              this._sendCommand("RCPT TO:<" + curRecipient + ">" + this._getDsnRcptToArgs());
+            }
+          } else {
+            curRecipient = this._envelope.rcptQueue.shift();
+            this._recipientQueue.push(curRecipient);
+            this._responseActions.push((str2) => {
+              this._actionRCPT(str2, callback);
+            });
+            this._sendCommand("RCPT TO:<" + curRecipient + ">" + this._getDsnRcptToArgs());
+          }
+        }
+      }
+      /**
+         * Handle response for a RCPT TO: command
+         *
+         * @param {String} str Message from the server
+         */
+      _actionRCPT(str, callback) {
+        let message, err, curRecipient = this._recipientQueue.shift();
+        if (Number(str.charAt(0)) !== 2) {
+          if (this._usingSmtpUtf8 && /^553 /.test(str) && /[\x80-\uFFFF]/.test(curRecipient)) {
+            message = "Internationalized mailbox name not allowed";
+          } else {
+            message = "Recipient command failed";
+          }
+          this._envelope.rejected.push(curRecipient);
+          err = this._formatError(message, "EENVELOPE", str, "RCPT TO");
+          err.recipient = curRecipient;
+          this._envelope.rejectedErrors.push(err);
+        } else {
+          this._envelope.accepted.push(curRecipient);
+        }
+        if (!this._envelope.rcptQueue.length && !this._recipientQueue.length) {
+          if (this._envelope.rejected.length < this._envelope.to.length) {
+            this._responseActions.push((str2) => {
+              this._actionDATA(str2, callback);
+            });
+            this._sendCommand("DATA");
+          } else {
+            err = this._formatError("Can't send mail - all recipients were rejected", "EENVELOPE", str, "RCPT TO");
+            err.rejected = this._envelope.rejected;
+            err.rejectedErrors = this._envelope.rejectedErrors;
+            return callback(err);
+          }
+        } else if (this._envelope.rcptQueue.length) {
+          curRecipient = this._envelope.rcptQueue.shift();
+          this._recipientQueue.push(curRecipient);
+          this._responseActions.push((str2) => {
+            this._actionRCPT(str2, callback);
+          });
+          this._sendCommand("RCPT TO:<" + curRecipient + ">" + this._getDsnRcptToArgs());
+        }
+      }
+      /**
+         * Handle response for a DATA command
+         *
+         * @param {String} str Message from the server
+         */
+      _actionDATA(str, callback) {
+        if (!/^[23]/.test(str)) {
+          return callback(this._formatError("Data command failed", "EENVELOPE", str, "DATA"));
+        }
+        let response = {
+          accepted: this._envelope.accepted,
+          rejected: this._envelope.rejected
+        };
+        if (this._ehloLines && this._ehloLines.length) {
+          response.ehlo = this._ehloLines;
+        }
+        if (this._envelope.rejectedErrors.length) {
+          response.rejectedErrors = this._envelope.rejectedErrors;
+        }
+        callback(null, response);
+      }
+      /**
+         * Handle response for a DATA stream when using SMTP
+         * We expect a single response that defines if the sending succeeded or failed
+         *
+         * @param {String} str Message from the server
+         */
+      _actionSMTPStream(str, callback) {
+        if (Number(str.charAt(0)) !== 2) {
+          return callback(this._formatError("Message failed", "EMESSAGE", str, "DATA"));
+        } else {
+          return callback(null, str);
+        }
+      }
+      /**
+         * Handle response for a DATA stream
+         * We expect a separate response for every recipient. All recipients can either
+         * succeed or fail separately
+         *
+         * @param {String} recipient The recipient this response applies to
+         * @param {Boolean} final Is this the final recipient?
+         * @param {String} str Message from the server
+         */
+      _actionLMTPStream(recipient, final, str, callback) {
+        let err;
+        if (Number(str.charAt(0)) !== 2) {
+          err = this._formatError("Message failed for recipient " + recipient, "EMESSAGE", str, "DATA");
+          err.recipient = recipient;
+          this._envelope.rejected.push(recipient);
+          this._envelope.rejectedErrors.push(err);
+          for (let i = 0, len = this._envelope.accepted.length; i < len; i++) {
+            if (this._envelope.accepted[i] === recipient) {
+              this._envelope.accepted.splice(i, 1);
+            }
+          }
+        }
+        if (final) {
+          return callback(null, str);
+        }
+      }
+      _handleXOauth2Token(isRetry, callback) {
+        this._auth.oauth2.getToken(isRetry, (err, accessToken) => {
+          if (err) {
+            this.logger.info({
+              tnx: "smtp",
+              username: this._auth.user,
+              action: "authfail",
+              method: this._authMethod
+            }, "User %s failed to authenticate", JSON.stringify(this._auth.user));
+            return callback(this._formatError(err, "EAUTH", false, "AUTH XOAUTH2"));
+          }
+          this._responseActions.push((str) => {
+            this._actionAUTHComplete(str, isRetry, callback);
+          });
+          this._sendCommand(
+            "AUTH XOAUTH2 " + this._auth.oauth2.buildXOAuth2Token(accessToken),
+            //  Hidden for logs
+            "AUTH XOAUTH2 " + this._auth.oauth2.buildXOAuth2Token("/* secret */")
+          );
+        });
+      }
+      /**
+         *
+         * @param {string} command
+         * @private
+         */
+      _isDestroyedMessage(command) {
+        if (this._destroyed) {
+          return "Cannot " + command + " - smtp connection is already destroyed.";
+        }
+        if (this._socket) {
+          if (this._socket.destroyed) {
+            return "Cannot " + command + " - smtp connection socket is already destroyed.";
+          }
+          if (!this._socket.writable) {
+            return "Cannot " + command + " - smtp connection socket is already half-closed.";
+          }
+        }
+      }
+      _getHostname() {
+        let defaultHostname;
+        try {
+          defaultHostname = os.hostname() || "";
+        } catch (err) {
+          defaultHostname = "localhost";
+        }
+        if (!defaultHostname || defaultHostname.indexOf(".") < 0) {
+          defaultHostname = "[127.0.0.1]";
+        }
+        if (defaultHostname.match(/^\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}$/)) {
+          defaultHostname = "[" + defaultHostname + "]";
+        }
+        return defaultHostname;
+      }
+    };
+    module.exports = SMTPConnection;
+  }
+});
+
+// node_modules/.deno/nodemailer@6.9.13/node_modules/nodemailer/lib/xoauth2/index.js
+var require_xoauth2 = __commonJS({
+  "node_modules/.deno/nodemailer@6.9.13/node_modules/nodemailer/lib/xoauth2/index.js"(exports, module) {
+    "use strict";
+    var Stream = __require("node:stream").Stream;
+    var nmfetch = require_fetch();
+    var crypto2 = __require("node:crypto");
+    var shared = require_shared();
+    var XOAuth2 = class extends Stream {
+      constructor(options, logger) {
+        super();
+        this.options = options || {};
+        if (options && options.serviceClient) {
+          if (!options.privateKey || !options.user) {
+            setImmediate(() => this.emit("error", new Error('Options "privateKey" and "user" are required for service account!')));
+            return;
+          }
+          let serviceRequestTimeout = Math.min(Math.max(Number(this.options.serviceRequestTimeout) || 0, 0), 3600);
+          this.options.serviceRequestTimeout = serviceRequestTimeout || 5 * 60;
+        }
+        this.logger = shared.getLogger({
+          logger
+        }, {
+          component: this.options.component || "OAuth2"
+        });
+        this.provisionCallback = typeof this.options.provisionCallback === "function" ? this.options.provisionCallback : false;
+        this.options.accessUrl = this.options.accessUrl || "https://accounts.google.com/o/oauth2/token";
+        this.options.customHeaders = this.options.customHeaders || {};
+        this.options.customParams = this.options.customParams || {};
+        this.accessToken = this.options.accessToken || false;
+        if (this.options.expires && Number(this.options.expires)) {
+          this.expires = this.options.expires;
+        } else {
+          let timeout = Math.max(Number(this.options.timeout) || 0, 0);
+          this.expires = timeout && Date.now() + timeout * 1e3 || 0;
+        }
+      }
+      /**
+         * Returns or generates (if previous has expired) a XOAuth2 token
+         *
+         * @param {Boolean} renew If false then use cached access token (if available)
+         * @param {Function} callback Callback function with error object and token string
+         */
+      getToken(renew, callback) {
+        if (!renew && this.accessToken && (!this.expires || this.expires > Date.now())) {
+          return callback(null, this.accessToken);
+        }
+        let generateCallback = (...args) => {
+          if (args[0]) {
+            this.logger.error({
+              err: args[0],
+              tnx: "OAUTH2",
+              user: this.options.user,
+              action: "renew"
+            }, "Failed generating new Access Token for %s", this.options.user);
+          } else {
+            this.logger.info({
+              tnx: "OAUTH2",
+              user: this.options.user,
+              action: "renew"
+            }, "Generated new Access Token for %s", this.options.user);
+          }
+          callback(...args);
+        };
+        if (this.provisionCallback) {
+          this.provisionCallback(this.options.user, !!renew, (err, accessToken, expires) => {
+            if (!err && accessToken) {
+              this.accessToken = accessToken;
+              this.expires = expires || 0;
+            }
+            generateCallback(err, accessToken);
+          });
+        } else {
+          this.generateToken(generateCallback);
+        }
+      }
+      /**
+         * Updates token values
+         *
+         * @param {String} accessToken New access token
+         * @param {Number} timeout Access token lifetime in seconds
+         *
+         * Emits 'token': { user: User email-address, accessToken: the new accessToken, timeout: TTL in seconds}
+         */
+      updateToken(accessToken, timeout) {
+        this.accessToken = accessToken;
+        timeout = Math.max(Number(timeout) || 0, 0);
+        this.expires = timeout && Date.now() + timeout * 1e3 || 0;
+        this.emit("token", {
+          user: this.options.user,
+          accessToken: accessToken || "",
+          expires: this.expires
+        });
+      }
+      /**
+         * Generates a new XOAuth2 token with the credentials provided at initialization
+         *
+         * @param {Function} callback Callback function with error object and token string
+         */
+      generateToken(callback) {
+        let urlOptions;
+        let loggedUrlOptions;
+        if (this.options.serviceClient) {
+          let iat = Math.floor(Date.now() / 1e3);
+          let tokenData = {
+            iss: this.options.serviceClient,
+            scope: this.options.scope || "https://mail.google.com/",
+            sub: this.options.user,
+            aud: this.options.accessUrl,
+            iat,
+            exp: iat + this.options.serviceRequestTimeout
+          };
+          let token;
+          try {
+            token = this.jwtSignRS256(tokenData);
+          } catch (err) {
+            return callback(new Error("Can't generate token. Check your auth options"));
+          }
+          urlOptions = {
+            grant_type: "urn:ietf:params:oauth:grant-type:jwt-bearer",
+            assertion: token
+          };
+          loggedUrlOptions = {
+            grant_type: "urn:ietf:params:oauth:grant-type:jwt-bearer",
+            assertion: tokenData
+          };
+        } else {
+          if (!this.options.refreshToken) {
+            return callback(new Error("Can't create new access token for user"));
+          }
+          urlOptions = {
+            client_id: this.options.clientId || "",
+            client_secret: this.options.clientSecret || "",
+            refresh_token: this.options.refreshToken,
+            grant_type: "refresh_token"
+          };
+          loggedUrlOptions = {
+            client_id: this.options.clientId || "",
+            client_secret: (this.options.clientSecret || "").substr(0, 6) + "...",
+            refresh_token: (this.options.refreshToken || "").substr(0, 6) + "...",
+            grant_type: "refresh_token"
+          };
+        }
+        Object.keys(this.options.customParams).forEach((key) => {
+          urlOptions[key] = this.options.customParams[key];
+          loggedUrlOptions[key] = this.options.customParams[key];
+        });
+        this.logger.debug({
+          tnx: "OAUTH2",
+          user: this.options.user,
+          action: "generate"
+        }, "Requesting token using: %s", JSON.stringify(loggedUrlOptions));
+        this.postRequest(this.options.accessUrl, urlOptions, this.options, (error, body) => {
+          let data;
+          if (error) {
+            return callback(error);
+          }
+          try {
+            data = JSON.parse(body.toString());
+          } catch (E) {
+            return callback(E);
+          }
+          if (!data || typeof data !== "object") {
+            this.logger.debug({
+              tnx: "OAUTH2",
+              user: this.options.user,
+              action: "post"
+            }, "Response: %s", (body || "").toString());
+            return callback(new Error("Invalid authentication response"));
+          }
+          let logData = {};
+          Object.keys(data).forEach((key) => {
+            if (key !== "access_token") {
+              logData[key] = data[key];
+            } else {
+              logData[key] = (data[key] || "").toString().substr(0, 6) + "...";
+            }
+          });
+          this.logger.debug({
+            tnx: "OAUTH2",
+            user: this.options.user,
+            action: "post"
+          }, "Response: %s", JSON.stringify(logData));
+          if (data.error) {
+            let errorMessage = data.error;
+            if (data.error_description) {
+              errorMessage += ": " + data.error_description;
+            }
+            if (data.error_uri) {
+              errorMessage += " (" + data.error_uri + ")";
+            }
+            return callback(new Error(errorMessage));
+          }
+          if (data.access_token) {
+            this.updateToken(data.access_token, data.expires_in);
+            return callback(null, this.accessToken);
+          }
+          return callback(new Error("No access token"));
+        });
+      }
+      /**
+         * Converts an access_token and user id into a base64 encoded XOAuth2 token
+         *
+         * @param {String} [accessToken] Access token string
+         * @return {String} Base64 encoded token for IMAP or SMTP login
+         */
+      buildXOAuth2Token(accessToken) {
+        let authData = [
+          "user=" + (this.options.user || ""),
+          "auth=Bearer " + (accessToken || this.accessToken),
+          "",
+          ""
+        ];
+        return Buffer.from(authData.join(""), "utf-8").toString("base64");
+      }
+      /**
+         * Custom POST request handler.
+         * This is only needed to keep paths short in Windows – usually this module
+         * is a dependency of a dependency and if it tries to require something
+         * like the request module the paths get way too long to handle for Windows.
+         * As we do only a simple POST request we do not actually require complicated
+         * logic support (no redirects, no nothing) anyway.
+         *
+         * @param {String} url Url to POST to
+         * @param {String|Buffer} payload Payload to POST
+         * @param {Function} callback Callback function with (err, buff)
+         */
+      postRequest(url, payload, params, callback) {
+        let returned = false;
+        let chunks = [];
+        let chunklen = 0;
+        let req = nmfetch(url, {
+          method: "post",
+          headers: params.customHeaders,
+          body: payload,
+          allowErrorResponse: true
+        });
+        req.on("readable", () => {
+          let chunk;
+          while ((chunk = req.read()) !== null) {
+            chunks.push(chunk);
+            chunklen += chunk.length;
+          }
+        });
+        req.once("error", (err) => {
+          if (returned) {
+            return;
+          }
+          returned = true;
+          return callback(err);
+        });
+        req.once("end", () => {
+          if (returned) {
+            return;
+          }
+          returned = true;
+          return callback(null, Buffer.concat(chunks, chunklen));
+        });
+      }
+      /**
+         * Encodes a buffer or a string into Base64url format
+         *
+         * @param {Buffer|String} data The data to convert
+         * @return {String} The encoded string
+         */
+      toBase64URL(data) {
+        if (typeof data === "string") {
+          data = Buffer.from(data);
+        }
+        return data.toString("base64").replace(/[=]+/g, "").replace(/\+/g, "-").replace(/\//g, "_");
+      }
+      /**
+         * Creates a JSON Web Token signed with RS256 (SHA256 + RSA)
+         *
+         * @param {Object} payload The payload to include in the generated token
+         * @return {String} The generated and signed token
+         */
+      jwtSignRS256(payload) {
+        payload = [
+          '{"alg":"RS256","typ":"JWT"}',
+          JSON.stringify(payload)
+        ].map((val2) => this.toBase64URL(val2)).join(".");
+        let signature = crypto2.createSign("RSA-SHA256").update(payload).sign(this.options.privateKey);
+        return payload + "." + this.toBase64URL(signature);
+      }
+    };
+    module.exports = XOAuth2;
+  }
+});
+
+// node_modules/.deno/nodemailer@6.9.13/node_modules/nodemailer/lib/smtp-pool/pool-resource.js
+var require_pool_resource = __commonJS({
+  "node_modules/.deno/nodemailer@6.9.13/node_modules/nodemailer/lib/smtp-pool/pool-resource.js"(exports, module) {
+    "use strict";
+    var SMTPConnection = require_smtp_connection();
+    var assign = require_shared().assign;
+    var XOAuth2 = require_xoauth2();
+    var EventEmitter = __require("node:events");
+    var PoolResource = class extends EventEmitter {
+      constructor(pool) {
+        super();
+        this.pool = pool;
+        this.options = pool.options;
+        this.logger = this.pool.logger;
+        if (this.options.auth) {
+          switch ((this.options.auth.type || "").toString().toUpperCase()) {
+            case "OAUTH2": {
+              let oauth2 = new XOAuth2(this.options.auth, this.logger);
+              oauth2.provisionCallback = this.pool.mailer && this.pool.mailer.get("oauth2_provision_cb") || oauth2.provisionCallback;
+              this.auth = {
+                type: "OAUTH2",
+                user: this.options.auth.user,
+                oauth2,
+                method: "XOAUTH2"
+              };
+              oauth2.on("token", (token) => this.pool.mailer.emit("token", token));
+              oauth2.on("error", (err) => this.emit("error", err));
+              break;
+            }
+            default:
+              if (!this.options.auth.user && !this.options.auth.pass) {
+                break;
+              }
+              this.auth = {
+                type: (this.options.auth.type || "").toString().toUpperCase() || "LOGIN",
+                user: this.options.auth.user,
+                credentials: {
+                  user: this.options.auth.user || "",
+                  pass: this.options.auth.pass,
+                  options: this.options.auth.options
+                },
+                method: (this.options.auth.method || "").trim().toUpperCase() || this.options.authMethod || false
+              };
+          }
+        }
+        this._connection = false;
+        this._connected = false;
+        this.messages = 0;
+        this.available = true;
+      }
+      /**
+         * Initiates a connection to the SMTP server
+         *
+         * @param {Function} callback Callback function to run once the connection is established or failed
+         */
+      connect(callback) {
+        this.pool.getSocket(this.options, (err, socketOptions) => {
+          if (err) {
+            return callback(err);
+          }
+          let returned = false;
+          let options = this.options;
+          if (socketOptions && socketOptions.connection) {
+            this.logger.info({
+              tnx: "proxy",
+              remoteAddress: socketOptions.connection.remoteAddress,
+              remotePort: socketOptions.connection.remotePort,
+              destHost: options.host || "",
+              destPort: options.port || "",
+              action: "connected"
+            }, "Using proxied socket from %s:%s to %s:%s", socketOptions.connection.remoteAddress, socketOptions.connection.remotePort, options.host || "", options.port || "");
+            options = assign(false, options);
+            Object.keys(socketOptions).forEach((key) => {
+              options[key] = socketOptions[key];
+            });
+          }
+          this.connection = new SMTPConnection(options);
+          this.connection.once("error", (err2) => {
+            this.emit("error", err2);
+            if (returned) {
+              return;
+            }
+            returned = true;
+            return callback(err2);
+          });
+          this.connection.once("end", () => {
+            this.close();
+            if (returned) {
+              return;
+            }
+            returned = true;
+            let timer = setTimeout(() => {
+              if (returned) {
+                return;
+              }
+              let err2 = new Error("Unexpected socket close");
+              if (this.connection && this.connection._socket && this.connection._socket.upgrading) {
+                err2.code = "ETLS";
+              }
+              callback(err2);
+            }, 1e3);
+            try {
+              timer.unref();
+            } catch (E) {
+            }
+          });
+          this.connection.connect(() => {
+            if (returned) {
+              return;
+            }
+            if (this.auth && (this.connection.allowsAuth || options.forceAuth)) {
+              this.connection.login(this.auth, (err2) => {
+                if (returned) {
+                  return;
+                }
+                returned = true;
+                if (err2) {
+                  this.connection.close();
+                  this.emit("error", err2);
+                  return callback(err2);
+                }
+                this._connected = true;
+                callback(null, true);
+              });
+            } else {
+              returned = true;
+              this._connected = true;
+              return callback(null, true);
+            }
+          });
+        });
+      }
+      /**
+         * Sends an e-mail to be sent using the selected settings
+         *
+         * @param {Object} mail Mail object
+         * @param {Function} callback Callback function
+         */
+      send(mail, callback) {
+        if (!this._connected) {
+          return this.connect((err) => {
+            if (err) {
+              return callback(err);
+            }
+            return this.send(mail, callback);
+          });
+        }
+        let envelope = mail.message.getEnvelope();
+        let messageId = mail.message.messageId();
+        let recipients = [].concat(envelope.to || []);
+        if (recipients.length > 3) {
+          recipients.push("...and " + recipients.splice(2).length + " more");
+        }
+        this.logger.info({
+          tnx: "send",
+          messageId,
+          cid: this.id
+        }, "Sending message %s using #%s to <%s>", messageId, this.id, recipients.join(", "));
+        if (mail.data.dsn) {
+          envelope.dsn = mail.data.dsn;
+        }
+        this.connection.send(envelope, mail.message.createReadStream(), (err, info) => {
+          this.messages++;
+          if (err) {
+            this.connection.close();
+            this.emit("error", err);
+            return callback(err);
+          }
+          info.envelope = {
+            from: envelope.from,
+            to: envelope.to
+          };
+          info.messageId = messageId;
+          setImmediate(() => {
+            let err2;
+            if (this.messages >= this.options.maxMessages) {
+              err2 = new Error("Resource exhausted");
+              err2.code = "EMAXLIMIT";
+              this.connection.close();
+              this.emit("error", err2);
+            } else {
+              this.pool._checkRateLimit(() => {
+                this.available = true;
+                this.emit("available");
+              });
+            }
+          });
+          callback(null, info);
+        });
+      }
+      /**
+         * Closes the connection
+         */
+      close() {
+        this._connected = false;
+        if (this.auth && this.auth.oauth2) {
+          this.auth.oauth2.removeAllListeners();
+        }
+        if (this.connection) {
+          this.connection.close();
+        }
+        this.emit("close");
+      }
+    };
+    module.exports = PoolResource;
+  }
+});
+
+// node_modules/.deno/nodemailer@6.9.13/node_modules/nodemailer/lib/well-known/services.json
+var require_services = __commonJS({
+  "node_modules/.deno/nodemailer@6.9.13/node_modules/nodemailer/lib/well-known/services.json"(exports, module) {
+    module.exports = {
+      "1und1": {
+        host: "smtp.1und1.de",
+        port: 465,
+        secure: true,
+        authMethod: "LOGIN"
+      },
+      Aliyun: {
+        domains: ["aliyun.com"],
+        host: "smtp.aliyun.com",
+        port: 465,
+        secure: true
+      },
+      AOL: {
+        domains: ["aol.com"],
+        host: "smtp.aol.com",
+        port: 587
+      },
+      Bluewin: {
+        host: "smtpauths.bluewin.ch",
+        domains: ["bluewin.ch"],
+        port: 465
+      },
+      DebugMail: {
+        host: "debugmail.io",
+        port: 25
+      },
+      DynectEmail: {
+        aliases: ["Dynect"],
+        host: "smtp.dynect.net",
+        port: 25
+      },
+      Ethereal: {
+        aliases: ["ethereal.email"],
+        host: "smtp.ethereal.email",
+        port: 587
+      },
+      FastMail: {
+        domains: ["fastmail.fm"],
+        host: "smtp.fastmail.com",
+        port: 465,
+        secure: true
+      },
+      "Forward Email": {
+        aliases: ["FE", "ForwardEmail"],
+        domains: ["forwardemail.net"],
+        host: "smtp.forwardemail.net",
+        port: 465,
+        secure: true
+      },
+      GandiMail: {
+        aliases: ["Gandi", "Gandi Mail"],
+        host: "mail.gandi.net",
+        port: 587
+      },
+      Gmail: {
+        aliases: ["Google Mail"],
+        domains: ["gmail.com", "googlemail.com"],
+        host: "smtp.gmail.com",
+        port: 465,
+        secure: true
+      },
+      Godaddy: {
+        host: "smtpout.secureserver.net",
+        port: 25
+      },
+      GodaddyAsia: {
+        host: "smtp.asia.secureserver.net",
+        port: 25
+      },
+      GodaddyEurope: {
+        host: "smtp.europe.secureserver.net",
+        port: 25
+      },
+      "hot.ee": {
+        host: "mail.hot.ee"
+      },
+      Hotmail: {
+        aliases: ["Outlook", "Outlook.com", "Hotmail.com"],
+        domains: ["hotmail.com", "outlook.com"],
+        host: "smtp-mail.outlook.com",
+        port: 587
+      },
+      iCloud: {
+        aliases: ["Me", "Mac"],
+        domains: ["me.com", "mac.com"],
+        host: "smtp.mail.me.com",
+        port: 587
+      },
+      Infomaniak: {
+        host: "mail.infomaniak.com",
+        domains: ["ik.me", "ikmail.com", "etik.com"],
+        port: 587
+      },
+      "mail.ee": {
+        host: "smtp.mail.ee"
+      },
+      "Mail.ru": {
+        host: "smtp.mail.ru",
+        port: 465,
+        secure: true
+      },
+      "Mailcatch.app": {
+        host: "sandbox-smtp.mailcatch.app",
+        port: 2525
+      },
+      Maildev: {
+        port: 1025,
+        ignoreTLS: true
+      },
+      Mailgun: {
+        host: "smtp.mailgun.org",
+        port: 465,
+        secure: true
+      },
+      Mailjet: {
+        host: "in.mailjet.com",
+        port: 587
+      },
+      Mailosaur: {
+        host: "mailosaur.io",
+        port: 25
+      },
+      Mailtrap: {
+        host: "smtp.mailtrap.io",
+        port: 2525
+      },
+      Mandrill: {
+        host: "smtp.mandrillapp.com",
+        port: 587
+      },
+      Naver: {
+        host: "smtp.naver.com",
+        port: 587
+      },
+      One: {
+        host: "send.one.com",
+        port: 465,
+        secure: true
+      },
+      OpenMailBox: {
+        aliases: ["OMB", "openmailbox.org"],
+        host: "smtp.openmailbox.org",
+        port: 465,
+        secure: true
+      },
+      Outlook365: {
+        host: "smtp.office365.com",
+        port: 587,
+        secure: false
+      },
+      OhMySMTP: {
+        host: "smtp.ohmysmtp.com",
+        port: 587,
+        secure: false
+      },
+      Postmark: {
+        aliases: ["PostmarkApp"],
+        host: "smtp.postmarkapp.com",
+        port: 2525
+      },
+      "qiye.aliyun": {
+        host: "smtp.mxhichina.com",
+        port: "465",
+        secure: true
+      },
+      QQ: {
+        domains: ["qq.com"],
+        host: "smtp.qq.com",
+        port: 465,
+        secure: true
+      },
+      QQex: {
+        aliases: ["QQ Enterprise"],
+        domains: ["exmail.qq.com"],
+        host: "smtp.exmail.qq.com",
+        port: 465,
+        secure: true
+      },
+      SendCloud: {
+        host: "smtp.sendcloud.net",
+        port: 2525
+      },
+      SendGrid: {
+        host: "smtp.sendgrid.net",
+        port: 587
+      },
+      SendinBlue: {
+        aliases: ["Brevo"],
+        host: "smtp-relay.brevo.com",
+        port: 587
+      },
+      SendPulse: {
+        host: "smtp-pulse.com",
+        port: 465,
+        secure: true
+      },
+      SES: {
+        host: "email-smtp.us-east-1.amazonaws.com",
+        port: 465,
+        secure: true
+      },
+      "SES-US-EAST-1": {
+        host: "email-smtp.us-east-1.amazonaws.com",
+        port: 465,
+        secure: true
+      },
+      "SES-US-WEST-2": {
+        host: "email-smtp.us-west-2.amazonaws.com",
+        port: 465,
+        secure: true
+      },
+      "SES-EU-WEST-1": {
+        host: "email-smtp.eu-west-1.amazonaws.com",
+        port: 465,
+        secure: true
+      },
+      "SES-AP-SOUTH-1": {
+        host: "email-smtp.ap-south-1.amazonaws.com",
+        port: 465,
+        secure: true
+      },
+      "SES-AP-NORTHEAST-1": {
+        host: "email-smtp.ap-northeast-1.amazonaws.com",
+        port: 465,
+        secure: true
+      },
+      "SES-AP-NORTHEAST-2": {
+        host: "email-smtp.ap-northeast-2.amazonaws.com",
+        port: 465,
+        secure: true
+      },
+      "SES-AP-NORTHEAST-3": {
+        host: "email-smtp.ap-northeast-3.amazonaws.com",
+        port: 465,
+        secure: true
+      },
+      "SES-AP-SOUTHEAST-1": {
+        host: "email-smtp.ap-southeast-1.amazonaws.com",
+        port: 465,
+        secure: true
+      },
+      "SES-AP-SOUTHEAST-2": {
+        host: "email-smtp.ap-southeast-2.amazonaws.com",
+        port: 465,
+        secure: true
+      },
+      Sparkpost: {
+        aliases: ["SparkPost", "SparkPost Mail"],
+        domains: ["sparkpost.com"],
+        host: "smtp.sparkpostmail.com",
+        port: 587,
+        secure: false
+      },
+      Tipimail: {
+        host: "smtp.tipimail.com",
+        port: 587
+      },
+      Yahoo: {
+        domains: ["yahoo.com"],
+        host: "smtp.mail.yahoo.com",
+        port: 465,
+        secure: true
+      },
+      Yandex: {
+        domains: ["yandex.ru"],
+        host: "smtp.yandex.ru",
+        port: 465,
+        secure: true
+      },
+      Zoho: {
+        host: "smtp.zoho.com",
+        port: 465,
+        secure: true,
+        authMethod: "LOGIN"
+      },
+      "126": {
+        host: "smtp.126.com",
+        port: 465,
+        secure: true
+      },
+      "163": {
+        host: "smtp.163.com",
+        port: 465,
+        secure: true
+      }
+    };
+  }
+});
+
+// node_modules/.deno/nodemailer@6.9.13/node_modules/nodemailer/lib/well-known/index.js
+var require_well_known = __commonJS({
+  "node_modules/.deno/nodemailer@6.9.13/node_modules/nodemailer/lib/well-known/index.js"(exports, module) {
+    "use strict";
+    var services = require_services();
+    var normalized = {};
+    Object.keys(services).forEach((key) => {
+      let service = services[key];
+      normalized[normalizeKey(key)] = normalizeService(service);
+      [].concat(service.aliases || []).forEach((alias) => {
+        normalized[normalizeKey(alias)] = normalizeService(service);
+      });
+      [].concat(service.domains || []).forEach((domain) => {
+        normalized[normalizeKey(domain)] = normalizeService(service);
+      });
+    });
+    function normalizeKey(key) {
+      return key.replace(/[^a-zA-Z0-9.-]/g, "").toLowerCase();
+    }
+    function normalizeService(service) {
+      let filter = [
+        "domains",
+        "aliases"
+      ];
+      let response = {};
+      Object.keys(service).forEach((key) => {
+        if (filter.indexOf(key) < 0) {
+          response[key] = service[key];
+        }
+      });
+      return response;
+    }
+    module.exports = function(key) {
+      key = normalizeKey(key.split("@").pop());
+      return normalized[key] || false;
+    };
+  }
+});
+
+// node_modules/.deno/nodemailer@6.9.13/node_modules/nodemailer/lib/smtp-pool/index.js
+var require_smtp_pool = __commonJS({
+  "node_modules/.deno/nodemailer@6.9.13/node_modules/nodemailer/lib/smtp-pool/index.js"(exports, module) {
+    "use strict";
+    var EventEmitter = __require("node:events");
+    var PoolResource = require_pool_resource();
+    var SMTPConnection = require_smtp_connection();
+    var wellKnown = require_well_known();
+    var shared = require_shared();
+    var packageData = require_package();
+    var SMTPPool = class extends EventEmitter {
+      constructor(options) {
+        super();
+        options = options || {};
+        if (typeof options === "string") {
+          options = {
+            url: options
+          };
+        }
+        let urlData;
+        let service = options.service;
+        if (typeof options.getSocket === "function") {
+          this.getSocket = options.getSocket;
+        }
+        if (options.url) {
+          urlData = shared.parseConnectionUrl(options.url);
+          service = service || urlData.service;
+        }
+        this.options = shared.assign(
+          false,
+          options,
+          urlData,
+          service && wellKnown(service)
+          // wellknown options
+        );
+        this.options.maxConnections = this.options.maxConnections || 5;
+        this.options.maxMessages = this.options.maxMessages || 100;
+        this.logger = shared.getLogger(this.options, {
+          component: this.options.component || "smtp-pool"
+        });
+        let connection = new SMTPConnection(this.options);
+        this.name = "SMTP (pool)";
+        this.version = packageData.version + "[client:" + connection.version + "]";
+        this._rateLimit = {
+          counter: 0,
+          timeout: null,
+          waiting: [],
+          checkpoint: false,
+          delta: Number(this.options.rateDelta) || 1e3,
+          limit: Number(this.options.rateLimit) || 0
+        };
+        this._closed = false;
+        this._queue = [];
+        this._connections = [];
+        this._connectionCounter = 0;
+        this.idling = true;
+        setImmediate(() => {
+          if (this.idling) {
+            this.emit("idle");
+          }
+        });
+      }
+      /**
+         * Placeholder function for creating proxy sockets. This method immediatelly returns
+         * without a socket
+         *
+         * @param {Object} options Connection options
+         * @param {Function} callback Callback function to run with the socket keys
+         */
+      getSocket(options, callback) {
+        return setImmediate(() => callback(null, false));
+      }
+      /**
+         * Queues an e-mail to be sent using the selected settings
+         *
+         * @param {Object} mail Mail object
+         * @param {Function} callback Callback function
+         */
+      send(mail, callback) {
+        if (this._closed) {
+          return false;
+        }
+        this._queue.push({
+          mail,
+          requeueAttempts: 0,
+          callback
+        });
+        if (this.idling && this._queue.length >= this.options.maxConnections) {
+          this.idling = false;
+        }
+        setImmediate(() => this._processMessages());
+        return true;
+      }
+      /**
+         * Closes all connections in the pool. If there is a message being sent, the connection
+         * is closed later
+         */
+      close() {
+        let connection;
+        let len = this._connections.length;
+        this._closed = true;
+        clearTimeout(this._rateLimit.timeout);
+        if (!len && !this._queue.length) {
+          return;
+        }
+        for (let i = len - 1; i >= 0; i--) {
+          if (this._connections[i] && this._connections[i].available) {
+            connection = this._connections[i];
+            connection.close();
+            this.logger.info({
+              tnx: "connection",
+              cid: connection.id,
+              action: "removed"
+            }, "Connection #%s removed", connection.id);
+          }
+        }
+        if (len && !this._connections.length) {
+          this.logger.debug({
+            tnx: "connection"
+          }, "All connections removed");
+        }
+        if (!this._queue.length) {
+          return;
+        }
+        let invokeCallbacks = () => {
+          if (!this._queue.length) {
+            this.logger.debug({
+              tnx: "connection"
+            }, "Pending queue entries cleared");
+            return;
+          }
+          let entry = this._queue.shift();
+          if (entry && typeof entry.callback === "function") {
+            try {
+              entry.callback(new Error("Connection pool was closed"));
+            } catch (E) {
+              this.logger.error({
+                err: E,
+                tnx: "callback",
+                cid: connection.id
+              }, "Callback error for #%s: %s", connection.id, E.message);
+            }
+          }
+          setImmediate(invokeCallbacks);
+        };
+        setImmediate(invokeCallbacks);
+      }
+      /**
+         * Check the queue and available connections. If there is a message to be sent and there is
+         * an available connection, then use this connection to send the mail
+         */
+      _processMessages() {
+        let connection;
+        let i, len;
+        if (this._closed) {
+          return;
+        }
+        if (!this._queue.length) {
+          if (!this.idling) {
+            this.idling = true;
+            this.emit("idle");
+          }
+          return;
+        }
+        for (i = 0, len = this._connections.length; i < len; i++) {
+          if (this._connections[i].available) {
+            connection = this._connections[i];
+            break;
+          }
+        }
+        if (!connection && this._connections.length < this.options.maxConnections) {
+          connection = this._createConnection();
+        }
+        if (!connection) {
+          this.idling = false;
+          return;
+        }
+        if (!this.idling && this._queue.length < this.options.maxConnections) {
+          this.idling = true;
+          this.emit("idle");
+        }
+        let entry = connection.queueEntry = this._queue.shift();
+        entry.messageId = (connection.queueEntry.mail.message.getHeader("message-id") || "").replace(/[<>\s]/g, "");
+        connection.available = false;
+        this.logger.debug({
+          tnx: "pool",
+          cid: connection.id,
+          messageId: entry.messageId,
+          action: "assign"
+        }, "Assigned message <%s> to #%s (%s)", entry.messageId, connection.id, connection.messages + 1);
+        if (this._rateLimit.limit) {
+          this._rateLimit.counter++;
+          if (!this._rateLimit.checkpoint) {
+            this._rateLimit.checkpoint = Date.now();
+          }
+        }
+        connection.send(entry.mail, (err, info) => {
+          if (entry === connection.queueEntry) {
+            try {
+              entry.callback(err, info);
+            } catch (E) {
+              this.logger.error({
+                err: E,
+                tnx: "callback",
+                cid: connection.id
+              }, "Callback error for #%s: %s", connection.id, E.message);
+            }
+            connection.queueEntry = false;
+          }
+        });
+      }
+      /**
+         * Creates a new pool resource
+         */
+      _createConnection() {
+        let connection = new PoolResource(this);
+        connection.id = ++this._connectionCounter;
+        this.logger.info({
+          tnx: "pool",
+          cid: connection.id,
+          action: "conection"
+        }, "Created new pool resource #%s", connection.id);
+        connection.on("available", () => {
+          this.logger.debug({
+            tnx: "connection",
+            cid: connection.id,
+            action: "available"
+          }, "Connection #%s became available", connection.id);
+          if (this._closed) {
+            this.close();
+          } else {
+            this._processMessages();
+          }
+        });
+        connection.once("error", (err) => {
+          if (err.code !== "EMAXLIMIT") {
+            this.logger.error({
+              err,
+              tnx: "pool",
+              cid: connection.id
+            }, "Pool Error for #%s: %s", connection.id, err.message);
+          } else {
+            this.logger.debug({
+              tnx: "pool",
+              cid: connection.id,
+              action: "maxlimit"
+            }, "Max messages limit exchausted for #%s", connection.id);
+          }
+          if (connection.queueEntry) {
+            try {
+              connection.queueEntry.callback(err);
+            } catch (E) {
+              this.logger.error({
+                err: E,
+                tnx: "callback",
+                cid: connection.id
+              }, "Callback error for #%s: %s", connection.id, E.message);
+            }
+            connection.queueEntry = false;
+          }
+          this._removeConnection(connection);
+          this._continueProcessing();
+        });
+        connection.once("close", () => {
+          this.logger.info({
+            tnx: "connection",
+            cid: connection.id,
+            action: "closed"
+          }, "Connection #%s was closed", connection.id);
+          this._removeConnection(connection);
+          if (connection.queueEntry) {
+            setTimeout(() => {
+              if (connection.queueEntry) {
+                if (this._shouldRequeuOnConnectionClose(connection.queueEntry)) {
+                  this._requeueEntryOnConnectionClose(connection);
+                } else {
+                  this._failDeliveryOnConnectionClose(connection);
+                }
+              }
+              this._continueProcessing();
+            }, 50);
+          } else {
+            this._continueProcessing();
+          }
+        });
+        this._connections.push(connection);
+        return connection;
+      }
+      _shouldRequeuOnConnectionClose(queueEntry) {
+        if (this.options.maxRequeues === void 0 || this.options.maxRequeues < 0) {
+          return true;
+        }
+        return queueEntry.requeueAttempts < this.options.maxRequeues;
+      }
+      _failDeliveryOnConnectionClose(connection) {
+        if (connection.queueEntry && connection.queueEntry.callback) {
+          try {
+            connection.queueEntry.callback(new Error("Reached maximum number of retries after connection was closed"));
+          } catch (E) {
+            this.logger.error({
+              err: E,
+              tnx: "callback",
+              messageId: connection.queueEntry.messageId,
+              cid: connection.id
+            }, "Callback error for #%s: %s", connection.id, E.message);
+          }
+          connection.queueEntry = false;
+        }
+      }
+      _requeueEntryOnConnectionClose(connection) {
+        connection.queueEntry.requeueAttempts = connection.queueEntry.requeueAttempts + 1;
+        this.logger.debug({
+          tnx: "pool",
+          cid: connection.id,
+          messageId: connection.queueEntry.messageId,
+          action: "requeue"
+        }, "Re-queued message <%s> for #%s. Attempt: #%s", connection.queueEntry.messageId, connection.id, connection.queueEntry.requeueAttempts);
+        this._queue.unshift(connection.queueEntry);
+        connection.queueEntry = false;
+      }
+      /**
+         * Continue to process message if the pool hasn't closed
+         */
+      _continueProcessing() {
+        if (this._closed) {
+          this.close();
+        } else {
+          setTimeout(() => this._processMessages(), 100);
+        }
+      }
+      /**
+         * Remove resource from pool
+         *
+         * @param {Object} connection The PoolResource to remove
+         */
+      _removeConnection(connection) {
+        let index = this._connections.indexOf(connection);
+        if (index !== -1) {
+          this._connections.splice(index, 1);
+        }
+      }
+      /**
+         * Checks if connections have hit current rate limit and if so, queues the availability callback
+         *
+         * @param {Function} callback Callback function to run once rate limiter has been cleared
+         */
+      _checkRateLimit(callback) {
+        if (!this._rateLimit.limit) {
+          return callback();
+        }
+        let now = Date.now();
+        if (this._rateLimit.counter < this._rateLimit.limit) {
+          return callback();
+        }
+        this._rateLimit.waiting.push(callback);
+        if (this._rateLimit.checkpoint <= now - this._rateLimit.delta) {
+          return this._clearRateLimit();
+        } else if (!this._rateLimit.timeout) {
+          this._rateLimit.timeout = setTimeout(() => this._clearRateLimit(), this._rateLimit.delta - (now - this._rateLimit.checkpoint));
+          this._rateLimit.checkpoint = now;
+        }
+      }
+      /**
+         * Clears current rate limit limitation and runs paused callback
+         */
+      _clearRateLimit() {
+        clearTimeout(this._rateLimit.timeout);
+        this._rateLimit.timeout = null;
+        this._rateLimit.counter = 0;
+        this._rateLimit.checkpoint = false;
+        while (this._rateLimit.waiting.length) {
+          let cb = this._rateLimit.waiting.shift();
+          setImmediate(cb);
+        }
+      }
+      /**
+         * Returns true if there are free slots in the queue
+         */
+      isIdle() {
+        return this.idling;
+      }
+      /**
+         * Verifies SMTP configuration
+         *
+         * @param {Function} callback Callback function
+         */
+      verify(callback) {
+        let promise;
+        if (!callback) {
+          promise = new Promise((resolve, reject) => {
+            callback = shared.callbackPromise(resolve, reject);
+          });
+        }
+        let auth = new PoolResource(this).auth;
+        this.getSocket(this.options, (err, socketOptions) => {
+          if (err) {
+            return callback(err);
+          }
+          let options = this.options;
+          if (socketOptions && socketOptions.connection) {
+            this.logger.info({
+              tnx: "proxy",
+              remoteAddress: socketOptions.connection.remoteAddress,
+              remotePort: socketOptions.connection.remotePort,
+              destHost: options.host || "",
+              destPort: options.port || "",
+              action: "connected"
+            }, "Using proxied socket from %s:%s to %s:%s", socketOptions.connection.remoteAddress, socketOptions.connection.remotePort, options.host || "", options.port || "");
+            options = shared.assign(false, options);
+            Object.keys(socketOptions).forEach((key) => {
+              options[key] = socketOptions[key];
+            });
+          }
+          let connection = new SMTPConnection(options);
+          let returned = false;
+          connection.once("error", (err2) => {
+            if (returned) {
+              return;
+            }
+            returned = true;
+            connection.close();
+            return callback(err2);
+          });
+          connection.once("end", () => {
+            if (returned) {
+              return;
+            }
+            returned = true;
+            return callback(new Error("Connection closed"));
+          });
+          let finalize = () => {
+            if (returned) {
+              return;
+            }
+            returned = true;
+            connection.quit();
+            return callback(null, true);
+          };
+          connection.connect(() => {
+            if (returned) {
+              return;
+            }
+            if (auth && (connection.allowsAuth || options.forceAuth)) {
+              connection.login(auth, (err2) => {
+                if (returned) {
+                  return;
+                }
+                if (err2) {
+                  returned = true;
+                  connection.close();
+                  return callback(err2);
+                }
+                finalize();
+              });
+            } else if (!auth && connection.allowsAuth && options.forceAuth) {
+              let err2 = new Error("Authentication info was not provided");
+              err2.code = "NoAuth";
+              returned = true;
+              connection.close();
+              return callback(err2);
+            } else {
+              finalize();
+            }
+          });
+        });
+        return promise;
+      }
+    };
+    module.exports = SMTPPool;
+  }
+});
+
+// node_modules/.deno/nodemailer@6.9.13/node_modules/nodemailer/lib/smtp-transport/index.js
+var require_smtp_transport = __commonJS({
+  "node_modules/.deno/nodemailer@6.9.13/node_modules/nodemailer/lib/smtp-transport/index.js"(exports, module) {
+    "use strict";
+    var EventEmitter = __require("node:events");
+    var SMTPConnection = require_smtp_connection();
+    var wellKnown = require_well_known();
+    var shared = require_shared();
+    var XOAuth2 = require_xoauth2();
+    var packageData = require_package();
+    var SMTPTransport = class extends EventEmitter {
+      constructor(options) {
+        super();
+        options = options || {};
+        if (typeof options === "string") {
+          options = {
+            url: options
+          };
+        }
+        let urlData;
+        let service = options.service;
+        if (typeof options.getSocket === "function") {
+          this.getSocket = options.getSocket;
+        }
+        if (options.url) {
+          urlData = shared.parseConnectionUrl(options.url);
+          service = service || urlData.service;
+        }
+        this.options = shared.assign(
+          false,
+          options,
+          urlData,
+          service && wellKnown(service)
+          // wellknown options
+        );
+        this.logger = shared.getLogger(this.options, {
+          component: this.options.component || "smtp-transport"
+        });
+        let connection = new SMTPConnection(this.options);
+        this.name = "SMTP";
+        this.version = packageData.version + "[client:" + connection.version + "]";
+        if (this.options.auth) {
+          this.auth = this.getAuth({});
+        }
+      }
+      /**
+         * Placeholder function for creating proxy sockets. This method immediatelly returns
+         * without a socket
+         *
+         * @param {Object} options Connection options
+         * @param {Function} callback Callback function to run with the socket keys
+         */
+      getSocket(options, callback) {
+        return setImmediate(() => callback(null, false));
+      }
+      getAuth(authOpts) {
+        if (!authOpts) {
+          return this.auth;
+        }
+        let hasAuth = false;
+        let authData = {};
+        if (this.options.auth && typeof this.options.auth === "object") {
+          Object.keys(this.options.auth).forEach((key) => {
+            hasAuth = true;
+            authData[key] = this.options.auth[key];
+          });
+        }
+        if (authOpts && typeof authOpts === "object") {
+          Object.keys(authOpts).forEach((key) => {
+            hasAuth = true;
+            authData[key] = authOpts[key];
+          });
+        }
+        if (!hasAuth) {
+          return false;
+        }
+        switch ((authData.type || "").toString().toUpperCase()) {
+          case "OAUTH2": {
+            if (!authData.service && !authData.user) {
+              return false;
+            }
+            let oauth2 = new XOAuth2(authData, this.logger);
+            oauth2.provisionCallback = this.mailer && this.mailer.get("oauth2_provision_cb") || oauth2.provisionCallback;
+            oauth2.on("token", (token) => this.mailer.emit("token", token));
+            oauth2.on("error", (err) => this.emit("error", err));
+            return {
+              type: "OAUTH2",
+              user: authData.user,
+              oauth2,
+              method: "XOAUTH2"
+            };
+          }
+          default:
+            return {
+              type: (authData.type || "").toString().toUpperCase() || "LOGIN",
+              user: authData.user,
+              credentials: {
+                user: authData.user || "",
+                pass: authData.pass,
+                options: authData.options
+              },
+              method: (authData.method || "").trim().toUpperCase() || this.options.authMethod || false
+            };
+        }
+      }
+      /**
+         * Sends an e-mail using the selected settings
+         *
+         * @param {Object} mail Mail object
+         * @param {Function} callback Callback function
+         */
+      send(mail, callback) {
+        this.getSocket(this.options, (err, socketOptions) => {
+          if (err) {
+            return callback(err);
+          }
+          let returned = false;
+          let options = this.options;
+          if (socketOptions && socketOptions.connection) {
+            this.logger.info({
+              tnx: "proxy",
+              remoteAddress: socketOptions.connection.remoteAddress,
+              remotePort: socketOptions.connection.remotePort,
+              destHost: options.host || "",
+              destPort: options.port || "",
+              action: "connected"
+            }, "Using proxied socket from %s:%s to %s:%s", socketOptions.connection.remoteAddress, socketOptions.connection.remotePort, options.host || "", options.port || "");
+            options = shared.assign(false, options);
+            Object.keys(socketOptions).forEach((key) => {
+              options[key] = socketOptions[key];
+            });
+          }
+          let connection = new SMTPConnection(options);
+          connection.once("error", (err2) => {
+            if (returned) {
+              return;
+            }
+            returned = true;
+            connection.close();
+            return callback(err2);
+          });
+          connection.once("end", () => {
+            if (returned) {
+              return;
+            }
+            let timer = setTimeout(() => {
+              if (returned) {
+                return;
+              }
+              returned = true;
+              let err2 = new Error("Unexpected socket close");
+              if (connection && connection._socket && connection._socket.upgrading) {
+                err2.code = "ETLS";
+              }
+              callback(err2);
+            }, 1e3);
+            try {
+              timer.unref();
+            } catch (E) {
+            }
+          });
+          let sendMessage = () => {
+            let envelope = mail.message.getEnvelope();
+            let messageId = mail.message.messageId();
+            let recipients = [].concat(envelope.to || []);
+            if (recipients.length > 3) {
+              recipients.push("...and " + recipients.splice(2).length + " more");
+            }
+            if (mail.data.dsn) {
+              envelope.dsn = mail.data.dsn;
+            }
+            this.logger.info({
+              tnx: "send",
+              messageId
+            }, "Sending message %s to <%s>", messageId, recipients.join(", "));
+            connection.send(envelope, mail.message.createReadStream(), (err2, info) => {
+              returned = true;
+              connection.close();
+              if (err2) {
+                this.logger.error({
+                  err: err2,
+                  tnx: "send"
+                }, "Send error for %s: %s", messageId, err2.message);
+                return callback(err2);
+              }
+              info.envelope = {
+                from: envelope.from,
+                to: envelope.to
+              };
+              info.messageId = messageId;
+              try {
+                return callback(null, info);
+              } catch (E) {
+                this.logger.error({
+                  err: E,
+                  tnx: "callback"
+                }, "Callback error for %s: %s", messageId, E.message);
+              }
+            });
+          };
+          connection.connect(() => {
+            if (returned) {
+              return;
+            }
+            let auth = this.getAuth(mail.data.auth);
+            if (auth && (connection.allowsAuth || options.forceAuth)) {
+              connection.login(auth, (err2) => {
+                if (auth && auth !== this.auth && auth.oauth2) {
+                  auth.oauth2.removeAllListeners();
+                }
+                if (returned) {
+                  return;
+                }
+                if (err2) {
+                  returned = true;
+                  connection.close();
+                  return callback(err2);
+                }
+                sendMessage();
+              });
+            } else {
+              sendMessage();
+            }
+          });
+        });
+      }
+      /**
+         * Verifies SMTP configuration
+         *
+         * @param {Function} callback Callback function
+         */
+      verify(callback) {
+        let promise;
+        if (!callback) {
+          promise = new Promise((resolve, reject) => {
+            callback = shared.callbackPromise(resolve, reject);
+          });
+        }
+        this.getSocket(this.options, (err, socketOptions) => {
+          if (err) {
+            return callback(err);
+          }
+          let options = this.options;
+          if (socketOptions && socketOptions.connection) {
+            this.logger.info({
+              tnx: "proxy",
+              remoteAddress: socketOptions.connection.remoteAddress,
+              remotePort: socketOptions.connection.remotePort,
+              destHost: options.host || "",
+              destPort: options.port || "",
+              action: "connected"
+            }, "Using proxied socket from %s:%s to %s:%s", socketOptions.connection.remoteAddress, socketOptions.connection.remotePort, options.host || "", options.port || "");
+            options = shared.assign(false, options);
+            Object.keys(socketOptions).forEach((key) => {
+              options[key] = socketOptions[key];
+            });
+          }
+          let connection = new SMTPConnection(options);
+          let returned = false;
+          connection.once("error", (err2) => {
+            if (returned) {
+              return;
+            }
+            returned = true;
+            connection.close();
+            return callback(err2);
+          });
+          connection.once("end", () => {
+            if (returned) {
+              return;
+            }
+            returned = true;
+            return callback(new Error("Connection closed"));
+          });
+          let finalize = () => {
+            if (returned) {
+              return;
+            }
+            returned = true;
+            connection.quit();
+            return callback(null, true);
+          };
+          connection.connect(() => {
+            if (returned) {
+              return;
+            }
+            let authData = this.getAuth({});
+            if (authData && (connection.allowsAuth || options.forceAuth)) {
+              connection.login(authData, (err2) => {
+                if (returned) {
+                  return;
+                }
+                if (err2) {
+                  returned = true;
+                  connection.close();
+                  return callback(err2);
+                }
+                finalize();
+              });
+            } else if (!authData && connection.allowsAuth && options.forceAuth) {
+              let err2 = new Error("Authentication info was not provided");
+              err2.code = "NoAuth";
+              returned = true;
+              connection.close();
+              return callback(err2);
+            } else {
+              finalize();
+            }
+          });
+        });
+        return promise;
+      }
+      /**
+         * Releases resources
+         */
+      close() {
+        if (this.auth && this.auth.oauth2) {
+          this.auth.oauth2.removeAllListeners();
+        }
+        this.emit("close");
+      }
+    };
+    module.exports = SMTPTransport;
+  }
+});
+
+// node_modules/.deno/nodemailer@6.9.13/node_modules/nodemailer/lib/sendmail-transport/index.js
+var require_sendmail_transport = __commonJS({
+  "node_modules/.deno/nodemailer@6.9.13/node_modules/nodemailer/lib/sendmail-transport/index.js"(exports, module) {
+    "use strict";
+    var spawn = __require("node:child_process").spawn;
+    var packageData = require_package();
+    var shared = require_shared();
+    var SendmailTransport = class {
+      constructor(options) {
+        options = options || {};
+        this._spawn = spawn;
+        this.options = options || {};
+        this.name = "Sendmail";
+        this.version = packageData.version;
+        this.path = "sendmail";
+        this.args = false;
+        this.winbreak = false;
+        this.logger = shared.getLogger(this.options, {
+          component: this.options.component || "sendmail"
+        });
+        if (options) {
+          if (typeof options === "string") {
+            this.path = options;
+          } else if (typeof options === "object") {
+            if (options.path) {
+              this.path = options.path;
+            }
+            if (Array.isArray(options.args)) {
+              this.args = options.args;
+            }
+            this.winbreak = [
+              "win",
+              "windows",
+              "dos",
+              "\r\n"
+            ].includes((options.newline || "").toString().toLowerCase());
+          }
+        }
+      }
+      /**
+         * <p>Compiles a mailcomposer message and forwards it to handler that sends it.</p>
+         *
+         * @param {Object} emailMessage MailComposer object
+         * @param {Function} callback Callback function to run when the sending is completed
+         */
+      send(mail, done) {
+        mail.message.keepBcc = true;
+        let envelope = mail.data.envelope || mail.message.getEnvelope();
+        let messageId = mail.message.messageId();
+        let args;
+        let sendmail;
+        let returned;
+        const hasInvalidAddresses = [].concat(envelope.from || []).concat(envelope.to || []).some((addr) => /^-/.test(addr));
+        if (hasInvalidAddresses) {
+          return done(new Error("Can not send mail. Invalid envelope addresses."));
+        }
+        if (this.args) {
+          args = [
+            "-i"
+          ].concat(this.args).concat(envelope.to);
+        } else {
+          args = [
+            "-i"
+          ].concat(envelope.from ? [
+            "-f",
+            envelope.from
+          ] : []).concat(envelope.to);
+        }
+        let callback = (err) => {
+          if (returned) {
+            return;
+          }
+          returned = true;
+          if (typeof done === "function") {
+            if (err) {
+              return done(err);
+            } else {
+              return done(null, {
+                envelope: mail.data.envelope || mail.message.getEnvelope(),
+                messageId,
+                response: "Messages queued for delivery"
+              });
+            }
+          }
+        };
+        try {
+          sendmail = this._spawn(this.path, args);
+        } catch (E) {
+          this.logger.error({
+            err: E,
+            tnx: "spawn",
+            messageId
+          }, "Error occurred while spawning sendmail. %s", E.message);
+          return callback(E);
+        }
+        if (sendmail) {
+          sendmail.on("error", (err) => {
+            this.logger.error({
+              err,
+              tnx: "spawn",
+              messageId
+            }, "Error occurred when sending message %s. %s", messageId, err.message);
+            callback(err);
+          });
+          sendmail.once("exit", (code) => {
+            if (!code) {
+              return callback();
+            }
+            let err;
+            if (code === 127) {
+              err = new Error("Sendmail command not found, process exited with code " + code);
+            } else {
+              err = new Error("Sendmail exited with code " + code);
+            }
+            this.logger.error({
+              err,
+              tnx: "stdin",
+              messageId
+            }, "Error sending message %s to sendmail. %s", messageId, err.message);
+            callback(err);
+          });
+          sendmail.once("close", callback);
+          sendmail.stdin.on("error", (err) => {
+            this.logger.error({
+              err,
+              tnx: "stdin",
+              messageId
+            }, "Error occurred when piping message %s to sendmail. %s", messageId, err.message);
+            callback(err);
+          });
+          let recipients = [].concat(envelope.to || []);
+          if (recipients.length > 3) {
+            recipients.push("...and " + recipients.splice(2).length + " more");
+          }
+          this.logger.info({
+            tnx: "send",
+            messageId
+          }, "Sending message %s to <%s>", messageId, recipients.join(", "));
+          let sourceStream = mail.message.createReadStream();
+          sourceStream.once("error", (err) => {
+            this.logger.error({
+              err,
+              tnx: "stdin",
+              messageId
+            }, "Error occurred when generating message %s. %s", messageId, err.message);
+            sendmail.kill("SIGINT");
+            callback(err);
+          });
+          sourceStream.pipe(sendmail.stdin);
+        } else {
+          return callback(new Error("sendmail was not found"));
+        }
+      }
+    };
+    module.exports = SendmailTransport;
+  }
+});
+
+// node_modules/.deno/nodemailer@6.9.13/node_modules/nodemailer/lib/stream-transport/index.js
+var require_stream_transport = __commonJS({
+  "node_modules/.deno/nodemailer@6.9.13/node_modules/nodemailer/lib/stream-transport/index.js"(exports, module) {
+    "use strict";
+    var packageData = require_package();
+    var shared = require_shared();
+    var StreamTransport = class {
+      constructor(options) {
+        options = options || {};
+        this.options = options || {};
+        this.name = "StreamTransport";
+        this.version = packageData.version;
+        this.logger = shared.getLogger(this.options, {
+          component: this.options.component || "stream-transport"
+        });
+        this.winbreak = [
+          "win",
+          "windows",
+          "dos",
+          "\r\n"
+        ].includes((options.newline || "").toString().toLowerCase());
+      }
+      /**
+         * Compiles a mailcomposer message and forwards it to handler that sends it
+         *
+         * @param {Object} emailMessage MailComposer object
+         * @param {Function} callback Callback function to run when the sending is completed
+         */
+      send(mail, done) {
+        mail.message.keepBcc = true;
+        let envelope = mail.data.envelope || mail.message.getEnvelope();
+        let messageId = mail.message.messageId();
+        let recipients = [].concat(envelope.to || []);
+        if (recipients.length > 3) {
+          recipients.push("...and " + recipients.splice(2).length + " more");
+        }
+        this.logger.info({
+          tnx: "send",
+          messageId
+        }, "Sending message %s to <%s> using %s line breaks", messageId, recipients.join(", "), this.winbreak ? "<CR><LF>" : "<LF>");
+        setImmediate(() => {
+          let stream;
+          try {
+            stream = mail.message.createReadStream();
+          } catch (E) {
+            this.logger.error({
+              err: E,
+              tnx: "send",
+              messageId
+            }, "Creating send stream failed for %s. %s", messageId, E.message);
+            return done(E);
+          }
+          if (!this.options.buffer) {
+            stream.once("error", (err) => {
+              this.logger.error({
+                err,
+                tnx: "send",
+                messageId
+              }, "Failed creating message for %s. %s", messageId, err.message);
+            });
+            return done(null, {
+              envelope: mail.data.envelope || mail.message.getEnvelope(),
+              messageId,
+              message: stream
+            });
+          }
+          let chunks = [];
+          let chunklen = 0;
+          stream.on("readable", () => {
+            let chunk;
+            while ((chunk = stream.read()) !== null) {
+              chunks.push(chunk);
+              chunklen += chunk.length;
+            }
+          });
+          stream.once("error", (err) => {
+            this.logger.error({
+              err,
+              tnx: "send",
+              messageId
+            }, "Failed creating message for %s. %s", messageId, err.message);
+            return done(err);
+          });
+          stream.on("end", () => done(null, {
+            envelope: mail.data.envelope || mail.message.getEnvelope(),
+            messageId,
+            message: Buffer.concat(chunks, chunklen)
+          }));
+        });
+      }
+    };
+    module.exports = StreamTransport;
+  }
+});
+
+// node_modules/.deno/nodemailer@6.9.13/node_modules/nodemailer/lib/json-transport/index.js
+var require_json_transport = __commonJS({
+  "node_modules/.deno/nodemailer@6.9.13/node_modules/nodemailer/lib/json-transport/index.js"(exports, module) {
+    "use strict";
+    var packageData = require_package();
+    var shared = require_shared();
+    var JSONTransport = class {
+      constructor(options) {
+        options = options || {};
+        this.options = options || {};
+        this.name = "JSONTransport";
+        this.version = packageData.version;
+        this.logger = shared.getLogger(this.options, {
+          component: this.options.component || "json-transport"
+        });
+      }
+      /**
+         * <p>Compiles a mailcomposer message and forwards it to handler that sends it.</p>
+         *
+         * @param {Object} emailMessage MailComposer object
+         * @param {Function} callback Callback function to run when the sending is completed
+         */
+      send(mail, done) {
+        mail.message.keepBcc = true;
+        let envelope = mail.data.envelope || mail.message.getEnvelope();
+        let messageId = mail.message.messageId();
+        let recipients = [].concat(envelope.to || []);
+        if (recipients.length > 3) {
+          recipients.push("...and " + recipients.splice(2).length + " more");
+        }
+        this.logger.info({
+          tnx: "send",
+          messageId
+        }, "Composing JSON structure of %s to <%s>", messageId, recipients.join(", "));
+        setImmediate(() => {
+          mail.normalize((err, data) => {
+            if (err) {
+              this.logger.error({
+                err,
+                tnx: "send",
+                messageId
+              }, "Failed building JSON structure for %s. %s", messageId, err.message);
+              return done(err);
+            }
+            delete data.envelope;
+            delete data.normalizedHeaders;
+            return done(null, {
+              envelope,
+              messageId,
+              message: this.options.skipEncoding ? data : JSON.stringify(data)
+            });
+          });
+        });
+      }
+    };
+    module.exports = JSONTransport;
+  }
+});
+
+// node_modules/.deno/nodemailer@6.9.13/node_modules/nodemailer/lib/ses-transport/index.js
+var require_ses_transport = __commonJS({
+  "node_modules/.deno/nodemailer@6.9.13/node_modules/nodemailer/lib/ses-transport/index.js"(exports, module) {
+    "use strict";
+    var EventEmitter = __require("node:events");
+    var packageData = require_package();
+    var shared = require_shared();
+    var LeWindows = require_le_windows();
+    var SESTransport = class extends EventEmitter {
+      constructor(options) {
+        super();
+        options = options || {};
+        this.options = options || {};
+        this.ses = this.options.SES;
+        this.name = "SESTransport";
+        this.version = packageData.version;
+        this.logger = shared.getLogger(this.options, {
+          component: this.options.component || "ses-transport"
+        });
+        this.maxConnections = Number(this.options.maxConnections) || Infinity;
+        this.connections = 0;
+        this.sendingRate = Number(this.options.sendingRate) || Infinity;
+        this.sendingRateTTL = null;
+        this.rateInterval = 1e3;
+        this.rateMessages = [];
+        this.pending = [];
+        this.idling = true;
+        setImmediate(() => {
+          if (this.idling) {
+            this.emit("idle");
+          }
+        });
+      }
+      /**
+         * Schedules a sending of a message
+         *
+         * @param {Object} emailMessage MailComposer object
+         * @param {Function} callback Callback function to run when the sending is completed
+         */
+      send(mail, callback) {
+        if (this.connections >= this.maxConnections) {
+          this.idling = false;
+          return this.pending.push({
+            mail,
+            callback
+          });
+        }
+        if (!this._checkSendingRate()) {
+          this.idling = false;
+          return this.pending.push({
+            mail,
+            callback
+          });
+        }
+        this._send(mail, (...args) => {
+          setImmediate(() => callback(...args));
+          this._sent();
+        });
+      }
+      _checkRatedQueue() {
+        if (this.connections >= this.maxConnections || !this._checkSendingRate()) {
+          return;
+        }
+        if (!this.pending.length) {
+          if (!this.idling) {
+            this.idling = true;
+            this.emit("idle");
+          }
+          return;
+        }
+        let next = this.pending.shift();
+        this._send(next.mail, (...args) => {
+          setImmediate(() => next.callback(...args));
+          this._sent();
+        });
+      }
+      _checkSendingRate() {
+        clearTimeout(this.sendingRateTTL);
+        let now = Date.now();
+        let oldest = false;
+        for (let i = this.rateMessages.length - 1; i >= 0; i--) {
+          if (this.rateMessages[i].ts >= now - this.rateInterval && (!oldest || this.rateMessages[i].ts < oldest)) {
+            oldest = this.rateMessages[i].ts;
+          }
+          if (this.rateMessages[i].ts < now - this.rateInterval && !this.rateMessages[i].pending) {
+            this.rateMessages.splice(i, 1);
+          }
+        }
+        if (this.rateMessages.length < this.sendingRate) {
+          return true;
+        }
+        let delay = Math.max(oldest + 1001, now + 20);
+        this.sendingRateTTL = setTimeout(() => this._checkRatedQueue(), now - delay);
+        try {
+          this.sendingRateTTL.unref();
+        } catch (E) {
+        }
+        return false;
+      }
+      _sent() {
+        this.connections--;
+        this._checkRatedQueue();
+      }
+      /**
+         * Returns true if there are free slots in the queue
+         */
+      isIdle() {
+        return this.idling;
+      }
+      /**
+         * Compiles a mailcomposer message and forwards it to SES
+         *
+         * @param {Object} emailMessage MailComposer object
+         * @param {Function} callback Callback function to run when the sending is completed
+         */
+      _send(mail, callback) {
+        let statObject = {
+          ts: Date.now(),
+          pending: true
+        };
+        this.connections++;
+        this.rateMessages.push(statObject);
+        let envelope = mail.data.envelope || mail.message.getEnvelope();
+        let messageId = mail.message.messageId();
+        let recipients = [].concat(envelope.to || []);
+        if (recipients.length > 3) {
+          recipients.push("...and " + recipients.splice(2).length + " more");
+        }
+        this.logger.info({
+          tnx: "send",
+          messageId
+        }, "Sending message %s to <%s>", messageId, recipients.join(", "));
+        let getRawMessage = (next) => {
+          if (!mail.data._dkim) {
+            mail.data._dkim = {};
+          }
+          if (mail.data._dkim.skipFields && typeof mail.data._dkim.skipFields === "string") {
+            mail.data._dkim.skipFields += ":date:message-id";
+          } else {
+            mail.data._dkim.skipFields = "date:message-id";
+          }
+          let sourceStream = mail.message.createReadStream();
+          let stream = sourceStream.pipe(new LeWindows());
+          let chunks = [];
+          let chunklen = 0;
+          stream.on("readable", () => {
+            let chunk;
+            while ((chunk = stream.read()) !== null) {
+              chunks.push(chunk);
+              chunklen += chunk.length;
+            }
+          });
+          sourceStream.once("error", (err) => stream.emit("error", err));
+          stream.once("error", (err) => {
+            next(err);
+          });
+          stream.once("end", () => next(null, Buffer.concat(chunks, chunklen)));
+        };
+        setImmediate(() => getRawMessage((err, raw) => {
+          if (err) {
+            this.logger.error({
+              err,
+              tnx: "send",
+              messageId
+            }, "Failed creating message for %s. %s", messageId, err.message);
+            statObject.pending = false;
+            return callback(err);
+          }
+          let sesMessage = {
+            RawMessage: {
+              // required
+              Data: raw
+              // required
+            },
+            Source: envelope.from,
+            Destinations: envelope.to
+          };
+          Object.keys(mail.data.ses || {}).forEach((key) => {
+            sesMessage[key] = mail.data.ses[key];
+          });
+          let ses = (this.ses.aws ? this.ses.ses : this.ses) || {};
+          let aws = this.ses.aws || {};
+          let getRegion = (cb) => {
+            if (ses.config && typeof ses.config.region === "function") {
+              return ses.config.region().then((region) => cb(null, region)).catch((err2) => cb(err2));
+            }
+            return cb(null, ses.config && ses.config.region || "us-east-1");
+          };
+          getRegion((err2, region) => {
+            if (err2 || !region) {
+              region = "us-east-1";
+            }
+            let sendPromise;
+            if (typeof ses.send === "function" && aws.SendRawEmailCommand) {
+              sendPromise = ses.send(new aws.SendRawEmailCommand(sesMessage));
+            } else {
+              sendPromise = ses.sendRawEmail(sesMessage).promise();
+            }
+            sendPromise.then((data) => {
+              if (region === "us-east-1") {
+                region = "email";
+              }
+              statObject.pending = false;
+              callback(null, {
+                envelope: {
+                  from: envelope.from,
+                  to: envelope.to
+                },
+                messageId: "<" + data.MessageId + (!/@/.test(data.MessageId) ? "@" + region + ".amazonses.com" : "") + ">",
+                response: data.MessageId,
+                raw
+              });
+            }).catch((err3) => {
+              this.logger.error({
+                err: err3,
+                tnx: "send"
+              }, "Send error for %s: %s", messageId, err3.message);
+              statObject.pending = false;
+              callback(err3);
+            });
+          });
+        }));
+      }
+      /**
+         * Verifies SES configuration
+         *
+         * @param {Function} callback Callback function
+         */
+      verify(callback) {
+        let promise;
+        let ses = (this.ses.aws ? this.ses.ses : this.ses) || {};
+        let aws = this.ses.aws || {};
+        const sesMessage = {
+          RawMessage: {
+            // required
+            Data: "From: invalid@invalid\r\nTo: invalid@invalid\r\n Subject: Invalid\r\n\r\nInvalid"
+          },
+          Source: "invalid@invalid",
+          Destinations: [
+            "invalid@invalid"
+          ]
+        };
+        if (!callback) {
+          promise = new Promise((resolve, reject) => {
+            callback = shared.callbackPromise(resolve, reject);
+          });
+        }
+        const cb = (err) => {
+          if (err && (err.code || err.Code) !== "InvalidParameterValue") {
+            return callback(err);
+          }
+          return callback(null, true);
+        };
+        if (typeof ses.send === "function" && aws.SendRawEmailCommand) {
+          sesMessage.RawMessage.Data = Buffer.from(sesMessage.RawMessage.Data);
+          ses.send(new aws.SendRawEmailCommand(sesMessage), cb);
+        } else {
+          ses.sendRawEmail(sesMessage, cb);
+        }
+        return promise;
+      }
+    };
+    module.exports = SESTransport;
+  }
+});
+
+// node_modules/.deno/nodemailer@6.9.13/node_modules/nodemailer/lib/nodemailer.js
+var require_nodemailer = __commonJS({
+  "node_modules/.deno/nodemailer@6.9.13/node_modules/nodemailer/lib/nodemailer.js"(exports, module) {
+    "use strict";
+    var Mailer = require_mailer();
+    var shared = require_shared();
+    var SMTPPool = require_smtp_pool();
+    var SMTPTransport = require_smtp_transport();
+    var SendmailTransport = require_sendmail_transport();
+    var StreamTransport = require_stream_transport();
+    var JSONTransport = require_json_transport();
+    var SESTransport = require_ses_transport();
+    var nmfetch = require_fetch();
+    var packageData = require_package();
+    var ETHEREAL_API = (process.env.ETHEREAL_API || "https://api.nodemailer.com").replace(/\/+$/, "");
+    var ETHEREAL_WEB = (process.env.ETHEREAL_WEB || "https://ethereal.email").replace(/\/+$/, "");
+    var ETHEREAL_CACHE = [
+      "true",
+      "yes",
+      "y",
+      "1"
+    ].includes((process.env.ETHEREAL_CACHE || "yes").toString().trim().toLowerCase());
+    var testAccount = false;
+    module.exports.createTransport = function(transporter, defaults) {
+      let urlConfig;
+      let options;
+      let mailer;
+      if (
+        // provided transporter is a configuration object, not transporter plugin
+        typeof transporter === "object" && typeof transporter.send !== "function" || // provided transporter looks like a connection url
+        typeof transporter === "string" && /^(smtps?|direct):/i.test(transporter)
+      ) {
+        if (urlConfig = typeof transporter === "string" ? transporter : transporter.url) {
+          options = shared.parseConnectionUrl(urlConfig);
+        } else {
+          options = transporter;
+        }
+        if (options.pool) {
+          transporter = new SMTPPool(options);
+        } else if (options.sendmail) {
+          transporter = new SendmailTransport(options);
+        } else if (options.streamTransport) {
+          transporter = new StreamTransport(options);
+        } else if (options.jsonTransport) {
+          transporter = new JSONTransport(options);
+        } else if (options.SES) {
+          transporter = new SESTransport(options);
+        } else {
+          transporter = new SMTPTransport(options);
+        }
+      }
+      mailer = new Mailer(transporter, options, defaults);
+      return mailer;
+    };
+    module.exports.createTestAccount = function(apiUrl, callback) {
+      let promise;
+      if (!callback && typeof apiUrl === "function") {
+        callback = apiUrl;
+        apiUrl = false;
+      }
+      if (!callback) {
+        promise = new Promise((resolve, reject) => {
+          callback = shared.callbackPromise(resolve, reject);
+        });
+      }
+      if (ETHEREAL_CACHE && testAccount) {
+        setImmediate(() => callback(null, testAccount));
+        return promise;
+      }
+      apiUrl = apiUrl || ETHEREAL_API;
+      let chunks = [];
+      let chunklen = 0;
+      let req = nmfetch(apiUrl + "/user", {
+        contentType: "application/json",
+        method: "POST",
+        body: Buffer.from(JSON.stringify({
+          requestor: packageData.name,
+          version: packageData.version
+        }))
+      });
+      req.on("readable", () => {
+        let chunk;
+        while ((chunk = req.read()) !== null) {
+          chunks.push(chunk);
+          chunklen += chunk.length;
+        }
+      });
+      req.once("error", (err) => callback(err));
+      req.once("end", () => {
+        let res = Buffer.concat(chunks, chunklen);
+        let data;
+        let err;
+        try {
+          data = JSON.parse(res.toString());
+        } catch (E) {
+          err = E;
+        }
+        if (err) {
+          return callback(err);
+        }
+        if (data.status !== "success" || data.error) {
+          return callback(new Error(data.error || "Request failed"));
+        }
+        delete data.status;
+        testAccount = data;
+        callback(null, testAccount);
+      });
+      return promise;
+    };
+    module.exports.getTestMessageUrl = function(info) {
+      if (!info || !info.response) {
+        return false;
+      }
+      let infoProps = /* @__PURE__ */ new Map();
+      info.response.replace(/\[([^\]]+)\]$/, (m, props) => {
+        props.replace(/\b([A-Z0-9]+)=([^\s]+)/g, (m2, key, value) => {
+          infoProps.set(key, value);
+        });
+      });
+      if (infoProps.has("STATUS") && infoProps.has("MSGID")) {
+        return (testAccount.web || ETHEREAL_WEB) + "/message/" + infoProps.get("MSGID");
+      }
+      return false;
+    };
+  }
+});
+
+// supabase/functions/_shared/compat.ts
+var import_npm_nodemailer_6_9 = __toESM(require_nodemailer());
+import { setImmediate as nodeSetImmediate, clearImmediate as nodeClearImmediate } from "node:timers";
+var g = globalThis;
+if (typeof g.setImmediate !== "function") g.setImmediate = nodeSetImmediate;
+if (typeof g.clearImmediate !== "function") g.clearImmediate = nodeClearImmediate;
+var SUPA_URL = Deno.env.get("SUPABASE_URL") || "";
+var SRK = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") || "";
+var ANON = Deno.env.get("SUPABASE_ANON_KEY") || "";
+var PRIV_BUCKET = "private";
+var PUB_BUCKET = "public";
+var LEGACY_BASE44_URL = () => Deno.env.get("EXM_LEGACY_BASE44_URL") || "https://exmortis-return-path.base44.app";
+var H = () => ({
+  apikey: SRK,
+  Authorization: `Bearer ${SRK}`,
+  "Content-Type": "application/json"
+});
+var val = (v) => encodeURIComponent(String(v));
+var inVal = (v) => `"${String(v).replace(/\\/g, "\\\\").replace(/"/g, '\\"')}"`;
+var col = (f) => `data->>${encodeURIComponent(f)}`;
+var OP_MAP = {
+  $ne: "neq",
+  $gt: "gt",
+  $gte: "gte",
+  $lt: "lt",
+  $lte: "lte"
+};
+function atom(field, cond2) {
+  if (cond2 === null) return `${col(field)}=is.null`;
+  if (cond2 === true || cond2 === false) return `${col(field)}=eq.${cond2}`;
+  if (typeof cond2 !== "object" || Array.isArray(cond2)) {
+    return Array.isArray(cond2) ? `${col(field)}=in.(${cond2.map(inVal).join(",")})` : `${col(field)}=eq.${val(cond2)}`;
+  }
+  const [op, v] = Object.entries(cond2)[0];
+  if (op === "$in" || op === "$nin") {
+    const list = Array.isArray(v) ? v : [
+      v
+    ];
+    return `${col(field)}=${op === "$in" ? "in" : "not.in"}.(${list.map(inVal).join(",")})`;
+  }
+  if (op === "$exists") return `${col(field)}=is.${v ? "not.null" : "null"}`;
+  if (op === "$regex") return `${col(field)}=like.*${encodeURIComponent(String(v))}*`;
+  if (op in OP_MAP) return `${col(field)}=${OP_MAP[op]}.${val(v)}`;
+  throw new Error(`Nieobs\u0142ugiwany operator filtra: ${op}`);
+}
+function conditions(query) {
+  const parts = [];
+  for (const [field, cond2] of Object.entries(query || {})) {
+    if (field === "$or" || field === "$and") {
+      const sep = field === "$or" ? "or" : "and";
+      const inner = cond2.map((sub) => {
+        const [f, c] = Object.entries(sub)[0];
+        return atom(f, c).replace("=", ".");
+      });
+      parts.push(`${sep}=(${inner.join(",")})`);
+    } else {
+      parts.push(atom(field, cond2));
+    }
+  }
+  return parts;
+}
+function orderExpr(sort) {
+  const dir = String(sort).startsWith("-") ? "desc" : "asc";
+  const field = String(sort).replace(/^-/, "");
+  const built = [
+    "created_date",
+    "updated_date"
+  ].includes(field);
+  return `${built ? field : encodeURIComponent("data->>" + field)}.${dir}`;
+}
+async function pgGet(table, qs2) {
+  const res = await fetch(`${SUPA_URL}/rest/v1/${table}?${qs2}`, {
+    headers: H(),
+    signal: AbortSignal.timeout(2e4)
+  });
+  if (!res.ok) throw new Error(`Supabase REST ${res.status}: ${(await res.text()).slice(0, 200)}`);
+  const text = await res.text();
+  return text ? JSON.parse(text) : [];
+}
+var row2rec = (r) => ({
+  ...r.data || {},
+  id: r.id,
+  created_date: r.created_date,
+  updated_date: r.updated_date,
+  created_by_id: r.created_by_id
+});
+var rec2row = (rec) => {
+  const data = {};
+  for (const [k, v] of Object.entries(rec)) {
+    if (![
+      "id",
+      "created_date",
+      "updated_date",
+      "created_by_id"
+    ].includes(k)) data[k] = v;
+  }
+  return data;
+};
+var tableOf = (name) => "exm_" + name.toLowerCase();
+function parseArgs(args) {
+  const [query, second] = args;
+  if (second && typeof second === "object" && !Array.isArray(second)) {
+    const o = second;
+    return {
+      query: query || {},
+      sort: o.sort,
+      limit: o.limit,
+      cursor: o.cursor,
+      distinct: o.distinct,
+      page: true
+    };
+  }
+  return {
+    query: query || {},
+    sort: second,
+    limit: args[2],
+    cursor: args[3],
+    distinct: null,
+    page: false
+  };
+}
+function makeEntity(name) {
+  const table = tableOf(name);
+  async function fetchPage(parts, sort, limit, cursor) {
+    const order = sort ? `&order=${orderExpr(String(sort))}` : "";
+    const lim = Math.max(1, Math.min(Number(limit) || 50, 2e3));
+    const off = Math.max(0, Number(cursor ?? 0) || 0);
+    const qs2 = `${parts.join("&")}${order}&limit=${lim + 1}&offset=${off}`;
+    const rows = await pgGet(table, qs2);
+    const has_more = rows.length > lim;
+    return {
+      items: (has_more ? rows.slice(0, lim) : rows).map(row2rec),
+      next_cursor: has_more ? String(off + lim) : null,
+      has_more
+    };
+  }
+  return {
+    async get(id) {
+      const rows = await pgGet(table, `id=eq.${val(id)}&limit=1`);
+      return rows[0] ? row2rec(rows[0]) : null;
+    },
+    async filter(...args) {
+      const { query, sort, limit, cursor, distinct, page } = parseArgs(args);
+      const parts = conditions(query);
+      if (distinct) {
+        const rows = await pgGet(table, `select=v:${encodeURIComponent("data->>" + distinct)}&limit=2000`);
+        return {
+          items: [
+            ...new Set(rows.map((r) => r.v).filter((v) => v !== null && v !== void 0))
+          ]
+        };
+      }
+      if (!page) {
+        const order = sort ? `&order=${orderExpr(String(sort))}` : "";
+        const lim = limit ? `&limit=${Math.min(Number(limit) || 50, 2e3)}` : "";
+        return (await pgGet(table, `${parts.join("&")}${order}${lim}`)).map(row2rec);
+      }
+      return fetchPage(parts, sort, limit, cursor);
+    },
+    // Base44: list(sort, limit, skip) — pierwszy argument to sortowanie, nie zapytanie.
+    // Tylko obiekt (albo brak argumentów) oznacza listę ze stronicą; reszta to tablica rekordów.
+    async list(...args) {
+      const [first, limit, skip] = args;
+      if (first === void 0 || first === null || typeof first === "string") {
+        const order = first ? `&order=${orderExpr(String(first))}` : "";
+        const lim = Math.max(1, Math.min(Number(limit) || 2e3, 2e3));
+        const off = Math.max(0, Number(skip) || 0);
+        return (await pgGet(table, `select=*${order}&limit=${lim}&offset=${off}`)).map(row2rec);
+      }
+      const options = first;
+      if (!Object.keys(options).length) return (await pgGet(table, "limit=2000")).map(row2rec);
+      return this.filter(options.query || {}, {
+        sort: options.sort,
+        limit: options.limit,
+        cursor: options.cursor,
+        distinct: options.distinct
+      });
+    },
+    async count(query = {}) {
+      const res = await fetch(`${SUPA_URL}/rest/v1/${table}?${conditions(query).join("&") || "select=id"}&limit=0`, {
+        method: "HEAD",
+        headers: {
+          ...H(),
+          Prefer: "count=exact"
+        },
+        signal: AbortSignal.timeout(2e4)
+      });
+      if (!res.ok) throw new Error(`Supabase REST ${res.status}`);
+      const range = res.headers.get("content-range") || "/0";
+      return Number(range.split("/")[1]) || 0;
+    },
+    async aggregate(body = {}) {
+      const parts = conditions(body.query || {});
+      const rows = (await pgGet(table, `${parts.join("&") || "select=*"}&limit=20000`)).map(row2rec);
+      const groupBy = body.groupBy || (body.dateBucket ? body.dateBucket.field : null);
+      const bucketUnit = body.dateBucket ? body.dateBucket.unit || "day" : null;
+      const groups = /* @__PURE__ */ new Map();
+      for (const r of rows) {
+        let g3 = groupBy ? r[groupBy] ?? null : "";
+        if (g3 && bucketUnit && groupBy) {
+          const d = new Date(g3);
+          g3 = bucketUnit === "month" ? d.toISOString().slice(0, 7) : bucketUnit === "week" ? String(d.getUTCFullYear()) + "-W" + Math.ceil(((+d - +new Date(d.getUTCFullYear(), 0, 1)) / 864e5 + new Date(d.getUTCFullYear(), 0, 1).getUTCDay() + 1) / 7) : d.toISOString().slice(0, 10);
+        }
+        const key = String(g3);
+        if (!groups.has(key)) groups.set(key, []);
+        groups.get(key).push(r);
+      }
+      const num = (r, f) => Number(r[f]) || 0;
+      const out = [
+        ...groups.entries()
+      ].map(([key, rs]) => {
+        const row = {
+          [groupBy || "okres"]: key === "null" ? null : key,
+          count: rs.length
+        };
+        for (const f of body.sum || []) row[`sum_${f}`] = rs.reduce((a, r) => a + num(r, f), 0);
+        for (const f of body.avg || []) row[`avg_${f}`] = rs.length ? rs.reduce((a, r) => a + num(r, f), 0) / rs.length : 0;
+        for (const f of body.min || []) row[`min_${f}`] = rs.length ? Math.min(...rs.map((r) => num(r, f))) : 0;
+        for (const f of body.max || []) row[`max_${f}`] = rs.length ? Math.max(...rs.map((r) => num(r, f))) : 0;
+        return row;
+      });
+      out.sort((a, b) => String(Object.values(a)[0]).localeCompare(String(Object.values(b)[0])));
+      return {
+        rows: out
+      };
+    },
+    async create(rec) {
+      const now = (/* @__PURE__ */ new Date()).toISOString();
+      const row = {
+        id: crypto.randomUUID(),
+        created_date: now,
+        updated_date: now,
+        created_by_id: rec.created_by_id || null,
+        data: rec2row(rec)
+      };
+      const res = await fetch(`${SUPA_URL}/rest/v1/${table}`, {
+        method: "POST",
+        headers: {
+          ...H(),
+          Prefer: "return=representation"
+        },
+        body: JSON.stringify(row),
+        signal: AbortSignal.timeout(2e4)
+      });
+      if (!res.ok) throw new Error(`Supabase REST ${res.status}: ${(await res.text()).slice(0, 200)}`);
+      return row2rec((await res.json())[0]);
+    },
+    async bulkCreate(recs) {
+      const now = (/* @__PURE__ */ new Date()).toISOString();
+      const rows = (recs || []).map((rec) => ({
+        id: crypto.randomUUID(),
+        created_date: now,
+        updated_date: now,
+        created_by_id: rec.created_by_id || null,
+        data: rec2row(rec)
+      }));
+      if (!rows.length) return [];
+      const res = await fetch(`${SUPA_URL}/rest/v1/${table}`, {
+        method: "POST",
+        headers: {
+          ...H(),
+          Prefer: "return=representation"
+        },
+        body: JSON.stringify(rows),
+        signal: AbortSignal.timeout(3e4)
+      });
+      if (!res.ok) throw new Error(`Supabase REST ${res.status}: ${(await res.text()).slice(0, 200)}`);
+      return (await res.json()).map(row2rec);
+    },
+    async update(id, patch) {
+      const rows = await pgGet(table, `id=eq.${val(id)}&limit=1`);
+      if (!rows[0]) return null;
+      const data = {
+        ...rows[0].data,
+        ...rec2row(patch)
+      };
+      const res = await fetch(`${SUPA_URL}/rest/v1/${table}?id=eq.${val(id)}`, {
+        method: "PATCH",
+        headers: {
+          ...H(),
+          Prefer: "return=representation"
+        },
+        body: JSON.stringify({
+          data,
+          updated_date: (/* @__PURE__ */ new Date()).toISOString()
+        }),
+        signal: AbortSignal.timeout(2e4)
+      });
+      if (!res.ok) throw new Error(`Supabase REST ${res.status}: ${(await res.text()).slice(0, 200)}`);
+      return row2rec((await res.json())[0]);
+    },
+    async updateMany(query, ops) {
+      const $set = ops.$set || {};
+      const $inc = ops.$inc || {};
+      const $unset = ops.$unset || [];
+      let changed = 0;
+      for (let round = 0; round < 20; round++) {
+        const ids = (await pgGet(table, `${conditions(query).join("&")}&select=id&limit=500`)).map((r) => String(r.id));
+        if (!ids.length) break;
+        await Promise.all(ids.map(async (id) => {
+          const rows = await pgGet(table, `id=eq.${val(id)}&limit=1`);
+          const data = {
+            ...rows[0]?.data || {},
+            ...$set
+          };
+          for (const [f, n] of Object.entries($inc)) data[f] = (Number(data[f]) || 0) + Number(n);
+          for (const f of $unset) delete data[f];
+          const res = await fetch(`${SUPA_URL}/rest/v1/${table}?id=eq.${val(id)}`, {
+            method: "PATCH",
+            headers: {
+              ...H(),
+              Prefer: "return=minimal"
+            },
+            body: JSON.stringify({
+              data,
+              updated_date: (/* @__PURE__ */ new Date()).toISOString()
+            }),
+            signal: AbortSignal.timeout(2e4)
+          });
+          if (res.ok) changed++;
+        }));
+      }
+      return {
+        ok: true,
+        changed
+      };
+    },
+    async bulkUpdate(list) {
+      for (const item of list || []) await this.update(item.id, item);
+      return {
+        ok: true,
+        count: (list || []).length
+      };
+    },
+    async delete(id) {
+      const res = await fetch(`${SUPA_URL}/rest/v1/${table}?id=eq.${val(id)}`, {
+        method: "DELETE",
+        headers: H(),
+        signal: AbortSignal.timeout(2e4)
+      });
+      if (!res.ok) throw new Error(`Supabase REST ${res.status}`);
+      return {
+        ok: true
+      };
+    },
+    async deleteMany(query = {}) {
+      const res = await fetch(`${SUPA_URL}/rest/v1/${table}?${conditions(query).join("&")}`, {
+        method: "DELETE",
+        headers: H(),
+        signal: AbortSignal.timeout(6e4)
+      });
+      if (!res.ok) throw new Error(`Supabase REST ${res.status}`);
+      return {
+        ok: true
+      };
+    },
+    subscribe: () => () => {
+    }
+  };
+}
+var ENTITIES = /* @__PURE__ */ new Map();
+function entities() {
+  return new Proxy({}, {
+    get: (_t, name) => {
+      if (!ENTITIES.has(name)) ENTITIES.set(name, makeEntity(name));
+      return ENTITIES.get(name);
+    }
+  });
+}
+var HOSTING_BASE = "";
+var HOSTING_BASE_AT = 0;
+async function hostingBase() {
+  if (HOSTING_BASE && Date.now() - HOSTING_BASE_AT < 3e5) return HOSTING_BASE;
+  let url = String(Deno.env.get("APP_URL") || Deno.env.get("SITE_URL") || "").replace(/\/+$/, "");
+  if (!url || /preview--/i.test(url)) {
+    const r = await fetch(`${SUPA_URL}/rest/v1/app_settings?key=eq.app&select=value&limit=1`, {
+      headers: H(),
+      signal: AbortSignal.timeout(1e4)
+    }).catch(() => null);
+    const j = r && r.ok ? await r.json().catch(() => null) : null;
+    url = String(j?.[0]?.value?.url || "").replace(/\/+$/, "");
+    if (/preview--/i.test(url)) url = "";
+  }
+  if (url) {
+    HOSTING_BASE = url;
+    HOSTING_BASE_AT = Date.now();
+  }
+  return url;
+}
+var Core = {
+  async SendEmail(opts) {
+    const host = Deno.env.get("SMTP_HOST");
+    const user = Deno.env.get("SMTP_USER");
+    const pass = Deno.env.get("SMTP_PASS");
+    if (!host || !user || !pass) throw new Error("Wysy\u0142ka awaryjna: brak sekret\xF3w SMTP_HOST/SMTP_USER/SMTP_PASS");
+    const port = Number(Deno.env.get("SMTP_PORT") || 587);
+    const transport = import_npm_nodemailer_6_9.default.createTransport({
+      host,
+      port,
+      secure: port === 465,
+      auth: {
+        user,
+        pass
+      }
+    });
+    await transport.sendMail({
+      from: `${opts.from_name || "Exmortis"} <${user}>`,
+      to: opts.to,
+      subject: opts.subject || "(bez tematu)",
+      html: opts.html || opts.body || "",
+      text: opts.text || ""
+    });
+    return {
+      ok: true
+    };
+  },
+  async CreateFileSignedUrl({ file_uri, expires_in = 300 }) {
+    if (/^https?:\/\//.test(file_uri)) return {
+      signed_url: file_uri
+    };
+    if (/^cf\//.test(String(file_uri))) {
+      const name = String(file_uri).replace(/^cf\/(private|public)\//, "");
+      if (!/^[A-Za-z0-9._-]{1,160}$/.test(name)) throw new Error("Podpis pliku: nieprawid\u0142owa nazwa pliku");
+      const key = Deno.env.get("MEDIA_SECRET") || Deno.env.get("BOOKING_HMAC_KEY");
+      if (!key) throw new Error("Podpis pliku: brak sekretu MEDIA_SECRET");
+      const base = await hostingBase();
+      if (!base) throw new Error("Podpis pliku: brak adresu aplikacji (ustawienie app)");
+      const exp2 = Math.floor(Date.now() / 1e3) + Math.max(60, Math.min(Number(expires_in) || 300, 604800));
+      const enc2 = new TextEncoder();
+      const k = await crypto.subtle.importKey("raw", enc2.encode(key), {
+        name: "HMAC",
+        hash: "SHA-256"
+      }, false, [
+        "sign"
+      ]);
+      const mac = [
+        ...new Uint8Array(await crypto.subtle.sign("HMAC", k, enc2.encode(`${name}.${exp2}`)))
+      ].map((b) => b.toString(16).padStart(2, "0")).join("");
+      return {
+        signed_url: `${base}/media/private/${encodeURIComponent(name)}?e=${exp2}&s=${mac}`
+      };
+    }
+    let bucket = "", path = "";
+    const m = file_uri.match(/^(?:supabase:\/\/)([^/]+)\/(.+)$/);
+    if (m) {
+      bucket = m[1];
+      path = m[2];
+    } else {
+      const [head, ...rest] = String(file_uri).split("/");
+      bucket = /privat/i.test(head) ? PRIV_BUCKET : PUB_BUCKET;
+      path = rest.join("/");
+    }
+    const exp = Math.max(60, Math.min(Number(expires_in) || 300, 604800));
+    const legacy = async () => {
+      const key = Deno.env.get("BOOKING_HMAC_KEY");
+      if (!key) throw new Error("Podpis pliku: brak sekretu BOOKING_HMAC_KEY");
+      const enc2 = new TextEncoder();
+      const k = await crypto.subtle.importKey("raw", enc2.encode(key), {
+        name: "HMAC",
+        hash: "SHA-256"
+      }, false, [
+        "sign"
+      ]);
+      const mac = [
+        ...new Uint8Array(await crypto.subtle.sign("HMAC", k, enc2.encode(`sign:${file_uri}`)))
+      ].map((b) => b.toString(16).padStart(2, "0")).join("");
+      const res = await fetch(`${LEGACY_BASE44_URL()}/functions/legacySign`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify({
+          uri: file_uri,
+          sig: mac,
+          expires_in: exp
+        }),
+        signal: AbortSignal.timeout(15e3)
+      });
+      if (!res.ok) throw new Error(`Podpis pliku (stare miejsce): ${res.status}`);
+      const j = await res.json().catch(() => null);
+      if (!j || !j.signed_url) throw new Error("Podpis pliku: brak linku");
+      return {
+        signed_url: j.signed_url
+      };
+    };
+    try {
+      const res = await fetch(`${SUPA_URL}/storage/v1/object/sign/${bucket}/${encodeURI(path)}`, {
+        method: "POST",
+        headers: {
+          ...H()
+        },
+        body: JSON.stringify({
+          expiresIn: exp
+        }),
+        signal: AbortSignal.timeout(2e4)
+      });
+      if (!res.ok) return await legacy();
+      const j = await res.json();
+      const rel = j.signedURL || j.token ? j.signedURL || `/object/sign/${bucket}/${path}?token=${j.token}` : null;
+      if (!rel) return await legacy();
+      return {
+        signed_url: `${SUPA_URL}/storage/v1${rel}`
+      };
+    } catch {
+      return await legacy();
+    }
+  },
+  async UploadPrivateFile({ file }) {
+    const name = `${Date.now()}-${(file.name || "plik").replace(/[^\w.\-]/g, "_")}`;
+    const res = await fetch(`${SUPA_URL}/storage/v1/object/${PRIV_BUCKET}/${name}`, {
+      method: "POST",
+      headers: {
+        apikey: SRK,
+        Authorization: `Bearer ${SRK}`,
+        "Content-Type": file.type || "application/octet-stream",
+        "x-upsert": "true"
+      },
+      body: file,
+      signal: AbortSignal.timeout(6e4)
+    });
+    if (!res.ok) throw new Error(`Storage upload ${res.status}: ${(await res.text()).slice(0, 200)}`);
+    return {
+      file_uri: `${PRIV_BUCKET}/${name}`
+    };
+  },
+  async UploadPublicFile({ file }) {
+    const name = `${Date.now()}-${(file.name || "plik").replace(/[^\w.\-]/g, "_")}`;
+    const res = await fetch(`${SUPA_URL}/storage/v1/object/${PUB_BUCKET}/${name}`, {
+      method: "POST",
+      headers: {
+        apikey: SRK,
+        Authorization: `Bearer ${SRK}`,
+        "Content-Type": file.type || "application/octet-stream",
+        "x-upsert": "true"
+      },
+      body: file,
+      signal: AbortSignal.timeout(6e4)
+    });
+    if (!res.ok) throw new Error(`Storage upload ${res.status}: ${(await res.text()).slice(0, 200)}`);
+    return {
+      file_url: `${SUPA_URL}/storage/v1/object/public/${PUB_BUCKET}/${name}`
+    };
+  },
+  async GenerateImage({ prompt }) {
+    const key = Deno.env.get("OPENAI_API_KEY");
+    if (!key) throw new Error("Generowanie obraz\xF3w: brak sekretu OPENAI_API_KEY");
+    const res = await fetch("https://api.openai.com/v1/images/generations", {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${key}`,
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify({
+        model: "gpt-image-1",
+        prompt,
+        size: "1024x1024",
+        n: 1
+      }),
+      signal: AbortSignal.timeout(12e4)
+    });
+    if (!res.ok) throw new Error(`OpenAI ${res.status}: ${(await res.text()).slice(0, 200)}`);
+    const b64 = (await res.json()).data?.[0]?.b64_json;
+    const bytes = Uint8Array.from(atob(b64), (c) => c.charCodeAt(0));
+    const { url } = await this.UploadPublicFile({
+      file: new Blob([
+        bytes
+      ], {
+        type: "image/png"
+      })
+    });
+    return {
+      url
+    };
+  }
+};
+var connectors = {
+  async getConnection(type) {
+    if (type === "supabase") return {
+      accessToken: SRK,
+      connectionConfig: {}
+    };
+    throw new Error(`\u0141\u0105cznik "${type}" nie dzia\u0142a po migracji \u2014 przenie\u015B token do sekret\xF3w i czytaj go w kodzie (Deno.env.get)`);
+  }
+};
+var CURRENT_REQ = null;
+var jwtOf = (req) => {
+  const h = (req?.headers.get("authorization") || "").match(/^Bearer (.+)$/i);
+  return h ? h[1] : "";
+};
+async function me() {
+  const token = jwtOf(CURRENT_REQ);
+  if (!token) return null;
+  const res = await fetch(`${SUPA_URL}/auth/v1/user`, {
+    headers: {
+      apikey: ANON,
+      Authorization: `Bearer ${token}`
+    },
+    signal: AbortSignal.timeout(1e4)
+  });
+  if (!res.ok) return null;
+  const u = await res.json();
+  let profile = null;
+  try {
+    const rows = await pgGet("exm_user", `${col("email")}=eq.${val(u.email)}&limit=1`);
+    profile = rows[0] || null;
+  } catch {
+  }
+  const d = profile?.data || {};
+  return {
+    id: String(u.id),
+    email: u.email,
+    full_name: d.full_name || u.user_metadata?.full_name || String(u.email || "").split("@")[0],
+    role: d.role || u.user_metadata?.role || "user",
+    created_date: profile?.created_date || u.created_at
+  };
+}
+async function updateMe(patch) {
+  const user = await me();
+  if (!user) throw new Error("Logowanie wymagane");
+  const data = {
+    full_name: patch.full_name,
+    ...rec2row(patch)
+  };
+  const res = await fetch(`${SUPA_URL}/rest/v1/exm_user?${col("email")}=eq.${val(user.email)}`, {
+    method: "PATCH",
+    headers: {
+      ...H(),
+      Prefer: "return=representation"
+    },
+    body: JSON.stringify({
+      data
+    }),
+    signal: AbortSignal.timeout(2e4)
+  });
+  if (!res.ok) throw new Error(`Supabase REST ${res.status}`);
+  const rows = await res.json();
+  return {
+    ...user,
+    ...rows[0]?.data || {},
+    ...patch
+  };
+}
+async function inviteUser(email, role = "user") {
+  const res = await fetch(`${SUPA_URL}/auth/v1/invite`, {
+    method: "POST",
+    headers: {
+      ...H()
+    },
+    body: JSON.stringify({
+      email
+    }),
+    signal: AbortSignal.timeout(2e4)
+  });
+  if (!res.ok) throw new Error(`Supabase invite ${res.status}: ${(await res.text()).slice(0, 200)}`);
+  try {
+    const now = (/* @__PURE__ */ new Date()).toISOString();
+    await fetch(`${SUPA_URL}/rest/v1/exm_user`, {
+      method: "POST",
+      headers: {
+        ...H(),
+        Prefer: "return=minimal"
+      },
+      body: JSON.stringify({
+        email,
+        role,
+        data: {
+          email,
+          full_name: email.split("@")[0],
+          role
+        },
+        created_date: now,
+        updated_date: now
+      }),
+      signal: AbortSignal.timeout(2e4)
+    });
+  } catch {
+  }
+  return {
+    ok: true
+  };
+}
+async function invoke(name, payload) {
+  const res = await fetch(`${SUPA_URL}/functions/v1/${name}`, {
+    method: "POST",
+    headers: {
+      Authorization: `Bearer ${SRK}`,
+      "Content-Type": "application/json"
+    },
+    body: JSON.stringify(payload),
+    signal: AbortSignal.timeout(12e4)
+  });
+  const data = await res.json().catch(() => null);
+  if (!res.ok) throw new Error(`Funkcja ${name}: ${res.status} ${JSON.stringify(data).slice(0, 200)}`);
+  return {
+    data
+  };
+}
+function createClientFromRequest(req) {
+  CURRENT_REQ = req;
+  const ents = entities();
+  return {
+    entities: ents,
+    auth: {
+      me,
+      isAuthenticated: async () => await me() !== null,
+      updateMe,
+      logout: () => new Response(null, {
+        status: 204
+      })
+    },
+    users: {
+      inviteUser
+    },
+    functions: {
+      invoke
+    },
+    asServiceRole: {
+      entities: ents,
+      integrations: {
+        Core
+      },
+      connectors,
+      users: {
+        inviteUser
+      },
+      aiGateway: {
+        connection: async () => {
+          throw new Error("aiGateway: po migracji u\u017Cywaj OpenAI (sekret OPENAI_API_KEY)");
+        }
+      }
+    }
+  };
+}
+
+// supabase/functions/_shared/supabase.ts
+var SUPA_URL2 = Deno.env.get("SUPABASE_URL") || "";
+var SRK2 = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") || "";
+var PROJECT_REF = SUPA_URL2.replace(/^https:\/\//, "").split(".")[0] || "fqhvxhnbeyvwubpnuzxe";
+var READ_RE = /^\s*(select|with|values|show|explain)\b/i;
+async function runSql(_base44, query, readOnly = false) {
+  const q = String(query || "").trim().replace(/;+\s*$/, "");
+  if (!q) return [];
+  const rows = await rpc(null, "exm_exec_sql", {
+    q,
+    read_only: readOnly || READ_RE.test(q)
+  });
+  return Array.isArray(rows) ? rows : [];
+}
+async function restGet(_base44, path) {
+  const res = await fetch(`https://${PROJECT_REF}.supabase.co/rest/v1/${path}`, {
+    headers: {
+      apikey: SRK2,
+      Authorization: `Bearer ${SRK2}`
+    },
+    signal: AbortSignal.timeout(15e3)
+  });
+  if (!res.ok) throw new Error(`Supabase REST ${res.status}: ${(await res.text()).slice(0, 200)}`);
+  const text = await res.text();
+  return text ? JSON.parse(text) : [];
+}
+async function rpc(_base44, fn, args) {
+  const res = await fetch(`https://${PROJECT_REF}.supabase.co/rest/v1/rpc/${fn}`, {
+    method: "POST",
+    headers: {
+      apikey: SRK2,
+      Authorization: `Bearer ${SRK2}`,
+      "Content-Type": "application/json"
+    },
+    body: JSON.stringify(args),
+    signal: AbortSignal.timeout(15e3)
+  });
+  const text = await res.text();
+  if (!res.ok) throw new Error(`Supabase RPC ${res.status}: ${text.slice(0, 300)}`);
+  return text ? JSON.parse(text) : null;
+}
+function escStr(value) {
+  const s = String(value);
+  let d = "$q$";
+  for (let n = 1; (s + d).indexOf(d) !== s.length; n++) d = `$q${n}$`;
+  return `${d}${s}${d}`;
+}
+function esc(value) {
+  if (value === null || value === void 0) return "NULL";
+  if (typeof value === "number") return String(value);
+  if (typeof value === "boolean") return value ? "TRUE" : "FALSE";
+  return escStr(value);
+}
+function clientIp(req) {
+  const ok = (v2) => /^[0-9a-fA-F:.]{3,45}$/.test(v2);
+  const t = (req.headers.get("true-client-ip") || "").trim();
+  if (ok(t)) return t;
+  const xff = (req.headers.get("x-forwarded-for") || "").split(",")[0].trim();
+  if (ok(xff)) return xff;
+  const v = (req.headers.get("cf-connecting-ip") || req.headers.get("x-real-ip") || "").trim();
+  return ok(v) ? v : "brak";
+}
+var EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+function textField(body, key, { max = 2e3, required = true } = {}) {
+  const v = body ? body[key] : void 0;
+  if (v === void 0 || v === null || String(v).trim() === "") {
+    if (required) {
+      const e = new Error(`Brak pola: ${key}`);
+      e.isValidation = true;
+      throw e;
+    }
+    return null;
+  }
+  const s = String(v).trim();
+  if (s.length > max) {
+    const e = new Error(`Pole ${key} jest zbyt d\u0142ugie`);
+    e.isValidation = true;
+    throw e;
+  }
+  return s;
+}
+function emailField(body, key = "email") {
+  const v = textField(body, key, {
+    max: 320
+  });
+  if (!EMAIL_RE.test(v)) {
+    const e = new Error("Niepoprawny adres e-mail");
+    e.isValidation = true;
+    throw e;
+  }
+  return v;
+}
+
+// supabase/functions/_shared/discounts.ts
+async function applyDiscount(base44, rawCode, lines) {
+  const code = String(rawCode || "").trim().toUpperCase();
+  if (!code) return null;
+  const found = (await base44.asServiceRole.entities.DiscountCode.filter({
+    code,
+    active: true
+  }))[0];
+  if (!found) throw new Error("Nieprawid\u0142owy kod rabatowy");
+  const today2 = (/* @__PURE__ */ new Date()).toLocaleDateString("sv-SE", {
+    timeZone: "Europe/Warsaw"
+  });
+  if (found.valid_until && found.valid_until < today2) throw new Error("Kod rabatowy wygas\u0142");
+  if (found.max_uses && (found.uses || 0) >= found.max_uses) throw new Error("Kod rabatowy zosta\u0142 ju\u017C wykorzystany");
+  const ids = found.product_ids || [];
+  const pids = [
+    ...new Set(lines.map((l) => String(l.product_id)))
+  ];
+  const rows = pids.length ? await runSql(base44, `SELECT id::text AS id FROM public.products WHERE product_type = 'karta' AND id::text IN (${pids.map(escStr).join(",")})`, true) : [];
+  const cards = rows.map((r) => r.id);
+  const fromCard = String(found.opis || "").startsWith("Karta podarunkowa");
+  const base = lines.filter((l) => !cards.includes(String(l.product_id))).filter((l) => ids.length === 0 || ids.includes(String(l.product_id))).reduce((s, l) => s + l.unit * l.qty, 0);
+  const onlyCards = lines.length > 0 && lines.every((l) => cards.includes(String(l.product_id)));
+  if (base === 0) throw new Error(onlyCards ? fromCard ? "Kodem z karty podarunkowej nie op\u0142acisz innej karty podarunkowej" : "Kod\xF3w rabatowych nie \u0142\u0105czy si\u0119 z kart\u0105 podarunkow\u0105" : "Kod nie obejmuje produkt\xF3w w koszyku");
+  const off = found.kind === "kwota" ? Math.min(base, Math.round(found.value * 100)) : Math.round(base * Math.min(100, found.value) / 100);
+  return {
+    record: found,
+    code,
+    discount: off
+  };
+}
+var RESERVE_SQL = `
+CREATE TABLE IF NOT EXISTS public.discount_reservations (
+  order_id text PRIMARY KEY, code text NOT NULL, email text, used boolean NOT NULL DEFAULT false, created_at timestamptz NOT NULL DEFAULT now());
+CREATE INDEX IF NOT EXISTS discount_reservations_code_idx ON public.discount_reservations (code);
+ALTER TABLE public.discount_reservations ENABLE ROW LEVEL SECURITY;
+REVOKE ALL ON public.discount_reservations FROM PUBLIC, anon, authenticated;
+CREATE OR REPLACE FUNCTION public.exm_reserve_code(p_code text, p_order text, p_email text, p_free int) RETURNS boolean
+LANGUAGE plpgsql SECURITY DEFINER SET search_path = '' AS $f$
+BEGIN
+  PERFORM pg_advisory_xact_lock(hashtext('kod:' || p_code));
+  DELETE FROM public.discount_reservations WHERE NOT used AND created_at < now() - interval '1 day';
+  IF (SELECT count(*) FROM public.discount_reservations WHERE code = p_code AND NOT used AND created_at > now() - interval '30 minutes'
+        AND order_id <> p_order AND lower(COALESCE(email, '')) <> lower(COALESCE(p_email, ''))) >= p_free THEN
+    RETURN false;
+  END IF;
+  INSERT INTO public.discount_reservations (order_id, code, email) VALUES (p_order, p_code, lower(p_email)) ON CONFLICT (order_id) DO NOTHING;
+  RETURN true;
+END $f$;
+REVOKE EXECUTE ON FUNCTION public.exm_reserve_code(text, text, text, int) FROM PUBLIC, anon, authenticated;`;
+var reserveReady = false;
+async function reserveCode(base44, record, orderId, email) {
+  const max = Number(record?.max_uses) || 0;
+  if (!max) return false;
+  if (!reserveReady) {
+    await runSql(base44, RESERVE_SQL);
+    reserveReady = true;
+  }
+  const free = max - (Number(record.uses) || 0);
+  const [r] = await runSql(base44, `SELECT public.exm_reserve_code(${escStr(String(record.code).toUpperCase())}, ${escStr(orderId)}, ${escStr(email || "")}, ${free}) AS ok`);
+  if (!r?.ok) throw new Error("Kod rabatowy zosta\u0142 ju\u017C wykorzystany");
+  return true;
+}
+async function releaseCode(base44, orderId) {
+  await runSql(base44, `DELETE FROM public.discount_reservations WHERE order_id = ${escStr(orderId)} AND NOT used`).catch(() => {
+  });
+}
+async function markCodeUsed(base44, orderId) {
+  await runSql(base44, `DO $m$ BEGIN IF to_regclass('public.discount_reservations') IS NOT NULL THEN
+    UPDATE public.discount_reservations SET used = TRUE WHERE order_id = ${escStr(orderId)}; END IF; END $m$`).catch(() => {
+  });
+}
+
+// supabase/functions/_shared/rateLimit.ts
+async function ipAllowed(base44, ip, type, max, windowMs, details = "") {
+  if (!ip || ip === "brak") return true;
+  try {
+    const L = base44.asServiceRole.entities.SecurityLog;
+    const since = new Date(Date.now() - windowMs).toISOString();
+    const recent = await L.filter({
+      type,
+      ip,
+      created_date: {
+        $gte: since
+      }
+    }, "-created_date", max + 1);
+    if (recent.length >= max) return false;
+    await L.create({
+      type,
+      ip,
+      details: String(details).slice(0, 80)
+    });
+  } catch {
+    return true;
+  }
+  return true;
+}
+var TOO_MANY = "Zbyt wiele zg\u0142osze\u0144 z tego po\u0142\u0105czenia. Spr\xF3buj ponownie za godzin\u0119.";
+
+// supabase/functions/_shared/shim.ts
+var secrets = {
+  get: (k) => Deno.env.get(k) ?? null
+};
+
+// supabase/functions/_shared/settings.ts
+var TABLE_OK = true;
+async function ensureSettingsTable(base44) {
+  if (TABLE_OK) return;
+  TABLE_OK = true;
+  await runSql(base44, `CREATE TABLE IF NOT EXISTS public.app_settings (
+      key text PRIMARY KEY,
+      value jsonb NOT NULL,
+      updated_date timestamptz DEFAULT now()
+    )`);
+}
+var FIRMA = null;
+async function getSetting(base44, key) {
+  await ensureSettingsTable(base44);
+  const rows = await runSql(base44, `SELECT value FROM public.app_settings WHERE key = ${escStr(key)}`, true);
+  const value = rows && rows.length > 0 ? rows[0].value : null;
+  if (key === "smtp") FIRMA = await getSetting(base44, "firma").catch(() => null);
+  return value;
+}
+var DEFAULT_APP_URL = globalThis.Deno?.env?.get?.("APP_URL") || "";
+var APP_URL = DEFAULT_APP_URL;
+var safeAppUrl = (u) => !u || /preview--/i.test(String(u)) ? DEFAULT_APP_URL : String(u).replace(/\/+$/, "");
+var APP_URL_AT = 0;
+async function loadAppUrl(base44) {
+  if (Date.now() - APP_URL_AT < 3e5) return APP_URL;
+  const s = await getSetting(base44, "app").catch(() => null);
+  APP_URL = safeAppUrl(s?.url);
+  APP_URL_AT = Date.now();
+  return APP_URL;
+}
+var CACHE = /* @__PURE__ */ new Map();
+async function getSettingsFast(base44, keys) {
+  const ck = keys.join(",");
+  const hit = CACHE.get(ck);
+  if (hit && Date.now() - hit.at < 6e4) return hit.v;
+  let out = await rpc(base44, "app_settings_get", {
+    p_keys: keys
+  }).catch(() => null);
+  if (!out || typeof out !== "object" || Array.isArray(out)) {
+    const rows = await runSql(base44, `SELECT key, value FROM public.app_settings WHERE key IN (${keys.map(escStr).join(",")})`, true).catch(() => []);
+    out = {};
+    for (const r of rows || []) out[r.key] = r.value;
+  }
+  CACHE.set(ck, {
+    v: out,
+    at: Date.now()
+  });
+  return out;
+}
+
+// supabase/functions/_shared/orders.ts
+var ORDERS_IDX = false;
+async function ensureOrdersTable(base44) {
+  if (ORDERS_IDX) return;
+  ORDERS_IDX = true;
+  await runSql(base44, `CREATE INDEX IF NOT EXISTS orders_payu_idx ON public.orders (payu_order_id);
+     CREATE INDEX IF NOT EXISTS orders_email_idx ON public.orders (lower(buyer_email));
+     CREATE INDEX IF NOT EXISTS orders_status_created_idx ON public.orders (status, created_date DESC);
+     CREATE INDEX IF NOT EXISTS orders_updated_idx ON public.orders (updated_date)`).catch(() => {
+  });
+}
+async function insertOrder(base44, order) {
+  await ensureOrdersTable(base44);
+  const itemsJson = JSON.stringify(order.items);
+  await runSql(base44, `INSERT INTO public.orders
+       (id, payu_order_id, buyer_name, buyer_email, buyer_phone, note, items, total, status,
+        phone_consent_date, newsletter_consent_date, digital_consent_text, digital_consent_date)
+     VALUES (${escStr(order.id)}, ${escStr(order.payuOrderId || "")}, ${escStr(order.buyerName || "")},
+             ${escStr(order.buyerEmail || "")},
+             ${order.buyerPhone ? escStr(order.buyerPhone) : "NULL"},
+             ${escStr(order.note || "")},
+             ${escStr(itemsJson)}::jsonb, ${esc(order.total)}, ${escStr(order.status)},
+             ${order.phoneConsent ? "now()" : "NULL"},
+             ${order.newsletterConsent ? "now()" : "NULL"},
+             ${order.digitalConsent ? escStr(order.digitalConsent) : "NULL"},
+             ${order.digitalConsent ? "now()" : "NULL"})`);
+  if (order.invoice) {
+    try {
+      if (await ensureInvoiceColumn(base44)) {
+        await runSql(base44, `UPDATE public.orders SET invoice = ${escStr(JSON.stringify(order.invoice))}::jsonb WHERE id = ${escStr(order.id)}`);
+      }
+    } catch {
+    }
+  }
+  if (order.discountCode) {
+    try {
+      await ensureDiscountColumn(base44);
+      await runSql(base44, `UPDATE public.orders SET discount_code = ${escStr(order.discountCode)} WHERE id = ${escStr(order.id)}`);
+    } catch {
+    }
+  }
+}
+var INVOICE_COL = false;
+async function ensureInvoiceColumn(base44) {
+  if (INVOICE_COL) return true;
+  const has = await runSql(base44, `SELECT 1 FROM information_schema.columns WHERE table_schema = 'public' AND table_name = 'orders' AND column_name = 'invoice'`, true);
+  if (!(Array.isArray(has) && has.length)) await runSql(base44, `ALTER TABLE public.orders ADD COLUMN IF NOT EXISTS invoice jsonb`);
+  INVOICE_COL = true;
+  return true;
+}
+var DISCOUNT_COL = false;
+async function ensureDiscountColumn(base44) {
+  if (DISCOUNT_COL) return true;
+  const has = await runSql(base44, `SELECT 1 FROM information_schema.columns WHERE table_schema = 'public' AND table_name = 'orders' AND column_name = 'discount_code'`, true);
+  if (!(Array.isArray(has) && has.length)) await runSql(base44, `ALTER TABLE public.orders ADD COLUMN IF NOT EXISTS discount_code text`);
+  DISCOUNT_COL = true;
+  return true;
+}
+async function getOrderByPayuId(base44, payuOrderId) {
+  await ensureOrdersTable(base44);
+  const rows = await runSql(base44, `SELECT * FROM public.orders WHERE payu_order_id = ${escStr(payuOrderId)} LIMIT 1`, true);
+  return rows && rows.length > 0 ? rows[0] : null;
+}
+async function claimCompletion(base44, payuOrderId) {
+  const rows = await runSql(base44, `UPDATE public.orders
+     SET status = 'COMPLETED', updated_date = now()
+     WHERE payu_order_id = ${escStr(payuOrderId)} AND status NOT IN ('COMPLETED', 'CANCELED')
+     RETURNING id`);
+  return Array.isArray(rows) && rows.length > 0;
+}
+async function releaseCompletion(base44, payuOrderId, previous) {
+  await runSql(base44, `UPDATE public.orders SET status = ${escStr(previous || "PENDING")}, updated_date = now()
+     WHERE payu_order_id = ${escStr(payuOrderId)} AND status = 'COMPLETED'`);
+}
+async function getOrderStatus(base44, id) {
+  const rows = await runSql(base44, `SELECT status FROM public.orders WHERE id = ${escStr(id)} LIMIT 1`, true);
+  return rows && rows.length ? String(rows[0].status || "") : null;
+}
+
+// supabase/functions/_shared/errors.ts
+var VALIDATION_RE = /^(Brak pola|Pole .* jest zbyt długie|Niepoprawny adres e-mail|Zaakceptuj|Zaznacz|Koszyk jest pusty|Jeden z produktów|Nieprawidłowy kod|Kod |Kodem |Kwota zamówienia|Podaj |Niepoprawny NIP|Bilet:|Brak wolnych|Zostało tylko|Zbyt wiele prób|Ten materiał)/;
+function errorResponse(error, fallback) {
+  const e = error;
+  const msg = String(e?.message || "");
+  if (e?.isValidation === true || VALIDATION_RE.test(msg)) {
+    return Response.json({
+      error: msg
+    }, {
+      status: 400
+    });
+  }
+  console.error("error:", msg);
+  return Response.json({
+    error: fallback
+  }, {
+    status: 500
+  });
+}
+
+// supabase/functions/_shared/mirror.ts
+var READY = /* @__PURE__ */ new Set();
+async function ensureMirrorTable(base44, entity) {
+  if (READY.has(entity)) return;
+  READY.add(entity);
+  const t = `exm_${entity.toLowerCase()}`;
+  await runSql(base44, `CREATE TABLE IF NOT EXISTS public.${t} (
+       id text PRIMARY KEY,
+       data jsonb NOT NULL DEFAULT '{}'::jsonb,
+       created_date timestamptz NOT NULL DEFAULT now(),
+       updated_date timestamptz NOT NULL DEFAULT now(),
+       created_by_id text
+     );
+     CREATE INDEX IF NOT EXISTS ${t}_data_gin ON public.${t} USING gin (data jsonb_path_ops);
+     CREATE INDEX IF NOT EXISTS ${t}_updated_idx ON public.${t} (updated_date);`).catch(() => {
+  });
+}
+async function mirrorRecord(base44, entity, id) {
+  if (!id) return;
+  try {
+    await ensureMirrorTable(base44, entity);
+    const rec = await base44.asServiceRole.entities[entity].get(id);
+    if (!rec) return;
+    const data = {
+      ...rec
+    };
+    delete data.id;
+    delete data.created_date;
+    delete data.updated_date;
+    delete data.created_by_id;
+    const cd = rec.created_date ? `${escStr(rec.created_date)}::timestamptz` : "now()";
+    await runSql(base44, `INSERT INTO public.exm_${entity.toLowerCase()} (id, data, created_date, updated_date, created_by_id)
+       VALUES (${escStr(rec.id)}, ${escStr(JSON.stringify(data))}::jsonb, ${cd}, now(),
+               ${rec.created_by_id ? escStr(rec.created_by_id) : "NULL"})
+       ON CONFLICT (id) DO UPDATE SET data = EXCLUDED.data, updated_date = now()`);
+  } catch (e) {
+    console.error(`mirror:${entity}:${id}:`, String(e?.message || e).slice(0, 200));
+  }
+}
+var enc = encodeURIComponent;
+function cond(field, c) {
+  const col2 = field === "id" ? "id" : `data->>${enc(field)}`;
+  if (c === null) return `${col2}=is.null`;
+  if (typeof c === "object" && !Array.isArray(c)) {
+    const [op, v] = Object.entries(c)[0];
+    if (op === "$in") return `${col2}=in.(${(Array.isArray(v) ? v : [
+      v
+    ]).map((x) => `"${x}"`).join(",")})`;
+    if (op === "$ne") return `${col2}=neq.${enc(String(v))}`;
+    if (op === "$regex") {
+      const nocase = String(c.$options || "").includes("i");
+      const like = nocase ? "ilike" : "like";
+      const p = String(v);
+      if (p.startsWith("^") && p.endsWith("$")) return `${col2}=${like}.${enc(p.slice(1, -1))}`;
+      return `${col2}=${like}.*${enc(p.replace(/\$$/, ""))}`;
+    }
+    throw new Error(`Nieobs\u0142ugiwany operator kopii: ${op}`);
+  }
+  return `${col2}=eq.${enc(String(c))}`;
+}
+function qs(query, sort, limit) {
+  const parts = [];
+  for (const [f, c] of Object.entries(query || {})) parts.push(cond(f, c));
+  if (sort) {
+    const dir = String(sort).startsWith("-") ? "desc" : "asc";
+    const field = String(sort).replace(/^-/, "");
+    const built = [
+      "created_date",
+      "updated_date"
+    ].includes(field);
+    parts.push(`order=${built ? field : enc("data->>" + field)}.${dir}`);
+  }
+  if (limit) parts.push(`limit=${limit}`);
+  return parts.join("&");
+}
+var row2rec2 = (r) => ({
+  ...r.data || {},
+  id: r.id,
+  created_date: r.created_date,
+  updated_date: r.updated_date,
+  created_by_id: r.created_by_id
+});
+async function mirrorFilter(base44, entity, query = {}, sort, limit) {
+  const rows = await restGet(base44, `exm_${entity.toLowerCase()}?${qs(query, sort, limit)}`);
+  return rows.map(row2rec2);
+}
+async function accessFilter(base44, query = {}, sort, limit) {
+  try {
+    return await mirrorFilter(base44, "Access", query, sort, limit);
+  } catch (e) {
+    console.error("odczyt:Access:", String(e?.message || e).slice(0, 200));
+    return base44.asServiceRole.entities.Access.filter(query, sort, limit);
+  }
+}
+
+// supabase/functions/_shared/smtp.ts
+var import_npm_nodemailer_6_92 = __toESM(require_nodemailer());
+
+// supabase/functions/_shared/emailLayout.ts
+var BRAND = {
+  bg: "#0A0A0B",
+  card: "#111113",
+  line: "#2A2A2C",
+  text: "#E8E6E1",
+  muted: "#A3A3A6",
+  faint: "#7A7A7D",
+  gold: "#C9A24A",
+  serif: "Georgia, 'Times New Roman', serif",
+  sans: "-apple-system, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif"
+};
+var SOCIAL = [
+  [
+    "Instagram",
+    "https://www.instagram.com/e.x.m.o.r.t.i.s/"
+  ],
+  [
+    "Facebook",
+    "https://www.facebook.com/dawidkowalczyk.exmortis"
+  ],
+  [
+    "YouTube",
+    "https://www.youtube.com/@e.x.m.o.r.t.i.s"
+  ],
+  [
+    "WhatsApp",
+    "https://whatsapp.com/channel/0029VbDYXi1Lo4hfFPvT3O3G"
+  ]
+];
+var MARKETING = /* @__PURE__ */ new Set([
+  "listy",
+  "newsletter",
+  "kampania"
+]);
+var esc2 = (v) => String(v ?? "").replace(/[&<>"]/g, (c) => ({
+  "&": "&amp;",
+  "<": "&lt;",
+  ">": "&gt;",
+  '"': "&quot;"
+})[c]);
+function emailButton(label, url, { secondary = false } = {}) {
+  const bg = secondary ? "transparent" : BRAND.gold;
+  const fg = secondary ? BRAND.gold : BRAND.bg;
+  return `<table role="presentation" cellspacing="0" cellpadding="0" border="0" style="margin:28px 0;"><tr>
+<td style="border-radius:2px;background:${bg};border:1px solid ${BRAND.gold};">
+<a href="${esc2(url)}" target="_blank" style="display:inline-block;padding:15px 30px;font-family:${BRAND.sans};font-size:13px;font-weight:600;letter-spacing:2px;text-transform:uppercase;color:${fg};text-decoration:none;">${esc2(label)}</a>
+</td></tr></table>`;
+}
+function normalizeBody(html) {
+  let s = String(html || "");
+  s = s.replace(/<p style="[^"]*">\s*EXMORTIS\s*<\/p>/g, "");
+  s = s.replace(/<p style="[^"]*">\s*WRACAM Z SIEBIE · UCZĘ WRACAĆ\s*<\/p>/g, "");
+  s = s.replace(/background:#0A0A0B;\s*padding:[^;"]*;?/g, "");
+  s = s.replace(/font-family:Cinzel,\s*Georgia,\s*serif/g, "font-family:Georgia,serif");
+  s = s.replace(/color:#8A8A8C/g, `color:${BRAND.muted}`).replace(/color:#5C5C5E/g, `color:${BRAND.faint}`).replace(/color:#3D3D3F/g, `color:${BRAND.faint}`);
+  s = s.replace(/<p[^>]*>\s*<a\s+href="(https?:[^"]+)"[^>]*>\s*([^<]{2,60}?)\s*<\/a>\s*<\/p>/g, (_, href, label) => emailButton(label.replace(/&amp;/g, "&").replace(/&quot;/g, '"'), href.replace(/&amp;/g, "&")));
+  s = s.replace(/<h1 style="[^"]*">/g, `<h1 style="margin:0 0 18px;font-family:${BRAND.serif};font-size:28px;line-height:1.25;font-weight:normal;color:#F5EFE1;">`);
+  s = s.replace(/<h1>/g, `<h1 style="margin:0 0 18px;font-family:${BRAND.serif};font-size:28px;line-height:1.25;font-weight:normal;color:#F5EFE1;">`);
+  s = s.replace(/<h2>/g, `<h2 style="margin:28px 0 12px;font-family:${BRAND.serif};font-size:21px;line-height:1.3;font-weight:normal;color:#F5EFE1;">`);
+  return s;
+}
+function textOf(html) {
+  return String(html || "").replace(/<(style|script)[^>]*>[\s\S]*?<\/\1>/gi, "").replace(/<[^>]+>/g, " ").replace(/&nbsp;/g, " ").replace(/&amp;/g, "&").replace(/&[a-z]+;/g, " ").replace(/\s+/g, " ").trim();
+}
+function emailLayout(html, { firma = null, appUrl = APP_URL, kind = "", preheader = "", unsubUrl = "" } = {}) {
+  const body = normalizeBody(html);
+  const site = String(appUrl || APP_URL).replace(/\/+$/, "");
+  const pre = (preheader || textOf(body).replace(/^(EXMORTIS\s*)+/, "")).slice(0, 140);
+  const marketing = MARKETING.has(kind) || !!unsubUrl;
+  const hasCrisis = /116\s?123/.test(body);
+  const contact = firma?.email || "kontakt@exmortis.pl";
+  const firmLine = [
+    firma?.nazwa || firma?.osoba,
+    firma?.adres,
+    firma?.nip && `NIP ${firma.nip}`,
+    firma?.regon && `REGON ${firma.regon}`
+  ].filter(Boolean).map(esc2).join(" \xB7 ");
+  const link = (href, label) => `<a href="${esc2(href)}" target="_blank" style="color:${BRAND.muted};text-decoration:underline;">${esc2(label)}</a>`;
+  const small = `font-family:${BRAND.sans};font-size:12px;line-height:1.7;color:${BRAND.faint};margin:0 0 10px;`;
+  const footer = [
+    `<p style="font-family:${BRAND.sans};font-size:11px;letter-spacing:3px;color:${BRAND.gold};margin:0 0 14px;">WRACAM Z SIEBIE \xB7 UCZ\u0118 WRACA\u0106</p>`,
+    `<p style="${small}">${SOCIAL.map(([l, u]) => link(u, l)).join(" &nbsp;\xB7&nbsp; ")}</p>`,
+    `<p style="${small}">${link(`mailto:${contact}`, contact)} &nbsp;\xB7&nbsp; ${link(site, site.replace(/^https?:\/\//, ""))}</p>`,
+    hasCrisis ? "" : `<p style="${small}">exmortis to mentoring, nie terapia. Je\u015Bli jest Ci bardzo ci\u0119\u017Cko: <span style="color:${BRAND.muted};">116 123</span> \xB7 <span style="color:${BRAND.muted};">800 70 2222</span> (ca\u0142\u0105 dob\u0119, bezp\u0142atnie) \xB7 w zagro\u017Ceniu \u017Cycia <span style="color:${BRAND.muted};">112</span>.</p>`,
+    firmLine ? `<p style="${small}">${firmLine}</p>` : "",
+    `<p style="${small}">${link(`${site}/regulamin`, "Regulamin")} &nbsp;\xB7&nbsp; ${link(`${site}/polityka-prywatnosci`, "Polityka prywatno\u015Bci")}</p>`,
+    marketing ? `<p style="${small}">Dostajesz Listy powrotu, bo zapisano ten adres na ${esc2(site.replace(/^https?:\/\//, ""))} i potwierdzono zapis.${unsubUrl ? ` ${link(unsubUrl, "Wypisz si\u0119 jednym klikni\u0119ciem")}.` : " Aby si\u0119 wypisa\u0107, odpowiedz na ten list s\u0142owem STOP."}</p>` : `<p style="${small}">To wiadomo\u015B\u0107 dotycz\u0105ca Twojego konta, zam\xF3wienia lub zapisu na ${esc2(site.replace(/^https?:\/\//, ""))}. Mo\u017Cesz na ni\u0105 po prostu odpowiedzie\u0107.</p>`
+  ].join("");
+  return `<!DOCTYPE html>
+<html lang="pl" xmlns="http://www.w3.org/1999/xhtml">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="x-apple-disable-message-reformatting">
+<meta name="color-scheme" content="dark light">
+<meta name="supported-color-schemes" content="dark light">
+<title>exmortis</title>
+<style>
+  body{margin:0;padding:0;background:${BRAND.bg};}
+  a{color:${BRAND.gold};}
+  img{border:0;line-height:100%;outline:none;text-decoration:none;}
+  table{border-collapse:collapse;}
+  .exm-body p,.exm-body li,.exm-body td{font-size:16px;}
+  @media (max-width:620px){
+    .exm-card{padding:28px 22px !important;}
+    .exm-wrap{padding:16px 10px !important;}
+    .exm-body h1{font-size:24px !important;}
+  }
+</style>
+</head>
+<body style="margin:0;padding:0;background:${BRAND.bg};">
+<div style="display:none;max-height:0;overflow:hidden;opacity:0;color:${BRAND.bg};font-size:1px;line-height:1px;">${esc2(pre)}${"&#8203;&zwnj;&nbsp;".repeat(40)}</div>
+<table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0" style="background:${BRAND.bg};">
+<tr><td align="center" class="exm-wrap" style="padding:32px 16px;">
+  <table role="presentation" width="600" cellspacing="0" cellpadding="0" border="0" style="width:100%;max-width:600px;">
+    <tr><td align="center" style="padding:8px 0 26px;">
+      <a href="${esc2(site)}" target="_blank" style="text-decoration:none;">
+        <img src="${esc2(site)}/exmortis-logo-500.png" width="64" height="64" alt="exmortis" style="display:block;width:64px;height:64px;margin:0 auto 12px;font-family:${BRAND.serif};font-size:18px;color:${BRAND.gold};">
+        <span style="font-family:${BRAND.sans};font-size:12px;letter-spacing:6px;color:${BRAND.gold};">EXMORTIS</span>
+      </a>
+    </td></tr>
+    <tr><td class="exm-card" style="background:${BRAND.card};border:1px solid ${BRAND.line};border-top:2px solid ${BRAND.gold};padding:44px 44px 36px;">
+      <div class="exm-body" style="font-family:${BRAND.serif};font-size:16px;line-height:1.7;color:${BRAND.text};">
+${body}
+      </div>
+    </td></tr>
+    <tr><td align="center" style="padding:30px 12px 8px;text-align:center;">
+${footer}
+    </td></tr>
+  </table>
+</td></tr>
+</table>
+</body>
+</html>`;
+}
+
+// supabase/functions/_shared/smtp.ts
+import { setImmediate as nodeSetImmediate2, clearImmediate as nodeClearImmediate2 } from "node:timers";
+var g2 = globalThis;
+if (typeof g2.setImmediate !== "function") g2.setImmediate = nodeSetImmediate2;
+if (typeof g2.clearImmediate !== "function") g2.clearImmediate = nodeClearImmediate2;
+var mailReady = (s) => !!(s && s.status === "dziala" && s.host && s.user && s.password);
+var CFG = null;
+var CFG_AT = 0;
+async function mailConfig(base44) {
+  if (CFG_AT && Date.now() - CFG_AT < 3e4) return CFG;
+  CFG = await getSetting(base44, "smtp").catch(() => null);
+  CFG_AT = Date.now();
+  return CFG;
+}
+var MCFG = null;
+var MCFG_AT = 0;
+async function mailConfigMarketing(base44) {
+  if (MCFG_AT && Date.now() - MCFG_AT < 3e4) return MCFG;
+  MCFG = await getSetting(base44, "smtp_marketing").catch(() => null);
+  MCFG_AT = Date.now();
+  return MCFG;
+}
+var MARKETING_KINDS = /* @__PURE__ */ new Set([
+  "listy",
+  "ogloszenie"
+]);
+async function adminTo(base44) {
+  const s = await mailConfig(base44);
+  return FIRMA?.email || s?.reply_to || s?.from || null;
+}
+function htmlToText(html) {
+  return String(html || "").replace(/<(style|script|head)[^>]*>[\s\S]*?<\/\1>/gi, "").replace(/<a\s[^>]*href="([^"]+)"[^>]*>([\s\S]*?)<\/a>/gi, (_, href, t) => {
+    const txt = t.replace(/<[^>]+>/g, "").trim();
+    return !txt ? href : txt === href || href.startsWith("mailto:") || href.startsWith("tel:") ? txt : `${txt} (${href})`;
+  }).replace(/<br\s*\/?>/gi, "\n").replace(/<\/(p|div|h[1-6]|li|tr|table|blockquote)>/gi, "\n\n").replace(/<li[^>]*>/gi, "\u2022 ").replace(/<[^>]+>/g, "").replace(/&nbsp;/g, " ").replace(/&amp;/g, "&").replace(/&lt;/g, "<").replace(/&gt;/g, ">").replace(/&quot;/g, '"').replace(/&#39;/g, "'").replace(/[ \t]+\n/g, "\n").replace(/\n{3,}/g, "\n\n").replace(/[ \t]{2,}/g, " ").trim();
+}
+var MAIL_BUDGET = 240;
+var LIMIT_MARK = "Czeka na limit wysy\u0142ki (najwy\u017Cej 240 maili na 2 godziny)";
+var SENT = {
+  at: 0,
+  n: 0
+};
+async function sentLast2h(base44) {
+  if (Date.now() - SENT.at < 3e4) return SENT.n;
+  const since = new Date(Date.now() - 2 * 36e5).toISOString();
+  const rows = await base44.asServiceRole.entities.MailQueue.filter({
+    status: "wyslany",
+    sent_at: {
+      $gte: since
+    }
+  }, "-created_date", 1e3).catch(() => null);
+  SENT = {
+    at: Date.now(),
+    n: rows ? rows.filter((r) => r.blad !== "kana\u0142: newsletter").length : SENT.n
+  };
+  return SENT.n;
+}
+async function smtpSend(smtp, { to, subject, html, attachments, headers, kind = "", preheader = "" }) {
+  if (!smtp || !smtp.host || !smtp.user || !smtp.password) throw new Error("Wysy\u0142ka e-mail nie jest skonfigurowana");
+  const port = Number(smtp.port) || 587;
+  const transporter = import_npm_nodemailer_6_92.default.createTransport({
+    host: smtp.host,
+    port,
+    secure: port === 465,
+    auth: {
+      user: smtp.user,
+      pass: smtp.password
+    }
+  });
+  const addr = smtp.from || smtp.user;
+  const unsubUrl = String(headers?.["List-Unsubscribe"] || "").replace(/^<|>$/g, "");
+  const full = emailLayout(html, {
+    firma: FIRMA,
+    kind,
+    preheader,
+    unsubUrl,
+    appUrl: APP_URL
+  });
+  await transporter.sendMail({
+    from: `"${String(smtp.from_name || "exmortis").replace(/"/g, "")}" <${addr}>`,
+    ...smtp.reply_to ? {
+      replyTo: smtp.reply_to
+    } : {},
+    to,
+    subject,
+    html: full,
+    text: htmlToText(full.replace(/^[\s\S]*?<body[^>]*>/, "").replace(/<div style="display:none[^>]*>[\s\S]*?<\/div>/, "")),
+    ...headers && typeof headers === "object" ? {
+      headers
+    } : {},
+    ...Array.isArray(attachments) && attachments.length > 0 ? {
+      attachments
+    } : {}
+  });
+}
+async function afterSent(base44, kind, to) {
+  if (kind === "listy_potwierdzenie") {
+    await runSql(base44, `UPDATE public.subscribers SET confirm_sent_at = now() WHERE email = ${escStr(String(to).toLowerCase())} AND status = 'pending'`).catch(() => {
+    });
+  }
+}
+async function sendMail(base44, { to, subject, html, attachments, kind = "inne", ref, waznyDo, headers, preheader = "" }) {
+  if (!to) throw new Error("Brak adresata");
+  const Q = base44.asServiceRole.entities.MailQueue;
+  const base = {
+    to_email: String(to || ""),
+    subject,
+    kind,
+    ...ref ? {
+      ref: String(ref)
+    } : {},
+    ...waznyDo ? {
+      wazny_do: new Date(waznyDo).toISOString()
+    } : {}
+  };
+  let smtp = await mailConfig(base44);
+  let viaMarketing = false;
+  if (MARKETING_KINDS.has(kind)) {
+    const m = await mailConfigMarketing(base44);
+    if (mailReady(m) && String(m.host || "").toLowerCase() !== String(smtp?.host || "").toLowerCase()) {
+      smtp = m;
+      viaMarketing = true;
+    }
+  }
+  if (!mailReady(smtp)) {
+    await Q.create({
+      ...base,
+      html,
+      attachments: attachments || [],
+      status: "kolejka"
+    });
+    return "kolejka";
+  }
+  if (!viaMarketing && await sentLast2h(base44) >= MAIL_BUDGET) {
+    await Q.create({
+      ...base,
+      html,
+      attachments: attachments || [],
+      status: "kolejka",
+      blad: LIMIT_MARK,
+      ...headers ? {
+        headers
+      } : {}
+    });
+    return "kolejka";
+  }
+  try {
+    await smtpSend(smtp, {
+      to,
+      subject,
+      html,
+      attachments,
+      headers,
+      kind,
+      preheader
+    });
+    if (!viaMarketing) SENT.n++;
+  } catch (e) {
+    await Q.create({
+      ...base,
+      html,
+      attachments: attachments || [],
+      status: "blad",
+      blad: String(e?.message || e).slice(0, 500)
+    });
+    throw e;
+  }
+  await Q.create({
+    ...base,
+    status: "wyslany",
+    sent_at: (/* @__PURE__ */ new Date()).toISOString(),
+    ...viaMarketing ? {
+      blad: "kana\u0142: newsletter"
+    } : {}
+  });
+  await afterSent(base44, kind, to);
+  return "wyslany";
+}
+var escHtml = (v) => String(v ?? "").replace(/[&<>"]/g, (c) => ({
+  "&": "&amp;",
+  "<": "&lt;",
+  ">": "&gt;",
+  '"': "&quot;"
+})[c]);
+var zl = (n) => `${Number(n || 0).toFixed(2).replace(".", ",")} z\u0142`;
+function orderEmailHtml(buyerName, items, total, orderId = "", invoice = null) {
+  const rows = items.map((p) => `<tr><td style="padding:8px 0;color:#E2E2E2;">${escHtml(p.name)} \xD7 ${Number(p.quantity) || 1}</td><td style="padding:8px 0;text-align:right;color:#C9A24A;">${zl((Number(p.quantity) || 1) * Number(p.unitPrice) / 100)}</td></tr>`).join("");
+  const nr = orderId ? String(orderId).slice(0, 8).toUpperCase() : "";
+  return `
+  <div style="background:#0A0A0B;padding:32px;font-family:Georgia,serif;color:#E2E2E2;">
+    <p style="letter-spacing:4px;color:#C9A24A;font-size:13px;">EXMORTIS</p>
+    <h1 style="font-size:26px;letter-spacing:1px;">Pr\xF3g przekroczony</h1>
+    <p style="color:#8A8A8C;line-height:1.7;">${escHtml(buyerName)}, Twoja p\u0142atno\u015B\u0107 zosta\u0142a przyj\u0119ta. Szczeg\xF3\u0142y poni\u017Cej \u2014 pierwszy ruch jest ju\u017C za Tob\u0105.</p>
+    ${nr ? `<p style="color:#8A8A8C;font-size:13px;">Numer zam\xF3wienia: <span style="color:#E2E2E2;">${nr}</span> (pe\u0142ny: ${escHtml(orderId)})</p>` : ""}
+    <table style="width:100%;border-collapse:collapse;margin:16px 0;font-size:14px;">${rows}
+      <tr><td style="padding-top:12px;border-top:1px solid #3D3D3F;color:#8A8A8C;">RAZEM</td>
+      <td style="padding-top:12px;border-top:1px solid #3D3D3F;text-align:right;color:#C9A24A;font-size:18px;">${zl(total)}</td></tr>
+    </table>
+    ${invoice && invoice.nip ? `<p style="color:#8A8A8C;font-size:13px;line-height:1.6;">Dane do faktury: <span style="color:#E2E2E2;">${escHtml(invoice.company)}, NIP ${escHtml(invoice.nip)}, ${escHtml(invoice.address)}</span><br>Faktur\u0119 wy\u015Bl\u0119 osobno na ten adres e-mail.</p>` : ""}
+    <p style="color:#8A8A8C;font-size:13px;line-height:1.6;"><a href="${APP_URL}/regulamin" style="color:#C9A24A;">Regulamin</a> \xB7 <a href="${APP_URL}/odstapienie" style="color:#C9A24A;">Odst\u0105pienie od umowy (formularz)</a></p>
+    <p style="color:#5C5C5E;font-size:12px;letter-spacing:2px;">WRACAM Z SIEBIE \xB7 UCZ\u0118 WRACA\u0106</p>
+  </div>`;
+}
+
+// supabase/functions/_shared/nextStep.ts
+async function nextStep(base44, boughtIds, ownedIds = []) {
+  const ids = [
+    ...new Set((boughtIds || []).filter(Boolean).map(String))
+  ];
+  if (!ids.length) return null;
+  const skip = [
+    .../* @__PURE__ */ new Set([
+      ...ids,
+      ...(ownedIds || []).map(String)
+    ])
+  ].map(escStr).join(",");
+  const rows = await runSql(base44, `
+    WITH b AS (SELECT MAX(level) AS lvl, (array_agg(next_step ORDER BY level DESC NULLS LAST) FILTER (WHERE COALESCE(next_step,'') <> ''))[1] AS ns
+               FROM public.products WHERE id::text IN (${ids.map(escStr).join(",")}))
+    SELECT p.name, p.slug, p.subtitle, b.ns FROM public.products p, b
+    WHERE p.active = TRUE AND p.status IN ('dost\u0119pny','wkr\xF3tce') AND p.id::text NOT IN (${skip})
+      AND p.level IS NOT NULL AND p.level > COALESCE(b.lvl, -1)
+    ORDER BY p.level ASC, p.sort_order ASC NULLS LAST LIMIT 1`, true);
+  const r = rows && rows[0];
+  if (!r) return null;
+  return {
+    name: r.name,
+    slug: r.slug,
+    text: r.ns || r.subtitle || null
+  };
+}
+var esc3 = (v) => String(v ?? "").replace(/[&<>"']/g, (c) => ({
+  "&": "&amp;",
+  "<": "&lt;",
+  ">": "&gt;",
+  '"': "&quot;",
+  "'": "&#39;"
+})[c]);
+async function nextStepHtml(base44, step) {
+  if (!step) return "";
+  const url = `${await loadAppUrl(base44)}/skarbiec/${encodeURIComponent(step.slug)}`;
+  return `<div style="background:#0A0A0B;padding:0 32px 32px;font-family:Georgia,serif;"><div style="border-top:1px solid #3D3D3F;padding-top:20px;">
+    <p style="font-size:11px;letter-spacing:.18em;color:#C9A24A;margin:0 0 8px;">NAST\u0118PNY KROK</p>
+    ${step.text ? `<p style="line-height:1.7;color:#E2E2E2;margin:0 0 8px;">${esc3(step.text)}</p>` : ""}
+    <p style="margin:0;"><a href="${esc3(url)}" style="color:#C9A24A;">${esc3(step.name)} \u2192</a></p></div></div>`;
+}
+
+// supabase/functions/_shared/productPrice.ts
+var warsawToday = () => new Intl.DateTimeFormat("sv-SE", {
+  timeZone: "Europe/Warsaw"
+}).format(/* @__PURE__ */ new Date());
+function readSteps(p) {
+  let raw = p?.price_steps;
+  if (typeof raw === "string") {
+    try {
+      raw = JSON.parse(raw);
+    } catch {
+      raw = null;
+    }
+  }
+  if (!Array.isArray(raw)) return [];
+  return raw.map((s) => ({
+    do: String(s?.do || "").slice(0, 10),
+    cena: s?.cena === null || s?.cena === void 0 || s?.cena === "" ? NaN : Number(s.cena)
+  })).filter((s) => /^\d{4}-\d{2}-\d{2}$/.test(s.do) && Number.isFinite(s.cena) && s.cena >= 0).sort((a, b) => a.do.localeCompare(b.do));
+}
+function activeStep(p, today2 = warsawToday()) {
+  const steps = readSteps(p);
+  const i = steps.findIndex((s) => s.do >= today2);
+  if (i < 0) return null;
+  const regular = p.price_regular != null ? Number(p.price_regular) : Number(p.price);
+  const next = steps[i + 1] ? {
+    od: nextDay(steps[i].do),
+    cena: steps[i + 1].cena
+  } : {
+    od: nextDay(steps[i].do),
+    cena: regular
+  };
+  return {
+    step: steps[i],
+    next
+  };
+}
+function nextDay(d) {
+  const t = /* @__PURE__ */ new Date(`${d}T12:00:00Z`);
+  t.setUTCDate(t.getUTCDate() + 1);
+  return t.toISOString().slice(0, 10);
+}
+function withSteps(p) {
+  if (!readSteps(p).length) return p;
+  const a = activeStep(p);
+  if (!a) return {
+    ...p,
+    price_start: null,
+    promo_end_date: null
+  };
+  return {
+    ...p,
+    price_start: a.step.cena,
+    promo_end_date: a.step.do,
+    next_price: a.next
+  };
+}
+function unitPrice(p) {
+  const q = withSteps(p);
+  const end = q.promo_end_date ? String(q.promo_end_date).slice(0, 10) : "";
+  if (end && q.price_start != null && end >= warsawToday()) return Number(q.price_start);
+  return q.price_regular != null ? Number(q.price_regular) : Number(q.price);
+}
+
+// supabase/functions/_shared/giftCard.ts
+var esc4 = (v) => String(v ?? "").replace(/[&<>"']/g, (c) => ({
+  "&": "&amp;",
+  "<": "&lt;",
+  ">": "&gt;",
+  '"': "&quot;",
+  "'": "&#39;"
+})[c]);
+var clip = (v, n) => String(v ?? "").replace(/[\u0000-\u001f<>]/g, " ").replace(/\s+/g, " ").trim().slice(0, n);
+function rand(abc, n) {
+  const b = crypto.getRandomValues(new Uint8Array(n));
+  return [
+    ...b
+  ].map((x) => abc[x % abc.length]).join("");
+}
+var newCode = () => "PREZENT-" + rand("ABCDEFGHJKLMNPQRSTUVWXYZ23456789", 10);
+var newToken = () => rand("abcdefghijkmnopqrstuvwxyzABCDEFGHJKLMNPQRSTUVWXYZ23456789", 32);
+var view = (r) => ({
+  code: r.code,
+  value: r.value,
+  until: r.valid_until,
+  to_name: r.gift_to || "",
+  message: r.gift_message || "",
+  token: r.gift_token || ""
+});
+var cardKey = (value, toName, message) => `${value}|${clip(toName, 60)}|${clip(message, 200)}`;
+async function issueGiftCards(base44, orderId, items, cardIds, buyerEmail = "") {
+  const Dc = base44.asServiceRole.entities.DiscountCode;
+  const tag = `zam\xF3wienie ${String(orderId).slice(0, 8).toUpperCase()}`;
+  const found = await Dc.filter({
+    opis: {
+      $regex: tag
+    }
+  }, "created_date", 500);
+  const existing = Array.isArray(found) ? found : found?.items || [];
+  const counts = /* @__PURE__ */ new Map();
+  for (const r of existing) {
+    const k = cardKey(Math.round(Number(r.value) || 0), r.gift_to, r.gift_message);
+    counts.set(k, (counts.get(k) || 0) + 1);
+  }
+  const until = existing[0]?.valid_until || new Date(Date.now() + 183 * 864e5).toLocaleDateString("sv-SE", {
+    timeZone: "Europe/Warsaw"
+  });
+  const out = existing.map(view);
+  for (const it of items.filter((i) => cardIds.includes(String(i.product_id)))) {
+    const value = Math.round(Number(it.unitPrice) || 0) / 100;
+    const to = clip(it.gift?.to_name, 60);
+    const message = clip(it.gift?.message, 200);
+    const want = Math.min(20, Number(it.quantity) || 1);
+    const have = counts.get(cardKey(value, to, message)) || 0;
+    for (let k = have; k < want; k++) {
+      const rec = await Dc.create({
+        code: newCode(),
+        kind: "kwota",
+        value,
+        max_uses: 1,
+        uses: 0,
+        valid_until: until,
+        active: true,
+        opis: `Karta podarunkowa \xB7 ${tag}`,
+        gift_to: to,
+        gift_message: message,
+        gift_token: newToken(),
+        buyer_email: String(buyerEmail || "").trim().toLowerCase()
+      });
+      out.push(view(rec));
+    }
+  }
+  return out;
+}
+var cardLink = (token) => `${APP_URL}/karta#t=${token}`;
+function giftCardsHtml(cards) {
+  if (!cards.length) return "";
+  const d = (s) => (/* @__PURE__ */ new Date(`${s}T12:00:00Z`)).toLocaleDateString("pl-PL", {
+    day: "numeric",
+    month: "long",
+    year: "numeric"
+  });
+  const one = (c) => `<div style="margin:0 0 16px;border:1px solid #C9A24A;background:#0A0A0B;padding:24px;">
+      <p style="font-size:11px;letter-spacing:.22em;color:#C9A24A;margin:0 0 16px;">EXMORTIS \xB7 KARTA PODARUNKOWA</p>
+      ${c.to_name ? `<p style="margin:0 0 6px;color:#8A8A8C;font-size:13px;">Dla</p><p style="margin:0 0 14px;color:#E2E2E2;font-size:20px;">${esc4(c.to_name)}</p>` : ""}
+      ${c.message ? `<p style="margin:0 0 16px;color:#E2E2E2;font-style:italic;line-height:1.6;">\u201E${esc4(c.message)}\u201D</p>` : ""}
+      <p style="margin:0 0 4px;color:#C9A24A;font-size:26px;">${esc4(String(c.value).replace(".", ","))} z\u0142</p>
+      <p style="margin:0 0 14px;color:#E2E2E2;">Kod: <b style="color:#C9A24A;letter-spacing:2px;">${esc4(c.code)}</b> \xB7 wa\u017Cna do ${esc4(d(c.until))}</p>
+      ${c.token ? `<p style="margin:0;"><a href="${esc4(cardLink(c.token))}" style="color:#C9A24A;">Otw\xF3rz kart\u0119 do wydruku lub zapisania jako PDF</a></p>` : ""}
+    </div>`;
+  return `<div style="background:#0A0A0B;padding:0 32px 32px;font-family:Georgia,serif;">
+    ${cards.map(one).join("")}
+    <p style="margin:0;color:#8A8A8C;font-size:13px;line-height:1.6;">Kod wpisuje si\u0119 w kasie Skarbca, w polu \u201Ekod rabatowy\u201D. Dzia\u0142a jednorazowo \u2014 niewykorzystana cz\u0119\u015B\u0107 kwoty przepada. Kart\u0119 mo\u017Cesz wydrukowa\u0107 albo przes\u0142a\u0107 link osobie obdarowanej. Wszystkie Twoje karty s\u0105 te\u017C w zak\u0142adce Zam\xF3wienia na koncie.</p></div>`;
+}
+function giftLine(p, it) {
+  if (p.product_type !== "karta") return null;
+  let opts = p.price_options;
+  if (typeof opts === "string") {
+    try {
+      opts = JSON.parse(opts);
+    } catch {
+      opts = null;
+    }
+  }
+  const amounts = Array.isArray(opts) ? opts.map(Number).filter((n) => n > 0) : [];
+  const want = Number((it || {}).amount);
+  const amount = amounts.length ? amounts.includes(want) ? want : NaN : unitPrice(p);
+  if (!Number.isFinite(amount) || amount <= 0) throw new Error("Jeden z produkt\xF3w nie jest ju\u017C dost\u0119pny \u2014 wybierz kwot\u0119 karty jeszcze raz");
+  return {
+    unit: Math.round(amount * 100),
+    gift: {
+      to_name: clip(it?.to_name, 60),
+      message: clip(it?.message, 200)
+    }
+  };
+}
+
+// supabase/functions/_shared/tickets.ts
+var TICKET_SCHEMA_SQL = `
+    ALTER TABLE public.events ADD COLUMN IF NOT EXISTS tickets boolean DEFAULT false;
+    ALTER TABLE public.events ADD COLUMN IF NOT EXISTS ticket_template jsonb;
+    CREATE TABLE IF NOT EXISTS public.event_tickets (
+      id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+      code text NOT NULL UNIQUE,
+      token text NOT NULL UNIQUE,
+      event_id text NOT NULL,
+      order_id text,
+      line_no int NOT NULL DEFAULT 0,
+      holder_name text NOT NULL,
+      buyer_email text,
+      price numeric(10,2) NOT NULL DEFAULT 0,
+      source text NOT NULL DEFAULT 'zakup',
+      status text NOT NULL DEFAULT 'wazny' CHECK (status IN ('wazny','wykorzystany','anulowany')),
+      checked_at timestamptz,
+      checked_by text,
+      created_at timestamptz NOT NULL DEFAULT now(),
+      UNIQUE (order_id, line_no)
+    );
+    CREATE INDEX IF NOT EXISTS event_tickets_event_idx ON public.event_tickets (event_id);
+    CREATE INDEX IF NOT EXISTS event_tickets_email_idx ON public.event_tickets (lower(buyer_email));
+    ALTER TABLE public.event_tickets ENABLE ROW LEVEL SECURITY;
+    REVOKE ALL ON public.event_tickets FROM PUBLIC, anon, authenticated;`;
+var schemaReady = false;
+async function ensureTicketSchema(base44) {
+  if (schemaReady) return;
+  await runSql(base44, TICKET_SCHEMA_SQL);
+  schemaReady = true;
+}
+var LETTERS = "ABCDEFGHJKLMNPRSTUVWXYZ";
+var rnd = (n) => crypto.getRandomValues(new Uint8Array(n));
+function newCode2() {
+  const b = rnd(7);
+  return [
+    ...b.slice(0, 3)
+  ].map((x) => LETTERS[x % LETTERS.length]).join("") + [
+    ...b.slice(3)
+  ].map((x) => String(x % 10)).join("");
+}
+var showCode = (c) => c && c.length === 7 ? `${c.slice(0, 3)}-${c.slice(3)}` : String(c || "");
+var TOKEN_ABC = "abcdefghijkmnopqrstuvwxyzABCDEFGHJKLMNPQRSTUVWXYZ23456789";
+var newToken2 = () => [
+  ...rnd(32)
+].map((x) => TOKEN_ABC[x % TOKEN_ABC.length]).join("");
+var ticketUrl = (token) => `${APP_URL}/bilet#t=${token}`;
+var ticketPdfUrl = (token) => `${APP_URL}/functions/tickets?pdf=${token}`;
+var cleanName = (v) => String(v ?? "").replace(/[\u0000-\u001f<>]/g, " ").replace(/\s+/g, " ").trim().slice(0, 80);
+function salesClosed(ev, now = Date.now()) {
+  if (!ev || ev.status !== "Opublikowane") return "To wydarzenie nie jest ju\u017C dost\u0119pne.";
+  if (!ev.tickets || !(Number(ev.price) > 0) || ev.format === "Online") return "Na to wydarzenie nie sprzedaj\u0119 bilet\xF3w.";
+  if (!ev.start_datetime) return "Sprzeda\u017C bilet\xF3w jeszcze si\u0119 nie zacz\u0119\u0142a.";
+  const deadline = ev.registration_deadline ? Date.parse(ev.registration_deadline) : Date.parse(ev.start_datetime) - 15 * 6e4;
+  if (now > deadline) return "Sprzeda\u017C bilet\xF3w jest zamkni\u0119ta.";
+  return null;
+}
+async function seatsTaken(base44, eventId, exceptOrderId = null) {
+  const [r] = await runSql(base44, `SELECT
+      (SELECT count(*) FROM public.event_tickets WHERE event_id = ${escStr(eventId)} AND status <> 'anulowany')::int AS sold,
+      (SELECT COALESCE(sum((it->>'quantity')::int), 0) FROM public.orders o, jsonb_array_elements(o.items) it
+        WHERE o.status IN ('PENDING','NEW','WAITING_FOR_CONFIRMATION') AND o.created_date > now() - interval '30 minutes'
+          AND it->>'event_id' = ${escStr(eventId)} ${exceptOrderId ? `AND o.id <> ${escStr(exceptOrderId)}` : ""})::int AS pending`, true);
+  return {
+    sold: Number(r?.sold) || 0,
+    pending: Number(r?.pending) || 0
+  };
+}
+async function ticketLines(base44, items) {
+  const wanted = /* @__PURE__ */ new Map();
+  for (const it of items) {
+    const id = String(it?.id || "").slice(0, 64);
+    const holders = (Array.isArray(it?.holders) ? it.holders : []).slice(0, 10).map(cleanName);
+    if (!id || !holders.length) throw new Error("Bilet: podaj imi\u0119 i nazwisko ka\u017Cdej osoby");
+    if (holders.some((h) => h.length < 3)) throw new Error("Bilet: podaj imi\u0119 i nazwisko ka\u017Cdej osoby");
+    wanted.set(id, [
+      ...wanted.get(id) || [],
+      ...holders
+    ]);
+  }
+  if (!wanted.size) return [];
+  await ensureTicketSchema(base44);
+  const rows = await runSql(base44, `SELECT id, title, status, format, price::float8 AS price, capacity, start_datetime, registration_deadline,
+      COALESCE(tickets, false) AS tickets FROM public.events WHERE id IN (${[
+    ...wanted.keys()
+  ].map(escStr).join(",")})`, true);
+  const byId = new Map(rows.map((r) => [
+    String(r.id),
+    r
+  ]));
+  const out = [];
+  let total = 0;
+  for (const [id, holders] of wanted) {
+    const ev = byId.get(id);
+    const closed = salesClosed(ev);
+    if (closed) throw new Error(`Bilet: ${closed}`);
+    if (holders.length > 10) throw new Error("Bilet: najwy\u017Cej 10 bilet\xF3w na jedno wydarzenie w zam\xF3wieniu");
+    total += holders.length;
+    if (Number(ev.capacity) > 0) {
+      const { sold, pending } = await seatsTaken(base44, id);
+      const left = Number(ev.capacity) - sold - pending;
+      if (holders.length > left) throw new Error(left > 0 ? `Brak wolnych miejsc: zosta\u0142o ${left}` : "Brak wolnych miejsc na to wydarzenie");
+    }
+    const unit = Math.round(Number(ev.price) * 100);
+    out.push({
+      event_id: id,
+      kind: "bilet",
+      product_id: `bilet:${id}`,
+      name: `Bilet \u2014 ${String(ev.title).slice(0, 120)}`,
+      unitPrice: String(unit),
+      quantity: holders.length,
+      holders
+    });
+  }
+  if (total > 20) throw new Error("Bilet: najwy\u017Cej 20 bilet\xF3w w jednym zam\xF3wieniu");
+  return out;
+}
+async function insertTicket(base44, t) {
+  for (let i = 0; i < 6; i++) {
+    const rows = await runSql(base44, `INSERT INTO public.event_tickets (code, token, event_id, order_id, line_no, holder_name, buyer_email, price, source)
+      VALUES (${escStr(newCode2())}, ${escStr(newToken2())}, ${escStr(t.event_id)}, ${t.order_id ? escStr(t.order_id) : "NULL"}, ${t.line_no},
+        ${escStr(t.holder_name)}, ${t.buyer_email ? escStr(t.buyer_email) : "NULL"}, ${Number(t.price) || 0}, ${escStr(t.source || "zakup")})
+      ON CONFLICT DO NOTHING RETURNING *`).catch((e) => {
+      if (!/duplicate|unique/i.test(String(e?.message))) throw e;
+      return [];
+    });
+    if (rows?.length) return rows[0];
+    if (t.order_id) {
+      const had = await runSql(base44, `SELECT * FROM public.event_tickets WHERE order_id = ${escStr(t.order_id)} AND line_no = ${t.line_no}`, true);
+      if (had?.length) return had[0];
+    }
+  }
+  throw new Error("Nie uda\u0142o si\u0119 nada\u0107 numeru biletu");
+}
+async function issueOrderTickets(base44, order, items) {
+  const lines = (items || []).filter((i) => i.kind === "bilet" && i.event_id);
+  if (!lines.length) return [];
+  await ensureTicketSchema(base44);
+  const email = String(order.buyer_email || "").trim().toLowerCase();
+  const out = [];
+  let n = 0;
+  for (const l of lines) {
+    const holders = Array.isArray(l.holders) && l.holders.length ? l.holders : [
+      order.buyer_name || "Uczestnik"
+    ];
+    for (const h of holders.slice(0, 20)) {
+      out.push(await insertTicket(base44, {
+        event_id: l.event_id,
+        order_id: String(order.id),
+        line_no: n++,
+        holder_name: cleanName(h) || "Uczestnik",
+        buyer_email: email,
+        price: Number(l.unitPrice) / 100
+      }));
+    }
+    if (email) {
+      await runSql(base44, `INSERT INTO public.registrations (id, event_id, first_name, email, consent, status, source, created_at)
+        VALUES (gen_random_uuid()::text, ${escStr(l.event_id)}, ${escStr(String(order.buyer_name || "").split(" ")[0] || "Uczestnik")}, ${escStr(email)}, TRUE, 'Zapisany', 'bilet', now())
+        ON CONFLICT (event_id, email) DO UPDATE SET status = 'Zapisany', source = 'bilet'
+          WHERE public.registrations.status NOT IN ('Zapisany','Obecny')`).catch((e) => console.error("bilet: zapis", e?.message));
+    }
+  }
+  const evIds = [
+    ...new Set(lines.map((l) => String(l.event_id)))
+  ];
+  out.overbooked = await runSql(base44, `SELECT e.id, e.title, e.capacity, COUNT(t.id)::int AS sold
+      FROM public.events e JOIN public.event_tickets t ON t.event_id = e.id AND t.status <> 'anulowany'
+     WHERE e.id IN (${evIds.map(escStr).join(",")}) AND COALESCE(e.capacity, 0) > 0
+     GROUP BY e.id, e.title, e.capacity HAVING COUNT(t.id) > e.capacity`, true).catch(() => []);
+  return out;
+}
+async function loadEvent(base44, id) {
+  const rows = await runSql(base44, `SELECT id, title, slug, subtitle, format, location, start_datetime, duration_minutes, status, price::float8 AS price,
+      capacity, registration_deadline, COALESCE(tickets, false) AS tickets, ticket_template, short_path FROM public.events WHERE id = ${escStr(id)}`, true);
+  return rows?.[0] || null;
+}
+var esc5 = (v) => String(v ?? "").replace(/[&<>"']/g, (c) => ({
+  "&": "&amp;",
+  "<": "&lt;",
+  ">": "&gt;",
+  '"': "&quot;",
+  "'": "&#39;"
+})[c]);
+var when = (iso) => new Intl.DateTimeFormat("pl-PL", {
+  timeZone: "Europe/Warsaw",
+  weekday: "long",
+  day: "numeric",
+  month: "long",
+  hour: "2-digit",
+  minute: "2-digit"
+}).format(new Date(iso));
+function ticketsHtml(tickets, events) {
+  if (!tickets.length) return "";
+  const byEv = /* @__PURE__ */ new Map();
+  for (const t of tickets) byEv.set(t.event_id, [
+    ...byEv.get(t.event_id) || [],
+    t
+  ]);
+  const blocks = [
+    ...byEv.entries()
+  ].map(([id, list]) => {
+    const ev = events.get(id) || {};
+    return `<div style="margin:0 0 18px;border:1px solid #C9A24A;padding:22px;">
+      <p style="font-size:11px;letter-spacing:.22em;color:#C9A24A;margin:0 0 10px;">BILET${list.length > 1 ? "Y" : ""}</p>
+      <p style="margin:0 0 6px;color:#F5EFE1;font-size:20px;">${esc5(ev.title || "")}</p>
+      ${ev.start_datetime ? `<p style="margin:0 0 14px;color:#8A8A8C;">${esc5(when(ev.start_datetime))} (czas polski)${ev.format === "Online" ? " \xB7 online" : ""}</p>` : ""}
+      ${list.map((t) => `<p style="margin:0 0 10px;color:#E2E2E2;">${esc5(t.holder_name)} \xB7 <b style="color:#C9A24A;letter-spacing:2px;">${esc5(showCode(t.code))}</b><br>
+        <a href="${esc5(ticketPdfUrl(t.token))}" style="color:#C9A24A;">Pobierz bilet (PDF)</a> \xB7 <a href="${esc5(ticketUrl(t.token))}" style="color:#8A8A8C;">otw\xF3rz na telefonie</a></p>`).join("")}
+    </div>`;
+  }).join("");
+  return `<div style="background:#0A0A0B;padding:0 32px 32px;font-family:Georgia,serif;">${blocks}
+    <p style="margin:0;color:#8A8A8C;font-size:13px;line-height:1.6;">Bilet jest imienny i wa\u017Cny na jedno wej\u015Bcie. Przy wej\u015Bciu poka\u017C kod QR \u2014 na telefonie albo wydrukowany. Ka\u017Cd\u0105 osob\u0119 wpuszczam na jej bilet, wi\u0119c bilety dla innych przeka\u017C im wcze\u015Bniej (PDF albo link). Wszystkie bilety s\u0105 te\u017C w Moim koncie \u2192 Spotkania, po zalogowaniu tym adresem e-mail.</p></div>`;
+}
+
+// supabase/functions/_shared/access.ts
+var DIGITAL = [
+  "pdf",
+  "audio",
+  "wideo",
+  "kurs"
+];
+var warsawToday2 = () => (/* @__PURE__ */ new Date()).toLocaleDateString("sv-SE", {
+  timeZone: "Europe/Warsaw"
+});
+function addMonths(ymd, m) {
+  const [y, mo, d] = ymd.split("-").map(Number);
+  return new Date(Date.UTC(y, mo - 1 + m, d)).toISOString().slice(0, 10);
+}
+async function grantAccess(base44, { email, product, source, orderId = null }) {
+  const E = base44.asServiceRole.entities.Access;
+  const mail = String(email).toLowerCase();
+  const existing = (await accessFilter(base44, {
+    user_email: mail,
+    product_id: String(product.id)
+  }))[0];
+  if (existing && source === "darmowy" && !existing.revoked) return;
+  if (existing && orderId && (existing.history || []).some((h) => h && h.order_id === orderId)) return existing.valid_until || null;
+  const today2 = warsawToday2();
+  const months = product.access_months ? Number(product.access_months) : null;
+  let until = null;
+  if (months) {
+    const live = existing && !existing.revoked && existing.valid_until && existing.valid_until >= today2;
+    until = addMonths(live ? existing.valid_until : today2, months);
+  }
+  if (existing && !existing.revoked && !existing.valid_until) until = null;
+  const entry = {
+    date: (/* @__PURE__ */ new Date()).toISOString(),
+    source,
+    order_id: orderId,
+    valid_until: until
+  };
+  const data = {
+    user_email: mail,
+    product_id: String(product.id),
+    product_name: product.name,
+    product_type: product.product_type || "pdf",
+    valid_until: until,
+    source,
+    order_id: orderId || "",
+    revoked: false
+  };
+  if (!until) delete data.valid_until;
+  let recId = existing?.id;
+  if (existing) {
+    await E.update(existing.id, {
+      ...data,
+      history: [
+        ...existing.history || [],
+        entry
+      ]
+    });
+    if (!until && existing.valid_until) await E.updateMany({
+      id: existing.id
+    }, {
+      $unset: {
+        valid_until: ""
+      }
+    });
+  } else recId = (await E.create({
+    ...data,
+    valid_from: today2,
+    history: [
+      entry
+    ]
+  })).id;
+  await mirrorRecord(base44, "Access", recId);
+  return until;
+}
+async function ensureAccount(base44, email) {
+  const found = await base44.asServiceRole.entities.User.filter({
+    email: String(email).toLowerCase()
+  });
+  if (found.length) return false;
+  try {
+    await base44.asServiceRole.users.inviteUser(String(email).toLowerCase(), "user");
+    return true;
+  } catch {
+    return false;
+  }
+}
+
+// supabase/functions/_shared/bundles.ts
+function idsOf(r) {
+  const raw = r?.bundle_items;
+  let arr = raw;
+  if (typeof raw === "string") {
+    try {
+      arr = JSON.parse(raw);
+    } catch {
+      arr = [];
+    }
+  }
+  return Array.isArray(arr) ? arr.map((x) => String(x)).filter(Boolean) : [];
+}
+async function expandBundles(base44, rows) {
+  const list = (rows || []).filter(Boolean);
+  const pkgs = list.filter((r) => r.product_type === "pakiet" && r.id);
+  if (!pkgs.length) return list;
+  const itemsByPkg = /* @__PURE__ */ new Map();
+  for (const r of pkgs) itemsByPkg.set(String(r.id), idsOf(r));
+  const missing = [
+    ...itemsByPkg
+  ].filter(([, v]) => !v.length).map(([k]) => k);
+  if (missing.length) {
+    const got = await runSql(base44, `SELECT id::text AS id, to_jsonb(p)->'bundle_items' AS bundle_items
+       FROM public.products p WHERE id::text IN (${missing.map(escStr).join(",")})`, true).catch(() => []);
+    for (const g3 of got || []) itemsByPkg.set(String(g3.id), idsOf(g3));
+  }
+  const compIds = [
+    ...new Set([
+      ...itemsByPkg.values()
+    ].flat())
+  ];
+  const comps = compIds.length ? await runSql(base44, `SELECT id::text AS id, name, product_type, access_months
+         FROM public.products WHERE id::text IN (${compIds.map(escStr).join(",")})`, true).catch(() => []) : [];
+  const compById = new Map((comps || []).map((c) => [
+    String(c.id),
+    c
+  ]));
+  const out = [];
+  const seen = /* @__PURE__ */ new Set();
+  const push = (row) => {
+    const key = String(row?.id || "");
+    if (key && seen.has(key)) return;
+    if (key) seen.add(key);
+    out.push(row);
+  };
+  const monthsOf = (v) => v != null && v !== "" && Number.isFinite(Number(v)) ? Number(v) : null;
+  for (const r of list) {
+    if (r.product_type !== "pakiet") {
+      push(r);
+      continue;
+    }
+    const months = monthsOf(r.access_months);
+    for (const cid of itemsByPkg.get(String(r.id)) || []) {
+      const c = compById.get(String(cid));
+      if (!c) continue;
+      push({
+        id: String(c.id),
+        name: c.name,
+        product_type: c.product_type,
+        access_months: months != null ? months : monthsOf(c.access_months)
+      });
+    }
+  }
+  return out;
+}
+
+// supabase/functions/_shared/invoices.ts
+var CYFROWE = [
+  "pdf",
+  "audio",
+  "wideo",
+  "kurs"
+];
+var STAWKI = [
+  "23",
+  "22",
+  "8",
+  "7",
+  "5",
+  "4",
+  "3",
+  "0",
+  "zw"
+];
+var FAKTURY_DEFAULT = {
+  wlaczona: false,
+  subdomena: "",
+  dokument_osoba: "vat",
+  dokument_firma: "vat",
+  stawka: "23",
+  stawka_cyfrowe: "",
+  wyslij_email: true
+};
+function cleanFaktury(v) {
+  const s = v && typeof v === "object" ? v : {};
+  const sub = String(s.subdomena || "").trim().toLowerCase().replace(/^https?:\/\//, "").replace(/\.fakturownia\.pl.*$/, "").replace(/[^a-z0-9-]/g, "").slice(0, 40);
+  if (sub && !/^[a-z0-9][a-z0-9-]{1,38}[a-z0-9]$/.test(sub)) {
+    throw new Error("Nazwa konta w Fakturowni: litery, cyfry i my\u015Blniki (np. exmortis \u2014 z adresu exmortis.fakturownia.pl)");
+  }
+  const stawka = (x, fallback) => STAWKI.includes(String(x)) ? String(x) : fallback;
+  return {
+    wlaczona: s.wlaczona === true,
+    subdomena: sub,
+    dokument_osoba: [
+      "vat",
+      "zw",
+      "nie"
+    ].includes(s.dokument_osoba) ? s.dokument_osoba : "vat",
+    dokument_firma: [
+      "vat",
+      "zw"
+    ].includes(s.dokument_firma) ? s.dokument_firma : "vat",
+    stawka: stawka(s.stawka, "23"),
+    stawka_cyfrowe: s.stawka_cyfrowe ? stawka(s.stawka_cyfrowe, "23") : "",
+    wyslij_email: s.wyslij_email !== false
+  };
+}
+function fakturyToken() {
+  try {
+    const v = secrets.get("FAKTUROWNIA_API_TOKEN");
+    if (v) return String(v).trim();
+  } catch {
+  }
+  try {
+    const v = globalThis?.process?.env?.FAKTUROWNIA_API_TOKEN;
+    if (v) return String(v).trim();
+  } catch {
+  }
+  return "";
+}
+async function loadFaktury(base44) {
+  const s = await getSettingsFast(base44, [
+    "faktury"
+  ]).catch(() => null);
+  let cfg;
+  try {
+    cfg = cleanFaktury(s?.faktury);
+  } catch {
+    cfg = {
+      ...FAKTURY_DEFAULT
+    };
+  }
+  const token = fakturyToken();
+  const url = cfg.subdomena ? `https://${cfg.subdomena}.fakturownia.pl` : "";
+  return {
+    cfg,
+    token,
+    url,
+    on: !!(cfg.wlaczona && token && url)
+  };
+}
+var ORDER_COLS = [
+  "invoice_id text",
+  "invoice_number text",
+  "invoice_url text",
+  "invoice_at timestamptz",
+  "invoice_error text"
+];
+var REFUND_COLS = [
+  "correction_id text",
+  "correction_number text",
+  "correction_url text",
+  "correction_error text"
+];
+var COLS_OK = false;
+async function ensureInvoiceColumns(base44) {
+  if (COLS_OK) return;
+  const add = async (table, cols) => {
+    const have = await runSql(base44, `SELECT column_name FROM information_schema.columns WHERE table_schema = 'public' AND table_name = '${table}'`, true).catch(() => []);
+    const names = new Set((Array.isArray(have) ? have : []).map((r) => String(r.column_name)));
+    for (const c of cols) {
+      const name = c.split(" ")[0];
+      if (names.has(name)) continue;
+      await runSql(base44, `ALTER TABLE public.${table} ADD COLUMN IF NOT EXISTS ${c}`).catch(() => {
+      });
+    }
+  };
+  await add("orders", ORDER_COLS);
+  await add("order_refunds", REFUND_COLS);
+  COLS_OK = true;
+}
+var zl2 = (n) => Number(n).toFixed(2);
+var today = () => (/* @__PURE__ */ new Date()).toLocaleDateString("sv-SE", {
+  timeZone: "Europe/Warsaw"
+});
+var clean = (v, n) => String(v ?? "").replace(/[\u0000-\u001f]/g, " ").replace(/\s+/g, " ").trim().slice(0, n);
+var safeErr = (e) => String(e?.message || e).replace(/api_token=[^\s&"'<>]*/gi, "api_token=***").replace(/https?:\/\/[^\s"']*fakturownia\.pl[^\s"']*/gi, "Fakturownia").replace(/\s+/g, " ").trim().slice(0, 300);
+async function api(url, path, token, { method = "GET", body } = {}) {
+  const sep = path.includes("?") ? "&" : "?";
+  let res;
+  try {
+    res = await fetch(`${url}${path}${sep}api_token=${encodeURIComponent(token)}`, {
+      method,
+      headers: {
+        "Content-Type": "application/json",
+        Accept: "application/json"
+      },
+      body: body ? JSON.stringify({
+        api_token: token,
+        ...body
+      }) : void 0,
+      signal: AbortSignal.timeout(15e3)
+    });
+  } catch (e) {
+    throw new Error(`Fakturownia: brak po\u0142\u0105czenia (${String(e?.name || "b\u0142\u0105d")})`);
+  }
+  const text = await res.text();
+  let data = null;
+  try {
+    data = text ? JSON.parse(text) : null;
+  } catch {
+    data = null;
+  }
+  if (!res.ok) {
+    const raw = data?.error?.message || data?.error || data?.message || text;
+    const msg = safeErr(String(raw || "brak odpowiedzi").replace(/<[^>]*>/g, " "));
+    throw new Error(`Fakturownia (${res.status}): ${msg}`);
+  }
+  return data;
+}
+function splitAddress(raw) {
+  const s = clean(raw, 200);
+  if (!s) return {};
+  const m = s.match(/^(.*?)[,\s]\s*(\d{2}-\d{3})[\s,]+(.+)$/);
+  if (m) return {
+    buyer_street: clean(m[1], 150),
+    buyer_post_code: m[2],
+    buyer_city: clean(m[3], 100),
+    buyer_country: "PL"
+  };
+  const m2 = s.match(/^(.*?)[,\s]\s*(\d{2}-\d{3})$/);
+  if (m2) return {
+    buyer_street: clean(m2[1], 150),
+    buyer_post_code: m2[2],
+    buyer_country: "PL"
+  };
+  return {
+    buyer_street: s,
+    buyer_country: "PL"
+  };
+}
+function buyerFields(order, company) {
+  const inv = order.invoice && typeof order.invoice === "object" ? order.invoice : {};
+  const email = clean(order.buyer_email, 120);
+  if (company) {
+    const out2 = {
+      buyer_name: clean(inv.company || order.buyer_name, 150) || "Klient",
+      buyer_email: email
+    };
+    const nip = String(inv.nip || "").replace(/[^0-9A-Za-z]/g, "").slice(0, 20);
+    if (nip) out2.buyer_tax_no = nip;
+    return {
+      ...out2,
+      ...splitAddress(inv.address)
+    };
+  }
+  const name = clean(order.buyer_name, 100);
+  const [first, ...rest] = name.split(" ");
+  const out = {
+    buyer_name: name || email || "Klient",
+    buyer_email: email
+  };
+  if (first) out.buyer_first_name = first;
+  if (rest.length) out.buyer_last_name = clean(rest.join(" "), 80);
+  return out;
+}
+async function buildPositions(base44, order, cfg, rate) {
+  const items = Array.isArray(order.items) ? order.items : [];
+  const ids = [
+    ...new Set(items.map((i) => String(i?.product_id || "")).filter((id) => id && !id.startsWith("bilet:")))
+  ];
+  const types = /* @__PURE__ */ new Map();
+  if (ids.length) {
+    const rows = await runSql(base44, `SELECT id::text AS id, product_type FROM public.products WHERE id::text IN (${ids.map(escStr).join(",")})`, true).catch(() => []);
+    for (const r of Array.isArray(rows) ? rows : []) types.set(String(r.id), String(r.product_type || ""));
+  }
+  const positions = [];
+  let sum = 0;
+  for (const it of items) {
+    const qty = Math.max(1, Math.min(99, Math.floor(Number(it?.quantity) || 1)));
+    const unit = Math.round(Number(it?.unitPrice) || 0);
+    const gross = unit * qty;
+    if (gross <= 0) continue;
+    sum += gross;
+    const type = types.get(String(it?.product_id || "")) || "";
+    const bon = type === "karta";
+    const tax = bon ? "np" : CYFROWE.includes(type) && cfg.stawka_cyfrowe && rate !== "zw" ? cfg.stawka_cyfrowe : rate;
+    const name = bon ? `${clean(it?.name, 140) || "Karta podarunkowa"} (bon)` : clean(it?.name, 150) || "Pozycja";
+    positions.push({
+      name,
+      quantity: qty,
+      tax,
+      gross
+    });
+  }
+  return {
+    positions,
+    sum
+  };
+}
+function applyDiscount2(positions, discountGrosze) {
+  const total = positions.reduce((s, p) => s + p.gross, 0);
+  const cut = Math.min(Math.max(0, Math.round(discountGrosze)), total);
+  if (!cut || total <= cut) return positions;
+  let left = cut;
+  const out = positions.map((p, i) => {
+    const share = i === positions.length - 1 ? left : Math.min(left, Math.round(p.gross * cut / total));
+    left -= share;
+    return {
+      ...p,
+      gross: p.gross - share
+    };
+  });
+  return out.filter((p) => p.gross > 0);
+}
+async function issueInvoice(base44, order) {
+  const { cfg, token, url, on } = await loadFaktury(base44);
+  if (!cfg.wlaczona) return {
+    ok: false,
+    skipped: "wylaczone"
+  };
+  if (!on) return {
+    ok: false,
+    skipped: "brak_konfiguracji"
+  };
+  if (!order?.id) return {
+    ok: false,
+    skipped: "brak_zamowienia"
+  };
+  await ensureInvoiceColumns(base44);
+  const fresh = await runSql(base44, `SELECT * FROM public.orders WHERE id = ${escStr(String(order.id))} LIMIT 1`, true).catch(() => []);
+  const o = (Array.isArray(fresh) ? fresh[0] : null) || order;
+  if (o.invoice_id) return {
+    ok: true,
+    already: true,
+    number: o.invoice_number || "",
+    url: o.invoice_url || ""
+  };
+  const total = Number(o.total || 0);
+  if (!(total > 0)) return {
+    ok: false,
+    skipped: "zero"
+  };
+  const inv = o.invoice && typeof o.invoice === "object" ? o.invoice : {};
+  const company = !!String(inv.nip || "").trim();
+  const doc = company ? cfg.dokument_firma : cfg.dokument_osoba;
+  if (doc === "nie") return {
+    ok: false,
+    skipped: "osoba_bez_faktury"
+  };
+  const rate = doc === "zw" ? "zw" : cfg.stawka;
+  const { positions, sum } = await buildPositions(base44, o, cfg, rate);
+  if (!positions.length) return {
+    ok: false,
+    skipped: "brak_pozycji"
+  };
+  const lines = applyDiscount2(positions, sum - Math.round(total * 100));
+  const payuId = String(o.payu_order_id || "");
+  const day = today();
+  const payload = {
+    invoice: {
+      kind: "vat",
+      number: null,
+      issue_date: day,
+      sell_date: day,
+      status: "paid",
+      paid: zl2(total),
+      payment_type: payuId && !payuId.startsWith("FREE-") ? "payu" : "karta podarunkowa",
+      payment_to_kind: "off",
+      oid: String(o.id),
+      oid_unique: "yes",
+      ...buyerFields(o, company),
+      positions: lines.map((p) => ({
+        name: p.name,
+        quantity: p.quantity,
+        tax: p.tax,
+        total_price_gross: zl2(p.gross / 100)
+      }))
+    }
+  };
+  try {
+    const created = await api(url, "/invoices.json", token, {
+      method: "POST",
+      body: payload
+    });
+    const id = created?.id;
+    if (!id) throw new Error("Fakturownia nie zwr\xF3ci\u0142a identyfikatora dokumentu");
+    const full = await api(url, `/invoices/${encodeURIComponent(String(id))}.json`, token).catch(() => created);
+    const number = clean(full?.number || created?.number || "", 60);
+    const pdf = full?.token ? `${url}/invoice/${full.token}.pdf` : `${url}/invoices/${id}`;
+    await runSql(base44, `UPDATE public.orders SET invoice_id = ${escStr(String(id))}, invoice_number = ${escStr(number)},
+         invoice_url = ${escStr(pdf)}, invoice_at = now(), invoice_error = NULL
+       WHERE id = ${escStr(String(o.id))}`);
+    if (cfg.wyslij_email) {
+      await api(url, `/invoices/${encodeURIComponent(String(id))}/send_by_email.json?email_pdf=true`, token, {
+        method: "POST",
+        body: {}
+      }).catch(() => {
+      });
+    }
+    return {
+      ok: true,
+      id: String(id),
+      number,
+      url: pdf
+    };
+  } catch (e) {
+    const msg = safeErr(e);
+    await runSql(base44, `UPDATE public.orders SET invoice_error = ${escStr(msg)}, invoice_at = now() WHERE id = ${escStr(String(o.id))}`).catch(() => {
+    });
+    return {
+      ok: false,
+      error: msg
+    };
+  }
+}
+
+// supabase/functions/_shared/bookingCrypto.ts
+var te = new TextEncoder();
+var td = new TextDecoder();
+
+// supabase/functions/_shared/booking.ts
+var te2 = new TextEncoder();
+var hex = (buf) => [
+  ...new Uint8Array(buf)
+].map((b) => b.toString(16).padStart(2, "0")).join("");
+var sha256hex = async (text) => hex(await crypto.subtle.digest("SHA-256", te2.encode(String(text))));
+function randomToken() {
+  const b = crypto.getRandomValues(new Uint8Array(32));
+  return btoa(String.fromCharCode(...b)).replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/, "");
+}
+
+// supabase/functions/_shared/fulfillOrder.ts
+function packageEmailHtml(token) {
+  const link = `${APP_URL}/rezerwacja/termin#t=${token}`;
+  return `<div style="background:#0A0A0B;padding:0 32px 32px;font-family:Georgia,serif;">
+    <p style="color:#E2E2E2;margin:0 0 12px;">P\u0142atno\u015B\u0107 przyj\u0119ta. Zosta\u0142o jedno: wybierz termin rozmowy.</p>
+    <p style="margin:20px 0;"><a href="${link}" style="color:#C9A24A;">Wybierz termin</a></p>
+    <p style="color:#8A8A8C;font-size:13px;line-height:1.6;">Link jest jednorazowy i wa\u017Cny 60 dni. Ten sam termin mo\u017Cesz wybra\u0107 w Moich sesjach na koncie, po zalogowaniu si\u0119 tym adresem.</p>
+  </div>`;
+}
+async function grantThresholdPackage(base44, stored) {
+  const [s] = await runSql(base44, `SELECT threshold_product_id, threshold_type_id, threshold_sessions, threshold_valid_days FROM public.bk_settings WHERE id = 1`, true);
+  if (!s?.threshold_product_id || !s?.threshold_type_id) return;
+  const items = Array.isArray(stored.items) ? stored.items : [];
+  const match = items.find((i) => String(i.product_id) === String(s.threshold_product_id));
+  if (!match) return;
+  const token = randomToken();
+  const r = await rpc(base44, "bk_grant_package", {
+    p: {
+      order_id: String(stored.id),
+      email: stored.buyer_email,
+      type_id: s.threshold_type_id,
+      sessions: (s.threshold_sessions || 1) * Math.max(1, Number(match.quantity) || 1),
+      valid_days: s.threshold_valid_days || 60,
+      token_hash: await sha256hex(token)
+    }
+  });
+  if (r?.already || !r?.ok) return;
+  await sendMail(base44, {
+    kind: "pakiet",
+    ref: stored.id,
+    to: stored.buyer_email,
+    subject: "EXMORTIS \u2014 wybierz termin rozmowy",
+    html: packageEmailHtml(token)
+  });
+}
+var PL_DATE = (ymd) => (/* @__PURE__ */ new Date(`${ymd}T12:00:00Z`)).toLocaleDateString("pl-PL", {
+  day: "numeric",
+  month: "long",
+  year: "numeric"
+});
+function accessEmailHtml(granted, consent, newAccount = false, email = "") {
+  if (!granted.length) return "";
+  const rows = granted.map((g3) => `<p style="color:#E2E2E2;margin:0 0 6px;">${String(g3.name).replace(/</g, "&lt;")} \xB7 Dost\u0119p ${g3.until ? `do ${PL_DATE(g3.until)}` : "bezterminowo"}</p>`).join("");
+  return `<div style="background:#0A0A0B;padding:0 32px 32px;font-family:Georgia,serif;">
+    ${rows}
+    <p style="margin:20px 0;"><a href="${APP_URL}/konto" style="color:#C9A24A;">Otw\xF3rz w Moich produktach</a></p>
+    ${newAccount ? `<p style="color:#8A8A8C;font-size:13px;line-height:1.6;">Konto za\u0142o\u017Cy\u0142em na adres ${String(email).replace(/</g, "&lt;")}. Wejd\u017A przez \u201EZaloguj przez Google\u201D (je\u015Bli to adres Gmail) albo ustaw has\u0142o: na stronie logowania kliknij \u201ENie pami\u0119tam has\u0142a\u201D i podaj ten adres.</p>` : ""}
+    ${consent ? `<p style="color:#8A8A8C;font-size:13px;line-height:1.6;">Potwierdzam Twoje \u017C\u0105danie dostarczenia tre\u015Bci cyfrowych przed up\u0142ywem 14 dni od zawarcia umowy oraz przyj\u0119cie do wiadomo\u015Bci utraty prawa odst\u0105pienia od umowy z chwil\u0105 rozpocz\u0119cia dostarczania.</p>` : ""}
+    <p style="color:#5C5C5E;font-size:12px;line-height:1.6;">exmortis to mentoring, nie terapia. Je\u015Bli jest Ci bardzo ci\u0119\u017Cko: 116 123 \xB7 800 70 2222 \xB7 w zagro\u017Ceniu \u017Cycia 112.</p>
+  </div>`;
+}
+async function fulfillOrder(base44, stored, payuOrderId) {
+  const items = Array.isArray(stored.items) ? stored.items : [];
+  const ids = items.map((i) => i.product_id).filter(Boolean);
+  const granted = [];
+  let newAccount = false;
+  try {
+    if (ids.length && stored.buyer_email) {
+      const rows = await runSql(base44, `SELECT id, name, product_type, access_months FROM public.products WHERE id::text IN (${ids.map(escStr).join(",")})`, true);
+      const toGrant = await expandBundles(base44, rows);
+      for (const p of toGrant.filter((r) => DIGITAL.includes(r.product_type))) {
+        const until = await grantAccess(base44, {
+          email: stored.buyer_email,
+          product: p,
+          source: "zakup",
+          orderId: stored.id
+        });
+        granted.push({
+          name: p.name,
+          until
+        });
+      }
+      if (granted.length) newAccount = await ensureAccount(base44, stored.buyer_email);
+    }
+  } catch (e) {
+    await releaseCompletion(base44, payuOrderId, stored.status).catch(() => {
+    });
+    throw e;
+  }
+  try {
+    const code = String(stored.discount_code || "").trim();
+    if (code) {
+      await markCodeUsed(base44, String(stored.id));
+      const rec = (await base44.asServiceRole.entities.DiscountCode.filter({
+        code
+      }))[0];
+      if (rec) {
+        let uses = (Number(rec.uses) || 0) + 1;
+        if (Number(rec.max_uses) > 0) {
+          const [r] = await runSql(base44, `SELECT CASE WHEN to_regclass('public.discount_reservations') IS NULL THEN 0
+              ELSE (SELECT count(*)::int FROM public.discount_reservations WHERE code = ${escStr(code.toUpperCase())} AND used) END AS n`, true).catch(() => [
+            {
+              n: 0
+            }
+          ]);
+          uses = Math.max(uses, Number(r?.n) || 0);
+        }
+        await base44.asServiceRole.entities.DiscountCode.update(rec.id, {
+          uses
+        });
+      }
+    }
+  } catch {
+  }
+  let cards = "";
+  let cardIds = [];
+  try {
+    const cardRows = ids.length ? await runSql(base44, `SELECT id::text AS id FROM public.products WHERE product_type = 'karta' AND id::text IN (${ids.map(escStr).join(",")})`, true) : [];
+    cardIds = cardRows.map((r) => String(r.id));
+    if (cardIds.length) cards = giftCardsHtml(await issueGiftCards(base44, stored.id, items, cardIds, stored.buyer_email));
+  } catch (e) {
+    await releaseCompletion(base44, payuOrderId, stored.status).catch(() => {
+    });
+    throw e;
+  }
+  let issued = [];
+  try {
+    issued = await issueOrderTickets(base44, stored, items);
+  } catch (e) {
+    await releaseCompletion(base44, payuOrderId, stored.status).catch(() => {
+    });
+    throw e;
+  }
+  let tix = "";
+  if (issued.length) {
+    try {
+      const evs = /* @__PURE__ */ new Map();
+      for (const id of [
+        ...new Set(issued.map((t) => t.event_id))
+      ]) evs.set(id, await loadEvent(base44, id));
+      tix = ticketsHtml(issued, evs);
+    } catch (e) {
+      console.error("bilety \u2014 tre\u015B\u0107 maila:", e?.message);
+    }
+  }
+  if (stored.buyer_email) {
+    try {
+      const own = ids.map(String).filter((id) => !cardIds.includes(id) && !id.startsWith("bilet:"));
+      const owned = await accessFilter(base44, {
+        user_email: String(stored.buyer_email).toLowerCase()
+      }, "-created_date", 200).then((l) => l.filter((a) => !a.revoked).map((a) => String(a.product_id))).catch(() => []);
+      const step = own.length ? await nextStep(base44, own, owned).then((s) => nextStepHtml(base44, s)).catch(() => "") : "";
+      await sendMail(base44, {
+        kind: "zamowienie",
+        ref: stored.id,
+        to: stored.buyer_email,
+        subject: Number(stored.total) > 0 ? "EXMORTIS \u2014 p\u0142atno\u015B\u0107 przyj\u0119ta" : "EXMORTIS \u2014 zam\xF3wienie przyj\u0119te",
+        html: orderEmailHtml(stored.buyer_name || "", items, stored.total, stored.id, stored.invoice || null) + accessEmailHtml(granted, !!stored.digital_consent_text, newAccount, stored.buyer_email) + tix + cards + step
+      });
+    } catch {
+    }
+  }
+  try {
+    const admin = await adminTo(base44);
+    if (admin) {
+      const list = items.map((i) => `${String(i.name).replace(/</g, "&lt;")} \xD7 ${Number(i.quantity) || 1}`).join("<br>");
+      await sendMail(base44, {
+        kind: "zamowienie_admin",
+        ref: stored.id,
+        to: admin,
+        subject: `Nowe zam\xF3wienie: ${Number(stored.total || 0).toFixed(2).replace(".", ",")} z\u0142`,
+        html: `<p>${String(stored.buyer_name || "").replace(/</g, "&lt;")} (${String(stored.buyer_email || "").replace(/</g, "&lt;")})</p><p>${list}</p><p>Numer: ${String(stored.id).slice(0, 8).toUpperCase()}</p>${stored.invoice?.nip ? `<p><b>Faktura</b>: ${String(stored.invoice.company).replace(/</g, "&lt;")}, NIP ${String(stored.invoice.nip)}, ${String(stored.invoice.address).replace(/</g, "&lt;")}</p>` : ""}<p>Panel: Zam\xF3wienia.</p>${(issued.overbooked || []).map((o) => `<p style="color:#b00;"><b>Uwaga \u2014 nadkomplet:</b> \u201E${String(o.title).replace(/</g, "&lt;")}\u201D ma ${o.sold} bilet\xF3w przy limicie ${o.capacity}. Bilety z tego zam\xF3wienia s\u0105 op\u0142acone i wa\u017Cne \u2014 zdecyduj: dodatkowe miejsce albo zwrot (Panel \u2192 Spotkania \u2192 BILETY).</p>`).join("")}`
+      });
+    }
+  } catch {
+  }
+  try {
+    await grantThresholdPackage(base44, stored);
+  } catch {
+  }
+  try {
+    await issueInvoice(base44, stored);
+  } catch (e) {
+    console.error("faktura:", e?.message);
+  }
+}
+
+// supabase/functions/_shared/newsletter.ts
+var esc6 = (s) => String(s || "").replace(/[&<>"']/g, (c) => ({
+  "&": "&amp;",
+  "<": "&lt;",
+  ">": "&gt;",
+  '"': "&quot;",
+  "'": "&#39;"
+})[c]);
+var newToken3 = () => crypto.randomUUID().replace(/-/g, "") + crypto.randomUUID().replace(/-/g, "");
+async function addSubscriber(base44, { email, name }) {
+  const nameVal = name === void 0 || name === null || String(name).trim() === "" ? "NULL" : escStr(String(name).trim().slice(0, 200));
+  const token = newToken3();
+  const rows = await runSql(base44, `INSERT INTO public.subscribers (id, email, name, status, confirm_token, confirm_sent_at)
+     VALUES (gen_random_uuid()::text, ${escStr(String(email).toLowerCase())}, ${nameVal}, 'pending', ${escStr(token)}, NULL)
+     ON CONFLICT (email) DO UPDATE SET
+       status = 'pending', confirm_token = EXCLUDED.confirm_token, confirm_sent_at = NULL,
+       name = COALESCE(EXCLUDED.name, public.subscribers.name), updated_date = now()
+     WHERE public.subscribers.status <> 'active'
+     RETURNING id`);
+  if (rows.length) await sendConfirmMail(base44, {
+    email,
+    name,
+    token
+  }).catch((e) => console.error("Listy: potwierdzenie", e.message));
+}
+async function sendConfirmMail(base44, { email, name, token }) {
+  const url = `${await loadAppUrl(base44)}/listy/potwierdz?t=${token}`;
+  await sendMail(base44, {
+    kind: "listy_potwierdzenie",
+    to: email,
+    subject: "Potwierd\u017A zapis na Listy powrotu",
+    html: `<div style="background:#0A0A0B;padding:40px 24px;font-family:Cinzel,Georgia,serif;color:#E2E2E2;">
+      <div style="max-width:560px;margin:0 auto;">
+        <p style="letter-spacing:3px;color:#C9A24A;font-size:12px;">EXMORTIS \xB7 LISTY POWROTU</p>
+        <h1 style="font-size:24px;">Potwierd\u017A zapis</h1>
+        <p style="font-family:Arial,sans-serif;line-height:1.7;">${name ? esc6(name) + ", " : ""}kto\u015B (mam nadziej\u0119, \u017Ce Ty) zapisa\u0142 ten adres na Listy powrotu, jeden list w ka\u017Cdy poniedzia\u0142ek. \u017Beby zacz\u0105\u0107 je dostawa\u0107, kliknij poni\u017Cej.</p>
+        <p style="margin:32px 0;"><a href="${url}" style="background:#C9A24A;color:#0A0A0B;padding:14px 28px;text-decoration:none;font-family:Arial,sans-serif;font-weight:bold;letter-spacing:2px;">POTWIERDZAM ZAPIS</a></p>
+        <p style="font-family:Arial,sans-serif;color:#8A8A8C;font-size:13px;line-height:1.6;">Je\u015Bli to nie Ty, zignoruj t\u0119 wiadomo\u015B\u0107. Bez potwierdzenia adres zostanie usuni\u0119ty po 7 dniach.</p>
+      </div></div>`
+  });
+}
+
+// supabase/functions/_shared/seats.ts
+var PENDING_MIN = 15;
+async function productSeats(base44, ids) {
+  const list = [
+    ...new Set((ids || []).map((x) => String(x || "")).filter((x) => /^[0-9a-f-]{36}$/i.test(x)))
+  ];
+  if (!list.length) return /* @__PURE__ */ new Map();
+  const inList = list.map(escStr).join(",");
+  const items = `jsonb_array_elements(CASE WHEN jsonb_typeof(o.items) = 'array' THEN o.items ELSE '[]'::jsonb END)`;
+  const rows = await runSql(base44, `SELECT p.id::text AS id, to_jsonb(p)->>'capacity' AS capacity,
+        COALESCE(s.n, 0)::int AS sold,
+        COALESCE(q.n, 0)::int AS pending
+     FROM public.products p
+     LEFT JOIN (
+       SELECT i->>'product_id' AS pid, SUM(COALESCE((i->>'quantity')::int, 1))::int AS n
+       FROM public.orders o, ${items} i
+       WHERE o.status = 'COMPLETED' AND i->>'product_id' IN (${inList})
+         -- Zam\xF3wienie zwr\xF3cone w ca\u0142o\u015Bci nie zajmuje miejsca (cz\u0119\u015Bciowy zwrot zostaje \u2014 nie sprzedajemy nadkompletu).
+         -- Uwaga: zwrot musi by\u0107 wi\u0119kszy od zera \u2014 inaczej zam\xF3wienie darmowe (total 0) wypada\u0142oby z puli sprzedanych.
+         AND NOT (COALESCE((to_jsonb(o)->>'refunded_total')::numeric, 0) > 0
+                  AND COALESCE((to_jsonb(o)->>'refunded_total')::numeric, 0) >= COALESCE(o.total, 0))
+       GROUP BY 1
+     ) s ON s.pid = p.id::text
+     LEFT JOIN (
+       SELECT i->>'product_id' AS pid, SUM(COALESCE((i->>'quantity')::int, 1))::int AS n
+       FROM public.orders o, ${items} i
+       WHERE o.status IN ('NEW', 'PENDING', 'WAITING_FOR_CONFIRMATION')
+         AND COALESCE(o.updated_date, o.created_date) > now() - interval '${PENDING_MIN} minutes'
+         AND i->>'product_id' IN (${inList})
+       GROUP BY 1
+     ) q ON q.pid = p.id::text
+     WHERE p.id::text IN (${inList}) AND to_jsonb(p)->>'capacity' IS NOT NULL`, true);
+  const out = /* @__PURE__ */ new Map();
+  for (const r of rows || []) {
+    const capacity = Number(r.capacity) || 0;
+    const sold = Number(r.sold) || 0;
+    const pending = Number(r.pending) || 0;
+    out.set(String(r.id), {
+      capacity,
+      sold,
+      pending,
+      left: Math.max(0, capacity - sold - pending)
+    });
+  }
+  return out;
+}
+
+// supabase/functions/_shared/legalDocs.ts
+var DOC_KEYS = [
+  "operator_nazwa",
+  "operator_adres",
+  "metody",
+  "przelozenie_h",
+  "data_od",
+  "poczta",
+  "newsletter",
+  "biuro"
+];
+var DOCS = [
+  "regulamin",
+  "prywatnosc",
+  "cookies"
+];
+var BASE = {
+  regulamin: "1.0",
+  prywatnosc: "1.1",
+  cookies: "1.0"
+};
+function cleanPola(data) {
+  const out = {};
+  for (const k of DOC_KEYS) out[k] = String(data?.[k] ?? "").trim().slice(0, 300);
+  if (out.przelozenie_h && !/^\d{1,3}$/.test(out.przelozenie_h)) throw new Error("Termin prze\u0142o\u017Cenia podaj w pe\u0142nych godzinach (np. 24).");
+  return out;
+}
+function publicDocs(s) {
+  const docs = {};
+  for (const d of DOCS) docs[d] = {
+    version: s?.docs?.[d]?.version || BASE[d],
+    date: s?.docs?.[d]?.date || null
+  };
+  return {
+    pola: cleanPola(s?.pola || {}),
+    docs
+  };
+}
+async function regulaminVersion(base44) {
+  return publicDocs(await getSetting(base44, "dokumenty").catch(() => null)).docs.regulamin.version;
+}
+
+// supabase/functions/_shared/invoice.ts
+function validNip(raw) {
+  const d = String(raw ?? "").toUpperCase().replace(/^PL/, "").replace(/[\s-]/g, "");
+  if (!/^\d{10}$/.test(d)) return null;
+  const w = [
+    6,
+    5,
+    7,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7
+  ];
+  const sum = w.reduce((s, x, i) => s + x * Number(d[i]), 0) % 11;
+  if (sum === 10 || sum !== Number(d[9])) return null;
+  return d;
+}
+function cleanInvoice(b) {
+  if (!b || b.want !== true) return null;
+  const company = String(b.company ?? "").trim().slice(0, 200);
+  const nip = validNip(b.nip);
+  const address = String(b.address ?? "").trim().slice(0, 300);
+  if (!company) throw new Error("Podaj nazw\u0119 firmy do faktury");
+  if (!nip) throw new Error("Niepoprawny NIP \u2014 sprawd\u017A 10 cyfr");
+  if (address.length < 5) throw new Error("Podaj adres firmy do faktury");
+  return {
+    company,
+    nip,
+    address
+  };
+}
+var nipPretty = (nip) => String(nip || "").replace(/^(\d{3})(\d{3})(\d{2})(\d{2})$/, "$1-$2-$3-$4");
+function invoiceText(inv) {
+  if (!inv) return "";
+  return `Faktura: ${inv.company}, NIP ${nipPretty(inv.nip)}, ${inv.address}`;
+}
+
+// supabase/functions/payuCreateOrder/index.ts
+var DIGITAL_CONSENT = "\u017B\u0105dam dostarczenia tre\u015Bci cyfrowych przed up\u0142ywem 14 dni od zawarcia umowy i przyjmuj\u0119 do wiadomo\u015Bci, \u017Ce z chwil\u0105 rozpocz\u0119cia ich dostarczania trac\u0119 prawo odst\u0105pienia od umowy.";
+async function saveConsents(base44, req, orderId, email, hasDigital, newsletterConsent) {
+  const cBase = {
+    email,
+    source: "kasa",
+    order_id: orderId,
+    doc_version: `regulamin ${await regulaminVersion(base44)}`,
+    ip: clientIp(req),
+    status: "udzielona"
+  };
+  const consents = [
+    {
+      ...cBase,
+      kind: "regulamin",
+      text: "Akceptuj\u0119 Regulamin. Znam Polityk\u0119 prywatno\u015Bci."
+    }
+  ];
+  if (hasDigital) consents.push({
+    ...cBase,
+    kind: "tresci_cyfrowe",
+    text: DIGITAL_CONSENT
+  });
+  if (newsletterConsent) consents.push({
+    ...cBase,
+    kind: "newsletter",
+    text: "Chc\u0119 otrzymywa\u0107 Listy powrotu \u2014 newsletter exmortis z tre\u015Bciami oraz informacjami o produktach i wydarzeniach \u2014 na podany adres e-mail. Zgod\u0119 mog\u0119 wycofa\u0107 w ka\u017Cdej chwili."
+  });
+  const made = await base44.asServiceRole.entities.Consent.bulkCreate(consents);
+  for (const c of made || []) await mirrorRecord(base44, "Consent", c.id);
+}
+function safeJson(res) {
+  return res.json().catch(() => ({}));
+}
+var BASE_URLS = {
+  secure: "https://secure.payu.com",
+  sandbox: "https://merch-prod.snd.payu.com"
+};
+var handler = async function(req) {
+  let base44Ref = null;
+  let reservedFor = null;
+  try {
+    const base44 = createClientFromRequest(req);
+    base44Ref = base44;
+    await loadAppUrl(base44);
+    const body = await req.json().catch(() => ({}));
+    if (body.action === "status") {
+      const id = String(body.orderId || "");
+      if (!/^[0-9a-f-]{36}$/i.test(id)) return Response.json({
+        status: null
+      });
+      return Response.json({
+        status: await getOrderStatus(base44, id)
+      });
+    }
+    if (!await ipAllowed(base44, clientIp(req), "kasa", 20, 36e5)) {
+      return Response.json({
+        error: TOO_MANY
+      }, {
+        status: 429
+      });
+    }
+    const buyerName = textField(body, "name", {
+      max: 100
+    });
+    const buyerEmail = emailField(body);
+    const note = textField(body, "note", {
+      max: 2e3,
+      required: false
+    }) || "";
+    const newsletterConsent = body.newsletter_consent === true;
+    if (body.terms_consent !== true) throw new Error("Zaakceptuj Regulamin");
+    const invoice = cleanInvoice(body.invoice);
+    const items = Array.isArray(body.items) ? body.items.slice(0, 20) : [];
+    if (items.length === 0) throw new Error("Koszyk jest pusty");
+    const ticketItems = items.filter((i) => i && i.kind === "bilet");
+    const productItems = items.filter((i) => !(i && i.kind === "bilet"));
+    const tickets = await ticketLines(base44, ticketItems);
+    const ids = [
+      ...new Set(productItems.map((i) => String((i || {}).id || "")).filter(Boolean))
+    ];
+    if (ids.length === 0 && tickets.length === 0) throw new Error("Koszyk jest pusty");
+    const idList = ids.map((id) => escStr(id)).join(",");
+    const rows = !ids.length ? [] : await runSql(base44, `SELECT id, name, price::float8 AS price, price_regular::float8 AS price_regular, price_start::float8 AS price_start,
+              promo_end_date::text AS promo_end_date, to_jsonb(p)->'price_steps' AS price_steps,
+              active, is_free, COALESCE(status, 'dost\u0119pny') AS status, product_type, to_jsonb(p)->'price_options' AS price_options
+       FROM public.products p WHERE id IN (${idList})`, true);
+    const byId = new Map(rows.map((r) => [
+      String(r.id),
+      r
+    ]));
+    const hasDigital = rows.some((r) => DIGITAL.includes(r.product_type) || r.product_type === "pakiet");
+    if (hasDigital && body.digital_consent !== true) {
+      throw new Error("Zaznacz zgod\u0119 na dostarczenie tre\u015Bci cyfrowych");
+    }
+    const products = [];
+    const stored = [];
+    let totalGrosze = 0;
+    for (const t of tickets) {
+      totalGrosze += Number(t.unitPrice) * t.quantity;
+      products.push({
+        name: t.name,
+        unitPrice: t.unitPrice,
+        quantity: t.quantity
+      });
+      stored.push(t);
+    }
+    for (const it of productItems) {
+      const p = byId.get(String((it || {}).id));
+      if (!p || p.active === false || p.status === "wkr\xF3tce" || p.status === "ukryty" || p.is_free === true) {
+        throw new Error("Jeden z produkt\xF3w nie jest ju\u017C dost\u0119pny");
+      }
+      const qty = Math.max(1, Math.min(20, Math.floor(Number((it || {}).qty) || 1)));
+      const card = giftLine(p, it);
+      const unit = card ? card.unit : Math.round(unitPrice(p) * 100);
+      if (!Number.isFinite(unit) || unit <= 0) throw new Error("Niepoprawna cena produktu");
+      totalGrosze += unit * qty;
+      const label = card ? `${String(p.name).slice(0, 120)} ${(unit / 100).toFixed(0)} z\u0142` : String(p.name).slice(0, 150);
+      products.push({
+        name: label,
+        unitPrice: String(unit),
+        quantity: qty
+      });
+      stored.push({
+        product_id: String(p.id),
+        name: label,
+        unitPrice: String(unit),
+        quantity: qty,
+        ...card ? {
+          gift: card.gift
+        } : {}
+      });
+    }
+    const need = /* @__PURE__ */ new Map();
+    for (const s of stored) {
+      const pid = String(s.product_id || "");
+      if (pid && !pid.startsWith("bilet:")) need.set(pid, (need.get(pid) || 0) + (Number(s.quantity) || 1));
+    }
+    if (need.size) {
+      const seats = await productSeats(base44, [
+        ...need.keys()
+      ]);
+      for (const [pid, q] of need) {
+        const st = seats.get(pid);
+        if (st && st.left < q) {
+          const nm = String(byId.get(pid)?.name || "produkt");
+          throw new Error(st.left > 0 ? `Zosta\u0142o tylko ${st.left} miejsc: ${nm}` : `Brak wolnych miejsc: ${nm}`);
+        }
+      }
+    }
+    const disc = await applyDiscount(base44, body.code, stored.map((s) => ({
+      product_id: s.product_id,
+      unit: Number(s.unitPrice),
+      qty: s.quantity
+    })));
+    if (disc) {
+      totalGrosze -= disc.discount;
+      products.length = 0;
+      products.push({
+        name: `EXMORTIS \u2014 zam\xF3wienie (kod ${disc.code})`,
+        unitPrice: String(totalGrosze),
+        quantity: 1
+      });
+    }
+    if (totalGrosze < 0) totalGrosze = 0;
+    if (totalGrosze > 0 && totalGrosze < 100) throw new Error("Kwota zam\xF3wienia jest zbyt niska dla PayU");
+    const orderId = crypto.randomUUID();
+    if (disc && await reserveCode(base44, disc.record, orderId, buyerEmail)) reservedFor = orderId;
+    if (totalGrosze === 0) {
+      const id = orderId;
+      const freeId = `FREE-${id}`;
+      await insertOrder(base44, {
+        id,
+        payuOrderId: freeId,
+        buyerName,
+        buyerEmail,
+        note: [
+          note,
+          invoice ? invoiceText(invoice) : "",
+          disc ? `Kod rabatowy: ${disc.code} (\u2212${(disc.discount / 100).toFixed(2)} z\u0142)` : ""
+        ].filter(Boolean).join("\n"),
+        invoice,
+        items: stored,
+        total: 0,
+        status: "PENDING",
+        newsletterConsent,
+        digitalConsent: hasDigital ? DIGITAL_CONSENT : null,
+        discountCode: disc ? disc.code : null
+      });
+      await saveConsents(base44, req, id, buyerEmail, hasDigital, newsletterConsent);
+      if (newsletterConsent) await addSubscriber(base44, {
+        email: buyerEmail,
+        name: buyerName,
+        consentGiven: true
+      });
+      const order = await getOrderByPayuId(base44, freeId);
+      if (await claimCompletion(base44, freeId)) await fulfillOrder(base44, order, freeId);
+      return Response.json({
+        redirectUri: `${APP_URL}/kasa?payu=done`,
+        orderId: id,
+        free: true
+      });
+    }
+    const payu = await getSetting(base44, "payu");
+    if (!payu || !payu.posId || !payu.clientId || !payu.clientSecret || !payu.secondKey) {
+      return Response.json({
+        error: "PAYU_NOT_CONFIGURED"
+      }, {
+        status: 400
+      });
+    }
+    const base = BASE_URLS[payu.env === "sandbox" ? "sandbox" : "secure"];
+    const tokenRes = await fetch(`${base}/pl/standard/user/oauth/authorize`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify({
+        grant_type: "client_credentials",
+        client_id: payu.clientId,
+        client_secret: payu.clientSecret
+      })
+    });
+    const token = await safeJson(tokenRes);
+    if (!tokenRes.ok || !token.access_token) {
+      throw new Error("PayU: b\u0142\u0105d autoryzacji (sprawd\u017A Client ID / Client Secret)");
+    }
+    const extOrderId = orderId;
+    const realIp = clientIp(req);
+    const customerIp = realIp === "brak" ? "127.0.0.1" : realIp;
+    const orderRes = await fetch(`${base}/api/v2_1/orders`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token.access_token}`
+      },
+      body: JSON.stringify({
+        notifyUrl: `${APP_URL}/functions/payuNotification`,
+        continueUrl: `${APP_URL}/kasa?payu=done`,
+        customerIp,
+        merchantPosId: String(payu.posId),
+        description: tickets.length ? "EXMORTIS \u2014 bilety" : "EXMORTIS \u2014 skarbiec",
+        currencyCode: "PLN",
+        totalAmount: String(totalGrosze),
+        extOrderId,
+        buyer: {
+          email: buyerEmail,
+          firstName: buyerName.slice(0, 100),
+          language: "pl"
+        },
+        products
+      })
+    });
+    const data = await safeJson(orderRes);
+    if (!orderRes.ok || !data.redirectUri) {
+      throw new Error(data && data.error && data.error.message || "PayU: nie uda\u0142o si\u0119 utworzy\u0107 p\u0142atno\u015Bci");
+    }
+    await insertOrder(base44, {
+      id: extOrderId,
+      payuOrderId: String(data.orderId || ""),
+      buyerName,
+      buyerEmail,
+      note: [
+        note,
+        invoice ? invoiceText(invoice) : "",
+        disc ? `Kod rabatowy: ${disc.code} (\u2212${(disc.discount / 100).toFixed(2)} z\u0142)` : ""
+      ].filter(Boolean).join("\n"),
+      invoice,
+      items: stored,
+      total: totalGrosze / 100,
+      status: "PENDING",
+      newsletterConsent,
+      digitalConsent: hasDigital ? DIGITAL_CONSENT : null,
+      discountCode: disc ? disc.code : null
+    });
+    await saveConsents(base44, req, extOrderId, buyerEmail, hasDigital, newsletterConsent);
+    if (newsletterConsent) {
+      await addSubscriber(base44, {
+        email: buyerEmail,
+        name: buyerName,
+        consentGiven: true
+      });
+    }
+    return Response.json({
+      redirectUri: data.redirectUri,
+      orderId: extOrderId
+    });
+  } catch (error) {
+    if (reservedFor) await releaseCode(base44Ref, reservedFor);
+    return errorResponse(error, "Nie uda\u0142o si\u0119 rozpocz\u0105\u0107 p\u0142atno\u015Bci. Spr\xF3buj ponownie.");
+  }
+};
+var CORS = {
+  "Access-Control-Allow-Origin": "*",
+  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
+  "Access-Control-Allow-Methods": "POST, GET, OPTIONS"
+};
+Deno.serve(async (req) => {
+  if (req.method === "OPTIONS") return new Response("ok", {
+    headers: CORS
+  });
+  try {
+    const res = await handler(req);
+    const h = new Headers(res.headers);
+    for (const [k, v] of Object.entries(CORS)) h.set(k, v);
+    return new Response(res.body, {
+      status: res.status,
+      statusText: res.statusText,
+      headers: h
+    });
+  } catch (e) {
+    const msg = String(e?.message || e);
+    const status = msg === "FORBIDDEN" ? 403 : e && e.isValidation ? 400 : 500;
+    console.error("edge:", msg.slice(0, 300));
+    return Response.json({
+      error: msg.slice(0, 300)
+    }, {
+      status,
+      headers: CORS
+    });
+  }
+});
