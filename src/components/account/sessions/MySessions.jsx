@@ -33,6 +33,7 @@ function NoAccess({ closed }) {
       <div className="flex flex-wrap gap-3">
         <Link to="/kontakt" className="btn-relic">NAPISZ DO EXMORTIS <ArrowRight className="h-4 w-4" /></Link>
         <Link to="/spotkania" className="btn-ghost">SPOTKANIA OGÓLNE</Link>
+        <Link to="/skarbiec/rozmowa-na-progu" className="btn-ghost">ROZMOWA NA PROGU</Link>
         {!closed && <Link to="/powrot" className="btn-ghost">O PROGRAMIE POWRÓT</Link>}
       </div>
     </div>
@@ -56,6 +57,7 @@ export default function MySessions() {
     <div className="mb-10">
       <p className="technical text-[10px] gold-text mb-3">UMÓW INDYWIDUALNE SPOTKANIE</p>
       <p className="text-sm text-foreground/60 max-w-[640px]">Spotkanie 1:1 z exmortis w ramach programu POWRÓT — termin wybierasz z dostępnych godzin.</p>
+      <p className="text-sm text-foreground/60 max-w-[640px] mt-2">Nie jesteś w programie POWRÓT? Możesz umówić pojedyncze spotkanie 1:1 — <Link to="/skarbiec/rozmowa-na-progu" className="gold-text underline underline-offset-4">Rozmowa na progu</Link>.</p>
     </div>
   );
 
