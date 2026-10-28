@@ -22,6 +22,16 @@ const app = express();
 app.disable("x-powered-by");
 app.set("trust proxy", true);
 
+// Nagłówki bezpieczeństwa na każdej odpowiedzi (bez CSP).
+app.use((_req, res, next) => {
+  res.setHeader("Strict-Transport-Security", "max-age=31536000");
+  res.setHeader("X-Frame-Options", "SAMEORIGIN");
+  res.setHeader("X-Content-Type-Options", "nosniff");
+  res.setHeader("Referrer-Policy", "strict-origin-when-cross-origin");
+  res.setHeader("Permissions-Policy", "camera=(), microphone=(), geolocation=(), payment=()");
+  next();
+});
+
 // .env z katalogu repo — zapas, gdy Passenger nie podaje zmiennych środowiskowych.
 function readEnvFile() {
   const out = {};
