@@ -5,6 +5,13 @@
 //   connectors.getConnection, users.inviteUser, aiGateway) · users.inviteUser · functions.invoke.
 // Dane trzymamy w tabelach exm_* (kolumna jsonb `data` + kolumny systemowe) — tak jak przy replikacji.
 import nodemailer from "npm:nodemailer@6.9.13";
+import { setImmediate as nodeSetImmediate, clearImmediate as nodeClearImmediate } from "node:timers";
+
+// nodemailer w Supabase Edge Functions nie ma globalnego setImmediate — bez tego polyfillu
+// każda wysyłka kończy się błędem „setImmediate is not defined".
+const g = globalThis as Record<string, unknown>;
+if (typeof g.setImmediate !== "function") g.setImmediate = nodeSetImmediate;
+if (typeof g.clearImmediate !== "function") g.clearImmediate = nodeClearImmediate;
 
 const SUPA_URL = Deno.env.get("SUPABASE_URL") || "";
 const SRK = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") || "";

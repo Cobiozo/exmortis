@@ -2,6 +2,13 @@ import nodemailer from "npm:nodemailer@6.9.13";
 import { FIRMA, getSetting, APP_URL } from "./settings.ts";
 import { emailLayout, cleanEmailHtml } from "./emailLayout.ts";
 import { runSql, escStr } from "./supabase.ts";
+import { setImmediate as nodeSetImmediate, clearImmediate as nodeClearImmediate } from "node:timers";
+
+// nodemailer w Supabase Edge Functions nie ma globalnego setImmediate — bez tego polyfillu
+// każda wysyłka kończy się błędem „setImmediate is not defined".
+const g = globalThis as Record<string, unknown>;
+if (typeof g.setImmediate !== "function") g.setImmediate = nodeSetImmediate;
+if (typeof g.clearImmediate !== "function") g.clearImmediate = nodeClearImmediate;
 
 // JEDYNA bramka wysyłki maili. Wysyła tylko, gdy wysyłka ma status „dziala” (po udanym teście).
 // W przeciwnym razie mail trafia do kolejki „Oczekuje na konfigurację” (MailQueue) — nic nie ginie.
