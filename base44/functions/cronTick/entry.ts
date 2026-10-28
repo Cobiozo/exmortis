@@ -6,6 +6,7 @@ import { APP_URL, DEFAULT_APP_URL, loadAppUrl } from "../../shared/settings.ts";
 import { sendMail, adminTo, flushMailQueue } from "../../shared/smtp.ts";
 import { issueInvoice, pendingInvoices, loadFaktury } from "../../shared/invoices.ts";
 import { onboardingTick } from "../../shared/onboarding.ts";
+import { dailySummary } from "../../shared/dailySummary.ts";
 
 // ============ Jedno zadanie cykliczne zamiast sześciu workflow ============
 // Workflow „Zadania cykliczne" woła tę funkcję co 5 minut (czas polski). Tutaj, równolegle,
@@ -51,6 +52,10 @@ async function call(origin, job) {
 // Minuta czasu polskiego — od niej zależy, czy wypada przebieg „co 15 minut".
 const warsawMinute = () =>
   Number(new Intl.DateTimeFormat("en-GB", { timeZone: "Europe/Warsaw", minute: "2-digit" }).format(new Date()));
+
+// Godzina czasu polskiego — po niej wypada dzienne podsumowanie (22:00).
+const warsawHour = () =>
+  Number(new Intl.DateTimeFormat("en-GB", { timeZone: "Europe/Warsaw", hour: "2-digit", hourCycle: "h23" }).format(new Date()));
 
 // Dzień tygodnia czasu polskiego — po nim wypada tygodniowa kopia zapasowa.
 const warsawIsSunday = () =>
@@ -121,6 +126,22 @@ export default async function (req) {
       }
     }
 
+    // Raz na dobę: podsumowanie dnia e-mailem (22:00 czasu polskiego, pierwsze 5 minut przebiegu).
+    // Blokada w app_settings (klucz 'daily_summary') — jeden mail na dobę, także po restarcie instancji.
+    // Podsumowanie idzie w tle, więc nie opóźnia pozostałych zadań, a jego błąd nie wywraca cronTick.
+    let podsumowanie = false;
+    if (warsawHour() === 22 && minute < 5) {
+      const lock = await runSql(base44, `INSERT INTO public.app_settings (key, value, updated_date)
+          VALUES ('daily_summary', jsonb_build_object('at', now()), now())
+        ON CONFLICT (key) DO UPDATE SET value = EXCLUDED.value, updated_date = now()
+          WHERE public.app_settings.updated_date < now() - interval '20 hours'
+        RETURNING key`).catch(() => []);
+      if (lock && lock.length) {
+        podsumowanie = true;
+        waitUntil(dailySummary(base44).catch((e) => console.error("podsumowanie dnia", String(e?.message || e).slice(0, 200))));
+      }
+    }
+
     // Równolegle, partiami po 6 (limit połączeń workera). Błąd jednego zadania nie zatrzymuje pozostałych.
     const out = [];
     for (let i = 0; i < jobs.length; i += 6) {
@@ -187,7 +208,7 @@ export default async function (req) {
           html: `<p>Ostatni przebieg zadań cyklicznych (${new Date().toISOString().slice(0, 16).replace("T", " ")} UTC) — nie odpowiedziały:</p><ul>${list}</ul><p>Kolejny alarm najwcześniej za 6 godzin. Jeśli powtarza się — sprawdź Panel → Pulpit → Gotowość platformy i logi funkcji.</p>` }).catch(() => {});
       }
     }
-    console.log("cronTick", JSON.stringify({ minute, quarter, ok: out.length - failed.length, failed: failed.length, ...(poczta ? { poczta } : {}), ...(prowadzenie ? { prowadzenie } : {}) }));
+    console.log("cronTick", JSON.stringify({ minute, quarter, ok: out.length - failed.length, failed: failed.length, ...(poczta ? { poczta } : {}), ...(prowadzenie ? { prowadzenie } : {}), ...(podsumowanie ? { podsumowanie } : {}) }));
     return Response.json({
       ok: failed.length === 0,
       minuta: minute,
