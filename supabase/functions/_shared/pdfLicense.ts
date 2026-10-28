@@ -1,4 +1,6 @@
-import { PDFDocument, StandardFonts, rgb, degrees } from "npm:@cantoo/pdf-lib@2.4.1";
+// Biblioteka PDF z gotowej paczki ESM (esm.sh). Wersja przez npm nie startuje na Supabase
+// (funkcja kończy się błędem BOOT_ERROR) — ten sam kod, ta sama wersja 2.4.1, gotowy moduł.
+import { PDFDocument, StandardFonts, rgb, degrees } from "https://esm.sh/@cantoo/pdf-lib@2.4.1?target=deno";
 
 // Wersja oznaczeń — zmiana wymusza ponowne wygenerowanie zapisanych kopii.
 export const WM_VERSION = "wm3";

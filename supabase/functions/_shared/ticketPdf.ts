@@ -1,8 +1,10 @@
 // PDF biletu: wzór wgrany w panelu (obraz na całą stronę) albo wzór domyślny exmortis,
 // a na nim imię i nazwisko, kod QR i numer biletu — w miejscach ustawionych w panelu.
-import { PDFDocument, rgb } from "npm:@cantoo/pdf-lib@2.4.1";
-import fontkit from "npm:@pdf-lib/fontkit@1.1.1";
-import QRCode from "npm:qrcode@1.5.4";
+// Biblioteki z gotowych paczek ESM (esm.sh). Wersje przez npm nie startują na Supabase
+// (BOOT_ERROR przy uruchomieniu funkcji) — te same wersje, gotowe moduły.
+import { PDFDocument, rgb } from "https://esm.sh/@cantoo/pdf-lib@2.4.1?target=deno";
+import fontkit from "https://esm.sh/@pdf-lib/fontkit@1.1.1?target=deno";
+import QRCode from "https://esm.sh/qrcode@1.5.4?target=deno";
 import { APP_URL } from "./settings.ts";
 
 export const FONTS = { cinzel: "Cinzel-SemiBold.ttf", garamond: "EBGaramond-Medium.ttf", inter: "Inter-SemiBold.ttf", mono: "SpaceMono-Bold.ttf" };
