@@ -23,7 +23,7 @@ function NoAccess({ closed }) {
         </>
       ) : (
         <>
-          <p className="relic-heading text-xl md:text-2xl text-[#F5EFE1] break-words">Indywidualne spotkania są dla uczestników programu POWRÓT</p>
+          <p className="relic-heading text-xl md:text-2xl text-[#F5EFE1] break-words">Indywidualne spotkania są dla uczestników programu POWRÓT lub ROZMOWY NA PROGU.</p>
           <p className="text-sm text-foreground/70 leading-relaxed">
             Na tym koncie nie ma dostępu do umawiania spotkań — nie jesteś uczestnikiem programu POWRÓT albo dostęp nie został jeszcze włączony.
             Jeśli jesteś w programie, napisz do exmortis z adresu, na który założone jest to konto. Możesz też dołączyć do spotkań ogólnych.
