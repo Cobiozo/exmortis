@@ -1,11 +1,21 @@
 // PDF biletu: wzór wgrany w panelu (obraz na całą stronę) albo wzór domyślny exmortis,
 // a na nim imię i nazwisko, kod QR i numer biletu — w miejscach ustawionych w panelu.
-// Biblioteki z gotowych paczek ESM (esm.sh). Wersje przez npm nie startują na Supabase
-// (BOOT_ERROR przy uruchomieniu funkcji) — te same wersje, gotowe moduły.
-import { PDFDocument, rgb } from "https://esm.sh/@cantoo/pdf-lib@2.4.1?target=deno";
-import fontkit from "https://esm.sh/@pdf-lib/fontkit@1.1.1?target=deno";
-import QRCode from "https://esm.sh/qrcode@1.5.4?target=deno";
+// Biblioteki ładowane leniwie — dopiero przy generowaniu biletu, nie przy starcie funkcji.
+// Statyczne importy wywalały całą funkcję błędem BOOT_ERROR.
 import { APP_URL } from "./settings.ts";
+
+const deps: any = { PDFDocument: null, rgb: null, fontkit: null, QRCode: null };
+async function libs() {
+  if (!deps.PDFDocument) {
+    const m: any = await import("npm:@cantoo/pdf-lib@2.4.1");
+    deps.PDFDocument = m?.PDFDocument ? m : m?.default;
+    deps.rgb = m?.rgb ?? m?.default?.rgb;
+    if (!deps.PDFDocument) throw new Error("Nie udało się wczytać biblioteki PDF");
+  }
+  if (!deps.fontkit) { const f: any = await import("npm:@pdf-lib/fontkit@1.1.1"); deps.fontkit = f?.default ?? f; }
+  if (!deps.QRCode) { const q: any = await import("npm:qrcode@1.5.4"); deps.QRCode = q?.default ?? q; }
+  return deps;
+}
 
 export const FONTS = { cinzel: "Cinzel-SemiBold.ttf", garamond: "EBGaramond-Medium.ttf", inter: "Inter-SemiBold.ttf", mono: "SpaceMono-Bold.ttf" };
 
@@ -43,7 +53,7 @@ async function loadImage(src: string) {
 const hex = (h, fb = "#000000") => {
   const m = String(h || fb).match(/^#?([0-9a-f]{6})$/i) || String(fb).match(/^#?([0-9a-f]{6})$/i);
   const n = parseInt(m![1], 16);
-  return rgb(((n >> 16) & 255) / 255, ((n >> 8) & 255) / 255, (n & 255) / 255);
+  return deps.rgb(((n >> 16) & 255) / 255, ((n >> 8) & 255) / 255, (n & 255) / 255);
 };
 const clamp = (v, a, b, d) => { const n = Number(v); return Number.isFinite(n) ? Math.min(b, Math.max(a, n)) : d; };
 
@@ -65,7 +75,7 @@ export function cleanLayout(t) {
 
 // Kod QR rysowany wektorowo (ostry w każdym wydruku), z białym marginesem — czytelny także na ciemnym wzorze.
 function drawQr(page, text, x, yTop, size, dark, light) {
-  const q = QRCode.create(text, { errorCorrectionLevel: "M" });
+  const q = deps.QRCode.create(text, { errorCorrectionLevel: "M" });
   const n = q.modules.size, quiet = 2;
   const cell = size / (n + quiet * 2);
   page.drawRectangle({ x, y: yTop - size, width: size, height: size, color: hex(light, "#FFFFFF") });
@@ -111,6 +121,7 @@ function wrap(font, text, size, maxW, maxLines = 2) {
 
 // tickets: [{ holder_name, code (ABC-1234), qr (adres) }] — jedna strona na bilet.
 export async function renderTicketsPdf(ev, template, tickets) {
+  const { PDFDocument, fontkit } = await libs();
   const t = cleanLayout(template);
   const doc = await PDFDocument.create();
   doc.registerFontkit(fontkit);

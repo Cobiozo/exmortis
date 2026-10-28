@@ -1,12 +1,22 @@
-// Biblioteka PDF z gotowej paczki ESM (esm.sh). Wersja przez npm nie startuje na Supabase
-// (funkcja kończy się błędem BOOT_ERROR) — ten sam kod, ta sama wersja 2.4.1, gotowy moduł.
-import { PDFDocument, StandardFonts, rgb, degrees } from "https://esm.sh/@cantoo/pdf-lib@2.4.1?target=deno";
+// Biblioteka PDF ładowana leniwie — dopiero przy generowaniu pliku, nie przy starcie funkcji.
+// Statyczny import (npm albo esm.sh) wywalał całą funkcję błędem BOOT_ERROR; tutaj start jest
+// lekki, a gdy biblioteka się nie wczyta, błąd wychodzi tylko z tworzenia PDF.
+let _pdf: any = null;
+async function pdfLib() {
+  if (!_pdf) {
+    const m: any = await import("npm:@cantoo/pdf-lib@2.4.1");
+    _pdf = m?.PDFDocument ? m : m?.default;
+    if (!_pdf?.PDFDocument) throw new Error("Nie udało się wczytać biblioteki PDF");
+  }
+  return _pdf;
+}
 
 // Wersja oznaczeń — zmiana wymusza ponowne wygenerowanie zapisanych kopii.
 export const WM_VERSION = "wm3";
 
 // Osobista kopia PDF: napis licencji na każdej stronie, ukryte znaczniki, metadane, blokada edycji.
 export async function personalizePdf(bytes: Uint8Array, o: { email: string; orderNo: string; date: string; licenseId: string; title: string }) {
+  const { PDFDocument, StandardFonts, rgb, degrees } = await pdfLib();
   const doc = await PDFDocument.load(bytes, { ignoreEncryption: true });
   const font = await doc.embedFont(StandardFonts.Helvetica);
   // Lewy górny róg: zaczyna się od adresu e-mail osoby, która kupiła lub pobrała plik.
