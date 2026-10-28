@@ -66,11 +66,18 @@ export async function personalizePdf(bytes: Uint8Array, o: { email: string; orde
   doc.setTitle(o.title);
   doc.setProducer("exmortis");
 
-  await doc.encrypt({
-    userPassword: "",
-    ownerPassword: crypto.randomUUID(),
-    permissions: { printing: "highResolution", copying: true, contentAccessibility: true, modifying: false, annotating: false, fillingForms: false, documentAssembly: false },
-  });
+  // TODO po premierze: przywrócić blokadę edycji (crypto-js w esm.sh).
+  // Do premiery plik wychodzi ze znakiem wodnym, ale bez szyfrowania: encrypt() wywalał się na
+  // „oe.default.MD5 is not a function” i pozbawiał kupującego pliku. Sam znak wodny wystarcza.
+  try {
+    await doc.encrypt({
+      userPassword: "",
+      ownerPassword: crypto.randomUUID(),
+      permissions: { printing: "highResolution", copying: true, contentAccessibility: true, modifying: false, annotating: false, fillingForms: false, documentAssembly: false },
+    });
+  } catch (e) {
+    console.warn("pdfLicense: blokada edycji pominięta (decyzja właściciela 28.10)", (e as any)?.message);
+  }
   return await doc.save();
 }
 
