@@ -2,8 +2,8 @@ import { waitUntil } from "./shim.ts";
 import { runSql, escStr, rpc } from "./supabase.ts";
 import { mirrorRecord, consentFilter } from "./mirror.ts";
 import { getSetting, loadAppUrl } from "./settings.ts";
-import { sendConfirmationMail } from "./events.ts";
-import { sendMail } from "./smtp.ts";
+import { sendConfirmationMail, plWhen } from "./events.ts";
+import { sendMail, adminTo } from "./smtp.ts";
 import { regulaminVersion } from "./legalDocs.ts";
 
 // Zapisy na spotkania: dwa zapytania do Supabase (odczyt + INSERT), bez zmian struktury tabel.
@@ -87,10 +87,37 @@ export async function ensureTzColumn(base44) {
   tzReady = true;
 }
 
+const esc = (v) => String(v ?? "").replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
+
+// Powiadomienie administratora o nowym zapisie — błąd nie może zablokować zapisu ani potwierdzenia.
+async function notifyAdminNewReg(base44, ev, reg) {
+  try {
+    const to = await adminTo(base44).catch(() => null);
+    if (!to) return;
+    const question = String(reg.question_for_dawid || "").trim();
+    await sendMail(base44, {
+      kind: "zapis_admin",
+      ref: reg.id,
+      to,
+      subject: `Nowy zapis: ${ev.title || "spotkanie"}`,
+      html:
+        `<p>${esc(reg.first_name)} (${esc(reg.email)}) zapisał(a) się na „${esc(ev.title)}” — ${esc(plWhen(ev.start_datetime))}.</p>` +
+        `<p>Status: ${esc(reg.status)}.</p>` +
+        (question ? `<p>Pytanie: ${esc(question)}</p>` : "") +
+        `<p>Panel: Spotkania.</p>`,
+    });
+  } catch (e) {
+    console.warn("registrations: powiadomienie administratora pominięte", String(e?.message || e).slice(0, 200));
+  }
+}
+
 export function afterSaved(base44, ev, reg, d) {
   const tz = typeof d.tz === "string" && /^[A-Za-z_+\-\/0-9]{1,64}$/.test(d.tz) ? d.tz : null;
   if (tz) reg = { ...reg, tz };
-  const jobs = [loadAppUrl(base44).then(() => sendConfirmationMail(base44, ev, reg))];
+  const confirm = loadAppUrl(base44).then(() => sendConfirmationMail(base44, ev, reg));
+  const jobs = [confirm];
+  // Powiadomienie administratora — po potwierdzeniu dla uczestnika, poza ścieżką błędu.
+  jobs.push(confirm.catch(() => {}).then(() => notifyAdminNewReg(base44, ev, reg)));
   if (tz) jobs.push(ensureTzColumn(base44).then(() => runSql(base44, `UPDATE public.registrations SET tz = ${escStr(tz)} WHERE id = ${escStr(reg.id)}`)));
   if (d.listy) {
     jobs.push(import("./newsletter.ts").then((m) => m.addSubscriber(base44, { email: d.email, name: d.first_name, consentGiven: true })));

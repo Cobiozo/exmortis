@@ -138,6 +138,22 @@ export default async function (req) {
       </div>`,
     });
 
+    // Powiadomienie administratora — błąd nie może wpłynąć na wydane zamówienie.
+    try {
+      const adminMail = await adminTo(base44).catch(() => null);
+      if (adminMail) {
+        await sendMail(base44, {
+          kind: "zamowienie_admin",
+          ref: orderId,
+          to: adminMail,
+          subject: `Nowe zamówienie (bezpłatne): ${product.name}`,
+          html: `<p>${escapeHtml(name)} (${escapeHtml(email)}) pobrał(a) „${escapeHtml(product.name)}”.</p><p>Numer: ${orderId.slice(0, 8).toUpperCase()}. Panel: Zamówienia.</p>`,
+        });
+      }
+    } catch (e) {
+      console.warn("orderFree: powiadomienie administratora pominięte", String(e?.message || e).slice(0, 200));
+    }
+
     return Response.json({ ok: true });
   } catch (error) {
     // Błąd danych z formularza = 400, reszta = 500.
