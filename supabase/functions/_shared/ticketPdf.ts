@@ -5,15 +5,69 @@
 import { APP_URL } from "./settings.ts";
 
 const deps: any = { PDFDocument: null, rgb: null, fontkit: null, QRCode: null };
+
+// esm.sh zamienia paczki CommonJS na ESM z nazwanymi eksportami — npm: w Supabase Edge tego nie robi
+// (import @pdf-lib/standard-fonts wywalał się na „does not provide an export named FontNames”).
+// Każda biblioteka: najpierw esm.sh, potem npm:, a gdy oba zawiodą — błąd z komunikatami obu prób.
+async function loadPdf() {
+  const errs: string[] = [];
+  try {
+    const m: any = await import("https://esm.sh/@cantoo/pdf-lib@2.4.1?bundle&target=deno");
+    const lib = m?.PDFDocument ? m : m?.default;
+    if (lib?.PDFDocument) return lib;
+    errs.push("esm.sh: brak PDFDocument");
+  } catch (e) { errs.push(`esm.sh: ${String((e as any)?.message || e)}`); }
+  try {
+    const m: any = await import("npm:@cantoo/pdf-lib@2.4.1");
+    const lib = m?.PDFDocument ? m : m?.default;
+    if (lib?.PDFDocument) return lib;
+    errs.push("npm: brak PDFDocument");
+  } catch (e) { errs.push(`npm: ${String((e as any)?.message || e)}`); }
+  throw new Error(`Nie udało się wczytać biblioteki PDF — ${errs.join(" | ")}`);
+}
+
+async function loadFontkit() {
+  const errs: string[] = [];
+  try {
+    const f: any = await import("https://esm.sh/@pdf-lib/fontkit@1.1.1?bundle&target=deno");
+    const m = f?.default ?? f;
+    if (m) return m;
+    errs.push("esm.sh: brak eksportu");
+  } catch (e) { errs.push(`esm.sh: ${String((e as any)?.message || e)}`); }
+  try {
+    const f: any = await import("npm:@pdf-lib/fontkit@1.1.1");
+    const m = f?.default ?? f;
+    if (m) return m;
+    errs.push("npm: brak eksportu");
+  } catch (e) { errs.push(`npm: ${String((e as any)?.message || e)}`); }
+  throw new Error(`Nie udało się wczytać fontkit — ${errs.join(" | ")}`);
+}
+
+async function loadQr() {
+  const errs: string[] = [];
+  try {
+    const q: any = await import("https://esm.sh/qrcode@1.5.4?bundle&target=deno");
+    const m = q?.create ? q : q?.default;
+    if (m?.create) return m;
+    errs.push("esm.sh: brak create");
+  } catch (e) { errs.push(`esm.sh: ${String((e as any)?.message || e)}`); }
+  try {
+    const q: any = await import("npm:qrcode@1.5.4");
+    const m = q?.create ? q : q?.default;
+    if (m?.create) return m;
+    errs.push("npm: brak create");
+  } catch (e) { errs.push(`npm: ${String((e as any)?.message || e)}`); }
+  throw new Error(`Nie udało się wczytać generatora QR — ${errs.join(" | ")}`);
+}
+
 async function libs() {
   if (!deps.PDFDocument) {
-    const m: any = await import("npm:@cantoo/pdf-lib@2.4.1");
-    deps.PDFDocument = m?.PDFDocument ? m : m?.default;
+    const m = await loadPdf();
+    deps.PDFDocument = m;
     deps.rgb = m?.rgb ?? m?.default?.rgb;
-    if (!deps.PDFDocument) throw new Error("Nie udało się wczytać biblioteki PDF");
   }
-  if (!deps.fontkit) { const f: any = await import("npm:@pdf-lib/fontkit@1.1.1"); deps.fontkit = f?.default ?? f; }
-  if (!deps.QRCode) { const q: any = await import("npm:qrcode@1.5.4"); deps.QRCode = q?.default ?? q; }
+  if (!deps.fontkit) deps.fontkit = await loadFontkit();
+  if (!deps.QRCode) deps.QRCode = await loadQr();
   return deps;
 }
 

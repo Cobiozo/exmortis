@@ -1,14 +1,30 @@
 // Biblioteka PDF ładowana leniwie — dopiero przy generowaniu pliku, nie przy starcie funkcji.
 // Statyczny import (npm albo esm.sh) wywalał całą funkcję błędem BOOT_ERROR; tutaj start jest
 // lekki, a gdy biblioteka się nie wczyta, błąd wychodzi tylko z tworzenia PDF.
+// esm.sh konwertuje paczkę CommonJS (wraz z zależnością @pdf-lib/standard-fonts) na ESM z nazwanymi
+// eksportami — npm: w Supabase Edge tego nie robi i import wywalał się na „does not provide an export named FontNames”.
+// Kolejność: esm.sh, potem npm:, a gdy oba zawiodą — błąd zawierający komunikaty z obu prób.
 let _pdf: any = null;
+const pickPdf = (m: any) => (m?.PDFDocument ? m : m?.default);
+
 async function pdfLib() {
-  if (!_pdf) {
-    const m: any = await import("npm:@cantoo/pdf-lib@2.4.1");
-    _pdf = m?.PDFDocument ? m : m?.default;
-    if (!_pdf?.PDFDocument) throw new Error("Nie udało się wczytać biblioteki PDF");
+  if (_pdf) return _pdf;
+  const errs: string[] = [];
+  try {
+    const lib = pickPdf(await import("https://esm.sh/@cantoo/pdf-lib@2.4.1?bundle&target=deno"));
+    if (lib?.PDFDocument) { _pdf = lib; return _pdf; }
+    errs.push("esm.sh: brak PDFDocument");
+  } catch (e) {
+    errs.push(`esm.sh: ${String((e as any)?.message || e)}`);
   }
-  return _pdf;
+  try {
+    const lib = pickPdf(await import("npm:@cantoo/pdf-lib@2.4.1"));
+    if (lib?.PDFDocument) { _pdf = lib; return _pdf; }
+    errs.push("npm: brak PDFDocument");
+  } catch (e) {
+    errs.push(`npm: ${String((e as any)?.message || e)}`);
+  }
+  throw new Error(`Nie udało się wczytać biblioteki PDF — ${errs.join(" | ")}`);
 }
 
 // Wersja oznaczeń — zmiana wymusza ponowne wygenerowanie zapisanych kopii.
