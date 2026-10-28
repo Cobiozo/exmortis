@@ -19096,7 +19096,11 @@ async function smtpSend(smtp, { to, subject, html, attachments, headers, kind = 
     auth: {
       user: smtp.user,
       pass: smtp.password
-    }
+    },
+    // Twarde limity: bez nich zerwane połączenie wisi dwie minuty i funkcja kończy się bez śladu w dzienniku.
+    connectionTimeout: 15e3,
+    greetingTimeout: 15e3,
+    socketTimeout: 6e4
   });
   const addr = smtp.from || smtp.user;
   const unsubUrl = String(headers?.["List-Unsubscribe"] || "").replace(/^<|>$/g, "");

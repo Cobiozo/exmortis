@@ -87,6 +87,8 @@ export async function smtpSend(smtp, { to, subject, html, attachments, headers, 
   const transporter = nodemailer.createTransport({
     host: smtp.host, port, secure: port === 465,
     auth: { user: smtp.user, pass: smtp.password },
+    // Twarde limity: bez nich zerwane połączenie wisi dwie minuty i funkcja kończy się bez śladu w dzienniku.
+    connectionTimeout: 15000, greetingTimeout: 15000, socketTimeout: 60000,
   });
   const addr = smtp.from || smtp.user;
   const unsubUrl = String(headers?.["List-Unsubscribe"] || "").replace(/^<|>$/g, "");
