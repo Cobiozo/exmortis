@@ -151,6 +151,26 @@ async function requireUser(req, res, next) {
   next();
 }
 
+// Tylko zespół exmortis (rola „admin" albo „techniczna" w profilu exm_user) może wgrywać pliki.
+async function requireStaff(req, res, next) {
+  const token = String(req.headers.authorization || "").replace(/^Bearer\s+/i, "");
+  const email = String(req.user?.email || "").toLowerCase();
+  if (!email) return res.status(403).json({ error: "Wgrywanie plików jest dostępne tylko dla zespołu exmortis." });
+  if (!SUPABASE_URL) return res.status(503).json({ error: "Sprawdzenie uprawnień: brak VITE_SUPABASE_URL." });
+  const r = await fetch(
+    `${SUPABASE_URL}/rest/v1/exm_user?data->>email=eq.${encodeURIComponent(email)}&select=data&limit=1`,
+    { headers: { apikey: ANON_KEY, Authorization: `Bearer ${token}` }, signal: AbortSignal.timeout(10000) },
+  ).catch(() => null);
+  if (!r || !r.ok) return res.status(503).json({ error: "Nie udało się sprawdzić uprawnień konta — spróbuj ponownie." });
+  const rows = await r.json().catch(() => null);
+  if (!Array.isArray(rows)) return res.status(503).json({ error: "Nie udało się sprawdzić uprawnień konta — spróbuj ponownie." });
+  const role = rows[0]?.data?.role;
+  if (role !== "admin" && role !== "techniczna") {
+    return res.status(403).json({ error: "Wgrywanie plików jest dostępne tylko dla zespołu exmortis." });
+  }
+  next();
+}
+
 // Nazwa pliku z żądania — tylko bezpieczne znaki, bez katalogów.
 const mediaName = (v) => {
   const s = String(v || "").replace(/^cf\//, "").replace(/^(private|public)\//, "");
@@ -159,7 +179,7 @@ const mediaName = (v) => {
 const mediaSig = (name, exp) => crypto.createHmac("sha256", MEDIA_SECRET).update(`${name}.${exp}`).digest("hex");
 
 // Zapis pliku. ?scope=private → magazyn prywatny (link tylko podpisany), bez → publiczny.
-app.post("/api/media/upload", requireUser, async (req, res) => {
+app.post("/api/media/upload", requireUser, requireStaff, async (req, res) => {
   const upload = await getUpload();
   if (!upload) return res.status(503).json({ error: "Magazyn plików: brak pakietu multer — uruchom npm install na serwerze." });
   upload.single("file")(req, res, (err) => {
