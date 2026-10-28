@@ -107,6 +107,8 @@ function wrapEntity(entity, name) {
             const norm = prop === "get" ? { id: String(args[0]) }
               : prop === "count" ? { query: args[0] || {} }
               : prop === "aggregate" ? { ...(args[0] || {}) }
+              // list(sort, limit, skip) — pierwszy argument to sortowanie, nie zapytanie.
+              : prop === "list" ? parseArgs([{}, ...args])
               : parseArgs(args);
             return await gatewayRead(name, prop, norm);
           } catch (e) {

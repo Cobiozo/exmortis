@@ -128,10 +128,18 @@ function makeEntity(name: string) {
       return fetchPage(parts, sort, limit, cursor);
     },
 
-    async list(options?: Record<string, unknown>) {
-      if (!options || !Object.keys(options).length) {
-        return (await pgGet(table, "limit=2000")).map(row2rec);
+    // Base44: list(sort, limit, skip) — pierwszy argument to sortowanie, nie zapytanie.
+    // Tylko obiekt (albo brak argumentów) oznacza listę ze stronicą; reszta to tablica rekordów.
+    async list(...args: unknown[]) {
+      const [first, limit, skip] = args;
+      if (first === undefined || first === null || typeof first === "string") {
+        const order = first ? `&order=${orderExpr(String(first))}` : "";
+        const lim = Math.max(1, Math.min(Number(limit) || 2000, 2000));
+        const off = Math.max(0, Number(skip) || 0);
+        return (await pgGet(table, `select=*${order}&limit=${lim}&offset=${off}`)).map(row2rec);
       }
+      const options = first as Record<string, unknown>;
+      if (!Object.keys(options).length) return (await pgGet(table, "limit=2000")).map(row2rec);
       return this.filter(options.query || {}, { sort: options.sort, limit: options.limit, cursor: options.cursor, distinct: options.distinct });
     },
 
