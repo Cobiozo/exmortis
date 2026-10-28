@@ -5290,6 +5290,14 @@
       "integrity": "sha512-bXE4cR/kVZhKZX/RjPEflHaKVhUVl85noU3v6b8apfQEc1x4A+zBxjZ4lN8LqGd6WZ3dl98pY4o717VFmoPp+A=="
     }
   },
+  "remote": {
+    "https://deno.land/x/dir@1.5.1/data_local_dir/mod.ts": "91eb1c4bfadfbeda30171007bac6d85aadacd43224a5ed721bbe56bc64e9eb66",
+    "https://deno.land/x/eszip@v0.55.2/eszip_wasm.generated.js": "08c55fa2d3436ff597d16c560deec9b1755e7728d2920c86e4bad8213bcd63e4",
+    "https://deno.land/x/eszip@v0.55.2/loader.ts": "31bae51763d86b8e60df3b3a8d0359e71d2ff32451af5f27ff7854bdd6f1f726",
+    "https://deno.land/x/eszip@v0.55.2/mod.ts": "1ab71595e9f0b771987276f96d323c3e03ad7f41fc653b38c44dfd51439c20e1",
+    "https://deno.land/x/wasmbuild@0.15.1/cache.ts": "9d01b5cb24e7f2a942bbd8d14b093751fa690a6cde8e21709ddc97667e6669ed",
+    "https://deno.land/x/wasmbuild@0.15.1/loader.ts": "8c2fc10e21678e42f84c5135d8ab6ab7dc92424c3f05d2354896a29ccfd02a63"
+  },
   "workspace": {
     "packageJson": {
       "dependencies": [
