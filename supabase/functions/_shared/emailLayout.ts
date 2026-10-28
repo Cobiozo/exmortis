@@ -102,16 +102,31 @@ export function emailLayout(html, { firma = null, appUrl = APP_URL, kind = "", p
   const link = (href, label) => `<a href="${esc(href)}" target="_blank" style="color:${BRAND.muted};text-decoration:underline;">${esc(label)}</a>`;
   const small = `font-family:${BRAND.sans};font-size:12px;line-height:1.7;color:${BRAND.faint};margin:0 0 10px;`;
 
+  // Bez adresu strony (app_url jeszcze niewczytany) nie ma z czego zbudować obrazka ani linków
+  // ze ścieżką względną — wtedy zamiast logo sam złoty napis. Żadnej domeny na stałe.
+  const host = site.replace(/^https?:\/\//, "");
+  const onSite = host ? ` na ${esc(host)}` : "";
+  const logo = site
+    ? `<a href="${esc(site)}" target="_blank" style="text-decoration:none;">
+        <img src="${esc(site)}/exmortis-logo-500.png" width="64" height="64" alt="exmortis" style="display:block;width:64px;height:64px;margin:0 auto 12px;font-family:${BRAND.serif};font-size:18px;color:${BRAND.gold};">
+        <span style="font-family:${BRAND.sans};font-size:12px;letter-spacing:6px;color:${BRAND.gold};">EXMORTIS</span>
+      </a>`
+    : `<span style="font-family:${BRAND.sans};font-size:12px;letter-spacing:6px;color:${BRAND.gold};">EXMORTIS</span>`;
+  const docs = [
+    site && link(`${site}/regulamin`, "Regulamin"),
+    site && link(`${site}/polityka-prywatnosci`, "Polityka prywatności"),
+  ].filter(Boolean).join(" &nbsp;·&nbsp; ");
+
   const footer = [
     `<p style="font-family:${BRAND.sans};font-size:11px;letter-spacing:3px;color:${BRAND.gold};margin:0 0 14px;">WRACAM Z SIEBIE · UCZĘ WRACAĆ</p>`,
     `<p style="${small}">${SOCIAL.map(([l, u]) => link(u, l)).join(" &nbsp;·&nbsp; ")}</p>`,
-    `<p style="${small}">${link(`mailto:${contact}`, contact)} &nbsp;·&nbsp; ${link(site, site.replace(/^https?:\/\//, ""))}</p>`,
+    `<p style="${small}">${link(`mailto:${contact}`, contact)}${host ? ` &nbsp;·&nbsp; ${link(site, host)}` : ""}</p>`,
     hasCrisis ? "" : `<p style="${small}">exmortis to mentoring, nie terapia. Jeśli jest Ci bardzo ciężko: <span style="color:${BRAND.muted};">116 123</span> · <span style="color:${BRAND.muted};">800 70 2222</span> (całą dobę, bezpłatnie) · w zagrożeniu życia <span style="color:${BRAND.muted};">112</span>.</p>`,
     firmLine ? `<p style="${small}">${firmLine}</p>` : "",
-    `<p style="${small}">${link(`${site}/regulamin`, "Regulamin")} &nbsp;·&nbsp; ${link(`${site}/polityka-prywatnosci`, "Polityka prywatności")}</p>`,
+    docs ? `<p style="${small}">${docs}</p>` : "",
     marketing
-      ? `<p style="${small}">Dostajesz Listy powrotu, bo zapisano ten adres na ${esc(site.replace(/^https?:\/\//, ""))} i potwierdzono zapis.${unsubUrl ? ` ${link(unsubUrl, "Wypisz się jednym kliknięciem")}.` : " Aby się wypisać, odpowiedz na ten list słowem STOP."}</p>`
-      : `<p style="${small}">To wiadomość dotycząca Twojego konta, zamówienia lub zapisu na ${esc(site.replace(/^https?:\/\//, ""))}. Możesz na nią po prostu odpowiedzieć.</p>`,
+      ? `<p style="${small}">Dostajesz Listy powrotu, bo zapisano ten adres${onSite} i potwierdzono zapis.${unsubUrl ? ` ${link(unsubUrl, "Wypisz się jednym kliknięciem")}.` : " Aby się wypisać, odpowiedz na ten list słowem STOP."}</p>`
+      : `<p style="${small}">To wiadomość dotycząca Twojego konta, zamówienia lub zapisu${onSite}. Możesz na nią po prostu odpowiedzieć.</p>`,
   ].join("");
 
   return `<!DOCTYPE html>
@@ -142,10 +157,7 @@ export function emailLayout(html, { firma = null, appUrl = APP_URL, kind = "", p
 <tr><td align="center" class="exm-wrap" style="padding:32px 16px;">
   <table role="presentation" width="600" cellspacing="0" cellpadding="0" border="0" style="width:100%;max-width:600px;">
     <tr><td align="center" style="padding:8px 0 26px;">
-      <a href="${esc(site)}" target="_blank" style="text-decoration:none;">
-        <img src="${esc(site)}/exmortis-logo-500.png" width="64" height="64" alt="exmortis" style="display:block;width:64px;height:64px;margin:0 auto 12px;font-family:${BRAND.serif};font-size:18px;color:${BRAND.gold};">
-        <span style="font-family:${BRAND.sans};font-size:12px;letter-spacing:6px;color:${BRAND.gold};">EXMORTIS</span>
-      </a>
+      ${logo}
     </td></tr>
     <tr><td class="exm-card" style="background:${BRAND.card};border:1px solid ${BRAND.line};border-top:2px solid ${BRAND.gold};padding:44px 44px 36px;">
       <div class="exm-body" style="font-family:${BRAND.serif};font-size:16px;line-height:1.7;color:${BRAND.text};">

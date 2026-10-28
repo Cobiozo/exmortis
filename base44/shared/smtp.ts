@@ -1,5 +1,5 @@
 import nodemailer from "npm:nodemailer@6.9.13";
-import { FIRMA, getSetting, APP_URL } from "./settings.ts";
+import { FIRMA, getSetting, APP_URL, loadAppUrl } from "./settings.ts";
 import { emailLayout, cleanEmailHtml } from "./emailLayout.ts";
 import { runSql, escStr } from "./supabase.ts";
 import { setImmediate as nodeSetImmediate, clearImmediate as nodeClearImmediate } from "node:timers";
@@ -126,6 +126,9 @@ export async function afterSent(base44, kind, to) {
 // Zwraca "wyslany" albo "kolejka". Błąd SMTP jest zapisywany w dzienniku i rzucany dalej.
 export async function sendMail(base44, { to, subject, html, attachments, kind = "inne", ref, waznyDo, headers, preheader = "" }) {
   if (!to) throw new Error("Brak adresata");
+  // Oprawa maila (logo, stopka, linki) bierze adres strony. Bez tego wczytania APP_URL bywa pusty
+  // i w mailu pojawia się „http:///exmortis-logo-500.png”.
+  await loadAppUrl(base44).catch(() => {});
   const Q = base44.asServiceRole.entities.MailQueue;
   const base = { to_email: String(to || ""), subject, kind, ...(ref ? { ref: String(ref) } : {}), ...(waznyDo ? { wazny_do: new Date(waznyDo).toISOString() } : {}) };
   let smtp = await mailConfig(base44);
@@ -158,6 +161,8 @@ export async function sendMail(base44, { to, subject, html, attachments, kind = 
 
 // Wysyłka zaległych (tylko na kliknięcie administratora), partiami.
 export async function flushMailQueue(base44, { auto = false } = {}) {
+  // Zaległe maile budują oprawę tak samo jak świeże — adres strony musi być wczytany.
+  await loadAppUrl(base44).catch(() => {});
   const smtp = await getSetting(base44, "smtp");
   if (!mailReady(smtp)) { if (auto) return { sent: 0, skipped: 0, failed: 0, more: false }; throw new Error("Wysyłka e-mail nie działa — najpierw wyślij udany test."); }
   const Q = base44.asServiceRole.entities.MailQueue;

@@ -74,6 +74,8 @@ export default async function (req) {
     if (body.action === "test") {
       if (tech) return Response.json({ error: "Brak dostępu" }, { status: 403 });
       const to = emailField(body, "to");
+      // Treść testu buduje tę samą oprawę co zwykłe maile — najpierw adres strony.
+      await loadAppUrl(base44).catch(() => {});
       try {
         await smtpSend(smtp, { to, subject: `exmortis: test wysyłki e-mail${KEY === "smtp_marketing" ? " (newsletter)" : ""}`, html: "<h1>Wysyłka działa</h1><p>To test z panelu exmortis. Jeśli widzisz tę wiadomość w skrzynce odbiorczej (nie w spamie), konfiguracja jest poprawna.</p>" });
       } catch (e) {
