@@ -1,5 +1,6 @@
 import { createClientFromRequest } from "../_shared/compat.ts";
 import { clientIp } from "../_shared/supabase.ts";
+import { currentInstagramToken } from "../_shared/instagram.ts";
 
 // Zwraca najnowsze posty z Instagrama (profil podłączony przez connector).
 // Endpoint publiczny — strona główna wyświetla te posty także niezalogowanym.
@@ -25,21 +26,31 @@ const handler = async function (req) {
     if (CACHE && Date.now() - CACHE.at < TTL) return Response.json(CACHE.data);
 
     const base44 = createClientFromRequest(req);
-    const { accessToken } = await base44.asServiceRole.connectors.getConnection("instagram");
+    // Token: sekret INSTAGRAM_ACCESS_TOKEN albo świeższy token odświeżony przez cronTick (app_settings).
+    const token = await currentInstagramToken(base44).catch(() => "");
+    // Brak tokenu nie psuje strony — sekcja na dole po prostu się nie pokazuje.
+    if (!token) {
+      console.error("instagramFeed: brak tokenu Instagrama — ustaw sekret INSTAGRAM_ACCESS_TOKEN");
+      return Response.json({ username: null, posts: [] });
+    }
 
     // Instagram Graph API: token jako parametr zapytania, nie nagłówek.
     const meRes = await fetch(
-      `https://graph.instagram.com/me?fields=id,username&access_token=${accessToken}`
+      `https://graph.instagram.com/me?fields=id,username&access_token=${encodeURIComponent(token)}`,
+      { signal: AbortSignal.timeout(15000) }
     );
-    const me = await meRes.json();
+    const me = await meRes.json().catch(() => ({}));
     if (!me.id) {
-      return Response.json({ error: "Brak profilu Instagram" }, { status: 502 });
+      console.error("instagramFeed: profil nie odpowiedział —", String(me?.error?.message || meRes.status).slice(0, 120));
+      return Response.json({ username: null, posts: [] });
     }
 
     const mediaRes = await fetch(
-      `https://graph.instagram.com/${me.id}/media?fields=id,caption,media_type,media_url,thumbnail_url,permalink&limit=8&access_token=${accessToken}`
+      `https://graph.instagram.com/${me.id}/media?fields=id,caption,media_type,media_url,thumbnail_url,permalink&limit=8&access_token=${encodeURIComponent(token)}`,
+      { signal: AbortSignal.timeout(15000) }
     );
-    const media = await mediaRes.json();
+    const media = await mediaRes.json().catch(() => ({}));
+    if (media?.error) console.error("instagramFeed: posty —", String(media.error.message).slice(0, 120));
 
     const posts = (media.data || []).map((p) => ({
       id: p.id,
@@ -48,10 +59,13 @@ const handler = async function (req) {
     }));
 
     const data = { username: me.username, posts: posts.slice(0, 6) };
-    CACHE = { at: Date.now(), data };
+    // Pustej odpowiedzi nie trzymamy w pamięci — sekcja pojawi się od razu po naprawie tokenu.
+    if (data.posts.length) CACHE = { at: Date.now(), data };
     return Response.json(data);
   } catch (error) {
-    return Response.json({ error: error.message }, { status: 500 });
+    // Instagram nigdy nie wywraca strony: pusta lista zamiast błędu (token nie trafia do logu).
+    console.error("instagramFeed:", String(error?.message || error).slice(0, 120));
+    return Response.json({ username: null, posts: [] });
   }
 }
 

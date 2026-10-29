@@ -8,6 +8,7 @@ import { issueInvoice, pendingInvoices, loadFaktury } from "../../shared/invoice
 import { onboardingTick } from "../../shared/onboarding.ts";
 import { dailySummary } from "../../shared/dailySummary.ts";
 import { importPodcastRss } from "../../shared/podcastRss.ts";
+import { refreshInstagramToken } from "../../shared/instagram.ts";
 
 // ============ Jedno zadanie cykliczne zamiast sześciu workflow ============
 // Workflow „Zadania cykliczne" woła tę funkcję co 5 minut (czas polski). Tutaj, równolegle,
@@ -153,6 +154,30 @@ export default async function (req) {
       }
     }
 
+    // Raz na dobę: odświeżenie długoterminowego tokenu Instagrama (ważny 60 dni, przedłużamy gdy
+    // zostało mniej niż 20 dni) — sekcja na stronie głównej nie może zgasnąć po dwóch miesiącach.
+    // Blokada w app_settings (klucz 'instagram_refresh') — najwyżej raz na 20 godzin.
+    // W odpowiedzi są tylko daty i liczby: sam token nigdy nie trafia do logów ani do raportu.
+    let instagram = null;
+    try {
+      const lock = await runSql(base44, `INSERT INTO public.app_settings (key, value, updated_date)
+          VALUES ('instagram_refresh', jsonb_build_object('at', now()), now())
+        ON CONFLICT (key) DO UPDATE SET value = EXCLUDED.value, updated_date = now()
+          WHERE public.app_settings.updated_date < now() - interval '20 hours'
+        RETURNING key`).catch(() => []);
+      if (lock?.length) {
+        const r = await refreshInstagramToken(base44);
+        instagram = {
+          ok: !!r.ok,
+          odswiezony: !!r.refreshed,
+          ...(r.days_left != null ? { dni: r.days_left } : {}),
+          ...(r.error ? { blad: r.error } : {}),
+        };
+      }
+    } catch (e) {
+      instagram = { ok: false, blad: String((e && e.message) || e).slice(0, 120) };
+    }
+
     // Równolegle, partiami po 6 (limit połączeń workera). Błąd jednego zadania nie zatrzymuje pozostałych.
     const out = [];
     for (let i = 0; i < jobs.length; i += 6) {
@@ -226,6 +251,7 @@ export default async function (req) {
       co15: quarter,
       kopia_zapasowa: kopia,
       faktury,
+      instagram,
       przebiegi: out,
       niepowodzenia: failed.length,
       ms: Date.now() - t0,
