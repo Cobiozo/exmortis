@@ -145,6 +145,16 @@ const handler = async function (req) {
       }
     }
 
+    // Raz na godzinę (minuta polska < 5): odcinki podcastu z kanału RSS. W tle i w try/catch —
+    // błąd kanału lub sieci nie wywraca przebiegu zadań cyklicznych.
+    if (minute < 5) {
+      try {
+        waitUntil(importPodcastRss(base44).catch((e) => console.error("podcast RSS", String(e?.message || e).slice(0, 200))));
+      } catch (e) {
+        console.error("podcast RSS", String(e?.message || e).slice(0, 200));
+      }
+    }
+
     // Równolegle, partiami po 6 (limit połączeń workera). Błąd jednego zadania nie zatrzymuje pozostałych.
     const out = [];
     for (let i = 0; i < jobs.length; i += 6) {

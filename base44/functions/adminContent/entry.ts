@@ -10,7 +10,8 @@ export default async function (req) {
     const base44 = createClientFromRequest(req);
     await requireAdmin(base44);
     const body = await req.json().catch(() => ({}));
-    // Import odcinków podcastu z kanału RSS — przycisk w panelu podcastu (admin i techniczna).
+    // Import odcinków podcastu z kanału RSS — przycisk w panelu podcastu (admin + techniczna).
+    // Wspólny moduł podcastRss.ts: dopisuje nowe odcinki, aktualizuje znane, porządkuje listę „Wszystkie odcinki”.
     if (body.action === "rss_import") {
       const wynik = await importPodcastRss(base44);
       return Response.json({ ok: true, ...wynik });
