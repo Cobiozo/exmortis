@@ -3,7 +3,7 @@
 // pozostałe bezpośrednie zapisy z interfejsu — tylko administrator. Zapisy użytkowników
 // wykonują funkcje serwerowe (np. zamówienia, rezerwacje), nie bramka.
 
-const STAFF = new Set(["SitePage", "PageVersion", "CmsSection", "MediaAsset", "SiteNav", "PageRedirect", "PublishedPage"]);
+const STAFF = new Set(["SitePage", "PageVersion", "CmsSection", "MediaAsset", "SiteNav", "PageRedirect", "PublishedPage", "PodcastSettings", "PodcastEpisode", "PodcastPlaylist"]);
 const ADMIN = new Set(["Utwor", "PodcastGuest", "ObokNagranie", "ObokSeria", "ObokUczestnik", "CourseLesson", "DiscountCode"]);
 const SYSTEM = new Set(["created_date", "updated_date", "created_by_id"]);
 

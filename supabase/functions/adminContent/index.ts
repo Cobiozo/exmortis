@@ -1,6 +1,7 @@
 import { createClientFromRequest } from "../_shared/compat.ts";
 import { runSql, escStr, requireStaff as requireAdmin } from "../_shared/supabase.ts";
 import { clearSnap } from "../_shared/snapshot.ts";
+import { importPodcastRss } from "../_shared/podcastRss.ts";
 
 const KEY_RE = /^[a-z0-9._-]+$/;
 
@@ -9,6 +10,11 @@ const handler = async function (req) {
     const base44 = createClientFromRequest(req);
     await requireAdmin(base44);
     const body = await req.json().catch(() => ({}));
+    // Import odcinków podcastu z kanału RSS — przycisk w panelu podcastu (admin i techniczna).
+    if (body.action === "rss_import") {
+      const wynik = await importPodcastRss(base44);
+      return Response.json({ ok: true, ...wynik });
+    }
     if (body.action !== "list") await clearSnap(base44, "content");
 
     if (body.action === "list") {

@@ -7,6 +7,7 @@ import { sendMail, adminTo, flushMailQueue } from "../../shared/smtp.ts";
 import { issueInvoice, pendingInvoices, loadFaktury } from "../../shared/invoices.ts";
 import { onboardingTick } from "../../shared/onboarding.ts";
 import { dailySummary } from "../../shared/dailySummary.ts";
+import { importPodcastRss } from "../../shared/podcastRss.ts";
 
 // ============ Jedno zadanie cykliczne zamiast sześciu workflow ============
 // Workflow „Zadania cykliczne" woła tę funkcję co 5 minut (czas polski). Tutaj, równolegle,

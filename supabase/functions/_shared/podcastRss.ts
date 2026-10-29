@@ -151,8 +151,7 @@ export async function importPodcastRss(base44: any): Promise<RssResult> {
       while (slugs.has(`${slug}-${n}`)) n++;
       slug = `${slug}-${n}`;
     }
-    const rec: Record<string, unknown> = { ...rss, tytul: title, slug, spotify: spotify || rss.tytul ? spotify : "", status: "opublikowany" };
-    if (!spotify) delete rec.spotify;
+    const rec: Record<string, unknown> = { ...rss, tytul: title, slug, spotify: spotify || "", status: "opublikowany" };
     for (const k of Object.keys(rec)) if (rec[k] === null || rec[k] === "") delete rec[k];
     const created = await base44.entities.PodcastEpisode.create(rec);
     slugs.add(slug);
