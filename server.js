@@ -62,6 +62,17 @@ const BACK_HEADERS = [
   "vary", "access-control-allow-origin",
 ];
 
+// Strony HTML zwracane przez funkcje (linki z maili otwierane w przeglądarce):
+// shopWaitlist — wypisanie z listy oczekujących, eventsCancel — odwołanie zapisu na spotkanie,
+// eventShare — strona udostępniania spotkania (og:image dla Facebooka/WhatsApp).
+// Tylko te funkcje; ICS, PDF, JSON i obrazy zostają bez zmian.
+const HTML_PAGES = ["shopWaitlist", "eventsCancel", "eventShare"];
+
+// Supabase Edge Functions wymuszają na domyślnej domenie Content-Type: text/plain dla odpowiedzi HTML.
+// Link z maila idzie przez /functions/<nazwa>, więc strona otwierała się jako surowy kod z krzakami
+// zamiast polskich liter. Rozpoznajemy stronę po treści, nie po nagłówku, i poprawiamy typ.
+const looksHtml = (buf) => /^\s*(?:<!doctype\s+html|<html)/i.test(buf.subarray(0, 512).toString("utf8"));
+
 // ---- MAGAZYN PLIKÓW (multer) -------------------------------------------------
 // Katalog można przenieść poza repozytorium zmienną MEDIA_DIR (np. /home/konto/media).
 const MEDIA_DIR = path.resolve(env("MEDIA_DIR") || path.join(__dirname, "media"));
@@ -305,12 +316,17 @@ app.all(
         redirect: "manual",
         signal: AbortSignal.timeout(60000),
       });
+      const buf = Buffer.from(await upstream.arrayBuffer());
+      // Strona HTML z funkcji z HTML_PAGES: nadpisujemy text/plain z Supabase, inaczej przeglądarka
+      // pokazuje surowy kod. Pozostałe odpowiedzi (ICS, PDF, JSON, obrazy) przechodzą nietknięte.
+      const asHtml = method === "GET" && HTML_PAGES.includes(name) && looksHtml(buf);
       res.status(upstream.status);
       for (const h of BACK_HEADERS) {
         const v = upstream.headers.get(h);
-        if (v) res.setHeader(h, v);
+        if (v && !(asHtml && h === "content-type")) res.setHeader(h, v);
       }
-      res.end(Buffer.from(await upstream.arrayBuffer()));
+      if (asHtml) res.setHeader("content-type", "text/html; charset=utf-8");
+      res.end(buf);
     } catch (e) {
       res.status(502).json({ error: String(e?.message || e) });
     }
