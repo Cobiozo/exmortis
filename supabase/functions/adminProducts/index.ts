@@ -1,9 +1,10 @@
 import { createClientFromRequest } from "../_shared/compat.ts";
+import { waitUntil } from "../_shared/shim.ts";
 import { runSql, escStr, requireAdmin } from "../_shared/supabase.ts";
 import { recordPrices, readSteps } from "../_shared/productPrice.ts";
 import { DIGITAL } from "../_shared/access.ts";
 import { requireMail } from "../_shared/smtp.ts";
-import { ensureWaitlistCols, notifyBatch } from "../_shared/waitlist.ts";
+import { ensureWaitlistCols, notifyBatch, waitlistPending, notifyAll } from "../_shared/waitlist.ts";
 import { clearSnap } from "../_shared/snapshot.ts";
 import { productSeats } from "../_shared/seats.ts";
 
@@ -227,6 +228,14 @@ const handler = async function (req) {
         `ALTER TABLE public.products ADD COLUMN IF NOT EXISTS file_url text, ADD COLUMN IF NOT EXISTS price_steps jsonb, ADD COLUMN IF NOT EXISTS available_at timestamptz, ADD COLUMN IF NOT EXISTS bundle_items jsonb DEFAULT '[]', ADD COLUMN IF NOT EXISTS capacity int`
       );
 
+      // Status PRZED zapisem — po nim wiadomo, czy produkt właśnie wychodzi z „wkrótce”.
+      let prevStatus = null;
+      if (p.id) {
+        const [prev] = await runSql(base44, `SELECT COALESCE(status, 'dostępny') AS status FROM public.products WHERE id = ${escStr(String(p.id))}`, true);
+        prevStatus = prev ? String(prev.status) : null;
+      }
+      const newStatus = p.status && STATUSES.includes(p.status) ? p.status : "dostępny";
+
       if (p.id) {
         await runSql(
           base44,
@@ -279,7 +288,17 @@ const handler = async function (req) {
       await runSql(base44, `UPDATE public.products SET price_options = ${optionsSql} WHERE slug = ${v.slug}`);
       await recordPrices(base44, true).catch(() => {}); // historia cen (Omnibus) od razu po zmianie
       await clearSnap(base44, "products:").catch(() => {}); // katalog w Skarbcu odświeży się przy najbliższym wejściu
-      return Response.json({ ok: true });
+
+      // Premiera „wkrótce” → „dostępny”: cała lista dostaje mail w tle, każda osoba najwyżej raz.
+      // Panel od razu wie, ile osób jest w kolejce (waitlist_auto), a wysyłka nie blokuje odpowiedzi.
+      let waitlistAuto = 0;
+      if (p.id && prevStatus === "wkrótce" && newStatus === "dostępny") {
+        waitlistAuto = await waitlistPending(base44, String(p.id)).catch(() => 0);
+        if (waitlistAuto > 0) {
+          waitUntil(notifyAll(base44, String(p.id), "").catch((e) => console.error("lista: premiera", String(e?.message || e).slice(0, 200))));
+        }
+      }
+      return Response.json({ ok: true, waitlist_auto: waitlistAuto });
     }
 
     // Lista oczekujących produktu: kto, kiedy, czy już powiadomiony.

@@ -150,7 +150,7 @@ export default function ProductEditor({ product, onSaved, onCancel }) {
     }
     setSaving(true);
     try {
-      await base44.functions.invoke("adminProducts", {
+      const res = await base44.functions.invoke("adminProducts", {
         action: "save",
         product: {
           ...form,
@@ -165,7 +165,7 @@ export default function ProductEditor({ product, onSaved, onCancel }) {
           sort_order: form.sort_order === "" ? null : Number(form.sort_order),
         },
       });
-      onSaved();
+      onSaved(res.data || {});
     } catch (err) {
       setError(err?.response?.data?.error || "Nie udało się zapisać produktu.");
     } finally {

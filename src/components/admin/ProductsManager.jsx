@@ -23,6 +23,7 @@ export default function ProductsManager() {
   const [waitlist, setWaitlist] = useState(null);
   const [reviews, setReviews] = useState(false);
   const [pending, setPending] = useState(0);
+  const [notice, setNotice] = useState(""); // np. „Powiadamiam N osób z listy oczekujących"
 
   const load = () => {
     setLoading(true);
@@ -39,14 +40,23 @@ export default function ProductsManager() {
   };
   useEffect(load, []);
 
+  // Komunikat po premierze produktu gaśnie sam.
+  useEffect(() => {
+    if (!notice) return;
+    const t = setTimeout(() => setNotice(""), 12000);
+    return () => clearTimeout(t);
+  }, [notice]);
+
   if (reviews) return <ReviewsPanel onBack={() => { setReviews(false); load(); }} />;
 
   if (editing !== null) {
     return (
       <ProductEditor
         product={editing === "new" ? null : editing}
-        onSaved={() => {
+        onSaved={(data) => {
           setEditing(null);
+          // Premiera „wkrótce” → „dostępny”: funkcja wysyła maile w tle i mówi, ile osób obejmuje.
+          if (data?.waitlist_auto > 0) setNotice(`Powiadamiam ${data.waitlist_auto} osób z listy oczekujących`);
           load();
         }}
         onCancel={() => setEditing(null)}
@@ -99,6 +109,11 @@ export default function ProductsManager() {
           </button>
         </div>
       </div>
+      {notice && (
+        <p className="text-xs gold-text border border-[#C9A24A]/40 bg-[#C9A24A]/10 px-4 py-3 mb-6">
+          {notice}
+        </p>
+      )}
       {loading ? (
         <div className="space-y-3">
           {[...Array(4)].map((_, i) => (
