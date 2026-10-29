@@ -166,8 +166,16 @@ const Image = React.forwardRef(
     if (!parsed) {
       const isErrorMode = mode === IMAGE_LOAD_MODE.FALLBACK
       const imageSrc = isErrorMode ? FALLBACK_IMAGE_URL : getOriginalImageUrl(src, parsedSource)
+      // Obraz bez transformacji (np. plik z hostingu) też musi respektować fittingType —
+      // inaczej rozciąga się do proporcji kontenera zamiast dopasować się do niego.
       return (
-        <img ref={ref} src={imageSrc} {...imageProps} data-error-image={isErrorMode || undefined} />
+        <img
+          ref={ref}
+          src={imageSrc}
+          {...imageProps}
+          className={cn(props.className, fittingType === "fit" ? "object-contain" : "object-cover")}
+          data-error-image={isErrorMode || undefined}
+        />
       )
     }
 

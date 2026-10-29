@@ -1,7 +1,7 @@
 import React from "react";
 import { Link } from "react-router-dom";
 import { LayoutGrid, Grid2x2, List, ChevronRight } from "lucide-react";
-import { Image } from "@/components/ui/image";
+import CoverStage from "./CoverStage";
 import { CardTopBadge, PriceBlock, isListenProduct, productHref } from "./cardBits";
 
 // Widoki Skarbca obok dotychczasowych kart: „kafelki” (2 w rzędzie na telefonie) i „lista” (zwarte wiersze).
@@ -43,7 +43,7 @@ export function ShopProductTile({ product: p, index }) {
   return (
     <To href={hrefOf(p)} className={`group flex flex-col h-full border hairline bg-[#0D0D0E] hover:border-[#C9A24A]/40 transition-colors ${soon ? "opacity-80" : ""}`}>
       <div className="relative aspect-[4/3] overflow-hidden bg-[#0F0F10]">
-        {cover ? <Image src={cover} alt="" className="w-full h-full" fittingType="fill" /> : (
+        {cover ? <CoverStage src={cover} /> : (
           <span className="absolute bottom-2 left-3 shop-heading text-2xl text-[#C9A24A]/25">{String(index ?? "").padStart(2, "0")}</span>
         )}
         <div className="absolute top-2 left-2 flex gap-1 scale-90 origin-top-left"><CardTopBadge p={p} index={index} /></div>
@@ -61,7 +61,7 @@ export function ShopProductRow({ product: p, index }) {
   return (
     <To href={hrefOf(p)} className="group flex items-center gap-3 sm:gap-4 py-3 border-b hairline hover:bg-[#0D0D0E] transition-colors">
       <div className="relative w-20 sm:w-28 aspect-[4/3] shrink-0 overflow-hidden bg-[#0F0F10]">
-        {cover ? <Image src={cover} alt="" className="w-full h-full" fittingType="fill" /> : (
+        {cover ? <CoverStage src={cover} pad="p-1.5" /> : (
           <span className="absolute bottom-1 left-2 shop-heading text-lg text-[#C9A24A]/25">{String(index ?? "").padStart(2, "0")}</span>
         )}
       </div>

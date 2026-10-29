@@ -1,5 +1,5 @@
 import React from "react";
-import { Image } from "@/components/ui/image";
+import CoverStage from "./CoverStage";
 import { CardTopBadge, PriceBlock, ProductButton } from "./cardBits";
 
 // Wyróżniona karta na całą szerokość sekcji (np. „Wracam inny", POWRÓT 1:1).
@@ -14,7 +14,7 @@ export default function ShopFeaturedCard({ product: p, onWaitlist, index, classN
       <div className="relative min-h-[200px] md:min-h-[240px] bg-[#0F0F10]">
         {cover ? (
           <div className="absolute inset-0 transition-transform duration-700 ease-out group-hover:scale-[1.03]">
-            <Image src={cover} alt={p.name} className="w-full h-full" fittingType="fill" />
+            <CoverStage src={cover} alt={p.name} />
           </div>
         ) : (
           <div className="absolute inset-0 flex items-center justify-center p-10 text-center bg-gradient-to-br from-[#141416] to-[#0A0A0B]">

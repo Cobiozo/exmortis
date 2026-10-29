@@ -1,6 +1,6 @@
 import React from "react";
 import { Link } from "react-router-dom";
-import { Image } from "@/components/ui/image";
+import CoverStage from "./CoverStage";
 import { CardTopBadge, PriceBlock, ProductButton, SeatsLine, isListenProduct, productHref } from "./cardBits";
 import { RatingLine } from "./Stars";
 
@@ -28,7 +28,7 @@ export default function ShopProductCard({ product: p, onWaitlist, index }) {
       <To href={href} tabIndex={-1} aria-hidden="true" className="relative block aspect-[16/9] overflow-hidden bg-[#0F0F10]">
         {cover ? (
           <div className="absolute inset-0 transition-transform duration-700 ease-out group-hover:scale-[1.03]">
-            <Image src={cover} alt="" className="w-full h-full" fittingType="fill" />
+            <CoverStage src={cover} />
           </div>
         ) : (
           <div className="absolute inset-0 flex items-end p-4 bg-gradient-to-br from-[#141416] to-[#0A0A0B]">

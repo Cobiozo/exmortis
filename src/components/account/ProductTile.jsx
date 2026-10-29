@@ -2,7 +2,7 @@ import React, { useState } from "react";
 import { FileText, Headphones, Film, Layers, Download, BookOpen, Loader2, Play } from "lucide-react";
 import { base44 } from "@/api/base44Client";
 import { Link } from "react-router-dom";
-import { Image } from "@/components/ui/image";
+import CoverStage from "@/components/exmortis/shop/CoverStage";
 import AccessLine from "./AccessLine";
 import { TYPE_LABEL } from "./accountUtils";
 
@@ -34,7 +34,7 @@ export default function ProductTile({ p }) {
   return (
     <div className={`border hairline flex flex-col ${p.active ? "" : "opacity-50"}`}>
       <div className="aspect-[4/3] bg-[#0F0F10] relative">
-        {p.cover ? <Image src={p.cover} alt="" className="absolute inset-0 w-full h-full" /> : (
+        {p.cover ? <CoverStage src={p.cover} alt={p.name} /> : (
           <div className="absolute inset-0 flex items-center justify-center"><Icon className="h-10 w-10 gold-text" strokeWidth={1} /></div>
         )}
       </div>
