@@ -5288,6 +5288,9 @@
   },
   "remote": {
     "https://deno.land/x/dir@1.5.1/data_local_dir/mod.ts": "91eb1c4bfadfbeda30171007bac6d85aadacd43224a5ed721bbe56bc64e9eb66",
+    "https://deno.land/x/eszip@v0.20.0/eszip_wasm.generated.js": "1c425da741fe272e613a128f707b413fdffb532b0c15c273a2dbcda98d12f826",
+    "https://deno.land/x/eszip@v0.20.0/loader.ts": "fea27f6649c0e2965b785715355f415de9369879e8948f51a3b0973dce7807a6",
+    "https://deno.land/x/eszip@v0.20.0/mod.ts": "791b15f978722a044141cd16d48419980346abb911b934bca964e1115fbcb476",
     "https://deno.land/x/eszip@v0.55.2/eszip_wasm.generated.js": "08c55fa2d3436ff597d16c560deec9b1755e7728d2920c86e4bad8213bcd63e4",
     "https://deno.land/x/eszip@v0.55.2/loader.ts": "31bae51763d86b8e60df3b3a8d0359e71d2ff32451af5f27ff7854bdd6f1f726",
     "https://deno.land/x/eszip@v0.55.2/mod.ts": "1ab71595e9f0b771987276f96d323c3e03ad7f41fc653b38c44dfd51439c20e1",
