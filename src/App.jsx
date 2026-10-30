@@ -17,6 +17,7 @@ const Rozdroza = lazyPage(() => import('@/pages/Rozdroza'));
 const ShopPage = lazyPage(() => import('@/pages/ShopPage'));
 const Checkout = lazyPage(() => import('@/pages/Checkout'));
 const Powrot = lazyPage(() => import('@/pages/Powrot'));
+const PowrotAnkieta = lazyPage(() => import('@/pages/PowrotAnkieta'));
 const Glos = lazyPage(() => import('@/pages/Glos'));
 const TestPage = lazyPage(() => import('@/pages/TestPage'));
 const Events = lazyPage(() => import('@/pages/Events'));
@@ -138,6 +139,7 @@ const AuthenticatedApp = () => {
           <Route path="/produkt/:slug" element={<ShopRedirect />} />
           <Route path="/kasa" element={<Checkout />} />
           <Route path="/powrot" element={<Powrot />} />
+          <Route path="/powrot/ankieta" element={<PowrotAnkieta />} />
           <Route path="/glos" element={<Glos />} />
           <Route path="/glos/:slug" element={<CmsRoutePage slug="_odcinek" />} />
           <Route path="/test" element={<TestPage />} />

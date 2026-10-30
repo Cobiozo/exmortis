@@ -34,6 +34,7 @@ const MessagesPanel = lazyPage(() => import("@/components/admin/library/Messages
 const HistoryPanel = lazyPage(() => import("@/components/admin/library/HistoryPanel"));
 const OrdersPanel = lazyPage(() => import("@/components/admin/orders/OrdersPanel"));
 const RozdrozaAdmin = lazyPage(() => import("@/components/admin/rozdroza/RozdrozaAdmin"));
+const PowrotPanel = lazyPage(() => import("@/components/admin/powrot/PowrotPanel"));
 
 const SECTIONS = {
   spotkania: ["Spotkania", () => <EventsManager />],
@@ -45,6 +46,7 @@ const SECTIONS = {
   statystyki: ["Statystyki", () => <div className="space-y-16"><SilenceStatsPanel /><QuizStatsPanel /></div>],
   glos: ["Głos", () => <PlaylistManager onMutate={() => {}} />],
   kontakty: ["Baza kontaktów", () => <ContactsTabs />],
+  powrot: ["Zgłoszenia POWRÓT", () => <PowrotPanel />],
   podcast: ["Podcast", () => <PodcastAdmin />],
   obok: ["Obok", () => <ObokAdmin />],
   rozdroza: ["Rozdroża", () => <Suspense fallback={<div className="w-6 h-6 border-2 border-[#3D3D3F] border-t-[#C9A24A] rounded-full animate-spin" />}><RozdrozaAdmin /></Suspense>],

@@ -5,9 +5,9 @@ import { ipAllowed, TOO_MANY } from "../_shared/rateLimit.ts";
 import { isUrgent, notifyUrgent } from "../_shared/crisis.ts";
 import { loadAppUrl, APP_URL as APP } from "../_shared/settings.ts";
 import { sendMail, adminTo } from "../_shared/smtp.ts";
+import { wrap, escHtml, num1to10, list, jsonb } from "../_shared/powrotSurvey.ts";
 
 const HELP = `<p style="font-size:18px;color:#C9A24A;line-height:1.7"><b>116 123</b> · <b>800 70 2222</b> (całą dobę, bezpłatnie) · <b>112</b></p>`;
-const wrap = (body) => `<div style="background:#0A0A0B;color:#E2E2E2;font-family:Georgia,serif;padding:32px;max-width:560px">${body}<hr style="border:none;border-top:1px solid #3D3D3F;margin:28px 0"><p style="font-size:12px;color:#8A8A8C">W kryzysie: 116 123 · 800 70 2222 · 112</p></div>`;
 
 // Nowe kolumny formularza kwalifikacyjnego (tele jest zgodne z encją PowrotApplication).
 const COLUMNS = [
@@ -42,16 +42,7 @@ async function ensurePilne(base44) {
   pilneCol = true;
 }
 
-const num1to10 = (v) => {
-  const n = Number(v);
-  return Number.isFinite(n) ? Math.max(1, Math.min(10, Math.round(n))) : null;
-};
-
-const list = (v) => (Array.isArray(v) ? v.map((s) => String(s)).slice(0, 20) : []);
-
-const jsonb = (v) => `${escStr(JSON.stringify(v))}::jsonb`;
-
-const escHtml = (v) => String(v ?? "").replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
+// wrap, escHtml, num1to10, list i jsonb — wspólne z ankietą (_shared/powrotSurvey.ts), żeby oba etapy pisały tak samo.
 
 const handler = async function (req) {
   try {
@@ -64,7 +55,8 @@ const handler = async function (req) {
 
     const age = textField(body, "age", { max: 20, required: false });
     const returnOther = textField(body, "return_from_other", { max: 500, required: false });
-    const situation = textField(body, "situation", { max: 5000, required: false });
+    // Etap 1: krótkie zgłoszenie — „co jest dla Ciebie ważne właśnie teraz” trafia do kolumny situation.
+    const situation = textField(body, "situation", { max: 5000 });
     const duration = textField(body, "duration", { max: 60, required: false });
     const triedBefore = textField(body, "tried_before", { max: 5000, required: false });
     const therapySupport = textField(body, "therapy_support", { max: 40, required: false });
@@ -84,7 +76,8 @@ const handler = async function (req) {
     const consentPaid = body.consent_paid === true;
     const consentAdult = body.consent_adult === true;
     // Zgody wymagane także po stronie serwera (formularz w przeglądarce można obejść).
-    if (!consentRodo || !consentPaid || !consentAdult) return Response.json({ error: "Zaznacz wymagane zgody (w tym potwierdzenie ukończenia 18 lat)." }, { status: 400 });
+    // Etap 1: tylko zgoda na kontakt i pełnoletność — zgoda na płatność i regulamin są w ankiecie.
+    if (!consentRodo || !consentAdult) return Response.json({ error: "Zaznacz wymagane zgody (w tym potwierdzenie ukończenia 18 lat)." }, { status: 400 });
     if (!adultCol) { await runSql(base44, `ALTER TABLE public.powrot_applications ADD COLUMN IF NOT EXISTS consent_adult boolean`); adultCol = true; }
     const pilne = isUrgent(situation, triedBefore, goal, obstacle, anythingElse, returnOther);
     await ensurePilne(base44);
