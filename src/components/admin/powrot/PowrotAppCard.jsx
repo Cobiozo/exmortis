@@ -1,5 +1,5 @@
 import React from "react";
-import { X, Send, Loader2, AlertTriangle } from "lucide-react";
+import { X, Send, Loader2, AlertTriangle, Trash2 } from "lucide-react";
 
 // Karta jednego zgłoszenia POWRÓT: dane z etapu 1, odpowiedzi ankiety, wysyłka linku.
 export const surveyState = (a) => {
@@ -20,7 +20,7 @@ const Line = ({ label, value }) => (
   </div>
 );
 
-export default function PowrotAppCard({ a, onClose, onSend, sending, error, notice }) {
+export default function PowrotAppCard({ a, onClose, onSend, sending, error, notice, onDelete }) {
   const st = surveyState(a);
   const lists = (v) => (Array.isArray(v) && v.length ? v.join(", ") : "—");
   return (
@@ -75,6 +75,12 @@ export default function PowrotAppCard({ a, onClose, onSend, sending, error, noti
       <div className="text-xs text-foreground/50 space-y-1 border-t hairline pt-4">
         <p>Zgody: kontakt/RODO {a.consent_rodo ? "✓" : "—"} · pełnoletność · płatność {a.consent_paid ? "✓" : "—"} · dane o zdrowiu {a.consent_health ? "✓" : "—"}</p>
         {a.wspolpraca_od && <p>Współpraca od {new Date(a.wspolpraca_od).toLocaleDateString("pl-PL")}</p>}
+      </div>
+
+      <div className="flex justify-end">
+        <button onClick={onDelete} className="btn-blood !py-2 !px-4 text-[10px]">
+          <Trash2 className="h-3.5 w-3.5" /> USUŃ ZGŁOSZENIE
+        </button>
       </div>
     </div>
   );

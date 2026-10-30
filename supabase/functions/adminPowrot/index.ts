@@ -16,9 +16,29 @@ const FIELDS = `id, created_date, full_name, email, phone, age, return_from, ret
 const handler = async function (req) {
   try {
     const base44 = createClientFromRequest(req);
-    await requireAdmin(base44);
+    const admin = await requireAdmin(base44);
     const body = await req.json().catch(() => ({}));
     await ensureSurveyColumns(base44);
+
+    // Usunięcie zgłoszenia: wyłącznie ten wiersz z powrot_applications (konto, newsletter,
+    // zapisy na spotkania i inne dane osoby zostają nietknięte).
+    if (body.action === "delete") {
+      const id = textField(body, "id", { max: 64 });
+      const found = await runSql(base44, `SELECT id, full_name, email FROM public.powrot_applications WHERE id = ${esc(id)}`, true);
+      const app = found && found[0];
+      if (!app) return Response.json({ error: "Nie znaleziono zgłoszenia." }, { status: 404 });
+
+      const removed = await runSql(base44, `DELETE FROM public.powrot_applications WHERE id = ${esc(id)} RETURNING id`);
+      if (!removed || !removed[0]) return Response.json({ error: "Nie znaleziono zgłoszenia." }, { status: 404 });
+
+      // Wspólny dziennik danych osobowych (panel RODO → Historia): kto, kogo i kiedy usunął.
+      await base44.asServiceRole.entities.DataAccessLog.create({
+        kto: admin.email, akcja: "usuniecie", zakres: "POWRÓT: zgłoszenie usunięte w panelu",
+        osoba: `${app.full_name} <${app.email}>`, liczba: 1, at: new Date().toISOString(),
+      }).catch(() => {});
+
+      return Response.json({ ok: true });
+    }
 
     if (body.action === "survey") {
       const id = textField(body, "id", { max: 64 });

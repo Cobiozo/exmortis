@@ -1,13 +1,16 @@
 import React, { useEffect, useRef, useState } from "react";
-import { Loader2, Send } from "lucide-react";
+import { Loader2, Send, Trash2 } from "lucide-react";
 import { base44 } from "@/api/base44Client";
 import PowrotAppCard, { surveyState } from "./PowrotAppCard";
+import PowrotDeleteDialog from "./PowrotDeleteDialog";
 
 // Zgłoszenia POWRÓT: etap 1 z formularza na stronie, odpowiedzi pełnej ankiety i wysyłka linku.
 export default function PowrotPanel() {
   const [rows, setRows] = useState(null);
   const [openId, setOpenId] = useState(null);
   const [sendingId, setSendingId] = useState(null);
+  const [delId, setDelId] = useState(null);
+  const [deleting, setDeleting] = useState(false);
   const [error, setError] = useState("");
   const [notice, setNotice] = useState("");
   const [loadError, setLoadError] = useState("");
@@ -48,6 +51,27 @@ export default function PowrotPanel() {
     }
   };
 
+  // Usunięcie zgłoszenia (razem z odpowiedziami ankiety) — tylko ten wiersz w bazie POWRÓT.
+  const del = rows?.find((r) => r.id === delId) || null;
+  const remove = async () => {
+    if (!del) return;
+    setDeleting(true);
+    setError("");
+    setNotice("");
+    try {
+      await base44.functions.invoke("adminPowrot", { action: "delete", id: del.id });
+      if (openId === del.id) setOpenId(null);
+      setDelId(null);
+      await load();
+      setNotice("Zgłoszenie usunięte.");
+    } catch (e) {
+      setError(e?.response?.data?.error || "Nie udało się usunąć zgłoszenia.");
+      setDelId(null);
+    } finally {
+      setDeleting(false);
+    }
+  };
+
   // Wysyłka z tabeli — bez otwierania karty, z potwierdzeniem.
   const sendRow = (row) => {
     if (!row) return;
@@ -70,6 +94,7 @@ export default function PowrotPanel() {
           error={error}
           notice={notice}
           onSend={() => send(open.id)}
+          onDelete={() => setDelId(open.id)}
           onClose={() => { setOpenId(null); setNotice(""); setError(""); }}
         />
       )}
@@ -105,7 +130,17 @@ export default function PowrotPanel() {
                     </button>
                   </td>
                   <td className="p-3">
-                    {r.pilne && <span className="bg-[#BC1E22] text-[#F5EFE1] technical text-[9px] px-2 py-0.5">SPRAWDŹ PILNIE</span>}
+                    <div className="flex items-center gap-3">
+                      {r.pilne && <span className="bg-[#BC1E22] text-[#F5EFE1] technical text-[9px] px-2 py-0.5">SPRAWDŹ PILNIE</span>}
+                      <button
+                        onClick={(e) => { e.stopPropagation(); setDelId(r.id); }}
+                        title="Usuń zgłoszenie"
+                        aria-label="Usuń zgłoszenie"
+                        className="p-1 text-foreground/40 hover:text-[#BC1E22]"
+                      >
+                        <Trash2 className="h-4 w-4" />
+                      </button>
+                    </div>
                   </td>
                 </tr>
               );
@@ -114,6 +149,13 @@ export default function PowrotPanel() {
           </tbody>
         </table>
       </div>
+      <PowrotDeleteDialog
+        app={del}
+        open={!!del}
+        onOpenChange={(v) => { if (!v) setDelId(null); }}
+        onConfirm={remove}
+        busy={deleting}
+      />
     </div>
   );
 }
