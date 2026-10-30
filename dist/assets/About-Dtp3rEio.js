@@ -1,0 +1,1 @@
+import"./rolldown-runtime-XKyaHtl9.js";import{jn as e}from"./icons-ByEKiWxq.js";import{t}from"./jsx-runtime-BDuacDHv.js";import{m as n}from"./index-CHHc5LwO.js";e();var r=t();function i(){return(0,r.jsx)(n,{slug:`o-mnie`})}export{i as default};
