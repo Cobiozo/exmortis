@@ -28,8 +28,8 @@ export const LISTOPAD_BLOCKS = [
   b("lis-kto-dzis", "tekst_zdjecie", { etykieta: "DZIŚ", tytul: "", strona: "prawo", kolumny: "40-60", proporcja: "4:5", mobile: "gora",
     podpis: "MENTOR · KOMPAS",
     zdjecie: { url: "https://media.base44.com/images/public/6aa08bc6318b0f886cc3b9a3/76a96cdf4_686174507_17893800810460401_1310148896120990981_n.jpg", alt: "Dawid — exmortis" },
-    tresc: "<p>Wracałem krok po kroku, bez skrótów. Dziś jestem szczęśliwym mężem i ojcem — i mentorem powrotu.</p><p>Nie jestem coachem ani terapeutą. Jestem człowiekiem, który idzie kawałek obok Ciebie, bo szedł tą drogą wcześniej. Zostawiam kompas, nie kierunek.</p><p><strong class=\"exm-akcent-zloty\">Nie ma sytuacji bez wyjścia.</strong> Wiem to. Byłem tam, gdzie wydawało mi się, że jest.</p>",
-    przyciski: [{ etykieta: "MOJA HISTORIA", link: "/o-mnie", styl: "obrys", strzalka: true }] }, { odstep: "maly" }),
+    tresc: "<p>Wracałem krok po kroku, bez skrótów. Dziś jestem szczęśliwym mężem i ojcem — i mentorem powrotu.</p><p>Nie jestem coachem ani terapeutą. Jestem człowiekiem, który idzie kawałek obok Ciebie, bo szedł tą drogą wcześniej. Zostawiam kompas, nie kierunek.</p><p><strong class=\"exm-akcent-zloty\">Nie ma sytuacji bez wyjścia.</strong> Wiem to.</p>",
+    przyciski: [] }, { odstep: "maly" }),
   b("lis-dla-kogo", "karty", { etykieta: "DLA KOGO", tytul: "Dla kogo jest ten wieczór", kolumny: "3", numerowane: true, karty: [
     { tytul: "Śmierć mentalna", opis: "Dla tych, którym wypalenie, lęk albo pustka odebrały siebie." },
     { tytul: "Śmierć duchowa", opis: "Dla tych, którzy stracili sens, wiarę albo kierunek." },
