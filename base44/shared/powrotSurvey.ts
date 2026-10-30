@@ -10,6 +10,7 @@ const COLUMNS: [string, string][] = [
   ["survey_done_at", "timestamptz"],
   ["consent_health", "boolean"],
   ["consent_health_at", "timestamptz"],
+  ["pilne", "boolean"],
 ];
 
 let READY = false;

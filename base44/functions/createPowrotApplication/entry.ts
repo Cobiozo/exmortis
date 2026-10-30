@@ -107,7 +107,7 @@ export default async function (req) {
     await loadAppUrl(base44).catch(() => {});
     waitUntil((async () => {
       const admin = await adminTo(base44).catch(() => null);
-      const link = `${APP}/admin/kontakty`;
+      const link = `${APP}/admin/powrot`;
       if (pilne) {
         await sendMail(base44, { kind: "powrot", ref: appId, to: email, subject: "Dziękuję za Twoją wiadomość",
           html: wrap(`<p>Dziękuję za tę wiadomość. Przeczytam Twoje zgłoszenie osobiście.</p><p>Jeśli jest Ci teraz bardzo ciężko, nie czekaj na moją odpowiedź. Zadzwoń teraz:</p>${HELP}<p>Twoja historia poczeka. Ty jesteś ważniejszy(-a).</p><p>Dawid, exmortis</p>`) }).catch(() => {});
