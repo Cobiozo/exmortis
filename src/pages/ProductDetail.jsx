@@ -1,6 +1,7 @@
 import { accessLabel, isDigital } from "@/components/account/accountUtils";
 import React, { useEffect, useState } from "react";
 import { sanitizeHtml } from "@/lib/sanitizeHtml";
+import { fixText } from "@/lib/typography";
 import { useParams, Link, useNavigate } from "react-router-dom";
 import { ArrowRight, ArrowLeft, Check, Minus, Plus } from "lucide-react";
 import { base44 } from "@/api/base44Client";
@@ -125,7 +126,7 @@ export default function ProductDetail() {
             <p className="technical text-[11px] gold-text mb-4">{product.category.toUpperCase()} · ARTEFAKT</p>
             <h1 className="relic-heading text-4xl md:text-5xl lg:text-6xl leading-[0.95] mb-4 [overflow-wrap:break-word]">{product.name}</h1>
             {product.subtitle && (
-              <p className="text-xl text-foreground/55 mb-8">{product.subtitle}</p>
+              <p className="text-xl text-foreground/55 mb-8">{fixText(product.subtitle)}</p>
             )}
 
             <div className="flex items-baseline flex-wrap gap-x-4 gap-y-1 mb-8">
@@ -159,7 +160,7 @@ export default function ProductDetail() {
             <InBundleLink product={product} />
 
             {product.description && !sameText(product.description, product.subtitle) && (
-              <p className="text-foreground/70 leading-relaxed text-lg mb-8">{product.description}</p>
+              <p className="text-foreground/70 leading-relaxed text-lg mb-8">{fixText(product.description)}</p>
             )}
 
             {product.long_description && !sameText(product.long_description, product.description) && !sameText(product.long_description, product.subtitle) &&
@@ -170,7 +171,7 @@ export default function ProductDetail() {
                 />
               ) : (
                 <p className="text-foreground/60 leading-relaxed mb-8 whitespace-pre-line">
-                  {product.long_description}
+                  {fixText(product.long_description)}
                 </p>
               ))}
 
@@ -198,7 +199,7 @@ export default function ProductDetail() {
                 {product.details.map((d, i) => (
                   <li key={i} className="flex items-start gap-3 text-foreground/70">
                     <Check className="h-4 w-4 gold-text mt-1 flex-shrink-0" />
-                    <span className="text-sm">{d}</span>
+                    <span className="text-sm">{fixText(d)}</span>
                   </li>
                 ))}
               </ul>

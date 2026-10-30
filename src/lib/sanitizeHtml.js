@@ -1,4 +1,8 @@
+import { fixTextNodes } from "@/lib/typography";
+
 // Czyszczenie HTML z dozwoloną listą znaczników i atrybutów.
+// Na koniec porządkowane są spacje w tekstach (twarde spacje z edytora → zwykłe + sierotki),
+// żeby akapity łamały się tylko między słowami.
 const TAGS = new Set(["P", "BR", "STRONG", "B", "EM", "I", "U", "S", "H1", "H2", "H3", "H4", "UL", "OL", "LI", "A", "BLOCKQUOTE", "PRE", "CODE", "SPAN", "IMG", "HR", "DIV"]);
 const ATTRS = { A: ["href"], IMG: ["src", "alt"], BLOCKQUOTE: ["class"], SPAN: ["class"], P: ["class"], DIV: ["class"], H1: ["class"], H2: ["class"], H3: ["class"], LI: ["class"], STRONG: ["class"], EM: ["class"] };
 
@@ -27,5 +31,6 @@ export function sanitizeHtml(html) {
     });
   };
   walk(doc.body);
+  fixTextNodes(doc.body);
   return doc.body.innerHTML;
 }

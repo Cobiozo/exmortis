@@ -3,6 +3,7 @@ import { Link } from "react-router-dom";
 import { ArrowRight } from "lucide-react";
 import { Image } from "@/components/ui/image";
 import { isPromoActive, priceOnRequest, regularPrice, unitPrice, lowestPrice30, zl } from "@/lib/productPrice";
+import { fixText } from "@/lib/typography";
 
 // Karta produktu na stronie głównej (Skarbiec).
 export default function ProductCard({ product, index = 0 }) {
@@ -38,12 +39,12 @@ export default function ProductCard({ product, index = 0 }) {
           <div>
             <h3 className="relic-heading text-lg gold-text">{product.name}</h3>
             {product.subtitle && (
-              <p className="text-sm text-foreground/55 mt-1">{product.subtitle}</p>
+              <p className="text-sm text-foreground/55 mt-1">{fixText(product.subtitle)}</p>
             )}
           </div>
           {product.description && !sameAsSubtitle && (
             <p className="text-sm text-foreground/60 line-clamp-2 leading-relaxed">
-              {product.description}
+              {fixText(product.description)}
             </p>
           )}
           <div className="flex items-center justify-between pt-4 border-t hairline">

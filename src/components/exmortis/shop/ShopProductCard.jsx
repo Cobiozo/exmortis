@@ -3,6 +3,7 @@ import { Link } from "react-router-dom";
 import CoverStage from "./CoverStage";
 import { CardTopBadge, PriceBlock, ProductButton, SeatsLine, isListenProduct, productHref, scrollToHash } from "./cardBits";
 import { RatingLine } from "./Stars";
+import { fixText } from "@/lib/typography";
 
 // Link wewnętrzny albo zewnętrzny (produkty z własnym adresem, np. POWRÓT → /powrot).
 // Adres z kotwicą (np. /#listy-powrotu) przewija do sekcji po przejściu na stronę główną.
@@ -51,8 +52,8 @@ export default function ShopProductCard({ product: p, onWaitlist, index }) {
           <To href={href} className="hover:text-[#C9A24A] transition-colors">{p.name}</To>
         </h3>
         {p.rating_count > 0 && <RatingLine avg={p.rating_avg} count={p.rating_count} className="technical text-[10px] gold-text" />}
-        {p.promise && <p className="italic text-foreground/70 text-sm leading-relaxed line-clamp-3">{p.promise}</p>}
-        {p.for_whom && <p className="text-xs text-foreground/55 line-clamp-2">{p.for_whom}</p>}
+        {p.promise && <p className="italic text-foreground/70 text-sm leading-relaxed line-clamp-3">{fixText(p.promise)}</p>}
+        {p.for_whom && <p className="text-xs text-foreground/55 line-clamp-2">{fixText(p.for_whom)}</p>}
         {(p.form || p.format_details) && (
           <p className="technical text-[9px] text-foreground/55">
             {[p.form, p.format_details].filter(Boolean).join(" · ").toUpperCase()}
