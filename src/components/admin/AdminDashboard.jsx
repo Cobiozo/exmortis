@@ -10,8 +10,20 @@ import DashboardLibraryTile from "./DashboardLibraryTile";
 import { Link } from "react-router-dom";
 import { base44 } from "@/api/base44Client";
 import { useAdminMode } from "@/components/admin/AdminModeContext";
+import { surveyState } from "@/components/admin/powrot/PowrotAppCard";
 import { trackWarnings } from "@/components/admin/silence/library/libUtils";
 const countWarnings = (l) => l.reduce((n, t) => n + trackWarnings(t).length, 0);
+
+// Liczniki POWRÓT z listy, którą zwraca adminPowrot (bez zmian po stronie serwera).
+const powrotCounts = (list) => {
+  if (!list) return null;
+  const weekAgo = Date.now() - 7 * 86400000;
+  return {
+    fresh: list.filter((a) => new Date(a.created_date).getTime() >= weekAgo).length,
+    todo: list.filter((a) => ["none", "expired"].includes(surveyState(a).key)).length,
+    done: list.filter((a) => a.survey_done_at).length,
+  };
+};
 
 function Tile({ to, label, title, lines, onClick }) {
   const Inner = (
@@ -49,6 +61,12 @@ export default function AdminDashboard() {
   useEffect(() => {
     base44.entities.SilenceTrack.filter({}, { limit: 200 }).then((p) => setSound(p.items));
   }, []);
+  const [powrot, setPowrot] = useState(null);
+  useEffect(() => {
+    base44.functions.invoke("adminPowrot", { action: "list" })
+      .then((r) => setPowrot(r.data.applications || []))
+      .catch(() => setPowrot([]));
+  }, []);
 
   return (
     <>
@@ -60,6 +78,7 @@ export default function AdminDashboard() {
     <ReadinessCard />
     {(() => {
       // Kafelki w czterech grupach; numeracja liczona po kolei, więc ukryte kafelki nie robią dziur.
+      const pc = powrotCounts(powrot);
       const groups = [
         ["CODZIENNA PRACA", [
           { to: "/admin/spotkania", title: "Spotkania", lines: [`Nadchodzące: ${v("upcoming_events")}`, `Zapisani: ${v("upcoming_registrations")}`, `Szkice: ${v("draft_events")}`] },
@@ -70,6 +89,9 @@ export default function AdminDashboard() {
           libOn && { to: "/admin/grupy", title: "Grupy", lines: ["Ręczne i automatyczne, znaczniki"] },
           { to: "/admin/ogloszenia", title: "Ogłoszenia", lines: ["Na koncie klienta, bez e-maili"] },
           { to: "/admin/obok", title: "Obok", lines: ["Serie, nagrania, uczestnicy"] },
+          { to: "/admin/powrot", title: "Zgłoszenia POWRÓT", lines: pc
+            ? [`Nowe (7 dni): ${pc.fresh}`, `Ankiety do wysłania: ${pc.todo}`, `Wypełnione: ${pc.done}`]
+            : ["Krótkie zgłoszenia, pełne ankiety, kwalifikacja"] },
         ]],
         ["SKLEP I TREŚCI", [
           { to: "/admin/zamowienia", title: "Zamówienia", lines: [`Opłacone (30 dni): ${v("paid_30")}`, `Faktury do wystawienia: ${v("invoices_todo")}`] },

@@ -1,9 +1,14 @@
 import React, { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
+import { ArrowUpRight } from "lucide-react";
 import { base44 } from "@/api/base44Client";
 
 export default function ContactsPanel() {
   const [rows, setRows] = useState(null);
   const [src, setSrc] = useState("");
+  const nav = useNavigate();
+  // Zgłoszenia POWRÓT prowadzą do swojej karty w panelu POWRÓT (po e-mailu).
+  const toPowrot = (email) => nav(`/admin/powrot?email=${encodeURIComponent(email || "")}`);
 
   useEffect(() => {
     base44.functions.invoke("adminDashboard", { action: "contacts" }).then((r) => setRows(r.data.contacts || []));
@@ -30,8 +35,15 @@ export default function ContactsPanel() {
           </thead>
           <tbody>
             {shown.map((r, i) => (
-              <tr key={i} className="border-t hairline">
-                <td className="p-3 gold-text">{r.source}</td>
+              <tr
+                key={i}
+                onClick={r.source === "Powrót" ? () => toPowrot(r.email) : undefined}
+                className={`border-t hairline ${r.source === "Powrót" ? "cursor-pointer hover:bg-[#121212]" : ""}`}
+              >
+                <td className="p-3 gold-text">
+                  {r.source}
+                  {r.source === "Powrót" && <ArrowUpRight className="inline h-3 w-3 ml-1 text-foreground/40" />}
+                </td>
                 <td className="p-3">{r.name || "—"}</td>
                 <td className="p-3">{r.email}</td>
                 <td className="p-3">{r.phone || "—"}</td>
