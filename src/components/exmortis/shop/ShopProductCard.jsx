@@ -1,12 +1,15 @@
 import React from "react";
 import { Link } from "react-router-dom";
 import CoverStage from "./CoverStage";
-import { CardTopBadge, PriceBlock, ProductButton, SeatsLine, isListenProduct, productHref } from "./cardBits";
+import { CardTopBadge, PriceBlock, ProductButton, SeatsLine, isListenProduct, productHref, scrollToHash } from "./cardBits";
 import { RatingLine } from "./Stars";
 
 // Link wewnętrzny albo zewnętrzny (produkty z własnym adresem, np. POWRÓT → /powrot).
+// Adres z kotwicą (np. /#listy-powrotu) przewija do sekcji po przejściu na stronę główną.
 function To({ href, children, ...rest }) {
-  return href.startsWith("/") ? <Link to={href} {...rest}>{children}</Link> : <a href={href} target="_blank" rel="noreferrer" {...rest}>{children}</a>;
+  const hash = href.includes("#") ? href.slice(href.indexOf("#")) : "";
+  const jump = hash ? { onClick: () => scrollToHash(hash) } : {};
+  return href.startsWith("/") ? <Link to={href} {...rest} {...jump}>{children}</Link> : <a href={href} target="_blank" rel="noreferrer" {...rest}>{children}</a>;
 }
 
 // Karta produktu w Skarbcu (zwarta): okładka 16:9, znaczek, nazwa (link do strony produktu),

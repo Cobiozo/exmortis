@@ -2,7 +2,7 @@ import React from "react";
 import { Link } from "react-router-dom";
 import { LayoutGrid, Grid2x2, List, ChevronRight } from "lucide-react";
 import CoverStage from "./CoverStage";
-import { CardTopBadge, PriceBlock, isListenProduct, productHref } from "./cardBits";
+import { CardTopBadge, PriceBlock, isListenProduct, productHref, scrollToHash } from "./cardBits";
 
 // Widoki Skarbca obok dotychczasowych kart: „kafelki” (2 w rzędzie na telefonie) i „lista” (zwarte wiersze).
 // Kupno i lista oczekujących — na stronie produktu (karta prowadzi tam w całości).
@@ -34,7 +34,9 @@ function hrefOf(p) {
   return isListenProduct(p) ? (p.checkout_url || "").trim() || "/glos" : productHref(p);
 }
 function To({ href, children, ...rest }) {
-  return href.startsWith("/") ? <Link to={href} {...rest}>{children}</Link> : <a href={href} target="_blank" rel="noreferrer" {...rest}>{children}</a>;
+  const hash = href.includes("#") ? href.slice(href.indexOf("#")) : "";
+  const jump = hash ? { onClick: () => scrollToHash(hash) } : {};
+  return href.startsWith("/") ? <Link to={href} {...rest} {...jump}>{children}</Link> : <a href={href} target="_blank" rel="noreferrer" {...rest}>{children}</a>;
 }
 
 export function ShopProductTile({ product: p, index }) {

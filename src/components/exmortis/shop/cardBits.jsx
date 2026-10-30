@@ -7,8 +7,27 @@ import { isPromoActive, priceOnRequest, lowestPrice30, zl, nextPriceText } from 
 // Wspólne elementy kart Skarbca: znaczki, cena, przycisk.
 
 // Produkty wyłączone z katalogu Skarbca (mają własne podstrony).
+// „Listy powrotu” i „Minutnik ciszy” są już w sekcji darmowej — prowadzą tam, gdzie wskazuje checkout_url.
+// „Test, której śmierci” zostaje wyłączony (ma własny blok nad katalogiem).
 // „Soundtrack powrotu” wycofany z katalogu (12.10, decyzja Dawida) — produkt można też ukryć w panelu.
-export const EXCLUDED_SLUGS = ["listy-powrotu", "test-ktorej-smierci", "minutnik-ciszy", "soundtrack-powrotu"];
+export const EXCLUDED_SLUGS = ["test-ktorej-smierci", "soundtrack-powrotu"];
+
+// Przewinięcie do sekcji na innej stronie (np. /#listy-powrotu). Sekcje modułów dochodzą leniwie,
+// więc próbujemy kilka razy, aż element będzie już na stronie.
+export function scrollToHash(hash) {
+  const id = decodeURIComponent(String(hash || "").replace(/^#/, ""));
+  if (!id) return;
+  let tries = 0;
+  const tick = () => {
+    const el = document.getElementById(id);
+    if (el) {
+      el.scrollIntoView({ behavior: "smooth", block: "start" });
+      return;
+    }
+    if (++tries < 40) window.setTimeout(tick, 100);
+  };
+  window.setTimeout(tick, 120);
+}
 
 // Podcasty i muzyka — bez koszyka; karta otwiera nagranie.
 export function isListenProduct(p) {
@@ -140,26 +159,30 @@ export function ProductButton({ p, onWaitlist }) {
     );
   }
 
-  // Podcasty i muzyka: cała karta jest klikalna — przycisk tylko sygnalizuje akcję.
-  if (isListenProduct(p)) {
-    return (
-      <span className={`${base} border border-[#C9A24A]/70 text-[#C9A24A]`}>
-        Posłuchaj <ArrowRight className="h-3.5 w-3.5" />
-      </span>
-    );
-  }
-
+  // Produkt z własnym adresem (Listy powrotu, Minutnik ciszy, POWRÓT…): przycisk pokazuje jego
+  // etykietę i prowadzi dokładnie tam, gdzie wskazuje checkout_url — bez koszyka i „Pobierz”.
   const url = (p.checkout_url || "").trim();
   if (url) {
     const label = p.button_label || "Zobacz";
+    const hashAt = url.indexOf("#");
+    const hash = hashAt >= 0 ? url.slice(hashAt) : "";
     return url.startsWith("/") ? (
-      <Link to={url} className={cls}>
+      <Link to={url} className={cls} onClick={hash ? () => scrollToHash(hash) : undefined}>
         {label}
       </Link>
     ) : (
       <a href={url} target="_blank" rel="noreferrer" className={cls}>
         {label}
       </a>
+    );
+  }
+
+  // Podcasty i muzyka bez własnego adresu: cała karta jest klikalna — przycisk tylko sygnalizuje akcję.
+  if (isListenProduct(p)) {
+    return (
+      <span className={`${base} border border-[#C9A24A]/70 text-[#C9A24A]`}>
+        Posłuchaj <ArrowRight className="h-3.5 w-3.5" />
+      </span>
     );
   }
 

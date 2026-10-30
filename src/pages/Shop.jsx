@@ -17,6 +17,23 @@ const LEVELS = [
 ];
 
 const STAGE_WORDS = ["Śmierć", "Próg", "Powrót", "Inny"];
+
+// Kolejność sekcji „Za darmo — zacznij tutaj” (reszta katalogu idzie kolejnością z bazy).
+// Dwa produkty mają w bazie ten sam sort_order, a bez daty utworzenia kolejność remisu jest
+// nieprzewidywalna — ta lista trzyma układ ustalony dla marki.
+const FREE_ORDER = [
+  "kiedy-kto-bliski-ga-nie-mini",
+  "3-pierwsze-ruchy",
+  "listy-powrotu",
+  "kanal-whatsapp",
+  "podcast-exmortis",
+  "muzyka-powrotu",
+  "minutnik-ciszy",
+];
+const freeRank = (p) => {
+  const i = FREE_ORDER.indexOf(p.slug);
+  return i < 0 ? FREE_ORDER.length : i;
+};
 // Dostępne = można kupić / pobrać teraz; Oczekujące = zapowiedź z listą oczekujących.
 const availOf = (p) => ((p.status || "dostępny") === "wkrótce" ? "Oczekujące" : "Dostępne");
 
@@ -54,7 +71,7 @@ export default function Shop() {
       .catch(() => setEvents([]));
   }, []);
 
-  // Katalog bez Listów powrotu, Testu i Minutnika ciszy — one mają własne podstrony.
+  // Katalog bez Testu i soundtracku — one mają własne miejsca (blok testu nad katalogiem, sekcja MUZYKA).
   const visible = useMemo(
     () => products.filter((p) => !EXCLUDED_SLUGS.includes(p.slug)),
     [products]
@@ -74,7 +91,7 @@ export default function Shop() {
   );
 
   const filtered = useMemo(() => {
-    return visible.filter((p) => {
+    const list = visible.filter((p) => {
       if (filters.stage && p.stage !== "Wszystkie" && p.stage !== filters.stage) return false;
       if (filters.avail && availOf(p) !== filters.avail) return false;
       if (filters.form && p.form !== filters.form) return false;
@@ -84,6 +101,8 @@ export default function Shop() {
       }
       return true;
     });
+    // Poziom zostaje poziomem; w obrębie sekcji darmowej — ustalona kolejność, reszta bez zmian.
+    return list.sort((a, b) => ((a.level ?? 1) - (b.level ?? 1)) || (freeRank(a) - freeRank(b)));
   }, [visible, filters]);
 
   const scrollToSections = () => {

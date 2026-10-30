@@ -9,7 +9,11 @@ import { GalleryBlock, VideoBlock } from "./blocks/MediaBlocks";
 import EventSignupBlock from "./blocks/EventSignupBlock";
 import SafetyBox from "./blocks/SafetyBox";
 import CtaBlock from "./blocks/CtaBlock";
+import ShopTestBlock from "@/components/exmortis/shop/ShopTestBlock";
 import { isDraft, DRAFT } from "./draft";
+
+// Blok testu na górze Skarbca ma własną oprawę (cienka złota ramka + złoty przycisk).
+const SHOP_TEST = { "sklep-test": "intro", "sklep-test-przycisk": "action" };
 
 const VIEW = { hero: HeroBlock, tekst: TextBlock, tekst_zdjecie: TextImageBlock, zdjecie: ImageBlock, przyciski: ButtonsBlock,
   cytat: QuoteBlock, linie: LinesBlock, etapy: StepsBlock, karty: CardsBlock, faq: FaqBlock, separator: SeparatorBlock, galeria: GalleryBlock, wideo: VideoBlock, zapis_spotkanie: EventSignupBlock, ramka: SafetyBox, cta: CtaBlock };
@@ -41,7 +45,9 @@ export default function BlockRenderer({ blocks = [], editable, selectedId, onSel
             onClickCapture={editable ? (e) => { if (e.target.closest("[data-tools]")) return; e.preventDefault(); e.stopPropagation(); onSelect?.(b.id); } : undefined}>
             {editable && selectedId === b.id && tools?.(b)}
             {warn}
-            {TYPES[b.typ].bare ? inner : <Section u={u} spine={TYPES[b.typ].spine}>{inner}</Section>}
+            {SHOP_TEST[b.id]
+              ? <ShopTestBlock part={SHOP_TEST[b.id]} d={d} />
+              : TYPES[b.typ].bare ? inner : <Section u={u} spine={TYPES[b.typ].spine}>{inner}</Section>}
           </div>
         );
       })}
