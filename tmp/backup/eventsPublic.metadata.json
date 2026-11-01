@@ -1,0 +1,13 @@
+{
+  "id": "73564fbe-a4ba-4d04-bd89-3e43b7a22861",
+  "slug": "eventsPublic",
+  "name": "eventsPublic",
+  "status": "ACTIVE",
+  "version": 11,
+  "created_at": 1792666990366,
+  "updated_at": 1793297681055,
+  "verify_jwt": true,
+  "import_map": false,
+  "entrypoint_path": "file:///tmp/user_fn_fqhvxhnbeyvwubpnuzxe_73564fbe-a4ba-4d04-bd89-3e43b7a22861_10/source/eventsPublic/index.ts",
+  "ezbr_sha256": "be046d7948f7b5c93864e59ed972a83f1411a0af7471d1da5c54e18e00ccce54"
+}

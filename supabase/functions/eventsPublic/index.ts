@@ -385,11 +385,25 @@ const handler = async function (req) {
          SELECT u.reg_id, u.first_name, u.email, u.cancel_token, u.tz, ${evCols}
            FROM u JOIN public.events e ON e.id = u.event_id`
       );
+      // Przypomnienia 24 h / 1 h: najpierw sam wybór kandydatów, flagę ustawiamy PO udanej wysyłce.
+      // Dzięki temu przerwany przebieg nie gubi przypomnień — niewysłane wracają w kolejnym ticku.
+      const pending = (flag, where, limit = 100) => runSql(
+        base44,
+        `SELECT r.id AS reg_id, r.first_name, r.email, r.cancel_token, r.tz, ${evCols}
+           FROM public.registrations r JOIN public.events e ON e.id = r.event_id
+          WHERE r.status IN ('Zapisany','Obecny') AND e.status = 'Opublikowane'
+            AND e.start_datetime IS NOT NULL AND r.${flag} = FALSE AND ${where}
+          ORDER BY e.start_datetime
+          LIMIT ${limit}`
+      );
+      const markSent = (flag, row, extra = "") => runSql(base44,
+        `UPDATE public.registrations SET ${flag} = TRUE${extra} WHERE id = ${escStr(row.reg_id)}`
+      ).catch(() => {});
       // 24 h: tylko spotkania dalej niż godzinę stąd (bliższe dostaną od razu przypomnienie 1 h, bez dubla).
-      const due24 = await claim("reminder_24h_sent",
-        `e.start_datetime > now() + interval '1 hour' AND e.start_datetime <= now() + interval '24 hours'`, "", 200);
-      const due1 = await claim("reminder_1h_sent",
-        `e.start_datetime > now() AND e.start_datetime <= now() + interval '1 hour'`, ", reminder_24h_sent = TRUE", 400);
+      const due24 = await pending("reminder_24h_sent",
+        `e.start_datetime > now() + interval '1 hour' AND e.start_datetime <= now() + interval '24 hours'`, 150);
+      const due1 = await pending("reminder_1h_sent",
+        `e.start_datetime > now() AND e.start_datetime <= now() + interval '1 hour'`, 300);
       // Powiadomienie o nagraniu: gdy admin udostępni je w kontach (recording_until w przyszłości), po zakończeniu spotkania.
       // Mail po spotkaniu (obecni / nieobecni) — następnego dnia od 9:00, bez nagrania.
       const dueFollow = await claimFollowups(base44).catch(() => []);
@@ -409,52 +423,57 @@ const handler = async function (req) {
         }));
       };
 
-      waitUntil(
-        (async () => {
-          await pool(due1, async (row) => {
-            try { await sendReminderMail(base44, row, regOf(row), "1h"); } catch { await release("reminder_1h_sent", row); }
-          });
-          await pool(due24, async (row) => {
-            try { await sendReminderMail(base44, row, regOf(row), "24h"); } catch { await release("reminder_24h_sent", row); }
-          });
-          if (dueFollow.length > 0) {
-            const site = APP_URL;
-            const nexts = new Map();
-            for (const row of dueFollow) {
-              if (!nexts.has(row.event_id)) nexts.set(row.event_id, await nextEventAfter(base44, row.event_id));
-            }
-            await pool(dueFollow, async (row) => {
-              const variant = attended(row) ? "obecny" : "nieobecny";
-              const m = followupMail(variant, followupCtx(row, site, nexts.get(row.event_id)));
-              try {
-                await sendMail(base44, { kind: `po_spotkaniu_${variant}`, ref: row.reg_id, to: row.email, subject: m.subject, html: m.html,
-                  waznyDo: new Date(Date.now() + 2 * 864e5) });
-              } catch { await release("follow_up_sent", row); }
-            }, 5);
-          }
-          if (dueRec.length > 0) {
-            const next = await runSql(
-              base44,
-              `SELECT title, slug, start_datetime FROM public.events
-               WHERE status = 'Opublikowane' AND start_datetime > now()
-               ORDER BY start_datetime ASC LIMIT 1`,
-              true
-            ).catch(() => []);
-            const inviteHtml = (next && next[0])
-              ? `<p style="margin-top:24px;color:#8A8A8C;">Najbliższe spotkanie: «${next[0].title}» — ${plWhen(next[0].start_datetime)}. <a href="${APP_URL}/spotkania/${next[0].slug}" style="color:#C9A24A;">Zobacz i zapisz się</a>.</p>`
-              : `<p style="margin-top:24px;color:#8A8A8C;">Jeśli chcesz porozmawiać o własnym powrocie — <a href="${APP_URL}/powrot" style="color:#C9A24A;">umów rozmowę kwalifikacyjną POWRÓT</a>.</p>`;
-            await pool(dueRec, async (row) => {
-              try { await sendRecordingMail(base44, row, regOf(row), inviteHtml); } catch { await release("recording_sent", row); }
-            });
-          }
-        })()
-      );
+      // Wysyłka SYNCHRONICZNIE, przed odpowiedzią: cronTick czeka na wynik, a wysyłka w tle bywała
+      // ucinana razem z odpowiedzią — maile nie powstawały, choć flagi już były TRUE.
+      const sent = { r1: 0, r24: 0 };
+      const failed = { r1: 0, r24: 0 };
+      const send = async (key, rows, fn, flag, extra = "") => {
+        await pool(rows, async (row) => {
+          try { await fn(row); await markSent(flag, row, extra); sent[key]++; }
+          catch (e) { failed[key]++; console.error("events tick", key, row.reg_id, e?.message || e); }
+        }, 5);
+      };
+      await send("r1", due1, (row) => sendReminderMail(base44, row, regOf(row), "1h"), "reminder_1h_sent", ", reminder_24h_sent = TRUE");
+      await send("r24", due24, (row) => sendReminderMail(base44, row, regOf(row), "24h"), "reminder_24h_sent");
+
+      if (dueFollow.length > 0) {
+        const site = APP_URL;
+        const nexts = new Map();
+        for (const row of dueFollow) {
+          if (!nexts.has(row.event_id)) nexts.set(row.event_id, await nextEventAfter(base44, row.event_id));
+        }
+        await pool(dueFollow, async (row) => {
+          const variant = attended(row) ? "obecny" : "nieobecny";
+          const m = followupMail(variant, followupCtx(row, site, nexts.get(row.event_id)));
+          try {
+            await sendMail(base44, { kind: `po_spotkaniu_${variant}`, ref: row.reg_id, to: row.email, subject: m.subject, html: m.html,
+              waznyDo: new Date(Date.now() + 2 * 864e5) });
+          } catch { await release("follow_up_sent", row); }
+        }, 5);
+      }
+      if (dueRec.length > 0) {
+        const next = await runSql(
+          base44,
+          `SELECT title, slug, start_datetime FROM public.events
+           WHERE status = 'Opublikowane' AND start_datetime > now()
+           ORDER BY start_datetime ASC LIMIT 1`,
+          true
+        ).catch(() => []);
+        const inviteHtml = (next && next[0])
+          ? `<p style="margin-top:24px;color:#8A8A8C;">Najbliższe spotkanie: «${next[0].title}» — ${plWhen(next[0].start_datetime)}. <a href="${APP_URL}/spotkania/${next[0].slug}" style="color:#C9A24A;">Zobacz i zapisz się</a>.</p>`
+          : `<p style="margin-top:24px;color:#8A8A8C;">Jeśli chcesz porozmawiać o własnym powrocie — <a href="${APP_URL}/powrot" style="color:#C9A24A;">umów rozmowę kwalifikacyjną POWRÓT</a>.</p>`;
+        await pool(dueRec, async (row) => {
+          try { await sendRecordingMail(base44, row, regOf(row), inviteHtml); } catch { await release("recording_sent", row); }
+        });
+      }
       return Response.json({
         ok: true,
         removed: (removed || []).length,
         queue,
         retention,
         due: { r24: due24.length, r1: due1.length, rec: dueRec.length, po: dueFollow.length },
+        sent,
+        failed,
       });
     }
 
