@@ -104,3 +104,20 @@ export async function requireAdmin(base44: { auth: { me: () => Promise<Record<st
   if (!user || user.role !== "admin") throw new Error("FORBIDDEN");
   return user;
 }
+
+// Konta Supabase Auth (panel „Konta") — wszystkie strony po 1000, klucz service_role.
+export async function listAuthUsers() {
+  const out: Array<Record<string, unknown>> = [];
+  for (let page = 1; page <= 50; page++) {
+    const res = await fetch(`${SUPA_URL}/auth/v1/admin/users?page=${page}&per_page=1000`, {
+      headers: { apikey: SRK, Authorization: `Bearer ${SRK}` },
+      signal: AbortSignal.timeout(20000),
+    });
+    if (!res.ok) throw new Error(`Supabase Auth ${res.status}: ${(await res.text()).slice(0, 200)}`);
+    const data = await res.json();
+    const users = Array.isArray(data?.users) ? data.users : [];
+    out.push(...users);
+    if (users.length < 1000) break;
+  }
+  return out;
+}

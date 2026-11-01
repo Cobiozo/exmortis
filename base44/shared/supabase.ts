@@ -167,3 +167,22 @@ export async function requireAdmin(base44) {
   }
   return user;
 }
+
+// Konta Supabase Auth (panel „Konta") — wszystkie strony po 1000, klucz service_role.
+export async function listAuthUsers(base44) {
+  const key = await serviceKey(base44);
+  const base = `https://${PROJECT_REF}.supabase.co`;
+  const out = [];
+  for (let page = 1; page <= 50; page++) {
+    const res = await fetch(`${base}/auth/v1/admin/users?page=${page}&per_page=1000`, {
+      headers: { apikey: key, Authorization: `Bearer ${key}` },
+      signal: AbortSignal.timeout(20000),
+    });
+    if (!res.ok) throw new Error(`Supabase Auth ${res.status}: ${(await res.text()).slice(0, 200)}`);
+    const data = await res.json();
+    const users = Array.isArray(data?.users) ? data.users : [];
+    out.push(...users);
+    if (users.length < 1000) break;
+  }
+  return out;
+}
