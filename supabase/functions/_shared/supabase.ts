@@ -108,7 +108,7 @@ export async function requireAdmin(base44: { auth: { me: () => Promise<Record<st
 // Konta Supabase Auth (panel „Konta") — wszystkie strony po 1000, klucz service_role.
 export async function listAuthUsers() {
   const out: Array<Record<string, unknown>> = [];
-  for (let page = 1; page <= 50; page++) {
+  for (let page = 1; page <= 200; page++) {
     const res = await fetch(`${SUPA_URL}/auth/v1/admin/users?page=${page}&per_page=1000`, {
       headers: { apikey: SRK, Authorization: `Bearer ${SRK}` },
       signal: AbortSignal.timeout(20000),
@@ -117,7 +117,13 @@ export async function listAuthUsers() {
     const data = await res.json();
     const users = Array.isArray(data?.users) ? data.users : [];
     out.push(...users);
-    if (users.length < 1000) break;
+    if (!users.length) break;
+    // Serwer może ograniczyć stronę — koniec wyznaczamy po lastPage/total, nie po liczbie wierszy.
+    const last = Number(data?.lastPage ?? data?.last_page ?? 0);
+    const total = Number(data?.total ?? 0);
+    if (last && page >= last) break;
+    if (!last && total && out.length >= total) break;
+    if (!last && !total && users.length < 1000) break;
   }
   return out;
 }

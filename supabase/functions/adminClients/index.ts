@@ -1,5 +1,5 @@
 import { createClientFromRequest } from "../_shared/compat.ts";
-import { runSql, escStr, requireAdmin } from "../_shared/supabase.ts";
+import { runSql, escStr, requireAdmin, listAuthUsers } from "../_shared/supabase.ts";
 import { grantAccess, isActive, ensureAccount } from "../_shared/access.ts";
 import { mirrorRecord, accessFilter, accessGet } from "../_shared/mirror.ts";
 import { expandBundles } from "../_shared/bundles.ts";
@@ -24,6 +24,59 @@ const handler = async function (req) {
     if (body.action === "list") {
       const res = await sr.Access.aggregate({ groupBy: "user_email", sort: "-count", limit: 1000 });
       return Response.json({ clients: res.rows.map((r) => ({ email: r.user_email, count: r.count })) });
+    }
+
+    // Konta: Supabase Auth + profil (exm_user) + aktywne dostępy + blokady z panelu.
+    // Wyłącznie administrator (requireAdmin na wejściu), bez haseł, tokenów, metadanych i IP.
+    if (body.action === "accounts") {
+      const users: any[] = await listAuthUsers();
+      const profiles = await runSql(base44,
+        `SELECT lower(data->>'email') AS email, data->>'full_name' AS full_name, data->>'role' AS role
+           FROM public.exm_user WHERE data->>'email' IS NOT NULL`, true).catch(() => []);
+      const accesses = await runSql(base44,
+        `SELECT lower(data->>'user_email') AS email, count(*)::int AS n FROM public.exm_access
+          WHERE COALESCE((data->>'revoked')::boolean, false) = false
+            AND (COALESCE(data->>'valid_until', '') = ''
+                 OR data->>'valid_until' >= to_char((now() AT TIME ZONE 'Europe/Warsaw'), 'YYYY-MM-DD'))
+          GROUP BY 1`, true).catch(() => []);
+      const blocks = await sr.SecurityLog.filter({ type: "blokada", resolved: false }, "-created_date", 300).catch(() => []);
+      const profMap = new Map(profiles.map((p) => [String(p.email || "").toLowerCase(), p]));
+      const accMap = new Map(accesses.map((r) => [String(r.email || "").toLowerCase(), Number(r.n) || 0]));
+      const now = Date.now();
+      const blockMap = new Map();
+      for (const b of blocks) {
+        const until = b.until ? new Date(b.until).getTime() : 0;
+        if (until > now) blockMap.set(String(b.user_email || "").toLowerCase(), b.until);
+      }
+      const ROLE = { admin: "admin", techniczna: "techniczna", user: "klient" };
+      const PROVIDER = { email: "E-mail", google: "Google", facebook: "Facebook", apple: "Apple", microsoft: "Microsoft", github: "GitHub" };
+      const list = users.map((u) => {
+        const mail = String(u.email || "").toLowerCase();
+        const p = profMap.get(mail);
+        const provider = String(u.app_metadata?.provider || u.identities?.[0]?.provider || "email");
+        const banned = u.banned_until ? new Date(u.banned_until).getTime() > now : false;
+        return {
+          id: u.id,
+          email: mail,
+          name: String(p?.full_name || u.user_metadata?.full_name || ""),
+          role: ROLE[String(p?.role || "user")] || "klient",
+          created_at: u.created_at || null,
+          last_sign_in_at: u.last_sign_in_at || null,
+          email_confirmed: !!u.email_confirmed_at,
+          provider: PROVIDER[provider] || provider,
+          blocked: banned || blockMap.has(mail),
+          accesses: accMap.get(mail) || 0,
+        };
+      }).sort((x, y) => String(y.created_at || "").localeCompare(String(x.created_at || "")));
+      const weekAgo = now - 7 * 86400000;
+      return Response.json({
+        accounts: list,
+        counts: {
+          total: list.length,
+          new7: list.filter((a) => a.created_at && new Date(a.created_at).getTime() >= weekAgo).length,
+          logins7: list.filter((a) => a.last_sign_in_at && new Date(a.last_sign_in_at).getTime() >= weekAgo).length,
+        },
+      });
     }
 
     if (body.action === "detail") {
