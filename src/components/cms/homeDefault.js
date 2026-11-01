@@ -36,6 +36,7 @@ export const HOME_BLOCKS = [
   mod("home-forwhom", "dla_kogo"),
   mod("home-history", "krotka_historia"),
   mod("home-return", "droga_powrotu"),
+  mod("home-rozdroza", "rozdroza"),
   mod("home-powrot", "zajawka_powrot"),
   mod("home-events", "spotkania"),
   { ...mod("home-skarbiec", "skarbiec", { etykieta: "SKARBIEC", tytul: "Skarbiec",

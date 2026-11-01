@@ -1,6 +1,7 @@
 import ForWhom from "@/components/exmortis/ForWhom";
 import ShortHistory from "@/components/exmortis/home/ShortHistory";
 import ReturnPath from "@/components/exmortis/home/ReturnPath";
+import RozdrozaHome from "@/components/exmortis/home/RozdrozaHome";
 import PowrotTeaser from "@/components/exmortis/PowrotTeaser";
 import EventsTeaser from "@/components/exmortis/events/EventsTeaser";
 import NewsletterSection from "@/components/exmortis/NewsletterSection";
@@ -28,6 +29,7 @@ export const MODULES = {
   dla_kogo: ["Dla kogo", ForWhom],
   krotka_historia: ["Krótka historia", ShortHistory],
   droga_powrotu: ["Droga powrotu", ReturnPath],
+  rozdroza: ["ROZDROŻA — interaktywne historie", RozdrozaHome],
   zajawka_powrot: ["Zajawka POWRÓT", PowrotTeaser],
   swiadectwa: ["Świadectwa", Testimonials],
   instagram: ["Instagram", InstagramFeed],
