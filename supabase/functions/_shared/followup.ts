@@ -37,16 +37,42 @@ function nextBox(next, site) {
   ].join("");
 }
 
-// ctx: { name, title, site, next: {title, slug, start_datetime} | null }
+// Nowe bloki dotyczą wyłącznie webinaru „Ze śmierci” — pozostałe spotkania bez zmian.
+const WEBINAR_SLUG = "ze-smierci-o-powrotach-o-ktorych-swiat-nie-mowi";
+
+// Prośba o opinię (tylko wersja „obecny” i tylko webinar).
+function surveyBox() {
+  return [
+    LABEL("TWOJA OPINIA"),
+    P(`Twoja opinia pomoże mi rozwijać exmortis tak, żeby lepiej służyło ludziom, którzy wracają. Ankieta zajmie 2–3 minuty.`),
+    emailButton("PODZIEL SIĘ OPINIĄ", "https://tally.so/r/rD5EKl"),
+  ].join("");
+}
+
+// Kod rabatowy dla uczestników webinaru (obie wersje).
+function giftBox(site) {
+  return [
+    `<div style="margin:28px 0;padding:22px 22px 4px;border:1px solid #2A2A2C;">`,
+    LABEL("PREZENT"),
+    P(`Kod <strong>POWROT20</strong> — 20 zł zniżki na płatne produkty w Skarbcu exmortis. Ebook „Wracam inny” i pozostałe płatne materiały będą dostępne od <strong>8 listopada</strong> — kod działa od premiery do <strong>15 listopada</strong>.`),
+    emailButton("ZOBACZ SKARBIEC", `${site}/skarbiec`),
+    `</div>`,
+  ].join("");
+}
+
+// ctx: { name, title, slug, site, next: {title, slug, start_datetime} | null }
 export function followupMail(variant, ctx) {
   const hi = ctx.name ? `${esc(ctx.name)}, ` : "";
   const title = `«${esc(ctx.title)}»`;
+  const webinar = ctx.slug === WEBINAR_SLUG;
   if (variant === "obecny") {
     return {
       subject: "Dziękuję za wczorajszy wieczór",
       html: [
         `<h1>Dziękuję za wczoraj</h1>`,
         P(`${hi}dziękuję za wspólny wieczór ${title}. Za czas, uwagę i pytania — także te, które zostały niezadane.`),
+        webinar ? surveyBox() : "",
+        webinar ? giftBox(ctx.site) : "",
         P(`Po takim spotkaniu łatwo wrócić do codzienności i zostawić wszystko tak, jak było. Dlatego jedna prośba: zanim minie ten tydzień, zrób jeden mały krok. Nie wielki — jeden.`),
         LABEL("PIERWSZY KROK"),
         P(`Krótki test — kilka minut, żeby zobaczyć, ile jest w Tobie każdej z trzech śmierci i od którego etapu powrotu warto zacząć.`),
@@ -63,6 +89,7 @@ export function followupMail(variant, ctx) {
       `<h1>Może następnym razem</h1>`,
       P(`${hi}wczoraj był wieczór ${title}. Nie udało Ci się dołączyć — i to w porządku. Życie rzadko pyta o nasze plany.`),
       P(`Spotkań nie nagrywam. To, co dzieje się na żywo, zostaje między tymi, którzy byli obecni — i właśnie dlatego może być prawdziwe.`),
+      webinar ? giftBox(ctx.site) : "",
       ctx.next
         ? nextBox(ctx.next, ctx.site)
         : [P(`Kolejne terminy pojawiają się na stronie spotkań.`), emailButton("ZOBACZ SPOTKANIA", `${ctx.site}/spotkania`)].join(""),
@@ -96,7 +123,7 @@ export async function claimFollowups(base44, limit = 150) {
       UPDATE public.registrations r SET follow_up_sent = TRUE FROM c WHERE r.id = c.id
       RETURNING r.id AS reg_id, r.first_name, r.email, r.status, r.joined_at, r.event_id
     )
-    SELECT u.reg_id, u.first_name, u.email, u.status, u.joined_at, e.id AS event_id, e.title, e.start_datetime
+    SELECT u.reg_id, u.first_name, u.email, u.status, u.joined_at, e.id AS event_id, e.title, e.slug, e.start_datetime
       FROM u JOIN public.events e ON e.id = u.event_id`).catch(() => []);
 }
 
@@ -107,5 +134,5 @@ export async function nextEventAfter(base44, eventId) {
   return rows?.[0] || null;
 }
 
-export const followupCtx = (row, site, next) => ({ name: firstName(row.first_name), title: row.title, site, next });
+export const followupCtx = (row, site, next) => ({ name: firstName(row.first_name), title: row.title, slug: row.slug, site, next });
 export const attended = (row) => !!row.joined_at || row.status === "Obecny";
