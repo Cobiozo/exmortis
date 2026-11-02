@@ -10,7 +10,7 @@ export const POWROT = {
   sessionsWord: "osiem sesji",
   months: "4–6 miesięcy",
   cadence: "co 2–3 tygodnie",
-  length: "60 min (sesja 1: do 90 min)",
+  length: "90 min",
   form: "Zoom",
   start: "styczeń 2027", // potwierdzony przez właściciela 2.11.2026
   tools: 8,
