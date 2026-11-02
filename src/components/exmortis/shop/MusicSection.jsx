@@ -1,5 +1,6 @@
 import React from "react";
 import { Youtube, Music2 } from "lucide-react";
+import { SPOTIFY_ARTIST } from "@/lib/spotify";
 import ShopProductCard from "./ShopProductCard";
 
 // Sekcja „Muzyka" — soundtrack powrotu + linki do słuchania.
@@ -17,7 +18,7 @@ export default function MusicSection({ products, onWaitlist }) {
           </div>
           <div className="md:col-span-5 flex flex-wrap gap-3 md:justify-end">
             <a
-              href="https://open.spotify.com"
+              href={SPOTIFY_ARTIST}
               target="_blank"
               rel="noreferrer"
               className="btn-ghost !px-5 !py-3 text-[10px]"

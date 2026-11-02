@@ -1,4 +1,5 @@
 import { base44 } from "@/api/base44Client";
+import { canonSpotify } from "@/lib/spotify";
 
 export const TEMATY = [["mentalna", "Śmierć mentalna"], ["duchowa", "Śmierć duchowa"], ["zyciowa", "Śmierć życiowa"], ["inne", "Inne"]];
 export const TRUDNE = ["samobójstwo", "samookaleczenie", "przemoc", "żałoba po dziecku", "uzależnienie", "inne"];
@@ -25,7 +26,9 @@ export async function loadPublished() {
 
 export async function loadSettings() {
   const p = await base44.entities.PodcastSettings.filter({}, { limit: 1 });
-  return p.items[0] || { nazwa: "Podcast exmortis" };
+  const s = p.items[0];
+  // Adres Spotify zawsze prowadzi do audycji (nie do wyszukiwania ani strony głównej).
+  return s ? { ...s, spotify: canonSpotify(s.spotify, "show") } : { nazwa: "Podcast exmortis", spotify: canonSpotify("", "show") };
 }
 
 export const slugify = (s) => s.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/ł/g, "l").replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "").slice(0, 80);

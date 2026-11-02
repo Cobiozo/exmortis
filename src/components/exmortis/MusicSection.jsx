@@ -2,9 +2,10 @@ import React, { useState } from "react";
 import { Music, ExternalLink } from "lucide-react";
 import YouTubePlaylist from "@/components/exmortis/glos/YouTubePlaylist";
 import PlaylistManager from "@/components/exmortis/glos/PlaylistManager";
+import { SPOTIFY_ARTIST } from "@/lib/spotify";
 
-// Wklej tu swoje prawdziwe linki artysty
-const SPOTIFY_URL = "https://open.spotify.com/search/exmortis";
+// Linki platform z jednego źródła (src/lib/spotify.js) — muzyka prowadzi do profilu artysty.
+const SPOTIFY_URL = SPOTIFY_ARTIST;
 const YOUTUBE_MUSIC_URL = "https://music.youtube.com/search?q=exmortis";
 
 const PLATFORMS = [
