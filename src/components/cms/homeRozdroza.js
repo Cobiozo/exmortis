@@ -12,12 +12,10 @@ export const HOME_ROZDROZA_BLOCK = {
 
 const isRozdroza = (b) => b.id === "home-rozdroza" || (b.typ === "modul" && b.dane?.modul === "rozdroza");
 
-// Wstawia sekcję zaraz PO „Drodze powrotu" (home-return), a gdyby jej nie było — przed „POWRÓT" (home-powrot).
+// Wstawia sekcję zaraz PO bloku Skarbca (home-skarbiec).
 export function withRozdroza(blocks) {
   if (!Array.isArray(blocks) || blocks.some(isRozdroza)) return blocks;
-  const after = blocks.findIndex((b) => b.id === "home-return" || (b.typ === "modul" && b.dane?.modul === "droga_powrotu"));
-  if (after >= 0) return [...blocks.slice(0, after + 1), HOME_ROZDROZA_BLOCK, ...blocks.slice(after + 1)];
-  const before = blocks.findIndex((b) => b.id === "home-powrot" || (b.typ === "modul" && b.dane?.modul === "zajawka_powrot"));
-  if (before >= 0) return [...blocks.slice(0, before), HOME_ROZDROZA_BLOCK, ...blocks.slice(before)];
-  return blocks;
+  const after = blocks.findIndex((b) => b.id === "home-skarbiec" || (b.typ === "modul" && b.dane?.modul === "skarbiec"));
+  if (after < 0) return blocks;
+  return [...blocks.slice(0, after + 1), HOME_ROZDROZA_BLOCK, ...blocks.slice(after + 1)];
 }

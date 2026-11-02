@@ -19,6 +19,7 @@ export const TYPES = {
       { k: "podlead", label: "Tekst pod leadem", typ: "textarea", max: 200 },
       { k: "przyciski", label: "Przyciski (0–2)", typ: "buttons", maxItems: 2 },
       { k: "przyciski_pion", label: "Przyciski jeden pod drugim", typ: "toggle" },
+      { k: "podpis_przycisku", label: "Podpis pod pierwszym przyciskiem", typ: "text", max: 90 },
       { k: "zapowiedz", label: "Informacja nad przyciskami (np. ZAPISY RUSZAJĄ 16 PAŹDZIERNIKA)", typ: "text", max: 50 },
       { k: "zapowiedz_do", label: "Informacja znika (czas polski; puste = zawsze widoczna)", typ: "datetime" },
       { k: "dopisek", label: "Dopisek pod przyciskami", typ: "text", max: 60 },

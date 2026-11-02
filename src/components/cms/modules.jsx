@@ -1,4 +1,5 @@
 import ForWhom from "@/components/exmortis/ForWhom";
+import StartPaths from "@/components/exmortis/home/StartPaths";
 import ShortHistory from "@/components/exmortis/home/ShortHistory";
 import ReturnPath from "@/components/exmortis/home/ReturnPath";
 import RozdrozaHome from "@/components/exmortis/home/RozdrozaHome";
@@ -29,6 +30,7 @@ export const MODULES = {
   newsletter: ["Listy powrotu (newsletter)", NewsletterSection],
   kontakt: ["Kontakt z formularzem", ContactSection],
   dla_kogo: ["Dla kogo", ForWhom],
+  od_czego_zaczac: ["Od czego zacząć (trzy pierwsze kroki)", StartPaths],
   krotka_historia: ["Krótka historia", ShortHistory],
   droga_powrotu: ["Droga powrotu", ReturnPath],
   rozdroza: ["ROZDROŻA — interaktywne historie", RozdrozaHome],

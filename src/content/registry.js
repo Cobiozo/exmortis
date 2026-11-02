@@ -90,7 +90,7 @@ export const CONTENT_PAGES = [
         label: "Dla kogo — zdanie zamykające",
         type: "richtext",
         default:
-          "Jeśli którykolwiek punkt zabrzmiał jak Twoje życie — jesteś we właściwym miejscu. Pierwszy ruch zrobisz dziś.",
+          "Jeśli któryś z tych punktów brzmi znajomo, możesz zacząć od jednego kroku. Poniżej trzy sposoby.",
       },
       {
         key: "powrotTeaserQuote",

@@ -15,7 +15,7 @@ const POINTS = [
 export default function ForWhom() {
   const { list, rich } = useSiteContent();
   const points = list("home", "forWhomPoints", POINTS);
-  const close = rich("home", "forWhomClose", "Jeśli którykolwiek punkt zabrzmiał jak Twoje życie — jesteś we właściwym miejscu. Pierwszy ruch zrobisz dziś.");
+  const close = rich("home", "forWhomClose", "Jeśli któryś z tych punktów brzmi znajomo, możesz zacząć od jednego kroku. Poniżej trzy sposoby.");
   return (
     <section className="py-32 px-5 md:px-10 border-t hairline bg-[#070708]">
       <div className="mx-auto max-w-[1400px] grid md:grid-cols-12 gap-12">
