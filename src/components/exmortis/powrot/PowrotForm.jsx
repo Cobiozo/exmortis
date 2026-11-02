@@ -114,8 +114,8 @@ export default function PowrotForm() {
               </div>
               <p className="relic-heading text-2xl gold-text">Dziękuję</p>
               <p className="text-foreground/60 leading-relaxed">
-                Dziękuję. Odezwę się osobiście — zwykle w ciągu kilku dni. Jeśli program będzie
-                dla Ciebie, wyślę Ci krótką ankietę, żebyśmy mogli dobrze przygotować rozmowę.
+                Dziękuję. Odezwę się osobiście — zwykle w ciągu kilku dni. Wyślę Ci osobisty
+                link do krótkiej ankiety, a po niej umówimy bezpłatną rozmowę kwalifikacyjną.
               </p>
             </div>
           ) : (

@@ -12,9 +12,9 @@ export const POWROT = {
   cadence: "co 2–3 tygodnie",
   length: "60 min (sesja 1: do 90 min)",
   form: "Zoom",
-  start: "styczeń 2027", // wartość ze strony — DO POTWIERDZENIA przez właściciela
+  start: "styczeń 2027", // potwierdzony przez właściciela 2.11.2026
   tools: 8,
-  toolsLine: "Arsenał 8 narzędzi głębi",
+  toolsLine: "Arsenał 8 narzędzi głębi — po jednym na każdą sesję",
 };
 
 export const POWROT_LEAD = `${POWROT.months}. ${POWROT.sessionsTitle}. Jedna decyzja: „chcę wrócić inny.”`;

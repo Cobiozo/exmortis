@@ -12,12 +12,12 @@ const INCLUDED = [
   POWROT.months,
   POWROT.form,
   "Mapa powrotu",
-  `${POWROT.tools} narzędzi głębi`,
+  POWROT.toolsLine,
   "dziennik z zadaniami",
 ];
 
 const QUALIFICATION =
-  "Krótkie zgłoszenie, bezpłatna rozmowa kwalifikacyjna, ankieta i wspólna decyzja — bez zobowiązań.";
+  "Krótkie zgłoszenie → ankieta → bezpłatna rozmowa kwalifikacyjna → wspólna decyzja — bez zobowiązań.";
 
 function Row({ label, children }) {
   return (

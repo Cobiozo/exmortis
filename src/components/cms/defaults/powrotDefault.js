@@ -33,7 +33,8 @@ export const POWROT_BLOCKS = [
       + `<h3>To nie jest kurs, który się kończy.</h3><h3 class="exm-akcent-zloty">To jest praca, która zostaje.</h3>` }, { tlo: G }),
   b("kwalifikacja", "etapy", { etykieta: "KWALIFIKACJA · 08", tytul: "Zero pośpiechu.", uklad: "pionowy", elementy: [
     { tytul: "Zgłoszenie", opis: "Wypełniasz krótkie zgłoszenie (kilka pytań o to, z czego wracasz i czego szukasz)" },
-    { tytul: "Rozmowa", opis: "Umawiamy rozmowę kwalifikacyjną — bezpłatnie, bez zobowiązań" },
+    { tytul: "Ankieta", opis: "Otrzymujesz osobisty link do pełnej ankiety — kilka pytań, które porządkują Twoją sytuację" },
+    { tytul: "Rozmowa", opis: "Po ankiecie umawiamy rozmowę kwalifikacyjną — bezpłatnie, bez zobowiązań" },
     { tytul: "Decyzja", opis: "Po rozmowie oboje decydujemy: czy to Twój moment i czy jestem Twoim przewodnikiem" },
     { tytul: "Start", opis: "Jeśli tak — ustalamy termin startu i formę współpracy" },
   ] }),
