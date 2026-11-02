@@ -1,19 +1,20 @@
 import React, { useState } from "react";
 import { Link } from "react-router-dom";
-import { ArrowRight, Check, Mail, Instagram, Facebook, Youtube, MessageCircle } from "lucide-react";
+import { ArrowRight, Check, Mail, Instagram, Facebook, Youtube } from "lucide-react";
 import { sendForm } from "@/lib/outbox";
 import { useSiteContent } from "@/components/exmortis/SiteContentProvider";
 import useSystemText from "@/content/useSystemText";
 import { track } from "@/lib/track";
 import { useCrisis } from "@/components/crisis/CrisisContext";
 import { sanitizeHtml } from "@/lib/sanitizeHtml";
+import WhatsAppChannelLink from "@/components/exmortis/WhatsAppChannelLink";
 
-// Wklej tu linki do swoich profili
+// Wklej tu linki do swoich profili. Kanał WhatsApp ma osobny przycisk pod ikonami —
+// adres z jednego źródła (lib/whatsappChannel.js), nie tutaj.
 const SOCIAL_LINKS = [
   { label: "Instagram", url: "https://www.instagram.com/e.x.m.o.r.t.i.s/", icon: Instagram },
   { label: "Facebook", url: "https://www.facebook.com/dawidkowalczyk.exmortis", icon: Facebook },
   { label: "YouTube", url: "https://www.youtube.com/@e.x.m.o.r.t.i.s", icon: Youtube },
-  { label: "Kanał WhatsApp", url: "https://whatsapp.com/channel/0029VbDYXi1Lo4hfFPvT3O3G", icon: MessageCircle },
 ];
 
 export default function ContactSection() {
@@ -92,6 +93,9 @@ export default function ContactSection() {
                 ))}
               </div>
             </div>
+
+            {/* Kanał WhatsApp — podpisany przycisk zamiast samej ikony. */}
+            <WhatsAppChannelLink miejsce="kontakt" label="KANAŁ WHATSAPP" caption="głos między poniedziałkami" framed />
           </div>
         </div>
 

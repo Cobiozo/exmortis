@@ -1,6 +1,7 @@
 import { runSql, escStr } from "./supabase.ts";
 import { loadAppUrl } from "./settings.ts";
 import { sendMail } from "./smtp.ts";
+import { WHATSAPP_CHANNEL, emailButton } from "./emailLayout.ts";
 
 // Listy powrotu — potwierdzenie zapisu (double opt-in).
 // Nowy adres trafia jako „pending”; aktywny staje się dopiero po kliknięciu linku z e-maila.
@@ -30,6 +31,12 @@ export async function addSubscriber(base44, { email, name }) {
 
 export async function sendConfirmMail(base44, { email, name, token }) {
   const url = `${await loadAppUrl(base44)}/listy/potwierdz?t=${token}`;
+  // Zaproszenie do kanału WhatsApp — ten sam krótki akapit, co po zapisie na stronie.
+  // Adres z jednego źródła (emailLayout WHATSAPP_CHANNEL); bez adresu bloku nie ma.
+  const waBlock = WHATSAPP_CHANNEL
+    ? `<p style="font-family:Arial,sans-serif;line-height:1.7;">Między listami nagrywam krótkie wiadomości głosowe. Jeśli chcesz słyszeć mnie częściej — dołącz do kanału WhatsApp.</p>
+        ${emailButton("DOŁĄCZ DO KANAŁU WHATSAPP", WHATSAPP_CHANNEL)}`
+    : "";
   // confirm_sent_at ustawia bramka po faktycznej wysyłce (7 dni liczy się od niej).
   await sendMail(base44, {
     kind: "listy_potwierdzenie",
@@ -42,6 +49,7 @@ export async function sendConfirmMail(base44, { email, name, token }) {
         <p style="font-family:Arial,sans-serif;line-height:1.7;">${name ? esc(name) + ", " : ""}ktoś (mam nadzieję, że Ty) zapisał ten adres na Listy powrotu, jeden list w każdy poniedziałek. Żeby zacząć je dostawać, kliknij poniżej.</p>
         <p style="margin:32px 0;"><a href="${url}" style="background:#C9A24A;color:#0A0A0B;padding:14px 28px;text-decoration:none;font-family:Arial,sans-serif;font-weight:bold;letter-spacing:2px;">POTWIERDZAM ZAPIS</a></p>
         <p style="font-family:Arial,sans-serif;color:#8A8A8C;font-size:13px;line-height:1.6;">Jeśli to nie Ty, zignoruj tę wiadomość. Bez potwierdzenia adres zostanie usunięty po 7 dniach.</p>
+        ${waBlock}
       </div></div>`,
   });
 }

@@ -1,3 +1,8 @@
+// Kanał WhatsApp: adres z jednego źródła (lib/whatsappChannel.js); pusty → pozycji w stopce nie ma.
+import { WHATSAPP_CHANNEL } from "@/lib/whatsappChannel";
+
+const WA = String(WHATSAPP_CHANNEL || "").trim();
+
 export const NAV = [
   { label: "O mnie", to: "/o-mnie" },
   { label: "Powrót", to: "/powrot" },
@@ -15,7 +20,7 @@ export const FOOTER = [
   col("Słuchaj", [["Podcast „Głos”", "/glos?src=footer"], ["Chwila ciszy", "/cisza?src=footer"], ["Test: która śmierć jest Twoja?", "/test?src=footer"]]),
   col("Poznaj", [["Strona główna", "/"], ["O mnie", "/o-mnie"], ["Manifest", "/#manifest"], ["Formularz kontaktowy", "/kontakt"]]),
   col("Kontakt", [["kontakt@exmortis.pl", "mailto:kontakt@exmortis.pl"], ["Instagram", "https://www.instagram.com/e.x.m.o.r.t.i.s/"],
-    ["Facebook", "https://www.facebook.com/dawidkowalczyk.exmortis"], ["YouTube", "https://www.youtube.com/@e.x.m.o.r.t.i.s"], ["Kanał WhatsApp", "https://whatsapp.com/channel/0029VbDYXi1Lo4hfFPvT3O3G"]]),
+    ["Facebook", "https://www.facebook.com/dawidkowalczyk.exmortis"], ["YouTube", "https://www.youtube.com/@e.x.m.o.r.t.i.s"], ...(WA ? [["Kanał WhatsApp", WA]] : [])]),
 ];
 
 export const isActive = (pathname, to) => {

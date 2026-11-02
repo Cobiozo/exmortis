@@ -5,6 +5,7 @@ import { useSiteContent } from "@/components/exmortis/SiteContentProvider";
 import useSystemText from "@/content/useSystemText";
 import { track } from "@/lib/track";
 import { sanitizeHtml } from "@/lib/sanitizeHtml";
+import WhatsAppChannelLink from "@/components/exmortis/WhatsAppChannelLink";
 
 // Sekcja „Listy powrotu" (newsletter) na stronie głównej — podpis pod kontakt.
 export default function NewsletterSection() {
@@ -27,7 +28,7 @@ export default function NewsletterSection() {
       track("Lead", { content_name: "newsletter" });
       setSent(true);
       setEmail("");
-      setTimeout(() => setSent(false), 5000);
+      // Potwierdzenie zostaje na ekranie — pod nim jest zaproszenie do kanału WhatsApp.
     } catch {
       setError("Nie udało się zapisać. Spróbuj ponownie.");
     } finally {
@@ -59,7 +60,13 @@ export default function NewsletterSection() {
               </button>
             </div>
             {sent && (
-              <p className="technical text-[10px] gold-text">✓ {t("dz.listy")}</p>
+              <div className="space-y-3 border border-[#C9A24A]/30 p-4">
+                <p className="technical text-[10px] gold-text">✓ {t("dz.listy")}</p>
+                <p className="text-sm text-foreground/60 leading-relaxed">
+                  Między listami nagrywam krótkie wiadomości głosowe. Jeśli chcesz słyszeć mnie częściej — dołącz do kanału WhatsApp.
+                </p>
+                <WhatsAppChannelLink miejsce="po_zapisie" />
+              </div>
             )}
             {error && <p className="technical text-[10px] blood-text">{error}</p>}
             <p className="technical text-[10px] text-foreground/55">

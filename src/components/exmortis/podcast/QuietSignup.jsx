@@ -3,6 +3,7 @@ import { Loader2 } from "lucide-react";
 import { base44 } from "@/api/base44Client";
 import useSystemText from "@/content/useSystemText";
 import { track } from "@/lib/track";
+import WhatsAppChannelLink from "@/components/exmortis/WhatsAppChannelLink";
 
 // Cichy zapis e-mail (Listy powrotu) — bez wyskakujących okienek.
 export default function QuietSignup({ button, source, lead }) {
@@ -21,7 +22,15 @@ export default function QuietSignup({ button, source, lead }) {
     setBusy(false);
   };
 
-  if (ok) return <p className="text-sm gold-text">{t("dz.listy")}</p>;
+  if (ok) return (
+    <div className="space-y-3 max-w-lg">
+      <p className="text-sm gold-text">{t("dz.listy")}</p>
+      <p className="text-sm text-foreground/60 leading-relaxed">
+        Między listami nagrywam krótkie wiadomości głosowe. Jeśli chcesz słyszeć mnie częściej — dołącz do kanału WhatsApp.
+      </p>
+      <WhatsAppChannelLink miejsce="po_zapisie" />
+    </div>
+  );
   return (
     <form onSubmit={submit} className="space-y-3 max-w-lg">
       {lead && <p className="text-sm text-foreground/60">{lead}</p>}
