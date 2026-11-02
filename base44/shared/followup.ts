@@ -111,20 +111,20 @@ export async function claimFollowups(base44, limit = 150) {
   if (h < 8 || h >= 20) return [];
   const due = `(((date_trunc('day', (e.start_datetime + (COALESCE(e.duration_minutes,60) * interval '1 minute')) AT TIME ZONE 'Europe/Warsaw')
                  + interval '1 day 9 hours') AT TIME ZONE 'Europe/Warsaw'))`;
-  return await runSql(base44, `
-    WITH c AS (
-      SELECT r.id FROM public.registrations r JOIN public.events e ON e.id = r.event_id
-       WHERE r.status IN ('Zapisany','Obecny') AND e.status = 'Opublikowane' AND e.format = 'Online'
-         AND e.start_datetime IS NOT NULL AND COALESCE(r.follow_up_sent, FALSE) = FALSE
-         AND now() >= ${due} AND now() < ${due} + interval '36 hours'
-       ORDER BY e.start_datetime LIMIT ${Number(limit) || 150}
-       FOR UPDATE OF r SKIP LOCKED
-    ), u AS (
-      UPDATE public.registrations r SET follow_up_sent = TRUE FROM c WHERE r.id = c.id
-      RETURNING r.id AS reg_id, r.first_name, r.email, r.status, r.joined_at, r.event_id
-    )
-    SELECT u.reg_id, u.first_name, u.email, u.status, u.joined_at, e.id AS event_id, e.title, e.slug, e.start_datetime
-      FROM u JOIN public.events e ON e.id = u.event_id`).catch(() => []);
+  // Bramka exm_exec_sql nie zwraca wyników z WITH…UPDATE…RETURNING (modyfikująca CTE nie może być
+  // zagnieżdżona w zapytaniu opakowującym), więc najpierw wybieramy kandydatów, a potem oznaczamy ich osobno.
+  const rows = await runSql(base44, `
+    SELECT r.id AS reg_id, r.first_name, r.email, r.status, r.joined_at, e.id AS event_id, e.title, e.slug, e.start_datetime
+      FROM public.registrations r JOIN public.events e ON e.id = r.event_id
+     WHERE r.status IN ('Zapisany','Obecny') AND e.status = 'Opublikowane' AND e.format = 'Online'
+       AND e.start_datetime IS NOT NULL AND COALESCE(r.follow_up_sent, FALSE) = FALSE
+       AND now() >= ${due} AND now() < ${due} + interval '36 hours'
+     ORDER BY e.start_datetime LIMIT ${Number(limit) || 150}`, true).catch(() => []);
+  if (!rows || !rows.length) return [];
+  const ids = rows.map((r) => escStr(String(r.reg_id))).join(",");
+  await runSql(base44, `UPDATE public.registrations SET follow_up_sent = TRUE
+     WHERE id::text IN (${ids}) AND COALESCE(follow_up_sent, FALSE) = FALSE`).catch(() => {});
+  return rows;
 }
 
 export async function nextEventAfter(base44, eventId) {
