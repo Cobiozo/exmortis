@@ -5,14 +5,24 @@ import { isDraft } from "../draft";
 import { Buttons, SectionHead } from "../parts";
 import { Img } from "./SimpleBlocks";
 
+// Kolumny na desktopie: nigdy więcej niż kart (sama siatka ma szare tło, więc pusta
+// komórka byłaby widoczna jako szary prostokąt). 1 karta → jedna kolumna, wyśrodkowana.
+const GRID = { 1: "md:grid-cols-1 max-w-xl mx-auto", 2: "md:grid-cols-2", 3: "md:grid-cols-3" };
+// Ostatni, niepełny rząd: ostatnia karta zajmuje brakujące kolumny.
+const SPAN = { 1: "", 2: "md:col-span-2", 3: "md:col-span-3" };
+
 export function CardsBlock({ d, label, center }) {
-  const cols = d.kolumny === "2" ? "md:grid-cols-2" : "md:grid-cols-3";
+  const cards = d.karty || [];
+  const want = Number(d.kolumny) === 2 ? 2 : 3;
+  const cols = Math.max(1, Math.min(want, cards.length || 1));
+  const rest = cards.length % cols;
+  const span = rest ? cols - rest + 1 : 0;
   return (
     <>
       <SectionHead label={label} title={d.tytul} intro={d.intro} center={center} />
-      <div className={`grid ${cols} gap-px bg-[#3D3D3F]/40 text-left`}>
-        {(d.karty || []).map((c, i) => (
-          <div key={i} className="bg-[#0A0A0B] p-8 sm:p-10 md:p-8 lg:p-12 min-w-0 group hover:bg-[#070708] transition-colors duration-500 flex flex-col">
+      <div className={`grid ${GRID[cols]} gap-px bg-[#3D3D3F]/40 text-left`}>
+        {cards.map((c, i) => (
+          <div key={i} className={`bg-[#0A0A0B] p-8 sm:p-10 md:p-8 lg:p-12 min-w-0 group hover:bg-[#070708] transition-colors duration-500 flex flex-col ${span && i === cards.length - 1 ? SPAN[span] : ""}`}>
             {c.obraz?.url && <Img img={c.obraz} ratio="3:2" className="mb-8" />}
             {d.numerowane && <p aria-hidden="true" data-n={String(i + 1).padStart(2, "0")} className="font-mono text-5xl leading-none text-foreground/15 mb-8 before:content-[attr(data-n)]" />}
             <h3 className="relic-heading text-2xl md:text-xl lg:text-2xl gold-text mb-5 [overflow-wrap:break-word]">{c.tytul}</h3>
