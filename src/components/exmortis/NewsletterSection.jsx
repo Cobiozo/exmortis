@@ -8,7 +8,7 @@ import { sanitizeHtml } from "@/lib/sanitizeHtml";
 import WhatsAppChannelLink from "@/components/exmortis/WhatsAppChannelLink";
 
 // Sekcja „Listy powrotu" (newsletter) na stronie głównej — podpis pod kontakt.
-export default function NewsletterSection() {
+export default function NewsletterSection({ label } = {}) {
   const { rich } = useSiteContent();
   const title = rich("footer", "newsletterTitle", 'Zapisz się.<br /><span class="blood-text">Wracaj</span> co tydzień.');
   const desc = rich("footer", "newsletterDesc", "Jeden list tygodniowo. Jeden temat powrotu. Jedno narzędzie. Prosto na Twój mail — z prezentem powitalnym: mini-PDF „3 pierwsze ruchy powrotu”.");
@@ -40,7 +40,7 @@ export default function NewsletterSection() {
     <section id="listy-powrotu" className="py-32 px-5 md:px-10 border-t hairline bg-[#070708]">
       <div className="mx-auto max-w-[1400px] grid md:grid-cols-2 gap-12 md:gap-20 items-center">
         <div>
-          <p className="technical text-[11px] gold-text mb-4">LISTY POWROTU · 09</p>
+          <p className="technical text-[11px] gold-text mb-4">{label || "LISTY POWROTU · 09"}</p>
           <h2 className="relic-heading text-4xl md:text-5xl lg:text-6xl leading-[0.95] mb-6" dangerouslySetInnerHTML={{ __html: sanitizeHtml(title) }} />
           <div className="rich-content text-foreground/60 text-lg max-w-md leading-relaxed" dangerouslySetInnerHTML={{ __html: sanitizeHtml(desc) }} />
         </div>

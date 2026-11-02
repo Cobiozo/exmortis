@@ -6,7 +6,7 @@ import EventTile from "./EventTile";
 
 // Strona główna: „Najbliższe spotkania" — do 3 opublikowanych wydarzeń.
 // Cała sekcja znika, gdy nie ma żadnego opublikowanego wydarzenia.
-export default function EventsTeaser() {
+export default function EventsTeaser({ label } = {}) {
   const [events, setEvents] = useState(null);
 
   useEffect(() => {
@@ -26,7 +26,7 @@ export default function EventsTeaser() {
     <section className="relative py-32 px-5 md:px-10 border-t hairline">
       <div className="absolute right-0 top-0 bottom-0 w-px spine opacity-30" />
       <div className="mx-auto max-w-[1400px]">
-        <p className="technical text-[11px] gold-text mb-4">SPOTKANIA · 07</p>
+        <p className="technical text-[11px] gold-text mb-4">{label || "SPOTKANIA · 07"}</p>
         <h2 className="relic-heading text-4xl md:text-5xl lg:text-6xl leading-[0.95] mb-14">
           Najbliższe<br />spotkania
         </h2>

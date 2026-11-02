@@ -11,7 +11,7 @@ const PRIEST_PHOTO =
   "https://media.base44.com/images/public/6aa08bc6318b0f886cc3b9a3/29c863d5e_Gemini_Generated_Image_5hhwtq5hhwtq5hhw.jpeg";
 
 // Strona główna: „Krótka historia” — zdjęcie, historia i wejście do podstrony O mnie.
-export default function ShortHistory() {
+export default function ShortHistory({ label } = {}) {
   return (
     <section id="historia" className="border-t hairline bg-[#070708]">
       <div className="relative h-[55vh] md:h-[75vh] overflow-hidden">
@@ -29,7 +29,7 @@ export default function ShortHistory() {
 
       <div className="py-24 md:py-32 px-5 md:px-10">
         <div className="mx-auto max-w-[1400px]">
-          <p className="technical text-[11px] gold-text mb-4">KRÓTKA HISTORIA · 04</p>
+          <p className="technical text-[11px] gold-text mb-4">{label || "KRÓTKA HISTORIA · 04"}</p>
           <h2 className="relic-heading text-4xl md:text-6xl leading-[0.95] mb-12">
             Ja tam byłem.<br />
             <span className="gold-text">I wróciłem. Inny.</span>

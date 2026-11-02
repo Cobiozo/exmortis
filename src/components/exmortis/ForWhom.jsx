@@ -12,7 +12,7 @@ const POINTS = [
   "Wracasz z etapu, który dał Ci wszystko oprócz Ciebie",
 ];
 
-export default function ForWhom() {
+export default function ForWhom({ label } = {}) {
   const { list, rich } = useSiteContent();
   const points = list("home", "forWhomPoints", POINTS);
   const close = rich("home", "forWhomClose", "Jeśli któryś z tych punktów brzmi znajomo, możesz zacząć od jednego kroku. Poniżej trzy sposoby.");
@@ -20,7 +20,7 @@ export default function ForWhom() {
     <section className="py-32 px-5 md:px-10 border-t hairline bg-[#070708]">
       <div className="mx-auto max-w-[1400px] grid md:grid-cols-12 gap-12">
         <div className="md:col-span-5">
-          <p className="technical text-[11px] gold-text mb-4">DLA KOGO · 03</p>
+          <p className="technical text-[11px] gold-text mb-4">{label || "DLA KOGO · 03"}</p>
           <h2 className="relic-heading text-4xl md:text-5xl lg:text-6xl leading-[0.95] mb-8">
             To dla Ciebie,<br /><span className="gold-text">jeśli:</span>
           </h2>

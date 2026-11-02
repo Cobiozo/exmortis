@@ -5,7 +5,7 @@ import { useSiteContent } from "@/components/exmortis/SiteContentProvider";
 import { sanitizeHtml } from "@/lib/sanitizeHtml";
 import { POWROT_TEASER } from "@/lib/powrotOffer";
 
-export default function PowrotTeaser() {
+export default function PowrotTeaser({ label } = {}) {
   const { rich } = useSiteContent();
   const quote = rich("home", "powrotTeaserQuote", "„Nowa wersja Ciebie nie powstaje z tej samej gliny, co poprzednia.<br />Trzeba ją wypalić.”");
   const desc = rich("home", "powrotTeaserDesc", POWROT_TEASER);
@@ -14,7 +14,7 @@ export default function PowrotTeaser() {
       <div className="absolute left-0 top-0 bottom-0 w-px spine opacity-30" />
       <div className="mx-auto max-w-[1400px] grid md:grid-cols-12 gap-12 items-center">
         <div className="md:col-span-5">
-          <p className="technical text-[11px] gold-text mb-4">POWRÓT · 06</p>
+          <p className="technical text-[11px] gold-text mb-4">{label || "POWRÓT · 06"}</p>
           <h2 className="relic-heading text-5xl lg:text-7xl xl:text-8xl gold-text leading-[0.9] [overflow-wrap:break-word]">
             POWRÓT
           </h2>

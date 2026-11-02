@@ -6,7 +6,7 @@ import { HOME_ROZDROZA_BLOCK } from "./homeRozdroza";
 // → krótka historia → droga powrotu → zajawka POWRÓT → spotkania → skarbiec → ROZDROŻA
 // → newsletter → kontakt → instagram.
 const bare = { ...LAYOUT_DEFAULT, numer: "brak" };
-const mod = (id, modul, extra = {}) => ({ id, typ: "modul", widoczny: true, dane: { modul, ...extra }, uklad: { ...bare } });
+const mod = (id, modul, extra = {}, numer = "auto") => ({ id, typ: "modul", widoczny: true, dane: { modul, ...extra }, uklad: { ...LAYOUT_DEFAULT, numer } });
 
 export const HOME_BLOCKS = [
   { id: "home-hero", typ: "hero", widoczny: true, uklad: { ...bare }, dane: {
@@ -38,17 +38,16 @@ export const HOME_BLOCKS = [
       { tytul: "Śmierć duchowa", opis: "Gdy z zewnątrz wszystko działa, a w środku brakuje sensu i odpowiedzi na pytanie „po co?”." },
       { tytul: "Śmierć życiowa", opis: "Gdy rozstanie, żałoba, utrata pracy albo choroba zabierają grunt pod nogami." },
     ] } },
-  mod("home-forwhom", "dla_kogo"),
+  mod("home-forwhom", "dla_kogo", { etykieta: "DLA KOGO" }),
   mod("home-start", "od_czego_zaczac", { etykieta: "OD CZEGO ZACZĄĆ", tytul: "Trzy sposoby na pierwszy krok" }),
-  mod("home-history", "krotka_historia"),
-  mod("home-return", "droga_powrotu"),
-  mod("home-powrot", "zajawka_powrot"),
-  mod("home-events", "spotkania"),
-  { ...mod("home-skarbiec", "skarbiec", { etykieta: "SKARBIEC", tytul: "Skarbiec",
+  mod("home-history", "krotka_historia", { etykieta: "KRÓTKA HISTORIA" }),
+  mod("home-return", "droga_powrotu", { etykieta: "DROGA POWROTU" }),
+  mod("home-powrot", "zajawka_powrot", { etykieta: "POWRÓT" }),
+  mod("home-events", "spotkania", { etykieta: "SPOTKANIA" }),
+  mod("home-skarbiec", "skarbiec", { etykieta: "SKARBIEC", tytul: "Skarbiec",
     tekst: "<p>W Skarbcu znajdziesz materiały na każdy etap powrotu — od bezpłatnego listu tygodniowego po pracę jeden na jeden przez 4–6 miesięcy.</p>" }),
-    uklad: { ...bare, numer: "wlasny", numer_wlasny: "10" } },
   HOME_ROZDROZA_BLOCK,
-  mod("home-newsletter", "newsletter"),
-  mod("home-contact", "kontakt"),
-  mod("home-instagram", "instagram"),
+  mod("home-newsletter", "newsletter", { etykieta: "LISTY POWROTU" }),
+  mod("home-contact", "kontakt", { etykieta: "KONTAKT" }),
+  mod("home-instagram", "instagram", {}, "brak"),
 ];

@@ -17,7 +17,7 @@ const SOCIAL_LINKS = [
   { label: "YouTube", url: "https://www.youtube.com/@e.x.m.o.r.t.i.s", icon: Youtube },
 ];
 
-export default function ContactSection() {
+export default function ContactSection({ label } = {}) {
   const { rich } = useSiteContent();
   const heading = rich("contact", "heading", 'Napisz.<br /><span class="gold-text">Odpowiadam sam.</span>');
   const intro = rich("contact", "intro", "Nie ma botów i asystentów. Jeśli jesteś na progu — napisz pierwszy ruch, choćby jednym zdaniem.");
@@ -56,7 +56,7 @@ export default function ContactSection() {
       <div className="mx-auto max-w-[1400px] grid md:grid-cols-2 gap-12 md:gap-20">
         {/* Lewa kolumna — kanały kontaktu */}
         <div>
-          <p className="technical text-[11px] gold-text mb-4">KONTAKT · 10</p>
+          <p className="technical text-[11px] gold-text mb-4">{label || "KONTAKT · 10"}</p>
           <h2 className="relic-heading text-4xl lg:text-5xl xl:text-6xl mb-6 leading-[0.95] [overflow-wrap:break-word]" dangerouslySetInnerHTML={{ __html: sanitizeHtml(heading) }} />
           <div className="rich-content text-foreground/60 text-lg leading-relaxed max-w-md mb-12" dangerouslySetInnerHTML={{ __html: sanitizeHtml(intro) }} />
 

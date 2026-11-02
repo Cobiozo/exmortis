@@ -15,14 +15,14 @@ const STAGES = [
 ];
 
 // Strona główna: „Droga powrotu” — trzy zdania i ścieżka czterech etapów.
-export default function ReturnPath() {
+export default function ReturnPath({ label } = {}) {
   const { list } = useSiteContent();
   const truths = list("home", "truths", THREE_TRUTHS);
 
   return (
     <section className="py-32 px-5 md:px-10 border-t hairline">
       <div className="mx-auto max-w-[1400px]">
-        <p className="technical text-[11px] gold-text mb-4">DROGA POWROTU · 05</p>
+        <p className="technical text-[11px] gold-text mb-4">{label || "DROGA POWROTU · 05"}</p>
         <h2 className="relic-heading text-4xl md:text-6xl leading-[0.95] mb-16">
           Droga powrotu
         </h2>
