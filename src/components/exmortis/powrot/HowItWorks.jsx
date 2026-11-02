@@ -17,12 +17,12 @@ export default function HowItWorks() {
       </div>
       <div className="max-w-3xl space-y-6 text-foreground/60 text-lg leading-relaxed">
         <p>
-          Osiem sesji, cztery etapy. Od diagnozy — gdzie jesteś, co umarło — po plan,
-          żeby nie wrócić do śmierci.
+          Osiem sesji, cztery etapy. Od nazwania, gdzie jesteś i co w Tobie umarło,
+          po plan na dalszą drogę.
         </p>
         <p>
           Między sesjami: zadania szyte pod Ciebie, dziennik powrotu, kontakt ze mną
-          w ustalonych granicach. Nie zostawiam Cię między spotkaniami.
+          w ustalonych granicach.
         </p>
       </div>
     </Section>

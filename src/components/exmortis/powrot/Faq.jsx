@@ -6,7 +6,7 @@ import { POWROT, POWROT_FAQ_PRICE } from "@/lib/powrotOffer";
 const FAQ = [
   {
     q: "Czym to się różni od terapii?",
-    a: "Terapia leczy zaburzenie. Mentoring prowadzi przez zmianę. Terapeuta pomaga Ci zrozumieć siebie. Mentor idzie z Tobą przez próg. Jeśli jesteś w klinicznym kryzysie — najpierw terapeuta, potem ja. Jeśli jesteś zdrowy, ale zablokowany — jestem od tego.",
+    a: "Terapia leczy zaburzenie. Mentoring prowadzi przez zmianę. Terapeuta pomaga Ci zrozumieć siebie. Mentor idzie z Tobą przez próg. Jeśli jesteś w klinicznym kryzysie — najpierw terapeuta, potem ja. Jeśli nie potrzebujesz leczenia, ale czujesz, że utknęło coś ważnego — to jest obszar mentoringu. Nie diagnozuję i nie zastępuję leczenia.",
   },
   {
     q: "Ile trwa jedna sesja?",
@@ -15,10 +15,6 @@ const FAQ = [
   {
     q: "Jaka jest inwestycja?",
     a: POWROT_FAQ_PRICE,
-  },
-  {
-    q: "Co, jeśli w trakcie stwierdzę, że to nie dla mnie?",
-    a: "Po trzeciej sesji jest naturalny moment weryfikacji. Jeśli któreś z nas uzna, że to nie ta praca — kończymy, rozliczam się z Tobą za wykonane sesje, reszta wraca do Ciebie. Chronię Twoje pieniądze tak samo jak Twoją drogę.",
   },
   {
     q: "Czy widujemy się na żywo?",

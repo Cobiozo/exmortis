@@ -19,8 +19,8 @@ export default function Deliverables() {
         ))}
       </ul>
       <p className="relic-heading text-2xl md:text-3xl text-foreground/85 leading-tight">
-        To nie jest kurs, który się kończy.<br />
-        <span className="gold-text">To jest praca, która zostaje.</span>
+        To nie jest kurs do odhaczenia.<br />
+        <span className="gold-text">To praca nad własnym życiem.</span>
       </p>
     </Section>
   );

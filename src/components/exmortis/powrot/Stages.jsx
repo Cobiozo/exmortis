@@ -3,9 +3,9 @@ import Section from "./Section";
 
 const STAGES = [
   { num: "I", title: "Śmierć", desc: "Nazywamy, co w Tobie umarło. Bez dramatu i bez pocieszania. Prawda jest fundamentem powrotu." },
-  { num: "II", title: "Próg", desc: "Podejmujesz decyzję. Nie deklarację — decyzję. To sesja, po której nie da się już żyć tak samo." },
+  { num: "II", title: "Próg", desc: "Podejmujesz decyzję — nie deklarację, ale konkretny wybór, od którego zaczyna się dalsza praca." },
   { num: "III", title: "Powrót", desc: "Odbudowujemy sens. Wnętrze. Codzienność. Tu dzieje się praca właściwa." },
-  { num: "IV", title: "Inny", desc: "Kim jesteś teraz. Jak nie wrócić do śmierci. Jak iść dalej, żeby to, co powstało, zostało." },
+  { num: "IV", title: "Inny", desc: "Kim jesteś teraz. Jak dbać o to, co udało się odbudować, i jak iść dalej." },
 ];
 
 export default function Stages() {
