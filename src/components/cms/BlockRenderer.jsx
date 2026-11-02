@@ -35,7 +35,7 @@ export default function BlockRenderer({ blocks = [], editable, selectedId, onSel
         // wchodzi od razu; niżej dociąga się po załadowaniu strony — patrz ModuleSlot.
         const inner = b.typ === "modul"
           ? <ModuleSlot d={d} label={label} eager={editable || i < 2} />
-          : <View d={d} label={label} center={u.wyrownanie === "srodek"} editable={editable} zoom={b.typ === "faq" && zoom} />;
+          : <View d={d} label={label} center={u.wyrownanie === "srodek"} szerokosc={u.szerokosc} editable={editable} zoom={b.typ === "faq" && zoom} />;
         const warn = editable && isDraft(b.dane) && (
           <p className="bg-[#5C1A1B] border border-[#BC1E22] text-[#F5EFE1] text-sm px-4 py-2">Do uzupełnienia: „{DRAFT}” — ta treść jest ukryta dla odwiedzających, dopóki jej nie zastąpisz.</p>
         );

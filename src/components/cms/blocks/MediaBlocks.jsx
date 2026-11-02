@@ -32,10 +32,14 @@ export function GalleryBlock({ d, label }) {
   );
 }
 
-export function VideoBlock({ d, label }) {
+// Ustawienie „Szerokość: wąska” zwęża sam odtwarzacz (max 768 px, wyśrodkowany).
+// Bloki bez tego ustawienia rysują się jak dotąd — na szerokość kontenera.
+const VIDEO_W = { waska: "max-w-3xl mx-auto" };
+
+export function VideoBlock({ d, label, szerokosc }) {
   const e = embed(d.url);
   return (
-    <figure>
+    <figure className={VIDEO_W[szerokosc] || ""}>
       {label && <p className="technical text-[10px] gold-text mb-4">{label}</p>}
       {d.tytul && <h2 className="relic-heading text-3xl min-[360px]:text-4xl md:text-6xl mb-12 leading-[0.95] whitespace-pre-line [overflow-wrap:break-word]">{d.tytul}</h2>}
       <div className={`${RATIO[d.proporcja] || RATIO["16:9"]} w-full bg-black border hairline`}>

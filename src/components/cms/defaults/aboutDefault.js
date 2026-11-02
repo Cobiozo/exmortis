@@ -16,7 +16,7 @@ export const ABOUT_BLOCKS = [
     zdjecie: { url: `${IMG}f7f7a5e2f_474783848_18188957653314489_4657498483259380055_n.jpg`, alt: "Dawid — exmortis" },
     tresc: `<p>Najpierw była depresja. Cicha, długa — taka, której z zewnątrz nie widać.</p><p>Potem decyzja, że dłużej tak nie mogę. I wtedy pojawiła się ona — kobieta, która dziś jest moją żoną. Moje życie obróciło się o 180 stopni.</p><p>Ale to jeszcze nie był powrót.</p><p>Odszedłem z kapłaństwa i zostałem z niczym. Straciłem pozycję, pracę, znajomych. Dla wielu, z którymi szedłem przez lata, stałem się trędowaty.</p><p>Chciałem wyjechać. Zmienić nazwisko. Zacząć od zera tam, gdzie nikt mnie nie zna.</p><p><strong>Zostałem. Dzięki niej.</strong></p><p>Razem zawalczyliśmy o ułożenie życia — przede wszystkim o powrót do komunii z Bogiem. Krok po kroku, bez skrótów.</p><p>Zostałem przeniesiony do stanu świeckiego. Choć wiem, że kapłaństwo zostawia znamię, którego nic nie zmaże: „Ty jesteś kapłanem na wieki”.</p><p>Moja żona otrzymała stwierdzenie nieważności wcześniejszego małżeństwa. Stanęliśmy razem przed ołtarzem i zawarliśmy sakramentalne małżeństwo. Wszystko, co było rozdarte, zostało uporządkowane.</p><p>Dziś jestem szczęśliwym mężem i ojcem. Rosnę w komunii z Bogiem. I tę iskrę chcę dawać dalej — zamieniać „grzebanie” w „sadzenie”.</p>` }),
   b("ocalenie-cytat", "cytat", { tekst: "Moim ocaleniem jest moja żona. Posłuchaj naszej historii w piosence „Ocalenie”.", podpis: "" }, { wyrownanie: "srodek", szerokosc: "waska", odstep: "maly" }),
-  b("ocalenie", "wideo", { url: "https://youtu.be/92kTN9ZBipc", proporcja: "16:9", podpis: "Ocalenie — nasza historia" }, { odstep: "sredni" }),
+  b("ocalenie", "wideo", { url: "https://youtu.be/92kTN9ZBipc", proporcja: "16:9", podpis: "Ocalenie — nasza historia" }, { szerokosc: "waska", odstep: "sredni" }),
   b("powstanie", "tekst", { etykieta: "POWSTANIE", tytul: "Skąd wzięło się\n„exmortis”?",
     tresc: `<p>I tak powstała przestrzeń exmortis — ze śmierci. Miejsce dla ludzi, którzy wychodzą: z tego, co ich zabijało po cichu. Z siebie sprzed lat. Ze śmierci mentalnej, duchowej albo życiowej. Do siebie. Do wzrostu.</p><h2 class="exm-akcent-zloty">Nie ma sytuacji bez wyjścia.</h2><p><span class="exm-akcent-zloty">Wiem to. Byłem tam, gdzie wydawało mi się, że jest.</span></p>` }, { szerokosc: "waska", odstep: "xl" }),
   b("granice", "karty", { etykieta: "GRANICE", tytul: "Kim NIE\njestem?", numerowane: true, kolumny: "3", karty: [
@@ -46,11 +46,13 @@ export const ABOUT_BLOCKS = [
     { tytul: "Pytania zamiast rad", opis: "Nie mówię «zrób tak» — to Twoje życie, więc ostateczne decyzje podejmujesz Ty. Moim zadaniem jest poprzez zadawanie pytań pokazać różne perspektywy. Więcej słucham niż mówię." },
     { tytul: "Jeden ruch na sesję", opis: "Każde spotkanie kończy się jednym konkretnym ruchem do wykonania. Bo powrót to ruchy, nie plany na rok." },
   ] }, { tlo: "grafit" }),
-  b("cta-foto", "zdjecie", { zdjecie: { url: `${IMG}480c7c335_702144182_17895011880460401_728690723499574380_n.jpg`, alt: "Dawid — exmortis" }, proporcja: "1:1" }, { szerokosc: "waska", odstep: "maly" }),
-  b("cta", "tekst", { etykieta: "", tytul: "Jeśli coś w Tobie\njuż wie",
-    tresc: "<p>Że chodzisz i pracujesz, a w środku jest cisza — to znaczy, że już wracasz. Zrób pierwszy ruch.</p>" }, { wyrownanie: "srodek", szerokosc: "waska", odstep: "maly" }),
-  b("cta-przyciski", "przyciski", { przyciski: [
-    { etykieta: "ZOBACZ DROGĘ POWROTU", link: "/skarbiec", styl: "zloty", strzalka: true },
-    { etykieta: "NAPISZ DO MNIE", link: "/kontakt", styl: "obrys", strzalka: true },
-  ] }, { wyrownanie: "srodek", odstep: "sredni" }),
+  // CTA w jednym bloku: zdjęcie po lewej (40%), po prawej nagłówek, akapit i oba przyciski.
+  // Tło i odstęp jak w bloku „mentor” wyżej.
+  b("cta", "tekst_zdjecie", { etykieta: "", tytul: "Jeśli coś w Tobie\njuż wie",
+    tresc: "<p>Że chodzisz i pracujesz, a w środku jest cisza — to znaczy, że już wracasz. Zrób pierwszy ruch.</p>",
+    strona: "lewo", kolumny: "40-60", proporcja: "4:5", mobile: "gora", przyciski: [
+      { etykieta: "ZOBACZ DROGĘ POWROTU", link: "/skarbiec", styl: "zloty", strzalka: true },
+      { etykieta: "NAPISZ DO MNIE", link: "/kontakt", styl: "obrys", strzalka: true },
+    ],
+    zdjecie: { url: `${IMG}480c7c335_702144182_17895011880460401_728690723499574380_n.jpg`, alt: "Dawid — exmortis" } }, { tlo: "grafit", odstep: "maly" }),
 ];
