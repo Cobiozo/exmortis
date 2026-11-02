@@ -26,9 +26,9 @@ export const POWROT_BLOCKS = [
   b("jak", "tekst", { etykieta: "JAK TO WYGLĄDA · 06", tytul: "Jak to wygląda",
     tresc: `<ul><li><strong>Czas pracy:</strong> 4–6 miesięcy</li><li><strong>Sesje:</strong> 8 spotkań · co 2–3 tygodnie</li><li><strong>Długość:</strong> 60 min (sesja 1: do 90 min)</li><li><strong>Miejsce:</strong> Platforma Zoom</li><li><strong>Cena:</strong> 7 999 PLN za pełny cykl</li></ul><p>Osiem sesji, cztery etapy. Od diagnozy — gdzie jesteś, co umarło — po plan, żeby nie wrócić do śmierci.</p><p>Między sesjami: zadania szyte pod Ciebie, dziennik powrotu, kontakt ze mną w ustalonych granicach. Nie zostawiam Cię między spotkaniami.</p>` }),
   b("dostajesz", "tekst", { etykieta: "CO OTRZYMUJESZ · 07", tytul: "Co otrzymujesz",
-    tresc: ul(["Osiem sesji indywidualnych 1:1", "Twoja własna Mapa powrotu (powstaje w sesji pierwszej)", "Arsenał 8 narzędzi głębi — po jednym na każdy etap", "Dziennik powrotu z zadaniami między sesjami", "Kontakt między sesjami (wiadomości, audio — z granicami)", "Domknięcie: osobisty plan „jak nie wrócić do śmierci”", "Dostęp do zamkniętej ścieżki „Listów powrotu” tylko dla uczestników programu"])
+    tresc: ul(["Osiem sesji indywidualnych 1:1", "Twoja własna Mapa powrotu (powstaje w sesji pierwszej)", "Arsenał 8 narzędzi głębi — po jednym na każdą sesję", "Dziennik powrotu z zadaniami między sesjami", "Kontakt między sesjami (wiadomości, audio — z granicami)", "Domknięcie: osobisty plan „jak nie wrócić do śmierci”", "Dostęp do zamkniętej ścieżki „Listów powrotu” tylko dla uczestników programu"])
       + `<h3>To nie jest kurs, który się kończy.</h3><h3 class="exm-akcent-zloty">To jest praca, która zostaje.</h3>` }, { tlo: G }),
-  b("kwalifikacja", "etapy", { etykieta: "KWALIFIKACJA · 08", tytul: "Cztery osoby.\nZero pośpiechu.", uklad: "pionowy", elementy: [
+  b("kwalifikacja", "etapy", { etykieta: "KWALIFIKACJA · 08", tytul: "Zero pośpiechu.", uklad: "pionowy", elementy: [
     { tytul: "Zgłoszenie", opis: "Wypełniasz krótkie zgłoszenie (kilka pytań o to, z czego wracasz i czego szukasz)" },
     { tytul: "Rozmowa", opis: "Umawiamy rozmowę kwalifikacyjną — bezpłatnie, bez zobowiązań" },
     { tytul: "Decyzja", opis: "Po rozmowie oboje decydujemy: czy to Twój moment i czy jestem Twoim przewodnikiem" },
@@ -37,7 +37,7 @@ export const POWROT_BLOCKS = [
   b("faq", "faq", { etykieta: "PYTANIA · 09", tytul: "Pytania", pytania: [
     { pytanie: "Czym to się różni od terapii?", odpowiedz: "Terapia leczy zaburzenie. Mentoring prowadzi przez zmianę. Terapeuta pomaga Ci zrozumieć siebie. Mentor idzie z Tobą przez próg. Jeśli jesteś w klinicznym kryzysie — najpierw terapeuta, potem ja. Jeśli jesteś zdrowy, ale zablokowany — jestem od tego." },
     { pytanie: "Ile trwa jedna sesja?", odpowiedz: "60 minut w rytmie sesji + pierwsza sesja diagnostyczna do 90 minut. Bez pośpiechu. Cisza w środku sesji jest częścią pracy." },
-    { pytanie: "Czy muszę być osobą wierzącą?", odpowiedz: "Nie. POWRÓT nie jest drogą religijną i nie wymaga żadnej wiary. Pracuję z sensem, nie z wyznaniem. Jeśli jesteś wierzący — Twoja wiara będzie częścią tej pracy. Jeśli nie — pracujemy w Twoim języku i na Twoich wartościach." },
+    { pytanie: "Czy muszę być osobą wierzącą?", odpowiedz: "Nie. Treści i współpraca są dla osób wierzących i niewierzących. Moja droga ma swoje źródło w wierze, ale nie jest warunkiem pracy ze mną — szanuję Twój światopogląd." },
     { pytanie: "Jaka jest cena?", odpowiedz: "7 999 PLN za pełny cykl 8 sesji. (start: styczeń 2027)" },
     { pytanie: "Co, jeśli w trakcie stwierdzę, że to nie dla mnie?", odpowiedz: "Po trzeciej sesji jest naturalny moment weryfikacji. Jeśli któreś z nas uzna, że to nie ta praca — kończymy, rozliczam się z Tobą za wykonane sesje, reszta wraca do Ciebie. Chronię Twoje pieniądze tak samo jak Twoją drogę." },
     { pytanie: "Czy widujemy się na żywo?", odpowiedz: "Cały program prowadzony jest przez platformę Zoom — po to, żeby był dostępny niezależnie od miasta. Uczestnicy POWRÓT-u mają pierwszeństwo i specjalne warunki w zapisach na doroczny retreat „exmortis” w Bieszczadach." },

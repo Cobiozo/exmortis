@@ -8,7 +8,7 @@ const mod = (id, modul, extra = {}) => ({ id, typ: "modul", widoczny: true, dane
 export const HOME_BLOCKS = [
   { id: "home-hero", typ: "hero", widoczny: true, uklad: { ...bare }, dane: {
     wariant: "znak", etykieta: "", linia1: "EXMORTIS", linia2: "ze śmierci",
-    lead: "Wracam z siebie. Uczę wracać.", podlead: "Droga powrotu ze śmierci mentalnej, duchowej i życiowej. Nie musisz wiedzieć, dokąd wracasz — wystarczy, że wiesz, że tak dalej nie chcesz.",
+    lead: "Wracam z siebie. Uczę wracać.", podlead: "Droga powrotu ze śmierci mentalnej, duchowej i życiowej. Mentoring 1:1 dla ludzi po wypaleniu, stracie i kryzysie, którzy chcą uporządkować życie i wybrać następny krok.",
     przyciski: [
       { etykieta: "Która śmierć jest Twoja?", link: "/test?src=home-hero", styl: "zloty", strzalka: true },
       { etykieta: "KIM JEST EXMORTIS?", link: "#historia", styl: "obrys" },
@@ -40,7 +40,7 @@ export const HOME_BLOCKS = [
   mod("home-powrot", "zajawka_powrot"),
   mod("home-events", "spotkania"),
   { ...mod("home-skarbiec", "skarbiec", { etykieta: "SKARBIEC", tytul: "Skarbiec",
-    tekst: "<p>Powrót ma cztery etapy: <strong>Śmierć · Próg · Powrót · Inny</strong>.</p><p>Na każdym z nich potrzeba innych narzędzi. Innych słów. Innej głębokości pracy.</p><p>W Skarbcu znajdziesz to, co pasuje do miejsca, w którym stoisz dzisiaj — od bezpłatnego listu tygodniowego po pracę jeden na jeden przez sześć miesięcy.</p>" }),
+    tekst: "<p>Powrót ma cztery etapy: <strong>Śmierć · Próg · Powrót · Inny</strong>.</p><p>Na każdym z nich potrzeba innych narzędzi. Innych słów. Innej głębokości pracy.</p><p>W Skarbcu znajdziesz to, co pasuje do miejsca, w którym stoisz dzisiaj — od bezpłatnego listu tygodniowego po pracę jeden na jeden przez 4–6 miesięcy.</p>" }),
     uklad: { ...bare, numer: "wlasny", numer_wlasny: "08" } },
   mod("home-newsletter", "newsletter"),
   mod("home-contact", "kontakt"),

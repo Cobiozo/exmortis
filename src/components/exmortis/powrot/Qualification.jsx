@@ -14,10 +14,9 @@ export default function Qualification() {
       <div className="grid md:grid-cols-12 gap-12">
         <div className="md:col-span-5">
           <h2 className="relic-heading text-4xl md:text-6xl leading-[0.95]">
-            Cztery osoby.<br /><span className="gold-text">Zero pośpiechu.</span>
+            <span className="gold-text">Zero pośpiechu.</span>
           </h2>
           <p className="mt-8 text-foreground/60 leading-relaxed">
-            Prowadzę maksymalnie cztery osoby jednocześnie w programie POWRÓT.
             Nie dlatego, że wybieram lepszych. Dlatego, że to praca, którą można wykonać
             tylko z osobami gotowymi — a moja uwaga ma pojemność.
           </p>
