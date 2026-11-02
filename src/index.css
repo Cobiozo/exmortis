@@ -287,8 +287,13 @@
 @media (min-width: 768px) { .container-exm { padding-inline: 24px; } }
 @media (min-width: 1024px) { .container-exm { padding-inline: 32px; } }
 /* Rozstrzelone kapitaliki: węziej na małych ekranach (główna przyczyna wychodzenia poza ekran) */
+@media (max-width: 767px) {
+  .technical { letter-spacing: 0.14em; }
+}
 @media (max-width: 479px) {
-  .technical { letter-spacing: 0.08em; }
+  .technical { letter-spacing: 0.12em; }
+  /* Drobne wersaliki nie schodzą poniżej 10 px (czytelność na telefonie). */
+  .technical[class*="text-[9px]"], .technical[class*="text-[8px]"] { font-size: 10px; }
   .relic-heading { letter-spacing: 0.01em; }
   .btn-relic, .btn-ghost, .btn-blood { padding-inline: 1.25rem; }
   .btn-relic:hover, .btn-blood:hover { letter-spacing: 0.1em; }
@@ -307,3 +312,19 @@
   padding: 0.5rem 0.25rem;
   margin: -0.5rem -0.25rem;
 }
+
+/* ==== WCAG AA — kontrast tekstu pomocniczego na ciemnych tłach ====
+   Podnosimy krycie w klasach używanych w całym serwisie, zamiast edytować setki plików.
+   Zmierzone na najjaśniejszym z ciemnych teł (#121212), gorzej wypada niż #0A0A0B / #0F0F10:
+   /40–/75 → min. 5.1:1 (próg dla małego tekstu to 4.5:1).
+   Bez zmian: złoto marki (#C9A24A), przyciski, logo, nagłówki, linie, separatory i duże cyfry dekoracyjne. */
+.text-foreground\/40 { color: hsl(var(--foreground) / 0.56); }
+.text-foreground\/45 { color: hsl(var(--foreground) / 0.58); }
+.text-foreground\/50 { color: hsl(var(--foreground) / 0.60); }
+.text-foreground\/55 { color: hsl(var(--foreground) / 0.62); }
+.text-foreground\/60 { color: hsl(var(--foreground) / 0.65); }
+.text-foreground\/65 { color: hsl(var(--foreground) / 0.68); }
+.text-foreground\/70 { color: hsl(var(--foreground) / 0.72); }
+.text-foreground\/75 { color: hsl(var(--foreground) / 0.78); }
+/* Pola formularzy: podpowiedź w polu też musi być czytelna. */
+[class*="placeholder:text-foreground/"]::placeholder { color: hsl(var(--foreground) / 0.62); }
