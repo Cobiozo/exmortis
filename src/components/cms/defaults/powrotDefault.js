@@ -1,13 +1,16 @@
 import { LAYOUT_DEFAULT as L } from "../blockTypes";
+import { POWROT, POWROT_LEAD, POWROT_HOW_ROWS, POWROT_INCLUDES, POWROT_FAQ_PRICE } from "@/lib/powrotOffer";
 
 // POWRÓT przeniesiony do bloków (te same teksty co dotąd).
+// Parametry programu (cena, sesje, czas, częstotliwość, długość, forma, start, narzędzia) — wyłącznie z powrotOffer.js.
 const b = (id, typ, dane, uklad = {}) => ({ id: `powrot-${id}`, typ, widoczny: true, dane, uklad: { ...L, numer: "brak", ...uklad } });
 const ul = (items) => `<ul>${items.map((i) => `<li>${i}</li>`).join("")}</ul>`;
+const META = ul(POWROT_HOW_ROWS.map((r) => `<strong>${r.label}:</strong> ${r.value}`));
 const G = "grafit";
 
 export const POWROT_BLOCKS = [
   b("hero", "hero", { wariant: "standard", etykieta: "AUTORSKI PROGRAM MENTORSKI EXMORTIS", linia1: "", linia2: "POWRÓT",
-    lead: "4–6 miesięcy. Osiem sesji. Jedna decyzja: „chcę wrócić inny.”", przyciski: [{ etykieta: "WYPEŁNIJ ZGŁOSZENIE", link: "#formularz", styl: "zloty", strzalka: true }], przyciemnienie: 60 }),
+    lead: POWROT_LEAD, przyciski: [{ etykieta: "WYPEŁNIJ ZGŁOSZENIE", link: "#formularz", styl: "zloty", strzalka: true }], przyciemnienie: 60 }),
   b("otwarcie", "tekst", { etykieta: "OTWARCIE · 01", tytul: "Są ludzie, którzy przychodzą do mnie, bo coś w nich umarło.",
     tresc: `<p class="exm-styl-lead">Nie mówią tego wprost. Mówią, że są zmęczeni, stracili sens, nie poznają siebie — mają wszystko, na co pracowali, i jednocześnie nic nie czują. Zwłaszcza szczęścia, satysfakcji, radości z życia.</p><p class="exm-styl-lead">Umarli. Tylko jeszcze o tym nie wiedzą.</p><h2 class="exm-akcent-zloty">POWRÓT jest dla tych, którzy już wiedzą.</h2>` }),
   b("dla-kogo", "tekst", { etykieta: "DLA KOGO · 02", tytul: "To praca dla Ciebie, jeśli:",
@@ -24,9 +27,9 @@ export const POWROT_BLOCKS = [
     { tytul: "IV · Inny", opis: "Kim jesteś teraz. Jak nie wrócić do śmierci. Jak iść dalej, żeby to, co powstało, zostało." },
   ] }, { tlo: G }),
   b("jak", "tekst", { etykieta: "JAK TO WYGLĄDA · 06", tytul: "Jak to wygląda",
-    tresc: `<ul><li><strong>Czas pracy:</strong> 4–6 miesięcy</li><li><strong>Sesje:</strong> 8 spotkań · co 2–3 tygodnie</li><li><strong>Długość:</strong> 60 min (sesja 1: do 90 min)</li><li><strong>Miejsce:</strong> Platforma Zoom</li><li><strong>Cena:</strong> 7 999 PLN za pełny cykl</li></ul><p>Osiem sesji, cztery etapy. Od diagnozy — gdzie jesteś, co umarło — po plan, żeby nie wrócić do śmierci.</p><p>Między sesjami: zadania szyte pod Ciebie, dziennik powrotu, kontakt ze mną w ustalonych granicach. Nie zostawiam Cię między spotkaniami.</p>` }),
+    tresc: `${META}<p>Osiem sesji, cztery etapy. Od diagnozy — gdzie jesteś, co umarło — po plan, żeby nie wrócić do śmierci.</p><p>Między sesjami: zadania szyte pod Ciebie, dziennik powrotu, kontakt ze mną w ustalonych granicach. Nie zostawiam Cię między spotkaniami.</p>` }),
   b("dostajesz", "tekst", { etykieta: "CO OTRZYMUJESZ · 07", tytul: "Co otrzymujesz",
-    tresc: ul(["Osiem sesji indywidualnych 1:1", "Twoja własna Mapa powrotu (powstaje w sesji pierwszej)", "Arsenał 8 narzędzi głębi — po jednym na każdą sesję", "Dziennik powrotu z zadaniami między sesjami", "Kontakt między sesjami (wiadomości, audio — z granicami)", "Domknięcie: osobisty plan „jak nie wrócić do śmierci”", "Dostęp do zamkniętej ścieżki „Listów powrotu” tylko dla uczestników programu"])
+    tresc: ul(POWROT_INCLUDES)
       + `<h3>To nie jest kurs, który się kończy.</h3><h3 class="exm-akcent-zloty">To jest praca, która zostaje.</h3>` }, { tlo: G }),
   b("kwalifikacja", "etapy", { etykieta: "KWALIFIKACJA · 08", tytul: "Zero pośpiechu.", uklad: "pionowy", elementy: [
     { tytul: "Zgłoszenie", opis: "Wypełniasz krótkie zgłoszenie (kilka pytań o to, z czego wracasz i czego szukasz)" },
@@ -36,11 +39,11 @@ export const POWROT_BLOCKS = [
   ] }),
   b("faq", "faq", { etykieta: "PYTANIA · 09", tytul: "Pytania", pytania: [
     { pytanie: "Czym to się różni od terapii?", odpowiedz: "Terapia leczy zaburzenie. Mentoring prowadzi przez zmianę. Terapeuta pomaga Ci zrozumieć siebie. Mentor idzie z Tobą przez próg. Jeśli jesteś w klinicznym kryzysie — najpierw terapeuta, potem ja. Jeśli jesteś zdrowy, ale zablokowany — jestem od tego." },
-    { pytanie: "Ile trwa jedna sesja?", odpowiedz: "60 minut w rytmie sesji + pierwsza sesja diagnostyczna do 90 minut. Bez pośpiechu. Cisza w środku sesji jest częścią pracy." },
+    { pytanie: "Ile trwa jedna sesja?", odpowiedz: `Sesja: ${POWROT.length}. Bez pośpiechu. Cisza w środku sesji jest częścią pracy.` },
     { pytanie: "Czy muszę być osobą wierzącą?", odpowiedz: "Nie. Treści i współpraca są dla osób wierzących i niewierzących. Moja droga ma swoje źródło w wierze, ale nie jest warunkiem pracy ze mną — szanuję Twój światopogląd." },
-    { pytanie: "Jaka jest cena?", odpowiedz: "7 999 PLN za pełny cykl 8 sesji. (start: styczeń 2027)" },
+    { pytanie: "Jaka jest cena?", odpowiedz: POWROT_FAQ_PRICE },
     { pytanie: "Co, jeśli w trakcie stwierdzę, że to nie dla mnie?", odpowiedz: "Po trzeciej sesji jest naturalny moment weryfikacji. Jeśli któreś z nas uzna, że to nie ta praca — kończymy, rozliczam się z Tobą za wykonane sesje, reszta wraca do Ciebie. Chronię Twoje pieniądze tak samo jak Twoją drogę." },
-    { pytanie: "Czy widujemy się na żywo?", odpowiedz: "Cały program prowadzony jest przez platformę Zoom — po to, żeby był dostępny niezależnie od miasta. Uczestnicy POWRÓT-u mają pierwszeństwo i specjalne warunki w zapisach na doroczny retreat „exmortis” w Bieszczadach." },
+    { pytanie: "Czy widujemy się na żywo?", odpowiedz: `Cały program prowadzony jest przez platformę ${POWROT.form} — po to, żeby był dostępny niezależnie od miasta. Uczestnicy POWRÓT-u mają pierwszeństwo i specjalne warunki w zapisach na doroczny retreat „exmortis” w Bieszczadach.` },
     { pytanie: "Jak często rusza nowa kohorta?", odpowiedz: "Nie prowadzę kohort. Program jest indywidualny — startujesz wtedy, kiedy Ty i ja jesteśmy gotowi." },
   ] }, { tlo: G }),
   b("ostatnie", "tekst", { etykieta: "OSTATNIE SŁOWO", tytul: "Nie musisz decydować się dziś.",
@@ -50,6 +53,7 @@ export const POWROT_BLOCKS = [
     { etykieta: "WYPEŁNIJ FORMULARZ KWALIFIKACYJNY", link: "#formularz", styl: "zloty", strzalka: true },
     { etykieta: "ZOBACZ SKARBIEC — RÓŻNE DROGI POWROTU", link: "/skarbiec", styl: "obrys", strzalka: false },
   ] }, { odstep: "maly" }),
+  b("podsumowanie", "modul", { modul: "powrot_podsumowanie" }),
   b("formularz", "modul", { modul: "powrot_formularz" }),
   b("koniec", "cytat", { tekst: "„Wracam z siebie. Uczę wracać.”", podpis: "EXMORTIS — ZE ŚMIERCI" }, { wyrownanie: "srodek", szerokosc: "waska" }),
 ];

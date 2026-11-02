@@ -1,15 +1,8 @@
 import React from "react";
 import Section from "./Section";
+import { POWROT_INCLUDES } from "@/lib/powrotOffer";
 
-const ITEMS = [
-  "Osiem sesji indywidualnych 1:1",
-  "Twoja własna Mapa powrotu (powstaje w sesji pierwszej)",
-  "Arsenał 8 narzędzi głębi — po jednym na każdą sesję",
-  "Dziennik powrotu z zadaniami między sesjami",
-  "Kontakt między sesjami (wiadomości, audio — z granicami)",
-  "Domknięcie: osobisty plan „jak nie wrócić do śmierci”",
-  "Dostęp do zamkniętej ścieżki „Listów powrotu” tylko dla uczestników programu",
-];
+const ITEMS = POWROT_INCLUDES;
 
 export default function Deliverables() {
   return (

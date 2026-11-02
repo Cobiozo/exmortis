@@ -4,6 +4,7 @@
 import { SYSTEM_BLOCKS } from "./systemTexts";
 import { LOGIN_BLOCKS } from "./loginTexts";
 import { ONLINE_BLOCKS } from "./onlineTexts";
+import { POWROT_TEASER } from "@/lib/powrotOffer";
 
 export const CONTENT_PAGES = [
   { key: "system", label: "Teksty systemowe", blocks: SYSTEM_BLOCKS },
@@ -103,7 +104,7 @@ export const CONTENT_PAGES = [
         label: "Zajawka POWRÓT — opis programu",
         type: "richtext",
         default:
-          "Autorski program mentorski exmortis — dla tych, którzy wychodzą ze śmierci mentalnej, duchowej albo życiowej. 4–6 miesięcy, cztery etapy, osiem sesji jeden na jeden.",
+          POWROT_TEASER,
       },
       {
         key: "testimonialsTitle",

@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import { ChevronDown } from "lucide-react";
 import Section from "./Section";
+import { POWROT, POWROT_FAQ_PRICE } from "@/lib/powrotOffer";
 
 const FAQ = [
   {
@@ -9,11 +10,11 @@ const FAQ = [
   },
   {
     q: "Ile trwa jedna sesja?",
-    a: "60 minut w rytmie sesji + pierwsza sesja diagnostyczna do 90 minut. Bez pośpiechu. Cisza w środku sesji jest częścią pracy.",
+    a: `Sesja: ${POWROT.length}. Bez pośpiechu. Cisza w środku sesji jest częścią pracy.`,
   },
   {
     q: "Jaka jest inwestycja?",
-    a: "2 999 PLN za pełny cykl. Płatność jednorazowo. Nie sprzedaję sesji — sprzedaję drogę.",
+    a: POWROT_FAQ_PRICE,
   },
   {
     q: "Co, jeśli w trakcie stwierdzę, że to nie dla mnie?",

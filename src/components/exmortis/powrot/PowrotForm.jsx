@@ -7,6 +7,7 @@ import { FUNNEL } from "@/lib/funnelEvents";
 import { useCrisis } from "@/components/crisis/CrisisContext";
 import Section from "./Section";
 import { Label, TextInput, TextArea, CheckRow } from "./PowrotFields";
+import { POWROT } from "@/lib/powrotOffer";
 
 // Etap 1 zgłoszenia POWRÓT: trzy dane kontaktowe, jedno pytanie i dwie zgody.
 // Pełna ankieta (dotychczasowy formularz) przychodzi osobistym linkiem, gdy program będzie dla Ciebie.
@@ -97,11 +98,14 @@ export default function PowrotForm() {
           </p>
         </div>
         <div className="min-w-0">
-          <p className="text-foreground/55 text-sm mb-8">
+          <p className="text-foreground/55 text-sm mb-4">
             Nie wiesz, czy to dla Ciebie? Zacznij od{" "}
             <Link to="/test?src=powrot" className="gold-text hover:underline">
               testu «Która śmierć jest Twoja?»
             </Link>
+          </p>
+          <p className="text-sm text-foreground/75 mb-8">
+            Inwestycja: <span className="gold-text">{POWROT.priceFull}</span>
           </p>
           {sent ? (
             <div className="border border-[#C9A24A]/40 p-8 md:p-10 flex flex-col items-center justify-center text-center gap-6 h-full">
@@ -145,6 +149,9 @@ export default function PowrotForm() {
               </div>
 
               {error && <p className="text-sm blood-text">{error}</p>}
+              <p className="text-xs text-foreground/60 leading-relaxed">
+                Rozmowa kwalifikacyjna jest bezpłatna i nie zobowiązuje do zakupu.
+              </p>
               <button type="submit" disabled={sending} className="btn-relic w-full disabled:opacity-60">
                 {sending ? "WYSYŁAM..." : "WYŚLIJ ZGŁOSZENIE"}{" "}
                 {!sending && <ArrowRight className="h-4 w-4" />}

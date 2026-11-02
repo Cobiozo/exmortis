@@ -15,6 +15,7 @@ import MusicSection from "@/components/exmortis/MusicSection";
 import PodcastSection from "@/components/exmortis/PodcastSection";
 import PodcastGuest from "@/components/exmortis/PodcastGuest";
 import PowrotForm from "@/components/exmortis/powrot/PowrotForm";
+import PowrotSummary from "@/components/exmortis/powrot/PowrotSummary";
 import PowrotEventLine from "./modules/PowrotEventLine";
 import TestQuiz from "@/pages/Test";
 import ShopCatalog from "@/pages/Shop";
@@ -40,6 +41,7 @@ export const MODULES = {
   podcast_gosc: ["Zostań gościem podcastu", PodcastGuest],
   whatsapp_glos: ["Kanał WhatsApp — Głos między poniedziałkami", WhatsAppChannelBlock],
   powrot_formularz: ["POWRÓT: formularz zgłoszeniowy", PowrotForm],
+  powrot_podsumowanie: ["POWRÓT: podsumowanie przed zgłoszeniem", PowrotSummary],
   powrot_spotkanie: ["POWRÓT: najbliższe spotkanie", PowrotEventLine],
   test: ["Test „Która śmierć jest Twoja?”", TestQuiz],
   spotkania_lista: ["Lista spotkań (nadchodzące i minione)", EventsListing],

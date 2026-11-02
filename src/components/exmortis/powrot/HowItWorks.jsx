@@ -1,12 +1,8 @@
 import React from "react";
 import Section from "./Section";
+import { POWROT_HOW_ROWS } from "@/lib/powrotOffer";
 
-const META = [
-  { label: "CZAS PRACY", value: "4–6 miesięcy" },
-  { label: "SESJE", value: "8 spotkań · co 2–3 tygodnie" },
-  { label: "DŁUGOŚĆ", value: "60 min (sesja 1: do 90 min)" },
-  { label: "MIEJSCE", value: "Platforma Zoom" },
-];
+const META = POWROT_HOW_ROWS.map((r) => ({ label: r.label.toUpperCase(), value: r.value }));
 
 export default function HowItWorks() {
   return (

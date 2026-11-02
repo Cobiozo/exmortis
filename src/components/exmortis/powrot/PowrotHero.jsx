@@ -1,5 +1,6 @@
 import React from "react";
 import Logo from "../Logo";
+import { POWROT_LEAD } from "@/lib/powrotOffer";
 
 export default function PowrotHero() {
   return (
@@ -13,7 +14,7 @@ export default function PowrotHero() {
           AUTORSKI PROGRAM MENTORSKI EXMORTIS
         </p>
         <p className="text-foreground/70 text-lg md:text-xl font-light leading-relaxed">
-          4–6 miesięcy. Osiem sesji. Jedna decyzja: „chcę wrócić inny.”
+          {POWROT_LEAD}
         </p>
       </div>
     </section>

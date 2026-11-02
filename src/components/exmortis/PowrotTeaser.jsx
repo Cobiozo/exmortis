@@ -3,11 +3,12 @@ import { Link } from "react-router-dom";
 import { ArrowRight } from "lucide-react";
 import { useSiteContent } from "@/components/exmortis/SiteContentProvider";
 import { sanitizeHtml } from "@/lib/sanitizeHtml";
+import { POWROT_TEASER } from "@/lib/powrotOffer";
 
 export default function PowrotTeaser() {
   const { rich } = useSiteContent();
   const quote = rich("home", "powrotTeaserQuote", "„Nowa wersja Ciebie nie powstaje z tej samej gliny, co poprzednia.<br />Trzeba ją wypalić.”");
-  const desc = rich("home", "powrotTeaserDesc", "Autorski program mentorski exmortis — dla tych, którzy wychodzą ze śmierci mentalnej, duchowej albo życiowej. 4–6 miesięcy, cztery etapy, osiem sesji jeden na jeden.");
+  const desc = rich("home", "powrotTeaserDesc", POWROT_TEASER);
   return (
     <section className="relative py-32 px-5 md:px-10 border-t hairline bg-[#070708] overflow-hidden">
       <div className="absolute left-0 top-0 bottom-0 w-px spine opacity-30" />
