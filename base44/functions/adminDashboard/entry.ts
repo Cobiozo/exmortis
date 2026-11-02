@@ -3,6 +3,7 @@ import { runSql, requireAdmin } from "../../shared/supabase.ts";
 import { getSetting } from "../../shared/settings.ts";
 import { mailReady } from "../../shared/smtp.ts";
 import { cleanFaktury, fakturyToken, FAKTURY_DEFAULT, DOKUMENT_OSOBA } from "../../shared/invoices.ts";
+import { freeStats } from "../../shared/freeMaterials.ts";
 
 const STATS_SQL = `SELECT
   (SELECT COUNT(*)::int FROM public.events WHERE status = 'Opublikowane' AND start_datetime > now()) AS upcoming_events,
@@ -217,6 +218,10 @@ export default async function (req) {
     }
     if (body.action === "contacts") {
       return Response.json({ contacts: await runSql(base44, CONTACTS_SQL, true) });
+    }
+    // Darmowe materiały: tylko agregaty (bez e-maili, bez IP).
+    if (body.action === "free_stats") {
+      return Response.json(await freeStats(base44));
     }
     const rows = await runSql(base44, STATS_SQL, true);
     return Response.json({ stats: rows[0] || {} });
