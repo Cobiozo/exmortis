@@ -1,8 +1,9 @@
-import React, { useState } from "react";
+import React, { useRef, useState } from "react";
 import { Link } from "react-router-dom";
 import { ArrowRight, Check } from "lucide-react";
 import { base44 } from "@/api/base44Client";
 import { track } from "@/lib/track";
+import { FUNNEL } from "@/lib/funnelEvents";
 import { useCrisis } from "@/components/crisis/CrisisContext";
 import Section from "./Section";
 import { Label, TextInput, TextArea, CheckRow } from "./PowrotFields";
@@ -28,10 +29,14 @@ export default function PowrotForm() {
 
   const setDirect = (k, v) => setForm((f) => ({ ...f, [k]: v }));
   const clearErr = (k) => setErrors((x) => (x[k] ? { ...x, [k]: undefined } : x));
+  // Pierwsza interakcja z formularzem — jedno zdarzenie na wizytę.
+  const started = useRef(false);
+  const markStart = () => { if (!started.current) { started.current = true; track(FUNNEL.powrotFormStart); } };
 
   const field = (k, type = "text") => ({
     value: form[k],
     onChange: (e) => {
+      markStart();
       setDirect(k, e.target.value);
       clearErr(k);
     },
@@ -42,6 +47,7 @@ export default function PowrotForm() {
     checked: form[k],
     error: errors[k],
     onChange: (v) => {
+      markStart();
       setDirect(k, v);
       clearErr(k);
     },

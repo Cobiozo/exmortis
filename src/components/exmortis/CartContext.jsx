@@ -1,5 +1,7 @@
 import React, { createContext, useContext, useEffect, useState, useCallback, useRef } from "react";
 import { unitPrice, priceOnRequest } from "@/lib/productPrice";
+import { track } from "@/lib/track";
+import { FUNNEL } from "@/lib/funnelEvents";
 
 const MAX_QTY = 20; // tyle przyjmuje kasa na serwerze
 
@@ -35,6 +37,7 @@ export function CartProvider({ children }) {
 
   const addItem = useCallback((product, qty = 1, gift = null) => {
     if (product.seats && product.seats.left <= 0) return; // limit miejsc wykorzystany (kasa i tak by odrzuciła)
+    track(FUNNEL.addToCart, { slug: product.slug });
     if (product.product_type === "karta" && gift) {
       const amount = Number(gift.amount);
       setItems((prev) => [...prev, {

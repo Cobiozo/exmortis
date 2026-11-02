@@ -3,6 +3,8 @@ import { ArrowRight, Check } from "lucide-react";
 import { base44 } from "@/api/base44Client";
 import NewsletterConsent from "./NewsletterConsent";
 import useSystemText from "@/content/useSystemText";
+import { track } from "@/lib/track";
+import { FUNNEL } from "@/lib/funnelEvents";
 
 const inputCls =
   "w-full bg-transparent border hairline px-5 py-4 focus:border-[#C9A24A] focus:outline-none transition-colors";
@@ -34,6 +36,7 @@ export default function FreeOrderForm({ product }) {
         phone: "",
         newsletter_consent: form.newsletterConsent,
       });
+      track(FUNNEL.freePdf, { slug: product.slug });
       setDone(form.name.trim().split(" ")[0] || "przyjacielu");
     } catch {
       setError("Nie udało się zapisać zamówienia. Spróbuj ponownie za chwilę.");

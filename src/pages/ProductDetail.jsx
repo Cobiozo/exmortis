@@ -21,6 +21,8 @@ import InBundleLink from "@/components/exmortis/shop/InBundleLink";
 import { cardAmounts } from "@/components/exmortis/CartContext";
 import JsonLd from "@/components/seo/JsonLd";
 import { productJsonLd } from "@/lib/structuredData";
+import { track } from "@/lib/track";
+import { FUNNEL } from "@/lib/funnelEvents";
 
 // Zmienione adresy produktów: stary → nowy.
 const OLD_SLUGS = { "krag-mezczyzn-rzeszow": "krag-mezczyzn" };
@@ -47,7 +49,11 @@ export default function ProductDetail() {
     setLoading(true);
     base44.functions
       .invoke("shopProducts", { slug })
-      .then((res) => setProduct(res.data.products[0] || null))
+      .then((res) => {
+        const p = res.data.products[0] || null;
+        setProduct(p);
+        if (p) track(FUNNEL.viewProduct, { slug: p.slug });
+      })
       .catch(() => setProduct(null))
       .finally(() => setLoading(false));
   }, [slug]);

@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { Link } from "react-router-dom";
 import { ArrowLeft, Share2, Check } from "lucide-react";
 import { base44 } from "@/api/base44Client";
@@ -6,6 +6,7 @@ import { sanitizeHtml } from "@/lib/sanitizeHtml";
 import useSystemText from "@/content/useSystemText";
 import ShopProductCard from "@/components/exmortis/shop/ShopProductCard";
 import { track } from "@/lib/track";
+import { FUNNEL } from "@/lib/funnelEvents";
 import { SITE_URL } from "@/config/site";
 
 const SHARE_URL = `${SITE_URL}/test?src=polecenie`;
@@ -78,6 +79,7 @@ export default function Test({ d = {} }) {
   const [products, setProducts] = useState(null);
   const [copied, setCopied] = useState(false);
   const [source, setSource] = useState("");
+  const started = useRef(false);
 
   const S_STAGE = N + 1, S_OPEN = N + 2, S_FORM = N + 3, S_RESULT = N + 4;
 
@@ -93,6 +95,7 @@ export default function Test({ d = {} }) {
   useEffect(() => { if (step > 0) window.scrollTo({ top: 0, behavior: "smooth" }); }, [step]);
 
   const answer = (value) => {
+    if (!started.current) { started.current = true; track(FUNNEL.testStart); }
     const i = step - 1;
     const fresh = answers[i] === null;
     setAnswers((a) => { const n = [...a]; n[i] = value; return n; });
@@ -117,6 +120,7 @@ export default function Test({ d = {} }) {
       });
       track("Lead", { content_name: "test" });
       setResult(res.data);
+      track(FUNNEL.testComplete, { kategoria: res.data?.dominant || "brak" });
       setStep(S_RESULT);
     } catch (e2) {
       setError(e2?.response?.status === 429 ? e2.response.data.error : "Nie udało się zapisać wyniku. Spróbuj ponownie.");
@@ -378,7 +382,9 @@ export default function Test({ d = {} }) {
               <p className="text-foreground/70 text-lg leading-relaxed">
                 Jeśli czujesz, że to Twój moment — porozmawiajmy. Trzydzieści minut, bezpłatnie, bez zobowiązań.
               </p>
-              <Link to="/powrot" className="btn-relic">UMÓW ROZMOWĘ KWALIFIKACYJNĄ</Link>
+              <Link to="/powrot" onClick={() => track(FUNNEL.testResultCta, { cel: "powrot" })} className="btn-relic">
+                UMÓW ROZMOWĘ KWALIFIKACYJNĄ
+              </Link>
             </div>
 
             <div className="text-xs text-foreground/55 text-center leading-relaxed mb-10 space-y-2 max-w-xl mx-auto">

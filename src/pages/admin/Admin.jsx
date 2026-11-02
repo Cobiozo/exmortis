@@ -13,6 +13,7 @@ const QuizStatsPanel = lazyPage(() => import("@/components/admin/QuizStatsPanel"
 const SilencePanel = lazyPage(() => import("@/components/admin/silence/SilencePanel"));
 const SilenceStatsPanel = lazyPage(() => import("@/components/admin/SilenceStatsPanel"));
 const FreeMaterialsPanel = lazyPage(() => import("@/components/admin/stats/FreeMaterialsPanel"));
+const FunnelPanel = lazyPage(() => import("@/components/admin/stats/FunnelPanel"));
 const EventsManager = lazyPage(() => import("@/components/admin/EventsManager"));
 import AdminDashboard from "@/components/admin/AdminDashboard";
 const ContactsTabs = lazyPage(() => import("@/components/admin/ContactsTabs"));
@@ -44,7 +45,7 @@ const SECTIONS = {
   cisza: ["Cisza", () => <SilencePanel />],
   skarbiec: ["Skarbiec", () => <ProductsManager />],
   zamowienia: ["Zamówienia", () => <OrdersPanel />],
-  statystyki: ["Statystyki", () => <div className="space-y-16"><FreeMaterialsPanel /><SilenceStatsPanel /><QuizStatsPanel /></div>],
+  statystyki: ["Statystyki", () => <div className="space-y-16"><FunnelPanel /><FreeMaterialsPanel /><SilenceStatsPanel /><QuizStatsPanel /></div>],
   glos: ["Głos", () => <PlaylistManager onMutate={() => {}} />],
   kontakty: ["Baza kontaktów", () => <ContactsTabs />],
   powrot: ["Zgłoszenia POWRÓT", () => <PowrotPanel />],
