@@ -8,7 +8,7 @@ const mod = (id, modul, extra = {}) => ({ id, typ: "modul", widoczny: true, dane
 export const HOME_BLOCKS = [
   { id: "home-hero", typ: "hero", widoczny: true, uklad: { ...bare }, dane: {
     wariant: "znak", etykieta: "", linia1: "EXMORTIS", linia2: "ze śmierci",
-    lead: "Wracam z siebie. Uczę wracać.", podlead: "Droga powrotu ze śmierci mentalnej, duchowej i życiowej.",
+    lead: "Wracam z siebie. Uczę wracać.", podlead: "Droga powrotu ze śmierci mentalnej, duchowej i życiowej. Nie musisz wiedzieć, dokąd wracasz — wystarczy, że wiesz, że tak dalej nie chcesz.",
     przyciski: [
       { etykieta: "Która śmierć jest Twoja?", link: "/test?src=home-hero", styl: "zloty", strzalka: true },
       { etykieta: "KIM JEST EXMORTIS?", link: "#historia", styl: "obrys" },

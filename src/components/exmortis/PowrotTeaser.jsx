@@ -7,7 +7,7 @@ import { sanitizeHtml } from "@/lib/sanitizeHtml";
 export default function PowrotTeaser() {
   const { rich } = useSiteContent();
   const quote = rich("home", "powrotTeaserQuote", "„Nowa wersja Ciebie nie powstaje z tej samej gliny, co poprzednia.<br />Trzeba ją wypalić.”");
-  const desc = rich("home", "powrotTeaserDesc", "Autorski program mentorski exmortis — dla tych, którzy wychodzą ze śmierci mentalnej, duchowej albo życiowej. Sześć miesięcy, cztery etapy, osiem sesji jeden na jeden. Prowadzę maksymalnie cztery osoby jednocześnie.");
+  const desc = rich("home", "powrotTeaserDesc", "Autorski program mentorski exmortis — dla tych, którzy wychodzą ze śmierci mentalnej, duchowej albo życiowej. 4–6 miesięcy, cztery etapy, osiem sesji jeden na jeden. Prowadzę maksymalnie cztery osoby w jednym cyklu.");
   return (
     <section className="relative py-32 px-5 md:px-10 border-t hairline bg-[#070708] overflow-hidden">
       <div className="absolute left-0 top-0 bottom-0 w-px spine opacity-30" />

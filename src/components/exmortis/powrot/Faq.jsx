@@ -27,10 +27,6 @@ const FAQ = [
     q: "Jak często rusza nowa kohorta?",
     a: "Nie prowadzę kohort. Program jest indywidualny — startujesz wtedy, kiedy Ty i ja jesteśmy gotowi.",
   },
-  {
-    q: "Czy to jest to samo, co Pure Life?",
-    a: "Nie. Pure Life to przestrzeń systematycznej pracy nad pięcioma płaszczyznami dojrzałości, prowadzona z zespołem liderów i specjalistów. POWRÓT w Exmortis to indywidualna, głęboka praca ze mną — jeden na jeden. Można korzystać z obu. Można z jednego. Można z żadnego.",
-  },
 ];
 
 export default function Faq() {

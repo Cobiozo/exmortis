@@ -2,6 +2,7 @@ import React, { useEffect, useMemo, useState } from "react";
 import { base44 } from "@/api/base44Client";
 import ShopFilters, { FORM_OPTIONS, AUDIENCE_OPTIONS, AVAIL_OPTIONS } from "@/components/exmortis/shop/ShopFilters";
 import ShopLevelSection from "@/components/exmortis/shop/ShopLevelSection";
+import ShopSoonSection from "@/components/exmortis/shop/ShopSoonSection";
 import MusicSection from "@/components/exmortis/shop/MusicSection";
 import TrustFooter from "@/components/exmortis/shop/TrustFooter";
 import WaitlistDialog from "@/components/exmortis/shop/WaitlistDialog";
@@ -105,6 +106,11 @@ export default function Shop() {
     return list.sort((a, b) => ((a.level ?? 1) - (b.level ?? 1)) || (freeRank(a) - freeRank(b)));
   }, [visible, filters]);
 
+  // Dostępne idą drabiną poziomów; zapowiedzi („wkrótce”) zbieramy niżej, w jednej sekcji.
+  const isSoon = (p) => (p.status || "dostępny") === "wkrótce";
+  const buyable = useMemo(() => filtered.filter((p) => !isSoon(p)), [filtered]);
+  const soon = useMemo(() => filtered.filter(isSoon), [filtered]);
+
   const scrollToSections = () => {
     setTimeout(
       () => document.getElementById("poziom-0")?.scrollIntoView({ behavior: "smooth" }),
@@ -162,11 +168,12 @@ export default function Shop() {
           </button>
         </div>
       ) : (
-        LEVELS.map((section) => (
+        <>
+        {LEVELS.map((section) => (
           <ShopLevelSection
             key={section.level}
             section={section}
-            products={filtered.filter((p) => (p.level ?? 1) === section.level)}
+            products={buyable.filter((p) => (p.level ?? 1) === section.level)}
             events={events.filter((e) =>
               (section.level === 2
                 ? ["Warsztat", "Retreat"]
@@ -178,7 +185,9 @@ export default function Shop() {
             onWaitlist={setWaitlistProduct}
             view={view}
           />
-        ))
+        ))}
+        <ShopSoonSection products={soon} onWaitlist={setWaitlistProduct} view={view} />
+        </>
       )}
 
       {/* ===== MUZYKA ===== */}

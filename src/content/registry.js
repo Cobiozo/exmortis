@@ -103,7 +103,7 @@ export const CONTENT_PAGES = [
         label: "Zajawka POWRÓT — opis programu",
         type: "richtext",
         default:
-          "Autorski program mentorski exmortis — dla tych, którzy wychodzą ze śmierci mentalnej, duchowej albo życiowej. Sześć miesięcy, cztery etapy, osiem sesji jeden na jeden. Prowadzę maksymalnie cztery osoby jednocześnie.",
+          "Autorski program mentorski exmortis — dla tych, którzy wychodzą ze śmierci mentalnej, duchowej albo życiowej. 4–6 miesięcy, cztery etapy, osiem sesji jeden na jeden. Prowadzę maksymalnie cztery osoby w jednym cyklu.",
       },
       {
         key: "testimonialsTitle",

@@ -8,15 +8,12 @@ const inputCls =
   "w-full bg-transparent border hairline px-5 py-4 focus:border-[#C9A24A] focus:outline-none transition-colors";
 const labelCls = "technical text-[10px] text-foreground/55 block mb-3";
 
-// Formularz zamówienia bezpłatnego materiału: imię, e-mail, telefon (opcjonalnie)
-// z osobną zgodą na kontakt oraz opcjonalna zgoda na newsletter.
-// Plik nie jest dostępny na stronie — przychodzi mailem z linkiem do pobrania.
+// Formularz zamówienia bezpłatnego materiału: imię, e-mail i opcjonalna zgoda na newsletter.
+// Telefonu nie zbieramy. Plik nie jest dostępny na stronie — przychodzi mailem z linkiem do pobrania.
 export default function FreeOrderForm({ product }) {
   const [form, setForm] = useState({
     name: "",
     email: "",
-    phone: "",
-    phoneConsent: false,
     newsletterConsent: false,
   });
   const [sending, setSending] = useState(false);
@@ -34,8 +31,7 @@ export default function FreeOrderForm({ product }) {
         slug: product.slug,
         name: form.name,
         email: form.email,
-        phone: form.phone,
-        phone_consent: form.phoneConsent,
+        phone: "",
         newsletter_consent: form.newsletterConsent,
       });
       setDone(form.name.trim().split(" ")[0] || "przyjacielu");
@@ -85,37 +81,12 @@ export default function FreeOrderForm({ product }) {
           />
         </div>
       </div>
-      <div>
-        <label className={labelCls}>TELEFON (NIEOBOWIĄZKOWO)</label>
-        <input
-          type="tel"
-          value={form.phone}
-          onChange={(e) => setForm({ ...form, phone: e.target.value })}
-          className={inputCls}
-        />
-        <p className="text-xs text-foreground/55 mt-2">
-          Jeśli chcesz, żebym mógł do Ciebie zadzwonić.
-        </p>
-        {form.phone.trim() !== "" && (
-          <label className="flex items-start gap-3 cursor-pointer mt-4">
-            <input
-              type="checkbox"
-              checked={form.phoneConsent}
-              onChange={(e) => setForm({ ...form, phoneConsent: e.target.checked })}
-              className="accent-[#C9A24A] w-5 h-5 shrink-0 mt-0.5"
-            />
-            <span className="text-xs text-foreground/55 leading-relaxed">
-              Zgadzam się na kontakt telefoniczny w sprawie moich materiałów i programu POWRÓT.
-            </span>
-          </label>
-        )}
-      </div>
       {error && <p className="text-xs blood-text">{error}</p>}
       <button type="submit" disabled={sending} className="btn-relic w-full disabled:opacity-60">
-        {sending ? "PRZYGOTOWUJĘ..." : "POBIERZ PLIK"} {!sending && <ArrowRight className="h-4 w-4" />}
+        {sending ? "WYSYŁAM..." : "WYŚLIJ PDF NA MÓJ E-MAIL"} {!sending && <ArrowRight className="h-4 w-4" />}
       </button>
       <p className="technical text-[10px] text-foreground/55">
-        Plik wyślę na Twój e-mail. Bez spamu, bez presji.
+        PDF przychodzi mailem — nie ma go do pobrania na stronie. Bez spamu, bez presji.
       </p>
     </form>
   );
