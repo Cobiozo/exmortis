@@ -41,52 +41,51 @@ function Group({ label, options, value, onToggle, allowAll = false }) {
   );
 }
 
-// Pasek filtrów Skarbca. Przyciski bez produktów są ukryte.
+const LABELS = { stage: "ETAP", form: "FORMA", audience: "DLA KOGO" };
+
+// Pasek filtrów Skarbca: zwinięty pod „Dopasuj materiały”; aktywne filtry widać zawsze (z ×).
+// Dostępność wybiera się zakładkami nad katalogiem, dlatego tu jej nie ma.
 export default function ShopFilters({ filters, setFilters, available, extra = null }) {
   const [open, setOpen] = useState(false);
   const a = available || { stages: STAGES, forms: FORM_OPTIONS, audiences: AUDIENCE_OPTIONS };
-  const hasAny = filters.stage || filters.form || filters.audience || filters.avail;
+  const active = Object.keys(LABELS).filter((k) => filters[k]);
+  const hasAny = active.length > 0;
   const toggle = (key) => (v) => setFilters((f) => ({ ...f, [key]: f[key] === v ? null : v }));
-  const clear = () => setFilters({ stage: null, form: null, audience: null, avail: null });
-
-  const panel = (
-    <div className="space-y-3 py-5">
-      {(a.avail || []).length > 1 && <Group label="DOSTĘPNOŚĆ" options={a.avail} value={filters.avail} onToggle={toggle("avail")} />}
-      <Group label="ETAP" options={a.stages} value={filters.stage} onToggle={toggle("stage")} allowAll />
-      <Group label="FORMA" options={a.forms} value={filters.form} onToggle={toggle("form")} />
-      <Group label="DLA KOGO" options={a.audiences} value={filters.audience} onToggle={toggle("audience")} />
-      {hasAny && (
-        <button
-          onClick={clear}
-          className="technical text-[9px] text-foreground/55 hover:blood-text flex items-center gap-1 pt-1 transition-colors"
-        >
-          <X className="h-3 w-3" /> WYCZYŚĆ FILTRY
-        </button>
-      )}
-    </div>
-  );
+  const clear = () => setFilters((f) => ({ ...f, stage: null, form: null, audience: null }));
 
   return (
     <div className="sticky top-20 z-30 bg-[#0A0A0B]/95 backdrop-blur-md border-b hairline">
       <div className="mx-auto max-w-[1400px] px-5 md:px-10">
-        <div className="hidden md:flex items-start justify-between gap-6"><div className="flex-1 min-w-0">{panel}</div>{extra && <div className="pt-5 shrink-0">{extra}</div>}</div>
-        <div className="md:hidden py-3 flex items-center justify-between gap-3">
+        <div className="py-3 flex flex-wrap items-center gap-3">
           <button
             onClick={() => setOpen(!open)}
-            className="technical text-[10px] px-3 py-2.5 border hairline text-foreground/60 flex items-center gap-2"
+            aria-expanded={open}
+            className={`technical text-[10px] px-3 py-2.5 border flex items-center gap-2 transition-colors ${open || hasAny ? "border-[#C9A24A]/60 gold-text" : "hairline text-foreground/60 hover:text-foreground"}`}
           >
-            <SlidersHorizontal className="h-3.5 w-3.5" /> FILTRUJ {hasAny && <span className="h-1.5 w-1.5 rounded-full bg-[#C9A24A]" aria-label="filtry aktywne" />}
+            <SlidersHorizontal className="h-3.5 w-3.5" /> DOPASUJ MATERIAŁY{hasAny ? ` (${active.length})` : ""}
           </button>
-          <div className="flex items-center gap-3">
-            {hasAny && (
-              <button onClick={clear} className="technical text-[9px] text-foreground/55 hover:blood-text transition-colors">
-                WYCZYŚĆ
-              </button>
-            )}
-            {extra}
-          </div>
+          {active.map((k) => (
+            <button key={k} onClick={() => setFilters((f) => ({ ...f, [k]: null }))}
+              className="technical text-[9px] px-2.5 py-1.5 border border-[#C9A24A] gold-text bg-[#C9A24A]/10 flex items-center gap-1.5"
+              aria-label={`Usuń filtr ${LABELS[k].toLowerCase()}: ${filters[k]}`}>
+              {LABELS[k]}: {String(filters[k]).toUpperCase()} <X className="h-3 w-3" />
+            </button>
+          ))}
+          {hasAny && (
+            <button onClick={clear} className="technical text-[9px] text-foreground/55 hover:blood-text transition-colors">
+              WYCZYŚĆ
+            </button>
+          )}
+          {extra && <div className="ml-auto">{extra}</div>}
         </div>
-        {open && <div className="md:hidden border-t hairline">{panel}</div>}
+        {open && (
+          <div className="space-y-3 pb-5 pt-1 border-t hairline">
+            <div className="pt-4" />
+            <Group label="ETAP" options={a.stages} value={filters.stage} onToggle={toggle("stage")} allowAll />
+            <Group label="FORMA" options={a.forms} value={filters.form} onToggle={toggle("form")} />
+            <Group label="DLA KOGO" options={a.audiences} value={filters.audience} onToggle={toggle("audience")} />
+          </div>
+        )}
       </div>
     </div>
   );
