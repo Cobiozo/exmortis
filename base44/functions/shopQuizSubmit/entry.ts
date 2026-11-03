@@ -15,87 +15,7 @@ const STAGES = ["Śmierć", "Próg", "Powrót", "Inny"];
 const CRISIS = "Jeśli jesteś w kryzysie albo myślisz o odebraniu sobie życia: 116 123 (bezpłatny telefon zaufania dla dorosłych), 800 70 2222 (Centrum Wsparcia, całą dobę), a w sytuacji zagrożenia życia 112.";
 const NOT_DIAGNOSIS = "Ten test nie jest diagnozą i nie zastępuje rozmowy z lekarzem, psychologiem ani psychoterapeutą. To narzędzie do zatrzymania się i przyjrzenia sobie.";
 
-// ---------- wersja 2 ----------
-// Kolejność stwierdzeń na stronie: M, D, Ż, M, D, Ż… — indeksy każdego obszaru w tablicy odpowiedzi.
-const V2 = { n: 15, max: 15, idx: { mentalna: [0, 3, 6, 9, 12], duchowa: [1, 4, 7, 10, 13], zyciowa: [2, 5, 8, 11, 14] } };
-const DIM_LABEL = { mentalna: "Mentalna", duchowa: "Duchowa", zyciowa: "Życiowa" };
-const LEVELS = [
-  { key: "brak", label: "brak wyraźnych oznak", min: 0 },
-  { key: "sygnaly", label: "pierwsze sygnały", min: 4 },
-  { key: "wyraznie", label: "wyraźnie obecna", min: 8 },
-  { key: "gleboko", label: "głęboko obecna", min: 12 },
-];
-const levelOf = (score) => [...LEVELS].reverse().find((l) => score >= l.min);
-
-const DIM_TEXT = {
-  mentalna: {
-    brak: "W tym obszarze nie widać wyraźnych oznak. Masz dziś dostęp do energii i obecności — warto wiedzieć, co je podtrzymuje.",
-    sygnaly: "Pojawiają się pierwsze sygnały: zmęczenie, które wraca, chwile działania na autopilocie. To jeszcze nie śmierć — to ostrzeżenie, które łatwo zagłuszyć kolejnym obowiązkiem.",
-    wyraznie: "Zmęczenie i obojętność stały się tłem codzienności. Funkcjonujesz, ale coraz mniej w tym Ciebie. To miejsce, w którym najczęściej pada zdanie: „muszę się bardziej postarać”.",
-    gleboko: "Odpowiedzi wskazują na głębokie wyczerpanie. Kiedy siły kończą się na tym poziomie, sama wola nie wystarczy — potrzebny jest odpoczynek, wsparcie bliskich i często rozmowa ze specjalistą.",
-  },
-  duchowa: {
-    brak: "Sens i kierunek są dziś dla Ciebie dostępne. To zasób — warto go nazwać, zanim przyjdzie czas, w którym będzie potrzebny.",
-    sygnaly: "Pojawiają się pytania o sens, które jeszcze nie bolą, ale nie dają spokoju. To często pierwszy znak, że dotychczasowe odpowiedzi robią się za ciasne.",
-    wyraznie: "Sens, który dotąd niósł, przestał wystarczać. Masz to, co „powinno” dawać spełnienie — a w środku jest cisza. To nie niewdzięczność. To sygnał, że dawne odpowiedzi się wyczerpały.",
-    gleboko: "Odpowiedzi wskazują na głęboką utratę sensu i kierunku. Pustka na tym poziomie bardzo obciąża — nie warto zostawać z nią w pojedynkę.",
-  },
-  zyciowa: {
-    brak: "Nie widać śladów straty ani końca, który wciąż Cię zatrzymuje. Jeśli coś ważnego się skończyło, wygląda na to, że znalazło już swoje miejsce.",
-    sygnaly: "Jest w Tobie coś, co się skończyło i wciąż daje o sobie znać. Wraca w pojedynczych chwilach, choć na co dzień sobie radzisz.",
-    wyraznie: "Jedno wydarzenie podzieliło życie na „przed” i „po”. Otoczenie oczekuje, że to już za Tobą, a Ty wciąż jesteś w środku. To nie opóźnienie — żałoba ma własny czas.",
-    gleboko: "Odpowiedzi wskazują, że strata wciąż zajmuje bardzo dużo miejsca i odbiera siły na codzienność. Przez to nie trzeba przechodzić w pojedynkę.",
-  },
-};
-
-const DOMINANT = {
-  Mentalna: {
-    head: (n) => `${n}, w Twoich odpowiedziach najwyraźniej widać śmierć mentalną.`,
-    body: "Śmierć mentalna nie wygląda jak upadek. Wygląda jak sprawne działanie: obowiązki zrobione, terminy dotrzymane, a w środku coraz mniej obecności. Największa pułapka tego miejsca brzmi: „muszę się bardziej postarać”. Nie musisz bardziej. Najpierw trzeba się zatrzymać i zobaczyć, co naprawdę zabiera Ci siły — i po co to wszystko robisz.",
-    questions: ["Co robisz dziś tylko dlatego, że „tak trzeba”?", "Kiedy ostatnio coś naprawdę Cię ożywiło — i co wtedy było inne?", "Co by się stało, gdyby przez tydzień nikt nie widział Twojego wysiłku?"],
-  },
-  Duchowa: {
-    head: (n) => `${n}, w Twoich odpowiedziach najwyraźniej widać śmierć duchową.`,
-    body: "Śmierć duchowa przychodzi cicho. Z zewnątrz wszystko jest na miejscu, a w środku gaśnie światło, które dawało kierunek. Pustka nie jest niewdzięcznością ani słabością. Jest znakiem, że dawne odpowiedzi stały się za ciasne. Sensu nie znajduje się gotowego. Sens się buduje — od pytań, których dotąd nie było wolno zadać.",
-    questions: ["Co straciło dla Ciebie znaczenie w ostatnich latach?", "Za czym tęsknisz, kiedy wokół robi się cicho?", "Gdyby nikt nie oceniał Twojego wyboru — jaki byłby następny krok?"],
-  },
-  Życiowa: {
-    head: (n) => `${n}, w Twoich odpowiedziach najwyraźniej widać śmierć życiową.`,
-    body: "Śmierć życiowa ma datę. Strata, rozstanie, koniec pracy, zdrowia albo roli, która była całym życiem. Świat ma krótką pamięć i szybko oczekuje powrotu do formy. Nie chodzi jednak o powrót do siebie sprzed. Chodzi o zbudowanie nowego domu w miejscu, w którym ten pierwszy się spalił.",
-    questions: ["Co skończyło się razem z tym wydarzeniem — poza tym, co widać?", "Czego nie pozwalasz sobie jeszcze opłakać?", "Co z tamtego życia chcesz zabrać dalej, a co zostawić?"],
-  },
-  Mieszana: {
-    head: (n) => `${n}, niesiesz więcej niż jedną śmierć.`,
-    body: "Tak jest u większości ludzi, którzy do mnie przychodzą. Jedna śmierć uruchamia drugą, druga maskuje trzecią: strata odbiera sens, brak sensu wyczerpuje, a wyczerpanie nie pozwala przeżyć straty. Dlatego warto zacząć nie od jednego fragmentu, ale od mapy całej drogi — i od pytania, która śmierć była pierwsza.",
-    questions: ["Która z tych śmierci była pierwsza?", "Która z nich zabiera Ci dziś najwięcej sił?", "Gdyby można było zająć się dziś tylko jedną — która by to była?"],
-  },
-  Żadna: {
-    head: (n) => `${n}, żadna z trzech śmierci nie dominuje.`,
-    body: "Twoje odpowiedzi są niskie we wszystkich trzech obszarach. To może znaczyć, że jesteś dziś w dobrym miejscu — i warto wiedzieć, co Cię w nim trzyma. Może też znaczyć, że trudne rzeczy są dobrze schowane. Odpowiedz sobie uczciwie, co jest bliższe prawdy, i wróć do testu za kilka tygodni.",
-    questions: ["Co dziś daje Ci siłę, sens i oparcie?", "O co dbasz, żeby tak zostało?", "Czy ktoś w Twoim otoczeniu przechodzi teraz swoją śmierć?"],
-  },
-};
-
-function scoreV2(answers) {
-  const sum = (idx) => idx.reduce((acc, i) => acc + Number(answers[i]), 0);
-  const scores = { mentalna: sum(V2.idx.mentalna), duchowa: sum(V2.idx.duchowa), zyciowa: sum(V2.idx.zyciowa) };
-  const ranked = Object.entries(scores).sort((a, b) => b[1] - a[1]);
-  let dominant = DIM_LABEL[ranked[0][0]];
-  if (ranked[0][1] < LEVELS[1].min) dominant = "Żadna";
-  else if (ranked[1][1] >= LEVELS[1].min && ranked[0][1] - ranked[1][1] <= 2) dominant = "Mieszana";
-  const dims = Object.keys(scores).map((k) => {
-    const l = levelOf(scores[k]);
-    return { key: k, label: DIM_LABEL[k], score: scores[k], max: V2.max, level: l.key, level_label: l.label, text: DIM_TEXT[k][l.key] };
-  });
-  return { scores, dominant, dims, deep: dims.some((d) => d.level === "gleboko") };
-}
-
-const STAGE_TEXT = {
-  "Śmierć": "Jesteś na początku drogi. Tu nie trzeba jeszcze niczego zmieniać — trzeba zobaczyć i nazwać, co się skończyło.",
-  "Próg": "Wiesz już, co umarło. Teraz liczy się jedna rzecz: decyzja, nie deklaracja.",
-  "Powrót": "Budujesz coś nowego. To najdłuższy etap — i ten, w którym najłatwiej wrócić do starego.",
-  "Inny": "Najtrudniejsze masz za sobą. Teraz zadanie na długo: nie wrócić do tego, co Cię zabijało.",
-};
+import { V2, DIM_LABEL, LEVELS, levelOf, DIM_TEXT, DOMINANT, scoreV2, STAGE_TEXT } from "../../shared/quizScore.ts";
 
 // ---------- wersja 1 (12 odpowiedzi) — bez zmian ----------
 const IDX_MENTAL = [0, 3, 6, 9];
@@ -121,8 +41,11 @@ function resultTextV1(dominant, isF) {
   return DOMINANT.Mieszana.body;
 }
 
-function recommendProducts(products, stage, dominant) {
-  const available = products.filter((p) => p.status === "dostępny");
+// Bardzo wysoki wynik (deep): bez programu POWRÓT w rekomendacjach — pierwszeństwo ma rozmowa ze specjalistą
+// (decyzja właściciela 3.11.2026). Miejsce wypełnia inny dostępny materiał.
+const NOT_WHEN_DEEP = new Set(["powrot-mentoring"]);
+function recommendProducts(products, stage, dominant, deep = false) {
+  const available = products.filter((p) => p.status === "dostępny" && !(deep && NOT_WHEN_DEEP.has(p.slug)));
   const bySlug = new Map(available.map((p) => [p.slug, p]));
   const picks = (RECIPES[stage] || []).filter((slug) => bySlug.has(slug));
   if (dominant === "Mentalna" && bySlug.has("pusty-szczyt")) {
@@ -157,7 +80,7 @@ function resultEmailHtml({ name, head, body, dims, questions, stage, sText, reco
     ${GOLD(`TWÓJ ETAP: ${stage.toUpperCase()}`)}
     ${P(sText)}
     ${links ? GOLD("OD CZEGO ZACZĄĆ") + links : ""}
-    ${P(`Jeśli czujesz, że to Twój moment — porozmawiajmy. Trzydzieści minut, bezpłatnie, bez zobowiązań: <a href="${SITE_URL}/powrot" style="color:#C9A24A;">umów rozmowę kwalifikacyjną</a>.`, "margin-top:24px;")}
+    ${deep ? "" : P(`Jeśli czujesz, że to Twój moment — porozmawiajmy. Trzydzieści minut, bezpłatnie, bez zobowiązań: <a href="${SITE_URL}/powrot" style="color:#C9A24A;">umów rozmowę kwalifikacyjną</a>.`, "margin-top:24px;")}
     <p style="color:#5C5C5E;font-size:12px;letter-spacing:2px;margin-top:32px;">Dawid — exmortis. Wracam z siebie. Uczę wracać.</p>
     <p style="color:#6A6A6C;font-size:11px;line-height:1.6;">${NOT_DIAGNOSIS} ${CRISIS}</p>
   </div>`;
@@ -189,11 +112,8 @@ async function ensureColumns(base44) {
   migrated = true;
 }
 
-export default async function (req) {
+async function legacyHandler(req, base44, body) {
   try {
-    const base44 = createClientFromRequest(req);
-    await loadAppUrl(base44);
-    const body = await req.json().catch(() => ({}));
 
     const email = emailField(body);
     const firstName = textField(body, "first_name", { max: 200, required: true });
@@ -250,7 +170,7 @@ export default async function (req) {
     }
 
     const productRows = await runSql(base44, `SELECT slug, name, status FROM public.products WHERE active = true`, true).catch(() => []);
-    const recommended = recommendProducts(productRows || [], stage, dominant);
+    const recommended = recommendProducts(productRows || [], stage, dominant, !!r2?.deep);
 
     const d = DOMINANT[dominant] || DOMINANT.Mieszana;
     const out = v2
@@ -281,3 +201,139 @@ export default async function (req) {
     return Response.json({ error: error.message }, { status: 500 });
   }
 }
+
+
+
+// ---------- przepływ od 3.11.2026: wynik bez danych kontaktowych, wysyłka opcjonalna ----------
+// action "wynik":  odpowiedzi + etap → wynik. Zapis anonimowy: same punkty, poziomy, etap i źródło
+//                  (bez imienia, e-maila, formy zwracania się i osobistego zdania). Zwraca result_key.
+//                  Ponowne „wynik” z tym samym result_key (zmiana odpowiedzi) nadpisuje ten sam wiersz.
+// action "wyslij": result_key + e-mail + zgoda → mail z wynikiem (neutralny, bez imienia), opcjonalnie
+//                  zapis na Listy (osobna zgoda) i osobiste zdanie (tylko przy zaznaczonej zgodzie).
+let anonReady = false;
+async function ensureAnon(base44) {
+  if (anonReady) return;
+  await ensureColumns(base44).catch((e) => console.error("quiz migrate:", e?.message));
+  await runSql(base44, `DO $q$ BEGIN
+    ALTER TABLE public.quiz_result ADD COLUMN IF NOT EXISTS result_key text;
+    ALTER TABLE public.quiz_result ADD COLUMN IF NOT EXISTS anon boolean NOT NULL DEFAULT false;
+    ALTER TABLE public.quiz_result ALTER COLUMN email DROP NOT NULL;
+    ALTER TABLE public.quiz_result ALTER COLUMN first_name DROP NOT NULL;
+    ALTER TABLE public.quiz_result ALTER COLUMN form_of_address DROP NOT NULL;
+    CREATE UNIQUE INDEX IF NOT EXISTS quiz_result_key_uq ON public.quiz_result (result_key) WHERE result_key IS NOT NULL;
+  END $q$`);
+  anonReady = true;
+}
+
+const KEY_RE = /^[a-f0-9]{32}$/;
+const newKey = () => crypto.randomUUID().replace(/-/g, "");
+
+function buildResult(scores, stage, products) {
+  // Te same reguły co scoreV2 (quizScore.ts), liczone z zapisanych sum — wynik w mailu = wynik na stronie.
+  const ranked = Object.entries(scores).sort((a, b) => b[1] - a[1]);
+  let dominant = DIM_LABEL[ranked[0][0]];
+  if (ranked[0][1] < LEVELS[1].min) dominant = "Żadna";
+  else if (ranked[1][1] >= LEVELS[1].min && ranked[0][1] - ranked[1][1] <= 2) dominant = "Mieszana";
+  const dims = Object.keys(scores).map((k) => {
+    const l = levelOf(scores[k]);
+    return { key: k, label: DIM_LABEL[k], score: scores[k], max: V2.max, level: l.key, level_label: l.label, text: DIM_TEXT[k][l.key] };
+  });
+  const deep = dims.some((d) => d.level === "gleboko");
+  const d = DOMINANT[dominant] || DOMINANT.Mieszana;
+  const recommended = recommendProducts(products || [], stage, dominant, deep);
+  return {
+    version: 2, dominant, scores, dims, deep, recommended,
+    headline: d.head(""), body: d.body, questions: d.questions,
+    stage, stage_text: STAGE_TEXT[stage], not_diagnosis: NOT_DIAGNOSIS, crisis: CRISIS,
+  };
+}
+
+async function handleWynik(req, base44, body) {
+  const stage = body.stage;
+  if (!STAGES.includes(stage)) return Response.json({ error: "Wybierz etap drogi" }, { status: 400 });
+  const answers = body.answers;
+  if (!Array.isArray(answers) || answers.length !== V2.n || answers.some((a) => ![0, 1, 2, 3].includes(Number(a)))) {
+    return Response.json({ error: "Niepoprawne odpowiedzi testu" }, { status: 400 });
+  }
+  if (!(await ipAllowed(base44, clientIp(req), "test_wynik", 40, 3600000))) return Response.json({ error: TOO_MANY }, { status: 429 });
+  const r2 = scoreV2(answers);
+  const source = textField(body, "source", { max: 50, required: false });
+  const productRows = await runSql(base44, `SELECT slug, name, status FROM public.products WHERE active = true`, true).catch(() => []);
+  const out = buildResult(r2.scores, stage, productRows);
+
+  // Zapis anonimowy nie blokuje wyniku — przy błędzie bazy wynik i tak się pokaże.
+  let key = typeof body.result_key === "string" && KEY_RE.test(body.result_key) ? body.result_key : null;
+  try {
+    await ensureAnon(base44);
+    const levels = escStr(JSON.stringify(Object.fromEntries(out.dims.map((d) => [d.key, d.level])))) + "::jsonb";
+    const sc = r2.scores;
+    if (key) {
+      const ex = await runSql(base44, `SELECT 1 FROM public.quiz_result WHERE result_key = ${escStr(key)} AND email IS NULL`, true).catch(() => []);
+      if (ex?.length) {
+        await runSql(base44, `UPDATE public.quiz_result SET score_mental = ${sc.mentalna}, score_spiritual = ${sc.duchowa}, score_life = ${sc.zyciowa},
+          dominant = ${escStr(out.dominant)}, stage = ${escStr(stage)}, levels = ${levels} WHERE result_key = ${escStr(key)} AND email IS NULL`);
+      } else key = null;
+    }
+    if (!key) {
+      key = newKey();
+      await runSql(base44, `INSERT INTO public.quiz_result (result_key, anon, score_mental, score_spiritual, score_life, dominant, stage, newsletter_consent, source, test_version, score_max, levels)
+        VALUES (${escStr(key)}, true, ${sc.mentalna}, ${sc.duchowa}, ${sc.zyciowa}, ${escStr(out.dominant)}, ${escStr(stage)}, false, ${source === null ? "NULL" : escStr(source)}, 2, ${V2.max}, ${levels})`);
+    }
+  } catch (e) {
+    console.error("quiz anon:", e?.message);
+  }
+  return Response.json({ ...out, result_key: key });
+}
+
+async function handleWyslij(req, base44, body) {
+  const key = typeof body.result_key === "string" && KEY_RE.test(body.result_key) ? body.result_key : null;
+  if (!key) return Response.json({ error: "Najpierw zobacz wynik testu" }, { status: 400 });
+  if (body.consent !== true) return Response.json({ error: "Zaznacz zgodę na wysłanie wyniku" }, { status: 400 });
+  const email = emailField(body);
+  // Wynik idzie e-mailem na podany adres — limit chroni przed wysyłką na cudze adresy seriami.
+  if (!(await ipAllowed(base44, clientIp(req), "test", 10, 3600000))) return Response.json({ error: TOO_MANY }, { status: 429 });
+  await ensureAnon(base44);
+  const rows = await runSql(base44, `SELECT score_mental, score_spiritual, score_life, stage, email FROM public.quiz_result WHERE result_key = ${escStr(key)}`, true);
+  const row = rows?.[0];
+  if (!row) return Response.json({ error: "Nie znalazłem tego wyniku — zrób test jeszcze raz" }, { status: 404 });
+  if (row.email && String(row.email).toLowerCase() !== email.toLowerCase()) {
+    return Response.json({ error: "Ten wynik został już wysłany na inny adres" }, { status: 409 });
+  }
+  const scores = { mentalna: Number(row.score_mental), duchowa: Number(row.score_spiritual), zyciowa: Number(row.score_life) };
+  const productRows = await runSql(base44, `SELECT slug, name, status FROM public.products WHERE active = true`, true).catch(() => []);
+  const out = buildResult(scores, row.stage, productRows);
+  // Osobiste zdanie: zapisywane wyłącznie przy zaznaczonej zgodzie (domyślnie nie).
+  const open = body.share_open === true ? textField(body, "open_answer", { max: 2000, required: false }) : null;
+  const news = body.newsletter_consent === true;
+  await runSql(base44, `UPDATE public.quiz_result SET email = ${escStr(email)}, newsletter_consent = ${news}${open ? `, open_answer = ${escStr(open)}` : ""} WHERE result_key = ${escStr(key)}`);
+  if (news) {
+    await (await import("../../shared/newsletter.ts")).addSubscriber(base44, { email, name: "" }).catch(() => {});
+  }
+  const d = DOMINANT[out.dominant] || DOMINANT.Mieszana;
+  const state = await sendMail(base44, {
+    kind: "test_wynik",
+    to: email,
+    subject: `Twój wynik testu: ${out.dominant === "Żadna" ? "żadna śmierć nie dominuje" : out.dominant === "Mieszana" ? "więcej niż jedna śmierć" : `śmierć ${out.dominant.toLowerCase()}`} · etap ${row.stage}`,
+    html: resultEmailHtml({ name: "", head: out.headline, body: out.body, dims: out.dims, questions: d.questions, stage: row.stage, sText: STAGE_TEXT[row.stage], recommended: out.recommended, deep: out.deep }),
+  });
+  return Response.json({ ok: true, delivery: state === "wyslany" ? "wyslany" : "kolejka" });
+}
+
+const handler = async function (req) {
+  try {
+    const base44 = createClientFromRequest(req);
+    await loadAppUrl(base44);
+    const body = await req.json().catch(() => ({}));
+    // Strona sprawdza, czy funkcja zna nowy przepływ (wynik bez e-maila) — do czasu wdrożenia działa stary.
+    if (body.action === "ping") return Response.json({ ok: true, flow: 3 });
+    if (body.action === "wynik") return await handleWynik(req, base44, body);
+    if (body.action === "wyslij") return await handleWyslij(req, base44, body);
+    return await legacyHandler(req, base44, body);
+  } catch (error) {
+    const msg = String(error?.message || error);
+    return Response.json({ error: msg }, { status: error?.isValidation ? 400 : 500 });
+  }
+};
+
+
+Deno.serve(handler);
