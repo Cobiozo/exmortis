@@ -195,16 +195,33 @@ function wrapIntegrations(integrations) {
   return new Proxy(integrations || {}, { get: (t, n) => (n === "Core" ? Core : t[n]) });
 }
 
+// Test publiczny ma stały adres wdrożonej funkcji. Na zewnętrznym hostingu
+// względne /api i brak zmiennych Base44 kierowały żądanie do serwera strony.
+async function invokePublicQuiz(payload) {
+  const appId = "6aa08bc6318b0f886cc3b9a3";
+  const res = await fetch(`https://exmortis-return-path.base44.app/api/apps/${appId}/functions/shopQuizSubmit`, {
+    method: "POST", credentials: "omit",
+    headers: { "Content-Type": "application/json", "X-App-Id": appId },
+    body: JSON.stringify(payload || {}),
+  });
+  const data = await res.json().catch(() => null);
+  if (!res.ok || !data || data.error) {
+    const error = new Error(data?.error || "Nie udało się połączyć z testem. Spróbuj ponownie.");
+    error.response = { status: res.status, data: data || { error: error.message } };
+    throw error;
+  }
+  return { data };
+}
+
 export function createExmClient(raw) {
   return new Proxy(raw, {
     get(target, prop) {
       if (prop === "entities") return wrapEntities(target.entities);
       if (prop === "auth" && AUTH_BACKEND === "supabase") return supaAuth;
-      if (prop === "functions" && FN_BACKEND === "supabase") return {
-        // Nowy test jest wdrożony w Base44; używa tej samej bazy wyników i wysyłki.
+      if (prop === "functions") return {
         invoke: (name, payload) => name === "shopQuizSubmit"
-          ? target.functions.invoke(name, payload)
-          : supaInvoke(name, payload),
+          ? invokePublicQuiz(payload)
+          : FN_BACKEND === "supabase" ? supaInvoke(name, payload) : target.functions.invoke(name, payload),
       };
       // Pliki (wgrywanie, podpisane linki) → Supabase Storage. Pozostałe integracje bez zmian.
       // Pliki zawsze przez magazyn hostingu (src/api/exmStorage.js) — niezależnie od tego,
