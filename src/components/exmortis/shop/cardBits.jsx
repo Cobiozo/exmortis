@@ -81,7 +81,7 @@ export function PriceBlock({ p }) {
     return <span className="technical text-[10px] text-foreground/55">WKRÓTCE</span>;
   }
   if (p.is_free) {
-    return <span>0 zł</span>;
+    return <span>Bezpłatnie</span>;
   }
   // Karta podarunkowa z kwotami do wyboru: „97 · 197 · 497 zł”.
   if (p.product_type === "karta" && Array.isArray(p.price_options) && p.price_options.length > 1) {
@@ -119,7 +119,8 @@ export function productHref(p) {
 // Miejsca: „ZOSTAŁO X Z N MIEJSC” (przy 10 i mniej wyróżnione), „BRAK MIEJSC” przy zerze.
 export function SeatsLine({ p, className = "" }) {
   const s = p?.seats;
-  if (!s || !s.capacity) return null;
+  // Zapowiedź: zapisy jeszcze nie ruszyły — liczba miejsc nie mówi nic o realnej dostępności.
+  if (!s || !s.capacity || p.status === "wkrótce") return null;
   if (s.left <= 0) {
     return <span className={`technical text-[10px] blood-text ${className}`}>BRAK MIEJSC</span>;
   }
@@ -154,7 +155,7 @@ export function ProductButton({ p, onWaitlist }) {
         onClick={() => onWaitlist && onWaitlist(p)}
         className={`${base} border border-[#5C1A1B] text-[#E0B9B9] hover:bg-[#5C1A1B]/25`}
       >
-        Zapisz się na listę oczekujących
+        Powiadom mnie o premierze
       </button>
     );
   }

@@ -161,7 +161,7 @@ export default function ProductDetail() {
               </p>
             )}
 
-            {product.seats && <p className="mb-6"><SeatsLine p={product} /></p>}
+            {product.seats && !soon && <p className="mb-6"><SeatsLine p={product} /></p>}
 
             <InBundleLink product={product} />
 
@@ -223,7 +223,7 @@ export default function ProductDetail() {
             {soon ? (
               <div className="mt-auto space-y-3">
                 <button onClick={() => setWaitlist(true)} className="btn-relic w-full">
-                  ZAPISZ SIĘ NA LISTĘ OCZEKUJĄCYCH <ArrowRight className="h-4 w-4" />
+                  POWIADOM MNIE O PREMIERZE <ArrowRight className="h-4 w-4" />
                 </button>
                 <p className="text-sm text-foreground/55">Ten materiał jeszcze powstaje. Napiszę, kiedy będzie gotowy.</p>
               </div>

@@ -13,10 +13,10 @@ export default function ShopSoonSection({ products, onWaitlist, view = "karty" }
     <section id="poziom-wkrotce" className="py-14 md:py-20 px-5 md:px-10 border-t hairline bg-[#070708]">
       <div className="mx-auto max-w-[1400px]">
         <div className="max-w-2xl mb-8 md:mb-10">
-          <p className="technical text-[11px] gold-text mb-4">ZAPOWIEDZI</p>
-          <h2 className="shop-heading text-3xl md:text-4xl text-[#F5EFE1] mb-3">WKRÓTCE — ZAPOWIEDZI</h2>
+          <p className="technical text-[11px] gold-text mb-4">W PRZYGOTOWANIU</p>
+          <h2 className="shop-heading text-3xl md:text-4xl text-[#F5EFE1] mb-3">Materiały w przygotowaniu</h2>
           <p className="text-foreground/70">
-            Te materiały jeszcze powstają. Zapisz się na listę oczekujących — napiszę, kiedy będą gotowe.
+            Tych materiałów nie można jeszcze kupić. Zostaw adres — napiszę, kiedy będą gotowe.
           </p>
         </div>
 
