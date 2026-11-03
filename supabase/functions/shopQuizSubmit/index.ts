@@ -121,8 +121,11 @@ function resultTextV1(dominant, isF) {
   return DOMINANT.Mieszana.body;
 }
 
-function recommendProducts(products, stage, dominant) {
-  const available = products.filter((p) => p.status === "dostępny");
+// Bardzo wysoki wynik (deep): bez programu POWRÓT w rekomendacjach — pierwszeństwo ma rozmowa ze specjalistą
+// (decyzja właściciela 3.11.2026). Miejsce wypełnia inny dostępny materiał.
+const NOT_WHEN_DEEP = new Set(["powrot-mentoring"]);
+function recommendProducts(products, stage, dominant, deep = false) {
+  const available = products.filter((p) => p.status === "dostępny" && !(deep && NOT_WHEN_DEEP.has(p.slug)));
   const bySlug = new Map(available.map((p) => [p.slug, p]));
   const picks = (RECIPES[stage] || []).filter((slug) => bySlug.has(slug));
   if (dominant === "Mentalna" && bySlug.has("pusty-szczyt")) {
@@ -157,7 +160,7 @@ function resultEmailHtml({ name, head, body, dims, questions, stage, sText, reco
     ${GOLD(`TWÓJ ETAP: ${stage.toUpperCase()}`)}
     ${P(sText)}
     ${links ? GOLD("OD CZEGO ZACZĄĆ") + links : ""}
-    ${P(`Jeśli czujesz, że to Twój moment — porozmawiajmy. Trzydzieści minut, bezpłatnie, bez zobowiązań: <a href="${SITE_URL}/powrot" style="color:#C9A24A;">umów rozmowę kwalifikacyjną</a>.`, "margin-top:24px;")}
+    ${deep ? "" : P(`Jeśli czujesz, że to Twój moment — porozmawiajmy. Trzydzieści minut, bezpłatnie, bez zobowiązań: <a href="${SITE_URL}/powrot" style="color:#C9A24A;">umów rozmowę kwalifikacyjną</a>.`, "margin-top:24px;")}
     <p style="color:#5C5C5E;font-size:12px;letter-spacing:2px;margin-top:32px;">Dawid — exmortis. Wracam z siebie. Uczę wracać.</p>
     <p style="color:#6A6A6C;font-size:11px;line-height:1.6;">${NOT_DIAGNOSIS} ${CRISIS}</p>
   </div>`;
@@ -250,7 +253,7 @@ const handler = async function (req) {
     }
 
     const productRows = await runSql(base44, `SELECT slug, name, status FROM public.products WHERE active = true`, true).catch(() => []);
-    const recommended = recommendProducts(productRows || [], stage, dominant);
+    const recommended = recommendProducts(productRows || [], stage, dominant, !!r2?.deep);
 
     const d = DOMINANT[dominant] || DOMINANT.Mieszana;
     const out = v2

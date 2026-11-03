@@ -146,6 +146,8 @@ export default function Test({ d = {} }) {
   const matched =
     result && products
       ? (result.recommended || []).map((r) => products.find((p) => p.slug === r.slug)).filter(Boolean)
+          // Bardzo wysoki wynik: bez programu POWRÓT (pierwszeństwo ma rozmowa ze specjalistą).
+          .filter((p) => !(result.deep && p.slug === "powrot-mentoring"))
       : [];
 
   return (
@@ -389,14 +391,16 @@ export default function Test({ d = {} }) {
               </div>
             )}
 
-            <div className="border border-[#5C1A1B]/50 bg-[#0D0D0E] p-8 md:p-12 text-center space-y-6 mb-10">
-              <p className="text-foreground/70 text-lg leading-relaxed">
-                Jeśli czujesz, że to Twój moment — porozmawiajmy. Trzydzieści minut, bezpłatnie, bez zobowiązań.
-              </p>
-              <Link to="/powrot" onClick={() => track(FUNNEL.testResultCta, { cel: "powrot" })} className="btn-relic">
-                UMÓW ROZMOWĘ KWALIFIKACYJNĄ
-              </Link>
-            </div>
+            {!result.deep && (
+              <div className="border border-[#5C1A1B]/50 bg-[#0D0D0E] p-8 md:p-12 text-center space-y-6 mb-10">
+                <p className="text-foreground/70 text-lg leading-relaxed">
+                  Jeśli czujesz, że to Twój moment — porozmawiajmy. Trzydzieści minut, bezpłatnie, bez zobowiązań.
+                </p>
+                <Link to="/powrot" onClick={() => track(FUNNEL.testResultCta, { cel: "powrot" })} className="btn-relic">
+                  UMÓW ROZMOWĘ KWALIFIKACYJNĄ
+                </Link>
+              </div>
+            )}
 
             <div className="text-xs text-foreground/55 text-center leading-relaxed mb-10 space-y-2 max-w-xl mx-auto">
               <p>{NOT_DIAGNOSIS}</p>
