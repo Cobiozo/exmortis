@@ -2,6 +2,7 @@ import React, { useState } from "react";
 import SubscribersPanel from "@/components/admin/newsletter/SubscribersPanel";
 import GroupsPanel from "@/components/admin/newsletter/GroupsPanel";
 import CampaignsPanel from "@/components/admin/newsletter/CampaignsPanel";
+import SeriesPanel from "@/components/admin/newsletter/SeriesPanel";
 
 const subBtn = (active) =>
   `px-5 py-2 technical text-[10px] border transition-colors ${
@@ -20,6 +21,9 @@ export default function NewsletterManager() {
         <button onClick={() => setSub("grupy")} className={subBtn(sub === "grupy")}>
           GRUPY
         </button>
+        <button onClick={() => setSub("seria")} className={subBtn(sub === "seria")}>
+          SERIA STARTOWA
+        </button>
         <button onClick={() => setSub("kampanie")} className={subBtn(sub === "kampanie")}>
           KAMPANIE I WYSYŁKI
         </button>
@@ -28,6 +32,8 @@ export default function NewsletterManager() {
         <SubscribersPanel />
       ) : sub === "grupy" ? (
         <GroupsPanel />
+      ) : sub === "seria" ? (
+        <SeriesPanel />
       ) : (
         <CampaignsPanel />
       )}

@@ -7,7 +7,7 @@ import useMailStatus, { MAIL_REQUIRED } from "@/lib/useMailStatus";
 const inputCls =
   "w-full bg-transparent border hairline px-4 py-2.5 focus:border-[#C9A24A] focus:outline-none transition-colors text-sm";
 
-const EMPTY = { id: null, subject: "", content: "", group_id: "", preheader: "", buttons: [{ label: "", url: "" }] };
+const EMPTY = { id: null, subject: "", content: "", group_id: "", preheader: "", series_name: "", buttons: [{ label: "", url: "" }] };
 // „exmortis.pl/test” → „https://exmortis.pl/test” (to samo robi serwer).
 const fixUrl = (u) => {
   const v = String(u || "").trim();
@@ -19,7 +19,7 @@ const fixUrl = (u) => {
 const fields = (e) => {
   const buttons = (e.buttons || []).filter((b) => b.label.trim() || b.url.trim()).map((b) => ({ label: b.label.trim(), url: fixUrl(b.url) }));
   // cta_label / cta_url — zgodność z wcześniejszą wersją funkcji na serwerze (jeden przycisk).
-  return { subject: e.subject, content: e.content, preheader: e.preheader, buttons,
+  return { subject: e.subject, content: e.content, preheader: e.preheader, buttons, series_name: e.series_name || "",
     cta_label: buttons[0]?.label || "", cta_url: buttons[0]?.url || "" };
 };
 // Prawdziwy komunikat z serwera (np. „Przycisk … nie ma linku”), a nie ogólny tekst.
@@ -34,10 +34,10 @@ const toLocalInput = (iso) => {
   const p = (n) => String(n).padStart(2, "0");
   return `${d.getFullYear()}-${p(d.getMonth() + 1)}-${p(d.getDate())}T${p(d.getHours())}:${p(d.getMinutes())}`;
 };
-// Domyślnie: najbliższy poniedziałek, 7:00 (Listy powrotu wychodzą w poniedziałki rano).
+// Domyślnie: najbliższy poniedziałek, 8:00 (Listy powrotu wychodzą w poniedziałki rano).
 const nextMonday7 = () => {
   const d = new Date();
-  d.setHours(7, 0, 0, 0);
+  d.setHours(8, 0, 0, 0);
   const add = (8 - d.getDay()) % 7 || 7;
   d.setDate(d.getDate() + add);
   return toLocalInput(d.toISOString());
@@ -90,6 +90,7 @@ export default function CampaignsPanel() {
             ? camp.buttons.map((b) => ({ label: b.label || "", url: b.url || "" }))
             : [{ label: camp.cta_label || "", url: camp.cta_url || "" }],
           status: camp.status || "draft",
+          series_name: camp.series_name || "",
           scheduled_at: camp.scheduled_at || null,
           when: camp.scheduled_at ? toLocalInput(camp.scheduled_at) : nextMonday7(),
         });
@@ -274,6 +275,16 @@ export default function CampaignsPanel() {
         <p className="text-[11px] text-foreground/40 mb-4">Uzupełnia temat — nie powtarzaj go. Puste pole = pierwsze zdanie listu.</p>
 
         <div className="mb-4">
+          <label htmlFor="camp-series" className="technical text-[10px] text-foreground/50 block mb-2">SERIA BIEŻĄCYCH LISTÓW (OPCJONALNIE, NP. „LISTOPAD 2026”)</label>
+          <input id="camp-series" list="camp-series-list" value={editor.series_name || ""} onChange={(e) => setEditor({ ...editor, series_name: e.target.value })}
+            className={inputCls} maxLength={80} placeholder="np. Listopad 2026" />
+          <datalist id="camp-series-list">
+            {[...new Set(campaigns.map((c) => c.series_name).filter(Boolean))].map((n) => <option key={n} value={n} />)}
+          </datalist>
+          <p className="text-[11px] text-foreground/40 mt-1">Tylko do porządku na liście. Bieżące listy dostają osoby, które ukończyły serię startową.</p>
+        </div>
+
+        <div className="mb-4">
           <label className="technical text-[10px] text-foreground/50 block mb-2">GRUPA ODBIORCÓW</label>
           <select
             value={editor.group_id}
@@ -421,8 +432,15 @@ export default function CampaignsPanel() {
         </p>
       ) : (
         <div className="border hairline divide-y divide-[#3D3D3F]/40">
-          {campaigns.map((c) => (
-            <div key={c.id} className="flex items-center gap-3 p-3 hover:bg-[#0F0F10] transition-colors">
+          {[...campaigns]
+            .sort((a, b) => String(a.series_name || "~").localeCompare(String(b.series_name || "~"), "pl")
+              || new Date(b.scheduled_at || b.sent_date || b.created_date) - new Date(a.scheduled_at || a.sent_date || a.created_date))
+            .map((c, i, arr) => (
+            <React.Fragment key={c.id}>
+            {(i === 0 || (arr[i - 1].series_name || "") !== (c.series_name || "")) && (
+              <p className="technical text-[10px] gold-text px-3 pt-4 pb-2 bg-[#0A0A0B]">{c.series_name ? `SERIA: ${c.series_name.toUpperCase()}` : "POZOSTAŁE"}</p>
+            )}
+            <div className="flex items-center gap-3 p-3 hover:bg-[#0F0F10] transition-colors">
               <div className="flex-1 min-w-0">
                 <p className="text-sm truncate">{c.subject}</p>
                 <p className="text-xs text-foreground/40 truncate">
