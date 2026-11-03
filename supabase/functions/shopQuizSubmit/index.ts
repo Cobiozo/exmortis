@@ -229,8 +229,7 @@ const KEY_RE = /^[a-f0-9]{32}$/;
 const newKey = () => crypto.randomUUID().replace(/-/g, "");
 
 function buildResult(scores, stage, products) {
-  const answersLike = null; // wynik liczony z sum (te same reguły co scoreV2)
-  void answersLike;
+  // Te same reguły co scoreV2 (quizScore.ts), liczone z zapisanych sum — wynik w mailu = wynik na stronie.
   const ranked = Object.entries(scores).sort((a, b) => b[1] - a[1]);
   let dominant = DIM_LABEL[ranked[0][0]];
   if (ranked[0][1] < LEVELS[1].min) dominant = "Żadna";
