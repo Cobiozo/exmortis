@@ -91,6 +91,14 @@ jobs:
     steps:
       - name: Checkout same pinned source commit
         uses: actions/checkout@v4
+      # The checkout contains the previously committed dist. Extracting the new
+      # artifact on top of it retains obsolete hashed chunks indefinitely.
+      # Remove only the release directory in this disposable CI workspace.
+      - name: Clear previous compiled release before extraction
+        shell: bash
+        run: |
+          set -euo pipefail
+          rm -rf -- dist
       - name: Retrieve compiled release
         uses: actions/download-artifact@v4
         with:
