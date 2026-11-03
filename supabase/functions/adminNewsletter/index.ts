@@ -45,7 +45,7 @@ async function sendBatch(base44, campaign, appUrl) {
         subject: campaign.subject,
         html: campaignEmailHtml(String(campaign.content || ""), s.name || "",
           s.unsub_token ? `${appUrl}/listy/wypis?t=${s.unsub_token}` : "",
-          { cta_label: campaign.cta_label || "", cta_url: campaign.cta_url || "" }),
+          { cta_label: campaign.cta_label || "", cta_url: campaign.cta_url || "", buttons: campaign.buttons || null }),
         preheader: campaign.preheader || "",
         ...(s.unsub_token ? { headers: { "List-Unsubscribe": `<${appUrl}/listy/wypis?t=${s.unsub_token}>` } } : {}),
       });
@@ -165,13 +165,38 @@ async function ensureTables(base44) {
   await runSql(base44, `ALTER TABLE public.campaigns ADD COLUMN IF NOT EXISTS preheader text, ADD COLUMN IF NOT EXISTS cta_label text, ADD COLUMN IF NOT EXISTS cta_url text`);
   // Planowana wysyłka (termin w UTC; panel pokazuje czas polski).
   await runSql(base44, `ALTER TABLE public.campaigns ADD COLUMN IF NOT EXISTS scheduled_at timestamptz`);
+  // Kilka przycisków w liście (do 3).
+  await runSql(base44, `ALTER TABLE public.campaigns ADD COLUMN IF NOT EXISTS buttons jsonb`);
 }
 
+// Adres przycisku: „exmortis.pl/test” → „https://exmortis.pl/test”; http:// → https://.
+const fixUrl = (u) => {
+  let v = String(u || "").trim().slice(0, 500);
+  if (!v) return "";
+  if (/^http:\/\//i.test(v)) v = "https://" + v.slice(7);
+  if (!/^https:\/\//i.test(v)) {
+    if (/^[a-z]+:/i.test(v)) throw new Error("Link przycisku musi być adresem strony (https://…)");
+    v = "https://" + v.replace(/^\/+/, "");
+  }
+  return v;
+};
+// Do 3 przycisków: [{label, url}]. Zgodność wstecz: pojedyncze pola cta_label / cta_url.
+const buttonsOf = (b) => {
+  const raw = Array.isArray(b.buttons) ? b.buttons : [{ label: b.cta_label, url: b.cta_url }];
+  const out = [];
+  for (const x of raw.slice(0, 3)) {
+    const label = String(x?.label || "").trim().slice(0, 60);
+    const url = fixUrl(x?.url);
+    if (!label && !url) continue;
+    if (!label) throw new Error("Każdy przycisk z linkiem potrzebuje tekstu");
+    if (!url) throw new Error(`Przycisk „${label}” nie ma linku`);
+    out.push({ label, url });
+  }
+  return out;
+};
 const ctaOf = (b) => {
-  const cta_label = String(b.cta_label || "").trim().slice(0, 60);
-  const cta_url = String(b.cta_url || "").trim().slice(0, 500);
-  if (cta_url && !/^https:\/\//.test(cta_url)) throw new Error("Link przycisku musi zaczynać się od https://");
-  return { cta_label, cta_url };
+  const buttons = buttonsOf(b);
+  return { cta_label: buttons[0]?.label || "", cta_url: buttons[0]?.url || "", buttons };
 };
 
 // Ilu aktywnych odbiorców danej kampanii jeszcze nie dostało listu.
@@ -283,7 +308,7 @@ const handler = async function (req) {
       const id = String(body.id || "");
       const rows = await runSql(
         base44,
-        `SELECT id, subject, content, group_id, status, preheader, cta_label, cta_url, scheduled_at FROM public.campaigns WHERE id = ${escStr(id)}`,
+        `SELECT id, subject, content, group_id, status, preheader, cta_label, cta_url, buttons, scheduled_at FROM public.campaigns WHERE id = ${escStr(id)}`,
         true
       );
       if (!rows.length) throw new Error("Nie znaleziono kampanii");
@@ -298,8 +323,8 @@ const handler = async function (req) {
       const content = String(body.content || "").slice(0, 100000);
       const groupId = body.group_id ? escStr(String(body.group_id)) : "NULL";
       const preheader = String(body.preheader || "").trim().slice(0, 140);
-      const { cta_label, cta_url } = ctaOf(body);
-      const extra = `preheader = ${escStr(preheader)}, cta_label = ${escStr(cta_label)}, cta_url = ${escStr(cta_url)}`;
+      const { cta_label, cta_url, buttons } = ctaOf(body);
+      const extra = `preheader = ${escStr(preheader)}, cta_label = ${escStr(cta_label)}, cta_url = ${escStr(cta_url)}, buttons = ${escStr(JSON.stringify(buttons))}::jsonb`;
 
       let id;
       if (body.id) {
@@ -329,7 +354,7 @@ const handler = async function (req) {
       }
       const rows = await runSql(
         base44,
-        `SELECT id, subject, content, group_id, status, preheader, cta_label, cta_url FROM public.campaigns WHERE id = ${escStr(id)}`,
+        `SELECT id, subject, content, group_id, status, preheader, cta_label, cta_url, buttons FROM public.campaigns WHERE id = ${escStr(id)}`,
         true
       );
       const remaining = await remainingFor(base44, rows[0]);
@@ -339,10 +364,10 @@ const handler = async function (req) {
     // Podgląd dokładnie takiego listu, jaki dostanie odbiorca (oprawa, stopka, przycisk).
     if (action === "campaigns.preview") {
       await ensureTables(base44);
-      const { cta_label, cta_url } = ctaOf(body);
+      const { cta_label, cta_url, buttons } = ctaOf(body);
       const appUrl = await loadAppUrl(base44);
       const firma = await getSetting(base44, "firma").catch(() => null);
-      const html = emailLayout(campaignEmailHtml(String(body.content || ""), "Anna", "", { cta_label, cta_url }), {
+      const html = emailLayout(campaignEmailHtml(String(body.content || ""), "Anna", "", { cta_label, cta_url, buttons }), {
         firma, kind: "listy", preheader: String(body.preheader || ""), unsubUrl: `${appUrl}/listy/wypis?t=podglad`,
         appUrl,
       });
@@ -355,11 +380,11 @@ const handler = async function (req) {
       await requireMail(base44);
       const me = await base44.auth.me();
       const subject = String(body.subject || "").trim().slice(0, 300) || "Bez tematu";
-      const { cta_label, cta_url } = ctaOf(body);
+      const { cta_label, cta_url, buttons } = ctaOf(body);
       const appUrl = await loadAppUrl(base44);
       await sendMail(base44, {
         kind: "listy", to: me.email, subject: `[TEST] ${subject}`,
-        html: campaignEmailHtml(String(body.content || ""), me.full_name ? String(me.full_name).split(" ")[0] : "", "", { cta_label, cta_url }),
+        html: campaignEmailHtml(String(body.content || ""), me.full_name ? String(me.full_name).split(" ")[0] : "", "", { cta_label, cta_url, buttons }),
         preheader: String(body.preheader || ""),
         headers: { "List-Unsubscribe": `<${appUrl}/listy/wypis?t=test>` },
       });
