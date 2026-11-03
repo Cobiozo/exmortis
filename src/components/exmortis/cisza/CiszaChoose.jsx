@@ -7,7 +7,7 @@ import CiszaFrame from "./CiszaFrame";
 // Ekran przed startem — mieści się na jednym ekranie telefonu.
 export default function CiszaChoose({ minutes, setMinutes, onStart, onLogo, view, onView, backdrops, backdropId, onBackdrop, introUrl, text }) {
   return (
-    <CiszaFrame onLogo={onLogo}>
+    <CiszaFrame onLogo={onLogo} onHome={onLogo}>
       <div className="w-full max-w-xl flex flex-col items-center text-center gap-4 sm:gap-6 fade-up">
         <div className="grid grid-cols-4 sm:grid-cols-7 gap-2 w-full" role="radiogroup" aria-label="Czas ciszy">
           {TIMES.map((m) => (

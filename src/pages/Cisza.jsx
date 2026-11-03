@@ -12,7 +12,11 @@ import { isView, DEFAULT_VIEW } from "@/components/exmortis/cisza/views";
 import Backdrop from "@/components/exmortis/cisza/backdrop/Backdrop";
 import { BLACK, orderBackdrops, resolveBackdrop } from "@/components/exmortis/cisza/backdrop/backdrops";
 
+// Odpowiedź listy: strona {items} albo tablica (zapas bazy aplikacji) — zawsze tablica, nigdy undefined.
+const asList = (p) => (Array.isArray(p) ? p : Array.isArray(p?.items) ? p.items : []);
+
 // Minutnik ciszy — tylko czas, prosty widok i znak exmortis.
+// Działa bez konta: brak albo błąd konfiguracji = ustawienia domyślne (czarne tło, bez muzyki i sygnałów).
 export default function Cisza() {
   const reduced = useReducedMotion();
   const navigate = useNavigate();
@@ -24,6 +28,8 @@ export default function Cisza() {
   const [source, setSource] = useState("");
   const [backdrops, setBackdrops] = useState([BLACK]);
   const [signals, setSignals] = useState([]);
+  // Stan konfiguracji: wczytywanie → gotowe / domyślne (brak ustawień) / błąd (minutnik działa w wersji podstawowej).
+  const [config, setConfig] = useState("loading");
 
   const update = (patch) => setPrefs((p) => { const n = { ...p, ...patch }; savePrefs(n); return n; });
 
@@ -33,14 +39,17 @@ export default function Cisza() {
     if (TIMES.includes(min)) update({ min });
     setSource((params.get("src") || "").slice(0, 100));
     savePrefs({ ...prefs }); // usuwa zapamiętany utwór
-    base44.entities.SilenceSignal.filter({ aktywny: true }, { limit: 50 }).then((p) => setSignals(p.items)).catch(() => {});
-    base44.entities.SilenceBackground.filter({ aktywne: true }, { sort: "kolejnosc", limit: 100 }).then((p) => setBackdrops(orderBackdrops(p.items))).catch(() => {});
+    base44.entities.SilenceSignal.filter({ aktywny: true }, { limit: 50 }).then((p) => setSignals(asList(p))).catch(() => {});
+    base44.entities.SilenceBackground.filter({ aktywne: true }, { sort: "kolejnosc", limit: 100 })
+      .then((p) => { const l = asList(p); if (l.length) setBackdrops(orderBackdrops(l)); }).catch(() => {});
     base44.entities.SilenceSettings.filter({}, { limit: 1 }).then((p) => {
-      const s = { ...SETTINGS_DEFAULTS, ...(p.items[0] || {}) };
+      const row = asList(p)[0];
+      const s = { ...SETTINGS_DEFAULTS, ...(row || {}) };
       setSettings(s);
+      setConfig(row ? "ready" : "defaults");
       // Muzyka tylko, gdy admin ją włączył — inaczej utwory nie są nawet pobierane.
-      if (s.muzyka_wlaczona) base44.entities.SilenceTrack.filter({ aktywny: true }, { sort: "kolejnosc", limit: 200 }).then((r) => setTracks(r.items)).catch(() => {});
-    }).catch(() => {});
+      if (s.muzyka_wlaczona) base44.entities.SilenceTrack.filter({ aktywny: true }, { sort: "kolejnosc", limit: 200 }).then((r) => setTracks(asList(r))).catch(() => {});
+    }).catch(() => setConfig("error"));
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
@@ -75,6 +84,12 @@ export default function Cisza() {
           volume={volume} onVolume={(v) => update({ vol: v })} muted={muted} onMuted={(m) => update({ muted: m })}
           source={source} reduced={reduced} speed={speed}
           onDone={() => setPhase("end")} onExit={() => setPhase("choose")} backdropName={backdrop.nazwa} intro={intro} outro={outro} />
+      )}
+      {phase === "choose" && config === "loading" && (
+        <p role="status" className="fixed bottom-[calc(14px+env(safe-area-inset-bottom))] inset-x-0 z-20 text-center technical text-[10px] text-foreground/50 pointer-events-none">WCZYTUJĘ USTAWIENIA…</p>
+      )}
+      {phase === "choose" && config === "error" && (
+        <p role="status" className="fixed bottom-[calc(14px+env(safe-area-inset-bottom))] inset-x-4 z-20 text-center text-xs text-foreground/60 pointer-events-none">Nie udało się wczytać ustawień — minutnik działa w wersji podstawowej.</p>
       )}
       {phase === "end" && <CiszaEnd text={settings.tekst_na_koniec} onAgain={() => setPhase("choose")} onLogo={home} reduced={reduced} view={view} minutes={minutes} backdrop={backdrop} />}
     </div>

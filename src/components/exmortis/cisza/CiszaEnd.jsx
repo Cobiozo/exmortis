@@ -9,7 +9,7 @@ import CiszaFrame from "./CiszaFrame";
 export default function CiszaEnd({ text, onAgain, onLogo, reduced, view, minutes, backdrop }) {
   const clock = useMemo(() => fixedClock(1), []);
   return (
-    <CiszaFrame onLogo={onLogo}>
+    <CiszaFrame onLogo={onLogo} onHome={onLogo}>
       <div className={`flex flex-col items-center text-center ${reduced ? "" : "fade-up"}`}>
         <div className="opacity-40 scale-50 -my-8 origin-center"><TimerView clock={clock} view={view} reduced /></div>
         <p className="shop-heading text-3xl md:text-5xl text-[#F5EFE1] max-w-2xl leading-tight mt-4">{text}</p>
