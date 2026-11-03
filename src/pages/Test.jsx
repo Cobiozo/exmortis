@@ -80,6 +80,7 @@ export default function Test({ d = {} }) {
   const [copied, setCopied] = useState(false);
   const [source, setSource] = useState("");
   const started = useRef(false);
+  const clickedRec = useRef(new Set());
 
   const S_STAGE = N + 1, S_OPEN = N + 2, S_FORM = N + 3, S_RESULT = N + 4;
 
@@ -120,7 +121,8 @@ export default function Test({ d = {} }) {
       });
       track("Lead", { content_name: "test" });
       setResult(res.data);
-      track(FUNNEL.testComplete, { kategoria: res.data?.dominant || "brak" });
+      // Bez wyniku testu w analityce: kategoria opisuje stan osoby — zostaje tylko w bazie (panel).
+      track(FUNNEL.testComplete);
       setStep(S_RESULT);
     } catch (e2) {
       setError(e2?.response?.status === 429 ? e2.response.data.error : "Nie udało się zapisać wyniku. Spróbuj ponownie.");
@@ -374,7 +376,16 @@ export default function Test({ d = {} }) {
               </div>
             ) : (
               <div className="grid sm:grid-cols-3 gap-4 mb-16">
-                {matched.map((p) => <ShopProductCard key={p.id} product={p} />)}
+                {matched.map((p) => (
+                  // Kliknięcie poleconego materiału: tylko slug produktu, raz na produkt.
+                  <div key={p.id} className="contents" onClickCapture={() => {
+                    if (clickedRec.current.has(p.slug)) return;
+                    clickedRec.current.add(p.slug);
+                    track(FUNNEL.testResultCta, { cel: p.slug });
+                  }}>
+                    <ShopProductCard product={p} />
+                  </div>
+                ))}
               </div>
             )}
 
