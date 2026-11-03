@@ -2,10 +2,113 @@ import { createClientFromRequest } from "../_shared/compat.ts";
 import { runSql, escStr, requireAdmin } from "../_shared/supabase.ts";
 import { loadAppUrl, getSetting } from "../_shared/settings.ts";
 import { emailLayout } from "../_shared/emailLayout.ts";
-import { sendMail, campaignEmailHtml, requireMail } from "../_shared/smtp.ts";
+import { sendMail, campaignEmailHtml, requireMail, adminTo } from "../_shared/smtp.ts";
+import { safeEqual } from "../_shared/libraryAccess.ts";
 
 // Moduł newslettera: grupy odbiorców, kampanie i wysyłki przez SMTP.
+// Statusy kampanii: draft (szkic) → scheduled (zaplanowana) → sending (wysyła się w tle) → sent.
 const SEND_BATCH = 10;
+const TICK_MS = 60000; // zaplanowana wysyłka w jednym przebiegu zadań cyklicznych (co 5 min) — najwyżej minuta
+
+const escHtml = (v) => String(v ?? "").replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
+const plWhen = (iso) => new Date(iso).toLocaleString("pl-PL", { weekday: "long", day: "numeric", month: "long", hour: "2-digit", minute: "2-digit", timeZone: "Europe/Warsaw" });
+
+// Jedna partia wysyłki kampanii (wspólna dla przycisku „Wyślij” i wysyłki zaplanowanej).
+async function sendBatch(base44, campaign, appUrl) {
+  const id = String(campaign.id);
+  const groupFilter = campaign.group_id
+    ? ` AND s.groups @> to_jsonb(${escStr(campaign.group_id)})`
+    : "";
+  const batch = await runSql(
+    base44,
+    `SELECT s.id, s.email, s.name, s.unsub_token FROM public.subscribers s
+     WHERE s.status = 'active'
+       AND NOT EXISTS (
+         SELECT 1 FROM public.campaign_recipients r
+         WHERE r.campaign_id = ${escStr(id)} AND r.subscriber_id = s.id
+       )${groupFilter}
+     ORDER BY s.created_date
+     LIMIT ${SEND_BATCH}`,
+    true
+  );
+  if (batch.length === 0) {
+    await runSql(base44, `UPDATE public.campaigns SET status = 'sent', sent_date = now() WHERE id = ${escStr(id)}`);
+    return { done: true, sent: 0, remaining: 0, failures: [] };
+  }
+  const sentRows = [];
+  const failures = [];
+  for (const s of batch) {
+    try {
+      await sendMail(base44, {
+        kind: "listy", ref: id,
+        to: s.email,
+        subject: campaign.subject,
+        html: campaignEmailHtml(String(campaign.content || ""), s.name || "",
+          s.unsub_token ? `${appUrl}/listy/wypis?t=${s.unsub_token}` : "",
+          { cta_label: campaign.cta_label || "", cta_url: campaign.cta_url || "" }),
+        preheader: campaign.preheader || "",
+        ...(s.unsub_token ? { headers: { "List-Unsubscribe": `<${appUrl}/listy/wypis?t=${s.unsub_token}>` } } : {}),
+      });
+      sentRows.push(s);
+    } catch {
+      failures.push(s.email);
+    }
+  }
+  if (sentRows.length === 0) {
+    throw new Error("Wysyłka nie powiodła się — sprawdź Ustawienia → Wysyłka e-mail");
+  }
+  const values = sentRows
+    .map((s) => `(${escStr(id)}, ${escStr(String(s.id))}, ${escStr(s.email)})`)
+    .join(",");
+  await runSql(
+    base44,
+    `INSERT INTO public.campaign_recipients (campaign_id, subscriber_id, email)
+     VALUES ${values} ON CONFLICT DO NOTHING`
+  );
+  await runSql(base44, `UPDATE public.campaigns SET sent_count = sent_count + ${sentRows.length} WHERE id = ${escStr(id)}`);
+  const remaining = await remainingFor(base44, campaign);
+  if (remaining <= 0) {
+    await runSql(base44, `UPDATE public.campaigns SET status = 'sent', sent_date = now() WHERE id = ${escStr(id)}`);
+  }
+  return { done: remaining <= 0, sent: sentRows.length, remaining, failures };
+}
+
+// Zadanie cykliczne: zaplanowane listy, których termin minął. Najpierw SELECT, potem zwykły UPDATE
+// (exm_exec_sql gubi wynik UPDATE … RETURNING). Po zakończeniu — krótki mail do administratora.
+async function scheduledTick(base44) {
+  const t0 = Date.now();
+  await ensureTables(base44);
+  const due = await runSql(base44, `SELECT id FROM public.campaigns WHERE status = 'scheduled' AND scheduled_at IS NOT NULL AND scheduled_at <= now() ORDER BY scheduled_at LIMIT 5`, true).catch(() => []);
+  if (due?.length) {
+    const ids = due.map((r) => escStr(String(r.id))).join(",");
+    await runSql(base44, `UPDATE public.campaigns SET status = 'sending' WHERE id IN (${ids}) AND status = 'scheduled'`);
+  }
+  const active = await runSql(base44, `SELECT * FROM public.campaigns WHERE status = 'sending' ORDER BY scheduled_at NULLS LAST LIMIT 5`, true).catch(() => []);
+  if (!active?.length) return { kampanie: 0 };
+  const appUrl = await loadAppUrl(base44);
+  const report = [];
+  for (const c of active) {
+    let sent = 0, done = false, error = "";
+    try {
+      while (Date.now() - t0 < TICK_MS) {
+        const r = await sendBatch(base44, c, appUrl);
+        sent += r.sent;
+        if (r.done) { done = true; break; }
+      }
+    } catch (e) {
+      error = String(e?.message || e).slice(0, 200);
+    }
+    report.push({ id: c.id, wyslane: sent, koniec: done, ...(error ? { blad: error } : {}) });
+    if (done) {
+      const to = await adminTo(base44).catch(() => null);
+      const total = await runSql(base44, `SELECT sent_count FROM public.campaigns WHERE id = ${escStr(String(c.id))}`, true).catch(() => []);
+      if (to) await sendMail(base44, { kind: "alarm", to, subject: `Wysłano zaplanowany list: ${String(c.subject).slice(0, 120)}`,
+        html: `<p>Zaplanowany list „${escHtml(c.subject)}” wyszedł do ${Number(total?.[0]?.sent_count || 0)} odbiorców.</p><p>Jeśli część czeka na limit skrzynki (240 maili na 2 godziny), wyjdzie sama w kolejnych przebiegach.</p>` }).catch(() => {});
+    }
+    if (Date.now() - t0 >= TICK_MS) break;
+  }
+  return { kampanie: report };
+}
 
 async function ensureTables(base44) {
   await runSql(
@@ -60,6 +163,8 @@ async function ensureTables(base44) {
   );
   // Zajawka (preheader) i jeden przycisk akcji — profesjonalny list ma jeden jasny następny krok.
   await runSql(base44, `ALTER TABLE public.campaigns ADD COLUMN IF NOT EXISTS preheader text, ADD COLUMN IF NOT EXISTS cta_label text, ADD COLUMN IF NOT EXISTS cta_url text`);
+  // Planowana wysyłka (termin w UTC; panel pokazuje czas polski).
+  await runSql(base44, `ALTER TABLE public.campaigns ADD COLUMN IF NOT EXISTS scheduled_at timestamptz`);
 }
 
 const ctaOf = (b) => {
@@ -90,9 +195,19 @@ async function remainingFor(base44, campaign) {
 const handler = async function (req) {
   try {
     const base44 = createClientFromRequest(req);
-    await requireAdmin(base44);
     const body = await req.json().catch(() => ({}));
     const action = String(body.action || "");
+
+    // Zadanie cykliczne (cronTick) — dostęp tokenem zadania z mb_settings, nie sesją administratora.
+    if (action === "campaigns.tick") {
+      const rows = await runSql(base44, `SELECT tick_token FROM public.mb_settings WHERE id = 1`, true).catch(() => null);
+      const stored = rows && rows[0] ? rows[0].tick_token : null;
+      const given = typeof body.tick_token === "string" ? body.tick_token : "";
+      if (!stored || !given || !safeEqual(given, stored)) return Response.json({ error: "Brak dostępu" }, { status: 403 });
+      return Response.json({ ok: true, ...(await scheduledTick(base44)) });
+    }
+
+    await requireAdmin(base44);
 
     // ===== GRUPY =====
     if (action === "groups.list") {
@@ -153,7 +268,7 @@ const handler = async function (req) {
       await ensureTables(base44);
       const campaigns = await runSql(
         base44,
-        `SELECT c.id, c.subject, c.group_id, c.status, c.sent_count, c.created_date, c.sent_date,
+        `SELECT c.id, c.subject, c.group_id, c.status, c.sent_count, c.created_date, c.sent_date, c.scheduled_at,
           g.name AS group_name
          FROM public.campaigns c
          LEFT JOIN public.newsletter_groups g ON g.id = c.group_id
@@ -168,7 +283,7 @@ const handler = async function (req) {
       const id = String(body.id || "");
       const rows = await runSql(
         base44,
-        `SELECT id, subject, content, group_id, status, preheader, cta_label, cta_url FROM public.campaigns WHERE id = ${escStr(id)}`,
+        `SELECT id, subject, content, group_id, status, preheader, cta_label, cta_url, scheduled_at FROM public.campaigns WHERE id = ${escStr(id)}`,
         true
       );
       if (!rows.length) throw new Error("Nie znaleziono kampanii");
@@ -196,6 +311,7 @@ const handler = async function (req) {
         );
         if (!cur.length) throw new Error("Nie znaleziono kampanii");
         if (cur[0].status === "sent") throw new Error("Kampania już wysłana — nie można jej edytować");
+        if (cur[0].status === "sending") throw new Error("Kampania właśnie się wysyła — nie można jej edytować");
         await runSql(
           base44,
           `UPDATE public.campaigns
@@ -250,10 +366,39 @@ const handler = async function (req) {
       return Response.json({ ok: true, to: me.email });
     }
 
+    // Zaplanowanie wysyłki: termin co najmniej 5 minut naprzód, najwyżej 90 dni. Treść zostaje edytowalna do startu.
+    if (action === "campaigns.schedule") {
+      await ensureTables(base44);
+      await requireMail(base44);
+      const id = String(body.id || "");
+      const at = new Date(String(body.at || ""));
+      if (!id) throw new Error("Najpierw zapisz szkic kampanii");
+      if (isNaN(at.getTime())) throw new Error("Podaj datę i godzinę wysyłki");
+      if (at.getTime() < Date.now() + 5 * 60000) throw new Error("Termin musi być co najmniej 5 minut od teraz");
+      if (at.getTime() > Date.now() + 90 * 86400000) throw new Error("Termin może być najwyżej 90 dni naprzód");
+      const rows = await runSql(base44, `SELECT status, content FROM public.campaigns WHERE id = ${escStr(id)}`, true);
+      if (!rows.length) throw new Error("Nie znaleziono kampanii");
+      if (rows[0].status === "sent" || rows[0].status === "sending") throw new Error("Ta kampania jest już wysłana albo właśnie się wysyła");
+      if (!String(rows[0].content || "").trim()) throw new Error("Kampania nie ma treści — zapisz szkic");
+      await runSql(base44, `UPDATE public.campaigns SET status = 'scheduled', scheduled_at = ${escStr(at.toISOString())}::timestamptz WHERE id = ${escStr(id)}`);
+      return Response.json({ ok: true, scheduled_at: at.toISOString(), kiedy: plWhen(at.toISOString()) });
+    }
+
+    if (action === "campaigns.unschedule") {
+      await ensureTables(base44);
+      const id = String(body.id || "");
+      await runSql(base44, `UPDATE public.campaigns SET status = 'draft', scheduled_at = NULL WHERE id = ${escStr(id)} AND status = 'scheduled'`);
+      const rows = await runSql(base44, `SELECT status FROM public.campaigns WHERE id = ${escStr(id)}`, true);
+      if (rows?.[0]?.status !== "draft") throw new Error("Nie da się już anulować — wysyłka ruszyła");
+      return Response.json({ ok: true });
+    }
+
     if (action === "campaigns.delete") {
       await ensureTables(base44);
       const id = String(body.id || "");
       if (!id) throw new Error("Brak id kampanii");
+      const st = await runSql(base44, `SELECT status FROM public.campaigns WHERE id = ${escStr(id)}`, true).catch(() => []);
+      if (st?.[0]?.status === "sending") throw new Error("Kampania właśnie się wysyła — usuń ją po zakończeniu");
       await runSql(base44, `DELETE FROM public.campaign_recipients WHERE campaign_id = ${escStr(id)}`);
       await runSql(base44, `DELETE FROM public.campaigns WHERE id = ${escStr(id)}`);
       return Response.json({ ok: true });
@@ -271,82 +416,15 @@ const handler = async function (req) {
       if (!rows.length) throw new Error("Nie znaleziono kampanii");
       const campaign = rows[0];
       if (campaign.status === "sent") throw new Error("Kampania już została wysłana");
+      if (campaign.status === "sending") throw new Error("Ta kampania wysyła się już w tle (zaplanowana) — nie wysyłaj jej drugi raz");
       if (!String(campaign.content || "").trim()) throw new Error("Kampania nie ma treści — zapisz szkic");
-
-      const groupFilter = campaign.group_id
-        ? ` AND s.groups @> to_jsonb(${escStr(campaign.group_id)})`
-        : "";
-      const batch = await runSql(
-        base44,
-        `SELECT s.id, s.email, s.name, s.unsub_token FROM public.subscribers s
-         WHERE s.status = 'active'
-           AND NOT EXISTS (
-             SELECT 1 FROM public.campaign_recipients r
-             WHERE r.campaign_id = ${escStr(id)} AND r.subscriber_id = s.id
-           )${groupFilter}
-         ORDER BY s.created_date
-         LIMIT ${SEND_BATCH}`,
-        true
-      );
-
-      if (batch.length === 0) {
-        await runSql(
-          base44,
-          `UPDATE public.campaigns SET status = 'sent', sent_date = now() WHERE id = ${escStr(id)}`
-        );
-        return Response.json({ done: true, sent: 0, remaining: 0, failures: [] });
-      }
-
       await requireMail(base44);
+      // Ręczne „Wyślij” na zaplanowanej kampanii: plan znika, wysyłka idzie teraz.
+      if (campaign.status === "scheduled") {
+        await runSql(base44, `UPDATE public.campaigns SET status = 'draft', scheduled_at = NULL WHERE id = ${escStr(id)}`);
+      }
       const appUrl = await loadAppUrl(base44);
-      const sentRows = [];
-      const failures = [];
-      for (const s of batch) {
-        try {
-          await sendMail(base44, {
-            kind: "listy", ref: id,
-            to: s.email,
-            subject: campaign.subject,
-            html: campaignEmailHtml(String(campaign.content || ""), s.name || "",
-              s.unsub_token ? `${appUrl}/listy/wypis?t=${s.unsub_token}` : "",
-              { cta_label: campaign.cta_label || "", cta_url: campaign.cta_url || "" }),
-            preheader: campaign.preheader || "",
-            ...(s.unsub_token ? { headers: { "List-Unsubscribe": `<${appUrl}/listy/wypis?t=${s.unsub_token}>` } } : {}),
-          });
-          sentRows.push(s);
-        } catch {
-          failures.push(s.email);
-        }
-      }
-      if (sentRows.length === 0) {
-        throw new Error("Wysyłka nie powiodła się — sprawdź Ustawienia → Wysyłka e-mail");
-      }
-      const values = sentRows
-        .map((s) => `(${escStr(id)}, ${escStr(String(s.id))}, ${escStr(s.email)})`)
-        .join(",");
-      await runSql(
-        base44,
-        `INSERT INTO public.campaign_recipients (campaign_id, subscriber_id, email)
-         VALUES ${values} ON CONFLICT DO NOTHING`
-      );
-      await runSql(
-        base44,
-        `UPDATE public.campaigns SET sent_count = sent_count + ${sentRows.length} WHERE id = ${escStr(id)}`
-      );
-
-      const remaining = await remainingFor(base44, campaign);
-      if (remaining <= 0) {
-        await runSql(
-          base44,
-          `UPDATE public.campaigns SET status = 'sent', sent_date = now() WHERE id = ${escStr(id)}`
-        );
-      }
-      return Response.json({
-        done: remaining <= 0,
-        sent: sentRows.length,
-        remaining,
-        failures,
-      });
+      return Response.json(await sendBatch(base44, campaign, appUrl));
     }
 
     return Response.json({ error: "Nieznana akcja" }, { status: 400 });
