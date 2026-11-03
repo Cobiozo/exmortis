@@ -200,7 +200,12 @@ export function createExmClient(raw) {
     get(target, prop) {
       if (prop === "entities") return wrapEntities(target.entities);
       if (prop === "auth" && AUTH_BACKEND === "supabase") return supaAuth;
-      if (prop === "functions" && FN_BACKEND === "supabase") return { invoke: supaInvoke };
+      if (prop === "functions" && FN_BACKEND === "supabase") return {
+        // Nowy test jest wdrożony w Base44; używa tej samej bazy wyników i wysyłki.
+        invoke: (name, payload) => name === "shopQuizSubmit"
+          ? target.functions.invoke(name, payload)
+          : supaInvoke(name, payload),
+      };
       // Pliki (wgrywanie, podpisane linki) → Supabase Storage. Pozostałe integracje bez zmian.
       // Pliki zawsze przez magazyn hostingu (src/api/exmStorage.js) — niezależnie od tego,
       // którędy idą funkcje serwerowe. Inaczej panel Ciszy wgrywał do starego magazynu.
