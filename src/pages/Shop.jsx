@@ -165,7 +165,7 @@ export default function Shop() {
         <div className="mx-auto max-w-[1400px] flex flex-wrap gap-2" role="tablist" aria-label="Dostępność materiałów">
           {[["dostepne", "DOSTĘPNE TERAZ", ready.length], ["przygotowanie", "W PRZYGOTOWANIU", visible.length - ready.length]].map(([k, label, n]) => (
             <button key={k} role="tab" aria-selected={tab === k} onClick={() => setTab(k)}
-              className={`technical text-[10px] px-4 py-2.5 border transition-colors ${tab === k ? "border-[#C9A24A] gold-text bg-[#C9A24A]/10" : "hairline text-foreground/55 hover:text-foreground"}`}>
+              className={`technical text-[10px] px-4 py-2.5 min-h-11 border transition-colors ${tab === k ? "border-[#C9A24A] gold-text bg-[#C9A24A]/10" : "hairline text-foreground/55 hover:text-foreground"}`}>
               {label}{loading ? "" : ` (${n})`}
             </button>
           ))}

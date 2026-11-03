@@ -1,4 +1,5 @@
-import React, { useEffect } from "react";
+import React, { useRef } from "react";
+import useDialogA11y from "@/lib/useDialogA11y";
 import { X, Plus, Minus, Trash2, ArrowRight } from "lucide-react";
 import { Link } from "react-router-dom";
 import { useCart, lineKey } from "./CartContext";
@@ -7,13 +8,9 @@ import { TicketLine } from "./events/TicketBuy";
 
 export default function CartDrawer() {
   const { items, open, setOpen, removeItem, updateQty, total } = useCart();
-  // Esc zamyka koszyk (klawiatura, czytniki ekranu).
-  useEffect(() => {
-    if (!open) return undefined;
-    const onKey = (e) => { if (e.key === "Escape") setOpen(false); };
-    window.addEventListener("keydown", onKey);
-    return () => window.removeEventListener("keydown", onKey);
-  }, [open, setOpen]);
+  // Esc zamyka koszyk, fokus wchodzi do panelu i wraca do ikony koszyka po zamknięciu.
+  const panelRef = useRef(null);
+  useDialogA11y(open, panelRef, () => setOpen(false));
 
   return (
     <>
@@ -24,13 +21,17 @@ export default function CartDrawer() {
       >
         <div className="absolute inset-0 bg-black/70 backdrop-blur-sm" onClick={() => setOpen(false)} />
         <aside
+          ref={panelRef}
+          role="dialog"
+          aria-modal="true"
+          aria-label="Koszyk"
           className={`absolute right-0 top-0 h-full w-full max-w-md bg-[#0A0A0B] border-l hairline flex flex-col transition-transform duration-400 ${
             open ? "translate-x-0" : "translate-x-full"
           }`}
         >
           <div className="flex items-center justify-between p-6 border-b hairline">
             <p className="technical text-[11px] gold-text">SKARBIEC · TWÓJ KOSZYK</p>
-            <button onClick={() => setOpen(false)} aria-label="Zamknij koszyk" className="text-foreground/60 hover:text-foreground">
+            <button onClick={() => setOpen(false)} aria-label="Zamknij koszyk" className="-m-3 p-3 min-h-11 min-w-11 inline-flex items-center justify-center text-foreground/60 hover:text-foreground">
               <X className="h-5 w-5" />
             </button>
           </div>

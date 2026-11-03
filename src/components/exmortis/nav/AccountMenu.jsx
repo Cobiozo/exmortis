@@ -5,7 +5,7 @@ import { useViewer } from "@/lib/useViewer";
 import { base44 } from "@/api/base44Client";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 
-const cls = "flex items-center gap-2 p-2 gold-text hover:text-[#E2C170] whitespace-nowrap transition-colors";
+const cls = "flex items-center justify-center gap-2 p-2 min-h-11 min-w-11 gold-text hover:text-[#E2C170] whitespace-nowrap transition-colors";
 const label = "technical text-[11px] !tracking-[0.12em] xl:!tracking-[0.18em] hidden xl:inline";
 
 // Ikona konta; napis tylko od 1280 px. Admin ma „Panel” w rozwijanym menu. Nowości i ogłoszenia — dzwoneczek obok.

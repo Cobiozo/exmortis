@@ -56,7 +56,7 @@ export default function Navbar() {
             {/* niewidoczna kopia menu do pomiaru szerokości */}
             <div aria-hidden="true" className="absolute invisible pointer-events-none -z-10 left-0 top-0"><DesktopNav ref={measureRef} /></div>
 
-            <Link ref={logoRef} to="/" aria-label="exmortis — strona główna" className="flex items-center gap-3 shrink-0 whitespace-nowrap">
+            <Link ref={logoRef} to="/" aria-label="exmortis — strona główna" className="flex items-center gap-3 shrink-0 whitespace-nowrap min-h-11">
               <Logo className="h-9 w-9 md:h-10 md:w-10" />
               <span className="relic-heading text-xl gold-text tracking-[0.3em] hidden sm:block">EXMORTIS</span>
             </Link>
@@ -67,12 +67,12 @@ export default function Navbar() {
               {collapsed && <TestLink small />}
               <NotificationBell />
               <AccountMenu />
-              <button onClick={() => setOpen(true)} className="relative p-2 text-foreground/80 hover:gold-text transition-colors" aria-label="Koszyk">
+              <button onClick={() => setOpen(true)} className="relative p-2 min-h-11 min-w-11 inline-flex items-center justify-center text-foreground/80 hover:gold-text transition-colors" aria-label="Koszyk">
                 <ShoppingBag className="h-5 w-5" strokeWidth={1.25} />
                 {count > 0 && <span className="absolute -top-0.5 -right-0.5 bg-[#BC1E22] text-[10px] font-mono w-4 h-4 flex items-center justify-center rounded-full">{count}</span>}
               </button>
               {collapsed && (
-                <button ref={burgerRef} onClick={() => (mobile ? close() : setMobile(true))} className="p-2 gold-text"
+                <button ref={burgerRef} onClick={() => (mobile ? close() : setMobile(true))} className="p-2 min-h-11 min-w-11 inline-flex items-center justify-center gold-text"
                   aria-label={mobile ? "Zamknij menu" : "Otwórz menu"} aria-expanded={mobile} aria-controls="mobile-menu">
                   {mobile ? <X className="h-6 w-6" strokeWidth={1.25} /> : <Menu className="h-6 w-6" strokeWidth={1.25} />}
                 </button>

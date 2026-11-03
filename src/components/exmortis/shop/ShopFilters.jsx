@@ -60,19 +60,19 @@ export default function ShopFilters({ filters, setFilters, available, extra = nu
           <button
             onClick={() => setOpen(!open)}
             aria-expanded={open}
-            className={`technical text-[10px] px-3 py-2.5 border flex items-center gap-2 transition-colors ${open || hasAny ? "border-[#C9A24A]/60 gold-text" : "hairline text-foreground/60 hover:text-foreground"}`}
+            className={`technical text-[10px] px-3 py-2.5 min-h-11 border flex items-center gap-2 transition-colors ${open || hasAny ? "border-[#C9A24A]/60 gold-text" : "hairline text-foreground/60 hover:text-foreground"}`}
           >
             <SlidersHorizontal className="h-3.5 w-3.5" /> DOPASUJ MATERIAŁY{hasAny ? ` (${active.length})` : ""}
           </button>
           {active.map((k) => (
             <button key={k} onClick={() => setFilters((f) => ({ ...f, [k]: null }))}
-              className="technical text-[9px] px-2.5 py-1.5 border border-[#C9A24A] gold-text bg-[#C9A24A]/10 flex items-center gap-1.5"
+              className="technical text-[9px] px-3 py-1.5 min-h-11 border border-[#C9A24A] gold-text bg-[#C9A24A]/10 flex items-center gap-1.5"
               aria-label={`Usuń filtr ${LABELS[k].toLowerCase()}: ${filters[k]}`}>
               {LABELS[k]}: {String(filters[k]).toUpperCase()} <X className="h-3 w-3" />
             </button>
           ))}
           {hasAny && (
-            <button onClick={clear} className="technical text-[9px] text-foreground/55 hover:blood-text transition-colors">
+            <button onClick={clear} className="technical text-[9px] px-2 min-h-11 text-foreground/55 hover:blood-text transition-colors">
               WYCZYŚĆ
             </button>
           )}

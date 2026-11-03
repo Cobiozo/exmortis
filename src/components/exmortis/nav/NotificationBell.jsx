@@ -72,7 +72,7 @@ export default function NotificationBell() {
 
   return (
     <Popover open={open} onOpenChange={(v) => { setOpen(v); if (v) load(true); }}>
-      <PopoverTrigger className="relative p-2 gold-text hover:text-[#E2C170] transition-colors" aria-label={unread ? `Powiadomienia: ${unread} nowe` : "Powiadomienia"} title="Powiadomienia">
+      <PopoverTrigger className="relative p-2 min-h-11 min-w-11 inline-flex items-center justify-center gold-text hover:text-[#E2C170] transition-colors" aria-label={unread ? `Powiadomienia: ${unread} nowe` : "Powiadomienia"} title="Powiadomienia">
         <Bell className="h-5 w-5" strokeWidth={1.25} />
         {unread > 0 && (
           <span className="absolute -top-0.5 -right-0.5 min-w-4 h-4 px-1 bg-[#C9A24A] text-[#0A0A0B] text-[10px] font-mono leading-4 text-center rounded-full" aria-hidden="true">{unread > 9 ? "9+" : unread}</span>

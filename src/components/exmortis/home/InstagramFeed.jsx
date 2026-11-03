@@ -50,6 +50,7 @@ export default function InstagramFeed() {
               href={p.permalink}
               target="_blank"
               rel="noreferrer"
+              aria-label={`${/\/reel\//.test(p.permalink || "") ? "Rolka" : "Post"} na Instagramie — otwiera się w nowej karcie`}
               className="group relative aspect-square block overflow-hidden"
             >
               <img

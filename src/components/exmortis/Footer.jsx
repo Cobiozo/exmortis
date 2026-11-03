@@ -16,7 +16,7 @@ export default function Footer() {
   const { pathname, search } = useLocation();
 
   return (
-    <footer className="relative bg-[#0A0A0B] border-t hairline overflow-hidden">
+    <footer className="relative bg-[#0A0A0B] border-t hairline overflow-hidden pb-14 md:pb-0">
       {/* Blood-trail top line */}
       <div className="absolute top-0 left-0 right-0 h-px spine" />
 

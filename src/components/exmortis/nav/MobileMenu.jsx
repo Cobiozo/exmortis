@@ -4,6 +4,7 @@ import { useViewer } from "@/lib/useViewer";
 import { base44 } from "@/api/base44Client";
 import { isActive } from "./navItems";
 import { useSiteNav } from "./useSiteNav";
+import useDialogA11y from "@/lib/useDialogA11y";
 
 // Pełnoekranowa warstwa menu; Esc zamyka, blokada przewijania, fokus na pierwszej pozycji.
 export default function MobileMenu({ open, onClose, top, preview }) {
@@ -15,11 +16,11 @@ export default function MobileMenu({ open, onClose, top, preview }) {
   useEffect(() => {
     if (!open || preview) return;
     document.body.style.overflow = "hidden";
-    ref.current?.querySelector("a,button")?.focus();
-    const onKey = (e) => e.key === "Escape" && onClose();
-    window.addEventListener("keydown", onKey);
-    return () => { document.body.style.overflow = ""; window.removeEventListener("keydown", onKey); };
-  }, [open, onClose]);
+    return () => { document.body.style.overflow = ""; };
+  }, [open, preview]);
+  // Fokus na pierwszej pozycji, Esc zamyka, po zamknięciu fokus wraca do przycisku menu.
+  // Bez pułapki Tab: przycisk „Zamknij menu” jest w nagłówku, poza tą warstwą.
+  useDialogA11y(open && !preview, ref, onClose, { trap: false });
 
   if (!open) return null;
   const item = (to) => `relic-heading text-[22px] whitespace-nowrap pb-1 border-b ${isActive(pathname, to) ? "gold-text border-[#C9A24A]" : "text-foreground/85 border-transparent"}`;

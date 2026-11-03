@@ -1,4 +1,5 @@
-import React, { createContext, useCallback, useContext, useEffect, useState, Suspense } from "react";
+import React, { createContext, useCallback, useContext, useEffect, useRef, useState, Suspense } from "react";
+import useDialogA11y from "@/lib/useDialogA11y";
 
 // Jedno okno kryzysowe dla całej aplikacji — otwierane przyciskiem albo po pilnym zgłoszeniu.
 // Plik okna doładowuje się w tle po starcie strony (bez obciążania pierwszego wyświetlenia).
@@ -11,16 +12,12 @@ const NUMBERS = [
 ];
 
 function CrisisFallback({ open, onOpenChange }) {
-  useEffect(() => {
-    if (!open) return undefined;
-    const esc = (e) => { if (e.key === "Escape") onOpenChange(false); };
-    window.addEventListener("keydown", esc);
-    return () => window.removeEventListener("keydown", esc);
-  }, [open, onOpenChange]);
+  const boxRef = useRef(null);
+  useDialogA11y(open, boxRef, () => onOpenChange(false));
   if (!open) return null;
   return (
     <div role="dialog" aria-modal="true" aria-labelledby="crisis-fb-title" className="fixed inset-0 z-[200] bg-black/80 flex items-center justify-center p-4" onClick={() => onOpenChange(false)}>
-      <div className="w-full max-w-lg max-h-[calc(100dvh-2rem)] overflow-y-auto border border-[#3D3D3F] bg-[#0A0A0B] p-7" onClick={(e) => e.stopPropagation()}>
+      <div ref={boxRef} className="w-full max-w-lg max-h-[calc(100dvh-2rem)] overflow-y-auto border border-[#3D3D3F] bg-[#0A0A0B] p-7" onClick={(e) => e.stopPropagation()}>
         <h2 id="crisis-fb-title" className="relic-heading text-2xl leading-tight text-foreground mb-4">Jeśli jest Ci teraz bardzo ciężko</h2>
         <p className="text-foreground/70 leading-relaxed mb-4">
           Jeśli jest Ci bardzo ciężko albo myślisz o odebraniu sobie życia — nie musisz zostać z tym

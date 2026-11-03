@@ -1,4 +1,5 @@
-import React, { useState } from "react";
+import React, { useRef, useState } from "react";
+import useDialogA11y from "@/lib/useDialogA11y";
 import { X, Check } from "lucide-react";
 import { base44 } from "@/api/base44Client";
 import { track } from "@/lib/track";
@@ -9,6 +10,8 @@ export default function WaitlistDialog({ product, onClose }) {
   const [sending, setSending] = useState(false);
   const [sent, setSent] = useState(false);
   const [error, setError] = useState("");
+  const boxRef = useRef(null);
+  useDialogA11y(!!product, boxRef, onClose);
 
   if (!product) return null;
 
@@ -42,12 +45,12 @@ export default function WaitlistDialog({ product, onClose }) {
     "w-full bg-transparent border hairline px-4 py-3 focus:border-[#C9A24A] focus:outline-none transition-colors";
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-5" role="dialog" aria-modal="true">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-5" role="dialog" aria-modal="true" aria-label={`Powiadomienie o premierze: ${product.name}`}>
       <div className="absolute inset-0 bg-[#0A0A0B]/85 backdrop-blur-sm" onClick={onClose} />
-      <div className="relative w-full max-w-md border border-[#C9A24A]/30 bg-[#0D0D0E] p-8 fade-up">
+      <div ref={boxRef} className="relative w-full max-w-md border border-[#C9A24A]/30 bg-[#0D0D0E] p-8 fade-up">
         <button
           onClick={onClose}
-          className="absolute top-4 right-4 text-foreground/55 hover:text-foreground transition-colors"
+          className="absolute top-1 right-1 min-h-11 min-w-11 inline-flex items-center justify-center text-foreground/55 hover:text-foreground transition-colors"
           aria-label="Zamknij"
         >
           <X className="h-4 w-4" />
