@@ -32,6 +32,12 @@ const SUPABASE_READ = new Set([
   "PodcastEpisode", "PodcastPlaylist", "Utwor", "SilenceSettings",
 ]);
 
+// Konfiguracja Ciszy (tła, sygnały, utwory) — dane niespersonalizowane. Gość czyta je wprost z kopii
+// kluczem anonimowym; polityki bazy wpuszczają wyłącznie aktywne pozycje (bez danych użytkowników).
+// Zalogowani (w tym panel) — jak dotąd przez bramkę. Wcześniej gość trafiał do bazy aplikacji, która
+// odmawiała albo zwracała inny kształt odpowiedzi → minutnik dostawał undefined i strona się wyłączała.
+const PUBLIC_CONFIG = new Set(["SilenceBackground", "SilenceSignal", "SilenceTrack"]);
+
 // Gość (bez logowania) nie ma dostępu do bramki — zapamiętujemy to na czas sesji
 // i czytamy wprost z bazy aplikacji, zamiast ponawiać odrzucone wywołania.
 let gatewayGuest = false;
@@ -103,7 +109,9 @@ function wrapEntity(entity, name) {
       }
       if (READ_OPS.includes(prop) && ENTITY_BACKEND === "supabase") {
         // Dane kont i panele: odczyt z kopii przez bramkę (reguły dostępu na serwerze).
+        const anon = hasSupabase && PUBLIC_CONFIG.has(name) ? supabaseEntityOps(name) : null;
         return async (...args) => {
+          if (gatewayGuest && anon && anon[prop]) return anon[prop](...args);
           if ((FN_BACKEND !== "supabase" && isFresh(name)) || gatewayGuest) return target[prop].apply(target, args);
           try {
             const norm = prop === "get" ? { id: String(args[0]) }
@@ -114,7 +122,10 @@ function wrapEntity(entity, name) {
               : parseArgs(args);
             return await gatewayRead(name, prop, norm);
           } catch (e) {
-            if (e?.response?.status === 401) gatewayGuest = true;
+            if (e?.response?.status === 401) {
+              gatewayGuest = true;
+              if (anon && anon[prop]) return anon[prop](...args);
+            }
             console.error("odczyt:kopia", name, String(prop), String(e?.message || e).slice(0, 150));
             return target[prop].apply(target, args);
           }
