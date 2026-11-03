@@ -32,5 +32,25 @@ export default function SeoMeta() {
     setMeta("name", "twitter:image", SITE_URL + og.img);
     setMeta("name", "twitter:image:alt", og.alt);
   }, [pathname]);
+
+  // Adres kanoniczny: domyślnie adres strony bez parametrów. Pomijany, gdy strona ma własny
+  // (usePageMeta, data-page) albo jest wyłączona z indeksu (noindex — konto, 404).
+  useEffect(() => {
+    const sync = () => {
+      const head = document.head;
+      const own = head.querySelector("link#exm-canonical");
+      const skip = head.querySelector('link[rel="canonical"][data-page]') || head.querySelector('meta[name="robots"][content*="noindex"]');
+      if (skip) { if (own) own.remove(); return; }
+      const href = SITE_URL + (pathname.replace(/\/+$/, "") || "/");
+      if (own) { if (own.getAttribute("href") !== href) own.setAttribute("href", href); return; }
+      const el = document.createElement("link");
+      el.id = "exm-canonical"; el.rel = "canonical"; el.href = href;
+      head.appendChild(el);
+    };
+    sync();
+    const mo = new MutationObserver(sync);
+    mo.observe(document.head, { childList: true });
+    return () => mo.disconnect();
+  }, [pathname]);
   return null;
 }

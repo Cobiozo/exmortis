@@ -11,7 +11,8 @@ export function usePageMeta({ canonical, ogImage, noindex } = {}) {
       document.head.appendChild(el);
       added.push(el);
     };
-    if (canonical) put("link", { rel: "canonical", href: SITE_URL + canonical });
+    // Własny adres kanoniczny strony ma pierwszeństwo przed domyślnym z SeoMeta (data-page).
+    if (canonical) put("link", { rel: "canonical", href: SITE_URL + canonical, "data-page": "1" });
     if (ogImage) {
       put("meta", { property: "og:image", content: ogImage });
       put("meta", { property: "og:image:width", content: "1200" });

@@ -8,6 +8,19 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url))
 import { OG_SPOTKANIE, OG_MARKA, metaMode } from './src/config/site.js'
 import { criticalCss } from './src/config/criticalCss.js'
 import portableBuild from './src/config/portableBuild.js'
+import { PAGES as SEO_PAGES } from './src/components/seo/seoPages.js'
+
+// Tytuły i opisy stron do surowego HTML: serwer (server.js) wstawia je przed wysłaniem strony,
+// żeby podglądy linków (Facebook, WhatsApp) i roboty bez JavaScriptu widziały właściwy opis.
+function exmSeoJson() {
+  return {
+    name: "exm-seo-json",
+    apply: "build",
+    generateBundle() {
+      this.emitFile({ type: "asset", fileName: "seo-pages.json", source: JSON.stringify(SEO_PAGES) });
+    },
+  };
+}
 
 // Adres aplikacji przy budowaniu. Vite ładuje .env do import.meta.env, a nie do process.env —
 // dlatego process.env działa tylko na serwerze/CI, a lokalnie bierzemy wartość z pliku .env.
@@ -191,5 +204,6 @@ export default defineConfig({
     exmInlineCss(),
     exmJoinFallback(),
     portableBuild(__dirname),
+    exmSeoJson(),
   ]
 });
