@@ -7,8 +7,12 @@ import useMailStatus, { MAIL_REQUIRED } from "@/lib/useMailStatus";
 const inputCls =
   "w-full bg-transparent border hairline px-4 py-2.5 focus:border-[#C9A24A] focus:outline-none transition-colors text-sm";
 
-const EMPTY = { id: null, subject: "", content: "", group_id: "", preheader: "", cta_label: "", cta_url: "" };
-const fields = (e) => ({ subject: e.subject, content: e.content, preheader: e.preheader, cta_label: e.cta_label, cta_url: e.cta_url });
+const EMPTY = { id: null, subject: "", content: "", group_id: "", preheader: "", buttons: [{ label: "", url: "" }] };
+const fields = (e) => ({ subject: e.subject, content: e.content, preheader: e.preheader,
+  buttons: (e.buttons || []).filter((b) => b.label.trim() || b.url.trim()) });
+// Prawdziwy komunikat z serwera (np. „Przycisk … nie ma linku”), a nie ogólny tekst.
+const errText = (err, fallback) => err?.response?.data?.error || (err?.message && !/^Request failed|^Funkcja \w+: \d+$/.test(err.message) ? err.message : "") || fallback;
+const MAX_BUTTONS = 3;
 
 // Termin wysyłki: pole datetime-local pracuje w czasie przeglądarki (u administratora — czas polski).
 const plWhen = (iso) => new Date(iso).toLocaleString("pl-PL", { weekday: "short", day: "numeric", month: "long", hour: "2-digit", minute: "2-digit", timeZone: "Europe/Warsaw" });
@@ -70,8 +74,9 @@ export default function CampaignsPanel() {
           content: camp.content || "",
           group_id: camp.group_id || "",
           preheader: camp.preheader || "",
-          cta_label: camp.cta_label || "",
-          cta_url: camp.cta_url || "",
+          buttons: Array.isArray(camp.buttons) && camp.buttons.length
+            ? camp.buttons.map((b) => ({ label: b.label || "", url: b.url || "" }))
+            : [{ label: camp.cta_label || "", url: camp.cta_url || "" }],
           status: camp.status || "draft",
           scheduled_at: camp.scheduled_at || null,
           when: camp.scheduled_at ? toLocalInput(camp.scheduled_at) : nextMonday7(),
@@ -81,7 +86,7 @@ export default function CampaignsPanel() {
         setEditor({ ...EMPTY, status: "draft", scheduled_at: null, when: nextMonday7() });
       }
     } catch (err) {
-      setError(err?.response?.data?.error || "Nie udało się otworzyć kampanii.");
+      setError(errText(err, "Nie udało się otworzyć kampanii."));
     } finally {
       setBusy(false);
     }
@@ -106,7 +111,7 @@ export default function CampaignsPanel() {
       load();
       return res.data.id;
     } catch (err) {
-      setError(err?.response?.data?.error || "Nie udało się zapisać.");
+      setError(errText(err, "Nie udało się zapisać."));
       return null;
     } finally {
       setBusy(false);
@@ -131,7 +136,7 @@ export default function CampaignsPanel() {
       setInfo(`Zaplanowano na ${r.data.kiedy}. Do tego czasu możesz poprawiać treść (pamiętaj o „Zapisz szkic”) albo anulować plan.`);
       load();
     } catch (err) {
-      setError(err?.response?.data?.error || "Nie udało się zaplanować.");
+      setError(errText(err, "Nie udało się zaplanować."));
     } finally {
       setBusy(false);
     }
@@ -146,7 +151,7 @@ export default function CampaignsPanel() {
       setInfo("Plan wysyłki anulowany — list wrócił do szkiców.");
       load();
     } catch (err) {
-      setError(err?.response?.data?.error || "Nie udało się anulować.");
+      setError(errText(err, "Nie udało się anulować."));
     } finally {
       setBusy(false);
     }
@@ -159,7 +164,7 @@ export default function CampaignsPanel() {
       const r = await base44.functions.invoke("adminNewsletter", { action: "campaigns.preview", ...fields(editor) });
       setPreview({ html: r.data.html, w: 390 });
     } catch (err) {
-      setError(err?.response?.data?.error || "Nie udało się przygotować podglądu.");
+      setError(errText(err, "Nie udało się przygotować podglądu."));
     } finally {
       setBusy(false);
     }
@@ -173,7 +178,7 @@ export default function CampaignsPanel() {
       const r = await base44.functions.invoke("adminNewsletter", { action: "campaigns.test", ...fields(editor) });
       setInfo(`Wysłano list testowy na ${r.data.to}. Sprawdź, jak wygląda w Twojej skrzynce (także w telefonie).`);
     } catch (err) {
-      setError(err?.response?.data?.error || "Nie udało się wysłać testu.");
+      setError(errText(err, "Nie udało się wysłać testu."));
     } finally {
       setBusy(false);
     }
@@ -205,7 +210,7 @@ export default function CampaignsPanel() {
       setRemaining(0);
       load();
     } catch (err) {
-      setError(err?.response?.data?.error || "Wysyłka przerwana.");
+      setError(errText(err, "Wysyłka przerwana."));
     } finally {
       setBusy(false);
     }
