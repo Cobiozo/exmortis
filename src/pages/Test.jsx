@@ -150,7 +150,10 @@ export default function Test({ d = {} }) {
         action: "wynik", answers: answers.map((a) => Number(a)), stage, source: source || null, result_key: resultKey,
       });
       setResult(res.data);
-      if (res.data?.result_key) setResultKey(res.data.result_key);
+      if (res.data?.result_key) {
+        if (res.data.result_key !== resultKey) setMail((m) => ({ ...m, done: null, error: "" }));
+        setResultKey(res.data.result_key);
+      }
       // Bez wyniku, odpowiedzi i zdania w analityce — tylko fakt ukończenia (raz).
       if (!completed.current) { completed.current = true; track(FUNNEL.testComplete); }
       setStep(S_RESULT);
@@ -387,7 +390,7 @@ export default function Test({ d = {} }) {
         {/* ===== WYNIK ===== */}
         {step === S_RESULT && result && (
           <div className="fade-up">
-            <p className="technical text-[10px] gold-text mb-8">{t("dz.test")}</p>
+            <p className="technical text-[10px] gold-text mb-8">{flow === "v3" ? "TWÓJ WYNIK" : t("dz.test")}</p>
 
             <h2 className="shop-heading text-3xl md:text-5xl text-[#F5EFE1] leading-tight mb-8 break-words">
               {result.headline || "Twój wynik"}
