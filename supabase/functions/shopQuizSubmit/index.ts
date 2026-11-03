@@ -324,6 +324,8 @@ const handler = async function (req) {
     const base44 = createClientFromRequest(req);
     await loadAppUrl(base44);
     const body = await req.json().catch(() => ({}));
+    // Strona sprawdza, czy funkcja zna nowy przepływ (wynik bez e-maila) — do czasu wdrożenia działa stary.
+    if (body.action === "ping") return Response.json({ ok: true, flow: 3 });
     if (body.action === "wynik") return await handleWynik(req, base44, body);
     if (body.action === "wyslij") return await handleWyslij(req, base44, body);
     return await legacyHandler(req, base44, body);
