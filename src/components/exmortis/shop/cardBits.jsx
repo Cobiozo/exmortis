@@ -155,7 +155,7 @@ export function ProductButton({ p, onWaitlist }) {
         onClick={() => onWaitlist && onWaitlist(p)}
         className={`${base} border border-[#5C1A1B] text-[#E0B9B9] hover:bg-[#5C1A1B]/25`}
       >
-        Powiadom mnie o premierze
+        {p.product_type === "usluga" ? "Powiadom mnie o dostępności" : "Powiadom mnie o premierze"}
       </button>
     );
   }

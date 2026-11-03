@@ -183,7 +183,8 @@ export default function ProductDetail() {
 
             {/* Meta */}
             {(() => {
-              const meta = [["FORMAT", product.format], ["CZAS", product.duration], ["MIEJSCA", product.spots]].filter(([, v]) => v);
+              // Format: jedno źródło z karty Skarbca (format_details); dawne pole „format” tylko jako zapas.
+              const meta = [["FORMAT", product.format_details || product.format], ["CZAS", product.duration], ["MIEJSCA", product.spots]].filter(([, v]) => v);
               if (!meta.length) return null;
               return (
                 <div className="grid grid-cols-2 gap-px bg-[#3D3D3F]/40 mb-8">
@@ -223,7 +224,7 @@ export default function ProductDetail() {
             {soon ? (
               <div className="mt-auto space-y-3">
                 <button onClick={() => setWaitlist(true)} className="btn-relic w-full">
-                  POWIADOM MNIE O PREMIERZE <ArrowRight className="h-4 w-4" />
+                  {product.product_type === "usluga" ? "POWIADOM MNIE O DOSTĘPNOŚCI" : "POWIADOM MNIE O PREMIERZE"} <ArrowRight className="h-4 w-4" />
                 </button>
                 <p className="text-sm text-foreground/55">Ten materiał jeszcze powstaje. Napiszę, kiedy będzie gotowy.</p>
               </div>

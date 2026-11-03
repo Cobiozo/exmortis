@@ -12,7 +12,7 @@ const ITEMS = [
     name: "Rozmowa na progu", text: "", note: "Po opłaceniu wybierasz termin w kalendarzu." },
 ];
 
-const zl = (n) => `${Number(n || 0).toLocaleString("pl-PL", { maximumFractionDigits: 2 })} zł`;
+import { zl } from "@/lib/productPrice";
 
 export default function OneOnOne() {
   const [prods, setProds] = useState(null);
@@ -36,7 +36,10 @@ export default function OneOnOne() {
           {cards.map(({ p, ...c }) => {
             const to = c.to || `/skarbiec/${p.slug}`;
             const soon = p.status === "wkrótce";
-            const paid = !p.is_free && Number(p.price) > 0 && c.slug !== "powrot-mentoring";
+            // Zapowiedź: bez ceny i bez „po opłaceniu” — tak samo jak karta w Skarbcu i strona usługi.
+            const paid = !soon && !p.is_free && Number(p.price) > 0 && c.slug !== "powrot-mentoring";
+            const note = soon ? "Zapisy jeszcze nie ruszyły. Zostaw adres — dam znać, gdy będzie można umówić termin." : c.note;
+            const cta = soon ? "POWIADOM MNIE O DOSTĘPNOŚCI" : c.cta;
             return (
               <Link key={c.slug} to={to}
                 className="group flex flex-col gap-4 border border-[#C9A24A]/30 bg-[#0D0D0E] p-6 md:p-8 transition-colors hover:border-[#C9A24A]/70 focus:outline-none focus-visible:border-[#C9A24A]">
@@ -50,10 +53,10 @@ export default function OneOnOne() {
                 <div className="mt-auto pt-5 border-t hairline flex flex-wrap items-end justify-between gap-4">
                   <div>
                     {paid && <p className="text-lg text-[#F5EFE1]">{zl(p.price)}</p>}
-                    <p className="text-[11px] text-foreground/55">{c.note}</p>
+                    <p className="text-[11px] text-foreground/55">{note}</p>
                   </div>
                   <span className="technical text-[10px] gold-text inline-flex items-center gap-2">
-                    {c.cta} <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-1" aria-hidden="true" />
+                    {cta} <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-1" aria-hidden="true" />
                   </span>
                 </div>
               </Link>
