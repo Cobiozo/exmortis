@@ -83,7 +83,7 @@ export default function Test({ d = {} }) {
   const [source, setSource] = useState("");
   const started = useRef(false);
   const clickedRec = useRef(new Set());
-  const [flow, setFlow] = useState(null); // null = sprawdzam · "v3" · "legacy"
+  const [flow] = useState("v3"); // null = sprawdzam · "v3" · "legacy"
   const [resultKey, setResultKey] = useState(null);
   const completed = useRef(false);
   const [mail, setMail] = useState({ email: "", consent: false, newsletter: false, shareOpen: false, sending: false, done: null, error: "" });
@@ -91,9 +91,7 @@ export default function Test({ d = {} }) {
   const S_STAGE = N + 1, S_OPEN = N + 2, S_FORM = N + 3, S_RESULT = N + 4;
 
   useEffect(() => {
-    base44.functions.invoke("shopQuizSubmit", { action: "ping" })
-      .then((r) => setFlow(r?.data?.flow === 3 ? "v3" : "legacy"))
-      .catch(() => setFlow("legacy"));
+    // Wynik bez kontaktu jest jedynym przepływem; awaria nie przywraca formularza z imieniem.
     setSource(new URLSearchParams(window.location.search).get("src") || "");
     base44.functions
       .invoke("shopProducts", {})
@@ -524,7 +522,7 @@ export default function Test({ d = {} }) {
             <div className="text-xs text-foreground/55 text-center leading-relaxed mb-10 space-y-2 max-w-xl mx-auto">
               <p>{NOT_DIAGNOSIS}</p>
               {flow === "v3" && (
-                <p>Co zapisuję: same punkty, poziomy i wybrany etap — bez imienia, adresu e-mail i Twojego zdania (anonimowa statystyka testu). Adres i zdanie trafiają do mnie tylko wtedy, gdy zdecydujesz się wysłać wynik.</p>
+                <p>Co zapisuję: punkty, poziomy, wybrany etap i źródło wejścia — bez imienia, adresu e-mail i Twojego zdania. Po zleceniu wysyłki adres e-mail zostaje powiązany z wynikiem. Twoje zdanie zapisuję tylko po osobnym zaznaczeniu zgody na jego przesłanie. Zapis na Listy powrotu wymaga oddzielnej, dobrowolnej zgody.</p>
               )}
               <CrisisLine />
               {result.email_sent === false && <p className="text-foreground/55">Wyniku nie udało się teraz wysłać e-mailem — zapisz go albo zrób zrzut ekranu.</p>}
