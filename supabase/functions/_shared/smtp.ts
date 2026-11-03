@@ -1,6 +1,6 @@
 import nodemailer from "npm:nodemailer@6.9.13";
 import { FIRMA, getSetting, APP_URL, loadAppUrl } from "./settings.ts";
-import { emailLayout, cleanEmailHtml } from "./emailLayout.ts";
+import { emailLayout, cleanEmailHtml, emailButton } from "./emailLayout.ts";
 import { runSql, escStr } from "./supabase.ts";
 import { setImmediate as nodeSetImmediate, clearImmediate as nodeClearImmediate } from "node:timers";
 
@@ -223,9 +223,15 @@ export function orderEmailHtml(buyerName, items, total, orderId = "", invoice = 
 
 // Treść kampanii newslettera. Oprawa (logo, stopka, wypis jednym kliknięciem) — w emailLayout;
 // adres wypisu przychodzi w nagłówku List-Unsubscribe (adminNewsletter).
-export function campaignEmailHtml(content, name, _unsubUrl = "", { cta_label = "", cta_url = "" } = {}) {
+export function campaignEmailHtml(content, name, _unsubUrl = "", { cta_label = "", cta_url = "", buttons = null } = {}) {
   const greeting = name ? `<p style="margin:0 0 18px;">${escHtml(name)},</p>` : "";
-  const cta = cta_label && /^https?:\/\//.test(cta_url)
-    ? `<p><a href="${escHtml(cta_url)}">${escHtml(cta_label)}</a></p>` : "";
+  // Kilka przycisków (do 3): pierwszy złoty, kolejne z obrysem. Bez listy — dawny pojedynczy przycisk.
+  const list = Array.isArray(buttons) && buttons.length
+    ? buttons
+    : (cta_label ? [{ label: cta_label, url: cta_url }] : []);
+  const valid = list.filter((b) => b && b.label && /^https?:\/\//.test(String(b.url || ""))).slice(0, 3);
+  const cta = valid.length === 1 && !(Array.isArray(buttons) && buttons.length)
+    ? `<p><a href="${escHtml(valid[0].url)}">${escHtml(valid[0].label)}</a></p>`
+    : valid.map((b, i) => emailButton(String(b.label), String(b.url), { secondary: i > 0 })).join("");
   return `${greeting}<div>${cleanEmailHtml(content)}</div>${cta}`;
 }
