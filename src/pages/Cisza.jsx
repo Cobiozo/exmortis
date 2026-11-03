@@ -60,6 +60,8 @@ export default function Cisza() {
 
   return (
     <div className="min-h-[100dvh] bg-[#0A0A0B] overflow-hidden">
+      {/* Nagłówek strony dla wyszukiwarek i czytników ekranu — wygląd minutnika bez zmian. */}
+      <h1 className="sr-only">Cisza — minutnik ciszy exmortis</h1>
       <Backdrop bg={backdrop} reduced={reduced} fadeMs={phase === "session" ? 1500 : 800} zoomMs={phase === "session" ? (minutes * 60000) / speed : 0} />
       {adminView && phase === "choose" && (
         <Link to="/admin/cisza" className="fixed bottom-3 right-4 z-50 technical text-[10px] gold-text hover:text-[#E2C170]">Zarządzaj</Link>
