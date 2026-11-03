@@ -55,6 +55,11 @@
     background: #C9A24A;
     color: #0A0A0B;
   }
+  /* Jeden, złoty obrys fokusu dla klawiatury (zamiast domyślnego obrysu przeglądarki). */
+  :focus-visible {
+    outline: 2px solid #C9A24A;
+    outline-offset: 2px;
+  }
 }
 
 @layer components {
@@ -78,15 +83,20 @@
   }
 
   .hairline {
-    border-color: rgba(61, 61, 63, 0.6);
+    border-color: rgba(70, 70, 73, 0.75);
+  }
+  /* Pola formularzy: obramowanie z kontrastem ok. 3,7:1 (WCAG 1.4.11 — granica pola musi być widoczna). */
+  input.hairline, textarea.hairline, select.hairline {
+    border-color: #6B6B6F;
   }
 
   .gold-text {
     color: #C9A24A;
   }
 
+  /* Czerwony tekst rozjaśniony do kontrastu 4,8:1 na czerni (wcześniej #BC1E22 — 3,1:1). Tła i obramowania zostają w #BC1E22. */
   .blood-text {
-    color: #BC1E22;
+    color: #E24449;
   }
 
   .grain {
@@ -288,12 +298,12 @@
 @media (min-width: 1024px) { .container-exm { padding-inline: 32px; } }
 /* Rozstrzelone kapitaliki: węziej na małych ekranach (główna przyczyna wychodzenia poza ekran) */
 @media (max-width: 767px) {
-  .technical { letter-spacing: 0.14em; }
+  .technical { letter-spacing: 0.12em; }
+  /* Drobne wersaliki na telefonie: najmniej 11 px i węższy odstęp liter (czytelność). */
+  .technical[class*="text-[8px]"], .technical[class*="text-[9px]"], .technical[class*="text-[10px]"] { font-size: 11px; letter-spacing: 0.1em; }
 }
 @media (max-width: 479px) {
-  .technical { letter-spacing: 0.12em; }
-  /* Drobne wersaliki nie schodzą poniżej 10 px (czytelność na telefonie). */
-  .technical[class*="text-[9px]"], .technical[class*="text-[8px]"] { font-size: 10px; }
+  .technical { letter-spacing: 0.1em; }
   .relic-heading { letter-spacing: 0.01em; }
   .btn-relic, .btn-ghost, .btn-blood { padding-inline: 1.25rem; }
   .btn-relic:hover, .btn-blood:hover { letter-spacing: 0.1em; }
