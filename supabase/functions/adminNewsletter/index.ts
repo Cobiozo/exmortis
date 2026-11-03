@@ -4,6 +4,7 @@ import { loadAppUrl, getSetting } from "../_shared/settings.ts";
 import { emailLayout } from "../_shared/emailLayout.ts";
 import { sendMail, campaignEmailHtml, requireMail, adminTo } from "../_shared/smtp.ts";
 import { safeEqual } from "../_shared/libraryAccess.ts";
+import { ensureSeriesTables, CAMPAIGN_AFTER_START, seriesState, seriesSaveLetter, seriesDeleteLetter, seriesMoveLetter, seriesSetActive, seriesTick } from "../_shared/newsletterSeries.ts";
 
 // Moduł newslettera: grupy odbiorców, kampanie i wysyłki przez SMTP.
 // Statusy kampanii: draft (szkic) → scheduled (zaplanowana) → sending (wysyła się w tle) → sent.
@@ -17,8 +18,8 @@ const plWhen = (iso) => new Date(iso).toLocaleString("pl-PL", { weekday: "long",
 async function sendBatch(base44, campaign, appUrl) {
   const id = String(campaign.id);
   const groupFilter = campaign.group_id
-    ? ` AND s.groups @> to_jsonb(${escStr(campaign.group_id)})`
-    : "";
+    ? ` AND s.groups @> to_jsonb(${escStr(campaign.group_id)})${CAMPAIGN_AFTER_START}`
+    : CAMPAIGN_AFTER_START;
   const batch = await runSql(
     base44,
     `SELECT s.id, s.email, s.name, s.unsub_token FROM public.subscribers s
@@ -78,13 +79,20 @@ async function sendBatch(base44, campaign, appUrl) {
 async function scheduledTick(base44) {
   const t0 = Date.now();
   await ensureTables(base44);
+  // Najpierw seria startowa (poniedziałek 8:00), potem zaplanowane kampanie.
+  let seria = null;
+  try {
+    seria = await seriesTick(base44, { budgetMs: 40000 });
+  } catch (e) {
+    seria = { blad: String(e?.message || e).slice(0, 200) };
+  }
   const due = await runSql(base44, `SELECT id FROM public.campaigns WHERE status = 'scheduled' AND scheduled_at IS NOT NULL AND scheduled_at <= now() ORDER BY scheduled_at LIMIT 5`, true).catch(() => []);
   if (due?.length) {
     const ids = due.map((r) => escStr(String(r.id))).join(",");
     await runSql(base44, `UPDATE public.campaigns SET status = 'sending' WHERE id IN (${ids}) AND status = 'scheduled'`);
   }
   const active = await runSql(base44, `SELECT * FROM public.campaigns WHERE status = 'sending' ORDER BY scheduled_at NULLS LAST LIMIT 5`, true).catch(() => []);
-  if (!active?.length) return { kampanie: 0 };
+  if (!active?.length) return { seria, kampanie: 0 };
   const appUrl = await loadAppUrl(base44);
   const report = [];
   for (const c of active) {
@@ -107,7 +115,7 @@ async function scheduledTick(base44) {
     }
     if (Date.now() - t0 >= TICK_MS) break;
   }
-  return { kampanie: report };
+  return { seria, kampanie: report };
 }
 
 async function ensureTables(base44) {
@@ -167,6 +175,9 @@ async function ensureTables(base44) {
   await runSql(base44, `ALTER TABLE public.campaigns ADD COLUMN IF NOT EXISTS scheduled_at timestamptz`);
   // Kilka przycisków w liście (do 3).
   await runSql(base44, `ALTER TABLE public.campaigns ADD COLUMN IF NOT EXISTS buttons jsonb`);
+  // Nazwa serii bieżących listów (np. „Listopad 2026”) — tylko do porządkowania w panelu.
+  await runSql(base44, `ALTER TABLE public.campaigns ADD COLUMN IF NOT EXISTS series_name text`);
+  await ensureSeriesTables(base44);
 }
 
 // Adres przycisku: „exmortis.pl/test” → „https://exmortis.pl/test”; http:// → https://.
@@ -202,8 +213,8 @@ const ctaOf = (b) => {
 // Ilu aktywnych odbiorców danej kampanii jeszcze nie dostało listu.
 async function remainingFor(base44, campaign) {
   const groupFilter = campaign.group_id
-    ? ` AND s.groups @> to_jsonb(${escStr(campaign.group_id)})`
-    : "";
+    ? ` AND s.groups @> to_jsonb(${escStr(campaign.group_id)})${CAMPAIGN_AFTER_START}`
+    : CAMPAIGN_AFTER_START;
   const rows = await runSql(
     base44,
     `SELECT count(*) AS n FROM public.subscribers s
@@ -293,7 +304,7 @@ const handler = async function (req) {
       await ensureTables(base44);
       const campaigns = await runSql(
         base44,
-        `SELECT c.id, c.subject, c.group_id, c.status, c.sent_count, c.created_date, c.sent_date, c.scheduled_at,
+        `SELECT c.id, c.subject, c.group_id, c.status, c.sent_count, c.created_date, c.sent_date, c.scheduled_at, c.series_name,
           g.name AS group_name
          FROM public.campaigns c
          LEFT JOIN public.newsletter_groups g ON g.id = c.group_id
@@ -308,7 +319,7 @@ const handler = async function (req) {
       const id = String(body.id || "");
       const rows = await runSql(
         base44,
-        `SELECT id, subject, content, group_id, status, preheader, cta_label, cta_url, buttons, scheduled_at FROM public.campaigns WHERE id = ${escStr(id)}`,
+        `SELECT id, subject, content, group_id, status, preheader, cta_label, cta_url, buttons, scheduled_at, series_name FROM public.campaigns WHERE id = ${escStr(id)}`,
         true
       );
       if (!rows.length) throw new Error("Nie znaleziono kampanii");
@@ -324,7 +335,8 @@ const handler = async function (req) {
       const groupId = body.group_id ? escStr(String(body.group_id)) : "NULL";
       const preheader = String(body.preheader || "").trim().slice(0, 140);
       const { cta_label, cta_url, buttons } = ctaOf(body);
-      const extra = `preheader = ${escStr(preheader)}, cta_label = ${escStr(cta_label)}, cta_url = ${escStr(cta_url)}, buttons = ${escStr(JSON.stringify(buttons))}::jsonb`;
+      const seriesName = String(body.series_name || "").trim().slice(0, 80);
+      const extra = `preheader = ${escStr(preheader)}, cta_label = ${escStr(cta_label)}, cta_url = ${escStr(cta_url)}, buttons = ${escStr(JSON.stringify(buttons))}::jsonb, series_name = ${seriesName ? escStr(seriesName) : "NULL"}`;
 
       let id;
       if (body.id) {
@@ -416,6 +428,33 @@ const handler = async function (req) {
       const rows = await runSql(base44, `SELECT status FROM public.campaigns WHERE id = ${escStr(id)}`, true);
       if (rows?.[0]?.status !== "draft") throw new Error("Nie da się już anulować — wysyłka ruszyła");
       return Response.json({ ok: true });
+    }
+
+    // ===== SERIA STARTOWA („Listy powrotu — początek drogi”) =====
+    if (action === "series.get") {
+      await ensureTables(base44);
+      return Response.json(await seriesState(base44));
+    }
+    if (action === "series.saveLetter") {
+      await ensureTables(base44);
+      const { buttons } = ctaOf(body);
+      const id = await seriesSaveLetter(base44, body, buttons);
+      return Response.json({ ok: true, id, ...(await seriesState(base44)) });
+    }
+    if (action === "series.deleteLetter") {
+      await ensureTables(base44);
+      await seriesDeleteLetter(base44, String(body.id || ""));
+      return Response.json({ ok: true, ...(await seriesState(base44)) });
+    }
+    if (action === "series.moveLetter") {
+      await ensureTables(base44);
+      await seriesMoveLetter(base44, String(body.id || ""), Number(body.dir) < 0 ? -1 : 1);
+      return Response.json({ ok: true, ...(await seriesState(base44)) });
+    }
+    if (action === "series.setActive") {
+      await ensureTables(base44);
+      if (body.on) await requireMail(base44);
+      return Response.json({ ok: true, ...(await seriesSetActive(base44, !!body.on)) });
     }
 
     if (action === "campaigns.delete") {
