@@ -25,7 +25,13 @@ export function nextPriceText(p) {
   const d = new Date(`${String(n.od).slice(0, 10)}T12:00:00`).toLocaleDateString("pl-PL", { day: "numeric", month: "long" });
   return `Od ${d}: ${zl(n.cena)}`;
 }
-export const zl = (n) => `${Number(n || 0).toFixed(2).replace(".", ",").replace(",00", "")} zł`;
+// Kwota po polsku: „7 999”, „3 490”, „49,90” (twarda spacja tysięcy — jeden zapis ceny w całym serwisie).
+export const kwota = (n) => {
+  const [i, d] = Number(n || 0).toFixed(2).split(".");
+  const g = i.replace(/\B(?=(\d{3})+(?!\d))/g, "\u00a0");
+  return d === "00" ? g : `${g},${d}`;
+};
+export const zl = (n) => `${kwota(n)} zł`;
 
 // Produkt płatny bez ceny (np. mentoring „po rozmowie”) — nie trafia do koszyka.
 export const priceOnRequest = (p) => !p?.is_free && !(unitPrice(p) > 0);

@@ -2,7 +2,7 @@ import React from "react";
 import { Link } from "react-router-dom";
 import { ArrowRight } from "lucide-react";
 import { useCart } from "../CartContext";
-import { isPromoActive, priceOnRequest, lowestPrice30, zl, nextPriceText } from "@/lib/productPrice";
+import { isPromoActive, priceOnRequest, lowestPrice30, zl, kwota, nextPriceText } from "@/lib/productPrice";
 
 // Wspólne elementy kart Skarbca: znaczki, cena, przycisk.
 
@@ -85,7 +85,7 @@ export function PriceBlock({ p }) {
   }
   // Karta podarunkowa z kwotami do wyboru: „97 · 197 · 497 zł”.
   if (p.product_type === "karta" && Array.isArray(p.price_options) && p.price_options.length > 1) {
-    return <span>{[...p.price_options].map(Number).sort((a, b) => a - b).join(" · ")} zł</span>;
+    return <span>{[...p.price_options].map(Number).sort((a, b) => a - b).map(kwota).join(" · ")} zł</span>;
   }
   if (isPromoActive(p) && p.price_start != null) {
     const until = new Date(`${p.promo_end_date}T12:00:00`).toLocaleDateString("pl-PL", {
@@ -94,8 +94,8 @@ export function PriceBlock({ p }) {
     });
     return (
       <span className="flex items-baseline gap-2 flex-wrap">
-        <s className="text-foreground/55">{p.price_regular} zł</s>
-        <span className="text-[#C9A24A] text-lg">{p.price_start} zł</span>
+        <s className="text-foreground/55">{kwota(p.price_regular)} zł</s>
+        <span className="text-[#C9A24A] text-lg">{kwota(p.price_start)} zł</span>
         <span className="technical text-[9px] text-foreground/55">DO {until.toUpperCase()}</span>
         {nextPriceText(p) && <span className="basis-full text-[11px] text-[#C9A24A]/80">{nextPriceText(p)}</span>}
         <span className="basis-full text-[11px] text-foreground/55">Najniższa cena z 30 dni przed obniżką: {zl(lowestPrice30(p))}</span>
@@ -106,9 +106,9 @@ export function PriceBlock({ p }) {
     return <span className="technical text-[10px] text-foreground/60">PO ROZMOWIE</span>;
   }
   if (p.price_regular != null) {
-    return <span>{p.price_regular} zł</span>;
+    return <span>{kwota(p.price_regular)} zł</span>;
   }
-  return Number(p.price) > 0 ? <span>{p.price} zł</span> : null;
+  return Number(p.price) > 0 ? <span>{kwota(p.price)} zł</span> : null;
 }
 
 export function productHref(p) {

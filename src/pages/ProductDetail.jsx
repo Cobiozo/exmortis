@@ -13,7 +13,7 @@ import Logo from "@/components/exmortis/Logo";
 import WaitlistDialog from "@/components/exmortis/shop/WaitlistDialog";
 import Curriculum from "@/components/exmortis/shop/Curriculum";
 import ProductReviews from "@/components/exmortis/shop/ProductReviews";
-import { isPromoActive, priceOnRequest, regularPrice, unitPrice, lowestPrice30, zl, nextPriceText } from "@/lib/productPrice";
+import { isPromoActive, priceOnRequest, regularPrice, unitPrice, lowestPrice30, zl, kwota, nextPriceText } from "@/lib/productPrice";
 import { GiftCardBuy } from "@/components/exmortis/shop/GiftCard";
 import BundleBox from "@/components/exmortis/shop/BundleBox";
 import { SeatsLine } from "@/components/exmortis/shop/cardBits";
@@ -137,10 +137,10 @@ export default function ProductDetail() {
 
             <div className="flex items-baseline flex-wrap gap-x-4 gap-y-1 mb-8">
               <span className="font-mono text-4xl gold-text">
-                {soon ? "Wkrótce" : product.is_free ? "Bezpłatnie" : amounts.length > 1 ? amounts.map((a) => `${a}`).join(" · ") + " zł" : onRequest ? "Po rozmowie" : `${unitPrice(product)} zł`}
+                {soon ? "Wkrótce" : product.is_free ? "Bezpłatnie" : amounts.length > 1 ? amounts.map((a) => kwota(a)).join(" · ") + " zł" : onRequest ? "Po rozmowie" : `${kwota(unitPrice(product))} zł`}
               </span>
               {promo && (
-                <span className="font-mono text-xl text-foreground/55 line-through">{regularPrice(product)} zł</span>
+                <span className="font-mono text-xl text-foreground/55 line-through">{kwota(regularPrice(product))} zł</span>
               )}
               {promo && (
                 <span className="technical text-[10px] text-foreground/55">
@@ -149,7 +149,7 @@ export default function ProductDetail() {
               )}
               {!promo && !soon && Number(product.old_price) > 0 && (
                 <span className="font-mono text-xl text-foreground/55 line-through">
-                  {product.old_price} zł
+                  {kwota(product.old_price)} zł
                 </span>
               )}
             </div>
