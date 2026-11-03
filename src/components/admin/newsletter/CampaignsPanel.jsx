@@ -8,8 +8,20 @@ const inputCls =
   "w-full bg-transparent border hairline px-4 py-2.5 focus:border-[#C9A24A] focus:outline-none transition-colors text-sm";
 
 const EMPTY = { id: null, subject: "", content: "", group_id: "", preheader: "", buttons: [{ label: "", url: "" }] };
-const fields = (e) => ({ subject: e.subject, content: e.content, preheader: e.preheader,
-  buttons: (e.buttons || []).filter((b) => b.label.trim() || b.url.trim()) });
+// „exmortis.pl/test” → „https://exmortis.pl/test” (to samo robi serwer).
+const fixUrl = (u) => {
+  const v = String(u || "").trim();
+  if (!v) return "";
+  if (/^https:\/\//i.test(v)) return v;
+  if (/^http:\/\//i.test(v)) return "https://" + v.slice(7);
+  return /^[a-z]+:/i.test(v) ? v : "https://" + v.replace(/^\/+/, "");
+};
+const fields = (e) => {
+  const buttons = (e.buttons || []).filter((b) => b.label.trim() || b.url.trim()).map((b) => ({ label: b.label.trim(), url: fixUrl(b.url) }));
+  // cta_label / cta_url — zgodność z wcześniejszą wersją funkcji na serwerze (jeden przycisk).
+  return { subject: e.subject, content: e.content, preheader: e.preheader, buttons,
+    cta_label: buttons[0]?.label || "", cta_url: buttons[0]?.url || "" };
+};
 // Prawdziwy komunikat z serwera (np. „Przycisk … nie ma linku”), a nie ogólny tekst.
 const errText = (err, fallback) => err?.response?.data?.error || (err?.message && !/^Request failed|^Funkcja \w+: \d+$/.test(err.message) ? err.message : "") || fallback;
 const MAX_BUTTONS = 3;
