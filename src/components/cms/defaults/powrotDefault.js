@@ -64,5 +64,5 @@ export const POWROT_BLOCKS = [
 export const TEST_BLOCKS = [
   { id: "test-quiz", typ: "modul", widoczny: true, uklad: { ...L, numer: "brak" }, dane: { modul: "test",
     tytul: "Która śmierć jest Twoja?",
-    tekst: "<p>Można funkcjonować i jednocześnie przestać żyć. Czasem przez wyczerpanie, czasem przez utratę sensu, czasem przez stratę, po której nic nie jest takie jak wcześniej.</p><p>Piętnaście stwierdzeń o ostatnich czterech tygodniach, kilka minut. Na końcu zobaczysz, ile jest w Tobie dziś śmierci mentalnej, duchowej i życiowej — albo że żadna z nich nie dominuje — oraz na którym etapie drogi jesteś. Odpowiadaj szczerze, pierwszą myślą. Nie ma dobrych ani złych odpowiedzi.</p>" } },
+    tekst: "<p>Można funkcjonować i jednocześnie przestać żyć.</p><p>15 stwierdzeń o ostatnich czterech tygodniach, potem wybór etapu drogi i — jeśli zechcesz — jedno zdanie refleksji. Kilka minut. Odpowiadaj pierwszą myślą.</p>" } },
 ];

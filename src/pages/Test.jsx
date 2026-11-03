@@ -229,9 +229,10 @@ export default function Test({ d = {} }) {
                   15 stwierdzeń o ostatnich czterech tygodniach, potem wybór etapu drogi i — jeśli zechcesz —
                   jedno zdanie refleksji. Kilka minut.
                 </p>
-                <p>Wynik zobaczysz od razu, bez podawania imienia i adresu e-mail. Odpowiadaj pierwszą myślą.</p>
+                <p>Odpowiadaj pierwszą myślą.</p>
               </div>
             )}
+            {flow === "v3" && <p className="text-foreground/75 max-w-xl mx-auto mb-6">Wynik zobaczysz od razu — bez podawania imienia i adresu e-mail.</p>}
             <p className="text-xs text-foreground/55 leading-relaxed max-w-xl mx-auto mb-14">{NOT_DIAGNOSIS}</p>
             {flow === "legacy" ? (
               <>
