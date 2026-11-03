@@ -216,16 +216,15 @@ async function quizDirect(payload) {
 }
 
 async function invokeQuiz(payload) {
+  // Najpierw właściwy backend funkcji. Gdy nie zna nowego przepływu (starsze wdrożenie kopii
+  // Supabase odpowiadało „Brak pola: email”), wynik liczy wdrożona funkcja aplikacji — ta sama
+  // logika i ta sama baza. Gdy kopia zostanie zaktualizowana, pierwsza droga zadziała sama.
   try {
     const res = FN_BACKEND === "supabase"
       ? await supaInvoke("shopQuizSubmit", payload)
       : await raw.functions.invoke("shopQuizSubmit", payload);
-    const data = res?.data;
-    if (data && !data.error) return { data };
-  } catch (e) {
-    // Serwer odpowiedział konkretnym powodem (np. limit prób) — pokazujemy go, nie ponawiamy.
-    if (e?.response?.data?.error) throw e;
-  }
+    if (res?.data && !res.data.error) return { data: res.data };
+  } catch {}
   return quizDirect(payload);
 }
 
