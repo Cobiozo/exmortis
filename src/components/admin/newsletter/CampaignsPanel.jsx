@@ -286,19 +286,36 @@ export default function CampaignsPanel() {
           placeholder="Treść listu do odbiorców…"
         />
 
-        <div className="grid sm:grid-cols-2 gap-3 mt-4">
-          <div>
-            <label className="technical text-[10px] text-foreground/50 block mb-2">PRZYCISK — TEKST (opcjonalnie)</label>
-            <input value={editor.cta_label} onChange={(e) => setEditor({ ...editor, cta_label: e.target.value })}
-              className={inputCls} placeholder="np. Zapisz się na 1 listopada" maxLength={60} />
-          </div>
-          <div>
-            <label className="technical text-[10px] text-foreground/50 block mb-2">PRZYCISK — LINK</label>
-            <input value={editor.cta_url} onChange={(e) => setEditor({ ...editor, cta_url: e.target.value })}
-              className={inputCls} placeholder="https://exmortis.pl/…" />
-          </div>
-        </div>
-        <p className="text-[11px] text-foreground/40 mt-1">Jeden list = jeden następny krok. Złoty przycisk pojawi się pod treścią.</p>
+        {(editor.buttons || []).map((b, i) => {
+          const setB = (patch) => setEditor({ ...editor, buttons: editor.buttons.map((x, j) => (j === i ? { ...x, ...patch } : x)) });
+          return (
+            <div key={i} className="grid sm:grid-cols-[1fr_1fr_auto] gap-3 mt-4 items-end">
+              <div>
+                <label className="technical text-[10px] text-foreground/50 block mb-2">
+                  {i === 0 ? "PRZYCISK GŁÓWNY (ZŁOTY) — TEKST" : `PRZYCISK ${i + 1} (OBRYS) — TEKST`}
+                </label>
+                <input value={b.label} onChange={(e) => setB({ label: e.target.value })}
+                  className={inputCls} placeholder={i === 0 ? "np. Zrób test" : "np. Zobacz Skarbiec"} maxLength={60} />
+              </div>
+              <div>
+                <label className="technical text-[10px] text-foreground/50 block mb-2">LINK</label>
+                <input value={b.url} onChange={(e) => setB({ url: e.target.value })}
+                  className={inputCls} placeholder="exmortis.pl/test" />
+              </div>
+              <button type="button" onClick={() => setEditor({ ...editor, buttons: editor.buttons.length > 1 ? editor.buttons.filter((_, j) => j !== i) : [{ label: "", url: "" }] })}
+                className="text-foreground/40 hover:blood-text p-2.5" aria-label={`Usuń przycisk ${i + 1}`}>
+                <Trash2 className="h-4 w-4" />
+              </button>
+            </div>
+          );
+        })}
+        {(editor.buttons || []).length < MAX_BUTTONS && (
+          <button type="button" onClick={() => setEditor({ ...editor, buttons: [...(editor.buttons || []), { label: "", url: "" }] })}
+            className="technical text-[10px] gold-text mt-3 inline-flex items-center gap-1 hover:underline underline-offset-4">
+            <Plus className="h-3 w-3" /> DODAJ PRZYCISK
+          </button>
+        )}
+        <p className="text-[11px] text-foreground/40 mt-1">Do 3 przycisków pod treścią: pierwszy złoty, kolejne z obrysem. Link możesz wpisać bez https:// (np. exmortis.pl/test). Najlepiej działa jeden główny następny krok.</p>
 
         <div className="mt-6 border hairline p-4">
           <label htmlFor="camp-when" className="technical text-[10px] text-foreground/50 block mb-2">ZAPLANUJ WYSYŁKĘ (CZAS POLSKI)</label>
