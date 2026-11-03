@@ -92,6 +92,8 @@ const handler = async function (req) {
       { label: "bootstrap/ping", name: "bootstrap", args: { ping: true } },
       { label: "eventsPublic/ping", name: "eventsPublic", args: { ping: true } },
       { label: "replikacja/delta", name: "replicateTick", args: { tick_token: stored } },
+      // Zaplanowane Listy powrotu (Panel → Newsletter → „Zaplanuj”) — wysyłka, gdy minął termin.
+      { label: "listy/zaplanowane", name: "adminNewsletter", args: { action: "campaigns.tick", tick_token: stored } },
     ];
 
     // Co 15 minut: przypomnienia o spotkaniach, przypomnienia o rezerwacjach 1:1, ponowienia zmiany adresu.
