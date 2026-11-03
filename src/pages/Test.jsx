@@ -63,7 +63,9 @@ const inputCls =
   "w-full bg-transparent border hairline px-4 py-4 focus:border-[#C9A24A] focus:outline-none transition-colors";
 const back = "technical text-[9px] text-foreground/55 hover:text-foreground/60 mt-10 flex items-center gap-2 transition-colors";
 
-// Kroki: 0 wstęp · 1–15 stwierdzenia · 16 etap · 17 zdanie · 18 formularz · 19 wynik
+// Kroki: 0 wstęp · 1–15 stwierdzenia · 16 etap · 17 zdanie · 18 liczenie (albo dawny formularz) · 19 wynik
+// Przepływ „v3” (od 3.11.2026): wynik bez imienia i e-maila; wysyłka e-mailem opcjonalna, pod wynikiem.
+// Dopóki funkcja serwera nie zna nowego przepływu (ping), działa dawny: forma zwracania się + formularz.
 // Moduł testu; d.tytul i d.tekst (wstęp) pochodzą z edytora stron.
 export default function Test({ d = {} }) {
   const t = useSystemText();
@@ -81,10 +83,17 @@ export default function Test({ d = {} }) {
   const [source, setSource] = useState("");
   const started = useRef(false);
   const clickedRec = useRef(new Set());
+  const [flow, setFlow] = useState(null); // null = sprawdzam · "v3" · "legacy"
+  const [resultKey, setResultKey] = useState(null);
+  const completed = useRef(false);
+  const [mail, setMail] = useState({ email: "", consent: false, newsletter: false, shareOpen: false, sending: false, done: null, error: "" });
 
   const S_STAGE = N + 1, S_OPEN = N + 2, S_FORM = N + 3, S_RESULT = N + 4;
 
   useEffect(() => {
+    base44.functions.invoke("shopQuizSubmit", { action: "ping" })
+      .then((r) => setFlow(r?.data?.flow === 3 ? "v3" : "legacy"))
+      .catch(() => setFlow("legacy"));
     setSource(new URLSearchParams(window.location.search).get("src") || "");
     base44.functions
       .invoke("shopProducts", {})
@@ -131,6 +140,46 @@ export default function Test({ d = {} }) {
     }
   };
 
+  // v3: wynik bez danych kontaktowych. Zmiana odpowiedzi po wyniku nadpisuje ten sam anonimowy zapis.
+  const compute = async () => {
+    setError("");
+    setSending(true);
+    setStep(S_FORM);
+    try {
+      const res = await base44.functions.invoke("shopQuizSubmit", {
+        action: "wynik", answers: answers.map((a) => Number(a)), stage, source: source || null, result_key: resultKey,
+      });
+      setResult(res.data);
+      if (res.data?.result_key) setResultKey(res.data.result_key);
+      // Bez wyniku, odpowiedzi i zdania w analityce — tylko fakt ukończenia (raz).
+      if (!completed.current) { completed.current = true; track(FUNNEL.testComplete); }
+      setStep(S_RESULT);
+    } catch (e2) {
+      setError(e2?.response?.data?.error || "Nie udało się policzyć wyniku. Spróbuj ponownie.");
+    } finally {
+      setSending(false);
+    }
+  };
+
+  // v3: opcjonalna wysyłka wyniku — sukces dopiero po potwierdzeniu serwera; przy błędzie dane zostają.
+  const sendResult = async (e) => {
+    e.preventDefault();
+    if (mail.sending) return;
+    if (!mail.consent) { setMail((m) => ({ ...m, error: "Zaznacz zgodę na wysłanie wyniku." })); return; }
+    setMail((m) => ({ ...m, sending: true, error: "" }));
+    try {
+      const res = await base44.functions.invoke("shopQuizSubmit", {
+        action: "wyslij", result_key: resultKey, email: mail.email.trim(), consent: true,
+        newsletter_consent: mail.newsletter, share_open: mail.shareOpen && !!openAnswer.trim(),
+        open_answer: mail.shareOpen && openAnswer.trim() ? openAnswer.trim() : null,
+      });
+      track("Lead", { content_name: "test" });
+      setMail((m) => ({ ...m, sending: false, done: res.data?.delivery || "wyslany" }));
+    } catch (e2) {
+      setMail((m) => ({ ...m, sending: false, error: e2?.response?.data?.error || "Nie udało się wysłać. Spróbuj ponownie." }));
+    }
+  };
+
   const share = async () => {
     try {
       await navigator.clipboard.writeText(SHARE_URL);
@@ -174,26 +223,30 @@ export default function Test({ d = {} }) {
             ) : (
               <div className="text-foreground/60 text-lg leading-relaxed max-w-xl mx-auto mb-10 space-y-4">
                 <p>
-                  Można funkcjonować i jednocześnie przestać żyć. Czasem przez wyczerpanie, czasem przez utratę sensu,
-                  czasem przez stratę, po której nic nie jest takie jak wcześniej.
+                  15 stwierdzeń o ostatnich czterech tygodniach, potem wybór etapu drogi i — jeśli zechcesz —
+                  jedno zdanie refleksji. Kilka minut.
                 </p>
-                <p>
-                  Piętnaście stwierdzeń o ostatnich czterech tygodniach, kilka minut. Na końcu zobaczysz, ile jest
-                  w Tobie dziś śmierci mentalnej, duchowej i życiowej — albo że żadna z nich nie dominuje — oraz na którym
-                  etapie drogi jesteś. Odpowiadaj szczerze, pierwszą myślą. Nie ma dobrych ani złych odpowiedzi.
-                </p>
+                <p>Wynik zobaczysz od razu, bez podawania imienia i adresu e-mail. Odpowiadaj pierwszą myślą.</p>
               </div>
             )}
             <p className="text-xs text-foreground/55 leading-relaxed max-w-xl mx-auto mb-14">{NOT_DIAGNOSIS}</p>
-            <p className="shop-heading text-xl text-[#F5EFE1] mb-8">Jak mam się do Ciebie zwracać?</p>
-            <div className="flex flex-col sm:flex-row gap-4 justify-center">
-              <button onClick={() => { setFormOfAddress("Mężczyzna"); setStep(1); }} className="btn-ghost">
-                JAK DO MĘŻCZYZNY
+            {flow === "legacy" ? (
+              <>
+                <p className="shop-heading text-xl text-[#F5EFE1] mb-8">Jak mam się do Ciebie zwracać?</p>
+                <div className="flex flex-col sm:flex-row gap-4 justify-center">
+                  <button onClick={() => { setFormOfAddress("Mężczyzna"); setStep(1); }} className="btn-ghost">
+                    JAK DO MĘŻCZYZNY
+                  </button>
+                  <button onClick={() => { setFormOfAddress("Kobieta"); setStep(1); }} className="btn-ghost">
+                    JAK DO KOBIETY
+                  </button>
+                </div>
+              </>
+            ) : (
+              <button onClick={() => setStep(1)} disabled={!flow} className="btn-relic disabled:opacity-60">
+                {flow ? "ZACZNIJ TEST" : "CHWILĘ…"}
               </button>
-              <button onClick={() => { setFormOfAddress("Kobieta"); setStep(1); }} className="btn-ghost">
-                JAK DO KOBIETY
-              </button>
-            </div>
+            )}
           </div>
         )}
 
@@ -267,10 +320,14 @@ export default function Test({ d = {} }) {
             </h2>
             <p className="italic text-foreground/55 text-lg mb-6">«Ostatnio umarło we mnie…»</p>
             <textarea value={openAnswer} onChange={(e) => setOpenAnswer(e.target.value)} rows={4} maxLength={2000} className={inputCls} placeholder="…" />
-            <p className="text-xs text-foreground/55 mt-3">Przeczytam to tylko ja. Nie musisz pisać nic, czego nie chcesz.</p>
+            {flow === "v3" ? (
+              <p className="text-xs text-foreground/55 mt-3">To zdanie zostaje w Twojej przeglądarce i nie jest zapisywane. Wyślesz je tylko wtedy, gdy pod wynikiem zdecydujesz się przesłać je razem z wynikiem.</p>
+            ) : (
+              <p className="text-xs text-foreground/55 mt-3">Przeczytam to tylko ja. Nie musisz pisać nic, czego nie chcesz.</p>
+            )}
             <div className="flex flex-col sm:flex-row gap-4 mt-10">
-              <button onClick={() => setStep(S_FORM)} className="btn-relic">DALEJ</button>
-              <button onClick={() => { setOpenAnswer(""); setStep(S_FORM); }} className="btn-ghost">POMIŃ</button>
+              <button onClick={() => (flow === "v3" ? compute() : setStep(S_FORM))} className="btn-relic">{flow === "v3" ? "POKAŻ MÓJ WYNIK" : "DALEJ"}</button>
+              <button onClick={() => { setOpenAnswer(""); if (flow === "v3") compute(); else setStep(S_FORM); }} className="btn-ghost">POMIŃ</button>
             </div>
             <button onClick={() => setStep(S_STAGE)} className={back}>
               <ArrowLeft className="h-3 w-3" /> WSTECZ
@@ -278,8 +335,24 @@ export default function Test({ d = {} }) {
           </div>
         )}
 
-        {/* ===== GDZIE WYSŁAĆ WYNIK ===== */}
-        {step === S_FORM && (
+        {/* ===== LICZENIE WYNIKU (v3) ===== */}
+        {step === S_FORM && flow === "v3" && (
+          <div className="fade-up text-center space-y-6" role="status" aria-live="polite">
+            {sending && <p className="shop-heading text-2xl text-[#F5EFE1]">Liczę Twój wynik…</p>}
+            {!sending && error && (
+              <>
+                <p className="text-sm blood-text" role="alert">{error}</p>
+                <button onClick={compute} className="btn-relic">SPRÓBUJ PONOWNIE</button>
+                <button type="button" onClick={() => setStep(S_OPEN)} className={`${back} mx-auto`}>
+                  <ArrowLeft className="h-3 w-3" /> WSTECZ
+                </button>
+              </>
+            )}
+          </div>
+        )}
+
+        {/* ===== GDZIE WYSŁAĆ WYNIK (dawny przepływ) ===== */}
+        {step === S_FORM && flow !== "v3" && (
           <form onSubmit={submit} className="fade-up space-y-6">
             <h2 className="shop-heading text-3xl md:text-5xl text-[#F5EFE1] break-words">
               Twój wynik jest gotowy. Gdzie mam go wysłać?
@@ -317,7 +390,7 @@ export default function Test({ d = {} }) {
             <p className="technical text-[10px] gold-text mb-8">{t("dz.test")}</p>
 
             <h2 className="shop-heading text-3xl md:text-5xl text-[#F5EFE1] leading-tight mb-8 break-words">
-              {result.headline || `${lead.first_name}, Twój wynik`}
+              {result.headline || "Twój wynik"}
             </h2>
             {result.body && <p className="text-foreground/75 text-lg leading-relaxed mb-14">{result.body}</p>}
 
@@ -371,7 +444,8 @@ export default function Test({ d = {} }) {
               <p className="text-foreground/60 leading-relaxed">{result.stage_text}</p>
             </div>
 
-            <h3 className="shop-heading text-2xl text-[#F5EFE1] mb-8">Od czego zacząć</h3>
+            <h3 className="shop-heading text-2xl text-[#F5EFE1] mb-3">Twój następny krok</h3>
+            {matched[0] && <p className="text-foreground/60 mb-8">Na początek: <span className="text-[#F5EFE1]">{matched[0].name}</span>. Poniżej także inne możliwości.</p>}
             {products === null ? (
               <div className="grid sm:grid-cols-3 gap-4 mb-16">
                 {[...Array(3)].map((_, i) => <div key={i} className="aspect-[3/4] bg-[#0D0D0E] border hairline animate-pulse" />)}
@@ -402,11 +476,63 @@ export default function Test({ d = {} }) {
               </div>
             )}
 
+            {flow === "v3" && (
+              <section className="border hairline bg-[#0D0D0E] p-6 md:p-8 mb-10" aria-labelledby="test-mail-h">
+                <p className="technical text-[10px] gold-text mb-3">OPCJONALNIE</p>
+                <h3 id="test-mail-h" className="shop-heading text-2xl text-[#F5EFE1] mb-3">Chcesz mieć ten wynik u siebie?</h3>
+                {mail.done ? (
+                  <p className="text-foreground/75 leading-relaxed" role="status">
+                    {mail.done === "kolejka"
+                      ? "Wynik jest w drodze — mail wyjdzie w ciągu najbliższych godzin. Sprawdź też folder Spam lub Oferty."
+                      : "Wysłałem wynik na podany adres. Jeśli nie widzisz wiadomości, sprawdź folder Spam lub Oferty."}
+                  </p>
+                ) : (
+                  <form onSubmit={sendResult} className="space-y-5" noValidate>
+                    <p className="text-sm text-foreground/60">Mogę wysłać Ci wynik e-mailem. Nie musisz tego robić — wynik masz powyżej.</p>
+                    <div>
+                      <label htmlFor="test-mail" className="technical text-[10px] text-foreground/55 block mb-3">E-MAIL</label>
+                      <input id="test-mail" type="email" autoComplete="email" value={mail.email}
+                        onChange={(e) => setMail({ ...mail, email: e.target.value, error: "" })} className={inputCls} />
+                    </div>
+                    <label className="flex items-start gap-3 cursor-pointer">
+                      <input type="checkbox" checked={mail.consent} onChange={(e) => setMail({ ...mail, consent: e.target.checked, error: "" })} className="accent-[#C9A24A] w-5 h-5 shrink-0 mt-0.5" />
+                      <span className="text-sm text-foreground/60 leading-relaxed">Zgadzam się na przetwarzanie adresu e-mail w celu wysłania wyniku.</span>
+                    </label>
+                    {openAnswer.trim() && (
+                      <label className="flex items-start gap-3 cursor-pointer">
+                        <input type="checkbox" checked={mail.shareOpen} onChange={(e) => setMail({ ...mail, shareOpen: e.target.checked })} className="accent-[#C9A24A] w-5 h-5 shrink-0 mt-0.5" />
+                        <span className="text-sm text-foreground/60 leading-relaxed">Prześlij też moje zdanie „Ostatnio umarło we mnie…” — przeczytam je tylko ja.</span>
+                      </label>
+                    )}
+                    <label className="flex items-start gap-3 cursor-pointer">
+                      <input type="checkbox" checked={mail.newsletter} onChange={(e) => setMail({ ...mail, newsletter: e.target.checked })} className="accent-[#C9A24A] w-5 h-5 shrink-0 mt-0.5" />
+                      <span className="text-sm text-foreground/60 leading-relaxed">Chcę też dostawać „Listy powrotu” — jeden list w każdy poniedziałek.</span>
+                    </label>
+                    {mail.error && <p className="text-sm blood-text" role="alert">{mail.error}</p>}
+                    <button type="submit" disabled={mail.sending || !mail.email.trim()} className="btn-ghost w-full disabled:opacity-60">
+                      {mail.sending ? "WYSYŁAM..." : "WYŚLIJ WYNIK NA MÓJ E-MAIL"}
+                    </button>
+                  </form>
+                )}
+              </section>
+            )}
+
             <div className="text-xs text-foreground/55 text-center leading-relaxed mb-10 space-y-2 max-w-xl mx-auto">
               <p>{NOT_DIAGNOSIS}</p>
+              {flow === "v3" && (
+                <p>Co zapisuję: same punkty, poziomy i wybrany etap — bez imienia, adresu e-mail i Twojego zdania (anonimowa statystyka testu). Adres i zdanie trafiają do mnie tylko wtedy, gdy zdecydujesz się wysłać wynik.</p>
+              )}
               <CrisisLine />
               {result.email_sent === false && <p className="text-foreground/55">Wyniku nie udało się teraz wysłać e-mailem — zapisz go albo zrób zrzut ekranu.</p>}
             </div>
+
+            {flow === "v3" && (
+              <div className="text-center mb-8">
+                <button type="button" onClick={() => setStep(1)} className="technical text-[10px] text-foreground/60 hover:gold-text underline underline-offset-4 min-h-11">
+                  ZMIEŃ ODPOWIEDZI
+                </button>
+              </div>
+            )}
 
             <div className="text-center">
               <button onClick={share} className="btn-ghost !px-5 !py-3 text-[10px]">
