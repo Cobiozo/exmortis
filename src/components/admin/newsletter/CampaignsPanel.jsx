@@ -486,6 +486,7 @@ export default function CampaignsPanel() {
                 <Trash2 className="h-4 w-4" />
               </button>
             </div>
+            </React.Fragment>
           ))}
         </div>
       )}
