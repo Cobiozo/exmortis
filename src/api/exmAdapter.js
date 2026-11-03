@@ -195,13 +195,15 @@ function wrapIntegrations(integrations) {
   return new Proxy(integrations || {}, { get: (t, n) => (n === "Core" ? Core : t[n]) });
 }
 
-// Test publiczny ma stały adres wdrożonej funkcji. Na zewnętrznym hostingu
-// względne /api i brak zmiennych Base44 kierowały żądanie do serwera strony.
-async function invokePublicQuiz(payload) {
-  const appId = "6aa08bc6318b0f886cc3b9a3";
-  const res = await fetch(`https://exmortis-return-path.base44.app/api/apps/${appId}/functions/shopQuizSubmit`, {
+// Test publiczny (wynik bez logowania). Najpierw zwykła droga aplikacji (podgląd, hosting
+// Base44, Supabase). Gdy ta w ogóle nie odpowie — bo na zewnętrznym hostingu klient nie zna
+// adresu serwera i wołałby względne /api — sięgamy po stały adres wdrożonej funkcji.
+const QUIZ_APP_ID = "6aa08bc6318b0f886cc3b9a3";
+
+async function quizDirect(payload) {
+  const res = await fetch(`https://exmortis-return-path.base44.app/api/apps/${QUIZ_APP_ID}/functions/shopQuizSubmit`, {
     method: "POST", credentials: "omit",
-    headers: { "Content-Type": "application/json", "X-App-Id": appId },
+    headers: { "Content-Type": "application/json", "X-App-Id": QUIZ_APP_ID },
     body: JSON.stringify(payload || {}),
   });
   const data = await res.json().catch(() => null);
@@ -213,6 +215,20 @@ async function invokePublicQuiz(payload) {
   return { data };
 }
 
+async function invokeQuiz(payload) {
+  try {
+    const res = FN_BACKEND === "supabase"
+      ? await supaInvoke("shopQuizSubmit", payload)
+      : await raw.functions.invoke("shopQuizSubmit", payload);
+    const data = res?.data;
+    if (data && !data.error) return { data };
+  } catch (e) {
+    // Serwer odpowiedział konkretnym powodem (np. limit prób) — pokazujemy go, nie ponawiamy.
+    if (e?.response?.data?.error) throw e;
+  }
+  return quizDirect(payload);
+}
+
 export function createExmClient(raw) {
   return new Proxy(raw, {
     get(target, prop) {
@@ -220,7 +236,7 @@ export function createExmClient(raw) {
       if (prop === "auth" && AUTH_BACKEND === "supabase") return supaAuth;
       if (prop === "functions") return {
         invoke: (name, payload) => name === "shopQuizSubmit"
-          ? invokePublicQuiz(payload)
+          ? invokeQuiz(payload)
           : FN_BACKEND === "supabase" ? supaInvoke(name, payload) : target.functions.invoke(name, payload),
       };
       // Pliki (wgrywanie, podpisane linki) → Supabase Storage. Pozostałe integracje bez zmian.
