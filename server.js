@@ -348,7 +348,57 @@ app.use(express.static(dist, {
 }));
 
 // SPA: każdy adres bez kropki w ścieżce → index.html (routing Reacta po stronie przeglądarki).
-app.get(/^(?!.*\.).*/, (_req, res) => {
+// Dla znanych stron publicznych (dist/seo-pages.json z builda) serwer wstawia od razu właściwy tytuł,
+// opis, og:title/og:description, og:url i adres kanoniczny — podglądy linków i roboty bez JavaScriptu
+// widzą opis tej strony, nie ogólny. Brak pliku albo błąd → zwykły index.html (jak dotychczas).
+const SEO_PRIVATE = new Set(["/konto", "/kasa", "/login", "/register", "/forgot-password", "/reset-password", "/listy/potwierdz", "/zmiana-adresu"]);
+const escAttr = (s) => String(s).replace(/&/g, "&amp;").replace(/"/g, "&quot;").replace(/</g, "&lt;");
+const seoCache = { mtime: 0, html: "", pages: {} };
+function seoLoad() {
+  const idx = path.join(dist, "index.html");
+  const m = fs.statSync(idx).mtimeMs;
+  if (m !== seoCache.mtime) {
+    seoCache.html = fs.readFileSync(idx, "utf8");
+    try { seoCache.pages = JSON.parse(fs.readFileSync(path.join(dist, "seo-pages.json"), "utf8")); } catch { seoCache.pages = {}; }
+    seoCache.mtime = m;
+  }
+  return seoCache;
+}
+function seoHtml(req) {
+  const { html, pages } = seoLoad();
+  const p = (req.path.replace(/\/+$/, "") || "/");
+  const meta = pages[p];
+  if (!meta || !meta.t) return null;
+  const t = escAttr(meta.t), d = escAttr(meta.d || "");
+  const host = String(req.headers["x-forwarded-host"] || req.headers.host || "").split(",")[0].trim();
+  const url = host ? `https://${host}${p === "/" ? "/" : p}` : "";
+  let out = html
+    .replace(/<title>[^<]*<\/title>/, `<title>${t}</title>`)
+    .replace(/(<meta name="description" content=")[^"]*(")/, `$1${d}$2`)
+    .replace(/(<meta property="og:description" content=")[^"]*(")/, `$1${d}$2`)
+    .replace(/(<meta name="twitter:description" content=")[^"]*(")/, `$1${d}$2`);
+  // Na stronie spotkania (/1-listopada) zostaje tytuł spotkania z buildu; gdzie indziej — tytuł strony.
+  if (p !== "/1-listopada") {
+    out = out
+      .replace(/(<meta property="og:title" content=")[^"]*(")/, `$1${t}$2`)
+      .replace(/(<meta name="twitter:title" content=")[^"]*(")/, `$1${t}$2`);
+  }
+  if (url) {
+    const extra = (SEO_PRIVATE.has(p) ? "" : `<link rel="canonical" id="exm-canonical" href="${escAttr(url)}" />`) + `<meta property="og:url" content="${escAttr(url)}" />`;
+    out = out.replace("</head>", `${extra}</head>`);
+  }
+  return out;
+}
+app.get(/^(?!.*\.).*/, (req, res) => {
+  try {
+    const out = seoHtml(req);
+    if (out) {
+      res.setHeader("Cache-Control", "no-cache");
+      return res.type("html").send(out);
+    }
+  } catch (e) {
+    console.error("seo:", String(e?.message || e).slice(0, 200));
+  }
   res.sendFile(path.join(dist, "index.html"));
 });
 
