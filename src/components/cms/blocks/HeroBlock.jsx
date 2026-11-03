@@ -62,8 +62,9 @@ export default function HeroBlock({ d }) {
           <span className="block tracking-[0.06em]">{nbsp(d.linia1)}</span>
           {d.linia2 && <span className="block gold-text mt-3 text-2xl sm:text-3xl md:text-4xl lg:text-[4rem]">{nbsp(d.linia2)}</span>}
         </h1>
-        {d.lead && <p className="no-hyph mt-5 md:mt-8 text-base sm:text-lg md:text-2xl text-foreground/75 font-light">{nbsp(d.lead)}</p>}
-        {d.podlead && <p className="no-hyph mt-2 text-sm md:text-base text-foreground/55 font-light">{d.podlead}</p>}
+        {/* Główny komunikat (wyraźny) i opis zwykłym tekstem — bez wersalików, czytelny na telefonie. */}
+        {d.lead && <p className="no-hyph mt-6 md:mt-10 text-[1.375rem] sm:text-2xl md:text-[2rem] leading-snug text-[#F5EFE1] font-light max-w-2xl">{nbsp(d.lead)}</p>}
+        {d.podlead && <p className="no-hyph mt-4 md:mt-5 text-base md:text-lg leading-relaxed text-foreground/75 font-light max-w-xl">{nbsp(d.podlead)}</p>}
         <Zapowiedz d={d} center />
         <HeroButtons d={d} className="mt-7 md:mt-12" center />
         <Dopisek t={d.dopisek} />

@@ -11,13 +11,13 @@ const mod = (id, modul, extra = {}, numer = "auto") => ({ id, typ: "modul", wido
 export const HOME_BLOCKS = [
   { id: "home-hero", typ: "hero", widoczny: true, uklad: { ...bare }, dane: {
     wariant: "znak", etykieta: "", linia1: "EXMORTIS", linia2: "ze śmierci",
-    lead: "Wracam z siebie. Uczę wracać.",
-    podlead: "Mentoring 1:1 dla osób po ważnej zmianie w życiu, które chcą uporządkować swoją sytuację i wybrać następny krok.",
+    lead: "Kiedy coś w Tobie zgasło, możesz zacząć wracać.",
+    podlead: "Po stracie, wypaleniu, utracie sensu — albo wtedy, gdy trudno nazwać, co się zmieniło. Znajdź słowa, wsparcie i pierwszy krok na swojej drodze powrotu.",
     przyciski: [
       { etykieta: "ZNAJDŹ SWÓJ PIERWSZY KROK", link: "/test?src=home-hero", styl: "zloty", strzalka: true },
       { etykieta: "POZNAJ MNIE I MOJĄ HISTORIĘ", link: "/o-mnie", styl: "obrys", strzalka: false },
     ],
-    podpis_przycisku: "Bezpłatny test autorefleksji · 15 pytań · około 3 minut.",
+    podpis_przycisku: "Bezpłatny test autorefleksji · 15 pytań · około 3 minut",
     dopisek: "",
     tlo: { url: "https://media.base44.com/images/public/6aa08bc6318b0f886cc3b9a3/b1f31269c_generated_f9afed1e.jpg", alt: "" },
     przyciemnienie: 60 } },
