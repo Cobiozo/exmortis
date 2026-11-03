@@ -33,29 +33,32 @@ export const DIM_TEXT = {
   },
 };
 
+// Nagłówek z imieniem (wersja z e-mailem sprzed 3.11) albo bez — wtedy od wielkiej litery.
+const withName = (n, rest) => (n ? `${n}, ${rest}` : rest.charAt(0).toUpperCase() + rest.slice(1));
+
 export const DOMINANT = {
   Mentalna: {
-    head: (n) => `${n}, w Twoich odpowiedziach najwyraźniej widać śmierć mentalną.`,
+    head: (n) => withName(n, "w Twoich odpowiedziach najwyraźniej widać śmierć mentalną."),
     body: "Śmierć mentalna nie wygląda jak upadek. Wygląda jak sprawne działanie: obowiązki zrobione, terminy dotrzymane, a w środku coraz mniej obecności. Największa pułapka tego miejsca brzmi: „muszę się bardziej postarać”. Nie musisz bardziej. Najpierw trzeba się zatrzymać i zobaczyć, co naprawdę zabiera Ci siły — i po co to wszystko robisz.",
     questions: ["Co robisz dziś tylko dlatego, że „tak trzeba”?", "Kiedy ostatnio coś naprawdę Cię ożywiło — i co wtedy było inne?", "Co by się stało, gdyby przez tydzień nikt nie widział Twojego wysiłku?"],
   },
   Duchowa: {
-    head: (n) => `${n}, w Twoich odpowiedziach najwyraźniej widać śmierć duchową.`,
+    head: (n) => withName(n, "w Twoich odpowiedziach najwyraźniej widać śmierć duchową."),
     body: "Śmierć duchowa przychodzi cicho. Z zewnątrz wszystko jest na miejscu, a w środku gaśnie światło, które dawało kierunek. Pustka nie jest niewdzięcznością ani słabością. Jest znakiem, że dawne odpowiedzi stały się za ciasne. Sensu nie znajduje się gotowego. Sens się buduje — od pytań, których dotąd nie było wolno zadać.",
     questions: ["Co straciło dla Ciebie znaczenie w ostatnich latach?", "Za czym tęsknisz, kiedy wokół robi się cicho?", "Gdyby nikt nie oceniał Twojego wyboru — jaki byłby następny krok?"],
   },
   Życiowa: {
-    head: (n) => `${n}, w Twoich odpowiedziach najwyraźniej widać śmierć życiową.`,
+    head: (n) => withName(n, "w Twoich odpowiedziach najwyraźniej widać śmierć życiową."),
     body: "Śmierć życiowa ma datę. Strata, rozstanie, koniec pracy, zdrowia albo roli, która była całym życiem. Świat ma krótką pamięć i szybko oczekuje powrotu do formy. Nie chodzi jednak o powrót do siebie sprzed. Chodzi o zbudowanie nowego domu w miejscu, w którym ten pierwszy się spalił.",
     questions: ["Co skończyło się razem z tym wydarzeniem — poza tym, co widać?", "Czego nie pozwalasz sobie jeszcze opłakać?", "Co z tamtego życia chcesz zabrać dalej, a co zostawić?"],
   },
   Mieszana: {
-    head: (n) => `${n}, niesiesz więcej niż jedną śmierć.`,
+    head: (n) => withName(n, "niesiesz więcej niż jedną śmierć."),
     body: "Tak jest u większości ludzi, którzy do mnie przychodzą. Jedna śmierć uruchamia drugą, druga maskuje trzecią: strata odbiera sens, brak sensu wyczerpuje, a wyczerpanie nie pozwala przeżyć straty. Dlatego warto zacząć nie od jednego fragmentu, ale od mapy całej drogi — i od pytania, która śmierć była pierwsza.",
     questions: ["Która z tych śmierci była pierwsza?", "Która z nich zabiera Ci dziś najwięcej sił?", "Gdyby można było zająć się dziś tylko jedną — która by to była?"],
   },
   Żadna: {
-    head: (n) => `${n}, żadna z trzech śmierci nie dominuje.`,
+    head: (n) => withName(n, "żadna z trzech śmierci nie dominuje."),
     body: "Twoje odpowiedzi są niskie we wszystkich trzech obszarach. To może znaczyć, że jesteś dziś w dobrym miejscu — i warto wiedzieć, co Cię w nim trzyma. Może też znaczyć, że trudne rzeczy są dobrze schowane. Odpowiedz sobie uczciwie, co jest bliższe prawdy, i wróć do testu za kilka tygodni.",
     questions: ["Co dziś daje Ci siłę, sens i oparcie?", "O co dbasz, żeby tak zostało?", "Czy ktoś w Twoim otoczeniu przechodzi teraz swoją śmierć?"],
   },
