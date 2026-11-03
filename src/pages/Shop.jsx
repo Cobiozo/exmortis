@@ -187,7 +187,7 @@ export default function Shop() {
       ) : emptyState ? (
         <div className="py-24 text-center px-5">
           <p className="shop-heading text-2xl text-[#F5EFE1]/60">
-            {hasFilters ? "Żaden materiał nie pasuje do wybranych filtrów." : "Nic nie jest teraz w przygotowaniu."}
+            {hasFilters ? "Żaden materiał nie pasuje do wybranych filtrów." : tab === "dostepne" ? "Materiały pojawią się tu wkrótce." : "Nic nie jest teraz w przygotowaniu."}
           </p>
           {hasFilters && (
             <>
