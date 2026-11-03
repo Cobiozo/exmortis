@@ -1,0 +1,98 @@
+# Wdrożenie wybranych funkcji Supabase (Edge Functions) — TYLKO ręcznie, przez właściciela.
+#
+# Uruchomienie: GitHub → Actions → „Exmortis — wdroż funkcje Supabase” → Run workflow
+#   → w polu „functions” wpisz nazwy funkcji po przecinku (np. adminNewsletter,cronTick) → Run.
+#
+# Wymaga sekretu repozytorium SUPABASE_ACCESS_TOKEN (Settings → Secrets and variables → Actions).
+# Token nigdy nie trafia do plików ani do logów.
+#
+# Bezpieczeństwo:
+#  - wdraża wyłącznie funkcje wpisane ręcznie (nigdy „wszystkie”);
+#  - dla każdej funkcji odczytuje jej OBECNE ustawienie verify_jwt na Supabase i zachowuje je
+#    (publiczne funkcje zostają publiczne, chronione — chronione);
+#  - po wdrożeniu sprawdza, czy ustawienie verify_jwt się nie zmieniło.
+name: Exmortis — wdroż funkcje Supabase
+
+on:
+  workflow_dispatch:
+    inputs:
+      functions:
+        description: "Nazwy funkcji po przecinku, np. adminNewsletter,cronTick"
+        required: true
+        type: string
+
+concurrency:
+  group: exmortis-supabase-functions
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    permissions:
+      contents: read
+    env:
+      PROJECT_REF: fqhvxhnbeyvwubpnuzxe
+      SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
+      FUNCTIONS: ${{ inputs.functions }}
+    steps:
+      - name: Pobierz kod
+        uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+
+      - name: Sprawdź token
+        shell: bash
+        run: |
+          if [ -z "$SUPABASE_ACCESS_TOKEN" ]; then
+            echo "::error::Brak sekretu SUPABASE_ACCESS_TOKEN w repozytorium (Settings → Secrets and variables → Actions)."
+            exit 1
+          fi
+
+      - name: Zainstaluj Supabase CLI
+        uses: supabase/setup-cli@v1
+        with:
+          version: latest
+
+      - name: Wdróż wybrane funkcje (z zachowaniem verify_jwt)
+        shell: bash
+        run: |
+          set -euo pipefail
+          IFS=',' read -ra LIST <<< "$FUNCTIONS"
+          [ "${#LIST[@]}" -gt 0 ] || { echo "::error::Nie podano żadnej funkcji"; exit 1; }
+          {
+            echo "### Wdrożenie funkcji Supabase"
+            echo "| Funkcja | verify_jwt przed | verify_jwt po | Wersja |"
+            echo "|---|---|---|---|"
+          } >> "$GITHUB_STEP_SUMMARY"
+          for raw in "${LIST[@]}"; do
+            fn="$(echo "$raw" | tr -d '[:space:]')"
+            [ -n "$fn" ] || continue
+            if ! [[ "$fn" =~ ^[A-Za-z0-9_-]+$ ]]; then echo "::error::Niepoprawna nazwa: $fn"; exit 1; fi
+            if [ "$fn" = "_shared" ] || [ ! -f "supabase/functions/$fn/index.ts" ]; then
+              echo "::error::Nie ma funkcji supabase/functions/$fn/index.ts"; exit 1
+            fi
+            # Obecne ustawienie verify_jwt na Supabase (404 = nowa funkcja → ustawienie z config.toml, domyślnie true).
+            code=$(curl -sS -o before.json -w '%{http_code}' -H "Authorization: Bearer $SUPABASE_ACCESS_TOKEN" \
+              "https://api.supabase.com/v1/projects/$PROJECT_REF/functions/$fn")
+            if [ "$code" = "200" ]; then
+              before=$(jq -r '.verify_jwt' before.json)
+            elif [ "$code" = "404" ]; then
+              if grep -A1 "^\[functions\.$fn\]" supabase/config.toml | grep -q 'verify_jwt = false'; then before=false; else before=true; fi
+            else
+              echo "::error::Nie udało się odczytać funkcji $fn (HTTP $code)"; exit 1
+            fi
+            flag=""
+            [ "$before" = "false" ] && flag="--no-verify-jwt"
+            echo "→ $fn (verify_jwt=$before)"
+            supabase functions deploy "$fn" --project-ref "$PROJECT_REF" --use-api $flag
+            curl -sS -o after.json -H "Authorization: Bearer $SUPABASE_ACCESS_TOKEN" \
+              "https://api.supabase.com/v1/projects/$PROJECT_REF/functions/$fn"
+            after=$(jq -r '.verify_jwt' after.json)
+            ver=$(jq -r '.version' after.json)
+            echo "| $fn | $before | $after | $ver |" >> "$GITHUB_STEP_SUMMARY"
+            if [ "$before" != "$after" ]; then
+              echo "::error::verify_jwt funkcji $fn zmieniło się ($before → $after) — sprawdź ustawienia w panelu Supabase"; exit 1
+            fi
+          done
+          rm -f before.json after.json
