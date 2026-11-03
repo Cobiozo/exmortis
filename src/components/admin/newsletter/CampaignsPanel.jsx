@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { base44 } from "@/api/base44Client";
-import { Plus, Trash2, X, Pencil, Send, Eye, Smartphone, Monitor, FlaskConical } from "lucide-react";
+import { Plus, Trash2, X, Pencil, Send, Eye, Smartphone, Monitor, FlaskConical, CalendarClock } from "lucide-react";
 import RichTextEditor from "@/components/admin/RichTextEditor";
 import useMailStatus, { MAIL_REQUIRED } from "@/lib/useMailStatus";
 
@@ -9,6 +9,24 @@ const inputCls =
 
 const EMPTY = { id: null, subject: "", content: "", group_id: "", preheader: "", cta_label: "", cta_url: "" };
 const fields = (e) => ({ subject: e.subject, content: e.content, preheader: e.preheader, cta_label: e.cta_label, cta_url: e.cta_url });
+
+// Termin wysyłki: pole datetime-local pracuje w czasie przeglądarki (u administratora — czas polski).
+const plWhen = (iso) => new Date(iso).toLocaleString("pl-PL", { weekday: "short", day: "numeric", month: "long", hour: "2-digit", minute: "2-digit", timeZone: "Europe/Warsaw" });
+const toLocalInput = (iso) => {
+  if (!iso) return "";
+  const d = new Date(iso);
+  const p = (n) => String(n).padStart(2, "0");
+  return `${d.getFullYear()}-${p(d.getMonth() + 1)}-${p(d.getDate())}T${p(d.getHours())}:${p(d.getMinutes())}`;
+};
+// Domyślnie: najbliższy poniedziałek, 7:00 (Listy powrotu wychodzą w poniedziałki rano).
+const nextMonday7 = () => {
+  const d = new Date();
+  d.setHours(7, 0, 0, 0);
+  const add = (8 - d.getDay()) % 7 || 7;
+  d.setDate(d.getDate() + add);
+  return toLocalInput(d.toISOString());
+};
+const STATUS = { sent: "WYSŁANA", scheduled: "ZAPLANOWANA", sending: "WYSYŁA SIĘ", draft: "SZKIC" };
 
 export default function CampaignsPanel() {
   const [campaigns, setCampaigns] = useState([]);
@@ -54,10 +72,13 @@ export default function CampaignsPanel() {
           preheader: camp.preheader || "",
           cta_label: camp.cta_label || "",
           cta_url: camp.cta_url || "",
+          status: camp.status || "draft",
+          scheduled_at: camp.scheduled_at || null,
+          when: camp.scheduled_at ? toLocalInput(camp.scheduled_at) : nextMonday7(),
         });
         setRemaining(res.data.remaining);
       } else {
-        setEditor({ ...EMPTY });
+        setEditor({ ...EMPTY, status: "draft", scheduled_at: null, when: nextMonday7() });
       }
     } catch (err) {
       setError(err?.response?.data?.error || "Nie udało się otworzyć kampanii.");
@@ -83,8 +104,49 @@ export default function CampaignsPanel() {
       setEditor({ ...editor, id: res.data.id });
       setRemaining(res.data.remaining);
       load();
+      return res.data.id;
     } catch (err) {
       setError(err?.response?.data?.error || "Nie udało się zapisać.");
+      return null;
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  // Zaplanuj: najpierw zapis treści (żeby wyszła dokładnie ta wersja), potem termin.
+  const schedule = async () => {
+    if (!editor.when) {
+      setError("Wybierz datę i godzinę wysyłki.");
+      return;
+    }
+    const at = new Date(editor.when);
+    if (!window.confirm(`Zaplanować „${editor.subject.trim()}” na ${plWhen(at.toISOString())} do ${remaining ?? "wszystkich"} odbiorców?`)) return;
+    setInfo("");
+    const id = await save();
+    if (!id) return;
+    setBusy(true);
+    try {
+      const r = await base44.functions.invoke("adminNewsletter", { action: "campaigns.schedule", id, at: at.toISOString() });
+      setEditor((e) => ({ ...e, id, status: "scheduled", scheduled_at: r.data.scheduled_at }));
+      setInfo(`Zaplanowano na ${r.data.kiedy}. Do tego czasu możesz poprawiać treść (pamiętaj o „Zapisz szkic”) albo anulować plan.`);
+      load();
+    } catch (err) {
+      setError(err?.response?.data?.error || "Nie udało się zaplanować.");
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  const unschedule = async (c) => {
+    setError("");
+    setBusy(true);
+    try {
+      await base44.functions.invoke("adminNewsletter", { action: "campaigns.unschedule", id: c.id });
+      if (editor && editor.id === c.id) setEditor({ ...editor, status: "draft", scheduled_at: null });
+      setInfo("Plan wysyłki anulowany — list wrócił do szkiców.");
+      load();
+    } catch (err) {
+      setError(err?.response?.data?.error || "Nie udało się anulować.");
     } finally {
       setBusy(false);
     }
@@ -232,6 +294,27 @@ export default function CampaignsPanel() {
           </div>
         </div>
         <p className="text-[11px] text-foreground/40 mt-1">Jeden list = jeden następny krok. Złoty przycisk pojawi się pod treścią.</p>
+
+        <div className="mt-6 border hairline p-4">
+          <label htmlFor="camp-when" className="technical text-[10px] text-foreground/50 block mb-2">ZAPLANUJ WYSYŁKĘ (CZAS POLSKI)</label>
+          {editor.status === "scheduled" && editor.scheduled_at && (
+            <p className="text-sm gold-text mb-3">Zaplanowana na {plWhen(editor.scheduled_at)}.</p>
+          )}
+          <div className="flex flex-wrap items-center gap-3">
+            <input id="camp-when" type="datetime-local" value={editor.when || ""}
+              onChange={(e) => setEditor({ ...editor, when: e.target.value })}
+              className={`${inputCls} !w-auto bg-[#0A0A0B] [color-scheme:dark]`} />
+            <button onClick={schedule} disabled={busy || !mailOk} className="btn-ghost !px-5 !py-2.5 disabled:opacity-60">
+              <CalendarClock className="h-4 w-4" /> {editor.status === "scheduled" ? "ZMIEŃ TERMIN" : "ZAPLANUJ"}
+            </button>
+            {editor.status === "scheduled" && (
+              <button onClick={() => unschedule(editor)} disabled={busy} className="technical text-[10px] text-foreground/50 hover:blood-text underline underline-offset-4">
+                ANULUJ PLAN
+              </button>
+            )}
+          </div>
+          <p className="text-[11px] text-foreground/40 mt-2">List wyjdzie sam o wybranej godzinie (z dokładnością do ok. 5 minut). Po wysyłce dostaniesz krótkie potwierdzenie e-mailem.</p>
+        </div>
         {info && <p className="text-sm gold-text mt-3">{info}</p>}
 
         {error && <p className="text-sm blood-text mt-3">{error}</p>}
@@ -310,7 +393,9 @@ export default function CampaignsPanel() {
                 <p className="text-sm truncate">{c.subject}</p>
                 <p className="text-xs text-foreground/40 truncate">
                   {c.group_name ? `GRUPA: ${c.group_name}` : "WSZYSCY AKTYWNI"} ·{" "}
-                  {new Date(c.sent_date || c.created_date).toLocaleDateString("pl-PL")}
+                  {c.status === "scheduled" && c.scheduled_at
+                    ? `WYJDZIE: ${plWhen(c.scheduled_at)}`
+                    : new Date(c.sent_date || c.created_date).toLocaleDateString("pl-PL")}
                 </p>
               </div>
               <span className="technical text-[9px] px-2 py-1 border border-[#C9A24A]/40 gold-text whitespace-nowrap">
@@ -323,9 +408,15 @@ export default function CampaignsPanel() {
                     : "border-[#C9A24A]/40 gold-text"
                 }`}
               >
-                {c.status === "sent" ? "WYSŁANA" : "SZKIC"}
+                {STATUS[c.status] || "SZKIC"}
               </span>
-              {c.status !== "sent" && (
+              {c.status === "scheduled" && (
+                <button onClick={() => unschedule(c)} disabled={busy}
+                  className="technical text-[9px] text-foreground/50 hover:blood-text underline underline-offset-4 px-1 whitespace-nowrap">
+                  ANULUJ PLAN
+                </button>
+              )}
+              {c.status !== "sent" && c.status !== "sending" && (
                 <button
                   onClick={() => openEditor(c)}
                   className="text-foreground/50 hover:gold-text transition-colors p-2"
