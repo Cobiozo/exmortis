@@ -29,7 +29,7 @@ export default function FreeOrderForm({ product }) {
     setSending(true);
     setError("");
     try {
-      await base44.functions.invoke("orderFree", {
+      const res = await base44.functions.invoke("orderFree", {
         slug: product.slug,
         name: form.name,
         email: form.email,
@@ -37,9 +37,9 @@ export default function FreeOrderForm({ product }) {
         newsletter_consent: form.newsletterConsent,
       });
       track(FUNNEL.freePdf, { slug: product.slug });
-      setDone(form.name.trim().split(" ")[0] || "przyjacielu");
-    } catch {
-      setError("Nie udało się zapisać zamówienia. Spróbuj ponownie za chwilę.");
+      setDone({ imie: form.name.trim().split(" ")[0] || "przyjacielu", delivery: res?.data?.delivery || "wyslany" });
+    } catch (err) {
+      setError(err?.response?.data?.error || "Nie udało się zapisać zamówienia. Spróbuj ponownie za chwilę.");
     } finally {
       setSending(false);
     }
@@ -50,7 +50,11 @@ export default function FreeOrderForm({ product }) {
       <div className="border border-[#C9A24A]/40 bg-[#0D0D0E] p-8 md:p-10 text-center space-y-5 fade-up">
         <Check className="h-8 w-8 gold-text mx-auto" />
         <p className="text-foreground/80 text-lg leading-relaxed">
-          {t("dz.pdf", { imie: done })}
+          {done.delivery === "kolejka"
+            ? `Zapisałem Twoje zamówienie, ${done.imie}. Mail z materiałem wyjdzie w ciągu najbliższych godzin — sprawdź też folder Spam lub Oferty.`
+            : done.delivery === "recznie"
+              ? `Zapisałem Twoje zamówienie, ${done.imie}. Twoją osobistą kopię materiału wyślę w osobnej wiadomości.`
+              : t("dz.pdf", { imie: done.imie })}
         </p>
       </div>
     );
@@ -86,7 +90,7 @@ export default function FreeOrderForm({ product }) {
       </div>
       {error && <p className="text-xs blood-text">{error}</p>}
       <button type="submit" disabled={sending} className="btn-relic w-full disabled:opacity-60">
-        {sending ? "WYSYŁAM..." : "WYŚLIJ PDF NA MÓJ E-MAIL"} {!sending && <ArrowRight className="h-4 w-4" />}
+        {sending ? "WYSYŁAM..." : "WYŚLIJ NA MÓJ E-MAIL"} {!sending && <ArrowRight className="h-4 w-4" />}
       </button>
       <p className="technical text-[10px] text-foreground/55">
         PDF przychodzi mailem — nie ma go do pobrania na stronie. Bez spamu, bez presji.

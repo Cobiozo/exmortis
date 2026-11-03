@@ -114,7 +114,10 @@ const handler = async function (req) {
           html: `<p>Nie udało się przygotować kopii ze znakiem wodnym dla ${escapeHtml(email)} (${escapeHtml(String(e?.message || e).slice(0, 200))}). Wyślij plik ręcznie.</p>` }).catch(() => {});
       }
     }
-    await sendMail(base44, {
+    // Stan dostawy dla strony: wyslany (mail wyszedł z plikiem), kolejka (czeka na limit skrzynki),
+    // recznie (bez kopii ze znakiem wodnym albo błąd wysyłki — administrator dostał alarm i dośle plik).
+    let delivery = fileUrl ? "wyslany" : "recznie";
+    const mailState = await sendMail(base44, {
       kind: "zamowienie",
       to: email,
       subject: `Twój materiał: ${product.name}`,
@@ -136,9 +139,17 @@ const handler = async function (req) {
         <p style="line-height:1.7;color:#8A8A8C;">Powrót nie kończy się na jednym kroku — dopiero się nim zaczyna.</p>
         <p style="color:#5C5C5E;font-size:12px;letter-spacing:2px;margin-top:32px;">WRACAM Z SIEBIE · UCZĘ WRACAĆ</p>
       </div>`,
+    }).catch(async (e) => {
+      // Zamówienie jest zapisane — nie pokazujemy błędu (ponowna próba utworzyłaby drugie). Alarm do administratora.
+      console.error("orderFree: wysyłka", e?.message || e);
+      await sendMail(base44, { kind: "alarm_pdf", to: await adminTo(base44).catch(() => null), subject: `Darmowy materiał nie wysłany: ${product.name}`,
+        html: `<p>Nie udało się wysłać maila z materiałem „${escapeHtml(product.name)}” do ${escapeHtml(email)} (${escapeHtml(String(e?.message || e).slice(0, 200))}). Wyślij go ręcznie albo ponów z kolejki maili.</p>` }).catch(() => {});
+      return "blad";
     });
+    if (mailState === "blad") delivery = "recznie";
+    else if (mailState === "kolejka" && delivery === "wyslany") delivery = "kolejka";
 
-    return Response.json({ ok: true });
+    return Response.json({ ok: true, delivery });
   } catch (error) {
     // Błąd danych z formularza = 400, reszta = 500.
     const bad = /^(Brak pola|Pole .* jest zbyt długie|Niepoprawny adres e-mail|Brak produktu|Ten materiał)/.test(String(error?.message || ""));

@@ -62,7 +62,9 @@ async function supaInvoke(name, payload) {
   if (!res.ok) {
     const e = new Error((data && data.error) || `Funkcja ${name}: ${res.status}`);
     e.status = res.status;
-    e.response = { status: res.status };
+    // Jak w kliencie Base44: treść odpowiedzi w e.response.data — formularze pokazują wtedy
+    // prawdziwy powód błędu z serwera (np. limit prób), a nie ogólny komunikat.
+    e.response = { status: res.status, data: data || {} };
     throw e;
   }
   return { data };
