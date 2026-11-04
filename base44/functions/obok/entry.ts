@@ -56,7 +56,7 @@ export default async function (req) {
     const bySlug = async (slug) => (await sr.ObokSeria.filter({ slug: String(slug || "") }, "-created_date", 1))[0];
 
     if (action === "home") {
-      const all = await sr.ObokSeria.filter(admin ? {} : { status: "aktywna" }, "kolejnosc", 100);
+      const all = (await sr.ObokSeria.filter(admin ? {} : { status: "aktywna" }, "kolejnosc", 100)).filter((s) => s.status !== "archiwalna"); // archiwalne znikają też z widoku admina
       const ok = [];
       for (const s of all) if (await hasAccess(s)) ok.push(s);
       // Dwa zbiorcze zapytania zamiast pary na serię (mniej wywołań bazy przy wielu seriach).
