@@ -98,7 +98,8 @@ function fromRss(block: string, cover: string): Record<string, unknown> {
 export type RssResult = { dodane: number; zaktualizowane: number; odcinki: number; lista: string };
 
 // base44: klient z createClientFromRequest (Base44 albo zgodny zamiennik w Supabase).
-export async function importPodcastRss(base44: any): Promise<RssResult> {
+// onlyNew: tylko dopisuje nowe odcinki — automatyczny import nie nadpisuje zmian wprowadzonych ręcznie w panelu.
+export async function importPodcastRss(base44: any, { onlyNew = false }: { onlyNew?: boolean } = {}): Promise<RssResult> {
   const settingsRows = await base44.entities.PodcastSettings.list("-created_date", 1);
   const settings = (Array.isArray(settingsRows) ? settingsRows[0] : null) || null;
   const feed = String((settings && (settings.rss_import || settings.rss)) || "").trim();
@@ -134,6 +135,10 @@ export async function importPodcastRss(base44: any): Promise<RssResult> {
     const audio = String(rss.audio || "").trim();
     const found = (audio && byAudio.get(audio)) || byTitle.get(title.toLowerCase());
 
+    if (found && onlyNew) {
+      if (audio) byAudio.set(audio, found);
+      continue;
+    }
     if (found) {
       // Nadpisujemy tylko niepuste wartości z kanału — brak danych w RSS nie kasuje tego, co już jest.
       const patch: Record<string, unknown> = {};

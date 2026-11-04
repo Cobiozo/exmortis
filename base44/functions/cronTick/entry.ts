@@ -148,7 +148,7 @@ export default async function (req) {
     // błąd kanału lub sieci nie wywraca przebiegu zadań cyklicznych.
     if (minute < 5) {
       try {
-        waitUntil(importPodcastRss(base44).catch((e) => console.error("podcast RSS", String(e?.message || e).slice(0, 200))));
+        waitUntil(importPodcastRss(base44, { onlyNew: true }).catch((e) => console.error("podcast RSS", String(e?.message || e).slice(0, 200))));
       } catch (e) {
         console.error("podcast RSS", String(e?.message || e).slice(0, 200));
       }

@@ -18,7 +18,7 @@ export default async function (req) {
         WHERE public.app_settings.updated_date < now() - interval '${EVERY_MIN} minutes'
       RETURNING key`).catch(() => []);
     if (!lock || !lock.length) return Response.json({ ok: true, pominiete: true });
-    const wynik = await importPodcastRss(exmClient(base44));
+    const wynik = await importPodcastRss(exmClient(base44), { onlyNew: true });
     return Response.json({ ok: true, dodane: wynik.dodane, odcinki: wynik.odcinki });
   } catch (e) {
     console.error("podcastSync", String(e?.message || e).slice(0, 200));
