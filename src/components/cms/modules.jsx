@@ -3,6 +3,7 @@ import StartPaths from "@/components/exmortis/home/StartPaths";
 import ShortHistory from "@/components/exmortis/home/ShortHistory";
 import ReturnPath from "@/components/exmortis/home/ReturnPath";
 import RozdrozaHome from "@/components/exmortis/home/RozdrozaHome";
+import ObokHome from "@/components/exmortis/home/ObokHome";
 import WhatsAppChannelBlock from "@/components/exmortis/glos/WhatsAppChannelBlock";
 import PowrotTeaser from "@/components/exmortis/PowrotTeaser";
 import EventsTeaser from "@/components/exmortis/events/EventsTeaser";
@@ -34,6 +35,7 @@ export const MODULES = {
   krotka_historia: ["Krótka historia", ShortHistory],
   droga_powrotu: ["Droga powrotu", ReturnPath],
   rozdroza: ["ROZDROŻA — interaktywne historie", RozdrozaHome],
+  obok: ["OBOK — zapowiedź (dobre słowo na wieczór)", ObokHome],
   zajawka_powrot: ["Zajawka POWRÓT", PowrotTeaser],
   swiadectwa: ["Świadectwa", Testimonials],
   instagram: ["Instagram", InstagramFeed],

@@ -5,14 +5,8 @@ import { useAuth } from "@/lib/AuthContext";
 import { NAV, TEST, FOOTER } from "./navItems";
 
 export const NAV_DEFAULT = { menu: NAV, test: TEST, kolumny: FOOTER };
-const OBOK = { label: "Obok", to: "/obok" };
-
-// „Obok” tylko dla zalogowanych — zaraz po Skarbcu.
-const withObok = (menu) => {
-  if (menu.some((m) => m.to === "/obok")) return menu;
-  const i = menu.findIndex((m) => String(m.to).startsWith("/skarbiec"));
-  return i < 0 ? [...menu, OBOK] : [...menu.slice(0, i + 1), OBOK, ...menu.slice(i + 1)];
-};
+// „Obok” nie ma pozycji w menu głównym — wejście z konta (zakładka Obok) i z zapowiedzi na stronie głównej.
+const noObok = (menu) => menu.filter((m) => !String(m.to).startsWith("/obok"));
 
 // Menu i stopka z edytora (jeden rekord SiteNav); domyślne wartości do czasu zapisu.
 // Podgląd szkicu w edytorze: nadpisuje opublikowane menu i stopkę.
@@ -20,7 +14,6 @@ export const NavDraftContext = createContext(null);
 
 export function useSiteNav() {
   const draft = useContext(NavDraftContext);
-  const { isAuthenticated } = useAuth();
   const { data } = useQuery({
     enabled: !draft,
     queryKey: ["siteNav"],
@@ -31,7 +24,7 @@ export function useSiteNav() {
   const menu = data?.menu?.length ? data.menu : NAV;
   return {
     record: data,
-    menu: isAuthenticated ? withObok(menu) : menu.filter((m) => m.to !== "/obok"),
+    menu: noObok(menu),
     test: data?.test?.label ? data.test : TEST,
     kolumny: data?.kolumny?.length ? data.kolumny : FOOTER,
   };
