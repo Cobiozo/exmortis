@@ -1,3 +1,4 @@
+import { readConsent } from "@/components/legal/cookieStore";
 // Źródło wizyty („skąd ktoś przyszedł”) zapamiętane na czas karty: ?src= / ?utm_source= z pierwszego wejścia,
 // a gdy ich brak — rozpoznana strona odsyłająca (Instagram, Facebook, YouTube…). Używane przy zapisie na spotkanie,
 // żeby raport źródeł działał także po przejściu na inną podstronę i bez oznaczonego linku.
@@ -17,8 +18,10 @@ function fromReferrer() {
     return hit ? hit[1] : h.replace(/^www\./, "").slice(0, 60);
   } catch { return ""; }
 }
+// Zapamiętanie źródła w pamięci przeglądarki to pomiar, nie funkcja niezbędna — tylko po zgodzie analitycznej
+// (art. 399 Pke). Bez zgody źródło z adresu (?src= / utm_source) nadal trafia do zapisu na bieżącej stronie.
 try {
-  if (!sessionStorage.getItem(KEY)) {
+  if (readConsent()?.analytics === true && !sessionStorage.getItem(KEY)) {
     const q = new URLSearchParams(location.search);
     const s = (q.get("src") || q.get("utm_source") || "").trim().slice(0, 60) || fromReferrer();
     if (s) sessionStorage.setItem(KEY, s);
