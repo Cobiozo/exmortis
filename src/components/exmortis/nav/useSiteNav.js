@@ -1,7 +1,6 @@
 import { createContext, useContext } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { base44 } from "@/api/base44Client";
-import { useAuth } from "@/lib/AuthContext";
 import { NAV, TEST, FOOTER } from "./navItems";
 
 export const NAV_DEFAULT = { menu: NAV, test: TEST, kolumny: FOOTER };
