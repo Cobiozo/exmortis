@@ -1,6 +1,7 @@
 import React from "react";
 import SafeImg from "../SafeImg";
 import { ratioClass } from "../ratios";
+import ExternalEmbed from "@/components/common/ExternalEmbed";
 
 const RATIO = { "16:9": "aspect-video", "4:3": "aspect-[4/3]", "1:1": "aspect-square", "9:16": "aspect-[9/16] max-w-sm mx-auto" };
 const COLS = { "2": "sm:grid-cols-2", "3": "sm:grid-cols-2 lg:grid-cols-3", "4": "grid-cols-2 lg:grid-cols-4" };
@@ -43,7 +44,11 @@ export function VideoBlock({ d, label, szerokosc }) {
       {label && <p className="technical text-[10px] gold-text mb-4">{label}</p>}
       {d.tytul && <h2 className="relic-heading text-3xl min-[360px]:text-4xl md:text-6xl mb-12 leading-[0.95] whitespace-pre-line [overflow-wrap:break-word]">{d.tytul}</h2>}
       <div className={`${RATIO[d.proporcja] || RATIO["16:9"]} w-full bg-black border hairline`}>
-        {e?.src && <iframe src={e.src} title={d.podpis || "Wideo"} className="w-full h-full" loading="lazy" allow="autoplay; fullscreen; picture-in-picture" allowFullScreen />}
+        {e?.src && (
+          <ExternalEmbed provider={/vimeo/.test(e.src) ? "Vimeo" : "YouTube"} className="w-full h-full">
+            {() => <iframe src={e.src} title={d.podpis || "Wideo"} className="w-full h-full" loading="lazy" allow="autoplay; fullscreen; picture-in-picture" allowFullScreen />}
+          </ExternalEmbed>
+        )}
         {e?.file && <video src={e.file} controls playsInline preload="metadata" className="w-full h-full object-contain" />}
         {!e && <p className="h-full flex items-center justify-center text-sm text-foreground/55">Wklej link YouTube, Vimeo lub pliku MP4.</p>}
       </div>

@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import { extractVideoId } from "@/components/exmortis/glos/youtube";
 import EpisodePlayer from "./EpisodePlayer";
+import ExternalEmbed from "@/components/common/ExternalEmbed";
 
 const spotifyEmbed = (u) => u?.replace("open.spotify.com/", "open.spotify.com/embed/").split("?")[0];
 
@@ -16,10 +17,14 @@ export default function EpisodeMedia({ ep, startAt }) {
       )}
       {mode === "audio" && ep.audio && <EpisodePlayer ep={ep} startAt={startAt} />}
       {mode === "audio" && !ep.audio && ep.spotify && (
-        <iframe src={spotifyEmbed(ep.spotify)} title={ep.tytul} height="232" loading="lazy" allow="autoplay; clipboard-write; encrypted-media" className="w-full border hairline" />
+        <ExternalEmbed provider="Spotify" what="odtwarzacz" className="w-full h-[232px]">
+          {() => <iframe src={spotifyEmbed(ep.spotify)} title={ep.tytul} height="232" loading="lazy" allow="autoplay; clipboard-write; encrypted-media" className="w-full border hairline" />}
+        </ExternalEmbed>
       )}
       {mode === "video" && yt && (
-        <iframe src={`https://www.youtube-nocookie.com/embed/${yt}${startAt ? `?start=${startAt}` : ""}`} title={ep.tytul} allowFullScreen loading="lazy" className="w-full aspect-video border hairline" />
+        <ExternalEmbed provider="YouTube" className="w-full aspect-video">
+          {() => <iframe src={`https://www.youtube-nocookie.com/embed/${yt}${startAt ? `?start=${startAt}` : ""}`} title={ep.tytul} allowFullScreen loading="lazy" className="w-full aspect-video border hairline" />}
+        </ExternalEmbed>
       )}
       {!ep.audio && !ep.spotify && !yt && <p className="text-sm text-foreground/55">Nagranie pojawi się wkrótce.</p>}
     </div>
