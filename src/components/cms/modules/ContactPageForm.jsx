@@ -14,7 +14,7 @@ const check = (f) => ({
   message: f.message.trim() ? "" : "Napisz, w czym mogę pomóc.",
 });
 
-// Moduł strony Kontakt: dane firmy (z Ustawień strony) i formularz.
+// Moduł strony Kontakt: formularz, pod nim dane firmy (z Ustawień strony).
 export default function ContactPageForm() {
   const [f, setF] = useState({ name: "", email: "", message: "", website: "" });
   const [errs, setErrs] = useState({});
@@ -37,7 +37,6 @@ export default function ContactPageForm() {
   return (
     <section className="px-5 md:px-10 pb-24">
       <div className="mx-auto max-w-[70ch]">
-        <CompanyLines variant="block" className="mb-10" />
         {state === "done" ? <div><p className="relic-heading text-2xl gold-text mb-3">{t("dz.kontakt.tytul")}</p><p className="text-foreground/60 leading-relaxed">{t("dz.kontakt")}</p></div> : (
           <form onSubmit={submit} noValidate className="space-y-5">
             <ContactField id="c-name" label="Imię" value={f.name} onChange={set("name")} error={errs.name} autoComplete="given-name" />
@@ -59,6 +58,8 @@ export default function ContactPageForm() {
             <button disabled={state === "busy"} className="btn-relic w-full">{state === "busy" ? "WYSYŁAM…" : "WYŚLIJ"}</button>
           </form>
         )}
+        {/* Dane firmy pod formularzem (w stopce ich nie ma — decyzja 4.11.2026). */}
+        <CompanyLines variant="block" className="mt-12 pt-8 border-t hairline text-sm" />
         <p className="mt-10 text-sm text-foreground/60">Chcesz odstąpić od umowy? <Link to="/odstapienie" className="gold-text underline">Odstąp od umowy tutaj</Link></p>
       </div>
     </section>
