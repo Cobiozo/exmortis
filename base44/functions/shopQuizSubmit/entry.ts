@@ -167,35 +167,31 @@ async function handleWynik(req, base44, body) {
   return Response.json({ ...out, result_key: key });
 }
 
+// Wysyłka wyniku (od 4.11.2026): test jest narzędziem refleksji i nie zbiera danych o zdrowiu.
+// Adres e-mail służy wyłącznie do jednorazowej wysyłki — nie zapisuję go przy wyniku. Osobistego zdania
+// serwer nie przyjmuje. Temat wiadomości jest neutralny (w dzienniku poczty nie ma kategorii wyniku).
+// Zapis na Listy powrotu — tylko przy osobnej, dobrowolnej zgodzie.
 async function handleWyslij(req, base44, body) {
   const key = typeof body.result_key === "string" && KEY_RE.test(body.result_key) ? body.result_key : null;
   if (!key) return Response.json({ error: "Najpierw zobacz wynik testu" }, { status: 400 });
-  if (body.consent !== true) return Response.json({ error: "Zaznacz zgodę na wysłanie wyniku" }, { status: 400 });
   const email = emailField(body);
   // Wynik idzie e-mailem na podany adres — limit chroni przed wysyłką na cudze adresy seriami.
   if (!(await ipAllowed(base44, clientIp(req), "test", 10, 3600000))) return Response.json({ error: TOO_MANY }, { status: 429 });
   await ensureAnon(base44);
-  const rows = await runSql(base44, `SELECT score_mental, score_spiritual, score_life, stage, email FROM public.quiz_result WHERE result_key = ${escStr(key)}`, true);
+  const rows = await runSql(base44, `SELECT score_mental, score_spiritual, score_life, stage FROM public.quiz_result WHERE result_key = ${escStr(key)}`, true);
   const row = rows?.[0];
   if (!row) return Response.json({ error: "Nie znalazłem tego wyniku — zrób test jeszcze raz" }, { status: 404 });
-  if (row.email && String(row.email).toLowerCase() !== email.toLowerCase()) {
-    return Response.json({ error: "Ten wynik został już wysłany na inny adres" }, { status: 409 });
-  }
   const scores = { mentalna: Number(row.score_mental), duchowa: Number(row.score_spiritual), zyciowa: Number(row.score_life) };
   const productRows = await runSql(base44, `SELECT slug, name, status, price FROM public.products WHERE active = true`, true).catch(() => []);
   const out = buildResult(scores, row.stage, productRows);
-  // Osobiste zdanie: zapisywane wyłącznie przy zaznaczonej zgodzie (domyślnie nie).
-  const open = body.share_open === true ? textField(body, "open_answer", { max: 2000, required: false }) : null;
-  const news = body.newsletter_consent === true;
-  await runSql(base44, `UPDATE public.quiz_result SET email = ${escStr(email)}, newsletter_consent = ${news}${open ? `, open_answer = ${escStr(open)}` : ""} WHERE result_key = ${escStr(key)}`);
-  if (news) {
+  if (body.newsletter_consent === true) {
     await (await import("../../shared/newsletter.ts")).addSubscriber(base44, { email, name: "" }).catch(() => {});
   }
   const d = DOMINANT[out.dominant] || DOMINANT.Mieszana;
   const state = await sendMail(base44, {
     kind: "test_wynik",
     to: email,
-    subject: `Twój wynik testu: ${out.dominant === "Żadna" ? "żadna śmierć nie dominuje" : out.dominant === "Mieszana" ? "więcej niż jedna śmierć" : `śmierć ${out.dominant.toLowerCase()}`} · etap ${row.stage}`,
+    subject: "Twój wynik testu „Która śmierć jest Twoja?”",
     html: resultEmailHtml({ name: "", head: out.headline, body: out.body, dims: out.dims, questions: d.questions, stage: row.stage, sText: STAGE_TEXT[row.stage], next: out.next, deep: out.deep }),
   });
   return Response.json({ ok: true, delivery: state === "wyslany" ? "wyslany" : "kolejka" });
