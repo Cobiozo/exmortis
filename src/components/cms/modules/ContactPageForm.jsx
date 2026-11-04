@@ -2,7 +2,6 @@ import React, { useState } from "react";
 import { Link } from "react-router-dom";
 import { sendForm } from "@/lib/outbox";
 import useSystemText from "@/content/useSystemText";
-import { useFirma } from "@/lib/useSiteSettings";
 import CompanyLines from "@/components/legal/CompanyLines";
 import ContactField from "./ContactField";
 import { track } from "@/lib/track";
@@ -23,7 +22,6 @@ export default function ContactPageForm() {
   const [agree, setAgree] = useState(false);
   const [agreeErr, setAgreeErr] = useState(false);
   const t = useSystemText();
-  const firma = useFirma();
   const set = (k) => (e) => { setF({ ...f, [k]: e.target.value }); if (errs[k]) setErrs({ ...errs, [k]: "" }); };
   const submit = async (e) => {
     e.preventDefault();
