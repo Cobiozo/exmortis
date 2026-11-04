@@ -61,3 +61,18 @@ export async function syncDocs(base44, data, snapshots, kto) {
 export async function regulaminVersion(base44) {
   return publicDocs(await getSetting(base44, "dokumenty").catch(() => null)).docs.regulamin.version;
 }
+
+// Regulamin w wersji z dnia zamówienia jako załącznik e-maila (trwały nośnik, art. 21 upk).
+// Treść z archiwum wersji (LegalDocVersion). Brak archiwum = brak załącznika (zostaje link w e-mailu).
+export async function regulaminAttachment(base44) {
+  try {
+    const last = (await base44.asServiceRole.entities.LegalDocVersion.filter({ doc: "regulamin" }, "-created_date", 1))[0];
+    if (!last?.sections?.length) return null;
+    const e = (v) => String(v ?? "").replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
+    const body = last.sections.map((s) => `<h2>${e(s.title)}</h2>${(s.body || []).map((p) => `<p>${e(p)}</p>`).join("")}`).join("");
+    const html = `<!doctype html><html lang="pl"><head><meta charset="utf-8"><title>${e(last.title)}</title></head><body style="font-family:Georgia,serif;max-width:760px;margin:24px auto;line-height:1.6;"><h1>${e(last.title)}</h1><p>Wersja ${e(last.version)} z dnia ${e(last.date)}</p>${body}</body></html>`;
+    return { filename: `Regulamin-exmortis-${String(last.version).replace(/[^0-9.]/g, "")}.html`, content: html, contentType: "text/html; charset=utf-8" };
+  } catch {
+    return null;
+  }
+}

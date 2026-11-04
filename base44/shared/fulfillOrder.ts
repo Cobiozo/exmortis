@@ -13,6 +13,7 @@ import { accessFilter } from "./mirror.ts";
 import { expandBundles } from "./bundles.ts";
 import { issueInvoice } from "./invoices.ts";
 import { randomToken, sha256hex } from "./booking.ts";
+import { regulaminAttachment } from "./legalDocs.ts";
 
 function packageEmailHtml(token) {
   const link = `${APP_URL}/rezerwacja/termin#t=${token}`;
@@ -44,6 +45,9 @@ async function grantThresholdPackage(base44, stored) {
 
 const PL_DATE = (ymd) =>
   new Date(`${ymd}T12:00:00Z`).toLocaleDateString("pl-PL", { day: "numeric", month: "long", year: "numeric" });
+
+// Potwierdzenie żądania rozpoczęcia usługi przed upływem 14 dni (zakup usługi wymaga tej zgody w kasie).
+const SERVICE_CONFIRM = `<div style="background:#0A0A0B;padding:0 32px 16px;font-family:Georgia,serif;"><p style="color:#8A8A8C;font-size:13px;line-height:1.6;">Potwierdzam Twoje żądanie rozpoczęcia świadczenia usługi przed upływem 14 dni od zawarcia umowy. Jeśli odstąpisz od umowy, zapłacisz za część usługi wykonaną do chwili odstąpienia; po pełnym wykonaniu usługi prawo odstąpienia wygasa.</p></div>`;
 
 function accessEmailHtml(granted, consent, newAccount = false, email = "") {
   if (!granted.length) return "";
@@ -146,10 +150,13 @@ export async function fulfillOrder(base44, stored, payuOrderId) {
       const owned = await accessFilter(base44, { user_email: String(stored.buyer_email).toLowerCase() }, "-created_date", 200)
         .then((l) => l.filter((a) => !a.revoked).map((a) => String(a.product_id))).catch(() => []);
       const step = own.length ? await nextStep(base44, own, owned).then((s) => nextStepHtml(base44, s)).catch(() => "") : "";
+      const svcRows = ids.length ? await runSql(base44, `SELECT 1 FROM public.products WHERE id IN (${ids.map((x) => escStr(String(x))).join(",")}) AND product_type = 'usluga' LIMIT 1`, true).catch(() => []) : [];
+      const reg = await regulaminAttachment(base44);
       await sendMail(base44, {
         kind: "zamowienie", ref: stored.id, to: stored.buyer_email,
+        ...(reg ? { attachments: [reg] } : {}),
         subject: Number(stored.total) > 0 ? "EXMORTIS — płatność przyjęta" : "EXMORTIS — zamówienie przyjęte",
-        html: orderEmailHtml(stored.buyer_name || "", items, stored.total, stored.id, stored.invoice || null) + accessEmailHtml(granted, !!stored.digital_consent_text, newAccount, stored.buyer_email) + tix + cards + step,
+        html: orderEmailHtml(stored.buyer_name || "", items, stored.total, stored.id, stored.invoice || null) + accessEmailHtml(granted, !!stored.digital_consent_text, newAccount, stored.buyer_email) + (svcRows.length ? SERVICE_CONFIRM : "") + tix + cards + step,
       });
     } catch { /* e-mail potwierdzenia jest opcjonalny */ }
   }

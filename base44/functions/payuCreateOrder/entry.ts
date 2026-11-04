@@ -19,10 +19,14 @@ import { ticketLines } from "../../shared/tickets.ts";
 const DIGITAL_CONSENT =
   "Żądam dostarczenia treści cyfrowych przed upływem 14 dni od zawarcia umowy i przyjmuję do wiadomości, że z chwilą rozpoczęcia ich dostarczania tracę prawo odstąpienia od umowy.";
 
+const SERVICE_CONSENT =
+  "Żądam rozpoczęcia świadczenia usługi przed upływem 14 dni od zawarcia umowy. Przyjmuję do wiadomości, że jeśli odstąpię od umowy, zapłacę za część usługi wykonaną do chwili odstąpienia, a po pełnym wykonaniu usługi utracę prawo odstąpienia.";
+
 // Każda zgoda zapisana osobno, z wersją dokumentu.
-async function saveConsents(base44, req, orderId, email, hasDigital, newsletterConsent) {
+async function saveConsents(base44, req, orderId, email, hasDigital, newsletterConsent, hasService = false) {
   const cBase = { email, source: "kasa", order_id: orderId, doc_version: `regulamin ${await regulaminVersion(base44)}`, ip: clientIp(req), status: "udzielona" };
-  const consents = [{ ...cBase, kind: "regulamin", text: "Akceptuję Regulamin. Znam Politykę prywatności." }];
+  const consents = [{ ...cBase, kind: "regulamin", text: "Akceptuję Regulamin." }];
+  if (hasService) consents.push({ ...cBase, kind: "usluga", text: SERVICE_CONSENT });
   if (hasDigital) consents.push({ ...cBase, kind: "tresci_cyfrowe", text: DIGITAL_CONSENT });
   if (newsletterConsent) consents.push({ ...cBase, kind: "newsletter", text: "Chcę otrzymywać Listy powrotu — newsletter exmortis z treściami oraz informacjami o produktach i wydarzeniach — na podany adres e-mail. Zgodę mogę wycofać w każdej chwili." });
   const made = await base44.asServiceRole.entities.Consent.bulkCreate(consents);
@@ -92,6 +96,11 @@ export default async function (req) {
     if (hasDigital && body.digital_consent !== true) {
       throw new Error("Zaznacz zgodę na dostarczenie treści cyfrowych");
     }
+    // Usługa (sesja, pakiet sesji, płatne spotkanie, warsztat): żądanie rozpoczęcia przed upływem 14 dni (art. 15 ust. 3, art. 21 ust. 2 upk).
+    const hasService = rows.some((r) => r.product_type === "usluga");
+    if (hasService && body.service_consent !== true) {
+      throw new Error("Zaznacz żądanie rozpoczęcia usługi");
+    }
 
     const products = [];
     const stored = [];
@@ -159,7 +168,7 @@ export default async function (req) {
         digitalConsent: hasDigital ? DIGITAL_CONSENT : null,
         discountCode: disc ? disc.code : null,
       });
-      await saveConsents(base44, req, id, buyerEmail, hasDigital, newsletterConsent);
+      await saveConsents(base44, req, id, buyerEmail, hasDigital, newsletterConsent, hasService);
       if (newsletterConsent) await addSubscriber(base44, { email: buyerEmail, name: buyerName, consentGiven: true });
       const order = await getOrderByPayuId(base44, freeId);
       if (await claimCompletion(base44, freeId)) await fulfillOrder(base44, order, freeId);
@@ -231,7 +240,7 @@ export default async function (req) {
       discountCode: disc ? disc.code : null,
     });
 
-    await saveConsents(base44, req, extOrderId, buyerEmail, hasDigital, newsletterConsent);
+    await saveConsents(base44, req, extOrderId, buyerEmail, hasDigital, newsletterConsent, hasService);
 
     // Licznik użyć kodu rośnie dopiero po opłaceniu (payuNotification).
 
