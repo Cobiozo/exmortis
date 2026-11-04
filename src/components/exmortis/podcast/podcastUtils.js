@@ -15,6 +15,18 @@ export const parseT = (t) => (t ? String(t).split(":").reduce((a, v) => a * 60 +
 export const parseChapters = (txt) =>
   (txt || "").split("\n").map((l) => l.match(/^\s*(\d{1,2}(?::\d{2}){1,2})\s*[—–-]\s*(.+)$/)).filter(Boolean).map((m) => ({ t: parseT(m[1]), title: m[2].trim() }));
 
+// Nowe odcinki z kanału RSS (Spotify) pobierają się same: strona w tle prosi funkcję o import,
+// a serwer robi go najwyżej raz na 20 minut. Raz na załadowanie strony. Zwraca liczbę dodanych odcinków.
+const SYNC_URL = "https://exmortis-return-path.base44.app/api/apps/6aa08bc6318b0f886cc3b9a3/functions/podcastSync";
+let syncing = null;
+export function syncPodcast() {
+  if (!syncing) {
+    syncing = fetch(SYNC_URL, { method: "POST", credentials: "omit", headers: { "Content-Type": "application/json", "X-App-Id": "6aa08bc6318b0f886cc3b9a3" }, body: "{}" })
+      .then((r) => r.json()).then((d) => Number(d?.dodane) || 0).catch(() => 0);
+  }
+  return syncing;
+}
+
 export async function loadPublished() {
   const now = new Date().toISOString();
   const p = await base44.entities.PodcastEpisode.filter(

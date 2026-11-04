@@ -5,7 +5,7 @@ import { Image } from "@/components/ui/image";
 import SubscribeLinks from "./podcast/SubscribeLinks";
 import QuietSignup from "./podcast/QuietSignup";
 import EpisodeList from "./podcast/EpisodeList";
-import { loadPublished, loadSettings, fmtT } from "./podcast/podcastUtils";
+import { loadPublished, loadSettings, fmtT, syncPodcast } from "./podcast/podcastUtils";
 
 export default function PodcastSection() {
   const [settings, setSettings] = useState(null);
@@ -14,6 +14,8 @@ export default function PodcastSection() {
   useEffect(() => {
     loadSettings().then(setSettings);
     loadPublished().then(setEps);
+    // Nowy odcinek w Spotify → pojawia się tu bez ręcznego importu.
+    syncPodcast().then((n) => { if (n > 0) loadPublished().then(setEps); });
     base44.entities.PodcastPlaylist.filter({ widoczna: true }, { sort: "kolejnosc", limit: 50 }).then((p) => setPlaylists(p.items));
   }, []);
   const latest = eps?.[0];
