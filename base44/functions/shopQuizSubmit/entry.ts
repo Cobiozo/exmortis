@@ -16,55 +16,22 @@ const CRISIS = "Jeśli jesteś w kryzysie albo myślisz o odebraniu sobie życia
 const NOT_DIAGNOSIS = "Ten test nie jest diagnozą i nie zastępuje rozmowy z lekarzem, psychologiem ani psychoterapeutą. To narzędzie do zatrzymania się i przyjrzenia sobie.";
 
 import { V2, DIM_LABEL, LEVELS, levelOf, DIM_TEXT, DOMINANT, scoreV2, STAGE_TEXT } from "../../shared/quizScore.ts";
-
-// ---------- wersja 1 (12 odpowiedzi) — bez zmian ----------
-const IDX_MENTAL = [0, 3, 6, 9];
-const IDX_SPIRITUAL = [1, 4, 7, 10];
-const IDX_LIFE = [2, 5, 8, 11];
-
-// Rekomendacje produktów według etapu (tylko status "dostępny", brakujące uzupełniane po kolei).
-const RECIPES = {
-  "Śmierć": ["mini-ebook-trzy-smierci", "wracam-inny", "listy-powrotu"],
-  "Próg": ["3-pierwsze-ruchy", "wracam-inny", "powrot-mentoring"],
-  "Powrót": ["wracam-inny", "dziennik-powrotu-90-dni", "powrot-mentoring"],
-  "Inny": ["listy-powrotu", "kanal-whatsapp", "wracam-inny"],
-};
-
-function resultTextV1(dominant, isF) {
-  if (dominant === "Mentalna") return DOMINANT.Mentalna.body;
-  if (dominant === "Duchowa") {
-    return isF
-      ? "Sens, na którym stałaś, przestał wystarczać. Twoja pustka nie jest niewdzięcznością — jest sygnałem, że jesteś gotowa na sens głębszy niż ten, który miałaś. Sensu się nie znajduje. Sens się buduje."
-      : "Sens, który dotąd wystarczał, przestał wystarczać. Twoja pustka nie jest niewdzięcznością — jest sygnałem gotowości na sens głębszy niż dotychczasowy. Sensu się nie znajduje. Sens się buduje.";
-  }
-  if (dominant === "Życiowa") return DOMINANT["Życiowa"].body;
-  return DOMINANT.Mieszana.body;
-}
-
-// Bardzo wysoki wynik (deep): bez programu POWRÓT w rekomendacjach — pierwszeństwo ma rozmowa ze specjalistą
-// (decyzja właściciela 3.11.2026). Miejsce wypełnia inny dostępny materiał.
-const NOT_WHEN_DEEP = new Set(["powrot-mentoring"]);
-function recommendProducts(products, stage, dominant, deep = false) {
-  const available = products.filter((p) => p.status === "dostępny" && !(deep && NOT_WHEN_DEEP.has(p.slug)));
-  const bySlug = new Map(available.map((p) => [p.slug, p]));
-  const picks = (RECIPES[stage] || []).filter((slug) => bySlug.has(slug));
-  if (dominant === "Mentalna" && bySlug.has("pusty-szczyt")) {
-    picks[2] = "pusty-szczyt";
-  }
-  for (const p of available) {
-    if (picks.length >= 3) break;
-    if (!picks.includes(p.slug)) picks.push(p.slug);
-  }
-  return picks.slice(0, 3).map((slug) => ({ slug, name: bySlug.get(slug).name }));
-}
+import { nextSteps } from "../../shared/quizNext.ts";
 
 const P = (s, extra = "") => `<p style="line-height:1.7;color:#E2E2E2;margin:0 0 14px;${extra}">${s}</p>`;
 const GOLD = (s, extra = "") => `<p style="color:#C9A24A;margin:26px 0 10px;letter-spacing:2px;font-size:12px;${extra}">${s}</p>`;
 
-function resultEmailHtml({ name, head, body, dims, questions, stage, sText, recommended, deep }) {
-  const links = recommended
-    .map((p) => `<p style="margin:8px 0;"><a href="${SITE_URL}/skarbiec/${p.slug}" style="color:#C9A24A;text-decoration:none;">${escHtml(p.name)}</a></p>`)
-    .join("");
+function resultEmailHtml({ name, head, body, dims, questions, stage, sText, next, deep }) {
+  const A = (href, label) => `<a href="${SITE_URL}${href}" style="color:#C9A24A;text-decoration:none;">${escHtml(label)}</a>`;
+  const line = (html) => `<p style="margin:8px 0;line-height:1.6;color:#E2E2E2;">${html}</p>`;
+  const n = next || { main: null, free: [], offer: null };
+  const links = [
+    n.main ? line(`Na początek: ${A(`/skarbiec/${n.main.slug}`, n.main.name)} — jeden list w każdy poniedziałek.`) : "",
+    line(`Zajrzyj do ${A("/skarbiec", "Skarbca")} — materiały na każdy etap drogi.`),
+    n.free.length ? line(`Bezpłatnie: ${n.free.map((p) => A(`/skarbiec/${p.slug}`, p.name)).join(" · ")}`) : "",
+    line(`${A("/spotkania", "Spotkania")} — otwarte spotkania online i na żywo.`),
+    n.offer ? line(`Jeśli chcesz pracować ze mną: ${A(`/skarbiec/${n.offer.slug}`, n.offer.name)}${n.offer.slug === "powrot-mentoring" ? ` — zacznij od bezpłatnej ${A("/powrot", "rozmowy kwalifikacyjnej")}.` : "."}`) : "",
+  ].join("");
   const dimHtml = (dims || [])
     .map((d) => `<p style="margin:0 0 4px;color:#C9A24A;font-size:12px;letter-spacing:2px;">${d.label.toUpperCase()} · ${d.score}/${d.max} · ${d.level_label}</p>${P(d.text, "color:#B8B8BA;")}`)
     .join("");
@@ -79,8 +46,7 @@ function resultEmailHtml({ name, head, body, dims, questions, stage, sText, reco
     ${questions ? GOLD("PYTANIA DO ZABRANIA ZE SOBĄ") + qHtml : ""}
     ${GOLD(`TWÓJ ETAP: ${stage.toUpperCase()}`)}
     ${P(sText)}
-    ${links ? GOLD("OD CZEGO ZACZĄĆ") + links : ""}
-    ${deep ? "" : P(`Jeśli czujesz, że to Twój moment — porozmawiajmy. Trzydzieści minut, bezpłatnie, bez zobowiązań: <a href="${SITE_URL}/powrot" style="color:#C9A24A;">umów rozmowę kwalifikacyjną</a>.`, "margin-top:24px;")}
+    ${GOLD("TWÓJ NASTĘPNY KROK")}${links}
     <p style="color:#5C5C5E;font-size:12px;letter-spacing:2px;margin-top:32px;">Dawid — exmortis. Wracam z siebie. Uczę wracać.</p>
     <p style="color:#6A6A6C;font-size:11px;line-height:1.6;">${NOT_DIAGNOSIS} ${CRISIS}</p>
   </div>`;
@@ -111,98 +77,6 @@ async function ensureColumns(base44) {
   END $q$`);
   migrated = true;
 }
-
-async function legacyHandler(req, base44, body) {
-  try {
-
-    const email = emailField(body);
-    const firstName = textField(body, "first_name", { max: 200, required: true });
-    const formOfAddress = body.form_of_address;
-    if (formOfAddress !== "Mężczyzna" && formOfAddress !== "Kobieta") {
-      throw new Error("Brak formy zwracania się");
-    }
-    const stage = body.stage;
-    if (!STAGES.includes(stage)) {
-      throw new Error("Brak etapu drogi");
-    }
-    const openAnswer = textField(body, "open_answer", { max: 2000, required: false });
-    const source = textField(body, "source", { max: 50, required: false });
-    const isF = formOfAddress === "Kobieta";
-
-    const answers = body.answers;
-    const n = Array.isArray(answers) ? answers.length : 0;
-    if ((n !== 12 && n !== V2.n) || answers.some((a) => ![0, 1, 2, 3].includes(Number(a)))) {
-      return Response.json({ error: "Niepoprawne odpowiedzi testu" }, { status: 400 });
-    }
-    // Wynik idzie e-mailem na podany adres — limit chroni przed wysyłką na cudze adresy seriami.
-    if (!(await ipAllowed(base44, clientIp(req), "test", 10, 3600000))) return Response.json({ error: TOO_MANY }, { status: 429 });
-
-    const v2 = n === V2.n;
-    let scores, dominant, r2 = null;
-    if (v2) {
-      r2 = scoreV2(answers);
-      scores = r2.scores; dominant = r2.dominant;
-    } else {
-      const sum = (idx) => idx.reduce((acc, i) => acc + Number(answers[i]), 0);
-      scores = { mentalna: sum(IDX_MENTAL), duchowa: sum(IDX_SPIRITUAL), zyciowa: sum(IDX_LIFE) };
-      const ranked = [["Mentalna", scores.mentalna], ["Duchowa", scores.duchowa], ["Życiowa", scores.zyciowa]].sort((a, b) => b[1] - a[1]);
-      dominant = ranked[0][0];
-      if (ranked[0][1] - ranked[1][1] <= 2) dominant = "Mieszana";
-    }
-
-    // Zapis wyniku nie blokuje osoby — przy błędzie bazy wynik i tak się pokaże.
-    try {
-      await ensureColumns(base44).catch((e) => console.error("quiz migrate:", e?.message));
-      const levels = r2 ? escStr(JSON.stringify(Object.fromEntries(r2.dims.map((d) => [d.key, d.level])))) + "::jsonb" : "NULL";
-      await runSql(
-        base44,
-        `INSERT INTO public.quiz_result (email, first_name, form_of_address, score_mental, score_spiritual, score_life, dominant, stage, open_answer, newsletter_consent, source${migrated ? ", test_version, score_max, levels" : ""})
-         VALUES (${escStr(email)}, ${escStr(firstName)}, ${escStr(formOfAddress)}, ${scores.mentalna}, ${scores.duchowa}, ${scores.zyciowa}, ${escStr(dominant)}, ${escStr(stage)}, ${
-          openAnswer === null ? "NULL" : escStr(openAnswer)
-        }, ${body.newsletter_consent === true}, ${source === null ? "NULL" : escStr(source)}${migrated ? `, ${v2 ? 2 : 1}, ${v2 ? V2.max : 12}, ${levels}` : ""})`
-      );
-    } catch (e) {
-      console.error("quiz insert:", e?.message);
-    }
-
-    if (body.newsletter_consent === true) {
-      await (await import("../../shared/newsletter.ts")).addSubscriber(base44, { email, name: firstName }).catch(() => {});
-    }
-
-    const productRows = await runSql(base44, `SELECT slug, name, status FROM public.products WHERE active = true`, true).catch(() => []);
-    const recommended = recommendProducts(productRows || [], stage, dominant, !!r2?.deep);
-
-    const d = DOMINANT[dominant] || DOMINANT.Mieszana;
-    const out = v2
-      ? {
-        version: 2, dominant, scores, dims: r2.dims, deep: r2.deep, recommended,
-        headline: d.head(firstName), body: d.body, questions: d.questions,
-        stage, stage_text: STAGE_TEXT[stage], not_diagnosis: NOT_DIAGNOSIS, crisis: CRISIS,
-      }
-      : { dominant, scores, recommended };
-
-    let emailSent = false;
-    try {
-      const r = await sendMail(base44, {
-        kind: "test_wynik",
-        to: email,
-        subject: v2 ? `Twój wynik testu: ${dominant === "Żadna" ? "żadna śmierć nie dominuje" : dominant === "Mieszana" ? "więcej niż jedna śmierć" : `śmierć ${dominant.toLowerCase()}`} · etap ${stage}` : `Twój wynik: ${dominant} · etap ${stage}`,
-        html: resultEmailHtml(v2
-          ? { name: firstName, head: out.headline, body: out.body, dims: r2.dims, questions: d.questions, stage, sText: STAGE_TEXT[stage], recommended, deep: r2.deep }
-          : { name: firstName, head: `${firstName},`, body: resultTextV1(dominant, isF), dims: null, questions: null, stage, sText: STAGE_TEXT[stage], recommended, deep: false }),
-      });
-      emailSent = r === "wyslany";
-    } catch {
-      emailSent = false;
-    }
-
-    return Response.json({ ...out, email_sent: emailSent });
-  } catch (error) {
-    return Response.json({ error: error.message }, { status: 500 });
-  }
-}
-
-
 
 // ---------- przepływ od 3.11.2026: wynik bez danych kontaktowych, wysyłka opcjonalna ----------
 // action "wynik":  odpowiedzi + etap → wynik. Zapis anonimowy: same punkty, poziomy, etap i źródło
@@ -240,9 +114,17 @@ function buildResult(scores, stage, products) {
   });
   const deep = dims.some((d) => d.level === "gleboko");
   const d = DOMINANT[dominant] || DOMINANT.Mieszana;
-  const recommended = recommendProducts(products || [], stage, dominant, deep);
+  const ns = nextSteps(products || [], { dims, stage, dominant, deep });
+  const nameOf = (slug) => (products || []).find((p) => p.slug === slug)?.name || slug;
+  const next = {
+    main: ns.main ? { slug: ns.main, name: nameOf(ns.main) } : null,
+    free: ns.free.map((slug) => ({ slug, name: nameOf(slug) })),
+    offer: ns.offer ? { slug: ns.offer, name: nameOf(ns.offer) } : null,
+  };
+  // „recommended” zostaje dla starszych kart przeglądarki: ta sama kolejność co na stronie.
+  const recommended = [next.main, ...next.free, next.offer].filter(Boolean);
   return {
-    version: 2, dominant, scores, dims, deep, recommended,
+    version: 2, dominant, scores, dims, deep, recommended, next,
     headline: d.head(""), body: d.body, questions: d.questions,
     stage, stage_text: STAGE_TEXT[stage], not_diagnosis: NOT_DIAGNOSIS, crisis: CRISIS,
   };
@@ -258,7 +140,7 @@ async function handleWynik(req, base44, body) {
   if (!(await ipAllowed(base44, clientIp(req), "test_wynik", 40, 3600000))) return Response.json({ error: TOO_MANY }, { status: 429 });
   const r2 = scoreV2(answers);
   const source = textField(body, "source", { max: 50, required: false });
-  const productRows = await runSql(base44, `SELECT slug, name, status FROM public.products WHERE active = true`, true).catch(() => []);
+  const productRows = await runSql(base44, `SELECT slug, name, status, price FROM public.products WHERE active = true`, true).catch(() => []);
   const out = buildResult(r2.scores, stage, productRows);
 
   // Zapis anonimowy nie blokuje wyniku — przy błędzie bazy wynik i tak się pokaże.
@@ -300,7 +182,7 @@ async function handleWyslij(req, base44, body) {
     return Response.json({ error: "Ten wynik został już wysłany na inny adres" }, { status: 409 });
   }
   const scores = { mentalna: Number(row.score_mental), duchowa: Number(row.score_spiritual), zyciowa: Number(row.score_life) };
-  const productRows = await runSql(base44, `SELECT slug, name, status FROM public.products WHERE active = true`, true).catch(() => []);
+  const productRows = await runSql(base44, `SELECT slug, name, status, price FROM public.products WHERE active = true`, true).catch(() => []);
   const out = buildResult(scores, row.stage, productRows);
   // Osobiste zdanie: zapisywane wyłącznie przy zaznaczonej zgodzie (domyślnie nie).
   const open = body.share_open === true ? textField(body, "open_answer", { max: 2000, required: false }) : null;
@@ -314,7 +196,7 @@ async function handleWyslij(req, base44, body) {
     kind: "test_wynik",
     to: email,
     subject: `Twój wynik testu: ${out.dominant === "Żadna" ? "żadna śmierć nie dominuje" : out.dominant === "Mieszana" ? "więcej niż jedna śmierć" : `śmierć ${out.dominant.toLowerCase()}`} · etap ${row.stage}`,
-    html: resultEmailHtml({ name: "", head: out.headline, body: out.body, dims: out.dims, questions: d.questions, stage: row.stage, sText: STAGE_TEXT[row.stage], recommended: out.recommended, deep: out.deep }),
+    html: resultEmailHtml({ name: "", head: out.headline, body: out.body, dims: out.dims, questions: d.questions, stage: row.stage, sText: STAGE_TEXT[row.stage], next: out.next, deep: out.deep }),
   });
   return Response.json({ ok: true, delivery: state === "wyslany" ? "wyslany" : "kolejka" });
 }
@@ -328,7 +210,8 @@ const handler = async function (req) {
     if (body.action === "ping") return Response.json({ ok: true, flow: 3 });
     if (body.action === "wynik") return await handleWynik(req, base44, body);
     if (body.action === "wyslij") return await handleWyslij(req, base44, body);
-    return await legacyHandler(req, base44, body);
+    // Dawny przepływ (imię i e-mail przed wynikiem) wyłączony 4.11.2026 — wynik liczy tylko action „wynik”.
+    return Response.json({ error: "Odśwież stronę testu i spróbuj ponownie." }, { status: 400 });
   } catch (error) {
     const msg = String(error?.message || error);
     return Response.json({ error: msg }, { status: error?.isValidation ? 400 : 500 });
