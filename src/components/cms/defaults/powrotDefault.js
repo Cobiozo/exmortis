@@ -64,5 +64,5 @@ export const POWROT_BLOCKS = [
 export const TEST_BLOCKS = [
   { id: "test-quiz", typ: "modul", widoczny: true, uklad: { ...L, numer: "brak" }, dane: { modul: "test",
     tytul: "Która śmierć jest Twoja?",
-    tekst: "<p>Można funkcjonować i jednocześnie przestać żyć.</p><p>15 stwierdzeń o ostatnich czterech tygodniach, potem wybór etapu drogi i — jeśli zechcesz — jedno zdanie refleksji. Kilka minut. Odpowiadaj pierwszą myślą.</p>" } },
+    tekst: "<p>Można funkcjonować i jednocześnie przestać żyć.</p><p>Dwa kroki: 15 stwierdzeń o ostatnich czterech tygodniach, potem wybór etapu drogi. Kilka minut. Odpowiadaj pierwszą myślą.</p>" } },
 ];
