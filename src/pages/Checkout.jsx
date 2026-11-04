@@ -13,6 +13,7 @@ import InvoiceFields, { validNip } from "@/components/exmortis/shop/InvoiceField
 import { GiftLine } from "@/components/exmortis/shop/GiftCard";
 import { TicketLine } from "@/components/exmortis/events/TicketBuy";
 import { track, trackPurchase } from "@/lib/track";
+import { TXT } from "@/content/legal/seller";
 
 const ORDER_KEY = "exm_payu_order";
 const ORDER_VALUE_KEY = "exm_payu_value";
@@ -29,6 +30,7 @@ export default function Checkout() {
   const [form, setForm] = useState({ name: "", email: "", note: "" });
   const [newsletterConsent, setNewsletterConsent] = useState(false);
   const [digitalConsent, setDigitalConsent] = useState(false);
+  const [serviceConsent, setServiceConsent] = useState(false);
   const [termsConsent, setTermsConsent] = useState(false);
   const [payError, setPayError] = useState("");
   const [discount, setDiscount] = useState(null);
@@ -103,6 +105,7 @@ export default function Checkout() {
         note: form.note,
         newsletter_consent: newsletterConsent,
         digital_consent: digitalConsent,
+        service_consent: serviceConsent,
         terms_consent: termsConsent,
         items: items.map((it) => (it.kind === "bilet" ? { id: it.id, kind: "bilet", holders: it.holders }
           : it.gift ? { id: it.id, qty: it.qty, amount: it.gift.amount, to_name: it.gift.to_name, message: it.gift.message } : { id: it.id, qty: it.qty })),
@@ -230,9 +233,16 @@ export default function Checkout() {
             <OrderSummaryInfo items={items} total={discount ? (total - discount.discount).toFixed(2) : total} />
             <label className="flex gap-3 text-sm text-foreground/65 leading-relaxed">
               <input type="checkbox" required className="mt-0.5 h-5 w-5 shrink-0 accent-[#C9A24A]" checked={termsConsent} onChange={(e) => setTermsConsent(e.target.checked)} />
-              <span>Akceptuję <Link to="/regulamin" className="underline">Regulamin</Link>. Znam <Link to="/polityka-prywatnosci" className="underline">Politykę prywatności</Link>.</span>
+              <span>Akceptuję <Link to="/regulamin" className="underline">Regulamin</Link>.</span>
             </label>
             <DigitalConsent items={items} checked={digitalConsent} onChange={setDigitalConsent} />
+            {items.some((i) => i.product_type === "usluga") && (
+              <label className="flex gap-3 text-sm text-foreground/65 leading-relaxed">
+                <input type="checkbox" required className="mt-0.5 h-5 w-5 shrink-0 accent-[#C9A24A]" checked={serviceConsent} onChange={(e) => setServiceConsent(e.target.checked)} />
+                <span>{TXT.service}</span>
+              </label>
+            )}
+            <p className="text-xs text-foreground/55">Zasady przetwarzania danych: <Link to="/polityka-prywatnosci" className="underline">Polityka prywatności</Link>.</p>
             {cartNote && <p className="text-sm text-foreground/70" role="status">{cartNote}</p>}
             {payError && <p className="text-sm text-[#E8C547]" role="alert">{payError}</p>}
             <button type="submit" disabled={submitting} className="btn-relic w-full disabled:opacity-60">
