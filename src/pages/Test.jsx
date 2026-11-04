@@ -372,7 +372,7 @@ export default function Test({ d = {} }) {
                   {next.main && (
                     <>
                       <p className="text-foreground/60 mb-8">
-                        Na początek zapisz się na <span className="text-[#F5EFE1]">{next.main.name}</span> — jeden list w każdy poniedziałek, bez pośpiechu.
+                        Na początek zapisz się na <span className="text-[#F5EFE1]">{next.main.name}</span> — jeden list w każdy poniedziałek.
                       </p>
                       <div className="grid sm:grid-cols-3 gap-4 mb-14" onClickCapture={cta("listy")}>
                         <ShopProductCard product={next.main} />
@@ -396,7 +396,7 @@ export default function Test({ d = {} }) {
                   )}
 
                   <Link to="/spotkania" onClick={cta("spotkania")} className="flex items-center justify-between gap-4 border hairline px-5 py-5 mb-10 min-h-11 text-[#F5EFE1] hover:border-[#C9A24A]/60 transition-colors">
-                    <span><span className="shop-heading text-xl block">Spotkania</span><span className="text-sm text-foreground/60">Otwarte spotkania online i na żywo — możesz po prostu posłuchać.</span></span>
+                    <span><span className="shop-heading text-xl block">Spotkania</span><span className="text-sm text-foreground/60">Otwarte spotkania online i na żywo.</span></span>
                     <ArrowRight className="h-4 w-4 shrink-0 gold-text" />
                   </Link>
 
@@ -406,7 +406,7 @@ export default function Test({ d = {} }) {
                       <p className="text-foreground/70 leading-relaxed mb-6">
                         {next.offer.slug === OFFER.powrot
                           ? "Jeśli czujesz, że to Twój moment, zacznij od bezpłatnej rozmowy kwalifikacyjnej. Trzydzieści minut, bez zobowiązań."
-                          : "Jedna rozmowa 1:1, żeby nazwać, gdzie jesteś, i wybrać pierwszy krok."}
+                          : "Pojedyncza rozmowa 1:1 — 90 minut online."}
                       </p>
                       <div className="grid sm:grid-cols-3 gap-4">
                         <ShopProductCard product={next.offer} />
