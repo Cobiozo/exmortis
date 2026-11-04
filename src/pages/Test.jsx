@@ -1,13 +1,13 @@
 import React, { useEffect, useRef, useState } from "react";
 import { Link } from "react-router-dom";
-import { ArrowLeft, Share2, Check } from "lucide-react";
+import { ArrowLeft, ArrowRight, Share2, Check } from "lucide-react";
 import { base44 } from "@/api/base44Client";
 import { sanitizeHtml } from "@/lib/sanitizeHtml";
-import useSystemText from "@/content/useSystemText";
 import ShopProductCard from "@/components/exmortis/shop/ShopProductCard";
 import { track } from "@/lib/track";
 import { FUNNEL } from "@/lib/funnelEvents";
 import { SITE_URL } from "@/config/site";
+import { nextSteps, OFFER } from "@/lib/testNextSteps";
 
 const SHARE_URL = `${SITE_URL}/test?src=polecenie`;
 const N = 15;
@@ -63,18 +63,15 @@ const inputCls =
   "w-full bg-transparent border hairline px-4 py-4 focus:border-[#C9A24A] focus:outline-none transition-colors";
 const back = "technical text-[9px] text-foreground/55 hover:text-foreground/60 mt-10 flex items-center gap-2 transition-colors";
 
-// Kroki: 0 wstęp · 1–15 stwierdzenia · 16 etap · 17 zdanie · 18 liczenie (albo dawny formularz) · 19 wynik
-// Przepływ „v3” (od 3.11.2026): wynik bez imienia i e-maila; wysyłka e-mailem opcjonalna, pod wynikiem.
-// Dopóki funkcja serwera nie zna nowego przepływu (ping), działa dawny: forma zwracania się + formularz.
+// Kroki: 0 wstęp · 1–15 stwierdzenia · 16 etap · 17 zdanie (opcjonalne) · 18 liczenie · 19 wynik
+// Wynik bez imienia i e-maila (od 3.11.2026). Liczenie wyniku i wysyłka e-mailem to osobne wywołania;
+// wysyłka jest opcjonalna, pod wynikiem. Dawny przepływ z imieniem usunięty 4.11.2026.
 // Moduł testu; d.tytul i d.tekst (wstęp) pochodzą z edytora stron.
 export default function Test({ d = {} }) {
-  const t = useSystemText();
   const [step, setStep] = useState(0);
-  const [formOfAddress, setFormOfAddress] = useState(null);
   const [answers, setAnswers] = useState(Array(N).fill(null));
   const [stage, setStage] = useState(null);
   const [openAnswer, setOpenAnswer] = useState("");
-  const [lead, setLead] = useState({ first_name: "", email: "", consent: false, newsletter: false });
   const [sending, setSending] = useState(false);
   const [error, setError] = useState("");
   const [result, setResult] = useState(null);
@@ -83,7 +80,6 @@ export default function Test({ d = {} }) {
   const [source, setSource] = useState("");
   const started = useRef(false);
   const clickedRec = useRef(new Set());
-  const [flow] = useState("v3"); // null = sprawdzam · "v3" · "legacy"
   const [resultKey, setResultKey] = useState(null);
   const completed = useRef(false);
   const [mail, setMail] = useState({ email: "", consent: false, newsletter: false, shareOpen: false, sending: false, done: null, error: "" });
@@ -109,33 +105,6 @@ export default function Test({ d = {} }) {
     setAnswers((a) => { const n = [...a]; n[i] = value; return n; });
     // Pierwsza odpowiedź przechodzi dalej sama; poprawka po „Wstecz” — też, ale nigdy nie przeskakuje dwóch kroków.
     setTimeout(() => setStep((s) => (s === step ? Math.min(s + 1, S_STAGE) : s)), fresh ? 280 : 200);
-  };
-
-  const submit = async (e) => {
-    e.preventDefault();
-    setError("");
-    setSending(true);
-    try {
-      const res = await base44.functions.invoke("shopQuizSubmit", {
-        first_name: lead.first_name,
-        email: lead.email,
-        form_of_address: formOfAddress,
-        answers: answers.map((a) => Number(a)),
-        stage,
-        open_answer: openAnswer || null,
-        newsletter_consent: lead.newsletter,
-        source: source || null,
-      });
-      track("Lead", { content_name: "test" });
-      setResult(res.data);
-      // Bez wyniku testu w analityce: kategoria opisuje stan osoby — zostaje tylko w bazie (panel).
-      track(FUNNEL.testComplete);
-      setStep(S_RESULT);
-    } catch (e2) {
-      setError(e2?.response?.status === 429 ? e2.response.data.error : "Nie udało się zapisać wyniku. Spróbuj ponownie.");
-    } finally {
-      setSending(false);
-    }
   };
 
   // v3: wynik bez danych kontaktowych. Zmiana odpowiedzi po wyniku nadpisuje ten sam anonimowy zapis.
@@ -230,25 +199,9 @@ export default function Test({ d = {} }) {
                 <p>Odpowiadaj pierwszą myślą.</p>
               </div>
             )}
-            {flow === "v3" && <p className="text-foreground/75 max-w-xl mx-auto mb-6">Wynik zobaczysz od razu — bez podawania imienia i adresu e-mail.</p>}
+            <p className="text-foreground/75 max-w-xl mx-auto mb-6">Wynik zobaczysz od razu — bez podawania imienia i adresu e-mail.</p>
             <p className="text-xs text-foreground/55 leading-relaxed max-w-xl mx-auto mb-14">{NOT_DIAGNOSIS}</p>
-            {flow === "legacy" ? (
-              <>
-                <p className="shop-heading text-xl text-[#F5EFE1] mb-8">Jak mam się do Ciebie zwracać?</p>
-                <div className="flex flex-col sm:flex-row gap-4 justify-center">
-                  <button onClick={() => { setFormOfAddress("Mężczyzna"); setStep(1); }} className="btn-ghost">
-                    JAK DO MĘŻCZYZNY
-                  </button>
-                  <button onClick={() => { setFormOfAddress("Kobieta"); setStep(1); }} className="btn-ghost">
-                    JAK DO KOBIETY
-                  </button>
-                </div>
-              </>
-            ) : (
-              <button onClick={() => setStep(1)} disabled={!flow} className="btn-relic disabled:opacity-60">
-                {flow ? "ZACZNIJ TEST" : "CHWILĘ…"}
-              </button>
-            )}
+            <button onClick={() => setStep(1)} className="btn-relic">ZACZNIJ TEST</button>
           </div>
         )}
 
@@ -268,14 +221,13 @@ export default function Test({ d = {} }) {
                   role="radio"
                   aria-checked={answers[step - 1] === s.value}
                   onClick={() => answer(s.value)}
-                  className={`w-full text-left px-5 py-5 md:py-4 border transition-all duration-200 flex items-center justify-between ${
+                  className={`w-full text-left px-5 py-5 md:py-4 border transition-all duration-200 flex items-center ${
                     answers[step - 1] === s.value
                       ? "border-[#C9A24A] bg-[#C9A24A]/10 text-[#F5EFE1]"
                       : "hairline text-foreground/60 hover:border-[#C9A24A]/50 hover:text-[#F5EFE1]"
                   }`}
                 >
                   <span className="text-base">{s.label}</span>
-                  <span className="technical text-[9px] text-foreground/55">{s.value}</span>
                 </button>
               ))}
             </div>
@@ -322,14 +274,10 @@ export default function Test({ d = {} }) {
             </h2>
             <p className="italic text-foreground/55 text-lg mb-6">«Ostatnio umarło we mnie…»</p>
             <textarea value={openAnswer} onChange={(e) => setOpenAnswer(e.target.value)} rows={4} maxLength={2000} className={inputCls} placeholder="…" />
-            {flow === "v3" ? (
-              <p className="text-xs text-foreground/55 mt-3">To zdanie zostaje w Twojej przeglądarce i nie jest zapisywane. Wyślesz je tylko wtedy, gdy pod wynikiem zdecydujesz się przesłać je razem z wynikiem.</p>
-            ) : (
-              <p className="text-xs text-foreground/55 mt-3">Przeczytam to tylko ja. Nie musisz pisać nic, czego nie chcesz.</p>
-            )}
+              <p className="text-xs text-foreground/55 mt-3">To zdanie zostaje w Twojej przeglądarce i nie jest zapisywane. Wyślesz je tylko wtedy, gdy pod wynikiem zdecydujesz się przesłać je razem z wynikiem. Możesz też pominąć ten krok.</p>
             <div className="flex flex-col sm:flex-row gap-4 mt-10">
-              <button onClick={() => (flow === "v3" ? compute() : setStep(S_FORM))} className="btn-relic">{flow === "v3" ? "POKAŻ MÓJ WYNIK" : "DALEJ"}</button>
-              <button onClick={() => { setOpenAnswer(""); if (flow === "v3") compute(); else setStep(S_FORM); }} className="btn-ghost">POMIŃ</button>
+              <button onClick={compute} className="btn-relic">POKAŻ MÓJ WYNIK</button>
+              <button onClick={() => { setOpenAnswer(""); compute(); }} className="btn-ghost">POMIŃ</button>
             </div>
             <button onClick={() => setStep(S_STAGE)} className={back}>
               <ArrowLeft className="h-3 w-3" /> WSTECZ
@@ -338,7 +286,7 @@ export default function Test({ d = {} }) {
         )}
 
         {/* ===== LICZENIE WYNIKU (v3) ===== */}
-        {step === S_FORM && flow === "v3" && (
+        {step === S_FORM && (
           <div className="fade-up text-center space-y-6" role="status" aria-live="polite">
             {sending && <p className="shop-heading text-2xl text-[#F5EFE1]">Liczę Twój wynik…</p>}
             {!sending && error && (
@@ -353,43 +301,10 @@ export default function Test({ d = {} }) {
           </div>
         )}
 
-        {/* ===== GDZIE WYSŁAĆ WYNIK (dawny przepływ) ===== */}
-        {step === S_FORM && flow !== "v3" && (
-          <form onSubmit={submit} className="fade-up space-y-6">
-            <h2 className="shop-heading text-3xl md:text-5xl text-[#F5EFE1] break-words">
-              Twój wynik jest gotowy. Gdzie mam go wysłać?
-            </h2>
-            <div>
-              <label className="technical text-[10px] text-foreground/55 block mb-3">IMIĘ</label>
-              <input required maxLength={200} value={lead.first_name} onChange={(e) => setLead({ ...lead, first_name: e.target.value })} className={inputCls} />
-            </div>
-            <div>
-              <label className="technical text-[10px] text-foreground/55 block mb-3">E-MAIL</label>
-              <input required type="email" value={lead.email} onChange={(e) => setLead({ ...lead, email: e.target.value })} className={inputCls} />
-            </div>
-            <label className="flex items-start gap-3 cursor-pointer">
-              <input type="checkbox" required checked={lead.consent} onChange={(e) => setLead({ ...lead, consent: e.target.checked })} className="accent-[#C9A24A] w-5 h-5 shrink-0 mt-0.5" />
-              <span className="text-sm text-foreground/55 leading-relaxed">Zgadzam się na przetwarzanie danych w celu przesłania wyniku.</span>
-            </label>
-            <label className="flex items-start gap-3 cursor-pointer">
-              <input type="checkbox" checked={lead.newsletter} onChange={(e) => setLead({ ...lead, newsletter: e.target.checked })} className="accent-[#C9A24A] w-5 h-5 shrink-0 mt-0.5" />
-              <span className="text-sm text-foreground/55 leading-relaxed">Chcę też dostawać „Listy powrotu” — jeden list w każdy poniedziałek.</span>
-            </label>
-            {error && <p className="text-sm blood-text" role="alert">{error}</p>}
-            <button type="submit" disabled={sending} className="btn-relic w-full disabled:opacity-60">
-              {sending ? "ZAPISUJĘ..." : "POKAŻ MÓJ WYNIK"}
-            </button>
-            <p className="text-xs text-foreground/55 text-center">Nie wysyłam spamu. Wypiszesz się jednym kliknięciem.</p>
-            <button type="button" onClick={() => setStep(S_OPEN)} className={back}>
-              <ArrowLeft className="h-3 w-3" /> WSTECZ
-            </button>
-          </form>
-        )}
-
         {/* ===== WYNIK ===== */}
         {step === S_RESULT && result && (
           <div className="fade-up">
-            <p className="technical text-[10px] gold-text mb-8">{flow === "v3" ? "TWÓJ WYNIK" : t("dz.test")}</p>
+            <p className="technical text-[10px] gold-text mb-8">TWÓJ WYNIK</p>
 
             <h2 className="shop-heading text-3xl md:text-5xl text-[#F5EFE1] leading-tight mb-8 break-words">
               {result.headline || "Twój wynik"}
@@ -478,7 +393,7 @@ export default function Test({ d = {} }) {
               </div>
             )}
 
-            {flow === "v3" && (
+            {(
               <section className="border hairline bg-[#0D0D0E] p-6 md:p-8 mb-10" aria-labelledby="test-mail-h">
                 <p className="technical text-[10px] gold-text mb-3">OPCJONALNIE</p>
                 <h3 id="test-mail-h" className="shop-heading text-2xl text-[#F5EFE1] mb-3">Chcesz mieć ten wynik u siebie?</h3>
@@ -521,14 +436,13 @@ export default function Test({ d = {} }) {
 
             <div className="text-xs text-foreground/55 text-center leading-relaxed mb-10 space-y-2 max-w-xl mx-auto">
               <p>{NOT_DIAGNOSIS}</p>
-              {flow === "v3" && (
+              {(
                 <p>Co zapisuję: punkty, poziomy, wybrany etap i źródło wejścia — bez imienia, adresu e-mail i Twojego zdania. Po zleceniu wysyłki adres e-mail zostaje powiązany z wynikiem. Twoje zdanie zapisuję tylko po osobnym zaznaczeniu zgody na jego przesłanie. Zapis na Listy powrotu wymaga oddzielnej, dobrowolnej zgody.</p>
               )}
               <CrisisLine />
-              {result.email_sent === false && <p className="text-foreground/55">Wyniku nie udało się teraz wysłać e-mailem — zapisz go albo zrób zrzut ekranu.</p>}
             </div>
 
-            {flow === "v3" && (
+            {(
               <div className="text-center mb-8">
                 <button type="button" onClick={() => setStep(1)} className="technical text-[10px] text-foreground/60 hover:gold-text underline underline-offset-4 min-h-11">
                   ZMIEŃ ODPOWIEDZI
