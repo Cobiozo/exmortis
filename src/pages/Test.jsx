@@ -1,20 +1,19 @@
-import React, { useEffect, useRef, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
 import { ArrowLeft, ArrowRight, Share2, Check } from "lucide-react";
 import { base44 } from "@/api/base44Client";
+import { scoreV2, DOMINANT, STAGE_TEXT } from "@/lib/quizScore";
 import { sanitizeHtml } from "@/lib/sanitizeHtml";
 import ShopProductCard from "@/components/exmortis/shop/ShopProductCard";
-import { track } from "@/lib/track";
-import { FUNNEL } from "@/lib/funnelEvents";
+import { setTrackingQuiet } from "@/lib/track";
 import { SITE_URL } from "@/config/site";
 import { nextSteps, OFFER } from "@/lib/testNextSteps";
-import { TXT } from "@/content/legal/seller";
 
-const SHARE_URL = `${SITE_URL}/test?src=polecenie`;
+const SHARE_URL = `${SITE_URL}/test`;
 const N = 15;
 
 // Wersja 2: 15 stwierdzeń o ostatnich czterech tygodniach, po 5 na obszar, w kolejności M, D, Ż.
-// Wynik (poziom w każdym obszarze, teksty, pytania) liczy serwer — strona i e-mail mówią to samo.
+// Wynik liczy wyłącznie ta strona w przeglądarce (src/lib/quizScore.js) — nic nie trafia na serwer.
 const QUESTIONS = [
   "Zmęczenie nie mija, nawet po odpoczynku albo wolnym weekendzie.",
   "Mam w życiu to, co „powinno” dawać sens — a sensu nie czuję.",
@@ -47,7 +46,8 @@ const STAGE_OPTIONS = [
   { stage: "Inny", text: "Najtrudniejsze mam za sobą. Chcę utrzymać to, co się we mnie zmieniło." },
 ];
 
-const NOT_DIAGNOSIS = "Ten test to narzędzie refleksji — nie diagnoza. Nie bada zdrowia i nie zastępuje rozmowy z lekarzem, psychologiem ani psychoterapeutą. Pomaga zatrzymać się i przyjrzeć sobie.";
+const NOT_DIAGNOSIS = "Test służy autorefleksji. Nie jest narzędziem diagnostycznym ani oceną stanu zdrowia i nie zastępuje konsultacji ze specjalistą.";
+const LOCAL_ONLY = "Odpowiedzi i wynik są przetwarzane wyłącznie w pamięci tej strony w Twojej przeglądarce. Nie wysyłamy ich na serwer ani e-mailem. Po odświeżeniu lub zamknięciu strony znikną.";
 
 function CrisisLine({ className = "" }) {
   const a = "gold-text hover:underline whitespace-nowrap";
@@ -60,47 +60,37 @@ function CrisisLine({ className = "" }) {
   );
 }
 
-const inputCls =
-  "w-full bg-transparent border hairline px-4 py-4 focus:border-[#C9A24A] focus:outline-none transition-colors";
 const back = "technical text-[9px] text-foreground/55 hover:text-foreground/60 mt-10 flex items-center gap-2 transition-colors";
 
-// Kroki: 0 wstęp · 1–15 stwierdzenia · 16 etap · 17 zdanie (opcjonalne) · 18 liczenie · 19 wynik
-// Wynik bez imienia i e-maila (od 3.11.2026). Liczenie wyniku i wysyłka e-mailem to osobne wywołania;
-// wysyłka jest opcjonalna, pod wynikiem. Dawny przepływ z imieniem usunięty 4.11.2026.
+// Kroki: 0 wstęp · 1–15 stwierdzenia · 16 etap · 17 wynik.
+// Od 4.11.2026 test działa WYŁĄCZNIE w przeglądarce: odpowiedzi, punkty, wynik i etap są tylko w stanie
+// tego komponentu (bez localStorage/sessionStorage/cookies/adresu URL), bez wywołań serwera, bez wysyłki
+// e-mailem i bez zdarzeń analitycznych. Odświeżenie strony lub „Zacznij od nowa” czyści wszystko.
+// Jedyne zapytanie strony to publiczna lista produktów (bez parametrów) do sekcji „następny krok”.
 // Moduł testu; d.tytul i d.tekst (wstęp) pochodzą z edytora stron.
 export default function Test({ d = {} }) {
   const [step, setStep] = useState(0);
   const [answers, setAnswers] = useState(Array(N).fill(null));
   const [stage, setStage] = useState(null);
-  const [openAnswer, setOpenAnswer] = useState("");
-  const [sending, setSending] = useState(false);
-  const [error, setError] = useState("");
-  const [result, setResult] = useState(null);
   const [products, setProducts] = useState(null);
   const [copied, setCopied] = useState(false);
-  const [source, setSource] = useState("");
-  const started = useRef(false);
-  const clickedRec = useRef(new Set());
-  const [resultKey, setResultKey] = useState(null);
-  const completed = useRef(false);
-  const [mail, setMail] = useState({ email: "", newsletter: false, sending: false, done: null, error: "" });
 
-  const S_STAGE = N + 1, S_OPEN = N + 2, S_FORM = N + 3, S_RESULT = N + 4;
+  const S_STAGE = N + 1, S_RESULT = N + 2;
 
   useEffect(() => {
-    // Wynik bez kontaktu jest jedynym przepływem; awaria nie przywraca formularza z imieniem.
-    setSource(new URLSearchParams(window.location.search).get("src") || "");
     base44.functions
       .invoke("shopProducts", {})
       .then((r) => setProducts(r.data.products || []))
       .catch(() => setProducts([]));
   }, []);
 
+  // Na czas testu: żadnej analityki ani pikseli, także po zgodzie w banerze cookies.
+  useEffect(() => { setTrackingQuiet(true); return () => setTrackingQuiet(false); }, []);
+
   // Wynik na górze ekranu — na telefonie zostawał w połowie przewiniętej strony.
   useEffect(() => { if (step > 0) window.scrollTo({ top: 0, behavior: "smooth" }); }, [step]);
 
   const answer = (value) => {
-    if (!started.current) { started.current = true; track(FUNNEL.testStart); }
     const i = step - 1;
     const fresh = answers[i] === null;
     setAnswers((a) => { const n = [...a]; n[i] = value; return n; });
@@ -108,45 +98,19 @@ export default function Test({ d = {} }) {
     setTimeout(() => setStep((s) => (s === step ? Math.min(s + 1, S_STAGE) : s)), fresh ? 280 : 200);
   };
 
-  // v3: wynik bez danych kontaktowych. Zmiana odpowiedzi po wyniku nadpisuje ten sam anonimowy zapis.
-  const compute = async () => {
-    setError("");
-    setSending(true);
-    setStep(S_FORM);
-    try {
-      const res = await base44.functions.invoke("shopQuizSubmit", {
-        action: "wynik", answers: answers.map((a) => Number(a)), stage, source: source || null, result_key: resultKey,
-      });
-      setResult(res.data);
-      if (res.data?.result_key) {
-        if (res.data.result_key !== resultKey) setMail((m) => ({ ...m, done: null, error: "" }));
-        setResultKey(res.data.result_key);
-      }
-      // Bez wyniku, odpowiedzi i zdania w analityce — tylko fakt ukończenia (raz).
-      if (!completed.current) { completed.current = true; track(FUNNEL.testComplete); }
-      setStep(S_RESULT);
-    } catch (e2) {
-      setError(e2?.response?.data?.error || "Nie udało się policzyć wyniku. Spróbuj ponownie.");
-    } finally {
-      setSending(false);
-    }
-  };
+  // Wynik liczony na bieżąco z odpowiedzi w pamięci strony — zmiana odpowiedzi od razu go przelicza.
+  const complete = answers.every((a) => a !== null) && !!stage;
+  const result = useMemo(() => {
+    if (!complete) return null;
+    const r = scoreV2(answers);
+    const t = DOMINANT[r.dominant] || DOMINANT.Mieszana;
+    return { ...r, headline: t.head(""), body: t.body, questions: t.questions, stage_text: STAGE_TEXT[stage] };
+  }, [complete, answers, stage]);
 
-  // v3: opcjonalna wysyłka wyniku — sukces dopiero po potwierdzeniu serwera; przy błędzie dane zostają.
-  const sendResult = async (e) => {
-    e.preventDefault();
-    if (mail.sending) return;
-    setMail((m) => ({ ...m, sending: true, error: "" }));
-    try {
-      const res = await base44.functions.invoke("shopQuizSubmit", {
-        // Tylko adres do jednorazowej wysyłki — bez zdania refleksji i bez zgody na dane szczególne (test ich nie zbiera).
-        action: "wyslij", result_key: resultKey, email: mail.email.trim(), newsletter_consent: mail.newsletter,
-      });
-      track("Lead", { content_name: "test" });
-      setMail((m) => ({ ...m, sending: false, done: res.data?.delivery || "wyslany" }));
-    } catch (e2) {
-      setMail((m) => ({ ...m, sending: false, error: e2?.response?.data?.error || "Nie udało się wysłać. Spróbuj ponownie." }));
-    }
+  const restart = () => {
+    setAnswers(Array(N).fill(null));
+    setStage(null);
+    setStep(0);
   };
 
   const share = async () => {
@@ -160,15 +124,10 @@ export default function Test({ d = {} }) {
   };
 
   const qText = step >= 1 && step <= N ? QUESTIONS[step - 1] : null;
-  const progress = Math.min(step, S_FORM) / S_FORM;
+  const progress = Math.min(step, S_STAGE) / S_STAGE;
   // Następne kroki (decyzja 4.11.2026): Listy powrotu → Skarbiec → bezpłatne → Spotkania → oferta, gdy wynika z testu.
-  const next = result && products ? nextSteps(products, result) : null;
-  // Analityka: tylko rodzaj kliknięcia, bez nazwy materiału — wybór materiału zależy od wyniku.
-  const cta = (cel) => () => {
-    if (clickedRec.current.has(cel)) return;
-    clickedRec.current.add(cel);
-    track(FUNNEL.testResultCta, { cel });
-  };
+  // Linki prowadzą do zwykłych stron (bez wyniku i bez identyfikatora w adresie).
+  const next = result && products ? nextSteps(products, { ...result, stage }) : null;
 
   return (
     <div className="min-h-screen bg-[#0A0A0B] pt-28 md:pt-32 pb-24 px-5">
@@ -194,13 +153,13 @@ export default function Test({ d = {} }) {
             ) : (
               <div className="text-foreground/60 text-lg leading-relaxed max-w-xl mx-auto mb-10 space-y-4">
                 <p>
-                  15 stwierdzeń o ostatnich czterech tygodniach, potem wybór etapu drogi i — jeśli zechcesz —
-                  jedno zdanie refleksji. Kilka minut.
+                  Dwa kroki: 15 stwierdzeń o ostatnich czterech tygodniach, potem wybór etapu drogi. Kilka minut.
                 </p>
                 <p>Odpowiadaj pierwszą myślą.</p>
               </div>
             )}
-            <p className="text-foreground/75 max-w-xl mx-auto mb-6">Wynik zobaczysz od razu — bez podawania imienia i adresu e-mail.</p>
+            <p className="text-foreground/75 max-w-xl mx-auto mb-6">Wynik zobaczysz od razu — bez konta, imienia i adresu e-mail.</p>
+            <p className="text-sm text-foreground/65 leading-relaxed max-w-xl mx-auto mb-4">{LOCAL_ONLY}</p>
             <p className="text-xs text-foreground/55 leading-relaxed max-w-xl mx-auto mb-14">{NOT_DIAGNOSIS}</p>
             <button onClick={() => setStep(1)} className="btn-relic">ZACZNIJ TEST</button>
           </div>
@@ -250,7 +209,7 @@ export default function Test({ d = {} }) {
               {STAGE_OPTIONS.map((o) => (
                 <button
                   key={o.stage}
-                  onClick={() => { setStage(o.stage); setStep(S_OPEN); }}
+                  onClick={() => { setStage(o.stage); setStep(S_RESULT); }}
                   className={`w-full text-left px-5 py-5 border transition-all duration-200 ${
                     stage === o.stage
                       ? "border-[#C9A24A] bg-[#C9A24A]/10 text-[#F5EFE1]"
@@ -267,45 +226,11 @@ export default function Test({ d = {} }) {
           </div>
         )}
 
-        {/* ===== JEDNO ZDANIE ===== */}
-        {step === S_OPEN && (
-          <div className="fade-up">
-            <h2 className="shop-heading text-2xl md:text-3xl text-[#F5EFE1] leading-snug mb-6">
-              Jeśli chcesz — dokończ jednym zdaniem:
-            </h2>
-            <p className="italic text-foreground/55 text-lg mb-6">«Ostatnio umarło we mnie…»</p>
-            <textarea value={openAnswer} onChange={(e) => setOpenAnswer(e.target.value)} rows={4} maxLength={2000} className={inputCls} placeholder="…" />
-              <p className="text-xs text-foreground/55 mt-3">To zdanie jest tylko dla Ciebie: zostaje w Twojej przeglądarce i nigdzie go nie wysyłam ani nie zapisuję. Możesz też pominąć ten krok.</p>
-            <div className="flex flex-col sm:flex-row gap-4 mt-10">
-              <button onClick={compute} className="btn-relic">POKAŻ MÓJ WYNIK</button>
-              <button onClick={() => { setOpenAnswer(""); compute(); }} className="btn-ghost">POMIŃ</button>
-            </div>
-            <button onClick={() => setStep(S_STAGE)} className={back}>
-              <ArrowLeft className="h-3 w-3" /> WSTECZ
-            </button>
-          </div>
-        )}
-
-        {/* ===== LICZENIE WYNIKU (v3) ===== */}
-        {step === S_FORM && (
-          <div className="fade-up text-center space-y-6" role="status" aria-live="polite">
-            {sending && <p className="shop-heading text-2xl text-[#F5EFE1]">Liczę Twój wynik…</p>}
-            {!sending && error && (
-              <>
-                <p className="text-sm blood-text" role="alert">{error}</p>
-                <button onClick={compute} className="btn-relic">SPRÓBUJ PONOWNIE</button>
-                <button type="button" onClick={() => setStep(S_OPEN)} className={`${back} mx-auto`}>
-                  <ArrowLeft className="h-3 w-3" /> WSTECZ
-                </button>
-              </>
-            )}
-          </div>
-        )}
-
         {/* ===== WYNIK ===== */}
         {step === S_RESULT && result && (
           <div className="fade-up">
-            <p className="technical text-[10px] gold-text mb-8">TWÓJ WYNIK</p>
+            <p className="technical text-[10px] gold-text mb-3">TWÓJ WYNIK</p>
+            <p className="text-sm text-foreground/55 mb-8">Podsumowanie tego, co zaznaczasz — zaproszenie do refleksji, nie ocena.</p>
 
             <h2 className="shop-heading text-3xl md:text-5xl text-[#F5EFE1] leading-tight mb-8 break-words">
               {result.headline || "Twój wynik"}
@@ -314,7 +239,7 @@ export default function Test({ d = {} }) {
 
             {Array.isArray(result.dims) && (
               <section className="mb-14">
-                <p className="technical text-[9px] text-foreground/55 mb-6">TRZY OBSZARY · NA ILE KAŻDA ŚMIERĆ JEST DZIŚ OBECNA</p>
+                <p className="technical text-[9px] text-foreground/55 mb-6">TRZY OBSZARY · CO POKAZUJĄ ZAZNACZONE ODPOWIEDZI</p>
                 <div className="space-y-8">
                   {result.dims.map((s) => (
                     <div key={s.key}>
@@ -373,14 +298,14 @@ export default function Test({ d = {} }) {
                       <p className="text-foreground/60 mb-8">
                         Na początek zapisz się na <span className="text-[#F5EFE1]">{next.main.name}</span> — jeden list w każdy poniedziałek.
                       </p>
-                      <div className="grid sm:grid-cols-3 gap-4 mb-14" onClickCapture={cta("listy")}>
+                      <div className="grid sm:grid-cols-3 gap-4 mb-14">
                         <ShopProductCard product={next.main} />
                       </div>
                     </>
                   )}
 
                   <p className="technical text-[9px] text-foreground/55 mb-4">INNE MOŻLIWOŚCI</p>
-                  <Link to="/skarbiec" onClick={cta("skarbiec")} className="flex items-center justify-between gap-4 border hairline px-5 py-5 mb-10 min-h-11 text-[#F5EFE1] hover:border-[#C9A24A]/60 transition-colors">
+                  <Link to="/skarbiec" className="flex items-center justify-between gap-4 border hairline px-5 py-5 mb-10 min-h-11 text-[#F5EFE1] hover:border-[#C9A24A]/60 transition-colors">
                     <span><span className="shop-heading text-xl block">Zajrzyj do Skarbca</span><span className="text-sm text-foreground/60">Materiały na każdy etap drogi — bezpłatne i płatne.</span></span>
                     <ArrowRight className="h-4 w-4 shrink-0 gold-text" />
                   </Link>
@@ -388,19 +313,19 @@ export default function Test({ d = {} }) {
                   {next.free.length > 0 && (
                     <>
                       <p className="technical text-[9px] text-foreground/55 mb-4">BEZPŁATNIE</p>
-                      <div className="grid sm:grid-cols-3 gap-4 mb-10" onClickCapture={cta("bezplatne")}>
+                      <div className="grid sm:grid-cols-3 gap-4 mb-10">
                         {next.free.map((p) => <ShopProductCard key={p.id || p.slug} product={p} />)}
                       </div>
                     </>
                   )}
 
-                  <Link to="/spotkania" onClick={cta("spotkania")} className="flex items-center justify-between gap-4 border hairline px-5 py-5 mb-10 min-h-11 text-[#F5EFE1] hover:border-[#C9A24A]/60 transition-colors">
+                  <Link to="/spotkania" className="flex items-center justify-between gap-4 border hairline px-5 py-5 mb-10 min-h-11 text-[#F5EFE1] hover:border-[#C9A24A]/60 transition-colors">
                     <span><span className="shop-heading text-xl block">Spotkania</span><span className="text-sm text-foreground/60">Otwarte spotkania online i na żywo.</span></span>
                     <ArrowRight className="h-4 w-4 shrink-0 gold-text" />
                   </Link>
 
                   {next.offer && (
-                    <div className="border border-[#5C1A1B]/50 bg-[#0D0D0E] p-6 md:p-8" onClickCapture={cta("praca-1-1")}>
+                    <div className="border border-[#5C1A1B]/50 bg-[#0D0D0E] p-6 md:p-8">
                       <p className="technical text-[9px] text-foreground/55 mb-3">JEŚLI CHCESZ PRACOWAĆ ZE MNĄ</p>
                       <p className="text-foreground/70 leading-relaxed mb-6">
                         {next.offer.slug === OFFER.powrot
@@ -416,54 +341,26 @@ export default function Test({ d = {} }) {
               )}
             </section>
 
-            <section className="border hairline bg-[#0D0D0E] p-6 md:p-8 mb-10" aria-labelledby="test-mail-h">
-                <p className="technical text-[10px] gold-text mb-3">OPCJONALNIE</p>
-                <h3 id="test-mail-h" className="shop-heading text-2xl text-[#F5EFE1] mb-3">Chcesz mieć ten wynik u siebie?</h3>
-                {mail.done ? (
-                  <p className="text-foreground/75 leading-relaxed" role="status">
-                    {mail.done === "kolejka"
-                      ? "Wynik jest w drodze — mail wyjdzie w ciągu najbliższych godzin. Sprawdź też folder Spam lub Oferty."
-                      : "Wysłałem wynik na podany adres. Jeśli nie widzisz wiadomości, sprawdź folder Spam lub Oferty."}
-                  </p>
-                ) : (
-                  <form onSubmit={sendResult} className="space-y-5" noValidate>
-                    <p className="text-sm text-foreground/60">Mogę wysłać Ci wynik e-mailem. Nie musisz tego robić — wynik masz powyżej.</p>
-                    <div>
-                      <label htmlFor="test-mail" className="technical text-[10px] text-foreground/55 block mb-3">E-MAIL</label>
-                      <input id="test-mail" type="email" autoComplete="email" value={mail.email}
-                        onChange={(e) => setMail({ ...mail, email: e.target.value, error: "" })} className={inputCls} />
-                    </div>
-                    <p className="text-xs text-foreground/55 leading-relaxed">Adres e-mail wykorzystam tylko do wysłania tej jednej wiadomości. Nie zapisuję go przy wyniku.</p>
-                    <label className="flex items-start gap-3 cursor-pointer">
-                      <input type="checkbox" checked={mail.newsletter} onChange={(e) => setMail({ ...mail, newsletter: e.target.checked })} className="accent-[#C9A24A] w-5 h-5 shrink-0 mt-0.5" />
-                      <span className="text-sm text-foreground/60 leading-relaxed">{TXT.newsletter}</span>
-                    </label>
-                    {mail.error && <p className="text-sm blood-text" role="alert">{mail.error}</p>}
-                    <button type="submit" disabled={mail.sending || !mail.email.trim()} className="btn-ghost w-full disabled:opacity-60">
-                      {mail.sending ? "WYSYŁAM..." : "WYŚLIJ WYNIK NA MÓJ E-MAIL"}
-                    </button>
-                  </form>
-                )}
-            </section>
-
             <div className="text-xs text-foreground/55 text-center leading-relaxed mb-10 space-y-2 max-w-xl mx-auto">
               <p>{NOT_DIAGNOSIS}</p>
+              <p>{LOCAL_ONLY}</p>
               <p>
-                Co zapisuję: tylko sumy punktów w trzech obszarach, poziomy, kategorię wyniku, wybrany etap i źródło wejścia —
-                bez imienia, adresu e-mail, odpowiedzi na poszczególne stwierdzenia i Twojego zdania. Ten anonimowy zapis
-                służy statystyce testu i znika po 12 miesiącach. Jeśli zlecisz wysyłkę, adres e-mail wykorzystam tylko do
-                wysłania wiadomości — w dzienniku poczty zostaje sam adres, neutralny temat i data, bez wyniku. Zapis na
-                Listy powrotu wymaga oddzielnej, dobrowolnej zgody. Dla ochrony przed nadużyciami adres IP trafia na 90 dni do
-                dziennika limitów, bez powiązania z wynikiem. Analityka (tylko po zgodzie w banerze cookies) dostaje wyłącznie
-                informację o rozpoczęciu i ukończeniu testu oraz rodzaju klikniętego kroku — bez odpowiedzi i wyniku.
+                Nie zapisuję odpowiedzi ani wyniku i nie wysyłam ich e-mailem. Podczas testu nie działają narzędzia
+                analityczne ani reklamowe. Jak przy każdej stronie, serwer hostingu może zapisać techniczny log wejścia
+                (np. adres IP i czas) — bez odpowiedzi i wyniku.
               </p>
               <CrisisLine />
             </div>
 
             <div className="text-center mb-8">
-                <button type="button" onClick={() => setStep(1)} className="technical text-[10px] text-foreground/60 hover:gold-text underline underline-offset-4 min-h-11">
-                  ZMIEŃ ODPOWIEDZI
-                </button>
+                <div className="flex flex-wrap justify-center gap-x-8 gap-y-2">
+                  <button type="button" onClick={() => setStep(1)} className="technical text-[10px] text-foreground/60 hover:gold-text underline underline-offset-4 min-h-11">
+                    ZMIEŃ ODPOWIEDZI
+                  </button>
+                  <button type="button" onClick={restart} className="technical text-[10px] text-foreground/60 hover:gold-text underline underline-offset-4 min-h-11">
+                    ZACZNIJ OD NOWA
+                  </button>
+                </div>
             </div>
 
             <div className="text-center">
