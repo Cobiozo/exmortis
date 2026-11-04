@@ -37,6 +37,8 @@ export default function ProductReviews({ productId }) {
         </span>
       </div>
 
+      {/* Informacja o weryfikacji opinii (art. 6 ust. 4 pkt 7 upnpr). */}
+      <p className="text-xs text-foreground/60 -mt-6 mb-8">Opinię może dodać tylko osoba, która kupiła ten produkt w Skarbcu — przycisk pojawia się w jej zamówieniach.</p>
       <div className="divide-y divide-[#3D3D3F]/60 border-y hairline">
         {shown.map((r, i) => (
           <article key={i} className="py-6 space-y-3">
