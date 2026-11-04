@@ -8,6 +8,7 @@ import { track } from "@/lib/track";
 import { FUNNEL } from "@/lib/funnelEvents";
 import { SITE_URL } from "@/config/site";
 import { nextSteps, OFFER } from "@/lib/testNextSteps";
+import { TXT } from "@/content/legal/seller";
 
 const SHARE_URL = `${SITE_URL}/test?src=polecenie`;
 const N = 15;
@@ -46,7 +47,7 @@ const STAGE_OPTIONS = [
   { stage: "Inny", text: "Najtrudniejsze mam za sobą. Chcę utrzymać to, co się we mnie zmieniło." },
 ];
 
-const NOT_DIAGNOSIS = "Ten test nie jest diagnozą i nie zastępuje rozmowy z lekarzem, psychologiem ani psychoterapeutą. To narzędzie do zatrzymania się i przyjrzenia sobie.";
+const NOT_DIAGNOSIS = "Ten test to narzędzie refleksji — nie diagnoza. Nie bada zdrowia i nie zastępuje rozmowy z lekarzem, psychologiem ani psychoterapeutą. Pomaga zatrzymać się i przyjrzeć sobie.";
 
 function CrisisLine({ className = "" }) {
   const a = "gold-text hover:underline whitespace-nowrap";
@@ -82,7 +83,7 @@ export default function Test({ d = {} }) {
   const clickedRec = useRef(new Set());
   const [resultKey, setResultKey] = useState(null);
   const completed = useRef(false);
-  const [mail, setMail] = useState({ email: "", consent: false, newsletter: false, shareOpen: false, sending: false, done: null, error: "" });
+  const [mail, setMail] = useState({ email: "", newsletter: false, sending: false, done: null, error: "" });
 
   const S_STAGE = N + 1, S_OPEN = N + 2, S_FORM = N + 3, S_RESULT = N + 4;
 
@@ -135,13 +136,11 @@ export default function Test({ d = {} }) {
   const sendResult = async (e) => {
     e.preventDefault();
     if (mail.sending) return;
-    if (!mail.consent) { setMail((m) => ({ ...m, error: "Zaznacz zgodę na wysłanie wyniku." })); return; }
     setMail((m) => ({ ...m, sending: true, error: "" }));
     try {
       const res = await base44.functions.invoke("shopQuizSubmit", {
-        action: "wyslij", result_key: resultKey, email: mail.email.trim(), consent: true,
-        newsletter_consent: mail.newsletter, share_open: mail.shareOpen && !!openAnswer.trim(),
-        open_answer: mail.shareOpen && openAnswer.trim() ? openAnswer.trim() : null,
+        // Tylko adres do jednorazowej wysyłki — bez zdania refleksji i bez zgody na dane szczególne (test ich nie zbiera).
+        action: "wyslij", result_key: resultKey, email: mail.email.trim(), newsletter_consent: mail.newsletter,
       });
       track("Lead", { content_name: "test" });
       setMail((m) => ({ ...m, sending: false, done: res.data?.delivery || "wyslany" }));
@@ -276,7 +275,7 @@ export default function Test({ d = {} }) {
             </h2>
             <p className="italic text-foreground/55 text-lg mb-6">«Ostatnio umarło we mnie…»</p>
             <textarea value={openAnswer} onChange={(e) => setOpenAnswer(e.target.value)} rows={4} maxLength={2000} className={inputCls} placeholder="…" />
-              <p className="text-xs text-foreground/55 mt-3">To zdanie zostaje w Twojej przeglądarce i nie jest zapisywane. Wyślesz je tylko wtedy, gdy pod wynikiem zdecydujesz się przesłać je razem z wynikiem. Możesz też pominąć ten krok.</p>
+              <p className="text-xs text-foreground/55 mt-3">To zdanie jest tylko dla Ciebie: zostaje w Twojej przeglądarce i nigdzie go nie wysyłam ani nie zapisuję. Możesz też pominąć ten krok.</p>
             <div className="flex flex-col sm:flex-row gap-4 mt-10">
               <button onClick={compute} className="btn-relic">POKAŻ MÓJ WYNIK</button>
               <button onClick={() => { setOpenAnswer(""); compute(); }} className="btn-ghost">POMIŃ</button>
@@ -434,19 +433,10 @@ export default function Test({ d = {} }) {
                       <input id="test-mail" type="email" autoComplete="email" value={mail.email}
                         onChange={(e) => setMail({ ...mail, email: e.target.value, error: "" })} className={inputCls} />
                     </div>
-                    <label className="flex items-start gap-3 cursor-pointer">
-                      <input type="checkbox" checked={mail.consent} onChange={(e) => setMail({ ...mail, consent: e.target.checked, error: "" })} className="accent-[#C9A24A] w-5 h-5 shrink-0 mt-0.5" />
-                      <span className="text-sm text-foreground/60 leading-relaxed">Zgadzam się na przetwarzanie adresu e-mail w celu wysłania wyniku.</span>
-                    </label>
-                    {openAnswer.trim() && (
-                      <label className="flex items-start gap-3 cursor-pointer">
-                        <input type="checkbox" checked={mail.shareOpen} onChange={(e) => setMail({ ...mail, shareOpen: e.target.checked })} className="accent-[#C9A24A] w-5 h-5 shrink-0 mt-0.5" />
-                        <span className="text-sm text-foreground/60 leading-relaxed">Prześlij też moje zdanie „Ostatnio umarło we mnie…” — przeczytam je tylko ja.</span>
-                      </label>
-                    )}
+                    <p className="text-xs text-foreground/55 leading-relaxed">Adres e-mail wykorzystam tylko do wysłania tej jednej wiadomości. Nie zapisuję go przy wyniku.</p>
                     <label className="flex items-start gap-3 cursor-pointer">
                       <input type="checkbox" checked={mail.newsletter} onChange={(e) => setMail({ ...mail, newsletter: e.target.checked })} className="accent-[#C9A24A] w-5 h-5 shrink-0 mt-0.5" />
-                      <span className="text-sm text-foreground/60 leading-relaxed">Chcę też dostawać „Listy powrotu” — jeden list w każdy poniedziałek.</span>
+                      <span className="text-sm text-foreground/60 leading-relaxed">{TXT.newsletter}</span>
                     </label>
                     {mail.error && <p className="text-sm blood-text" role="alert">{mail.error}</p>}
                     <button type="submit" disabled={mail.sending || !mail.email.trim()} className="btn-ghost w-full disabled:opacity-60">
@@ -459,12 +449,12 @@ export default function Test({ d = {} }) {
             <div className="text-xs text-foreground/55 text-center leading-relaxed mb-10 space-y-2 max-w-xl mx-auto">
               <p>{NOT_DIAGNOSIS}</p>
               <p>
-                Co zapisuję: sumy punktów w trzech obszarach, poziomy, kategorię wyniku, wybrany etap i źródło wejścia —
-                bez imienia, adresu e-mail, odpowiedzi na poszczególne stwierdzenia i Twojego zdania. Wynik przechowuję
-                12 miesięcy. Adres e-mail zapisuję dopiero wtedy, gdy zlecisz wysyłkę, i wtedy zostaje powiązany z wynikiem.
-                Twoje zdanie zapisuję tylko po osobnym zaznaczeniu zgody na jego przesłanie. Zapis na Listy powrotu wymaga
-                oddzielnej, dobrowolnej zgody. Dla ochrony przed nadużyciami adres IP trafia na 90 dni do dziennika
-                limitów, bez powiązania z wynikiem. Analityka (tylko po zgodzie w banerze cookies) dostaje wyłącznie
+                Co zapisuję: tylko sumy punktów w trzech obszarach, poziomy, kategorię wyniku, wybrany etap i źródło wejścia —
+                bez imienia, adresu e-mail, odpowiedzi na poszczególne stwierdzenia i Twojego zdania. Ten anonimowy zapis
+                służy statystyce testu i znika po 12 miesiącach. Jeśli zlecisz wysyłkę, adres e-mail wykorzystam tylko do
+                wysłania wiadomości — w dzienniku poczty zostaje sam adres, neutralny temat i data, bez wyniku. Zapis na
+                Listy powrotu wymaga oddzielnej, dobrowolnej zgody. Dla ochrony przed nadużyciami adres IP trafia na 90 dni do
+                dziennika limitów, bez powiązania z wynikiem. Analityka (tylko po zgodzie w banerze cookies) dostaje wyłącznie
                 informację o rozpoczęciu i ukończeniu testu oraz rodzaju klikniętego kroku — bez odpowiedzi i wyniku.
               </p>
               <CrisisLine />
