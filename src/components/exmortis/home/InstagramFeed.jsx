@@ -1,11 +1,15 @@
 import React, { useEffect, useState } from "react";
 import { ArrowUpRight } from "lucide-react";
 import { base44 } from "@/api/base44Client";
+import useMarketingConsent from "@/lib/useMarketingConsent";
 
 // Strona główna: najnowsze posty z Instagrama — minimalny pasek zdjęć bez ramek.
 // Sekcja znika całkowicie, gdy feed nie jest dostępny.
 export default function InstagramFeed() {
   const [feed, setFeed] = useState(null);
+  // Zdjęcia ładują się z serwerów Instagrama (Meta) — dopiero po zgodzie na treści zewnętrzne albo kliknięciu.
+  const consent = useMarketingConsent();
+  const [show, setShow] = useState(false);
 
   useEffect(() => {
     base44.functions
@@ -43,6 +47,12 @@ export default function InstagramFeed() {
           </a>
         </div>
 
+        {!(consent || show) ? (
+          <div className="border hairline p-6 text-center space-y-3">
+            <button type="button" onClick={() => setShow(true)} className="btn-ghost min-h-11">POKAŻ ZDJĘCIA Z INSTAGRAMA</button>
+            <p className="text-xs text-foreground/60">Po kliknięciu Instagram (Meta) otrzyma Twój adres IP.</p>
+          </div>
+        ) : (
         <div className="grid grid-cols-3 md:grid-cols-6 gap-1.5 md:gap-2">
           {feed.posts.map((p) => (
             <a
@@ -62,6 +72,7 @@ export default function InstagramFeed() {
             </a>
           ))}
         </div>
+        )}
       </div>
     </section>
   );
