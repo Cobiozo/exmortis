@@ -411,9 +411,6 @@ export default function Test({ d = {} }) {
                       <div className="grid sm:grid-cols-3 gap-4">
                         <ShopProductCard product={next.offer} />
                       </div>
-                      {next.offer.slug === OFFER.powrot && (
-                        <Link to="/powrot" className="btn-relic mt-8 inline-flex">UMÓW ROZMOWĘ KWALIFIKACYJNĄ</Link>
-                      )}
                     </div>
                   )}
                 </>
