@@ -162,12 +162,14 @@ export default function Test({ d = {} }) {
 
   const qText = step >= 1 && step <= N ? QUESTIONS[step - 1] : null;
   const progress = Math.min(step, S_FORM) / S_FORM;
-  const matched =
-    result && products
-      ? (result.recommended || []).map((r) => products.find((p) => p.slug === r.slug)).filter(Boolean)
-          // Bardzo wysoki wynik: bez programu POWRÓT (pierwszeństwo ma rozmowa ze specjalistą).
-          .filter((p) => !(result.deep && p.slug === "powrot-mentoring"))
-      : [];
+  // Następne kroki (decyzja 4.11.2026): Listy powrotu → Skarbiec → bezpłatne → Spotkania → oferta, gdy wynika z testu.
+  const next = result && products ? nextSteps(products, result) : null;
+  // Analityka: tylko rodzaj kliknięcia, bez nazwy materiału — wybór materiału zależy od wyniku.
+  const cta = (cel) => () => {
+    if (clickedRec.current.has(cel)) return;
+    clickedRec.current.add(cel);
+    track(FUNNEL.testResultCta, { cel });
+  };
 
   return (
     <div className="min-h-screen bg-[#0A0A0B] pt-28 md:pt-32 pb-24 px-5">
@@ -361,40 +363,64 @@ export default function Test({ d = {} }) {
               <p className="text-foreground/60 leading-relaxed">{result.stage_text}</p>
             </div>
 
-            <h3 className="shop-heading text-2xl text-[#F5EFE1] mb-3">Twój następny krok</h3>
-            {matched[0] && <p className="text-foreground/60 mb-8">Na początek: <span className="text-[#F5EFE1]">{matched[0].name}</span>. Poniżej także inne możliwości.</p>}
-            {products === null ? (
-              <div className="grid sm:grid-cols-3 gap-4 mb-16">
-                {[...Array(3)].map((_, i) => <div key={i} className="aspect-[3/4] bg-[#0D0D0E] border hairline animate-pulse" />)}
-              </div>
-            ) : (
-              <div className="grid sm:grid-cols-3 gap-4 mb-16">
-                {matched.map((p) => (
-                  // Kliknięcie poleconego materiału: tylko slug produktu, raz na produkt.
-                  <div key={p.id} className="contents" onClickCapture={() => {
-                    if (clickedRec.current.has(p.slug)) return;
-                    clickedRec.current.add(p.slug);
-                    track(FUNNEL.testResultCta, { cel: p.slug });
-                  }}>
-                    <ShopProductCard product={p} />
-                  </div>
-                ))}
-              </div>
-            )}
+            <section className="mb-16" aria-labelledby="test-next-h">
+              <h3 id="test-next-h" className="shop-heading text-2xl text-[#F5EFE1] mb-3">Twój następny krok</h3>
+              {next === null ? (
+                <div className="aspect-[3/1] bg-[#0D0D0E] border hairline animate-pulse" />
+              ) : (
+                <>
+                  {next.main && (
+                    <>
+                      <p className="text-foreground/60 mb-8">
+                        Na początek zapisz się na <span className="text-[#F5EFE1]">{next.main.name}</span> — jeden list w każdy poniedziałek, bez pośpiechu.
+                      </p>
+                      <div className="grid sm:grid-cols-3 gap-4 mb-14" onClickCapture={cta("listy")}>
+                        <ShopProductCard product={next.main} />
+                      </div>
+                    </>
+                  )}
 
-            {!result.deep && (
-              <div className="border border-[#5C1A1B]/50 bg-[#0D0D0E] p-8 md:p-12 text-center space-y-6 mb-10">
-                <p className="text-foreground/70 text-lg leading-relaxed">
-                  Jeśli czujesz, że to Twój moment — porozmawiajmy. Trzydzieści minut, bezpłatnie, bez zobowiązań.
-                </p>
-                <Link to="/powrot" onClick={() => track(FUNNEL.testResultCta, { cel: "powrot" })} className="btn-relic">
-                  UMÓW ROZMOWĘ KWALIFIKACYJNĄ
-                </Link>
-              </div>
-            )}
+                  <p className="technical text-[9px] text-foreground/55 mb-4">INNE MOŻLIWOŚCI</p>
+                  <Link to="/skarbiec" onClick={cta("skarbiec")} className="flex items-center justify-between gap-4 border hairline px-5 py-5 mb-10 min-h-11 text-[#F5EFE1] hover:border-[#C9A24A]/60 transition-colors">
+                    <span><span className="shop-heading text-xl block">Zajrzyj do Skarbca</span><span className="text-sm text-foreground/60">Materiały na każdy etap drogi — bezpłatne i płatne.</span></span>
+                    <ArrowRight className="h-4 w-4 shrink-0 gold-text" />
+                  </Link>
 
-            {(
-              <section className="border hairline bg-[#0D0D0E] p-6 md:p-8 mb-10" aria-labelledby="test-mail-h">
+                  {next.free.length > 0 && (
+                    <>
+                      <p className="technical text-[9px] text-foreground/55 mb-4">BEZPŁATNIE</p>
+                      <div className="grid sm:grid-cols-3 gap-4 mb-10" onClickCapture={cta("bezplatne")}>
+                        {next.free.map((p) => <ShopProductCard key={p.id || p.slug} product={p} />)}
+                      </div>
+                    </>
+                  )}
+
+                  <Link to="/spotkania" onClick={cta("spotkania")} className="flex items-center justify-between gap-4 border hairline px-5 py-5 mb-10 min-h-11 text-[#F5EFE1] hover:border-[#C9A24A]/60 transition-colors">
+                    <span><span className="shop-heading text-xl block">Spotkania</span><span className="text-sm text-foreground/60">Otwarte spotkania online i na żywo — możesz po prostu posłuchać.</span></span>
+                    <ArrowRight className="h-4 w-4 shrink-0 gold-text" />
+                  </Link>
+
+                  {next.offer && (
+                    <div className="border border-[#5C1A1B]/50 bg-[#0D0D0E] p-6 md:p-8" onClickCapture={cta("praca-1-1")}>
+                      <p className="technical text-[9px] text-foreground/55 mb-3">JEŚLI CHCESZ PRACOWAĆ ZE MNĄ</p>
+                      <p className="text-foreground/70 leading-relaxed mb-6">
+                        {next.offer.slug === OFFER.powrot
+                          ? "Jeśli czujesz, że to Twój moment, zacznij od bezpłatnej rozmowy kwalifikacyjnej. Trzydzieści minut, bez zobowiązań."
+                          : "Jedna rozmowa 1:1, żeby nazwać, gdzie jesteś, i wybrać pierwszy krok."}
+                      </p>
+                      <div className="grid sm:grid-cols-3 gap-4">
+                        <ShopProductCard product={next.offer} />
+                      </div>
+                      {next.offer.slug === OFFER.powrot && (
+                        <Link to="/powrot" className="btn-relic mt-8 inline-flex">UMÓW ROZMOWĘ KWALIFIKACYJNĄ</Link>
+                      )}
+                    </div>
+                  )}
+                </>
+              )}
+            </section>
+
+            <section className="border hairline bg-[#0D0D0E] p-6 md:p-8 mb-10" aria-labelledby="test-mail-h">
                 <p className="technical text-[10px] gold-text mb-3">OPCJONALNIE</p>
                 <h3 id="test-mail-h" className="shop-heading text-2xl text-[#F5EFE1] mb-3">Chcesz mieć ten wynik u siebie?</h3>
                 {mail.done ? (
@@ -431,24 +457,27 @@ export default function Test({ d = {} }) {
                     </button>
                   </form>
                 )}
-              </section>
-            )}
+            </section>
 
             <div className="text-xs text-foreground/55 text-center leading-relaxed mb-10 space-y-2 max-w-xl mx-auto">
               <p>{NOT_DIAGNOSIS}</p>
-              {(
-                <p>Co zapisuję: punkty, poziomy, wybrany etap i źródło wejścia — bez imienia, adresu e-mail i Twojego zdania. Po zleceniu wysyłki adres e-mail zostaje powiązany z wynikiem. Twoje zdanie zapisuję tylko po osobnym zaznaczeniu zgody na jego przesłanie. Zapis na Listy powrotu wymaga oddzielnej, dobrowolnej zgody.</p>
-              )}
+              <p>
+                Co zapisuję: sumy punktów w trzech obszarach, poziomy, kategorię wyniku, wybrany etap i źródło wejścia —
+                bez imienia, adresu e-mail, odpowiedzi na poszczególne stwierdzenia i Twojego zdania. Wynik przechowuję
+                12 miesięcy. Adres e-mail zapisuję dopiero wtedy, gdy zlecisz wysyłkę, i wtedy zostaje powiązany z wynikiem.
+                Twoje zdanie zapisuję tylko po osobnym zaznaczeniu zgody na jego przesłanie. Zapis na Listy powrotu wymaga
+                oddzielnej, dobrowolnej zgody. Dla ochrony przed nadużyciami adres IP trafia na 90 dni do dziennika
+                limitów, bez powiązania z wynikiem. Analityka (tylko po zgodzie w banerze cookies) dostaje wyłącznie
+                informację o rozpoczęciu i ukończeniu testu oraz rodzaju klikniętego kroku — bez odpowiedzi i wyniku.
+              </p>
               <CrisisLine />
             </div>
 
-            {(
-              <div className="text-center mb-8">
+            <div className="text-center mb-8">
                 <button type="button" onClick={() => setStep(1)} className="technical text-[10px] text-foreground/60 hover:gold-text underline underline-offset-4 min-h-11">
                   ZMIEŃ ODPOWIEDZI
                 </button>
-              </div>
-            )}
+            </div>
 
             <div className="text-center">
               <button onClick={share} className="btn-ghost !px-5 !py-3 text-[10px]">
