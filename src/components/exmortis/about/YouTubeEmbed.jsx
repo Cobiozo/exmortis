@@ -11,7 +11,7 @@ export default function YouTubeEmbed({ videoId, watchUrl, title }) {
   const consent = useMarketingConsent();
 
   return (
-    <div className="w-full">
+    <div className="w-full max-w-3xl mx-auto">
       {play ? (
         <div className="relative w-full aspect-video border border-[#C9A24A]/60">
           <iframe
