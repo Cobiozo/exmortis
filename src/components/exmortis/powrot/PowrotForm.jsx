@@ -16,7 +16,9 @@ const INITIAL = {
   email: "",
   phone: "",
   situation: "",
-  consent_rodo: false,
+  // Pole zostaje dla zgodności z serwerem: oznacza przekazanie informacji o przetwarzaniu (podstawa: działania
+  // przed zawarciem umowy, art. 6 ust. 1 lit. b RODO), a nie osobną zgodę.
+  consent_rodo: true,
   consent_adult: false,
 };
 
@@ -61,7 +63,6 @@ export default function PowrotForm() {
     if (!/^\+?[0-9\s\-()]{7,20}$/.test(form.phone.trim())) errs.phone = "Podaj poprawny numer telefonu.";
     if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.email.trim())) errs.email = "Podaj poprawny adres e-mail.";
     if (!form.situation.trim()) errs.situation = "Napisz kilka zdań.";
-    if (!form.consent_rodo) errs.consent_rodo = "Ta zgoda jest wymagana.";
     if (!form.consent_adult) errs.consent_adult = "Program jest dla osób pełnoletnich.";
     setErrors(errs);
     if (Object.keys(errs).length > 0) {
@@ -127,19 +128,18 @@ export default function PowrotForm() {
                 <TextArea
                   label="Co sprawia, że program POWRÓT jest dla Ciebie ważny właśnie teraz?"
                   required
-                  hint="Kilka zdań wystarczy — co dzieje się w Twoim życiu i czego szukasz."
+                  hint="Kilka zdań wystarczy — co dzieje się w Twoim życiu i czego szukasz. Nie opisuj tu stanu zdrowia — jeśli będzie potrzebne, zapytam w ankiecie, za osobną zgodą."
                   rows={5}
                   {...field("situation")}
                 />
               </div>
 
               <div className="space-y-4 border-t hairline pt-8">
-                <CheckRow {...check("consent_rodo")}>
-                  Wyrażam zgodę na przetwarzanie moich danych osobowych w celu kontaktu w sprawie
-                  programu POWRÓT. Szczegóły w{" "}
-                  <Link to="/polityka-prywatnosci" className="gold-text underline">polityce prywatności</Link>.
-                  <span className="gold-text"> *</span>
-                </CheckRow>
+                <p className="text-xs text-foreground/60 leading-relaxed">
+                  Administratorem danych jest Dawid Kowalczyk (EXMORTIS). Przetwarzam je, aby odpowiedzieć na zgłoszenie
+                  i umówić rozmowę kwalifikacyjną. Szczegóły i Twoje prawa:{" "}
+                  <Link to="/polityka-prywatnosci" className="gold-text underline">Polityka prywatności</Link>.
+                </p>
                 <CheckRow {...check("consent_adult")}>
                   Oświadczam, że mam ukończone 18 lat. <span className="gold-text">*</span>
                 </CheckRow>

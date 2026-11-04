@@ -72,12 +72,12 @@ const handler = async function (req) {
     const readiness = num1to10(body.readiness);
     const returnFrom = list(body.return_from);
     const affectedAreas = list(body.affected_areas);
-    const consentRodo = body.consent_rodo === true;
+    const consentRodo = body.consent_rodo !== false; // informacja przekazana (dawniej zgoda na kontakt)
     const consentPaid = body.consent_paid === true;
     const consentAdult = body.consent_adult === true;
     // Zgody wymagane także po stronie serwera (formularz w przeglądarce można obejść).
-    // Etap 1: tylko zgoda na kontakt i pełnoletność — zgoda na płatność i regulamin są w ankiecie.
-    if (!consentRodo || !consentAdult) return Response.json({ error: "Zaznacz wymagane zgody (w tym potwierdzenie ukończenia 18 lat)." }, { status: 400 });
+    // Etap 1: pełnoletność. Dane przetwarzane w ramach działań przed umową (art. 6 ust. 1 lit. b) — bez osobnej zgody (4.11.2026).
+    if (!consentAdult) return Response.json({ error: "Zaznacz wymagane zgody (w tym potwierdzenie ukończenia 18 lat)." }, { status: 400 });
     if (!adultCol) { await runSql(base44, `ALTER TABLE public.powrot_applications ADD COLUMN IF NOT EXISTS consent_adult boolean`); adultCol = true; }
     const pilne = isUrgent(situation, triedBefore, goal, obstacle, anythingElse, returnOther);
     await ensurePilne(base44);

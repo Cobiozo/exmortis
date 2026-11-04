@@ -223,8 +223,9 @@ export default function PowrotAnkieta() {
 
         <div className="space-y-4 border-t hairline pt-8">
           <CheckRow {...check("consent_health")}>
-            Wyrażam zgodę na przetwarzanie moich danych, w tym informacji o zdrowiu, które podam
-            w ankiecie, w celu kwalifikacji do programu POWRÓT. Zgodę mogę wycofać w każdej chwili.
+            Wyrażam wyraźną zgodę na przetwarzanie informacji, które podam w ankiecie, w tym o moim zdrowiu
+            oraz przekonaniach religijnych lub światopoglądowych, w celu kwalifikacji do programu POWRÓT. Zgodę mogę
+            wycofać w każdej chwili; bez niej kwalifikacja nie jest możliwa.
             <span className="gold-text"> *</span>
           </CheckRow>
           <CheckRow {...check("consent_terms")}>
