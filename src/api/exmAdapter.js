@@ -195,37 +195,13 @@ function wrapIntegrations(integrations) {
   return new Proxy(integrations || {}, { get: (t, n) => (n === "Core" ? Core : t[n]) });
 }
 
-// Test publiczny (wynik bez logowania). Najpierw zwykła droga aplikacji (podgląd, hosting
-// Base44, Supabase). Gdy ta w ogóle nie odpowie — bo na zewnętrznym hostingu klient nie zna
-// adresu serwera i wołałby względne /api — sięgamy po stały adres wdrożonej funkcji.
-const QUIZ_APP_ID = "6aa08bc6318b0f886cc3b9a3";
-
-async function quizDirect(payload) {
-  const res = await fetch(`https://exmortis-return-path.base44.app/api/apps/${QUIZ_APP_ID}/functions/shopQuizSubmit`, {
-    method: "POST", credentials: "omit",
-    headers: { "Content-Type": "application/json", "X-App-Id": QUIZ_APP_ID },
-    body: JSON.stringify(payload || {}),
-  });
-  const data = await res.json().catch(() => null);
-  if (!res.ok || !data || data.error) {
-    const error = new Error(data?.error || "Nie udało się połączyć z testem. Spróbuj ponownie.");
-    error.response = { status: res.status, data: data || { error: error.message } };
-    throw error;
-  }
-  return { data };
-}
-
-async function invokeQuiz(payload) {
-  // Najpierw właściwy backend funkcji. Gdy nie zna nowego przepływu (starsze wdrożenie kopii
-  // Supabase odpowiadało „Brak pola: email”), wynik liczy wdrożona funkcja aplikacji — ta sama
-  // logika i ta sama baza. Gdy kopia zostanie zaktualizowana, pierwsza droga zadziała sama.
-  try {
-    const res = FN_BACKEND === "supabase"
-      ? await supaInvoke("shopQuizSubmit", payload)
-      : await raw.functions.invoke("shopQuizSubmit", payload);
-    if (res?.data && !res.data.error) return { data: res.data };
-  } catch {}
-  return quizDirect(payload);
+// Test „Która śmierć jest Twoja?” działa od 4.11.2026 wyłącznie w przeglądarce. Wywołanie dawnej funkcji
+// wyniku jest blokowane już tutaj — bez żadnego zapytania sieciowego, więc odpowiedzi i wynik nie mogą
+// trafić ani do funkcji Base44, ani do starszej kopii w Supabase.
+async function invokeQuiz() {
+  const error = new Error("Test działa w całości w przeglądarce — wynik nie jest wysyłany.");
+  error.response = { status: 410, data: { error: error.message } };
+  throw error;
 }
 
 export function createExmClient(raw) {
@@ -235,7 +211,7 @@ export function createExmClient(raw) {
       if (prop === "auth" && AUTH_BACKEND === "supabase") return supaAuth;
       if (prop === "functions") return {
         invoke: (name, payload) => name === "shopQuizSubmit"
-          ? invokeQuiz(payload)
+          ? invokeQuiz()
           : FN_BACKEND === "supabase" ? supaInvoke(name, payload) : target.functions.invoke(name, payload),
       };
       // Pliki (wgrywanie, podpisane linki) → Supabase Storage. Pozostałe integracje bez zmian.
