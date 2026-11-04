@@ -3,7 +3,6 @@ import { Link, useLocation } from "react-router-dom";
 import { useSiteContent } from "@/components/exmortis/SiteContentProvider";
 import Logo from "./Logo";
 import FooterColumns from "./footer/FooterColumns";
-import CompanyLines from "@/components/legal/CompanyLines";
 import usePrelaunch from "@/lib/usePrelaunch";
 import { openCookieSettings } from "@/components/legal/cookieStore";
 import { linkPhones } from "@/lib/phones";
@@ -42,7 +41,7 @@ export default function Footer() {
             ))}
             <button onClick={openCookieSettings} className="min-h-[44px] flex items-center text-left text-foreground/75 hover:gold-text">Ustawienia cookies</button>
           </nav>
-          <CompanyLines className="text-xs text-foreground/65 mb-6" />
+          {/* Dane firmy tylko na stronie Kontakt (pod formularzem) i w dokumentach prawnych — decyzja 4.11.2026. */}
           <div className="flex flex-col sm:flex-row justify-between gap-4">
             <p className="technical text-xs text-foreground/65">
               © {new Date().getFullYear()} EXMORTIS · WSZELKIE PRAWA ZASTRZEŻONE
