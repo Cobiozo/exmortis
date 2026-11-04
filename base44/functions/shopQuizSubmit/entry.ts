@@ -3,7 +3,7 @@ import { runSql, escStr, emailField, textField, clientIp } from "../../shared/su
 import { ipAllowed, TOO_MANY } from "../../shared/rateLimit.ts";
 
 const escHtml = (s) => String(s ?? "").replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
-import { getSetting, loadAppUrl, APP_URL as SITE_URL } from "../../shared/settings.ts";
+import { loadAppUrl, APP_URL as SITE_URL } from "../../shared/settings.ts";
 import { sendMail } from "../../shared/smtp.ts";
 
 // Publiczne przesłanie testu „Która śmierć jest Twoja?”: zapis wyniku, opcjonalny zapis na Listy powrotu,
@@ -21,7 +21,7 @@ import { nextSteps } from "../../shared/quizNext.ts";
 const P = (s, extra = "") => `<p style="line-height:1.7;color:#E2E2E2;margin:0 0 14px;${extra}">${s}</p>`;
 const GOLD = (s, extra = "") => `<p style="color:#C9A24A;margin:26px 0 10px;letter-spacing:2px;font-size:12px;${extra}">${s}</p>`;
 
-function resultEmailHtml({ name, head, body, dims, questions, stage, sText, next, deep }) {
+function resultEmailHtml({ head, body, dims, questions, stage, sText, next, deep }) {
   const A = (href, label) => `<a href="${SITE_URL}${href}" style="color:#C9A24A;text-decoration:none;">${escHtml(label)}</a>`;
   const line = (html) => `<p style="margin:8px 0;line-height:1.6;color:#E2E2E2;">${html}</p>`;
   const n = next || { main: null, free: [], offer: null };
