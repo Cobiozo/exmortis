@@ -1,5 +1,5 @@
 export const BANNER_TEXT =
-  "Używamy plików cookies niezbędnych do działania strony. Za Twoją zgodą — także analitycznych i marketingowych (np. piksel Meta), które pomagają nam docierać do osób, którym exmortis może pomóc. Możesz zaakceptować, odrzucić lub wybrać ustawienia — i zmienić zdanie w każdej chwili („Ustawienia cookies” w stopce).";
+  "Używamy plików cookies niezbędnych do działania strony. Za Twoją zgodą — także analitycznych i marketingowych (np. piksel Meta) oraz odtwarzaczy YouTube i Spotify. Możesz zaakceptować, odrzucić lub wybrać ustawienia — i zmienić zdanie w każdej chwili („Ustawienia cookies” w stopce).";
 
 export const BANNER_TEXT_SHORT = "Używamy cookies niezbędnych do działania strony. Analityczne i marketingowe — tylko za Twoją zgodą.";
 

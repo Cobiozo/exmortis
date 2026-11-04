@@ -1,7 +1,7 @@
 // Dane firmy są w panelu: Ustawienia strony → Dane firmy (src/lib/firma.js podstawia je w tekstach).
 export const LEGAL_VERSION = "1.0";
 export const LEGAL_FROM = "[DATA WEJŚCIA W ŻYCIE]";
-export const COOKIES_VERSION = "1.0";
+export const COOKIES_VERSION = "1.1"; // 1.1 (4.11.2026): treści zewnętrzne — ponowne pytanie o zgodę
 
 export const TXT = {
   terms: "Akceptuję Regulamin.",
