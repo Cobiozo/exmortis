@@ -80,6 +80,8 @@ const handler = async function (req) {
         tiles.push({ id: s.id, nazwa: s.nazwa, slug: s.slug, opis_krotki: s.opis_krotki || "", okladka: s.okladka || "", typ: s.typ,
           total: recs.length, open: open.length, heard: open.filter((r) => hm.get(r.id)?.ukonczone).length,
           next: next ? { tytul: next.tytul, at: new Date(times.get(next.id) as number).toISOString() } : null,
+          latest: (() => { const l = open.slice().sort((a, b) => (times.get(b.id) as number) - (times.get(a.id) as number))[0];
+            return l ? { tytul: l.tytul, numer: l.numer, at: new Date(times.get(l.id) as number).toISOString(), heard: !!hm.get(l.id)?.ukonczone } : null; })(),
           powiadomienia: !!memberOf.get(s.id)?.powiadomienia, member: memberOf.has(s.id) });
       }
       return Response.json({ tiles, imie: me.full_name || "" });
