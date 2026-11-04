@@ -10,7 +10,8 @@ export default function Analytics() {
   const pomiar = useSiteSettings()?.pomiar;
   // Bez pomiaru: panel, skaner i strony z prywatnym kluczem w adresie (wypis, potwierdzenie, zmiana adresu,
   // rezerwacja, karta, bilet, dołączenie do spotkania, konto) — klucz nie może trafić do narzędzi zewnętrznych.
-  const skip = /^\/(admin|skaner|listy\/|zmiana-adresu|rezerwacja\/|karta|bilet|konto)/.test(loc.pathname) || /\/dolacz\/?$/.test(loc.pathname);
+  // /test — test autorefleksji działa bez żadnego pomiaru, także po zgodzie (od 4.11.2026).
+  const skip = /^\/(admin|skaner|listy\/|zmiana-adresu|rezerwacja\/|karta|bilet|konto|test\/?$)/.test(loc.pathname) || /\/dolacz\/?$/.test(loc.pathname);
 
   useEffect(() => { setTrackSettings(pomiar); if (!skip) applyConsent(); }, [pomiar, skip]);
 

@@ -8,6 +8,16 @@ let cfg = { wlaczony: false, pixel_id: "", ga4_id: "" };
 let gaOn = false;
 let fbOn = false;
 let lastPage = "";
+// Tryb cichy (strona testu): żadnych zdarzeń, odsłon ani doładowania skryptów — także przy zgodzie.
+// Jeśli GA/Pixel były już wczytane wcześniej w tej wizycie, wyłączamy je oficjalnymi przełącznikami
+// (ga-disable-<id>, fbq consent revoke) na czas pobytu na teście i przywracamy po wyjściu.
+let quiet = false;
+const isQuiet = () => quiet || (typeof window !== "undefined" && /^\/test\/?$/.test(window.location.pathname));
+export function setTrackingQuiet(on) {
+  quiet = !!on;
+  if (cfg.ga4_id) window[`ga-disable-${cfg.ga4_id}`] = quiet;
+  if (fbOn && window.fbq) window.fbq("consent", quiet ? "revoke" : "grant");
+}
 
 // Adres bez kluczy z linków (np. ?t= w wypisie, rezerwacji, karcie) — do narzędzi trafia ścieżka i tylko parametry utm_*.
 function cleanUrl() {
@@ -32,7 +42,7 @@ export const gaAllowed = () => cfg.wlaczony && !!cfg.ga4_id && consent().analyti
 export const fbAllowed = () => cfg.wlaczony && !!cfg.pixel_id && consent().marketing === true;
 
 function loadGa() {
-  if (gaOn || !gaAllowed()) return;
+  if (gaOn || !gaAllowed() || isQuiet()) return;
   gaOn = true;
   window.dataLayer = window.dataLayer || [];
   window.gtag = window.gtag || function () { window.dataLayer.push(arguments); };
@@ -50,13 +60,15 @@ function loadGa() {
 }
 
 function loadFb() {
-  if (fbOn || !fbAllowed()) return;
+  if (fbOn || !fbAllowed() || isQuiet()) return;
   fbOn = true;
   if (!window.fbq) {
     const n = function () { n.callMethod ? n.callMethod.apply(n, arguments) : n.queue.push(arguments); };
     n.queue = []; n.loaded = true; n.version = "2.0";
     window.fbq = n;
     window._fbq = n;
+    // Bez automatycznego zbierania kliknięć i treści przycisków (autoConfig) — tylko jawne zdarzenia.
+    n("set", "autoConfig", false, cfg.pixel_id);
     const s = document.createElement("script");
     s.async = true;
     s.src = "https://connect.facebook.net/en_US/fbevents.js";
@@ -67,12 +79,14 @@ function loadFb() {
 
 // Wołane przy starcie i po każdej zmianie zgody — doładowuje to, na co zgoda właśnie jest.
 export function applyConsent() {
+  if (isQuiet()) return;
   if (gaAllowed()) loadGa();
   if (fbAllowed()) loadFb();
 }
 
 // Zdarzenie trafia tylko do tego narzędzia, na które jest zgoda.
 export function track(name, params) {
+  if (isQuiet()) return;
   const p = params || {};
   if (gaAllowed()) { loadGa(); window.gtag("event", name, p); }
   if (fbAllowed()) { loadFb(); window.fbq("track", name, p); }
@@ -82,6 +96,7 @@ export function track(name, params) {
 export function trackPageView(key) {
   const c = cleanUrl();
   const k = key || c.path;
+  if (isQuiet()) return;
   if (k === lastPage || (!gaAllowed() && !fbAllowed())) return;
   lastPage = k;
   if (gaAllowed()) { loadGa(); window.gtag("set", { page_location: c.href }); window.gtag("event", "page_view", { page_path: c.path, page_location: c.href, page_title: document.title }); }
