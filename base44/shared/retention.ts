@@ -13,6 +13,26 @@ const purgeLogs = (E, before) =>
     .then((r) => Number(typeof r === "number" ? r : (r?.deleted ?? r?.count ?? 0)) || 0)
     .catch(() => 0);
 
+// Zgłoszenia do podcastu, które nie zakończyły się nagraniem: usuwane po 6 miesiącach bez zmian
+// (tak mówi formularz zgłoszenia). Nagrane i opublikowane zostają — ich dalszy los opisuje umowa z gościem.
+const PODCAST_KEEP = new Set(["nagrane", "opublikowane"]);
+async function purgePodcastApps(base44) {
+  try {
+    const E = base44.asServiceRole.entities.PodcastApplication;
+    const before = new Date(Date.now() - 183 * 86400000).toISOString();
+    const old = await E.filter({ updated_date: { $lt: before } }, "updated_date", 200);
+    let n = 0;
+    for (const r of old || []) {
+      if (PODCAST_KEEP.has(r.status)) continue;
+      await E.delete(r.id);
+      n++;
+    }
+    return n;
+  } catch {
+    return 0;
+  }
+}
+
 export async function runRetention(base44) {
   const withdrawn = await consentFilter(base44, { kind: "test_art9", status: "wycofana" }, "-created_date", 1000);
   const emails = [...new Set(withdrawn.map((c) => String(c.email).toLowerCase()))];
@@ -29,6 +49,7 @@ export async function runRetention(base44) {
     purgeLogs(base44.asServiceRole.entities.PlaybackLog, before),
     purgeLogs(base44.asServiceRole.entities.SecurityLog, before),
   ]);
-  return { quiz_12m: quiz.length, quiz_wycofane: quizW.length, powrot: powrot.length, listy_niepotwierdzone: listy,
+  const podcast_6m = await purgePodcastApps(base44);
+  return { podcast_6m, quiz_12m: quiz.length, quiz_wycofane: quizW.length, powrot: powrot.length, listy_niepotwierdzone: listy,
     dziennik_odtworzen, dziennik_bezpieczenstwa };
 }
