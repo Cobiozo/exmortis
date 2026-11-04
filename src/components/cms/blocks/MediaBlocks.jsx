@@ -33,16 +33,17 @@ export function GalleryBlock({ d, label }) {
   );
 }
 
-// Ustawienie „Szerokość: wąska” zwęża sam odtwarzacz (max 768 px, wyśrodkowany).
-// Bloki bez tego ustawienia rysują się jak dotąd — na szerokość kontenera.
-const VIDEO_W = { waska: "max-w-3xl mx-auto" };
+// Odtwarzacz ma jedną szerokość na całej stronie: najwyżej 768 px, wyśrodkowany (4.11.2026 — pełna
+// szerokość zasłaniała ekran). Tylko ustawienie „Szerokość: pełna” rozciąga go na cały kontener.
+const VIDEO_W = { pelna: "" };
+const VIDEO_DEFAULT = "max-w-3xl mx-auto";
 
 export function VideoBlock({ d, label, szerokosc }) {
   const e = embed(d.url);
   return (
-    <figure className={VIDEO_W[szerokosc] || ""}>
+    <figure className={szerokosc in VIDEO_W ? VIDEO_W[szerokosc] : VIDEO_DEFAULT}>
       {label && <p className="technical text-[10px] gold-text mb-4">{label}</p>}
-      {d.tytul && <h2 className="relic-heading text-3xl min-[360px]:text-4xl md:text-6xl mb-12 leading-[0.95] whitespace-pre-line [overflow-wrap:break-word]">{d.tytul}</h2>}
+      {d.tytul && <h2 className="relic-heading text-3xl min-[360px]:text-4xl md:text-5xl mb-10 leading-[0.95] whitespace-pre-line [overflow-wrap:break-word]">{d.tytul}</h2>}
       <div className={`${RATIO[d.proporcja] || RATIO["16:9"]} w-full bg-black border hairline`}>
         {e?.src && (
           <ExternalEmbed provider={/vimeo/.test(e.src) ? "Vimeo" : "YouTube"} className="w-full h-full">
