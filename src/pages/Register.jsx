@@ -8,6 +8,7 @@ import GoogleButton from "@/components/auth/GoogleButton";
 import PasswordStrength from "@/components/auth/PasswordStrength";
 import { afterLoginTarget, providerReturnTo } from "@/lib/afterLogin";
 import { track } from "@/lib/track";
+import { TXT } from "@/content/legal/seller";
 
 const check = "mt-0.5 h-5 w-5 shrink-0 accent-[#C9A24A]";
 
@@ -96,11 +97,11 @@ export default function Register() {
         <PasswordStrength value={password} />
         <label className="flex gap-3 text-sm text-foreground/65 leading-relaxed">
           <input type="checkbox" className={check} checked={terms} onChange={(e) => setTerms(e.target.checked)} required />
-          <span>Akceptuję <Link to="/regulamin" className="gold-text underline">regulamin</Link> i <Link to="/polityka-prywatnosci" className="gold-text underline">politykę prywatności</Link>.</span>
+          <span>Akceptuję <Link to="/regulamin" className="gold-text underline">Regulamin</Link>. Zasady przetwarzania danych: <Link to="/polityka-prywatnosci" className="gold-text underline">Polityka prywatności</Link>.</span>
         </label>
         <label className="flex gap-3 text-sm text-foreground/65 leading-relaxed">
           <input type="checkbox" className={check} checked={letters} onChange={(e) => setLetters(e.target.checked)} />
-          <span>Chcę dostawać Listy powrotu — jeden list w każdy poniedziałek.</span>
+          <span>{TXT.newsletter}</span>
         </label>
         <button type="submit" disabled={loading} className="btn-relic w-full disabled:opacity-60">
           {loading && <Loader2 className="h-4 w-4 animate-spin" />} ZAŁÓŻ KONTO

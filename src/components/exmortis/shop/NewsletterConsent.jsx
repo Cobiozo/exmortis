@@ -1,5 +1,6 @@
 import React from "react";
 import { Link } from "react-router-dom";
+import { TXT } from "@/content/legal/seller";
 
 // Checkbox zgody na newsletter „Listy powrotu” — opcjonalny, domyślnie odznaczony.
 export default function NewsletterConsent({ checked, onChange }) {
@@ -12,8 +13,7 @@ export default function NewsletterConsent({ checked, onChange }) {
         className="accent-[#C9A24A] w-5 h-5 shrink-0 mt-0.5"
       />
       <span className="text-xs text-foreground/55 leading-relaxed">
-        Chcę dostawać Listy powrotu — jeden list w każdy poniedziałek. Mogę wypisać się w
-        każdej chwili jednym kliknięciem. Szczegóły w{" "}
+        {TXT.newsletter} Szczegóły w{" "}
         <Link to="/polityka-prywatnosci" className="gold-text hover:underline">
           Polityce prywatności
         </Link>

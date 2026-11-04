@@ -13,7 +13,8 @@ export const ACTIVE = ["Zapisany", "Obecny", "Lista rezerwowa"];
 export const MAX_PROBY = 8; // tick co 15 min → ok. 2 godziny ponowień
 export const REGULAMIN_TEXT = "Akceptuję regulamin.";
 export const REGULAMIN_VERSION = "1.0";
-export const LISTY_TEXT = "Chcę też dostawać Listy powrotu — jeden list w każdy poniedziałek.";
+// Jeden tekst zgody na Listy powrotu we wszystkich formularzach (= TXT.newsletter na stronie, 4.11.2026).
+export const LISTY_TEXT = "Chcę otrzymywać Listy powrotu — newsletter exmortis z treściami oraz informacjami o produktach i wydarzeniach — na podany adres e-mail. Zgodę mogę wycofać w każdej chwili.";
 
 const ts = (v) => (v ? `${escStr(v)}::timestamptz` : "now()");
 

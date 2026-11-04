@@ -5,6 +5,7 @@ import useSystemText from "@/content/useSystemText";
 import CalendarButtons from "./CalendarButtons";
 import { track } from "@/lib/track";
 import { visitSource } from "@/lib/firstTouch";
+import { TXT } from "@/content/legal/seller";
 
 // Formularz zapisu na wydarzenie (strona wydarzenia): imię, e-mail, pytanie, zgoda.
 export default function RegistrationForm({ event: ev }) {
@@ -210,7 +211,7 @@ export default function RegistrationForm({ event: ev }) {
           className="mt-0.5 h-5 w-5 shrink-0 accent-[#C9A24A]"
         />
         <span className="text-sm text-foreground/80 leading-relaxed group-hover:text-foreground transition-colors">
-          Chcę też dostawać Listy powrotu — jeden list w każdy poniedziałek.
+          {TXT.newsletter}
         </span>
       </label>
       {error && <p role="alert" className="text-sm text-[#E8C547] leading-relaxed">{error}</p>}
