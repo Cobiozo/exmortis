@@ -1,6 +1,7 @@
 import React, { useEffect, useRef } from "react";
 import { Play } from "lucide-react";
 import { thumbUrl } from "./youtube";
+import useMarketingConsent from "@/lib/useMarketingConsent";
 
 // Ładuje YouTube IFrame API raz na stronę.
 function loadYT(cb) {
@@ -25,6 +26,8 @@ function loadYT(cb) {
 // z przyciskiem play (bez ładowania iframe). Po starcie osadza przez
 // youtube-nocookie.com i przy końcu utworu wywołuje onEnded.
 export default function GlosPlayer({ videoId, started, onStart, onEnded }) {
+  // Miniatura z serwerów YouTube tylko po zgodzie na treści zewnętrzne; bez niej — ciemne tło.
+  const consent = useMarketingConsent();
   const holderRef = useRef(null);
   const playerRef = useRef(null);
   const loadedRef = useRef(null);
@@ -69,11 +72,14 @@ export default function GlosPlayer({ videoId, started, onStart, onEnded }) {
         className="relative block w-full aspect-video border hairline overflow-hidden group bg-[#0A0A0B]"
         aria-label="Odtwórz utwór"
       >
-        <img
-          src={thumbUrl(videoId)}
-          alt=""
-          className="absolute inset-0 w-full h-full object-cover opacity-60 group-hover:opacity-85 transition-opacity duration-500"
-        />
+        {consent && (
+          <img
+            src={thumbUrl(videoId)}
+            alt=""
+            className="absolute inset-0 w-full h-full object-cover opacity-60 group-hover:opacity-85 transition-opacity duration-500"
+          />
+        )}
+        {!consent && <span className="absolute bottom-2 left-0 right-0 px-3 text-[11px] text-foreground/70 text-center">Odtwarzacz YouTube — po kliknięciu YouTube otrzyma Twój adres IP</span>}
         <span className="absolute inset-0 flex items-center justify-center">
           <span className="w-16 h-16 md:w-20 md:h-20 bg-[#BC1E22] flex items-center justify-center transition-transform duration-300 group-hover:scale-105">
             <Play className="h-7 w-7 md:h-9 md:w-9 text-[#E2E2E2] ml-1" fill="currentColor" />

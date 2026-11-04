@@ -2,10 +2,12 @@ import React, { useEffect, useRef, useState } from "react";
 import { base44 } from "@/api/base44Client";
 import { extractVideoId, thumbUrl } from "./youtube";
 import GlosPlayer from "./GlosPlayer";
+import useMarketingConsent from "@/lib/useMarketingConsent";
 
 // Publiczna playlista utworów z encji „Utwor" (tylko widoczne, wg kolejności).
 // Pusta lista → komponent nie renderuje nic.
 export default function YouTubePlaylist() {
+  const consent = useMarketingConsent();
   const [songs, setSongs] = useState(null);
   const [idx, setIdx] = useState(0);
   const [started, setStarted] = useState(false);
@@ -84,7 +86,7 @@ export default function YouTubePlaylist() {
                       : "border-l-2 border-transparent hover:bg-[#0F0F10]"
                   }`}
                 >
-                  {id && (
+                  {id && consent && (
                     <img
                       src={thumbUrl(id)}
                       alt=""
