@@ -30,7 +30,7 @@ export default function Footer() {
   const opis = rich("footer", "opis", "Słowa, historie i spotkania na Twoją drogę powrotu.");
 
   return (
-    <footer className="relative bg-[#0A0A0B] border-t hairline pb-16 md:pb-0">
+    <footer className="relative bg-[#0A0A0B] border-t hairline pb-16">
       <div className="absolute top-0 left-0 right-0 h-px spine" aria-hidden="true" />
 
       <div className="mx-auto max-w-[1400px] px-5 md:px-10 pt-12 md:pt-14 pb-8">
