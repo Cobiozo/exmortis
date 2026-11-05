@@ -152,7 +152,7 @@ export default function RegistrationForm({ event: ev }) {
 
   return (
     <form onSubmit={submit} className="space-y-5">
-      {fromAccount && <AccountContactLine email={acc.email} lead="Zapiszę adres:" onChange={() => { setManual(true); setFirstName((v) => v || acc.firstName); setEmail((v) => v || acc.email); }} />}
+      {fromAccount && <AccountContactLine email={acc.email} lead="Zapis na adres:" onChange={() => { setManual(true); setFirstName((v) => v || acc.firstName); setEmail((v) => v || acc.email); }} />}
       {(!fromAccount || !acc.firstName) && (
       <div className={`grid gap-5 ${fromAccount ? "" : "sm:grid-cols-2"}`}>
         <label htmlFor="reg-name" className="block">
