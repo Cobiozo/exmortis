@@ -1,4 +1,5 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect } from "react";
+import { useLocation, useNavigate } from "react-router-dom";
 import { base44 } from "@/api/base44Client";
 import { useNoIndex } from "@/lib/useNoIndex";
 import MyProducts from "@/components/account/MyProducts";
@@ -8,37 +9,31 @@ import DailyThought from "@/components/account/DailyThought";
 import AccountAnnouncements from "@/components/account/announce/AccountAnnouncements";
 import MySessions from "@/components/account/sessions/MySessions";
 import MyEvents from "@/components/account/events/MyEvents";
-import { useLocation, useNavigate } from "react-router-dom";
-import { listStories, cachedList } from "@/components/rozdroza/api";
-import { libBundle } from "@/components/account/library/libApi";
 import MyLibrary from "@/components/account/library/MyLibrary";
 import MyMessages from "@/components/account/messages/MyMessages";
 import AccountUnreadMessage from "@/components/account/messages/AccountUnreadMessage";
+import AccountShell from "@/components/account/shell/AccountShell";
+import { useAccountState, visibleSections, labelOf } from "@/components/account/shell/accountNav";
 
-const HEAD = [["produkty", "Moje produkty"], ["spotkania", "Spotkania"], ["sesje", "Umów spotkanie"]];
-const TAIL = [["zakupy", "Zakupy"], ["ustawienia", "Ustawienia"]];
+// Nagłówki sekcji: nazwa jak w menu; opis tylko tam, gdzie ustalony (Biblioteka — 5.11.2026).
+const INTRO = {
+  biblioteka: { title: "Biblioteka", text: "Nagrania, playlisty i materiały na drogę powrotu." },
+};
 
-// /konto — tylko dla zalogowanych (ProtectedRoute). Zakładki biblioteki i wiadomości
-// pokazują się wyłącznie wtedy, gdy moduł jest dla tej osoby dostępny (jeden lekki odczyt).
+// /konto — tylko dla zalogowanych (ProtectedRoute). Sekcja wynika z adresu (?tab=…), więc odświeżenie,
+// wstecz/dalej i linki z dzwonka trafiają we właściwe miejsce. Domyślnie: Moje produkty.
+// Biblioteka i Wiadomości pokazują się wyłącznie wtedy, gdy moduł jest dla tej osoby dostępny.
 export default function Account() {
   useNoIndex();
-  const [tab, setTab] = useState(() => new URLSearchParams(window.location.search).get("tab") || "produkty");
-  // Link z dzwoneczka (/konto?tab=…) zmienia zakładkę także wtedy, gdy konto jest już otwarte.
   const { search } = useLocation();
-  useEffect(() => { const t = new URLSearchParams(search).get("tab"); if (t) setTab(t); }, [search]);
-  const [me, setMe] = useState(null);
-  const [cfg, setCfg] = useState(null);
   const navigate = useNavigate();
-  // ROZDROŻA: zakładka, gdy są opublikowane historie (admin widzi ją zawsze). Lekki odczyt w tle — bez tekstów.
-  const [rz, setRz] = useState(() => !!cachedList()?.length);
+  const state = useAccountState();
+  const { me, cfg } = state;
+  const tab = new URLSearchParams(search).get("tab") || "produkty";
+  const go = (k) => navigate(`/konto?tab=${k}`);
 
-  useEffect(() => {
-    // Wszystko równolegle: konto i jedno wejście do modułu (przełączniki + biblioteka + wiadomości).
-    base44.auth.me().then(setMe);
-    libBundle().then(setCfg).catch(() => setCfg({ library: false, messages: false }));
-    const t = setTimeout(() => listStories().then((l) => l.length && setRz(true)).catch(() => {}), 600);
-    return () => clearTimeout(t);
-  }, []);
+  // Dawny adres zakładki Rozdroża prowadzi do jej trasy.
+  useEffect(() => { if (tab === "rozdroza") navigate("/konto/rozdroza", { replace: true }); }, [tab, navigate]);
 
   if (me?.role === "zablokowane") {
     return (
@@ -49,57 +44,36 @@ export default function Account() {
     );
   }
 
-  const TABS = [
-    ...HEAD.slice(0, 2),
-    ...(rz || me?.role === "admin" ? [["rozdroza", "Rozdroża"]] : []),
-    ...HEAD.slice(2),
-    ...(cfg?.library ? [["biblioteka", "Moja biblioteka"]] : []),
-    ...(cfg?.messages ? [["wiadomosci", "Wiadomości"]] : []),
-    ...TAIL,
-  ];
-  // Zanim przełączniki dojdą, nie przeskakujemy między zakładkami.
-  const active = !cfg || TABS.some(([k]) => k === tab) ? tab : "produkty";
+  // Zanim przełączniki dojdą, nie przeskakujemy między sekcjami.
+  const active = !cfg || visibleSections(state).some((s) => s.key === tab) ? tab : "produkty";
+  const intro = INTRO[active] || { title: labelOf(active) };
+
+  const aside = (
+    <>
+      {cfg?.messages && (
+        <AccountUnreadMessage
+          initial={(cfg?.messages_data?.items || []).find((m) => !m.read_at) || null}
+          onOpen={() => go("wiadomosci")}
+        />
+      )}
+      <AccountAnnouncements />
+      <DailyThought hasLibrary={!!cfg?.library} onLibrary={() => go("biblioteka")} />
+    </>
+  );
 
   return (
-    <div className="bg-[#0A0A0B] pt-28 pb-24 min-h-screen">
-      <div className="mx-auto max-w-[1200px] px-5 md:px-10">
-        <div className="flex flex-col lg:flex-row lg:items-end lg:justify-between gap-6">
-          <div>
-            <p className="technical text-[10px] gold-text mb-4">MOJE KONTO</p>
-            <h1 className="shop-heading text-4xl md:text-5xl text-[#F5EFE1]">
-              {me ? `Dobrze, że jesteś${me.imie ? `, ${me.imie}` : ""}.` : "Twoje miejsce"}
-            </h1>
-          </div>
-          <div className="w-full lg:max-w-[380px] flex flex-col gap-4">
-            {cfg?.messages && (
-              <AccountUnreadMessage
-                initial={(cfg?.messages_data?.items || []).find((m) => !m.read_at) || null}
-                onOpen={() => setTab("wiadomosci")}
-              />
-            )}
-            <AccountAnnouncements />
-            <DailyThought hasLibrary={!!cfg?.library} onLibrary={() => setTab("biblioteka")} />
-          </div>
-        </div>
-        <div className="flex gap-8 mt-12 mb-10 border-b hairline overflow-x-auto [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
-          {TABS.map(([k, l]) => (
-            <button
-              key={k}
-              onClick={() => (k === "rozdroza" ? navigate("/konto/rozdroza") : setTab(k))}
-              className={`pb-4 -mb-px technical text-[10px] whitespace-nowrap border-b ${active === k ? "border-[#C9A24A] gold-text" : "border-transparent text-foreground/55 hover:text-[#F5EFE1]"}`}
-            >
-              {l}
-            </button>
-          ))}
-        </div>
-        {active === "produkty" && <MyProducts />}
-        {active === "spotkania" && <MyEvents />}
-        {active === "sesje" && <MySessions />}
-        {active === "biblioteka" && <MyLibrary initial={cfg?.library_data} onGoToOrders={() => setTab("zakupy")} />}
-        {active === "wiadomosci" && <MyMessages initial={cfg?.messages_data} footer={cfg?.footer} />}
-        {active === "zakupy" && <MyOrders />}
-        {active === "ustawienia" && me && <AccountSettings me={me} />}
+    <AccountShell state={state} active={active} aside={aside}>
+      <div className="mb-6">
+        <h2 className="shop-heading text-2xl md:text-3xl text-[#F5EFE1]">{intro.title}</h2>
+        {intro.text && <p className="text-base text-[#F5EFE1]/75 mt-1">{intro.text}</p>}
       </div>
-    </div>
+      {active === "produkty" && <MyProducts />}
+      {active === "spotkania" && <MyEvents />}
+      {active === "sesje" && <MySessions />}
+      {active === "biblioteka" && <MyLibrary initial={cfg?.library_data} onGoToOrders={() => go("zakupy")} />}
+      {active === "wiadomosci" && <MyMessages initial={cfg?.messages_data} footer={cfg?.footer} />}
+      {active === "zakupy" && <MyOrders />}
+      {active === "ustawienia" && me && <AccountSettings me={me} />}
+    </AccountShell>
   );
 }
