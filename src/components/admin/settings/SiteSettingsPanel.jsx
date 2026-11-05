@@ -17,7 +17,7 @@ import FakturySettings from "./FakturySettings";
 import BackupsPanel from "./BackupsPanel";
 import { useAdminMode } from "@/components/admin/AdminModeContext";
 
-// Ustawienia strony: dane firmy i tryb przedpremierowy.
+// Ustawienia strony: przerwa techniczna, dane firmy i pozostałe.
 export default function SiteSettingsPanel() {
   const [s, setS] = useState(null);
   const { isAdmin } = useAdminMode();

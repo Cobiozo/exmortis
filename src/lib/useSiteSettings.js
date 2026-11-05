@@ -4,7 +4,7 @@ import { base44 } from "@/api/base44Client";
 import { takeSettings, onBoot } from "@/lib/prefetch";
 import { readCache, writeCache } from "@/lib/swrCache";
 
-// Publiczne ustawienia: dane firmy + tryb przedpremierowy + czas serwera (różnica zegarów).
+// Publiczne ustawienia: dane firmy + przerwa techniczna („premiera”) + czas serwera (różnica zegarów).
 // Kopia z poprzedniej wizyty renderuje się od razu; serwer odświeża ją w tle.
 const shape = (r, t0) => {
   const out = { ...r, offset: r._cache || !r.now ? readCache("settings")?.offset || 0 : new Date(r.now).getTime() - (t0 + Date.now()) / 2, confirmed: !r._fallback };
