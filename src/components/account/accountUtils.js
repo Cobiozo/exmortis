@@ -14,6 +14,8 @@ export const STATUS_LABEL = {
   NEW: "Oczekuje",
   WAITING_FOR_CONFIRMATION: "Oczekuje",
   CANCELED: "Anulowane",
+  CREATING: "Przerwane",
+  FAILED: "Nieudane",
   REFUNDED: "Zwrócone",
   FREE: "Bezpłatne",
 };

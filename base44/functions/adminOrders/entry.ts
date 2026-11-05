@@ -11,6 +11,8 @@ const LIST_SQL = (where) => `SELECT o.id, o.payu_order_id, o.created_date, o.upd
     o.note, o.items, o.total::float8 AS total, o.status, to_jsonb(o)->'invoice' AS invoice,
     to_jsonb(o)->>'invoice_number' AS invoice_number, to_jsonb(o)->>'invoice_url' AS invoice_url,
     to_jsonb(o)->>'invoice_error' AS invoice_error,
+    to_jsonb(o)->>'payu_status' AS payu_status, to_jsonb(o)->>'fulfilled_at' AS fulfilled_at,
+    to_jsonb(o)->>'fulfill_error' AS fulfill_error,
     COALESCE((to_jsonb(o)->>'refunded_total')::numeric, 0)::float8 AS refunded_total
   FROM public.orders o WHERE ${where} ORDER BY o.created_date DESC LIMIT 500`;
 
@@ -80,6 +82,8 @@ export default async function (req) {
       if (st === "paid") parts.push("o.status = 'COMPLETED'");
       else if (st === "pending") parts.push("o.status IN ('PENDING', 'WAITING_FOR_CONFIRMATION', 'NEW')");
       else if (st === "canceled") parts.push("o.status = 'CANCELED'");
+      else if (st === "failed") parts.push("o.status IN ('CREATING', 'FAILED')");
+      else if (st === "unfulfilled") parts.push("o.status = 'COMPLETED'", "to_jsonb(o)->>'fulfilled_at' IS NULL");
       if (body.invoice === "todo") {
         parts.push("o.status = 'COMPLETED'", "jsonb_typeof(to_jsonb(o)->'invoice') = 'object'", "COALESCE((to_jsonb(o)->'invoice'->>'wystawiona')::boolean, false) = false");
       }

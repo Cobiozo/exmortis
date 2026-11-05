@@ -7,8 +7,8 @@ import { clearSnap } from "../../shared/snapshot.ts";
 import { unpaidReminders } from "../../shared/unpaidReminder.ts";
 import { safeEqual } from "../../shared/libraryAccess.ts";
 import { applyDataPatches } from "../../shared/dataPatches.ts";
-import { getOrderByPayuId, claimCompletion, expireStaleCreating } from "../../shared/orders.ts";
-import { fulfillOrder } from "../../shared/fulfillOrder.ts";
+import { expireStaleCreating } from "../../shared/orders.ts";
+import { markPaid, fulfillPaid, drainPayuEvents, retryUnfulfilled } from "../../shared/payuQueue.ts";
 import { loadAppUrl } from "../../shared/settings.ts";
 
 // Zamówienia za 0 zł (całość pokryta kartą/kodem) nie mają powiadomienia PayU, które by je ponowiło.
@@ -18,10 +18,8 @@ async function retryFreeOrders(base44) {
     AND created_date < now() - interval '3 minutes' AND created_date > now() - interval '1 day' ORDER BY created_date LIMIT 5`, true);
   let done = 0;
   for (const r of rows) {
-    const order = await getOrderByPayuId(base44, r.payu_order_id);
-    if (order && await claimCompletion(base44, r.payu_order_id)) {
-      await fulfillOrder(base44, order, r.payu_order_id).then(() => done++).catch((e) => console.error("zamówienie 0 zł:", e?.message));
-    }
+    await markPaid(base44, r.payu_order_id);
+    await fulfillPaid(base44, r.payu_order_id).then((f) => { if (f.fulfilled) done++; }).catch((e) => console.error("zamówienie 0 zł:", e?.message));
   }
   return done;
 }
@@ -126,10 +124,13 @@ export default async function(req) {
     const freeDone = await retryFreeOrders(base44).catch((e) => { console.error("zamówienia 0 zł:", e.message); return 0; });
     // Zamówienia utknięte w CREATING (przerwana kasa) — zamykane po 15 minutach.
     const expired = await expireStaleCreating(base44).catch(() => 0);
+    // Kolejka powiadomień PayU i opłacone, a niezrealizowane zamówienia — niezależnie od nadejścia kolejnego webhooka.
+    const payuQueue = await drainPayuEvents(base44, 10).catch((e) => { console.error("kolejka PayU:", e?.message); return 0; });
+    const refulfilled = await retryUnfulfilled(base44, 5).catch((e) => { console.error("realizacje:", e?.message); return 0; });
     const pruned = await pruneSnapshots(base44).catch((e) => { console.error("kopie:", e.message); return 0; });
     const ready = await requireMail(base44).then(() => true).catch(() => false);
     const reminded = ready ? await unpaidReminders(base44).catch((e) => { console.error("przypomnienia:", e.message); return 0; }) : 0;
-    return Response.json({ ok: true, published: done, prices, released, reminded, patched, freeDone, expired, pruned });
+    return Response.json({ ok: true, published: done, prices, released, reminded, patched, freeDone, expired, payuQueue, refulfilled, pruned });
   } catch (error) {
     return Response.json({ error: error.message }, { status: 500 });
   }

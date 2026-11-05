@@ -81,7 +81,7 @@ export async function seatsTaken(base44, eventId, exceptOrderId = null) {
   const [r] = await runSql(base44, `SELECT
       (SELECT count(*) FROM public.event_tickets WHERE event_id = ${escStr(eventId)} AND status <> 'anulowany')::int AS sold,
       (SELECT COALESCE(sum((it->>'quantity')::int), 0) FROM public.orders o, jsonb_array_elements(o.items) it
-        WHERE o.status IN ('PENDING','NEW','WAITING_FOR_CONFIRMATION') AND o.created_date > now() - interval '30 minutes'
+        WHERE o.status IN ('CREATING','PENDING','NEW','WAITING_FOR_CONFIRMATION') AND o.created_date > now() - interval '30 minutes'
           AND it->>'event_id' = ${escStr(eventId)} ${exceptOrderId ? `AND o.id <> ${escStr(exceptOrderId)}` : ""})::int AS pending`, true);
   return { sold: Number(r?.sold) || 0, pending: Number(r?.pending) || 0 };
 }

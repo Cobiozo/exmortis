@@ -2,37 +2,9 @@ import { runSql, escStr, esc } from "./supabase.ts";
 
 // Zamówienia z kasy (PayU) — tabela public.orders.
 
-// Struktura tabeli zakładana migracją przy wdrożeniu — przy zapytaniach nic nie zmieniamy.
-// Indeksy natomiast zakładamy tu: tabela rośnie, a bez nich każde powiadomienie PayU (payu_order_id),
-// konto i opinie (e-mail), lista i statystyki w panelu (status, data) oraz ponowienia faktur
-// (updated_date) przechodzą przez całą tabelę. Raz na instancję; po pierwszym razie to no-op.
-let ORDERS_IDX = false;
-export async function ensureOrdersTable(base44) {
-  if (ORDERS_IDX) return;
-  ORDERS_IDX = true;
-  await runSql(
-    base44,
-    `CREATE INDEX IF NOT EXISTS orders_payu_idx ON public.orders (payu_order_id);
-     CREATE INDEX IF NOT EXISTS orders_email_idx ON public.orders (lower(buyer_email));
-     CREATE INDEX IF NOT EXISTS orders_status_created_idx ON public.orders (status, created_date DESC);
-     CREATE INDEX IF NOT EXISTS orders_updated_idx ON public.orders (updated_date);
-     ALTER TABLE public.orders ADD COLUMN IF NOT EXISTS payu_status text;
-     ALTER TABLE public.orders ADD COLUMN IF NOT EXISTS redirect_uri text;
-     ALTER TABLE public.orders ADD COLUMN IF NOT EXISTS fulfilled_at timestamptz;
-     CREATE TABLE IF NOT EXISTS public.payu_events (
-       id text PRIMARY KEY,
-       payu_order_id text,
-       ext_order_id text,
-       payu_status text,
-       payload jsonb,
-       received_at timestamptz DEFAULT now(),
-       processed_at timestamptz,
-       tries int DEFAULT 0,
-       last_error text
-     );
-     CREATE INDEX IF NOT EXISTS payu_events_pending_idx ON public.payu_events (processed_at)`
-  ).catch(() => {});
-}
+// Struktura tabel płatności (kolumny payu_status, redirect_uri, fulfilled_at, fulfill_*, indeksy, tabela payu_events)
+// zakładana jest wyłącznie migracją docs/tech/migracje/2026-11-05_payu.sql. Obsługa płatności nie wykonuje DDL.
+export async function ensureOrdersTable(_base44) {}
 
 export async function insertOrder(base44, order) {
   await ensureOrdersTable(base44);
@@ -114,43 +86,13 @@ export async function updateOrderStatus(base44, payuOrderId, status, payuStatus 
      SET status = ${escStr(status)}, updated_date = now()
      WHERE payu_order_id = ${escStr(payuOrderId)} AND status NOT IN ('COMPLETED', 'CANCELED')`
   );
-  // Surowy status PayU trzymamy osobno od statusu zamówienia (kolumna może nie istnieć na starej bazie).
+  // Surowy status PayU trzymamy osobno od statusu zamówienia.
   if (payuStatus) {
     await runSql(
       base44,
       `UPDATE public.orders SET payu_status = ${escStr(payuStatus)} WHERE payu_order_id = ${escStr(payuOrderId)}`
     ).catch(() => {});
   }
-}
-
-// Atomowe przejęcie pierwszego COMPLETED: tylko jedno wywołanie dostaje wiersz (równoległe i ponowione powiadomienia — nic).
-export async function claimCompletion(base44, payuOrderId) {
-  const rows = await runSql(
-    base44,
-    `UPDATE public.orders
-     SET status = 'COMPLETED', updated_date = now()
-     WHERE payu_order_id = ${escStr(payuOrderId)} AND status NOT IN ('COMPLETED', 'CANCELED')
-     RETURNING id`
-  );
-  const claimed = Array.isArray(rows) && rows.length > 0;
-  // Znacznik realizacji niezależny od statusu płatności — widać, że dostęp/bilety już wydane.
-  if (claimed) {
-    await runSql(
-      base44,
-      `UPDATE public.orders SET payu_status = 'COMPLETED', fulfilled_at = COALESCE(fulfilled_at, now())
-       WHERE payu_order_id = ${escStr(payuOrderId)}`
-    ).catch(() => {});
-  }
-  return claimed;
-}
-
-// Cofnięcie przejęcia, gdy obsługa się nie udała — PayU ponówi powiadomienie.
-export async function releaseCompletion(base44, payuOrderId, previous) {
-  await runSql(
-    base44,
-    `UPDATE public.orders SET status = ${escStr(previous || "PENDING")}, updated_date = now()
-     WHERE payu_order_id = ${escStr(payuOrderId)} AND status = 'COMPLETED'`
-  );
 }
 
 export async function getOrderStatus(base44, id) {
@@ -209,30 +151,8 @@ export async function findOrderForNotification(base44, payuOrderId, extOrderId) 
   return found;
 }
 
-// Zdarzenie zapisane trwale, gdy zamówienia jeszcze nie ma — do przetworzenia przy kolejnym powiadomieniu.
-export async function recordPayuEvent(base44, { payuOrderId, extOrderId, payuStatus, order }) {
-  const id = crypto.randomUUID();
-  await runSql(
-    base44,
-    `INSERT INTO public.payu_events (id, payu_order_id, ext_order_id, payu_status, payload)
-     VALUES (${escStr(id)}, ${escStr(payuOrderId || "")}, ${escStr(extOrderId || "")}, ${escStr(payuStatus || "")},
-             ${escStr(JSON.stringify({ order: order || null }))}::jsonb)`
-  );
-  return id;
-}
-
-export async function pendingPayuEvents(base44, limit = 5) {
-  const rows = await runSql(
-    base44,
-    `SELECT * FROM public.payu_events
-     WHERE processed_at IS NULL ORDER BY received_at LIMIT ${Math.max(1, Number(limit) || 5)}`,
-    true
-  ).catch(() => []);
-  return Array.isArray(rows) ? rows : [];
-}
-
 // Zamówienia, które utknęły jako CREATING (kasa przerwana przed odpowiedzią PayU) — po 15 minutach
-// zamykamy je jako FAILED. Późne powiadomienie i tak je dokończy (claimCompletion dopuszcza FAILED).
+// zamykamy je jako FAILED. Późne powiadomienie COMPLETED i tak je opłaci (markPaid dopuszcza FAILED).
 export async function expireStaleCreating(base44) {
   const rows = await runSql(
     base44,
@@ -240,16 +160,4 @@ export async function expireStaleCreating(base44) {
      WHERE status = 'CREATING' AND created_date < now() - interval '15 minutes' RETURNING id`
   ).catch(() => []);
   return Array.isArray(rows) ? rows.length : 0;
-}
-
-// Zdarzenie uznajemy za domknięte po przetworzeniu; przy błędzie wraca do kolejki (najwyżej 3 podejścia).
-export async function closePayuEvent(base44, id, error = null) {
-  await runSql(
-    base44,
-    `UPDATE public.payu_events
-     SET processed_at = CASE WHEN ${error ? "true" : "false"} AND COALESCE(tries, 0) < 2 THEN NULL ELSE now() END,
-         tries = COALESCE(tries, 0) + 1,
-         last_error = ${escStr(error || "")}
-     WHERE id = ${escStr(id)}`
-  ).catch(() => {});
 }

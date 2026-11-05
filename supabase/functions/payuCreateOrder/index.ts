@@ -4,13 +4,13 @@ import { runSql, escStr, textField, emailField, clientIp } from "../_shared/supa
 import { ipAllowed, TOO_MANY } from "../_shared/rateLimit.ts";
 import { getSetting, loadAppUrl, APP_URL } from "../_shared/settings.ts";
 import {
-  insertOrder, getOrderStatus, getOrderByPayuId, claimCompletion,
+  insertOrder, getOrderStatus,
   insertCreatingOrder, attachPayuOrder, markOrderFailed,
 } from "../_shared/orders.ts";
 import { payuToken, payuCreateOrder } from "../_shared/payu.ts";
 import { errorResponse } from "../_shared/errors.ts";
 import { mirrorRecord } from "../_shared/mirror.ts";
-import { fulfillOrder } from "../_shared/fulfillOrder.ts";
+import { markPaid, fulfillPaid, nudgeOrder } from "../_shared/payuQueue.ts";
 import { addSubscriber } from "../_shared/newsletter.ts";
 import { DIGITAL } from "../_shared/access.ts";
 import { productSeats } from "../_shared/seats.ts";
@@ -51,6 +51,8 @@ const handler = async function (req) {
     if (body.action === "status") {
       const id = String(body.orderId || "");
       if (!/^[0-9a-f-]{36}$/i.test(id)) return Response.json({ status: null });
+      // Przy okazji dokańczamy zaległe kroki tego zamówienia (kolejka PayU, realizacja) — niezależnie od webhooka.
+      await nudgeOrder(base44, id).catch(() => {});
       return Response.json({ status: await getOrderStatus(base44, id) });
     }
 
@@ -166,8 +168,9 @@ const handler = async function (req) {
       });
       await saveConsents(base44, req, id, buyerEmail, hasDigital, newsletterConsent, hasService);
       if (newsletterConsent) await addSubscriber(base44, { email: buyerEmail, name: buyerName, consentGiven: true });
-      const order = await getOrderByPayuId(base44, freeId);
-      if (await claimCompletion(base44, freeId)) await fulfillOrder(base44, order, freeId);
+      // Bez bramki: zamówienie od razu opłacone; realizacja z fulfilled_at po sukcesie, a błąd ponawia zadanie cykliczne.
+      await markPaid(base44, freeId);
+      await fulfillPaid(base44, freeId).catch((e) => console.error("zamówienie 0 zł:", String(e?.message || e).slice(0, 200)));
       return Response.json({ redirectUri: `${APP_URL}/kasa?payu=done`, orderId: id, free: true });
     }
 

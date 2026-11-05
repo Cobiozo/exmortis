@@ -2,72 +2,14 @@ import { createHash } from "node:crypto";
 import { createClientFromRequest } from "../_shared/compat.ts";
 import { getSetting, loadAppUrl } from "../_shared/settings.ts";
 import { safeEqual } from "../_shared/libraryAccess.ts";
-import {
-  findOrderForNotification, updateOrderStatus, claimCompletion, releaseCompletion,
-  recordPayuEvent, pendingPayuEvents, closePayuEvent,
-} from "../_shared/orders.ts";
-import { fulfillOrder } from "../_shared/fulfillOrder.ts";
+import { handleNotification, drainPayuEvents, retryUnfulfilled } from "../_shared/payuQueue.ts";
 import { applyRefundFromNotification } from "../_shared/refunds.ts";
-import { localPayuStatus } from "../_shared/payu.ts";
 
 // Webhook powiadomień PayU — wywoływany z serwerów PayU bez sesji użytkownika.
 // Autentyczność weryfikowana podpisem OpenPayU (MD5: treść + drugi klucz).
 
-// Statusy, które kończą płatność: COMPLETED realizuje zamówienie, CANCELED je zamyka.
-// PENDING i WAITING_FOR_CONFIRMATION zostawiają zamówienie jako opłacane w toku.
-async function processOrder(base44, payuOrderId, status, order) {
-  const extOrderId = String(order?.extOrderId || "");
-  const stored = await findOrderForNotification(base44, payuOrderId, extOrderId);
-
-  // Zamówienia jeszcze nie ma (np. powiadomienie wyprzedziło zapis) — zapisujemy zdarzenie trwale.
-  if (!stored) {
-    await recordPayuEvent(base44, { payuOrderId, extOrderId, payuStatus: status, order });
-    return { stored: false };
-  }
-
-  const local = localPayuStatus(status);
-  if (local !== "COMPLETED") {
-    await updateOrderStatus(base44, payuOrderId, local, status);
-    return { stored: true, status: local };
-  }
-
-  // Pierwsze COMPLETED przejmuje dokładnie jedno wywołanie — powtórki nie dublują dostępu ani maili.
-  if (!(await claimCompletion(base44, payuOrderId))) return { stored: true, duplicate: true };
-  try {
-    await fulfillOrder(base44, stored, payuOrderId);
-  } catch (e) {
-    // Realizacja nie doszła do końca — cofamy przejęcie, żeby PayU mogło ponowić.
-    await releaseCompletion(base44, payuOrderId, stored.status).catch(() => {});
-    throw e;
-  }
-  return { stored: true, status: "COMPLETED" };
-}
-
-// Zdarzenia zapisane wcześniej (zamówienie nie istniało) — ponawiane przy każdym powiadomieniu.
-async function drainPending(base44, limit = 5) {
-  const pending = await pendingPayuEvents(base44, limit);
-  for (const ev of pending) {
-    const order = ev.payload?.order || null;
-    const payuOrderId = String(order?.orderId || ev.payu_order_id || "");
-    const status = String(order?.status || ev.payu_status || "").toUpperCase();
-    if (!payuOrderId || !status) {
-      await closePayuEvent(base44, ev.id);
-      continue;
-    }
-    try {
-      const stored = await findOrderForNotification(base44, payuOrderId, String(order?.extOrderId || ev.ext_order_id || ""));
-      if (!stored) {
-        // Wciąż brak zamówienia — zostaje w kolejce, a po kilku próbach wypada (closePayuEvent).
-        await closePayuEvent(base44, ev.id, "brak zamówienia");
-        continue;
-      }
-      await processOrder(base44, payuOrderId, status, order || {});
-      await closePayuEvent(base44, ev.id);
-    } catch (e) {
-      await closePayuEvent(base44, ev.id, String(e?.message || e).slice(0, 200));
-    }
-  }
-}
+// Każde podpisane powiadomienie trafia do kolejki public.payu_events (payuQueue.ts): trwały zapis, idempotentne
+// przetwarzanie, weryfikacja kwoty/waluty/POS przed uznaniem płatności i ponawianie bez limitu prób.
 
 const handler = async function (req) {
   try {
@@ -106,14 +48,14 @@ const handler = async function (req) {
     }
 
     const order = payload.order || {};
-    const payuOrderId = String(order.orderId || "");
-    const status = String(order.status || "").toUpperCase();
-    if (!payuOrderId || !status) return Response.json({ ok: true });
+    if (!String(order.orderId || "") || !String(order.status || "")) return Response.json({ ok: true });
 
-    // Najpierw zaległe zdarzenia, potem bieżące.
-    await drainPending(base44).catch(() => {});
+    // Bieżące powiadomienie: trwały zapis w kolejce i przetworzenie. Błąd bazy → 503, PayU ponowi (kolejka też).
+    const result = await handleNotification(base44, payu, order);
 
-    const result = await processOrder(base44, payuOrderId, status, order);
+    // Zaległe zdarzenia i niedokończone realizacje — po bieżącym, bez wpływu na odpowiedź dla PayU.
+    await drainPayuEvents(base44, 3).catch(() => {});
+    await retryUnfulfilled(base44, 2).catch(() => {});
     return Response.json({ ok: true, ...result });
   } catch (error) {
     // Błąd bazy albo realizacji: 503, żeby PayU ponowiło powiadomienie zamiast uznać je za dostarczone.

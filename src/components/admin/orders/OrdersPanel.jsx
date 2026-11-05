@@ -11,9 +11,12 @@ const zl = (n) => `${Number(n || 0).toFixed(2).replace(".", ",")} zł`;
 const when = (iso) => (iso ? new Date(iso).toLocaleString("pl-PL", { timeZone: "Europe/Warsaw", day: "numeric", month: "short", year: "numeric", hour: "2-digit", minute: "2-digit" }) : "");
 const shortNo = (id) => String(id || "").slice(0, 8).toUpperCase();
 const nipPretty = (n) => String(n || "").replace(/^(\d{3})(\d{3})(\d{2})(\d{2})$/, "$1-$2-$3-$4");
-const STATUS_CLS = { COMPLETED: "text-[#9FD3A0] border-[#9FD3A0]/40", CANCELED: "text-foreground/45 border-foreground/20" };
+const STATUS_CLS = { COMPLETED: "text-[#9FD3A0] border-[#9FD3A0]/40", CANCELED: "text-foreground/45 border-foreground/20",
+  CREATING: "text-foreground/45 border-foreground/20", FAILED: "text-[#E57373] border-[#E57373]/40" };
+// Opłacone, ale realizacja (dostęp, bilety, maile) jeszcze niezakończona albo płatność niezgodna z zamówieniem.
+const payNote = (o) => (o.payu_status === "MISMATCH" ? " · NIEZGODNA" : o.status === "COMPLETED" && !o.fulfilled_at && o.fulfill_error ? " · REALIZACJA W TOKU" : "");
 
-const FILTERS = [["", "Wszystkie"], ["paid", "Opłacone"], ["pending", "Oczekujące"], ["canceled", "Anulowane"]];
+const FILTERS = [["", "Wszystkie"], ["paid", "Opłacone"], ["pending", "Oczekujące"], ["unfulfilled", "Do realizacji"], ["failed", "Przerwane"], ["canceled", "Anulowane"]];
 
 // Plik CSV dla księgowości (średnik + BOM — otwiera się poprawnie w Excelu).
 function exportCsv(orders) {
@@ -144,7 +147,7 @@ export default function OrdersPanel() {
                   <span className="hidden md:block text-sm text-foreground/70 truncate">{(o.items || []).map((i) => i.name).join(", ")}</span>
                   <span className="font-mono text-sm gold-text md:text-right">{zl(o.total)}</span>
                   <span className={`justify-self-start md:justify-self-end technical text-[9px] border px-2 py-1 ${STATUS_CLS[o.status] || "text-[#E8C547] border-[#E8C547]/40"}`}>
-                    {(STATUS_LABEL[o.status] || o.status || "").toUpperCase()}{refundLabel(o)}{o.invoice?.nip && !o.invoice.wystawiona && o.status === "COMPLETED" ? " · FV" : ""}
+                    {(STATUS_LABEL[o.status] || o.status || "").toUpperCase()}{payNote(o)}{refundLabel(o)}{o.invoice?.nip && !o.invoice.wystawiona && o.status === "COMPLETED" ? " · FV" : ""}
                   </span>
                   <ChevronDown className={`hidden md:block h-4 w-4 text-foreground/40 transition-transform ${isOpen ? "rotate-180" : ""}`} aria-hidden="true" />
                 </button>

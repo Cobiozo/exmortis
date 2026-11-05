@@ -1,7 +1,6 @@
 // Realizacja opłaconego zamówienia: dostęp, kod rabatowy, karty podarunkowe, maile, pakiet sesji.
 // Wspólne dla powiadomienia PayU i zamówień za 0 zł (bez bramki).
 import { APP_URL } from "./settings.ts";
-import { releaseCompletion } from "./orders.ts";
 import { sendMail, orderEmailHtml, adminTo } from "./smtp.ts";
 import { nextStep, nextStepHtml } from "./nextStep.ts";
 import { issueGiftCards, giftCardsHtml } from "./giftCard.ts";
@@ -63,7 +62,8 @@ function accessEmailHtml(granted, consent, newAccount = false, email = "") {
   </div>`;
 }
 
-// Wywołać po claimCompletion. Przy błędzie nadania dostępu cofa przejęcie i rzuca.
+// Wywoływać przez fulfillPaid (payuQueue.ts): przejęcie realizacji, a fulfilled_at dopiero po sukcesie.
+// Przy błędzie nadania dostępu, kart albo biletów rzuca — zamówienie zostaje opłacone i niezrealizowane do ponowienia.
 export async function fulfillOrder(base44, stored, payuOrderId) {
   const items = Array.isArray(stored.items) ? stored.items : [];
   const ids = items.map((i) => i.product_id).filter(Boolean);
@@ -82,11 +82,34 @@ export async function fulfillOrder(base44, stored, payuOrderId) {
       if (granted.length) newAccount = await ensureAccount(base44, stored.buyer_email);
     }
   } catch (e) {
-    await releaseCompletion(base44, payuOrderId, stored.status).catch(() => {});
     throw e;
   }
 
-  // Kod rabatowy liczony jako użyty dopiero po opłaceniu. Bierzemy go z kolumny zamówienia, nigdy
+  // Karty podarunkowe: powstają przed mailem, a nieudane wystawienie przerywa realizację.
+  // Inaczej kupujący zapłaciłby za karty, których nie dostał, a powtórka nie miałaby czego dokończyć —
+  // przejęcie cofnięte, więc PayU ponowi powiadomienie i komplet się dopełni.
+  let cards = "";
+  let cardIds = [];
+  try {
+    const cardRows = ids.length ? await runSql(base44, `SELECT id::text AS id FROM public.products WHERE product_type = 'karta' AND id::text IN (${ids.map(escStr).join(",")})`, true) : [];
+    cardIds = cardRows.map((r) => String(r.id));
+    if (cardIds.length) cards = giftCardsHtml(await issueGiftCards(base44, stored.id, items, cardIds, stored.buyer_email));
+  } catch (e) {
+    throw e;
+  }
+
+  // Bilety na wydarzenia: numery, kody QR i zapis kupującego (niezależnie od wysyłki maila — są też w koncie).
+  // Nieudane wystawienie przerywa realizację (przejęcie cofnięte, więc PayU ponowi) — inaczej kupujący
+  // zapłaciłby za bilety, których nie ma, a powtórka nie miałaby czego dokończyć. Powtórka jest idempotentna
+  // (numer zamówienia i numer pozycji), więc dopełnia tylko brakujące bilety.
+  let issued = [];
+  try {
+    issued = await issueOrderTickets(base44, stored, items);
+  } catch (e) {
+    throw e;
+  }
+  // Kod rabatowy liczony jako użyty dopiero po opłaceniu i po krokach, które mogą się nie udać (karty, bilety) —
+  // ponowiona realizacja nie liczy go drugi raz. Bierzemy go z kolumny zamówienia, nigdy
   // z notatki — notatkę wpisuje kupujący, więc mógłby w niej podać cudzy kod karty podarunkowej
   // i wypalić go bez zakupu.
   try {
@@ -108,31 +131,6 @@ export async function fulfillOrder(base44, stored, payuOrderId) {
     }
   } catch { /* licznik kodu nie blokuje zamówienia */ }
 
-  // Karty podarunkowe: powstają przed mailem, a nieudane wystawienie przerywa realizację.
-  // Inaczej kupujący zapłaciłby za karty, których nie dostał, a powtórka nie miałaby czego dokończyć —
-  // przejęcie cofnięte, więc PayU ponowi powiadomienie i komplet się dopełni.
-  let cards = "";
-  let cardIds = [];
-  try {
-    const cardRows = ids.length ? await runSql(base44, `SELECT id::text AS id FROM public.products WHERE product_type = 'karta' AND id::text IN (${ids.map(escStr).join(",")})`, true) : [];
-    cardIds = cardRows.map((r) => String(r.id));
-    if (cardIds.length) cards = giftCardsHtml(await issueGiftCards(base44, stored.id, items, cardIds, stored.buyer_email));
-  } catch (e) {
-    await releaseCompletion(base44, payuOrderId, stored.status).catch(() => {});
-    throw e;
-  }
-
-  // Bilety na wydarzenia: numery, kody QR i zapis kupującego (niezależnie od wysyłki maila — są też w koncie).
-  // Nieudane wystawienie przerywa realizację (przejęcie cofnięte, więc PayU ponowi) — inaczej kupujący
-  // zapłaciłby za bilety, których nie ma, a powtórka nie miałaby czego dokończyć. Powtórka jest idempotentna
-  // (numer zamówienia i numer pozycji), więc dopełnia tylko brakujące bilety.
-  let issued = [];
-  try {
-    issued = await issueOrderTickets(base44, stored, items);
-  } catch (e) {
-    await releaseCompletion(base44, payuOrderId, stored.status).catch(() => {});
-    throw e;
-  }
   let tix = "";
   if (issued.length) {
     try {

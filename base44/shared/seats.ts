@@ -32,7 +32,7 @@ export async function productSeats(base44, ids) {
      LEFT JOIN (
        SELECT i->>'product_id' AS pid, SUM(COALESCE((i->>'quantity')::int, 1))::int AS n
        FROM public.orders o, ${items} i
-       WHERE o.status IN ('NEW', 'PENDING', 'WAITING_FOR_CONFIRMATION')
+       WHERE o.status IN ('CREATING', 'NEW', 'PENDING', 'WAITING_FOR_CONFIRMATION')
          AND COALESCE(o.updated_date, o.created_date) > now() - interval '${PENDING_MIN} minutes'
          AND i->>'product_id' IN (${inList})
        GROUP BY 1
