@@ -1,18 +1,16 @@
 import React from "react";
-import { Navigate, useLocation } from "react-router-dom";
-import usePrelaunch, { isHiddenPath } from "@/lib/usePrelaunch";
-import { useAdminMode } from "@/components/admin/AdminModeContext";
+import { useLocation } from "react-router-dom";
+import usePrelaunch, { isOpenPath } from "@/lib/usePrelaunch";
+import Maintenance from "./Maintenance";
 
-// Tryb przedpremierowy: gość trafiający na ukryty adres wraca na zapowiedź (przekierowanie tymczasowe).
-// Wyjątek: administrator zawsze widzi ROZDROŻA w koncie (podgląd szkicu i „jak klient”), także w widoku „gość”.
+// Przerwa techniczna: gość na zamkniętym adresie widzi stronę przerwy (adres zostaje ten sam).
+// Otwarte zostają dokumenty prawne, kontakt, logowanie i linki z maili (isOpenPath).
+// Zalogowani klienci i administrator widzą pełną stronę; /konto i /admin chroni logowanie jak zawsze.
 export default function PrelaunchGate({ children }) {
-  const { gated, loading, provisional } = usePrelaunch();
-  const { isAdmin, ready } = useAdminMode();
-  const { pathname } = useLocation();
-  const adminRz = pathname.startsWith("/konto/rozdroza");
-  if (adminRz && !ready && isHiddenPath(pathname)) return <div className="min-h-[100svh] bg-[#0A0A0B]" />;
-  if (adminRz && isAdmin) return children;
-  if ((loading || provisional) && isHiddenPath(pathname)) return <div className="min-h-[100svh] bg-[#0A0A0B]" />;
-  if (gated && isHiddenPath(pathname)) return <Navigate to="/" replace />;
+  const { gated, provisional } = usePrelaunch();
+  const { pathname, search } = useLocation();
+  if (isOpenPath(pathname, search) || pathname.startsWith("/admin") || pathname.startsWith("/konto")) return children;
+  if (provisional) return <div className="min-h-[100svh] bg-[#0A0A0B]" />;
+  if (gated) return <Maintenance />;
   return children;
 }
