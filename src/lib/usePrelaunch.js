@@ -35,7 +35,5 @@ export default function usePrelaunch() {
   // Do czasu sprawdzenia logowania: w czasie przerwy nic nie odsłaniamy (ciemne tło zamiast mignięcia strony).
   if (!ready) return { loading: false, provisional: active, active, gated: active, until, tick };
   const gated = active && (isAdmin ? guest : !isAuthenticated);
-  // Kopia ustawień z pamięci przeglądarki: przerwa włączona, ale serwer jeszcze nie potwierdził — czekamy.
-  if (!active && !s.confirmed) return { loading: false, provisional: false, active, gated, until, tick };
   return { loading: false, active, gated, until, tick };
 }
