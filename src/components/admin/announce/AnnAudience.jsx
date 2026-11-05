@@ -1,7 +1,7 @@
 import React from "react";
 import { INPUT, LABEL } from "./annForm";
 
-const OPTS = [["wszyscy", "Wszystkie osoby z kontem"], ["produkt", "Osoby z dostępem do produktu lub kursu"], ["obok", "Uczestnicy Obok (seria)"], ["spotkanie", "Osoby zapisane na spotkanie"]];
+const OPTS = [["wszyscy", "Wszystkie osoby z kontem"], ["produkt", "Osoby z dostępem do produktu lub kursu"], ["spotkanie", "Osoby zapisane na spotkanie"]];
 
 // Wybór odbiorców ogłoszenia.
 export default function AnnAudience({ f, set, options }) {

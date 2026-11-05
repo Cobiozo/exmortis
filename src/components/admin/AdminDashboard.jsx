@@ -88,7 +88,6 @@ export default function AdminDashboard() {
           libOn && { to: "/admin/biblioteka", title: "Biblioteka", lines: ["Materiały, kolekcje, przydziały"] },
           libOn && { to: "/admin/grupy", title: "Grupy", lines: ["Ręczne i automatyczne, znaczniki"] },
           { to: "/admin/ogloszenia", title: "Ogłoszenia", lines: ["Na koncie klienta, bez e-maili"] },
-          { to: "/admin/obok", title: "Obok", lines: ["Serie, nagrania, uczestnicy"] },
           { to: "/admin/powrot", title: "Zgłoszenia POWRÓT", lines: pc
             ? [`Nowe (7 dni): ${pc.fresh}`, `Ankiety do wysłania: ${pc.todo}`, `Wypełnione: ${pc.done}`]
             : ["Krótkie zgłoszenia, pełne ankiety, kwalifikacja"] },

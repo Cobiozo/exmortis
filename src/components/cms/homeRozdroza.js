@@ -20,7 +20,7 @@ function addRozdroza(blocks) {
   return [...blocks.slice(0, after + 1), HOME_ROZDROZA_BLOCK, ...blocks.slice(after + 1)];
 }
 
-// Zapowiedź OBOK — tak samo kodem, zaraz PO ROZDROŻACH (bez duplikatu, gdy admin doda blok „obok”).
+// Zapowiedź Biblioteki (dawniej OBOK; klucz modułu „obok” zostaje dla zgodności) — tak samo kodem, zaraz PO ROZDROŻACH (bez duplikatu, gdy admin doda blok „obok”).
 export const HOME_OBOK_BLOCK = {
   id: "home-obok",
   typ: "modul",

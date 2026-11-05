@@ -4,7 +4,7 @@ import { base44 } from "@/api/base44Client";
 import { NAV, TEST, FOOTER } from "./navItems";
 
 export const NAV_DEFAULT = { menu: NAV, test: TEST, kolumny: FOOTER };
-// „Obok” nie ma pozycji w menu głównym — wejście z konta (zakładka Obok) i z zapowiedzi na stronie głównej.
+// „Obok” zakończone 5.11.2026 (adres /obok przekierowuje do Biblioteki) — stara pozycja w menu z panelu jest pomijana.
 const noObok = (menu) => menu.filter((m) => !String(m.to).startsWith("/obok"));
 
 // Menu i stopka z edytora (jeden rekord SiteNav); domyślne wartości do czasu zapisu.

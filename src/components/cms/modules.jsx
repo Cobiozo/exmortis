@@ -35,7 +35,7 @@ export const MODULES = {
   krotka_historia: ["Krótka historia", ShortHistory],
   droga_powrotu: ["Droga powrotu", ReturnPath],
   rozdroza: ["ROZDROŻA — interaktywne historie", RozdrozaHome],
-  obok: ["OBOK — zapowiedź (dobre słowo na wieczór)", ObokHome],
+  obok: ["Biblioteka — zapowiedź (materiały dla osób z kontem)", ObokHome],
   zajawka_powrot: ["Zajawka POWRÓT", PowrotTeaser],
   swiadectwa: ["Świadectwa", Testimonials],
   instagram: ["Instagram", InstagramFeed],

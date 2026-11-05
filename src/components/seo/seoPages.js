@@ -13,7 +13,6 @@ export const PAGES = {
   "/skarbiec": { t: "Skarbiec — materiały na drogę powrotu | exmortis", d: "E-booki, kursy wideo, nagrania i karty podarunkowe exmortis. Narzędzia do pracy we własnym tempie, z dostępem w Twoim koncie." },
   "/glos": { t: "Głos — muzyka i podcast | exmortis", d: "Muzyka i podcast exmortis: rozmowy o powrotach ze śmierci mentalnej, duchowej i życiowej. Posłuchaj odcinków albo zgłoś się jako gość." },
   "/cisza": { t: "Cisza — minutnik ciszy | exmortis", d: "Kilka minut ciszy w przeglądarce: wybierz czas, usiądź, oddychaj. Bez rozpraszaczy, we własnym tempie." },
-  "/obok": { t: "Obok — dobre słowo na wieczór | exmortis", d: "Krótkie nagrania, dobre słowo i jedno pytanie do refleksji na wieczór. Spokojne towarzyszenie w drodze powrotu — bezpłatnie, dla osób z kontem exmortis." },
   "/7-wieczorow": { t: "7 wieczorów ciszy — exmortis", d: "Siedem wieczornych nagrań na czas świąt, od 25 grudnia. Na wieczory, które bywają najtrudniejsze." },
   "/kontakt": { t: "Kontakt — exmortis", d: "Napisz do mnie przez formularz. Odpowiadam osobiście." },
   "/1-listopada": { t: "1 listopada, 20:00 — Ze śmierci | exmortis", d: PRE.d },

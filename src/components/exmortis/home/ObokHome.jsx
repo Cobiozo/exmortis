@@ -4,34 +4,34 @@ import { ArrowRight } from "lucide-react";
 import { useAuth } from "@/lib/AuthContext";
 import { track } from "@/lib/track";
 
-// Strona główna: krótka zapowiedź OBOK. Obok nie ma pozycji w menu — wejście z konta,
-// a stąd zaproszenie do bezpłatnego konta (gość) albo prosto do zakładki Obok (zalogowany).
-const KONTO_OBOK = "/konto?tab=obok";
+// Strona główna: krótka zapowiedź Biblioteki (od 5.11.2026 zastępuje Obok). Materiały — playlisty, nagrania,
+// pliki PDF — są w koncie, w zakładce Biblioteka. Gość dostaje zaproszenie do bezpłatnego konta.
+const KONTO_BIBLIOTEKA = "/konto?tab=biblioteka";
 
 export default function ObokHome() {
   const { user, isLoadingAuth } = useAuth();
   const zalogowany = !!user;
-  const back = encodeURIComponent(KONTO_OBOK);
+  const back = encodeURIComponent(KONTO_BIBLIOTEKA);
   return (
-    <section aria-labelledby="home-obok-tytul" className="py-20 md:py-24 px-5 md:px-10 border-t hairline bg-[#0A0A0B]">
+    <section aria-labelledby="home-biblioteka-tytul" className="py-20 md:py-24 px-5 md:px-10 border-t hairline bg-[#0A0A0B]">
       <div className="mx-auto max-w-[1400px] grid md:grid-cols-12 gap-8 md:gap-16 items-end">
         <div className="md:col-span-7">
-          <p className="technical text-[11px] gold-text mb-4">OBOK</p>
-          <h2 id="home-obok-tytul" className="relic-heading text-[26px] sm:text-4xl leading-[1.08] text-[#F5EFE1] mb-6">
-            Dobre słowo na wieczór.
+          <p className="technical text-[11px] gold-text mb-4">BIBLIOTEKA</p>
+          <h2 id="home-biblioteka-tytul" className="relic-heading text-[26px] sm:text-4xl leading-[1.08] text-[#F5EFE1] mb-6">
+            Materiały na drogę powrotu.
           </h2>
           <p className="text-[17px] leading-[1.75] text-foreground/60 max-w-[40rem]">
-            Obok — krótkie nagrania, dobre słowo i jedno pytanie na wieczór. Spokojne towarzyszenie między rozmowami, bez pośpiechu i bez oceniania.
+            Nagrania na spokojne wieczory, playlisty i materiały do pracy z sobą — w Twoim koncie, w Twoim rytmie.
           </p>
         </div>
         <div className="md:col-span-5 md:text-right">
           {zalogowany ? (
-            <Link to={KONTO_OBOK} onClick={() => track("obok_home_click", { zalogowany: true })} className="btn-relic min-h-[44px]">
-              PRZEJDŹ DO OBOK <ArrowRight className="h-4 w-4" aria-hidden="true" />
+            <Link to={KONTO_BIBLIOTEKA} onClick={() => track("biblioteka_home_click", { zalogowany: true })} className="btn-relic min-h-[44px]">
+              OTWÓRZ BIBLIOTEKĘ <ArrowRight className="h-4 w-4" aria-hidden="true" />
             </Link>
           ) : (
             <div className="flex flex-wrap gap-4 md:justify-end">
-              <Link to={`/register?returnTo=${back}`} onClick={() => track("obok_home_click", { zalogowany: false })} className="btn-relic min-h-[44px]">
+              <Link to={`/register?returnTo=${back}`} onClick={() => track("biblioteka_home_click", { zalogowany: false })} className="btn-relic min-h-[44px]">
                 ZAŁÓŻ DARMOWE KONTO
               </Link>
               <Link to={`/login?returnTo=${back}`} className="btn-ghost min-h-[44px]">ZALOGUJ SIĘ</Link>
