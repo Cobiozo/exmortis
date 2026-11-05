@@ -91,8 +91,20 @@ CREATE TABLE IF NOT EXISTS public.mb_groups (
   created_at timestamptz NOT NULL DEFAULT now(),
   updated_at timestamptz NOT NULL DEFAULT now(),
   CHECK ((kind = 'RECZNA' AND rule IS NULL)
-      OR (kind = 'AUTOMATYCZNA' AND rule IS NOT NULL AND rule->>'typ' IN ('produkt','aktywny_pakiet')))
+      OR (kind = 'AUTOMATYCZNA' AND rule IS NOT NULL AND rule->>'typ' IN ('produkt','aktywny_pakiet','wszystkie_konta')))
 );
+-- 5.11.2026: reguła „wszystkie_konta” (materiały dla każdej osoby z kontem). Starsze bazy mają ograniczenie
+-- bez tej wartości — podmieniamy je na nazwane (bez zmiany istniejących wierszy).
+DO $gr$ DECLARE r record; BEGIN
+  FOR r IN SELECT conname FROM pg_constraint WHERE conrelid = 'public.mb_groups'::regclass AND contype = 'c'
+    AND pg_get_constraintdef(oid) LIKE '%aktywny_pakiet%' AND pg_get_constraintdef(oid) NOT LIKE '%wszystkie_konta%' LOOP
+    EXECUTE format('ALTER TABLE public.mb_groups DROP CONSTRAINT %I', r.conname);
+  END LOOP;
+  IF NOT EXISTS (SELECT 1 FROM pg_constraint WHERE conrelid = 'public.mb_groups'::regclass AND pg_get_constraintdef(oid) LIKE '%wszystkie_konta%') THEN
+    ALTER TABLE public.mb_groups ADD CONSTRAINT mb_groups_rule_kind CHECK ((kind = 'RECZNA' AND rule IS NULL)
+      OR (kind = 'AUTOMATYCZNA' AND rule IS NOT NULL AND rule->>'typ' IN ('produkt','aktywny_pakiet','wszystkie_konta')));
+  END IF;
+END $gr$;
 -- Dopisane w 1B-1: grupy startowe czekają na akceptację (NULL = „do akceptacji").
 ALTER TABLE public.mb_groups ADD COLUMN IF NOT EXISTS accepted_at timestamptz;
 CREATE TABLE IF NOT EXISTS public.mb_group_members (
@@ -288,6 +300,12 @@ BEGIN
        WHERE p.payment_status = 'oplacony' AND p.valid_until > now()
          AND p.sessions_used < p.sessions_total AND p.email_display IS NOT NULL
          AND (COALESCE(p_rule->>'type_id','') = '' OR p.type_id::text = p_rule->>'type_id');
+  ELSIF p_rule->>'typ' = 'wszystkie_konta' THEN
+    -- Każda osoba z kontem (logowanie Supabase), bez kont usuniętych i zablokowanych.
+    RETURN QUERY
+      SELECT DISTINCT lower(btrim(u.email::text))
+        FROM auth.users u
+       WHERE u.email IS NOT NULL AND u.deleted_at IS NULL AND (u.banned_until IS NULL OR u.banned_until < now());
   END IF;
 END $ae$;
 

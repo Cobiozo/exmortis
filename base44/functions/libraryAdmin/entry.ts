@@ -401,10 +401,10 @@ export default async function (req) {
       const kind = body.kind === "AUTOMATYCZNA" ? "AUTOMATYCZNA" : "RECZNA";
       let rule = null;
       if (kind === "AUTOMATYCZNA") {
-        const typ = body.rule && body.rule.typ === "aktywny_pakiet" ? "aktywny_pakiet" : "produkt";
+        const typ = ["aktywny_pakiet", "wszystkie_konta"].includes(body.rule && body.rule.typ) ? body.rule.typ : "produkt";
         if (typ === "produkt" && !uuidOrNull(body.rule && body.rule.id)) return bad("Wybierz produkt.");
         const tid = uuidOrNull(body.rule && body.rule.type_id);
-        rule = typ === "produkt" ? { typ, id: uuidOrNull(body.rule.id) } : { typ, ...(tid ? { type_id: tid } : {}) };
+        rule = typ === "produkt" ? { typ, id: uuidOrNull(body.rule.id) } : typ === "wszystkie_konta" ? { typ } : { typ, ...(tid ? { type_id: tid } : {}) };
       }
       if (id) {
         const r = await runSql(base44, `UPDATE public.mb_groups SET name = ${escStr(name)}, color = ${esc(color)},
