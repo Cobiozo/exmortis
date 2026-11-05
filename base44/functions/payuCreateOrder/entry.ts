@@ -204,6 +204,7 @@ export default async function (req) {
 
     // 4. Zamówienie w PayU. HTTP 302 z JSON-em to poprawna odpowiedź, nie błąd.
     const created = await payuCreateOrder(payu, accessToken, {
+      // Przez exmortis.pl (server.js → Supabase z kluczem anon): funkcja ma verify_jwt, a PayU nie wysyła tokenu.
       notifyUrl: `${APP_URL}/functions/payuNotification`,
       continueUrl: `${APP_URL}/kasa?payu=done`,
       customerIp,

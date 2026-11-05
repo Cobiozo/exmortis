@@ -201,12 +201,11 @@ const handler = async function (req) {
 
     const realIp = clientIp(req);
     const customerIp = realIp === "brak" ? "127.0.0.1" : realIp;
-    // Adres powiadomień tego wdrożenia: dla Supabase — własna funkcja edge.
-    const supabaseUrl = (Deno.env.get("SUPABASE_URL") || "").replace(/\/+$/, "");
 
     // 4. Zamówienie w PayU. HTTP 302 z JSON-em to poprawna odpowiedź, nie błąd.
     const created = await payuCreateOrder(payu, accessToken, {
-      notifyUrl: supabaseUrl ? `${supabaseUrl}/functions/v1/payuNotification` : `${APP_URL}/functions/payuNotification`,
+      // Przez exmortis.pl (server.js → Supabase z kluczem anon): funkcja ma verify_jwt, a PayU nie wysyła tokenu.
+      notifyUrl: `${APP_URL}/functions/payuNotification`,
       continueUrl: `${APP_URL}/kasa?payu=done`,
       customerIp,
       merchantPosId: String(payu.posId),

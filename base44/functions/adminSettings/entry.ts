@@ -46,7 +46,7 @@ export default async function (req) {
         // Rola techniczna nie widzi listy adresów z dostępem przedpremierowym.
         premiera: { ...PREMIERA_DEFAULT, ...(premiera || {}), ...(tech ? { dostep: [], dostep_ukryty: true } : {}) },
         app: { url: app?.url || DEFAULT_APP_URL },
-        // Panel pokazuje rzeczywisty adres powiadomień tego wdrożenia (funkcja Base44).
+        // Adres powiadomień taki sam jak w zamówieniu: przez adres aplikacji.
         backend: "base44",
         notifyUrl: `${String(app?.url || DEFAULT_APP_URL).replace(/\/+$/, "")}/functions/payuNotification`,
         payu: payu ? maskSecrets(payu, ["clientSecret", "secondKey"]) : {},

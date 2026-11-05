@@ -85,25 +85,9 @@ export async function loadFaktury(base44) {
 const ORDER_COLS = ["invoice_id text", "invoice_number text", "invoice_url text", "invoice_at timestamptz", "invoice_error text"];
 const REFUND_COLS = ["correction_id text", "correction_number text", "correction_url text", "correction_error text"];
 
-let COLS_OK = false;
-export async function ensureInvoiceColumns(base44) {
-  if (COLS_OK) return;
-  const add = async (table, cols) => {
-    const have = await runSql(
-      base44,
-      `SELECT column_name FROM information_schema.columns WHERE table_schema = 'public' AND table_name = '${table}'`,
-      true
-    ).catch(() => []);
-    const names = new Set((Array.isArray(have) ? have : []).map((r) => String(r.column_name)));
-    for (const c of cols) {
-      const name = c.split(" ")[0];
-      if (names.has(name)) continue;
-      await runSql(base44, `ALTER TABLE public.${table} ADD COLUMN IF NOT EXISTS ${c}`).catch(() => {});
-    }
-  };
-  await add("orders", ORDER_COLS);
-  await add("order_refunds", REFUND_COLS);
-  COLS_OK = true;
+// Kolumny invoice_* (orders) i correction_* (order_refunds): Struktura zakładana migracją docs/tech/migracje/2026-11-05_payu.sql — bez DDL w trakcie zakupu.
+export async function ensureInvoiceColumns(_base44) {
+  return;
 }
 
 // ---- pomocnicze ----

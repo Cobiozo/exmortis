@@ -6,22 +6,9 @@ import { runSql, escStr, restGet } from "./supabase.ts";
 
 const READY = new Set();
 
-async function ensureMirrorTable(base44, entity) {
-  if (READY.has(entity)) return;
+// Tabele exm_* zakłada migracja (exm_access, exm_consent w 2026-11-05_payu.sql). Struktura zakładana migracją docs/tech/migracje/2026-11-05_payu.sql — bez DDL w trakcie zakupu.
+async function ensureMirrorTable(_base44, entity) {
   READY.add(entity);
-  const t = `exm_${entity.toLowerCase()}`;
-  await runSql(
-    base44,
-    `CREATE TABLE IF NOT EXISTS public.${t} (
-       id text PRIMARY KEY,
-       data jsonb NOT NULL DEFAULT '{}'::jsonb,
-       created_date timestamptz NOT NULL DEFAULT now(),
-       updated_date timestamptz NOT NULL DEFAULT now(),
-       created_by_id text
-     );
-     CREATE INDEX IF NOT EXISTS ${t}_data_gin ON public.${t} USING gin (data jsonb_path_ops);
-     CREATE INDEX IF NOT EXISTS ${t}_updated_idx ON public.${t} (updated_date);`
-  ).catch(() => {});
 }
 
 // Kopiuje jeden rekord encji Base44 do exm_<encja> (pola we wnętrzu `data`, jak w replikacji).

@@ -65,6 +65,8 @@ function accessEmailHtml(granted, consent, newAccount = false, email = "") {
 // Wywoływać przez fulfillPaid (payuQueue.ts): przejęcie realizacji, a fulfilled_at dopiero po sukcesie.
 // Przy błędzie nadania dostępu, kart albo biletów rzuca — zamówienie zostaje opłacone i niezrealizowane do ponowienia.
 export async function fulfillOrder(base44, stored, payuOrderId) {
+  // Zamówienie testowe (is_test ustawia wyłącznie backend testowy): bez dostępów, kart, biletów, kodów, maili i faktur.
+  if (stored?.is_test === true) return { test: true };
   const items = Array.isArray(stored.items) ? stored.items : [];
   const ids = items.map((i) => i.product_id).filter(Boolean);
   const granted = [];

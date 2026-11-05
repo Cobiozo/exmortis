@@ -14,7 +14,39 @@ const nipPretty = (n) => String(n || "").replace(/^(\d{3})(\d{3})(\d{2})(\d{2})$
 const STATUS_CLS = { COMPLETED: "text-[#9FD3A0] border-[#9FD3A0]/40", CANCELED: "text-foreground/45 border-foreground/20",
   CREATING: "text-foreground/45 border-foreground/20", FAILED: "text-[#E57373] border-[#E57373]/40" };
 // Opłacone, ale realizacja (dostęp, bilety, maile) jeszcze niezakończona albo płatność niezgodna z zamówieniem.
-const payNote = (o) => (o.payu_status === "MISMATCH" ? " · NIEZGODNA" : o.status === "COMPLETED" && !o.fulfilled_at && o.fulfill_error ? " · REALIZACJA W TOKU" : "");
+const payNote = (o) => `${o.is_test ? " · TEST" : ""}${o.payu_status === "MISMATCH" ? " · NIEZGODNA" : o.status === "COMPLETED" && !o.fulfilled_at && (o.fulfill_error || o.fulfill_review) ? " · DO REALIZACJI" : ""}`;
+// Wznowienie dotyczy zamówień z numerem PayU (albo FREE-), jeszcze niezrealizowanych; sporne wymagają drugiego kliknięcia.
+const canResume = (o) => !o.fulfilled_at && !!o.payu_order_id && (o.status === "COMPLETED" || o.payu_status === "MISMATCH" || ["PENDING", "NEW", "WAITING_FOR_CONFIRMATION", "FAILED", "CANCELED"].includes(o.status));
+
+function ResumeBox({ o, onDone }) {
+  const [busy, setBusy] = useState(false);
+  const [msg, setMsg] = useState("");
+  const [confirm, setConfirm] = useState(false);
+  if (!canResume(o)) return null;
+  const run = async (withConfirm) => {
+    setBusy(true); setMsg("");
+    try {
+      const r = await base44.functions.invoke("adminOrders", { action: "resume_fulfillment", id: o.id, confirm: withConfirm });
+      if (r.data.needsConfirm) { setConfirm(true); setMsg(`Zamówienie sporne. ${r.data.check || ""}. Potwierdź, że chcesz je zrealizować.`); }
+      else if (r.data.already) setMsg("To zamówienie jest już zrealizowane.");
+      else { setMsg(r.data.fulfilled ? `Zrealizowane (${r.data.check}).` : "Realizacja w toku — sprawdź za chwilę."); onDone(); }
+    } catch (e) { setMsg(e?.response?.data?.error || "Nie udało się wznowić realizacji."); }
+    setBusy(false);
+  };
+  return (
+    <div className="border hairline p-4 space-y-3">
+      <p className="technical text-[10px] gold-text">REALIZACJA</p>
+      {o.fulfill_review && <p className="text-xs text-foreground/60">{o.fulfill_review}</p>}
+      {o.fulfill_error && <p className="text-xs text-[#E8C547]">Ostatni błąd: {o.fulfill_error}</p>}
+      <p className="text-xs text-foreground/50">Przed wznowieniem sprawdzam płatność w PayU (status, kwota, waluta, POS). Bez potwierdzenia nic się nie zmienia.</p>
+      <div className="flex flex-wrap gap-3">
+        {!confirm && <button onClick={() => run(false)} disabled={busy} className="btn-ghost !px-4 !py-2 text-[10px]">{busy ? <Loader2 className="h-4 w-4 animate-spin" /> : "WZNÓW REALIZACJĘ"}</button>}
+        {confirm && <button onClick={() => run(true)} disabled={busy} className="btn-relic !px-4 !py-2 text-[10px]">{busy ? <Loader2 className="h-4 w-4 animate-spin" /> : "POTWIERDZAM — ZREALIZUJ ZAMÓWIENIE SPORNE"}</button>}
+      </div>
+      {msg && <p className="text-xs text-foreground/70" role="status">{msg}</p>}
+    </div>
+  );
+}
 
 const FILTERS = [["", "Wszystkie"], ["paid", "Opłacone"], ["pending", "Oczekujące"], ["unfulfilled", "Do realizacji"], ["failed", "Przerwane"], ["canceled", "Anulowane"]];
 
@@ -163,6 +195,7 @@ export default function OrdersPanel() {
                       <p className="text-xs text-foreground/35 pt-2 break-all">Pełny numer: {o.id}{o.payu_order_id ? ` · PayU: ${o.payu_order_id}` : ""}</p>
                     </div>
                     <div className="space-y-4">
+                      <ResumeBox o={o} onDone={load} />
                       <FakturaBlock o={o} />
                       <InvoiceBox o={o} onSaved={(inv) => patch(o.id, inv)} />
                       <RefundBox order={o} refunds={refundsOf(o.id)} onOpen={setRefund} />

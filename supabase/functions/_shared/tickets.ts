@@ -28,11 +28,9 @@ export const TICKET_SCHEMA_SQL = `
     ALTER TABLE public.event_tickets ENABLE ROW LEVEL SECURITY;
     REVOKE ALL ON public.event_tickets FROM PUBLIC, anon, authenticated;`;
 
-let schemaReady = false;
-export async function ensureTicketSchema(base44) {
-  if (schemaReady) return;
-  await runSql(base44, TICKET_SCHEMA_SQL);
-  schemaReady = true;
+// TICKET_SCHEMA_SQL zostaje jako wzór. Struktura zakładana migracją docs/tech/migracje/2026-11-05_payu.sql — bez DDL w trakcie zakupu.
+export async function ensureTicketSchema(_base44) {
+  return;
 }
 
 // Numer biletu: 3 litery + 4 cyfry (bez I, O, Q — nie mylą się z cyframi). W bazie bez myślnika.

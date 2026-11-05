@@ -6,7 +6,6 @@ import { loadAppUrl } from "./settings.ts";
 const esc = (v) => String(v ?? "").replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
 
 export async function unpaidReminders(base44, limit = 20) {
-  await runSql(base44, `ALTER TABLE public.orders ADD COLUMN IF NOT EXISTS reminded_at timestamptz`);
   const rows = await runSql(base44, `SELECT o.id, o.buyer_name, o.buyer_email, o.items FROM public.orders o
     WHERE o.status IN ('NEW','PENDING') AND o.reminded_at IS NULL AND o.buyer_email IS NOT NULL
       AND COALESCE(o.payu_order_id, '') NOT LIKE 'FREE-%'

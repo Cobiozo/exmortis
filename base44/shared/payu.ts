@@ -109,6 +109,26 @@ export async function payuCreateOrder(payu, accessToken, payload, { timeoutMs = 
   };
 }
 
+// GET /api/v2_1/orders/{orderId} — stan zamówienia w PayU (do ręcznego wznowienia realizacji).
+// Zwraca pierwszy obiekt z „orders” (status, totalAmount, currencyCode, merchantPosId, extOrderId).
+export async function payuGetOrder(payu, accessToken, payuOrderId, { timeoutMs = 15000 } = {}) {
+  const base = payuBase(payu?.env);
+  let res;
+  try {
+    res = await fetch(`${base}/api/v2_1/orders/${encodeURIComponent(String(payuOrderId))}`, {
+      headers: { Accept: "application/json", Authorization: `Bearer ${accessToken}` },
+      redirect: "manual",
+      signal: AbortSignal.timeout(timeoutMs),
+    });
+  } catch (e) {
+    throw new Error(netError(e, "PAYU_GET_ORDER"));
+  }
+  const data = await res.json().catch(() => null);
+  const order = Array.isArray(data?.orders) ? data.orders[0] : null;
+  if (!res.ok || !order) throw new Error("PAYU_GET_ORDER_FAILED");
+  return order;
+}
+
 // Status PayU → status zamówienia w bazie. Realizacja idzie osobno (kolumna fulfilled_at).
 export function localPayuStatus(payuStatus) {
   const s = String(payuStatus || "").toUpperCase();

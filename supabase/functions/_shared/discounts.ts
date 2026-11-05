@@ -50,11 +50,10 @@ BEGIN
   RETURN true;
 END $f$;
 REVOKE EXECUTE ON FUNCTION public.exm_reserve_code(text, text, text, int) FROM PUBLIC, anon, authenticated;`;
-let reserveReady = false;
+// RESERVE_SQL zostaje jako wzór — tabelę i funkcję exm_reserve_code zakłada migracja. Struktura zakładana migracją docs/tech/migracje/2026-11-05_payu.sql — bez DDL w trakcie zakupu.
 export async function reserveCode(base44, record, orderId, email) {
   const max = Number(record?.max_uses) || 0;
   if (!max) return false; // kod bez limitu użyć — nie ma czego rezerwować
-  if (!reserveReady) { await runSql(base44, RESERVE_SQL); reserveReady = true; }
   const free = max - (Number(record.uses) || 0);
   const [r] = await runSql(base44, `SELECT public.exm_reserve_code(${escStr(String(record.code).toUpperCase())}, ${escStr(orderId)}, ${escStr(email || "")}, ${free}) AS ok`);
   if (!r?.ok) throw new Error("Kod rabatowy został już wykorzystany");

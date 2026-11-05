@@ -42,11 +42,8 @@ export const REFUND_SCHEMA_SQL = `
     REVOKE ALL ON public.order_refunds FROM PUBLIC, anon, authenticated;
     ALTER TABLE public.orders ADD COLUMN IF NOT EXISTS refunded_total numeric(10,2) DEFAULT 0;`;
 
-let schemaReady = false;
-export async function ensureRefundSchema(base44) {
-  if (schemaReady) return;
-  await runSql(base44, REFUND_SCHEMA_SQL);
-  schemaReady = true;
+// REFUND_SCHEMA_SQL zostaje jako wzór. Struktura zakładana migracją docs/tech/migracje/2026-11-05_payu.sql — bez DDL w trakcie zakupu.
+export async function ensureRefundSchema(_base44) {
   tableKnown = true;
 }
 

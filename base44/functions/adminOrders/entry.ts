@@ -1,6 +1,7 @@
 import { createClientFromRequest } from "npm:@base44/sdk@0.8.44";
 import { runSql, escStr, requireAdmin } from "../../shared/supabase.ts";
 import { ensureInvoiceColumn } from "../../shared/orders.ts";
+import { resumeFulfillment } from "../../shared/payuQueue.ts";
 import { createRefund, listRefunds, hasRefundsTable } from "../../shared/refunds.ts";
 import { issueInvoice } from "../../shared/invoices.ts";
 
@@ -12,7 +13,8 @@ const LIST_SQL = (where) => `SELECT o.id, o.payu_order_id, o.created_date, o.upd
     to_jsonb(o)->>'invoice_number' AS invoice_number, to_jsonb(o)->>'invoice_url' AS invoice_url,
     to_jsonb(o)->>'invoice_error' AS invoice_error,
     to_jsonb(o)->>'payu_status' AS payu_status, to_jsonb(o)->>'fulfilled_at' AS fulfilled_at,
-    to_jsonb(o)->>'fulfill_error' AS fulfill_error,
+    to_jsonb(o)->>'fulfill_error' AS fulfill_error, to_jsonb(o)->>'fulfill_review' AS fulfill_review,
+    COALESCE((to_jsonb(o)->>'is_test')::boolean, false) AS is_test,
     COALESCE((to_jsonb(o)->>'refunded_total')::numeric, 0)::float8 AS refunded_total
   FROM public.orders o WHERE ${where} ORDER BY o.created_date DESC LIMIT 500`;
 
@@ -151,6 +153,19 @@ export default async function (req) {
         return Response.json({ skipped: r.skipped, error: why });
       }
       return Response.json(r);
+    }
+
+    // Ręczne wznowienie realizacji (administrator — sprawdzone wyżej przez requireAdmin). Płatność sprawdzana w API PayU;
+    // zamówienia sporne wymagają dodatkowo confirm === true. Błąd sprawdzenia → 400 i brak zmian.
+    if (body.action === "resume_fulfillment") {
+      const id = String(body.id || "");
+      if (!/^[0-9a-f-]{36}$/i.test(id)) return Response.json({ error: "Brak zamówienia" }, { status: 400 });
+      try {
+        return Response.json(await resumeFulfillment(base44, id, { confirm: body.confirm === true }));
+      } catch (e) {
+        const m = String(e?.message || e);
+        return Response.json({ error: e?.isValidation ? m : "Nie udało się wznowić realizacji." }, { status: e?.isValidation ? 400 : 500 });
+      }
     }
 
     if (body.action === "invoice_issued") {

@@ -46,23 +46,12 @@ export async function insertOrder(base44, order) {
   }
 }
 
-// Kolumna „invoice” zakładana przy pierwszym zamówieniu z fakturą (sprawdzenie bez blokowania tabeli).
-let INVOICE_COL = false;
-export async function ensureInvoiceColumn(base44) {
-  if (INVOICE_COL) return true;
-  const has = await runSql(base44, `SELECT 1 FROM information_schema.columns WHERE table_schema = 'public' AND table_name = 'orders' AND column_name = 'invoice'`, true);
-  if (!(Array.isArray(has) && has.length)) await runSql(base44, `ALTER TABLE public.orders ADD COLUMN IF NOT EXISTS invoice jsonb`);
-  INVOICE_COL = true;
+// Kolumny invoice i discount_code: Struktura zakładana migracją docs/tech/migracje/2026-11-05_payu.sql — bez DDL w trakcie zakupu.
+export async function ensureInvoiceColumn(_base44) {
   return true;
 }
 
-// Kolumna „discount_code” zakładana przy pierwszym zamówieniu z kodem rabatowym.
-let DISCOUNT_COL = false;
-export async function ensureDiscountColumn(base44) {
-  if (DISCOUNT_COL) return true;
-  const has = await runSql(base44, `SELECT 1 FROM information_schema.columns WHERE table_schema = 'public' AND table_name = 'orders' AND column_name = 'discount_code'`, true);
-  if (!(Array.isArray(has) && has.length)) await runSql(base44, `ALTER TABLE public.orders ADD COLUMN IF NOT EXISTS discount_code text`);
-  DISCOUNT_COL = true;
+export async function ensureDiscountColumn(_base44) {
   return true;
 }
 

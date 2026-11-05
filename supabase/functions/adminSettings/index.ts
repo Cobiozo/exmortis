@@ -46,9 +46,9 @@ const handler = async function (req) {
         // Rola techniczna nie widzi listy adresów z dostępem przedpremierowym.
         premiera: { ...PREMIERA_DEFAULT, ...(premiera || {}), ...(tech ? { dostep: [], dostep_ukryty: true } : {}) },
         app: { url: app?.url || DEFAULT_APP_URL },
-        // Panel pokazuje rzeczywisty adres powiadomień tego wdrożenia (funkcja edge Supabase).
+        // Adres powiadomień taki sam jak w zamówieniu: przez exmortis.pl (server.js przekazuje do funkcji edge Supabase).
         backend: "supabase",
-        notifyUrl: (Deno.env.get("SUPABASE_URL") || "").replace(/\/+$/, "") + "/functions/v1/payuNotification",
+        notifyUrl: `${String(app?.url || DEFAULT_APP_URL).replace(/\/+$/, "")}/functions/payuNotification`,
         payu: payu ? maskSecrets(payu, ["clientSecret", "secondKey"]) : {},
         smtp: smtp ? maskSecrets(smtp, ["password"]) : {},
       });
