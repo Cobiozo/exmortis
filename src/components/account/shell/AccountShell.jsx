@@ -81,12 +81,8 @@ export default function AccountShell({ state, active, aside, children }) {
               {me ? `Dobrze, że jesteś${me.imie ? `, ${me.imie}` : ""}.` : "Twoje miejsce"}
             </h1>
           </div>
-          {aside && <div className="w-full lg:max-w-[380px] flex flex-col gap-3 min-w-0">{aside}</div>}
-        </header>
-
-        <div className="lg:grid lg:grid-cols-[220px_minmax(0,1fr)] lg:gap-10">
           {/* Telefon i tablet: jedno rozwijane menu konta z nazwą aktywnej sekcji. */}
-          <div className="lg:hidden mb-6">
+          <div className="lg:hidden">
             <button ref={btn} type="button" aria-expanded={open} aria-controls={panelId} onClick={() => setOpen((v) => !v)}
               className="w-full min-h-[48px] flex items-center justify-between gap-3 border hairline px-4 text-left text-base text-[#F5EFE1] focus-visible:outline focus-visible:outline-2 focus-visible:outline-[#C9A24A]">
               <span><span className="technical text-[10px] text-[#F5EFE1]/70 mr-2">MENU KONTA:</span>{section || "wybierz sekcję"}</span>
@@ -97,6 +93,10 @@ export default function AccountShell({ state, active, aside, children }) {
             </div>
           </div>
 
+          {aside && <div className="w-full lg:max-w-[380px] flex flex-col gap-3 min-w-0">{aside}</div>}
+        </header>
+
+        <div className="lg:grid lg:grid-cols-[220px_minmax(0,1fr)] lg:gap-10">
           <aside className="hidden lg:block">
             <div className="sticky top-28">
               <NavList state={state} active={active} />
