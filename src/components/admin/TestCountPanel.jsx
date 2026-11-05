@@ -99,7 +99,7 @@ export default function TestCountPanel() {
       )}
 
       <p className="text-xs text-foreground/50 mt-6">
-        Liczone od 5.11.2026, raz na kartę przeglądarki (zmiana odpowiedzi nie dolicza kolejnego ukończenia).
+        Liczone od 5.11.2026, raz na wczytanie strony testu (zmiana odpowiedzi nie dolicza kolejnego ukończenia, ponowne wczytanie strony — tak).
         Rozpoczęć testu nie liczymy.
       </p>
     </div>

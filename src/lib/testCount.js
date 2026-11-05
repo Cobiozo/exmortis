@@ -1,19 +1,18 @@
 // Anonimowy licznik ukończeń testu (decyzja właściciela 5.11.2026).
 // Po pokazaniu wyniku strona wysyła WYŁĄCZNIE nazwę wyniku (np. „duchowa”) do funkcji bazy test_done,
 // która dolicza +1 do sumy dnia. Bez odpowiedzi, etapu, konta, e-maila i adresu IP — zawsze kluczem
-// anonimowym (także u zalogowanych), bez ciasteczek. Raz na kartę przeglądarki (flaga w sessionStorage).
+// anonimowym (także u zalogowanych), bez ciasteczek. Raz na wczytanie strony: znacznik tylko w pamięci
+// (zmienna modułu) — nic nie jest zapisywane w przeglądarce (decyzja 5.11.2026, bez wpisu w Polityce cookies).
 import { SUPABASE_URL, ANON_KEY, hasSupabase } from "@/api/exmSupabase";
 import { supaBearer } from "@/api/exmAuth";
 
 export const RESULT_KEYS = ["mentalna", "duchowa", "zyciowa", "wiele", "zadna"];
-const FLAG = "exm_test_policzony";
+let counted = false;
 
 export function countCompletion(key) {
   if (!hasSupabase || !RESULT_KEYS.includes(key)) return;
-  try {
-    if (sessionStorage.getItem(FLAG)) return;
-    sessionStorage.setItem(FLAG, "1");
-  } catch {}
+  if (counted) return;
+  counted = true;
   fetch(`${SUPABASE_URL}/rest/v1/rpc/test_done`, {
     method: "POST",
     keepalive: true,
