@@ -9,7 +9,7 @@ const ContentHub = lazyPage(() => import("@/components/admin/cms/ContentHub"));
 const NavEditor = lazyPage(() => import("@/components/admin/cms/nav/NavEditor"));
 const IntegrationsManager = lazyPage(() => import("@/components/admin/IntegrationsManager"));
 const SiteSettingsPanel = lazyPage(() => import("@/components/admin/settings/SiteSettingsPanel"));
-const QuizStatsPanel = lazyPage(() => import("@/components/admin/QuizStatsPanel"));
+const TestCountPanel = lazyPage(() => import("@/components/admin/TestCountPanel"));
 const SilencePanel = lazyPage(() => import("@/components/admin/silence/SilencePanel"));
 const SilenceStatsPanel = lazyPage(() => import("@/components/admin/SilenceStatsPanel"));
 const FreeMaterialsPanel = lazyPage(() => import("@/components/admin/stats/FreeMaterialsPanel"));
@@ -45,7 +45,7 @@ const SECTIONS = {
   cisza: ["Cisza", () => <SilencePanel />],
   skarbiec: ["Skarbiec", () => <ProductsManager />],
   zamowienia: ["Zamówienia", () => <OrdersPanel />],
-  statystyki: ["Statystyki", () => <div className="space-y-16"><FunnelPanel /><FreeMaterialsPanel /><SilenceStatsPanel /><QuizStatsPanel /></div>],
+  statystyki: ["Statystyki", () => <div className="space-y-16"><FunnelPanel /><FreeMaterialsPanel /><SilenceStatsPanel /><TestCountPanel /></div>],
   glos: ["Głos", () => <PlaylistManager onMutate={() => {}} />],
   kontakty: ["Baza kontaktów", () => <ContactsTabs />],
   powrot: ["Zgłoszenia POWRÓT", () => <PowrotPanel />],
@@ -66,7 +66,7 @@ const SECTIONS = {
   menu: ["Menu i stopka", () => <NavEditor />],
   integracje: ["Integracje", () => <IntegrationsManager />],
   ustawienia: ["Ustawienia strony", () => <SiteSettingsPanel />],
-  testy: ["Wyniki testu", () => <QuizStatsPanel />],
+  testy: ["Ukończenia testu", () => <TestCountPanel />],
 };
 
 // Rola „techniczna”: ustawienia, treści, wygląd — bez danych osobowych.

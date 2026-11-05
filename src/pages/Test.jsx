@@ -7,10 +7,11 @@ import ShopProductCard from "@/components/exmortis/shop/ShopProductCard";
 import { setTrackingQuiet } from "@/lib/track";
 import { SITE_URL } from "@/config/site";
 import { nextSteps } from "@/lib/testNextSteps";
+import { countCompletion } from "@/lib/testCount";
 
 const SHARE_URL = `${SITE_URL}/test`;
 const N = QUESTIONS.length;
-const LOCAL_ONLY = "Odpowiedzi i wynik są przetwarzane wyłącznie w pamięci tej strony w Twojej przeglądarce. Nie wysyłamy ich na serwer ani e-mailem. Po odświeżeniu lub zamknięciu strony znikną.";
+const LOCAL_ONLY = "Odpowiedzi są przetwarzane wyłącznie w pamięci tej strony w Twojej przeglądarce. Nie wysyłamy ich na serwer ani e-mailem. Po odświeżeniu lub zamknięciu strony znikną. Do statystyki liczymy tylko, ile razy test został ukończony i z jakim wynikiem — anonimowo, bez odpowiedzi i bez danych, które pozwalałyby Cię rozpoznać.";
 
 function HelpInfo({ className = "" }) {
   const a = "gold-text hover:underline whitespace-nowrap";
@@ -35,7 +36,8 @@ const choice = (on) => `w-full text-left px-5 py-4 min-h-[56px] border transitio
 // Test „Która śmierć jest Twoja?” — wersja 3.1 (5.11.2026).
 // Kroki: 0 otwarcie · 1–15 stwierdzenia · 16 etap · 17 wynik. Działa WYŁĄCZNIE w przeglądarce: stan tylko w tym
 // komponencie (bez localStorage, adresu URL, serwera, e-maila i analityki). Odświeżenie lub „Zacznij od nowa” czyści.
-// Jedyne zapytanie strony: publiczna lista produktów (bez parametrów) do linków „dalej”.
+// Zapytania strony: publiczna lista produktów (bez parametrów) do linków „dalej” oraz — po wyniku —
+// anonimowy licznik ukończeń (sama nazwa wyniku, raz na kartę; src/lib/testCount.js, decyzja 5.11.2026).
 export default function Test() {
   const [step, setStep] = useState(0);
   const [answers, setAnswers] = useState(Array(N).fill(null));
@@ -60,6 +62,7 @@ export default function Test() {
   const complete = answers.every((a) => a !== null) && !!stage;
   const result = useMemo(() => (complete ? scoreTest(answers) : null), [complete, answers]);
   const r = result ? RESULTS[result.key] : null;
+  useEffect(() => { if (step === S_RESULT && result) countCompletion(result.key); }, [step, result]);
   const st = STAGES.find((s) => s.key === stage);
   // Następne kroki jednakowe dla wszystkich wyników — bez oferty zależnej od punktów (decyzja 5.11.2026).
   const next = products ? nextSteps(products, { dims: [], stage: null, dominant: null, deep: true }) : null;

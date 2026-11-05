@@ -107,7 +107,7 @@ export default function AdminDashboard() {
         ["DANE I WYNIKI", [
           { to: "/admin/statystyki", title: "Statystyki", lines: ["Ostatnie 30 dni:", `Zapisy: ${v("reg_30")}`, `Pobrania: ${v("downloads_30")}`, `Rozpoczęcia ciszy: ${v("silence_30")}`] },
           { to: "/admin/kontakty", title: "Baza kontaktów", lines: ["Wszystkie formularze w jednym miejscu", `Nowe zgłoszenia do podcastu: ${newApps ?? "…"}`] },
-          { to: "/admin/testy", title: "Wyniki testu", lines: ["Odpowiedzi z testu"] },
+          { to: "/admin/testy", title: "Ukończenia testu", lines: ["Ile razy test doszedł do wyniku", "Anonimowo, bez odpowiedzi"] },
         ]],
         ["USTAWIENIA I BEZPIECZEŃSTWO", [
           { to: "/admin/ustawienia", title: "Ustawienia strony", lines: ["Dane firmy", "Tryb przedpremierowy", "Wysyłka e-mail", "Mój stały link Zoom"] },

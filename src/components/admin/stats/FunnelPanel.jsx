@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { base44 } from "@/api/base44Client";
 import FunnelRows from "./FunnelRows";
+import { testCounts, sumDays } from "@/lib/testCount";
 
 const RANGES = [7, 30, 90];
 const DAY = 86400000;
@@ -19,17 +20,16 @@ const itemsOf = (raw) => {
 };
 const isPowrot = (it) => /powrot/i.test(String(it.slug || it.product_id || it.name || ""));
 
-// LEJEK — liczby wyłącznie z istniejących funkcji (adminQuiz, adminDashboard, eventsAdmin, adminPowrot, adminOrders).
-// „Test rozpoczęty” istnieje tylko w GA4, więc po stronie serwera pokazujemy „—”.
+// LEJEK — liczby z istniejących funkcji (adminDashboard, eventsAdmin, adminPowrot, adminOrders) i anonimowego
+// licznika ukończeń testu (test_stats). Rozpoczęć testu nie liczymy — strona testu nie wysyła takich zdarzeń.
 export default function FunnelPanel() {
   const [data, setData] = useState(null);
   const [range, setRange] = useState(30);
 
   useEffect(() => {
     (async () => {
-      const from = new Date(Date.now() - 90 * DAY).toISOString().slice(0, 10);
       const [quiz, free, events, powrot, orders] = await Promise.all([
-        base44.functions.invoke("adminQuiz", { action: "list", date_from: from }).then((r) => r.data.rows || []).catch(() => []),
+        testCounts().catch(() => null),
         base44.functions.invoke("adminDashboard", { action: "free_stats" }).then((r) => r.data).catch(() => null),
         base44.functions.invoke("eventsAdmin", { action: "list" }).then((r) => r.data.events || []).catch(() => []),
         base44.functions.invoke("adminPowrot", { action: "list" }).then((r) => r.data.applications || []).catch(() => []),
@@ -58,12 +58,9 @@ export default function FunnelPanel() {
   if (!data) return <div className="py-10 flex justify-center"><div className="w-8 h-8 border-4 border-[#3D3D3F] border-t-[#C9A24A] rounded-full animate-spin" /></div>;
 
   const evsIn = data.events.filter((e) => e.start_datetime && inRange(e.start_datetime, range) && !/anulow/i.test(String(e.status || "")));
-  const quizIn = data.quiz.filter((r) => inRange(r.created_at, range));
   const freeKey = `d${range}`;
   const rows = [
-    { label: "Test rozpoczęty", value: null, note: "Dostępne w Google Analytics (zdarzenie test_start) — po stronie serwera nie istnieje." },
-    { label: "Test ukończony (quiz_result)", value: quizIn.length },
-    { label: "Zapis na Listy po teście", value: quizIn.filter((r) => r.newsletter_consent === true).length },
+    { label: "Test ukończony (anonimowy licznik)", value: data.quiz ? sumDays(data.quiz, range) : null },
     { label: "Darmowy materiał (zamówienia 0 zł)", value: data.free ? sum(data.free.products || [], freeKey) : null },
     { label: "Zapis na spotkanie (registrations)", value: sum(evsIn, "registered") },
     { label: "Udział w spotkaniu (dołączył / Obecny)", value: evsIn.reduce((s, e) => s + (data.joinedBy[String(e.id)] || 0), 0) },
@@ -95,7 +92,7 @@ export default function FunnelPanel() {
       <FunnelRows rows={rows} />
 
       <p className="text-xs text-foreground/50 mt-4">
-        Zakres liczony od dziś wstecz ({range} dni). Test liczony po dacie wypełnienia, spotkania po dacie rozpoczęcia,
+        Zakres liczony od dziś wstecz ({range} dni). Test liczony po dniu ukończenia, spotkania po dacie rozpoczęcia,
         POWRÓT po dacie zgłoszenia i wypełnienia ankiety. Zdarzenia w GA4 i Meta wymagają zgody cookies i weryfikacji w DebugView.
       </p>
     </div>
