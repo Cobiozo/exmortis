@@ -1,24 +1,28 @@
 // TYMCZASOWA INSPEKCJA PayU — 5.11.2026, etap 1 zatwierdzony przez właściciela (tylko odczyt).
-// Autoryzacja: nagłówek X-Exm-Inspect musi być równy sekretowi aplikacji EXM_INSPECT_KEY (porównanie stałoczasowe).
-// Bez poprawnego klucza funkcja kończy się 401 i nie wykonuje żadnego zapytania.
+// Autoryzacja: nagłówek X-Exm-Session = token sesji Supabase zalogowanego ADMINISTRATORA (rola admin w exm_user).
+// Token sprawdzany w Supabase Auth (/auth/v1/user), rola w bazie. // Bez ważnej sesji administratora funkcja kończy się 401 i nie wykonuje żadnego zapytania.
 // Wszystkie zapytania SQL idą trybem read-only Management API do projektu fqhvxhnbeyvwubpnuzxe.
 // Zwraca wyłącznie strukturę, liczby i skrócone numery zamówień — bez imion, adresów e-mail i treści maili.
-// Po inspekcji funkcja wraca do 410, a sekret jest usuwany.
+// Po inspekcji funkcja wraca do 410.
 import { createClientFromRequest } from "npm:@base44/sdk@0.8.44";
-import { secrets } from "base44:runtime";
 import { runSql } from "../../shared/supabase.ts";
 
 const REF = "fqhvxhnbeyvwubpnuzxe";
 const API = `https://api.supabase.com/v1/projects/${REF}`;
 
-function keyOk(given: string) {
-  let want = "";
-  try { want = String((secrets as { get?: (k: string) => unknown }).get?.("EXM_INSPECT_KEY") || ""); } catch { /* brak */ }
-  if (!want) { try { want = Deno.env.get("EXM_INSPECT_KEY") || ""; } catch { /* brak */ } }
-  if (want.length < 32 || given.length !== want.length) return false;
-  let d = 0;
-  for (let i = 0; i < want.length; i++) d |= want.charCodeAt(i) ^ given.charCodeAt(i);
-  return d === 0;
+const SUPA = "https://fqhvxhnbeyvwubpnuzxe.supabase.co";
+// Klucz publiczny (anon) — ten sam co w .env strony; sam nie daje dostępu do danych.
+const ANON = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZxaHZ4aG5iZXl2d3VicG51enhlIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODkwMzgyMjMsImV4cCI6MjEwNDYxNDIyM30.-FaXBLNrtt8Uu_tD2bY_7cy8Jdyt4l0YIdqXmSHQXr0";
+
+async function adminOk(base44, token: string) {
+  if (!/^eyJ[\w-]+\.[\w-]+\.[\w-]+$/.test(token)) return false;
+  const r = await fetch(`${SUPA}/auth/v1/user`, { headers: { apikey: ANON, Authorization: `Bearer ${token}` }, signal: AbortSignal.timeout(10000) }).catch(() => null);
+  if (!r || !r.ok) return false;
+  const u = await r.json().catch(() => null);
+  const email = String(u?.email || "").trim().toLowerCase();
+  if (!email || !u?.email_confirmed_at) return false;
+  const rows = await runSql(base44, `SELECT 1 FROM public.exm_user WHERE lower(data->>'email') = '${email.replace(/'/g, "''")}' AND data->>'role' = 'admin' LIMIT 1`, true).catch(() => []);
+  return Array.isArray(rows) && rows.length === 1;
 }
 
 const redact = (s: unknown) => String(s ?? "")
@@ -28,10 +32,10 @@ const redact = (s: unknown) => String(s ?? "")
   .replace(/[\w.+-]+@[\w-]+\.[\w.]+/g, "[e-mail]");
 
 Deno.serve(async (req) => {
-  if (!keyOk(req.headers.get("x-exm-inspect") || "")) return Response.json({ error: "Brak autoryzacji" }, { status: 401 });
   const out: Record<string, unknown> = {};
   try {
     const base44 = createClientFromRequest(req);
+    if (!(await adminOk(base44, req.headers.get("x-exm-session") || ""))) return Response.json({ error: "Brak autoryzacji" }, { status: 401 });
     const q = async (name: string, sql: string) => {
       try { out[name] = await runSql(base44, sql, true); } catch (e) { out[name] = { blad: redact(e?.message || e).slice(0, 300) }; }
     };
