@@ -20,6 +20,6 @@ export function cleanPremiera(data) {
 // Linia do stopek e-maili — tylko wypełnione pola.
 export function firmaFooter(f) {
   if (!f) return "";
-  const parts = [f.nazwa, f.adres, f.nip && `NIP ${f.nip}`, f.regon && `REGON ${f.regon}`].filter(Boolean);
+  const parts = [f.nazwa, f.adres || f.korespondencja, f.nip && `NIP ${f.nip}`, f.regon && `REGON ${f.regon}`].filter(Boolean);
   return parts.length ? `<p style="font-size:11px;color:#8A8A8C;line-height:1.6;margin-top:24px;">${parts.join(", ")}</p>` : "";
 }

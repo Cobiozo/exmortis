@@ -101,7 +101,7 @@ export function emailLayout(html, { firma = null, appUrl = APP_URL, kind = "", p
   const marketing = MARKETING.has(kind) || !!unsubUrl;
   const hasCrisis = /116\s?123/.test(body);
   const contact = firma?.email || "kontakt@exmortis.pl";
-  const firmLine = [firma?.nazwa || firma?.osoba, firma?.adres, firma?.nip && `NIP ${firma.nip}`, firma?.regon && `REGON ${firma.regon}`]
+  const firmLine = [firma?.nazwa || firma?.osoba, firma?.adres || firma?.korespondencja, firma?.nip && `NIP ${firma.nip}`, firma?.regon && `REGON ${firma.regon}`]
     .filter(Boolean).map(esc).join(" · ");
   const link = (href, label) => `<a href="${esc(href)}" target="_blank" style="color:${BRAND.muted};text-decoration:underline;">${esc(label)}</a>`;
   const small = `font-family:${BRAND.sans};font-size:12px;line-height:1.7;color:${BRAND.faint};margin:0 0 10px;`;

@@ -6,7 +6,11 @@ const TOKENS = {
   "[E-MAIL KONTAKTOWY]": "email", "[TELEFON]": "telefon",
 };
 
+// Bez stałego miejsca wykonywania działalności: „adres” = adres do korespondencji (doręczeń) z Ustawień.
+export const addrOf = (f = {}) => f.adres || f.korespondencja || "";
+
 export function fillFirma(text, firma = {}) {
+  firma = { ...firma, adres: addrOf(firma) };
   let out = String(text);
   const numbered = /^\d+\./.test(out);
   for (const [tok, key] of Object.entries(TOKENS)) {
@@ -17,7 +21,7 @@ export function fillFirma(text, firma = {}) {
   return out;
 }
 
-export const REQUIRED = [["nazwa", "nazwa firmy"], ["osoba", "imię i nazwisko"], ["adres", "adres działalności"], ["korespondencja", "adres do korespondencji"], ["nip", "NIP"], ["regon", "REGON"], ["email", "e-mail kontaktowy"]];
+export const REQUIRED = [["nazwa", "nazwa firmy"], ["osoba", "imię i nazwisko"], ["korespondencja", "adres do korespondencji"], ["nip", "NIP"], ["regon", "REGON"], ["email", "e-mail kontaktowy"]];
 export const missingFirma = (f = {}) => REQUIRED.filter(([k]) => !f[k]).map(([, l]) => l);
 
 export const BASIS = {
@@ -28,4 +32,4 @@ export const BASIS = {
 
 // Klauzula pod formularzami — zawsze zaczyna się od administratora.
 export const clause = (purpose, basis, f = {}) =>
-  `Administratorem danych jest ${f.nazwa || "…"}, ${f.adres || "…"}. Przetwarzam je, aby ${purpose}, ${BASIS[basis]}. Masz prawo dostępu do danych, ich sprostowania, usunięcia, ograniczenia przetwarzania, sprzeciwu i skargi do Prezesa UODO.`;
+  `Administratorem danych jest ${f.nazwa || "…"}, ${addrOf(f) || "…"}. Przetwarzam je, aby ${purpose}, ${BASIS[basis]}. Masz prawo dostępu do danych, ich sprostowania, usunięcia, ograniczenia przetwarzania, sprzeciwu i skargi do Prezesa UODO.`;

@@ -4,7 +4,7 @@ import { base44 } from "@/api/base44Client";
 import { Building2 } from "lucide-react";
 import { missingFirma } from "@/lib/firma";
 
-const FIELDS = [["nazwa", "Nazwa firmy (pełna, jak w CEIDG)"], ["osoba", "Imię i nazwisko"], ["adres", "Adres działalności"], ["korespondencja", "Adres do korespondencji"],
+const FIELDS = [["nazwa", "Nazwa firmy (pełna, jak w CEIDG)"], ["osoba", "Imię i nazwisko"], ["adres", "Adres stałego miejsca działalności (zostaw puste, jeśli go nie masz)"], ["korespondencja", "Adres do korespondencji"],
   ["nip", "NIP"], ["regon", "REGON"], ["email", "E-mail kontaktowy"], ["telefon", "Telefon (opcjonalnie)"]];
 const inp = "w-full bg-transparent border hairline px-4 py-3 focus:border-[#C9A24A] focus:outline-none";
 
