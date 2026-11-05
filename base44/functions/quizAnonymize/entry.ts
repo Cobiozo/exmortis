@@ -50,9 +50,10 @@ Deno.serve(async (req) => {
              'AUTOMATYCZNA', '{"typ":"wszystkie_konta"}'::jsonb, now(), 'system'
       WHERE NOT EXISTS (SELECT 1 FROM public.mb_groups WHERE rule->>'typ' = 'wszystkie_konta')`);
     const g = await runSql(base44, `SELECT id::text AS id FROM public.mb_groups WHERE rule->>'typ' = 'wszystkie_konta' LIMIT 1`, true);
-    const n = await runSql(base44, `SELECT COUNT(*)::int AS n FROM public.mb_auto_group_emails('{"typ":"wszystkie_konta"}'::jsonb)`, true);
+    const n = await runSql(base44, `SELECT COUNT(*)::int AS n FROM auth.users u WHERE u.email IS NOT NULL AND u.deleted_at IS NULL`, true);
+    const fnok = await runSql(base44, `SELECT position('wszystkie_konta' in pg_get_functiondef('public.mb_auto_group_emails(jsonb)'::regprocedure)) > 0 AS ok`, true);
     const st = await runSql(base44, `SELECT library_mode, messages_mode FROM public.mb_settings WHERE id = 1`, true);
-    return Response.json({ ok: true, group: !!g?.[0]?.id, members: n?.[0]?.n ?? null, library_mode: st?.[0]?.library_mode ?? null, messages_mode: st?.[0]?.messages_mode ?? null });
+    return Response.json({ ok: true, group: !!g?.[0]?.id, members: n?.[0]?.n ?? null, fn_updated: !!fnok?.[0]?.ok, library_mode: st?.[0]?.library_mode ?? null, messages_mode: st?.[0]?.messages_mode ?? null });
   } catch (e) {
     return Response.json({ error: String(e?.message || e).slice(0, 300) }, { status: 500 });
   }
