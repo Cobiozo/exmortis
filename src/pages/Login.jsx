@@ -1,11 +1,11 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { Loader2 } from "lucide-react";
 import { base44 } from "@/api/base44Client";
 import AuthLayout from "@/components/AuthLayout";
 import AuthField from "@/components/auth/AuthField";
 import GoogleButton from "@/components/auth/GoogleButton";
-import { afterLoginTarget, providerReturnTo } from "@/lib/afterLogin";
+import { afterLoginTarget, providerReturnTo, loggedInTarget } from "@/lib/afterLogin";
 import useLoginText from "@/content/useLoginText";
 
 export default function Login() {
@@ -13,7 +13,17 @@ export default function Login() {
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
+  // Sesja już jest (powrót z Google albo wejście zalogowanego) — bez formularza, od razu dalej.
+  const [checking, setChecking] = useState(true);
   const t = useLoginText();
+
+  useEffect(() => {
+    let alive = true;
+    loggedInTarget()
+      .then((to) => { if (!alive) return; if (to) window.location.replace(to); else setChecking(false); })
+      .catch(() => alive && setChecking(false));
+    return () => { alive = false; };
+  }, []);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -22,12 +32,20 @@ export default function Login() {
     try {
       await base44.auth.loginViaEmailPassword(email, password);
       localStorage.setItem("exm_login_via", "haslo");
-      window.location.href = await afterLoginTarget();
+      window.location.replace(await afterLoginTarget());
     } catch (err) {
       setError(t("blad"));
       setLoading(false);
     }
   };
+
+  if (checking) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-[#0A0A0B]" role="status" aria-label="Logowanie">
+        <Loader2 className="h-7 w-7 animate-spin text-[#C9A24A]" />
+      </div>
+    );
+  }
 
   return (
     <AuthLayout tabs>
