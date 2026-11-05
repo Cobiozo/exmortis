@@ -75,7 +75,7 @@ export default function AccountShell({ state, active, aside, children }) {
           <div className="min-w-0">
             <nav aria-label="Ścieżka" className="technical text-[10px] text-[#F5EFE1]/70 mb-3 flex flex-wrap items-center gap-2">
               <Link to="/konto" className="hover:text-[#F5EFE1] min-h-[32px] inline-flex items-center">MOJE KONTO</Link>
-              {section && <><span aria-hidden="true">/</span><span className="gold-text" aria-current="page">{section.toUpperCase()}</span></>}
+              {section && <><span aria-hidden="true">/</span><span className="gold-text">{section.toUpperCase()}</span></>}
             </nav>
             <h1 className="shop-heading text-3xl md:text-4xl text-[#F5EFE1] leading-tight">
               {me ? `Dobrze, że jesteś${me.imie ? `, ${me.imie}` : ""}.` : "Twoje miejsce"}
