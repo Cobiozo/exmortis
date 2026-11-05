@@ -176,6 +176,30 @@ Deno.serve(async (req) => {
       return Response.json({ http: r.status, status_payu: j?.status?.statusCode, zamowienie: { status: po.status, totalAmount: po.totalAmount, currencyCode: po.currencyCode, merchantPosId_zgodny: po.merchantPosId ? String(po.merchantPosId) === String(p.posId) : null, extOrderId_zgodny: po.extOrderId ? po.extOrderId === o.id : null, notifyUrl: po.notifyUrl || null }, baza: { status: o.status, payu_status: o.payu_status, is_test: o.is_test, total: o.total } });
     }
 
+    if (action === "signed_notify") {
+      // Syntetyczne powiadomienie w formacie PayU, podpisane drugim kluczem po stronie serwera (klucz nie opuszcza funkcji),
+      // wysłane tą samą drogą co PayU: https://exmortis.pl/functions/payuNotification (proxy CyberFolks → Supabase).
+      // Tylko zamówienia testowe (konto +test, is_test) i tylko status zgodny z PayU (sprawdzany w API przed wysłaniem).
+      const id = String(body.payuOrderId || "");
+      if (!/^[A-Z0-9]{10,40}$/i.test(id)) throw new Error("Zły numer PayU");
+      const [o] = await runSql(base44, `SELECT id, buyer_email ILIKE '%+test%' AS testowe, is_test, total FROM public.orders WHERE payu_order_id = '${id.replace(/'/g, "")}'`, true);
+      if (!o || !o.testowe || o.is_test !== true) throw new Error("To nie jest zamówienie testowe");
+      const p = await payuSettings(base44);
+      const { token } = await payuOAuth(p);
+      const g = await fetch(`${payuBase(p.env)}/api/v2_1/orders/${id}`, { headers: { Authorization: `Bearer ${token}` }, signal: AbortSignal.timeout(15000) }).then((r) => r.json());
+      const po = g?.orders?.[0];
+      if (!po) throw new Error("Brak zamówienia w PayU");
+      const raw = JSON.stringify({ order: { orderId: po.orderId, extOrderId: po.extOrderId, orderCreateDate: po.orderCreateDate, notifyUrl: po.notifyUrl, customerIp: po.customerIp, merchantPosId: po.merchantPosId, description: po.description, currencyCode: po.currencyCode, totalAmount: po.totalAmount, status: po.status, products: po.products }, localReceiptDateTime: new Date().toISOString(), properties: [{ name: "PAYMENT_ID", value: "TEST" }] });
+      const sig = await md5hex(raw + String(p.secondKey || ""));
+      const send = async () => {
+        const r = await fetch("https://exmortis.pl/functions/payuNotification", { method: "POST", headers: { "Content-Type": "application/json;charset=UTF-8", "OpenPayu-Signature": `sender=checkout;signature=${sig};algorithm=MD5;content=DOCUMENT` }, body: raw, signal: AbortSignal.timeout(30000) });
+        return { http: r.status, odpowiedz: redact((await r.text()).slice(0, 300)) };
+      };
+      const first = await send();
+      const second = await send();
+      return Response.json({ status_w_payu: po.status, pierwsze: first, duplikat: second });
+    }
+
     if (action === "mark_test") {
       const id = String(body.id || "").replace(/'/g, "");
       const rows = await runSql(base44, `UPDATE public.orders SET is_test = true, fulfill_review = 'TEST — zamówienie kontrolne wdrożenia 5.11.2026' WHERE id = '${id}' AND buyer_email ILIKE '%+test%' AND status IN ('CREATING','PENDING','NEW') RETURNING id, status, is_test`, false);
