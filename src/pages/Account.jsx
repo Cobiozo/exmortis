@@ -57,12 +57,12 @@ export default function Account() {
         />
       )}
       <AccountAnnouncements />
-      <DailyThought hasLibrary={!!cfg?.library} onLibrary={() => go("biblioteka")} />
     </>
   );
+  const band = <DailyThought hasLibrary={!!cfg?.library} onLibrary={() => go("biblioteka")} />;
 
   return (
-    <AccountShell state={state} active={active} aside={aside}>
+    <AccountShell state={state} active={active} aside={aside} band={band}>
       <div className="mb-6">
         <h2 className="shop-heading text-2xl md:text-3xl text-[#F5EFE1]">{intro.title}</h2>
         {intro.text && <p className="text-base text-[#F5EFE1]/75 mt-1">{intro.text}</p>}

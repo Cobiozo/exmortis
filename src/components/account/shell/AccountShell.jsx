@@ -50,7 +50,7 @@ function NavList({ state, active, onPick }) {
   );
 }
 
-export default function AccountShell({ state, active, aside, children }) {
+export default function AccountShell({ state, active, aside, band, children }) {
   const { me } = state;
   const [open, setOpen] = useState(false);
   const btn = useRef(null);
@@ -71,7 +71,7 @@ export default function AccountShell({ state, active, aside, children }) {
   return (
     <div className="bg-[#0A0A0B] pt-24 md:pt-28 pb-24 min-h-screen">
       <div className="mx-auto max-w-[1200px] px-4 sm:px-5 md:px-10">
-        <header className="flex flex-col lg:flex-row lg:items-start lg:justify-between gap-5 mb-8">
+        <header className="flex flex-col lg:flex-row lg:items-end lg:justify-between gap-5 mb-6">
           <div className="min-w-0">
             <nav aria-label="Ścieżka" className="technical text-[10px] text-[#F5EFE1]/70 mb-3 flex flex-wrap items-center gap-2">
               <Link to="/konto" className="hover:text-[#F5EFE1] min-h-[32px] inline-flex items-center">MOJE KONTO</Link>
@@ -95,6 +95,7 @@ export default function AccountShell({ state, active, aside, children }) {
 
           {aside && <div className="w-full lg:max-w-[380px] flex flex-col gap-3 min-w-0">{aside}</div>}
         </header>
+        {band && <div className="mb-8">{band}</div>}
 
         <div className="lg:grid lg:grid-cols-[220px_minmax(0,1fr)] lg:gap-10">
           <aside className="hidden lg:block">
