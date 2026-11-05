@@ -92,10 +92,19 @@ Deno.serve(async (req) => {
       FROM pg_namespace n WHERE n.nspname='backup'`);
 
     // ---- B. historyczne zamówienia COMPLETED — dowody realizacji (bez danych osób) ----
-    await q("realizacje_historyczne", `WITH o AS (
+    // Wszystkie zamówienia COMPLETED, partiami po BATCH (stała kolejność: data, id).
+    {
+      const BATCH = 400;
+      const all: any[] = [];
+      let partie = 0, blad: string | null = null;
+      try {
+        const total = await runSql(base44, `SELECT count(*)::int AS n FROM public.orders WHERE status='COMPLETED'`, true);
+        const n = Number(total?.[0]?.n) || 0;
+        for (let offset = 0; offset < n; offset += BATCH) {
+          const rows = await runSql(base44, `WITH o AS (
         SELECT id, created_date, total, payu_order_id, items, to_jsonb(orders)->'invoice' AS inv,
                to_jsonb(orders)->>'invoice_number' AS inv_no
-        FROM public.orders WHERE status='COMPLETED' ORDER BY created_date DESC LIMIT 300),
+        FROM public.orders WHERE status='COMPLETED' ORDER BY created_date DESC, id LIMIT ${BATCH} OFFSET ${offset}),
       it AS (SELECT o.id AS oid, i->>'product_id' AS pid, COALESCE((i->>'quantity')::int, 1) AS q, i->>'kind' AS kind, i->>'event_id' AS ev
         FROM o, jsonb_array_elements(CASE WHEN jsonb_typeof(o.items)='array' THEN o.items ELSE '[]'::jsonb END) i),
       typ AS (SELECT it.*, p.product_type FROM it LEFT JOIN public.products p ON p.id::text = it.pid)
@@ -110,7 +119,13 @@ Deno.serve(async (req) => {
         (SELECT count(*)::int FROM public.exm_discountcode d WHERE d.data->>'opis' ILIKE '%zamówienie ' || upper(left(o.id, 8)) || '%') AS karty,
         (SELECT string_agg(m.data->>'status', ',') FROM public.exm_mailqueue m WHERE m.data->>'kind'='zamowienie' AND m.data->>'ref'=o.id) AS mail,
         (o.inv IS NOT NULL AND jsonb_typeof(o.inv)='object') AS faktura_chciana, (o.inv_no IS NOT NULL) AS faktura_wystawiona
-      FROM o ORDER BY o.created_date DESC`);
+      FROM o ORDER BY o.created_date DESC`, true);
+          all.push(...(rows || []));
+          partie++;
+        }
+        out.realizacje_historyczne = { completed_w_bazie: n, sprawdzone: all.length, partie, zamowienia: all };
+      } catch (e) { blad = redact(e?.message || e).slice(0, 300); out.realizacje_historyczne = { blad, sprawdzone: all.length, partie }; }
+    }
 
     // ---- C. pg_cron / pg_net ----
     await q("rozszerzenia", `SELECT extname, extversion FROM pg_extension WHERE extname IN ('pg_cron','pg_net','pgsodium','supabase_vault')`);
