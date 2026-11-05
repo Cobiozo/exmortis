@@ -16,15 +16,22 @@ export default function ScrollToTop() {
   const navigationType = useNavigationType();
 
   useEffect(() => {
-    if (navigationType === "POP") return;
-
+    // Kotwica (#…): sekcje strony głównej wczytują się chwilę po wejściu — szukamy elementu do 3 s,
+    // także przy bezpośrednim wejściu z adresu (np. /#manifest ze stopki na innej stronie).
     if (hash) {
       const id = getHashId(hash);
-      const timer = window.setTimeout(() => {
-        document.getElementById(id)?.scrollIntoView({ behavior: "smooth" });
-      }, 50);
+      let tries = 0;
+      let timer;
+      const tick = () => {
+        const el = document.getElementById(id);
+        if (el) { el.scrollIntoView({ behavior: "smooth" }); return; }
+        if (++tries < 30) timer = window.setTimeout(tick, 100);
+      };
+      timer = window.setTimeout(tick, 50);
       return () => window.clearTimeout(timer);
     }
+
+    if (navigationType === "POP") return;
 
     window.scrollTo({ top: 0, left: 0, behavior: "instant" });
   }, [pathname, hash, navigationType]);
