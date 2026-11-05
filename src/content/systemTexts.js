@@ -1,4 +1,4 @@
-// Teksty systemowe (404 i podziękowania po formularzach). {imie} — imię z formularza.
+// Teksty systemowe (404, podziękowania po formularzach, strona przerwy technicznej). {imie} — imię z formularza.
 export const SYSTEM_BLOCKS = [
   { key: "nf.etykieta", label: "404 — etykieta", type: "text", default: "404" },
   { key: "nf.tytul", label: "404 — nagłówek", type: "text", default: "Tej strony tu nie ma." },
@@ -10,4 +10,10 @@ export const SYSTEM_BLOCKS = [
   { key: "dz.kontakt.tytul", label: "Podziękowanie: kontakt — nagłówek", type: "text", default: "Wiadomość dotarła" },
   { key: "dz.kontakt", label: "Podziękowanie: kontakt — tekst", type: "text", default: "Odpowiadam osobiście, zwykle w ciągu 48 godzin. Do zobaczenia na drodze." },
   { key: "dz.test", label: "Podziękowanie: test (nad wynikiem)", type: "text", default: "Dziękuję. Wynik wysłałem też na Twój e-mail." },
+  { key: "pt.etykieta", label: "Przerwa techniczna — etykieta", type: "text", default: "PRZERWA TECHNICZNA" },
+  { key: "pt.tytul", label: "Przerwa techniczna — nagłówek", type: "text", default: "Na chwilę zamykam drzwi." },
+  { key: "pt.tekst", label: "Przerwa techniczna — tekst", type: "text", default: "Pracuję nad stroną, żeby lepiej służyła Twojej drodze. Jeśli masz konto, zaloguj się — wszystko, co już masz, jest dostępne." },
+  { key: "pt.koniec", label: "Przerwa techniczna — godzina powrotu ({kiedy} = data i godzina)", type: "text", default: "Wracam {kiedy}." },
+  { key: "pt.zaloguj", label: "Przerwa techniczna — przycisk logowania", type: "text", default: "Zaloguj się" },
+  { key: "pt.kontakt", label: "Przerwa techniczna — link do kontaktu", type: "text", default: "Napisz do mnie" },
 ];
