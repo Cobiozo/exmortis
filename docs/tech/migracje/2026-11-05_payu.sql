@@ -1,9 +1,10 @@
--- Exmortis — PayU: migracja 2026-11-05, WERSJA 2 (po inspekcji produkcji 5.11.2026 ok. 20:25)
+-- Exmortis — PayU: migracja 2026-11-05, WERSJA 3 (po inspekcji produkcji 5.11.2026 ok. 20:25; bez DDL w trakcie zakupu)
 -- Projekt Supabase: fqhvxhnbeyvwubpnuzxe (Exmortis). Uruchamiać PRZED wdrożeniem funkcji PayU.
 --
 -- Stan z inspekcji: orders 14 wierszy (2 COMPLETED z 13.10 — bez płatności, 12 FREE), RLS włączone bez polityk,
 -- brak ograniczeń CHECK, wyzwalaczy i zależnych widoków; brak payu_events i discount_reservations;
 -- brak kolumn invoice*, payu_status, redirect_uri, fulfilled_at, fulfill_*; order_refunds bez correction_*.
+-- Od tej wersji kod funkcji nie zakłada żadnych struktur w trakcie zakupu — wszystkie są tutaj (kroki 2–6).
 --
 -- Zasady: jedna transakcja, idempotentna (można powtórzyć), lock_timeout 5 s. Nie usuwa wierszy ani kolumn.
 -- Zmiana danych tylko w krokach 7–8: fulfilled_at WYŁĄCZNIE dla zamówień COMPLETED z kompletem dowodów realizacji
@@ -51,6 +52,63 @@ ALTER TABLE public.orders ADD COLUMN IF NOT EXISTS invoice_error  text;
 ALTER TABLE public.orders ADD COLUMN IF NOT EXISTS discount_code  text;
 ALTER TABLE public.orders ADD COLUMN IF NOT EXISTS refunded_total numeric(10,2) DEFAULT 0;
 ALTER TABLE public.orders ADD COLUMN IF NOT EXISTS reminded_at    timestamptz;
+
+-- 3b. Struktury zakładane dotąd w locie przez funkcje zakupu (tickets.ts, refunds.ts, mirror.ts) — już istnieją
+--     w produkcji; tu idempotentnie, żeby nowa baza (np. odtworzona z kopii) była kompletna bez DDL w kodzie.
+ALTER TABLE public.events ADD COLUMN IF NOT EXISTS tickets boolean DEFAULT false;
+ALTER TABLE public.events ADD COLUMN IF NOT EXISTS ticket_template jsonb;
+CREATE TABLE IF NOT EXISTS public.event_tickets (
+  id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+  code text NOT NULL UNIQUE,
+  token text NOT NULL UNIQUE,
+  event_id text NOT NULL,
+  order_id text,
+  line_no int NOT NULL DEFAULT 0,
+  holder_name text NOT NULL,
+  buyer_email text,
+  price numeric(10,2) NOT NULL DEFAULT 0,
+  source text NOT NULL DEFAULT 'zakup',
+  status text NOT NULL DEFAULT 'wazny' CHECK (status IN ('wazny','wykorzystany','anulowany')),
+  checked_at timestamptz,
+  checked_by text,
+  created_at timestamptz NOT NULL DEFAULT now(),
+  UNIQUE (order_id, line_no)
+);
+CREATE INDEX IF NOT EXISTS event_tickets_event_idx ON public.event_tickets (event_id);
+CREATE INDEX IF NOT EXISTS event_tickets_email_idx ON public.event_tickets (lower(buyer_email));
+ALTER TABLE public.event_tickets ENABLE ROW LEVEL SECURITY;
+REVOKE ALL ON public.event_tickets FROM PUBLIC, anon, authenticated;
+
+CREATE TABLE IF NOT EXISTS public.order_refunds (
+  id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+  order_id text NOT NULL,
+  amount numeric(10,2) NOT NULL,
+  reason text,
+  status text NOT NULL DEFAULT 'nowy',
+  payu_refund_id text,
+  ext_refund_id text,
+  revoke_access boolean NOT NULL DEFAULT false,
+  cancel_tickets boolean NOT NULL DEFAULT false,
+  void_cards boolean NOT NULL DEFAULT false,
+  effects_done boolean NOT NULL DEFAULT false,
+  created_at timestamptz NOT NULL DEFAULT now(),
+  updated_at timestamptz,
+  created_by text
+);
+CREATE UNIQUE INDEX IF NOT EXISTS order_refunds_ext_idx ON public.order_refunds (ext_refund_id);
+CREATE INDEX IF NOT EXISTS order_refunds_order_idx ON public.order_refunds (order_id);
+ALTER TABLE public.order_refunds ENABLE ROW LEVEL SECURITY;
+REVOKE ALL ON public.order_refunds FROM PUBLIC, anon, authenticated;
+
+DO $m$ DECLARE t text; BEGIN
+  FOREACH t IN ARRAY ARRAY['exm_access', 'exm_consent'] LOOP
+    EXECUTE format('CREATE TABLE IF NOT EXISTS public.%I (id text PRIMARY KEY, data jsonb NOT NULL DEFAULT ''{}''::jsonb,
+      created_date timestamptz NOT NULL DEFAULT now(), updated_date timestamptz NOT NULL DEFAULT now(), created_by_id text)', t);
+    EXECUTE format('CREATE INDEX IF NOT EXISTS %I ON public.%I USING gin (data jsonb_path_ops)', t || '_data_gin', t);
+    EXECUTE format('CREATE INDEX IF NOT EXISTS %I ON public.%I (updated_date)', t || '_updated_idx', t);
+    EXECUTE format('ALTER TABLE public.%I ENABLE ROW LEVEL SECURITY', t);
+  END LOOP;
+END $m$;
 
 -- 4. order_refunds — kolumny korekt faktur (tabela istnieje).
 ALTER TABLE public.order_refunds ADD COLUMN IF NOT EXISTS correction_id     text;
