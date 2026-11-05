@@ -9,7 +9,7 @@ export default function Origin() {
     "origin",
     `<p>I tak powstała przestrzeń exmortis — ze śmierci. Miejsce dla ludzi, którzy wychodzą: z tego, co ich zabijało po cichu. Z siebie sprzed lat. Ze śmierci mentalnej, duchowej albo życiowej. Do siebie. Do wzrostu.</p>
 <p class="relic-heading gold-text text-2xl md:text-3xl mt-8">Nie ma sytuacji bez wyjścia.</p>
-<p class="gold-text">Wiem to. Byłem tam, gdzie wydawało mi się, że jest.</p>`
+<p class="gold-text">Wiem to. Byłem tam, gdzie wydawało mi się, że wyjścia już nie ma.</p>`
   );
 
   return (
