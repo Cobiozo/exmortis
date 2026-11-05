@@ -1,5 +1,7 @@
 import React from "react";
 import { Link, Route, Routes, useLocation, useNavigate } from "react-router-dom";
+import AccountShell from "@/components/account/shell/AccountShell";
+import { useAccountState } from "@/components/account/shell/accountNav";
 import { useNoIndex } from "@/lib/useNoIndex";
 import { useAuth } from "@/lib/AuthContext";
 import RzIntro from "@/components/rozdroza/RzIntro";
@@ -76,15 +78,10 @@ export default function Rozdroza() {
   const { pathname } = useLocation();
   const [pv, setPv] = React.useState(0);
   const bump = React.useCallback(() => setPv((n) => n + 1), []);
-  return (
-    <div className="bg-[#0A0A0B] pt-24 md:pt-28 pb-24 min-h-[100svh]">
-      <div className="mx-auto max-w-[1200px] px-4 sm:px-5 md:px-10">
-        <nav aria-label="Ścieżka" className="technical text-[10px] text-foreground/55 mb-8 flex items-center gap-2">
-          <Link to="/konto" className="hover:text-foreground min-h-[32px] inline-flex items-center">MOJE KONTO</Link>
-          <span aria-hidden="true">/</span>
-          {pathname.replace(/\/+$/, "") === "/konto/rozdroza" ? <span className="gold-text">ROZDROŻA</span> : <Link to="/konto/rozdroza" className="hover:text-foreground min-h-[32px] inline-flex items-center">ROZDROŻA</Link>}
-        </nav>
-        <AdminPreviewBar onChange={bump} />
+  const state = useAccountState();
+  const body = (
+    <>
+      <AdminPreviewBar onChange={bump} />
         <RzBoundary key={`${pathname}|${pv}`}>
           <Routes>
             <Route index element={<RzIntro />} />
@@ -95,7 +92,22 @@ export default function Rozdroza() {
             <Route path="*" element={<RzProblem text="Nie ma takiej strony w ROZDROŻACH." />} />
           </Routes>
         </RzBoundary>
-      </div>
-    </div>
+    </>
   );
+  // Czytnik historii — pełna szerokość, bez menu konta (skupienie na lekturze).
+  if (/\/czytaj\/?$/.test(pathname) || new URLSearchParams(window.location.search).get("czytaj") === "1") {
+    return (
+      <div className="bg-[#0A0A0B] pt-24 md:pt-28 pb-24 min-h-[100svh]">
+        <div className="mx-auto max-w-[1200px] px-4 sm:px-5 md:px-10">
+          <nav aria-label="Ścieżka" className="technical text-[10px] text-[#F5EFE1]/70 mb-8 flex items-center gap-2">
+            <Link to="/konto" className="hover:text-[#F5EFE1] min-h-[32px] inline-flex items-center">MOJE KONTO</Link>
+            <span aria-hidden="true">/</span>
+            <Link to="/konto/rozdroza" className="hover:text-[#F5EFE1] min-h-[32px] inline-flex items-center">ROZDROŻA</Link>
+          </nav>
+          {body}
+        </div>
+      </div>
+    );
+  }
+  return <AccountShell state={state} active="rozdroza">{body}</AccountShell>;
 }

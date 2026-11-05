@@ -103,7 +103,7 @@ export default function AccountShell({ state, active, aside, children }) {
             </div>
           </aside>
 
-          <main id="tresc-konta" className="min-w-0">{children}</main>
+          <div id="tresc-konta" className="min-w-0">{children}</div>
         </div>
       </div>
     </div>

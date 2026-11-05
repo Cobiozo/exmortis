@@ -23,7 +23,7 @@ export default function DailyThought({ hasLibrary, onLibrary }) {
   const date = fmt.format(now).replace(/^(\S+?),? /, "$1 · ").toUpperCase();
 
   return (
-    <aside className="w-full lg:max-w-[380px] lg:text-right min-h-[150px]" aria-label="Myśl na dziś">
+    <aside className="w-full lg:text-right" aria-label="Myśl na dziś">
       <p className="font-mono text-xs tracking-[0.18em] text-[#C9A24A]">MYŚL NA DZIŚ</p>
       <time dateTime={isoDay(now)} className="block font-mono text-[13px] text-[#F5EFE1]/70 mt-2">{date}</time>
       {pod === "rano" && txt("rano") && <p className="shop-heading text-base text-[#F5EFE1]/70 mt-2">{txt("rano")}</p>}
@@ -33,8 +33,8 @@ export default function DailyThought({ hasLibrary, onLibrary }) {
           <p className="text-sm text-[#F5EFE1]/70"><a href="tel:116123" className={LINK}>{txt("tel")}</a></p>
         </div>
       )}
-      <div className="h-px w-10 bg-[#C9A24A] my-4 lg:ml-auto" />
-      {thought && <p className="shop-heading italic text-lg md:text-xl leading-[1.4] text-[#F5EFE1] no-hyph">{thought}</p>}
+      <div className="h-px w-10 bg-[#C9A24A] my-3 lg:ml-auto" />
+      {thought && <p className="shop-heading italic text-lg leading-[1.45] text-[#F5EFE1] no-hyph break-words">{thought}</p>}
     </aside>
   );
 }
