@@ -38,12 +38,16 @@ async function mgmt(token: string, path: string, init: RequestInit = {}) {
 }
 
 const cache = new Map<string, string>();
+// Przywrócenie poprzedniej wersji: tylko cronTick z commita, z którego wdrożono v12 (ostatnia zmiana supabase/functions przed 30.10 00:04 UTC).
+const ROLLBACK: Record<string, string> = { cronTick: "20f3bd518fd917bb02f202e1e3d8c49b32ccc592" };
+let BASE = RAW;
 async function fileText(p: string) {
-  if (cache.has(p)) return cache.get(p)!;
-  const r = await fetch(RAW + p, { signal: AbortSignal.timeout(20000) });
+  const ck = BASE + p;
+  if (cache.has(ck)) return cache.get(ck)!;
+  const r = await fetch(BASE + p, { signal: AbortSignal.timeout(20000) });
   if (!r.ok) throw new Error(`GitHub ${r.status}: ${p}`);
   const t = await r.text();
-  cache.set(p, t);
+  cache.set(ck, t);
   return t;
 }
 
@@ -133,12 +137,18 @@ Deno.serve(async (req) => {
     }
 
     if (action === "deploy") {
+      BASE = RAW;
+      if (body.rollback) {
+        const sha = ROLLBACK[String(body.slugs?.[0] || "")];
+        if (!sha || body.slugs.length !== 1 || body.rollback !== sha) throw new Error("Przywrócenie niedozwolone");
+        BASE = `https://raw.githubusercontent.com/Cobiozo/exmortis/${sha}/`;
+      }
       const slugs: string[] = body.slugs || [];
       const out: unknown[] = [];
       for (const slug of slugs) {
         if (!EXPECTED[slug]) { out.push({ slug, blad: "funkcja spoza listy" }); break; }
         const files = await collect(slug);
-        if (files.length !== EXPECTED[slug]) { out.push({ slug, blad: `pliki ${files.length} ≠ oczekiwane ${EXPECTED[slug]}`, files }); break; }
+        if (!body.rollback && files.length !== EXPECTED[slug]) { out.push({ slug, blad: `pliki ${files.length} ≠ oczekiwane ${EXPECTED[slug]}`, files }); break; }
         if (body.dry) { out.push({ slug, pliki: files.length, ok: true }); continue; }
         const cur = await mgmt(accessToken, `/functions/${slug}`);
         if (!cur.ok) { out.push({ slug, blad: `odczyt ${cur.status}`, body: redact(JSON.stringify(cur.body)).slice(0, 300) }); break; }
@@ -152,7 +162,7 @@ Deno.serve(async (req) => {
         out.push(res);
         if (!r.ok || b?.verify_jwt !== verifyJwt) break; // nie kontynuuj po błędzie
       }
-      return Response.json({ commit: COMMIT, wyniki: out });
+      return Response.json({ commit: body.rollback || COMMIT, wyniki: out });
     }
 
     if (action === "payu_oauth") {
