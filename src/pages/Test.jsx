@@ -179,12 +179,12 @@ export default function Test() {
               </div>
             </article>
 
-            <section className="mb-12" aria-label="Trzy historie">
+            {result.key !== "zadna" && <section className="mb-12" aria-label="Trzy historie">
               <p className="technical text-[10px] text-[#F5EFE1]/70 mb-3">TRZY HISTORIE — OD NAJBLIŻSZEJ</p>
               <ol className="space-y-1 text-base text-[#F5EFE1]/85">
                 {result.ranked.map((d, i) => <li key={d}>{i + 1}. {DIM_LABEL[d]}</li>)}
               </ol>
-            </section>
+            </section>}
 
             {st && (
               <section className="border border-[#5C1A1B]/50 bg-[#0D0D0E] p-6 md:p-8 mb-12">
