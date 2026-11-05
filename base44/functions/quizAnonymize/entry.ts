@@ -17,8 +17,14 @@ Deno.serve(async (req) => {
     if (start < 0 || end < 0) return Response.json({ error: "Brak definicji funkcji" }, { status: 500 });
     const fn = SCHEMA_SQL.slice(start, end + "END $ae$;".length);
     if (!fn.includes("email_confirmed_at IS NOT NULL")) return Response.json({ error: "Stara definicja" }, { status: 500 });
-    await runSql(base44, fn);
-    await runSql(base44, "REVOKE ALL ON FUNCTION public.mb_auto_group_emails(jsonb) FROM PUBLIC, anon, authenticated;");
+    const step = async (name, q, ro = false) => {
+      try { await runSql(base44, q, ro); return null; } catch (e) { return `${name}: ${String(e?.message || e).slice(0, 200)}`; }
+    };
+    const before = await runSql(base44, `SELECT r.rolname AS wlasciciel, current_user AS ja,
+      position('email_confirmed_at' in pg_get_functiondef(p.oid)) > 0 AS juz_nowa
+      FROM pg_proc p JOIN pg_roles r ON r.oid = p.proowner WHERE p.oid = 'public.mb_auto_group_emails(jsonb)'::regprocedure`);
+    const errors = [await step("definicja", fn),
+      await step("uprawnienia", "REVOKE ALL ON FUNCTION public.mb_auto_group_emails(jsonb) FROM PUBLIC, anon, authenticated;")].filter(Boolean);
     const check = await runSql(base44, `SELECT
       (SELECT count(*) FROM auth.users WHERE email IS NOT NULL AND deleted_at IS NULL AND email_confirmed_at IS NOT NULL
          AND (banned_until IS NULL OR banned_until < now())) AS w_grupie,
@@ -26,7 +32,7 @@ Deno.serve(async (req) => {
       (SELECT count(*) FROM auth.users WHERE email IS NOT NULL AND deleted_at IS NULL AND email_confirmed_at IS NULL) AS niepotwierdzone,
       position('email_confirmed_at' in pg_get_functiondef('public.mb_auto_group_emails(jsonb)'::regprocedure)) > 0 AS nowa_definicja,
       has_function_privilege('anon', 'public.mb_auto_group_emails(jsonb)', 'EXECUTE') AS anon_moze`, true);
-    return Response.json({ ok: true, check });
+    return Response.json({ ok: errors.length === 0, wersja: 2, before, errors, check });
   } catch (error) {
     return Response.json({ error: String(error?.message || error).slice(0, 300) }, { status: 500 });
   }
