@@ -63,8 +63,8 @@ export default function Account() {
 
   return (
     <AccountShell state={state} active={active} aside={aside} band={band}>
-      <div className="mb-6">
-        <h2 className="shop-heading text-2xl md:text-3xl text-[#F5EFE1]">{intro.title}</h2>
+      <div className="mb-4 lg:mb-6">
+        <h2 className="shop-heading text-[26px] leading-tight md:text-3xl text-[#F5EFE1] focus:outline-none">{intro.title}</h2>
         {intro.text && <p className="text-base text-[#F5EFE1]/75 mt-1">{intro.text}</p>}
       </div>
       {active === "produkty" && <MyProducts />}

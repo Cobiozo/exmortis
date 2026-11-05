@@ -33,7 +33,7 @@ export default function ProductTile({ p }) {
 
   return (
     <div className={`border hairline flex flex-col ${p.active ? "" : "opacity-50"}`}>
-      <div className="aspect-[4/3] bg-[#0F0F10] relative">
+      <div className="aspect-[16/9] sm:aspect-[4/3] bg-[#0F0F10] relative">
         {p.cover ? <CoverStage src={p.cover} alt={p.name} /> : (
           <div className="absolute inset-0 flex items-center justify-center"><Icon className="h-10 w-10 gold-text" strokeWidth={1} /></div>
         )}
