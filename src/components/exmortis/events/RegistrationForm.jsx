@@ -6,6 +6,7 @@ import CalendarButtons from "./CalendarButtons";
 import { track } from "@/lib/track";
 import { visitSource } from "@/lib/firstTouch";
 import { TXT } from "@/content/legal/seller";
+import { useAccountContact, AccountContactLine, SignInHint } from "@/components/common/AccountContact";
 
 // Formularz zapisu na wydarzenie (strona wydarzenia): imię, e-mail, pytanie, zgoda.
 export default function RegistrationForm({ event: ev }) {
@@ -20,6 +21,12 @@ export default function RegistrationForm({ event: ev }) {
   const [sending, setSending] = useState(false);
   const [error, setError] = useState("");
   const [result, setResult] = useState(null);
+  // Zalogowana osoba: imię i e-mail z konta (bez wpisywania); „zmień” pokazuje pola.
+  const acc = useAccountContact();
+  const [manual, setManual] = useState(false);
+  const fromAccount = acc.signedIn && !manual;
+  const nameOut = fromAccount && acc.firstName ? acc.firstName : firstName;
+  const emailOut = fromAccount ? acc.email : email;
 
   useEffect(() => {
     if (result && result.checkout_url) {
@@ -44,8 +51,8 @@ export default function RegistrationForm({ event: ev }) {
       const data = await sendForm("eventsPublic", {
         action: "register",
         slug: ev.slug,
-        first_name: firstName,
-        email,
+        first_name: nameOut,
+        email: emailOut,
         question,
         consent: true,
         listy,
@@ -59,7 +66,7 @@ export default function RegistrationForm({ event: ev }) {
         if (tk) [ev.slug, ev.short_path].filter(Boolean).forEach((k) => localStorage.setItem(`exm_join_t:${k}`, tk));
       } catch { /* bez pamięci przeglądarki */ }
       if (!data?.already) track("CompleteRegistration", { content_name: "spotkanie" });
-      setResult(data.queued ? { ok: true, status: "Zapisany", first_name: firstName, pending: true,
+      setResult(data.queued ? { ok: true, status: "Zapisany", first_name: nameOut, pending: true,
         join_url: ev.format === "Online" ? (ev.short_path ? `/${ev.short_path}/dolacz` : `/spotkania/${ev.slug}/dolacz`) : null } : data);
     } catch (err) {
       setError(err?.response?.data?.error || "Nie udało się zapisać. Spróbuj ponownie.");
@@ -89,7 +96,7 @@ export default function RegistrationForm({ event: ev }) {
     return (
       <div className="border border-[#C9A24A]/40 bg-[#0D0D0E] p-6 sm:p-8 no-hyph">
         <p className="shop-heading text-xl text-[#F5EFE1]">
-          {t("dz.spotkanie", { imie: result.first_name || firstName })}
+          {t("dz.spotkanie", { imie: result.first_name || nameOut })}
         </p>
         <p className="text-foreground/70 mt-4 leading-relaxed">
           Uczestnictwo w spotkaniu może stać się jednym z pierwszych kroków Twojego POWROTU.
@@ -145,7 +152,9 @@ export default function RegistrationForm({ event: ev }) {
 
   return (
     <form onSubmit={submit} className="space-y-5">
-      <div className="grid sm:grid-cols-2 gap-5">
+      {fromAccount && <AccountContactLine email={acc.email} lead="Zapiszę adres:" onChange={() => { setManual(true); setFirstName((v) => v || acc.firstName); setEmail((v) => v || acc.email); }} />}
+      {(!fromAccount || !acc.firstName) && (
+      <div className={`grid gap-5 ${fromAccount ? "" : "sm:grid-cols-2"}`}>
         <label htmlFor="reg-name" className="block">
           <span className="block technical text-[10px] text-foreground/60 mb-2">IMIĘ</span>
           <input
@@ -159,7 +168,7 @@ export default function RegistrationForm({ event: ev }) {
             className="bg-transparent border hairline px-5 py-4 text-foreground placeholder:text-foreground/55 font-mono text-base min-h-[48px] w-full focus:border-[#C9A24A] focus:outline-none transition-colors"
           />
         </label>
-        <label htmlFor="reg-email" className="block">
+        {!fromAccount && <label htmlFor="reg-email" className="block">
           <span className="block technical text-[10px] text-foreground/60 mb-2">E-MAIL</span>
           <input
             id="reg-email"
@@ -171,8 +180,9 @@ export default function RegistrationForm({ event: ev }) {
             placeholder="E-mail"
             className="bg-transparent border hairline px-5 py-4 text-foreground placeholder:text-foreground/55 font-mono text-base min-h-[48px] w-full focus:border-[#C9A24A] focus:outline-none transition-colors"
           />
-        </label>
+        </label>}
       </div>
+      )}
       <div aria-hidden="true" className="absolute -left-[9999px] h-0 w-0 overflow-hidden">
         <label htmlFor="reg-web">Strona www</label>
         <input id="reg-web" tabIndex={-1} autoComplete="off" value={website} onChange={(e) => setWebsite(e.target.value)} />
@@ -197,9 +207,7 @@ export default function RegistrationForm({ event: ev }) {
           className="mt-0.5 h-5 w-5 shrink-0 accent-[#C9A24A]"
         />
         <span className="text-sm text-foreground/80 leading-relaxed group-hover:text-foreground transition-colors">
-          Akceptuję{" "}
-          <Link to="/regulamin" className="gold-text underline">regulamin</Link> i{" "}
-          <Link to="/polityka-prywatnosci" className="gold-text underline">politykę prywatności</Link>.
+          Akceptuję <Link to="/regulamin" className="gold-text underline">Regulamin</Link>.
         </span>
       </label>
       {consentErr && <p id="reg-consent-err" role="alert" className="-mt-3 text-sm text-[#E8C547]">Zaznacz, żeby się zapisać.</p>}
@@ -214,6 +222,10 @@ export default function RegistrationForm({ event: ev }) {
           {TXT.newsletter}
         </span>
       </label>
+      <p className="text-xs text-[#F5EFE1]/70 leading-relaxed">
+        Dane służą do zapisu i przypomnień o spotkaniu. Szczegóły: <Link to="/polityka-prywatnosci" className="gold-text underline">Polityka prywatności</Link>.
+      </p>
+      {!acc.signedIn && <SignInHint />}
       {error && <p role="alert" className="text-sm text-[#E8C547] leading-relaxed">{error}</p>}
       <button type="submit" disabled={sending} aria-busy={sending} className="btn-relic disabled:opacity-60 disabled:cursor-wait">
         {sending ? "ZAPISUJĘ…" : "ZAPISUJĘ SIĘ"}
