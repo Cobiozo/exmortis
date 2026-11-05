@@ -66,6 +66,7 @@ export default function GroupsTab() {
                       {auto ? `Osób teraz: ${g.count}` : `Członków: ${g.count}`}
                       {auto && g.rule?.typ === "aktywny_pakiet" ? " · aktywny pakiet" : ""}
                       {auto && g.rule?.typ === "produkt" ? " · kupił produkt" : ""}
+                      {auto && g.rule?.typ === "wszystkie_konta" ? " · wszystkie konta" : ""}
                     </p>
                   </div>
                   <div className="flex flex-wrap gap-2">
