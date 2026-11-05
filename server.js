@@ -389,12 +389,49 @@ function seoHtml(req) {
   }
   return out;
 }
+// Przerwa techniczna (Ustawienia → Przerwa techniczna, zapis „premiera”): dokumenty HTML zamkniętych adresów
+// dostają kod 503 z Retry-After — roboty wyszukiwarek wiedzą, że to chwilowe, i nie usuwają stron z wyników.
+// Treść odpowiedzi to ta sama aplikacja, więc zalogowani klienci korzystają normalnie (stronę przerwy widzą tylko goście).
+// Stan odświeżany w tle co 60 s z siteSettings; błąd albo brak odpowiedzi → zwykłe 200 (bez blokowania strony).
+const PAUSE_OPEN = new Set(["/kontakt", "/regulamin", "/polityka-prywatnosci", "/polityka-cookies", "/odstapienie", "/login", "/register",
+  "/forgot-password", "/reset-password", "/listy/potwierdz", "/listy/wypis", "/zmiana-adresu", "/karta", "/bilet", "/rezerwacja/termin", "/rezerwacja/zarzadzaj"]);
+const pause = { at: 0, until: 0, busy: false };
+function pauseRefresh() {
+  if (pause.busy || Date.now() - pause.at < 60000 || !SUPABASE_URL || !ANON_KEY) return;
+  pause.busy = true;
+  pause.at = Date.now();
+  fetch(`${SUPABASE_URL}/functions/v1/siteSettings`, {
+    method: "POST",
+    headers: { apikey: ANON_KEY, authorization: `Bearer ${ANON_KEY}`, "content-type": "application/json" },
+    body: "{}",
+    signal: AbortSignal.timeout(5000),
+  })
+    .then(async (r) => {
+      const p = r.ok ? (await r.json())?.premiera || {} : {};
+      const until = Date.parse(p.do);
+      pause.until = r.ok && !p.wylaczony && until > Date.now() ? until : 0;
+    })
+    .catch(() => { pause.until = 0; })
+    .finally(() => { pause.busy = false; });
+}
+function pauseRetryAfter(req) {
+  pauseRefresh();
+  if (!(pause.until > Date.now())) return 0;
+  const p = req.path.replace(/\/+$/, "") || "/";
+  if (PAUSE_OPEN.has(p) || p.endsWith("/dolacz") || p.startsWith("/admin") || p.startsWith("/konto") || p === "/skaner") return 0;
+  if (p === "/kasa" && "payu" in (req.query || {})) return 0;
+  return Math.max(60, Math.min(86400, Math.round((pause.until - Date.now()) / 1000)));
+}
+pauseRefresh();
+
 app.get(/^(?!.*\.).*/, (req, res) => {
+  const retry = pauseRetryAfter(req);
   try {
     const out = seoHtml(req);
-    if (out) {
+    if (out || retry) {
       res.setHeader("Cache-Control", "no-cache");
-      return res.type("html").send(out);
+      if (retry) res.status(503).setHeader("Retry-After", String(retry));
+      return res.type("html").send(out || seoLoad().html);
     }
   } catch (e) {
     console.error("seo:", String(e?.message || e).slice(0, 200));
