@@ -26,6 +26,7 @@ export default function Checkout() {
   // PayU dopisuje ?error=… do adresu powrotu, gdy płatność przerwano lub odrzucono.
   const [payuError] = useState(() => !!new URLSearchParams(window.location.search).get("error"));
   const [payState, setPayState] = useState("check"); // check | ok | wait | fail
+  const [pollNonce, setPollNonce] = useState(0); // ponowne sprawdzenie stanu na żądanie klienta
   const [submitting, setSubmitting] = useState(false);
   const [form, setForm] = useState({ name: "", email: "", note: "" });
   const [newsletterConsent, setNewsletterConsent] = useState(false);
@@ -85,12 +86,15 @@ export default function Checkout() {
         return;
       }
       if (st === "CANCELED") { setPayState("fail"); return; }
-      if (tries >= 20) { clear(); setPayState("wait"); return; }
+      // PENDING, WAITING_FOR_CONFIRMATION, brak odpowiedzi: płatność NIE jest potwierdzona.
+      // Po wyczerpaniu prób zostawiamy zamówienie do dalszej weryfikacji, a koszyka nie ruszamy —
+      // adres z ?payu=done nie jest dowodem otrzymania pieniędzy.
+      if (tries >= 20) { setPayState("wait"); return; }
       setTimeout(tick, 3000);
     };
     tick();
     return () => { stop = true; };
-  }, [payuDone, payuError, clear]);
+  }, [payuDone, payuError, clear, pollNonce]);
 
   const submit = async (e) => {
     e.preventDefault();
@@ -146,9 +150,26 @@ export default function Checkout() {
           <>
             <h1 className="relic-heading text-4xl md:text-6xl">Płatność nie doszła do skutku</h1>
             <p className="text-foreground/60 text-lg max-w-md leading-relaxed">
-              Nic nie zostało pobrane albo PayU zwróci środki. Koszyk na Ciebie czeka.
+              Nic nie zostało pobrane albo PayU zwróci środki. Koszyk na Ciebie czeka — możesz spróbować jeszcze raz.
             </p>
             <a href="/kasa" className="btn-relic">WRÓĆ DO KASY <ArrowRight className="h-4 w-4" /></a>
+          </>
+        ) : payState === "wait" ? (
+          <>
+            <h1 className="relic-heading text-3xl md:text-5xl">Płatność w weryfikacji</h1>
+            <p className="text-foreground/60 text-lg max-w-md leading-relaxed">
+              PayU jeszcze nie potwierdziło płatności. Nie traktujemy jej jako opłaconej, dopóki nie dotrze
+              powiadomienie z bramki. Koszyk zostaje na swoim miejscu, a dostęp i szczegóły wyślemy mailem —
+              zwykle w kilka minut.
+            </p>
+            <button
+              type="button"
+              onClick={() => { setPayState("check"); setPollNonce((n) => n + 1); }}
+              className="btn-ghost"
+            >
+              SPRAWDŹ PONOWNIE
+            </button>
+            <Link to="/kontakt" className="technical text-[10px] text-foreground/55 hover:gold-text">NAPISZ, JEŻELI PŁATNOŚĆ NIE DOTARŁA</Link>
           </>
         ) : (
           <>
@@ -157,9 +178,7 @@ export default function Checkout() {
             </div>
             <h1 className="relic-heading text-4xl md:text-6xl gold-text">Próg przekroczony</h1>
             <p className="text-foreground/60 text-lg max-w-md leading-relaxed">
-              {payState === "wait"
-                ? "PayU jeszcze potwierdza płatność. Gdy dotrze, dostaniesz maila z dostępem — zwykle w kilka minut."
-                : "Płatność dotarła. Dostęp i szczegóły są już w drodze na Twój mail — pierwszy ruch jest już za Tobą."}
+              Płatność dotarła. Dostęp i szczegóły są już w drodze na Twój mail — pierwszy ruch jest już za Tobą.
             </p>
             <ChooseTermButton />
             <Link to="/konto" className="btn-ghost">MOJE PRODUKTY</Link>

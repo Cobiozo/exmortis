@@ -7,7 +7,7 @@ import { clearSnap } from "../../shared/snapshot.ts";
 import { unpaidReminders } from "../../shared/unpaidReminder.ts";
 import { safeEqual } from "../../shared/libraryAccess.ts";
 import { applyDataPatches } from "../../shared/dataPatches.ts";
-import { getOrderByPayuId, claimCompletion } from "../../shared/orders.ts";
+import { getOrderByPayuId, claimCompletion, expireStaleCreating } from "../../shared/orders.ts";
 import { fulfillOrder } from "../../shared/fulfillOrder.ts";
 import { loadAppUrl } from "../../shared/settings.ts";
 
@@ -124,10 +124,12 @@ export default async function(req) {
     const released = await releaseDue(base44).catch((e) => { console.error("premiera:", e.message); return []; });
     await loadAppUrl(base44).catch(() => {});
     const freeDone = await retryFreeOrders(base44).catch((e) => { console.error("zamówienia 0 zł:", e.message); return 0; });
+    // Zamówienia utknięte w CREATING (przerwana kasa) — zamykane po 15 minutach.
+    const expired = await expireStaleCreating(base44).catch(() => 0);
     const pruned = await pruneSnapshots(base44).catch((e) => { console.error("kopie:", e.message); return 0; });
     const ready = await requireMail(base44).then(() => true).catch(() => false);
     const reminded = ready ? await unpaidReminders(base44).catch((e) => { console.error("przypomnienia:", e.message); return 0; }) : 0;
-    return Response.json({ ok: true, published: done, prices, released, reminded, patched, freeDone, pruned });
+    return Response.json({ ok: true, published: done, prices, released, reminded, patched, freeDone, expired, pruned });
   } catch (error) {
     return Response.json({ error: error.message }, { status: 500 });
   }

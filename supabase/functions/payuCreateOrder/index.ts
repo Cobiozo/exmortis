@@ -3,7 +3,11 @@ import { applyDiscount, reserveCode, releaseCode } from "../_shared/discounts.ts
 import { runSql, escStr, textField, emailField, clientIp } from "../_shared/supabase.ts";
 import { ipAllowed, TOO_MANY } from "../_shared/rateLimit.ts";
 import { getSetting, loadAppUrl, APP_URL } from "../_shared/settings.ts";
-import { insertOrder, getOrderStatus, getOrderByPayuId, claimCompletion } from "../_shared/orders.ts";
+import {
+  insertOrder, getOrderStatus, getOrderByPayuId, claimCompletion,
+  insertCreatingOrder, attachPayuOrder, markOrderFailed,
+} from "../_shared/orders.ts";
+import { payuToken, payuCreateOrder } from "../_shared/payu.ts";
 import { errorResponse } from "../_shared/errors.ts";
 import { mirrorRecord } from "../_shared/mirror.ts";
 import { fulfillOrder } from "../_shared/fulfillOrder.ts";
@@ -33,19 +37,10 @@ async function saveConsents(base44, req, orderId, email, hasDigital, newsletterC
   for (const c of made || []) await mirrorRecord(base44, "Consent", c.id);
 }
 
-// PayU przy awarii potrafi zwrócić HTML albo puste body — parsuj bezpiecznie, żeby błąd bramki był czytelny.
-function safeJson(res) {
-  return res.json().catch(() => ({}));
-}
-
-const BASE_URLS = {
-  secure: "https://secure.payu.com",
-  sandbox: "https://merch-prod.snd.payu.com",
-};
-
 const handler = async function (req) {
   let base44Ref = null;
   let reservedFor = null; // zamówienie, pod które zarezerwowano kod — zwalniane, gdy płatność się nie utworzy
+  let createdOrderId = null; // zamówienie zapisane jako CREATING — oznaczane jako nieudane, gdy PayU odmówi
   try {
     const base44 = createClientFromRequest(req);
     base44Ref = base44;
@@ -155,6 +150,7 @@ const handler = async function (req) {
     if (totalGrosze > 0 && totalGrosze < 100) throw new Error("Kwota zamówienia jest zbyt niska dla PayU");
     // Numer zamówienia od razu — pod nim rezerwujemy kod z limitem użyć (karta podarunkowa).
     const orderId = crypto.randomUUID();
+    const orderNote = [note, invoice ? invoiceText(invoice) : "", disc ? `Kod rabatowy: ${disc.code} (−${(disc.discount / 100).toFixed(2)} zł)` : ""].filter(Boolean).join("\n");
     if (disc && (await reserveCode(base44, disc.record, orderId, buyerEmail))) reservedFor = orderId;
 
     // Zamówienie za 0 zł (np. całość pokryta kartą) — bez bramki PayU, od razu realizowane.
@@ -163,7 +159,7 @@ const handler = async function (req) {
       const freeId = `FREE-${id}`;
       await insertOrder(base44, {
         id, payuOrderId: freeId, buyerName, buyerEmail,
-        note: [note, invoice ? invoiceText(invoice) : "", disc ? `Kod rabatowy: ${disc.code} (−${(disc.discount / 100).toFixed(2)} zł)` : ""].filter(Boolean).join("\n"),
+        note: orderNote,
         invoice, items: stored, total: 0, status: "PENDING", newsletterConsent,
         digitalConsent: hasDigital ? DIGITAL_CONSENT : null,
         discountCode: disc ? disc.code : null,
@@ -179,66 +175,48 @@ const handler = async function (req) {
     if (!payu || !payu.posId || !payu.clientId || !payu.clientSecret || !payu.secondKey) {
       return Response.json({ error: "PAYU_NOT_CONFIGURED" }, { status: 400 });
     }
-    const base = BASE_URLS[payu.env === "sandbox" ? "sandbox" : "secure"];
-
-    const tokenRes = await fetch(`${base}/pl/standard/user/oauth/authorize`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        grant_type: "client_credentials",
-        client_id: payu.clientId,
-        client_secret: payu.clientSecret,
-      }),
-    });
-    const token = await safeJson(tokenRes);
-    if (!tokenRes.ok || !token.access_token) {
-      throw new Error("PayU: błąd autoryzacji (sprawdź Client ID / Client Secret)");
-    }
-
     const extOrderId = orderId;
-    const realIp = clientIp(req);
-    const customerIp = realIp === "brak" ? "127.0.0.1" : realIp;
 
-    const orderRes = await fetch(`${base}/api/v2_1/orders`, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${token.access_token}`,
-      },
-      body: JSON.stringify({
-        notifyUrl: `${APP_URL}/functions/payuNotification`,
-        continueUrl: `${APP_URL}/kasa?payu=done`,
-        customerIp,
-        merchantPosId: String(payu.posId),
-        description: tickets.length ? "EXMORTIS — bilety" : "EXMORTIS — skarbiec",
-        currencyCode: "PLN",
-        totalAmount: String(totalGrosze),
-        extOrderId,
-        buyer: { email: buyerEmail, firstName: buyerName.slice(0, 100), language: "pl" },
-        products,
-      }),
-    });
-    const data = await safeJson(orderRes);
-    if (!orderRes.ok || !data.redirectUri) {
-      throw new Error(
-        (data && data.error && data.error.message) || "PayU: nie udało się utworzyć płatności"
-      );
-    }
-
-    await insertOrder(base44, {
+    // 2. Zamówienie zapisane lokalnie jako CREATING — zanim cokolwiek pójdzie do PayU.
+    // Dzięki temu powiadomienie, które wyprzedzi odpowiedź bramki, ma już do czego trafić.
+    createdOrderId = extOrderId;
+    await insertCreatingOrder(base44, {
       id: extOrderId,
-      payuOrderId: String(data.orderId || ""),
       buyerName,
       buyerEmail,
-      note: [note, invoice ? invoiceText(invoice) : "", disc ? `Kod rabatowy: ${disc.code} (−${(disc.discount / 100).toFixed(2)} zł)` : ""].filter(Boolean).join("\n"),
+      note: orderNote,
       invoice,
       items: stored,
       total: totalGrosze / 100,
-      status: "PENDING",
       newsletterConsent,
       digitalConsent: hasDigital ? DIGITAL_CONSENT : null,
       discountCode: disc ? disc.code : null,
     });
+
+    // 3. Autoryzacja OAuth (formularz, nie JSON) — z limitem czasu i obsługą awarii sieci.
+    const { accessToken } = await payuToken(payu);
+
+    const realIp = clientIp(req);
+    const customerIp = realIp === "brak" ? "127.0.0.1" : realIp;
+    // Adres powiadomień tego wdrożenia: dla Supabase — własna funkcja edge.
+    const supabaseUrl = (Deno.env.get("SUPABASE_URL") || "").replace(/\/+$/, "");
+
+    // 4. Zamówienie w PayU. HTTP 302 z JSON-em to poprawna odpowiedź, nie błąd.
+    const created = await payuCreateOrder(payu, accessToken, {
+      notifyUrl: supabaseUrl ? `${supabaseUrl}/functions/v1/payuNotification` : `${APP_URL}/functions/payuNotification`,
+      continueUrl: `${APP_URL}/kasa?payu=done`,
+      customerIp,
+      merchantPosId: String(payu.posId),
+      description: tickets.length ? "EXMORTIS — bilety" : "EXMORTIS — skarbiec",
+      currencyCode: "PLN",
+      totalAmount: String(totalGrosze),
+      extOrderId,
+      buyer: { email: buyerEmail, firstName: buyerName.slice(0, 100), language: "pl" },
+      products,
+    });
+
+    // 5. Identyfikator PayU i adres płatności przy zamówieniu; status PENDING.
+    await attachPayuOrder(base44, extOrderId, created.payuOrderId, created.redirectUri);
 
     await saveConsents(base44, req, extOrderId, buyerEmail, hasDigital, newsletterConsent, hasService);
 
@@ -248,9 +226,12 @@ const handler = async function (req) {
       await addSubscriber(base44, { email: buyerEmail, name: buyerName, consentGiven: true });
     }
 
-    return Response.json({ redirectUri: data.redirectUri, orderId: extOrderId });
+    // 6. Klient idzie do PayU; realizacja dopiero po podpisanym powiadomieniu COMPLETED.
+    return Response.json({ redirectUri: created.redirectUri, orderId: extOrderId, payuOrderId: created.payuOrderId });
   } catch (error) {
     if (reservedFor) await releaseCode(base44Ref, reservedFor);
+    // Zamówienie zapisane jako CREATING, ale płatność nie powstała — nie zostawiamy go w zawieszeniu.
+    if (createdOrderId && base44Ref) await markOrderFailed(base44Ref, createdOrderId);
     // Błąd walidacji formularza = 400 (komunikat dla klienta); reszta (baza, PayU) = generyczna 500,
     // szczegóły tylko w logach (audyt W1: bez wycieku surowego tekstu błędu).
     return errorResponse(error, "Nie udało się rozpocząć płatności. Spróbuj ponownie.");

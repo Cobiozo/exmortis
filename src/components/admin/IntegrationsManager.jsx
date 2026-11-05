@@ -3,6 +3,7 @@ import { base44 } from "@/api/base44Client";
 import { Save, Trash2, CreditCard, Mail } from "lucide-react";
 import AppUrlSettings from "./AppUrlSettings";
 import { useAuth } from "@/lib/AuthContext";
+import { ACTIVE_BACKEND } from "@/api/exmAdapter";
 
 const inputCls =
   "w-full bg-transparent border hairline px-4 py-2.5 focus:border-[#C9A24A] focus:outline-none transition-colors text-sm";
@@ -44,8 +45,13 @@ export default function IntegrationsManager() {
   const [payuMsg, setPayuMsg] = useState(null);
   const [smtpMsg, setSmtpMsg] = useState(null);
   const [copied, setCopied] = useState(false);
-  // Adres powiadomień PayU bierze się z adresu aplikacji (Ustawienia → Adres aplikacji), nie z wpisu na stałe.
-  const notifyUrl = appUrl ? `${String(appUrl).replace(/\/+$/, "")}/functions/payuNotification` : "";
+  // Adres powiadomień liczy serwer zależnie od wdrożenia (Base44 albo funkcja edge Supabase) —
+  // panel nie zgaduje go z adresu strony.
+  const [notifyUrl, setNotifyUrl] = useState("");
+  const [backend, setBackend] = useState(ACTIVE_BACKEND);
+  const [testBusy, setTestBusy] = useState(false);
+  const [testMsg, setTestMsg] = useState(null);
+
   const load = () =>
     base44.functions
       .invoke("adminSettings", { action: "get" })
@@ -53,6 +59,8 @@ export default function IntegrationsManager() {
         setPayu({ ...EMPTY_PAYU, ...(res.data.payu || {}) });
         setSmtp({ ...EMPTY_SMTP, ...(res.data.smtp || {}) });
         setAppUrl(res.data.app?.url || "");
+        setNotifyUrl(res.data.notifyUrl || "");
+        setBackend(res.data.backend || ACTIVE_BACKEND);
       })
       .catch(() => {})
       .finally(() => setLoading(false));
@@ -89,6 +97,23 @@ export default function IntegrationsManager() {
       setMsg({ ok: false, text: errText(err, "Nie udało się usunąć.") });
     } finally {
       setBusy(false);
+    }
+  };
+
+  // Test autoryzacji OAuth na zapisanych danych — sekrety nie opuszczają serwera.
+  const testPayu = async () => {
+    setTestBusy(true);
+    setTestMsg(null);
+    try {
+      const res = await base44.functions.invoke("adminSettings", { action: "payu_test" });
+      setTestMsg({
+        ok: true,
+        text: `Połączenie z PayU działa (${res.data.env === "sandbox" ? "środowisko testowe" : "produkcja"}).`,
+      });
+    } catch (err) {
+      setTestMsg({ ok: false, text: errText(err, "Nie udało się zalogować do PayU.") });
+    } finally {
+      setTestBusy(false);
     }
   };
 
@@ -159,7 +184,9 @@ export default function IntegrationsManager() {
           KLUCZE SĄ MASKOWANE — ZOSTAW BEZ ZMIAN, ABY UTRZYMAĆ ZAPISANE.
         </p>
         <div className="mt-2 flex flex-wrap items-center gap-3">
-          <span className="technical text-[9px] text-foreground/40">ADRES POWIADOMIEŃ DO PANELU PAYU:</span>
+          <span className="technical text-[9px] text-foreground/40">
+            ADRES POWIADOMIEŃ DO PANELU PAYU{backend ? ` (${backend === "supabase" ? "SUPABASE EDGE" : backend === "base44" ? "BASE44" : backend})` : ""}:
+          </span>
           {notifyUrl ? (
             <>
               <span className="technical text-[10px] gold-text break-all">{notifyUrl}</span>
@@ -172,10 +199,10 @@ export default function IntegrationsManager() {
               </button>
             </>
           ) : (
-            <span className="technical text-[10px] text-foreground/40">NAJPIERW UZUPEŁNIJ ADRES APLIKACJI</span>
+            <span className="technical text-[10px] text-foreground/40">ADRES NIEZNANY — SPRAWDŹ KONFIGURACJĘ WDROŻENIA</span>
           )}
         </div>
-        <div className="flex gap-3 mt-6">
+        <div className="flex flex-wrap gap-3 mt-6">
           <button
             onClick={() => save("payu", payu, setPayuBusy, setPayuMsg)}
             disabled={payuBusy}
@@ -190,8 +217,17 @@ export default function IntegrationsManager() {
           >
             <Trash2 className="h-4 w-4" /> USUŃ DANE
           </button>
+          <button
+            type="button"
+            onClick={testPayu}
+            disabled={testBusy}
+            className="btn-ghost !px-5 !py-2.5 disabled:opacity-60"
+          >
+            {testBusy ? "ŁĄCZĘ..." : "TESTUJ POŁĄCZENIE"}
+          </button>
         </div>
         <Msg msg={payuMsg} />
+        <Msg msg={testMsg} />
       </section>
       )}
 

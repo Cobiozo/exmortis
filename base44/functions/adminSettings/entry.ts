@@ -7,6 +7,7 @@ import { cleanPomiar, validatePomiar, POMIAR_DEFAULT } from "../../shared/tracki
 import { cleanFaktury, fakturyToken } from "../../shared/invoices.ts";
 import { syncDocs, publicDocs } from "../../shared/legalDocs.ts";
 import { VIDEO_SETTING, signServerVideo, newVideoKey, ttlHours } from "../../shared/videoSign.ts";
+import { payuToken } from "../../shared/payu.ts";
 
 const MASK = "********";
 
@@ -45,9 +46,41 @@ export default async function (req) {
         // Rola techniczna nie widzi listy adresów z dostępem przedpremierowym.
         premiera: { ...PREMIERA_DEFAULT, ...(premiera || {}), ...(tech ? { dostep: [], dostep_ukryty: true } : {}) },
         app: { url: app?.url || DEFAULT_APP_URL },
+        // Panel pokazuje rzeczywisty adres powiadomień tego wdrożenia (funkcja Base44).
+        backend: "base44",
+        notifyUrl: `${String(app?.url || DEFAULT_APP_URL).replace(/\/+$/, "")}/functions/payuNotification`,
         payu: payu ? maskSecrets(payu, ["clientSecret", "secondKey"]) : {},
         smtp: smtp ? maskSecrets(smtp, ["password"]) : {},
       });
+    }
+
+    // Test autoryzacji OAuth na ZAPISANYCH danych — sekrety nie wracają do przeglądarki.
+    if (body.action === "payu_test") {
+      if (tech) return Response.json({ error: "Brak dostępu" }, { status: 403 });
+      const payu = await getSetting(base44, "payu");
+      if (!payu?.clientId || !payu?.clientSecret) {
+        return Response.json({ error: "Najpierw zapisz Client ID i Client Secret" }, { status: 400 });
+      }
+      try {
+        const { expiresIn } = await payuToken(payu);
+        return Response.json({
+          ok: true,
+          env: payu.env === "sandbox" ? "sandbox" : "secure",
+          posId_set: !!payu.posId,
+          secondKey_set: !!payu.secondKey,
+          expires_in: expiresIn,
+        });
+      } catch (e) {
+        const msg = String(e?.message || e);
+        const reason = msg === "PAYU_OAUTH_FAILED"
+          ? "PayU odrzuciło Client ID lub Client Secret dla wybranego środowiska."
+          : msg.includes("TIMEOUT")
+            ? "PayU nie odpowiedziało w wyznaczonym czasie."
+            : msg.includes("NETWORK")
+              ? "Brak połączenia z PayU."
+              : "Nie udało się zalogować do PayU.";
+        return Response.json({ error: reason }, { status: 400 });
+      }
     }
 
     if (body.action === "save" && body.target === "firma") {

@@ -25,6 +25,8 @@ const READ_OPS = ["get", "filter", "list", "count", "aggregate"];
 const WRITE_OPS = ["create", "bulkCreate", "update", "updateMany", "bulkUpdate", "delete", "deleteMany"];
 // Funkcje serwerowe na Supabase (krok 6 migracji) — VITE_EXM_FN_BACKEND=base44 wraca na Base44.
 export const FN_BACKEND = import.meta.env.VITE_EXM_FN_BACKEND === "supabase" && hasSupabase ? "supabase" : "base44";
+// Aktywny backend wdrożenia — jedna nazwa pokazywana w panelu integracji (adres webhooka liczy serwer).
+export const ACTIVE_BACKEND = FN_BACKEND;
 
 // Kolekcje publiczne: odczyt wprost z kopii (anon) — polityki w bazie odwzorowują reguły aplikacji.
 const SUPABASE_READ = new Set([
