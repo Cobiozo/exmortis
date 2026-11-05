@@ -10,18 +10,24 @@
 //  - płatność (status COMPLETED) i realizacja (fulfilled_at) są rozdzielone: fulfilled_at zapisujemy dopiero
 //    po skutecznej realizacji, a nieudaną realizację ponawiamy (blokada fulfill_lock_at chroni przed równoległym wykonaniem);
 //  - COMPLETED uznajemy wyłącznie przy zgodnej kwocie, walucie (PLN), POS i numerze zamówienia.
+//  - zamówienia testowe (is_test — ustawiane wyłącznie przez backend testowy, nigdy z kasy) przechodzą całą ścieżkę
+//    płatności, ale realizacja jest pomijana: bez maili, faktur, dostępów, kart i biletów;
+//  - alerty dla administratora (jednorazowe): realizacja nieudana kilka razy, powiadomienie PayU zaległe;
+//  - ręczne wznowienie realizacji przez administratora tylko po sprawdzeniu płatności w API PayU.
 // Struktury tabel zakłada migracja docs/tech/migracje/2026-11-05_payu.sql — tu nie ma żadnego DDL.
 import { runSql, escStr } from "./supabase.ts";
 import { getSetting } from "./settings.ts";
 import { findOrderForNotification, updateOrderStatus } from "./orders.ts";
 import { fulfillOrder } from "./fulfillOrder.ts";
-import { localPayuStatus } from "./payu.ts";
+import { localPayuStatus, payuToken, payuGetOrder } from "./payu.ts";
 import { sendMail, adminTo } from "./smtp.ts";
 
 const LEASE_MIN = 5;      // na tyle minut zdarzenie jest „wzięte” przez jedno wywołanie
 const LOCK_MIN = 10;      // blokada realizacji; po awarii wywołania przejmuje ją kolejne po 10 minutach
 const GIVE_UP_DAYS = 7;   // zdarzenie bez pasującego zamówienia przestaje być ponawiane po 7 dniach
 const MAX_FULFILL_TRIES = 48;
+const ALERT_FULFILL_TRIES = 3;    // alert po trzech nieudanych realizacjach (albo 30 min od pierwszego błędu)
+const ALERT_EVENT_TRIES = 5;      // alert, gdy powiadomienie PayU po 5 próbach (albo 30 min) wciąż nieprzetworzone
 
 const msg = (e) => String(e?.message || e || "").slice(0, 300);
 // Kolejna próba: 1, 2, 4 … minut, najwyżej 6 godzin.
@@ -61,16 +67,17 @@ export async function fulfillPaid(base44, payuOrderId) {
        WHERE id = ${escStr(order.id)} AND fulfilled_at IS NULL`).catch(() => {});
     throw e;
   }
-  await runSql(base44, `UPDATE public.orders SET fulfilled_at = now(), fulfill_lock_at = NULL, fulfill_error = NULL, updated_date = now()
+  const review = order.is_test === true ? ", fulfill_review = 'TEST: realizacja pominięta (bez maili, faktur i dostępów)'" : "";
+  await runSql(base44, `UPDATE public.orders SET fulfilled_at = now(), fulfill_lock_at = NULL, fulfill_error = NULL, updated_date = now()${review}
      WHERE id = ${escStr(order.id)}`);
-  return { fulfilled: true };
+  return { fulfilled: true, test: order.is_test === true };
 }
 
 // Opłacone, ale niezrealizowane (awaria w trakcie realizacji) — ponawiane z zadania cyklicznego i przy sprawdzaniu stanu.
 export async function retryUnfulfilled(base44, limit = 3) {
   const rows = await runSql(base44, `SELECT payu_order_id FROM public.orders
      WHERE status = 'COMPLETED' AND fulfilled_at IS NULL AND COALESCE(payu_order_id, '') <> ''
-       AND COALESCE(payu_status, '') <> 'MISMATCH'
+       AND COALESCE(payu_status, '') <> 'MISMATCH' AND COALESCE(fulfill_review, '') NOT LIKE 'DO RĘCZNEJ%'
        AND (fulfill_lock_at IS NULL OR fulfill_lock_at < now() - interval '${LOCK_MIN} minutes')
        AND COALESCE(fulfill_tries, 0) < ${MAX_FULFILL_TRIES}
        AND created_date > now() - interval '14 days'
@@ -248,5 +255,110 @@ export async function nudgeOrder(base44, id) {
     await drainPayuEvents(base44, 3, `(ext_order_id = ${escStr(id)}${pid ? ` OR payu_order_id = ${escStr(pid)}` : ""})`);
   } else if (o.status === "COMPLETED" && !o.fulfilled_at && pid) {
     await fulfillPaid(base44, pid).catch((e) => console.error("realizacja zamówienia:", msg(e)));
+  }
+}
+
+// ---------- alerty dla administratora ----------
+
+async function sendAlert(base44, subject, lines, ref) {
+  const to = await adminTo(base44).catch(() => null);
+  if (!to) return false;
+  await sendMail(base44, {
+    kind: "alert_platnosci", ref, to, subject,
+    html: `<p>${lines.map((l) => String(l).replace(/</g, "&lt;")).join("</p><p>")}</p><p>Panel → Zamówienia (filtr „Do realizacji”).</p>`,
+  });
+  return true;
+}
+
+// Jednorazowe alerty: realizacje nieudane kilka razy i zaległe powiadomienia PayU. Wołane z cmsScheduled.
+// Bez danych osobowych w treści — tylko numery zamówień i opis błędu.
+export async function alertStale(base44) {
+  let sent = 0;
+  const orders = await runSql(base44, `SELECT id, payu_order_id, fulfill_tries, left(COALESCE(fulfill_error, ''), 160) AS err
+     FROM public.orders
+     WHERE status = 'COMPLETED' AND fulfilled_at IS NULL AND fulfill_alerted_at IS NULL AND NOT is_test
+       AND COALESCE(fulfill_review, '') NOT LIKE 'DO RĘCZNEJ%'
+       AND (COALESCE(fulfill_tries, 0) >= ${ALERT_FULFILL_TRIES} OR (fulfill_error IS NOT NULL AND updated_date < now() - interval '30 minutes'))
+     ORDER BY updated_date LIMIT 20`, true).catch(() => []);
+  if (orders?.length) {
+    const ok = await sendAlert(base44, `EXMORTIS — ${orders.length} opłacone zamówienie(a) bez realizacji`,
+      ["Te zamówienia są opłacone, ale realizacja (dostęp, bilety, karty, mail) się nie udała. System ponawia ją automatycznie; możesz też użyć „Wznów realizację”.",
+        ...orders.map((o) => `${String(o.id).slice(0, 8).toUpperCase()} · prób: ${o.fulfill_tries} · ${o.err || "bez opisu"}`)], "alert-realizacje").catch(() => false);
+    if (ok) {
+      await runSql(base44, `UPDATE public.orders SET fulfill_alerted_at = now() WHERE id IN (${orders.map((o) => escStr(o.id)).join(",")})`).catch(() => {});
+      sent++;
+    }
+  }
+  const events = await runSql(base44, `SELECT id, tries, left(COALESCE(last_error, ''), 160) AS err FROM public.payu_events
+     WHERE processed_at IS NULL AND alerted_at IS NULL
+       AND (tries >= ${ALERT_EVENT_TRIES} OR received_at < now() - interval '30 minutes')
+     ORDER BY received_at LIMIT 20`, true).catch(() => []);
+  if (events?.length) {
+    const ok = await sendAlert(base44, `EXMORTIS — ${events.length} zaległe powiadomienie(a) PayU`,
+      ["Te powiadomienia PayU są zapisane, ale jeszcze nieprzetworzone. System ponawia je automatycznie (do 6 h między próbami).",
+        ...events.map((e) => `${String(e.id).replace(/</g, "")} · prób: ${e.tries} · ${e.err || "bez opisu"}`)], "alert-powiadomienia").catch(() => false);
+    if (ok) {
+      await runSql(base44, `UPDATE public.payu_events SET alerted_at = now() WHERE id IN (${events.map((e) => escStr(e.id)).join(",")})`).catch(() => {});
+      sent++;
+    }
+  }
+  return sent;
+}
+
+// ---------- ręczne wznowienie realizacji (tylko administrator — sprawdza wywołujący, np. adminOrders) ----------
+
+function refuse(message) {
+  const e = new Error(message);
+  (e as { isValidation?: boolean }).isValidation = true;
+  return e;
+}
+
+// Wznowienie realizacji zamówienia, które nie zostało zrealizowane. Zanim cokolwiek zmienimy:
+//  - zamówienie PayU: płatność musi być COMPLETED w API PayU, z tą samą kwotą, walutą PLN i POS;
+//  - zamówienie bez bramki (FREE-…): kwota musi wynosić 0;
+//  - zamówienie sporne (niezgodność, ręczna weryfikacja, status inny niż COMPLETED): dodatkowo confirm === true.
+// Zamówienia testowe (is_test) nie są sprawdzane w PayU — ich realizacja i tak niczego nie wydaje.
+export async function resumeFulfillment(base44, id, { confirm = false, getPayu = null } = {}) {
+  const rows = await runSql(base44, `SELECT * FROM public.orders WHERE id = ${escStr(id)} LIMIT 1`, true);
+  const o = rows && rows[0];
+  if (!o) throw refuse("Nie ma takiego zamówienia.");
+  if (o.fulfilled_at) return { ok: true, already: true };
+  const pid = String(o.payu_order_id || "");
+  if (!pid) throw refuse("Zamówienie nie ma numeru PayU — płatność nie została utworzona.");
+  // Sporne: niezgodność, ręczna weryfikacja albo status inny niż opłacone (np. powiadomienie PayU nie dotarło).
+  const disputed = o.status !== "COMPLETED" || o.payu_status === "MISMATCH" || String(o.fulfill_review || "").startsWith("DO RĘCZNEJ");
+  let check = "test";
+  if (o.is_test !== true) {
+    if (pid.startsWith("FREE-")) {
+      if (Number(o.total || 0) !== 0) throw refuse("Zamówienie bez bramki płatności musi mieć kwotę 0.");
+      check = "bez płatności (0 zł)";
+    } else {
+      const payu = getPayu ? await getPayu() : await getSetting(base44, "payu");
+      if (!payu?.posId) throw refuse("Brak konfiguracji PayU.");
+      let remote;
+      try {
+        const { accessToken } = await payuToken(payu);
+        remote = await payuGetOrder(payu, accessToken, pid);
+      } catch (e) {
+        throw refuse(`Nie udało się sprawdzić płatności w PayU (${msg(e)}). Nic nie zostało zmienione.`);
+      }
+      const status = String(remote?.status || "").toUpperCase();
+      if (status !== "COMPLETED") throw refuse(`PayU nie potwierdza płatności (status: ${status || "brak"}). Nic nie zostało zmienione.`);
+      const bad = paymentMismatch(remote, o, payu);
+      if (bad) throw refuse(`Płatność w PayU nie zgadza się z zamówieniem (${bad}). Nic nie zostało zmienione.`);
+      check = "PayU: COMPLETED, kwota, waluta i POS zgodne";
+    }
+  }
+  if (disputed && confirm !== true) return { ok: false, needsConfirm: true, check };
+  await runSql(base44, `UPDATE public.orders
+     SET status = 'COMPLETED', payu_status = 'COMPLETED', fulfill_tries = 0, fulfill_lock_at = NULL,
+         fulfill_alerted_at = NULL, fulfill_error = NULL, updated_date = now(),
+         fulfill_review = ${escStr(`wznowione ręcznie ${new Date().toISOString()} (${check})`)}
+     WHERE id = ${escStr(id)} AND fulfilled_at IS NULL`);
+  try {
+    const f = await fulfillPaid(base44, pid);
+    return { ok: true, check, ...f };
+  } catch (e) {
+    throw refuse(`Płatność potwierdzona, ale realizacja się nie udała: ${msg(e)}. Spróbuj ponownie za kilka minut.`);
   }
 }
