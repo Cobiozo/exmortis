@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useEffect, useRef } from "react";
 import { Link } from "react-router-dom";
 import { HeartHandshake, SlidersHorizontal } from "lucide-react";
 import { useSiteContent } from "@/components/exmortis/SiteContentProvider";
@@ -20,7 +20,13 @@ const TEL = "underline decoration-[#C9A24A]/60 underline-offset-4 hover:text-[#C
 export default function Footer() {
   const { rich } = useSiteContent();
   const { gated } = usePrelaunch();
-  const { open: openCrisis } = useCrisis();
+  const { open: openCrisis, isOpen } = useCrisis();
+  // Po zamknięciu panelu pomocy otwartego ze stopki fokus wraca na przycisk.
+  const helpBtn = useRef(null);
+  const fromFooter = useRef(false);
+  useEffect(() => {
+    if (!isOpen && fromFooter.current) { fromFooter.current = false; helpBtn.current?.focus(); }
+  }, [isOpen]);
   const opis = rich("footer", "opis", "Słowa, historie i spotkania na Twoją drogę powrotu.");
 
   return (
@@ -53,7 +59,7 @@ export default function Footer() {
               </p>
             </div>
           </div>
-          <button type="button" onClick={openCrisis}
+          <button ref={helpBtn} type="button" onClick={() => { fromFooter.current = true; openCrisis(); }}
             className="self-start md:self-center shrink-0 inline-flex items-center gap-2 min-h-[44px] px-5 border border-[#C9A24A]/60 text-sm text-[#F5EFE1] hover:bg-[#C9A24A]/10 transition-colors motion-reduce:transition-none focus-visible:outline focus-visible:outline-2 focus-visible:outline-[#C9A24A]">
             <HeartHandshake className="h-4 w-4 gold-text" aria-hidden="true" />
             Pomoc w kryzysie
