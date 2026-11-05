@@ -14,7 +14,6 @@ export function useAccountContact() {
 // Uzupełnia stan formularza danymi z konta (tylko puste pola) — dla formularzy z własnym stanem.
 export function useAccountPrefill(apply) {
   const acc = useAccountContact();
-  // eslint-disable-next-line react-hooks/exhaustive-deps
   useEffect(() => { if (acc.signedIn) apply(acc); }, [acc.signedIn, acc.email, acc.name]);
   return acc;
 }

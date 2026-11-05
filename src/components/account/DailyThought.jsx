@@ -9,7 +9,7 @@ const LINK = "underline decoration-[#C9A24A] underline-offset-4 hover:text-[#C9A
 
 // Pasek „Myśl na dziś” pod powitaniem w koncie. Admin może podejrzeć porę: /konto?godzina=2
 // Nocą link do Biblioteki (dawniej Obok — stary znacznik {Obok} w treści też działa).
-export default function DailyThought({ hasLibrary, onLibrary, showCta = true }) {
+export default function DailyThought() {
   const { list, str } = useSiteContent();
   const { isAdmin } = useAdminMode();
   const [now, setNow] = useState(() => new Date());
@@ -25,7 +25,8 @@ export default function DailyThought({ hasLibrary, onLibrary, showCta = true }) 
   const dateLabel = fmt.format(now).replace(/^(\S+?),? /, "$1, ");
 
   // Pasek pod powitaniem (5.11.2026): etykieta z datą, myśl, a obok jedno działanie — Biblioteka.
-  // Rano i nocą dodatkowa linijka z panelu (nocą także telefon 116 123) — bez zmian warunków.
+  // Rano dodatkowa linijka z panelu. Nocny dopisek i przycisk Biblioteki usunięte 5.11.2026 (decyzja właściciela:
+// Biblioteka jest w menu konta, numery pomocowe są w stopce i w panelu „Nagła pomoc”).
   return (
     <section aria-label="Myśl na dziś" className="border-y hairline py-5 flex flex-col md:flex-row md:items-center md:justify-between gap-4">
       <div className="min-w-0 flex-1">
@@ -34,19 +35,7 @@ export default function DailyThought({ hasLibrary, onLibrary, showCta = true }) 
         </p>
         {thought && <p className="shop-heading italic text-xl md:text-2xl leading-snug text-[#F5EFE1] mt-2 no-hyph break-words">{thought}</p>}
         {pod === "rano" && txt("rano") && <p className="text-sm text-[#F5EFE1]/75 mt-2">{txt("rano")}</p>}
-        {pod === "noc" && (
-          <div className="mt-2 space-y-1">
-            {hasLibrary && after !== undefined && <p className="text-sm text-[#F5EFE1]/75">{before}<button type="button" onClick={onLibrary} className={LINK}>Bibliotece</button>{after}</p>}
-            <p className="text-sm text-[#F5EFE1]/75"><a href="tel:116123" className={LINK}>{txt("tel")}</a></p>
-          </div>
-        )}
       </div>
-      {hasLibrary && showCta && (
-        <button type="button" onClick={onLibrary}
-          className="self-start md:self-center shrink-0 inline-flex items-center gap-2 min-h-[44px] text-sm gold-text hover:text-[#F5EFE1] transition-colors motion-reduce:transition-none focus-visible:outline focus-visible:outline-2 focus-visible:outline-[#C9A24A]">
-          Otwórz Bibliotekę <ArrowRight className="h-4 w-4" aria-hidden="true" />
-        </button>
-      )}
     </section>
   );
 }

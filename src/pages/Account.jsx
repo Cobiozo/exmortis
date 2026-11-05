@@ -59,7 +59,7 @@ export default function Account() {
       <AccountAnnouncements />
     </>
   );
-  const band = <DailyThought hasLibrary={!!cfg?.library} onLibrary={() => go("biblioteka")} showCta={active !== "biblioteka"} />;
+  const band = <DailyThought />;
 
   return (
     <AccountShell state={state} active={active} aside={aside} band={band}>
