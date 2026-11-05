@@ -75,14 +75,14 @@ function AdminPreviewBar({ onChange }) {
 // /konto/rozdroza — moduł Panelu Klienta (to samo konto i sesja; trasa ładowana na żądanie).
 export default function Rozdroza() {
   useNoIndex();
-  const { pathname } = useLocation();
+  const { pathname, search } = useLocation();
   const [pv, setPv] = React.useState(0);
   const bump = React.useCallback(() => setPv((n) => n + 1), []);
   const state = useAccountState();
   const body = (
     <>
       <AdminPreviewBar onChange={bump} />
-        <RzBoundary key={`${pathname}|${pv}`}>
+      <RzBoundary key={`${pathname}|${pv}`}>
           <Routes>
             <Route index element={<RzIntro />} />
             <Route path="biblioteka" element={<RzLibrary />} />
@@ -95,7 +95,7 @@ export default function Rozdroza() {
     </>
   );
   // Czytnik historii — pełna szerokość, bez menu konta (skupienie na lekturze).
-  if (/\/czytaj\/?$/.test(pathname) || new URLSearchParams(window.location.search).get("czytaj") === "1") {
+  if (/\/czytaj\/?$/.test(pathname) || new URLSearchParams(search).get("czytaj") === "1") {
     return (
       <div className="bg-[#0A0A0B] pt-24 md:pt-28 pb-24 min-h-[100svh]">
         <div className="mx-auto max-w-[1200px] px-4 sm:px-5 md:px-10">

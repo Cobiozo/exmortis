@@ -22,12 +22,13 @@ export default function MyProducts() {
       <button onClick={load} className="btn-ghost !py-2 !px-4">Ponów</button>
     </div>
   );
-  if (!list) return <p className="text-foreground/55">Ładowanie…</p>;
+  if (!list) return <p className="text-[#F5EFE1]/70" role="status">Ładowanie…</p>;
   if (!list.length) {
     return (
-      <div className="py-16 text-center">
-        <p className="shop-heading text-2xl text-[#F5EFE1]">Na razie nic tu nie ma. Zajrzyj do Skarbca.</p>
-        <Link to="/skarbiec" className="btn-ghost mt-8">SKARBIEC</Link>
+      <div className="border hairline p-6 md:p-8">
+        <p className="shop-heading text-2xl text-[#F5EFE1]">Nie masz jeszcze żadnych produktów.</p>
+        <p className="text-base text-[#F5EFE1]/75 mt-2 max-w-[52ch]">W Skarbcu znajdziesz materiały na każdy etap drogi — także bezpłatne. To, co wybierzesz, pojawi się tutaj.</p>
+        <Link to="/skarbiec" className="btn-ghost mt-6">ZAJRZYJ DO SKARBCA</Link>
       </div>
     );
   }
