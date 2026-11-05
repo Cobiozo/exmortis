@@ -9,7 +9,7 @@ const LINK = "underline decoration-[#C9A24A] underline-offset-4 hover:text-[#C9A
 
 // Pasek „Myśl na dziś” pod powitaniem w koncie. Admin może podejrzeć porę: /konto?godzina=2
 // Nocą link do Biblioteki (dawniej Obok — stary znacznik {Obok} w treści też działa).
-export default function DailyThought({ hasLibrary, onLibrary }) {
+export default function DailyThought({ hasLibrary, onLibrary, showCta = true }) {
   const { list, str } = useSiteContent();
   const { isAdmin } = useAdminMode();
   const [now, setNow] = useState(() => new Date());
@@ -41,7 +41,7 @@ export default function DailyThought({ hasLibrary, onLibrary }) {
           </div>
         )}
       </div>
-      {hasLibrary && (
+      {hasLibrary && showCta && (
         <button type="button" onClick={onLibrary}
           className="self-start md:self-center shrink-0 inline-flex items-center gap-2 min-h-[44px] text-sm gold-text hover:text-[#F5EFE1] transition-colors motion-reduce:transition-none focus-visible:outline focus-visible:outline-2 focus-visible:outline-[#C9A24A]">
           Otwórz Bibliotekę <ArrowRight className="h-4 w-4" aria-hidden="true" />
