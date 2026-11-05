@@ -38,14 +38,14 @@ const START = [
 ];
 export const DEF_LIST = START.map((t) => ({ t, on: true }));
 export const DEF_SPECIAL = [
-  { d: "12-24", t: "Jeśli ten wieczór jest trudny, Obok czeka na Ciebie." },
+  { d: "12-24", t: "Jeśli ten wieczór jest trudny, w Bibliotece czekają nagrania na takie chwile." },
   { d: "12-25", t: "Siedem wieczorów ciszy zaczyna się dziś o 20:00 (czasu PL)." },
   { d: "12-31", t: "Nie musisz zamykać roku podsumowaniem. Wystarczy wdzięczność." },
   { d: "01-01", t: "Nowy rok nie wymaga rewolucji. Wystarczy następny krok." },
 ];
 export const DEF_TEXTS = {
   rano: "Dzień dobry.",
-  noc: "Późna pora. Jeśli nie możesz zasnąć — w {Obok} czeka nagranie na takie chwile.",
+  noc: "Późna pora. Jeśli nie możesz zasnąć — w {Biblioteka} czekają nagrania na takie chwile.",
   tel: "Jeśli jest bardzo ciężko: 116 123 (całą dobę, bezpłatnie).",
 };
 export const MAX = 120;

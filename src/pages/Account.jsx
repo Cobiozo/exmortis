@@ -33,7 +33,7 @@ export default function Account() {
   const [rz, setRz] = useState(() => !!cachedList()?.length);
 
   useEffect(() => {
-    // Wszystko równolegle: konto, Obok i jedno wejście do modułu (przełączniki + biblioteka + wiadomości).
+    // Wszystko równolegle: konto i jedno wejście do modułu (przełączniki + biblioteka + wiadomości).
     base44.auth.me().then(setMe);
     libBundle().then(setCfg).catch(() => setCfg({ library: false, messages: false }));
     const t = setTimeout(() => listStories().then((l) => l.length && setRz(true)).catch(() => {}), 600);

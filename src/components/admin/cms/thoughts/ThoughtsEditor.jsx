@@ -6,7 +6,7 @@ import ThoughtsList from "./ThoughtsList";
 import SpecialDates from "./SpecialDates";
 
 const H = "technical text-[10px] gold-text mb-3";
-const TEXTS = [["rano", "Rano (5:00–10:59)"], ["noc", "Noc (23:00–4:59) — {Obok} = link do zakładki"], ["tel", "Noc — linia z numerem 116 123"]];
+const TEXTS = [["rano", "Rano (5:00–10:59)"], ["noc", "Noc (23:00–4:59) — {Biblioteka} = link do Biblioteki"], ["tel", "Noc — linia z numerem 116 123"]];
 
 // Treści stron → Myśli dnia. Zapis do page_content, strona „mysli”.
 export default function ThoughtsEditor() {

@@ -2,7 +2,7 @@ import { Toaster } from "@/components/ui/toaster"
 import OfflineBanner from "@/components/net/OfflineBanner";
 import { QueryClientProvider } from '@tanstack/react-query'
 import { queryClientInstance } from '@/lib/query-client'
-import { BrowserRouter as Router, Route, Routes } from 'react-router-dom';
+import { BrowserRouter as Router, Route, Routes, Navigate } from 'react-router-dom';
 import PageNotFound from './lib/PageNotFound';
 import { AuthProvider, useAuth } from '@/lib/AuthContext';
 import { appParams } from '@/lib/app-params';
@@ -53,9 +53,6 @@ const CmsPage = lazyPage(() => import('@/pages/CmsPage'));
 import CmsRoutePage from '@/components/cms/CmsRoutePage';
 import Listopad from '@/pages/Listopad';
 import ShopRedirect from '@/components/exmortis/shop/ShopRedirect';
-const Obok = lazyPage(() => import('@/pages/Obok'));
-const ObokSeria = lazyPage(() => import('@/pages/ObokSeria'));
-const ObokNagranie = lazyPage(() => import('@/pages/ObokNagranie'));
 const ListyPotwierdz = lazyPage(() => import('@/pages/ListyPotwierdz'));
 const ListyWypis = lazyPage(() => import('@/pages/ListyWypis'));
 const ZmianaAdresu = lazyPage(() => import('@/pages/ZmianaAdresu'));
@@ -160,9 +157,8 @@ const AuthenticatedApp = () => {
           <Route path="/listy/potwierdz" element={<ListyPotwierdz />} />
           <Route path="/listy/wypis" element={<ListyWypis />} />
           <Route path="/zmiana-adresu" element={<ZmianaAdresu />} />
-          <Route path="/obok" element={<Obok />} />
-          <Route path="/obok/:seria" element={<ObokSeria />} />
-          <Route path="/obok/:seria/:numer" element={<ObokNagranie />} />
+          {/* Obok zakończone 5.11.2026 — materiały dla zalogowanych są w Bibliotece konta. */}
+          <Route path="/obok/*" element={<Navigate to="/konto?tab=biblioteka" replace />} />
           <Route path="*" element={<PageNotFound />} />
         </Route>
       </Routes>

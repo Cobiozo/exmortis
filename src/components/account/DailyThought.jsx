@@ -7,7 +7,8 @@ const fmt = new Intl.DateTimeFormat("pl-PL", { weekday: "long", day: "numeric", 
 const LINK = "underline decoration-[#C9A24A] underline-offset-4 hover:text-[#C9A24A] focus-visible:outline focus-visible:outline-2 focus-visible:outline-[#C9A24A]";
 
 // Blok „Myśl na dziś” w nagłówku konta. Admin może podejrzeć porę: /konto?godzina=2
-export default function DailyThought({ hasObok, onObok }) {
+// Nocą link do Biblioteki (dawniej Obok — stary znacznik {Obok} w treści też działa).
+export default function DailyThought({ hasLibrary, onLibrary }) {
   const { list, str } = useSiteContent();
   const { isAdmin } = useAdminMode();
   const [now, setNow] = useState(() => new Date());
@@ -18,7 +19,7 @@ export default function DailyThought({ hasObok, onObok }) {
   const pod = partOfDay(hour);
   const thought = pickThought(now, list("mysli", "lista", DEF_LIST), list("mysli", "specjalne", DEF_SPECIAL));
   const txt = (k) => str("mysli", k, DEF_TEXTS[k]) || "";
-  const [before, after] = txt("noc").split("{Obok}");
+  const [before, after] = txt("noc").replace("{Obok}", "{Biblioteka}").split("{Biblioteka}");
   const date = fmt.format(now).replace(/^(\S+?),? /, "$1 · ").toUpperCase();
 
   return (
@@ -28,7 +29,7 @@ export default function DailyThought({ hasObok, onObok }) {
       {pod === "rano" && txt("rano") && <p className="shop-heading text-base text-[#F5EFE1]/70 mt-2">{txt("rano")}</p>}
       {pod === "noc" && (
         <div className="mt-2 space-y-1">
-          {hasObok && <p className="shop-heading text-base text-[#F5EFE1]/70">{before}<button type="button" onClick={onObok} className={LINK}>Obok</button>{after}</p>}
+          {hasLibrary && after !== undefined && <p className="shop-heading text-base text-[#F5EFE1]/70">{before}<button type="button" onClick={onLibrary} className={LINK}>Bibliotece</button>{after}</p>}
           <p className="text-sm text-[#F5EFE1]/70"><a href="tel:116123" className={LINK}>{txt("tel")}</a></p>
         </div>
       )}
