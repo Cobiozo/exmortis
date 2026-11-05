@@ -40,7 +40,7 @@ export default function BlockRenderer({ blocks = [], editable, selectedId, onSel
           <p className="bg-[#5C1A1B] border border-[#BC1E22] text-[#F5EFE1] text-sm px-4 py-2">Do uzupełnienia: „{DRAFT}” — ta treść jest ukryta dla odwiedzających, dopóki jej nie zastąpisz.</p>
         );
         return (
-          <div key={b.id} data-block={b.id} id={u.kotwica || undefined}
+          <div key={b.id} data-block={b.id} id={u.kotwica || (b.id === "home-manifest" ? "manifest" : undefined)}
             className={`${DEVICE[u.urzadzenia] || ""} ${u.kotwica ? "scroll-mt-20" : ""} ${editable ? `relative cursor-pointer outline-offset-[-2px] hover:outline hover:outline-1 hover:outline-[#C9A24A]/60 ${selectedId === b.id ? "outline outline-2 outline-[#C9A24A]" : ""}` : ""}`}
             onClickCapture={editable ? (e) => { if (e.target.closest("[data-tools]")) return; e.preventDefault(); e.stopPropagation(); onSelect?.(b.id); } : undefined}>
             {editable && selectedId === b.id && tools?.(b)}

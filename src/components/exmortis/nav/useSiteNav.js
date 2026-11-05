@@ -1,7 +1,9 @@
 import { createContext, useContext } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { base44 } from "@/api/base44Client";
-import { NAV, TEST, FOOTER } from "./navItems";
+import { NAV, TEST, FOOTER, FOOTER_OLD_TITLES } from "./navItems";
+
+const isOldFooter = (k) => k.length === FOOTER_OLD_TITLES.length && k.every((c, i) => c?.title === FOOTER_OLD_TITLES[i]);
 
 export const NAV_DEFAULT = { menu: NAV, test: TEST, kolumny: FOOTER };
 // „Obok” zakończone 5.11.2026 (adres /obok przekierowuje do Biblioteki) — stara pozycja w menu z panelu jest pomijana.
@@ -25,6 +27,6 @@ export function useSiteNav() {
     record: data,
     menu: noObok(menu),
     test: data?.test?.label ? data.test : TEST,
-    kolumny: data?.kolumny?.length ? data.kolumny : FOOTER,
+    kolumny: data?.kolumny?.length && !isOldFooter(data.kolumny) ? data.kolumny : FOOTER,
   };
 }
