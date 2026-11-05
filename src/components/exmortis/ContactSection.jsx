@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { useAccountPrefill, AccountContactLine, SignInHint } from "@/components/common/AccountContact";
+import { useAccountPrefill, AccountContactLine } from "@/components/common/AccountContact";
 import { Link } from "react-router-dom";
 import { ArrowRight, Check, Mail, Instagram, Facebook, Youtube } from "lucide-react";
 import { sendForm } from "@/lib/outbox";

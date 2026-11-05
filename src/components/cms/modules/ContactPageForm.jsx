@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { useAccountPrefill, AccountContactLine, SignInHint } from "@/components/common/AccountContact";
+import { useAccountPrefill, AccountContactLine } from "@/components/common/AccountContact";
 import { Link } from "react-router-dom";
 import { sendForm } from "@/lib/outbox";
 import useSystemText from "@/content/useSystemText";

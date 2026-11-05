@@ -1,5 +1,5 @@
 import React, { useRef, useState } from "react";
-import { useAccountPrefill, AccountContactLine, SignInHint } from "@/components/common/AccountContact";
+import { useAccountPrefill, AccountContactLine } from "@/components/common/AccountContact";
 import useDialogA11y from "@/lib/useDialogA11y";
 import { X, Check } from "lucide-react";
 import { base44 } from "@/api/base44Client";

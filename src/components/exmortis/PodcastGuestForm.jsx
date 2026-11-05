@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { useAccountPrefill, AccountContactLine, SignInHint } from "@/components/common/AccountContact";
+import { useAccountPrefill, AccountContactLine } from "@/components/common/AccountContact";
 import { Link } from "react-router-dom";
 import { Loader2 } from "lucide-react";
 import { base44 } from "@/api/base44Client";
