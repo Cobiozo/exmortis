@@ -1,24 +1,26 @@
--- Exmortis — PayU: kolumny zamówień, kolejka powiadomień, uprawnienia (5.11.2026)
--- Projekt Supabase: fqhvxhnbeyvwubpnuzxe (Exmortis). Uruchamiać PRZED wdrożeniem funkcji
--- payuCreateOrder, payuNotification, adminSettings, cmsScheduled, adminOrders.
+-- Exmortis — PayU: migracja 2026-11-05, WERSJA 2 (po inspekcji produkcji 5.11.2026 ok. 20:25)
+-- Projekt Supabase: fqhvxhnbeyvwubpnuzxe (Exmortis). Uruchamiać PRZED wdrożeniem funkcji PayU.
 --
--- Migracja jest idempotentna (można ją uruchomić wielokrotnie) i działa w jednej transakcji.
--- Nie usuwa zamówień ani kolumn. Jedyna zmiana danych: fulfilled_at dla zamówień już opłaconych
--- (zrealizowanych starym kodem w jednym kroku), żeby ponawianie realizacji nie objęło ich drugi raz.
--- Kod funkcji nie wykonuje już żadnego DDL dla tych struktur (orders.ts: ensureOrdersTable jest pusta).
+-- Stan z inspekcji: orders 14 wierszy (2 COMPLETED z 13.10 — bez płatności, 12 FREE), RLS włączone bez polityk,
+-- brak ograniczeń CHECK, wyzwalaczy i zależnych widoków; brak payu_events i discount_reservations;
+-- brak kolumn invoice*, payu_status, redirect_uri, fulfilled_at, fulfill_*; order_refunds bez correction_*.
+--
+-- Zasady: jedna transakcja, idempotentna (można powtórzyć), lock_timeout 5 s. Nie usuwa wierszy ani kolumn.
+-- Zmiana danych tylko w krokach 7–8: fulfilled_at WYŁĄCZNIE dla zamówień COMPLETED z kompletem dowodów realizacji
+-- (dostępy, bilety, karty, wysłany mail); pozostałe COMPLETED → oznaczenie do ręcznej weryfikacji, bez automatycznych ponowień.
+-- PRZED uruchomieniem: niezależny backup (pg_dump poza Supabase) — kopia w kroku 0 jest tylko pomocnicza.
 
 BEGIN;
 SET LOCAL lock_timeout = '5s';
 SET LOCAL statement_timeout = '60s';
 
--- 0. Kopia zamówień w schemacie backup (niedostępnym dla anon/authenticated) — tylko przy pierwszym uruchomieniu.
+-- 0. Kopia pomocnicza w tej samej bazie (schemat backup bez dostępu anon/authenticated).
 CREATE SCHEMA IF NOT EXISTS backup;
 REVOKE ALL ON SCHEMA backup FROM PUBLIC, anon, authenticated;
 CREATE TABLE IF NOT EXISTS backup.orders_przed_payu_20261105 AS TABLE public.orders;
 REVOKE ALL ON backup.orders_przed_payu_20261105 FROM PUBLIC, anon, authenticated;
 
--- 1. Ograniczenia statusu: nowe statusy CREATING i FAILED muszą być dozwolone. Jeśli istnieje ograniczenie
---    CHECK na status bez tych wartości — przerwij (do ręcznej decyzji), zamiast zgadywać listę.
+-- 1. Bezpiecznik: ewentualne CHECK na status musi dopuszczać CREATING i FAILED (dziś CHECK nie ma).
 DO $c$ DECLARE r record; BEGIN
   FOR r IN SELECT conname, pg_get_constraintdef(oid) AS d FROM pg_constraint
             WHERE conrelid = 'public.orders'::regclass AND contype = 'c' AND pg_get_constraintdef(oid) ILIKE '%status%' LOOP
@@ -28,27 +30,55 @@ DO $c$ DECLARE r record; BEGIN
   END LOOP;
 END $c$;
 
--- 2. Kolumny zamówień (płatność i realizacja rozdzielone).
-ALTER TABLE public.orders ADD COLUMN IF NOT EXISTS payu_status     text;
-ALTER TABLE public.orders ADD COLUMN IF NOT EXISTS redirect_uri    text;
-ALTER TABLE public.orders ADD COLUMN IF NOT EXISTS fulfilled_at    timestamptz;
-ALTER TABLE public.orders ADD COLUMN IF NOT EXISTS fulfill_lock_at timestamptz;
-ALTER TABLE public.orders ADD COLUMN IF NOT EXISTS fulfill_tries   integer NOT NULL DEFAULT 0;
-ALTER TABLE public.orders ADD COLUMN IF NOT EXISTS fulfill_error   text;
+-- 2. orders — płatność i realizacja (rozdzielone).
+ALTER TABLE public.orders ADD COLUMN IF NOT EXISTS payu_status        text;
+ALTER TABLE public.orders ADD COLUMN IF NOT EXISTS redirect_uri       text;
+ALTER TABLE public.orders ADD COLUMN IF NOT EXISTS fulfilled_at       timestamptz;
+ALTER TABLE public.orders ADD COLUMN IF NOT EXISTS fulfill_lock_at    timestamptz;
+ALTER TABLE public.orders ADD COLUMN IF NOT EXISTS fulfill_tries      integer NOT NULL DEFAULT 0;
+ALTER TABLE public.orders ADD COLUMN IF NOT EXISTS fulfill_error      text;
+ALTER TABLE public.orders ADD COLUMN IF NOT EXISTS fulfill_alerted_at timestamptz;   -- jednorazowy alert po limicie ponowień
+ALTER TABLE public.orders ADD COLUMN IF NOT EXISTS fulfill_review     text;          -- ręczna weryfikacja / opis decyzji
+ALTER TABLE public.orders ADD COLUMN IF NOT EXISTS is_test            boolean NOT NULL DEFAULT false; -- zamówienia testowe: bez maili, faktur i dostępów
 
--- 3. Zamówienia opłacone przed wdrożeniem: realizacja odbyła się razem z przejęciem COMPLETED (stary kod).
-UPDATE public.orders
-   SET fulfilled_at = COALESCE(updated_date::timestamptz, created_date::timestamptz, now())
- WHERE status = 'COMPLETED' AND fulfilled_at IS NULL;
+-- 3. orders — kolumny zakładane dotąd w trakcie zakupu (ensureInvoiceColumn/ensureDiscountColumn/ensureInvoiceColumns/refunds/unpaidReminder).
+ALTER TABLE public.orders ADD COLUMN IF NOT EXISTS invoice        jsonb;
+ALTER TABLE public.orders ADD COLUMN IF NOT EXISTS invoice_id     text;
+ALTER TABLE public.orders ADD COLUMN IF NOT EXISTS invoice_number text;
+ALTER TABLE public.orders ADD COLUMN IF NOT EXISTS invoice_url    text;
+ALTER TABLE public.orders ADD COLUMN IF NOT EXISTS invoice_at     timestamptz;
+ALTER TABLE public.orders ADD COLUMN IF NOT EXISTS invoice_error  text;
+ALTER TABLE public.orders ADD COLUMN IF NOT EXISTS discount_code  text;
+ALTER TABLE public.orders ADD COLUMN IF NOT EXISTS refunded_total numeric(10,2) DEFAULT 0;
+ALTER TABLE public.orders ADD COLUMN IF NOT EXISTS reminded_at    timestamptz;
 
--- 4. Indeksy (dotąd zakładane w locie przy pierwszym zamówieniu).
-CREATE INDEX IF NOT EXISTS orders_payu_idx           ON public.orders (payu_order_id);
-CREATE INDEX IF NOT EXISTS orders_email_idx          ON public.orders (lower(buyer_email));
-CREATE INDEX IF NOT EXISTS orders_status_created_idx ON public.orders (status, created_date DESC);
-CREATE INDEX IF NOT EXISTS orders_updated_idx        ON public.orders (updated_date);
-CREATE INDEX IF NOT EXISTS orders_unfulfilled_idx    ON public.orders (updated_date) WHERE status = 'COMPLETED' AND fulfilled_at IS NULL;
+-- 4. order_refunds — kolumny korekt faktur (tabela istnieje).
+ALTER TABLE public.order_refunds ADD COLUMN IF NOT EXISTS correction_id     text;
+ALTER TABLE public.order_refunds ADD COLUMN IF NOT EXISTS correction_number text;
+ALTER TABLE public.order_refunds ADD COLUMN IF NOT EXISTS correction_url    text;
+ALTER TABLE public.order_refunds ADD COLUMN IF NOT EXISTS correction_error  text;
 
--- 5. Kolejka powiadomień PayU. Zawiera dane kupującego z powiadomienia — dostęp wyłącznie dla backendu.
+-- 5. Rezerwacje kodów z limitem użyć (dotąd zakładane przy pierwszym użyciu kodu) — treść 1:1 z discounts.ts.
+CREATE TABLE IF NOT EXISTS public.discount_reservations (
+  order_id text PRIMARY KEY, code text NOT NULL, email text, used boolean NOT NULL DEFAULT false, created_at timestamptz NOT NULL DEFAULT now());
+CREATE INDEX IF NOT EXISTS discount_reservations_code_idx ON public.discount_reservations (code);
+ALTER TABLE public.discount_reservations ENABLE ROW LEVEL SECURITY;
+REVOKE ALL ON public.discount_reservations FROM PUBLIC, anon, authenticated;
+CREATE OR REPLACE FUNCTION public.exm_reserve_code(p_code text, p_order text, p_email text, p_free int) RETURNS boolean
+LANGUAGE plpgsql SECURITY DEFINER SET search_path = '' AS $f$
+BEGIN
+  PERFORM pg_advisory_xact_lock(hashtext('kod:' || p_code));
+  DELETE FROM public.discount_reservations WHERE NOT used AND created_at < now() - interval '1 day';
+  IF (SELECT count(*) FROM public.discount_reservations WHERE code = p_code AND NOT used AND created_at > now() - interval '30 minutes'
+        AND order_id <> p_order AND lower(COALESCE(email, '')) <> lower(COALESCE(p_email, ''))) >= p_free THEN
+    RETURN false;
+  END IF;
+  INSERT INTO public.discount_reservations (order_id, code, email) VALUES (p_order, p_code, lower(p_email)) ON CONFLICT (order_id) DO NOTHING;
+  RETURN true;
+END $f$;
+REVOKE EXECUTE ON FUNCTION public.exm_reserve_code(text, text, text, int) FROM PUBLIC, anon, authenticated;
+
+-- 6. Kolejka powiadomień PayU — dane kupującego z powiadomienia, dostęp wyłącznie dla backendu.
 CREATE TABLE IF NOT EXISTS public.payu_events (
   id              text PRIMARY KEY,                 -- numer zamówienia PayU + ":" + status
   payu_order_id   text NOT NULL DEFAULT '',
@@ -60,25 +90,55 @@ CREATE TABLE IF NOT EXISTS public.payu_events (
   processed_at    timestamptz,
   tries           integer NOT NULL DEFAULT 0,
   last_error      text,
-  result          text
+  result          text,
+  alerted_at      timestamptz                       -- jednorazowy alert, gdy zdarzenie długo nie może się przetworzyć
 );
-ALTER TABLE public.payu_events ADD COLUMN IF NOT EXISTS next_attempt_at timestamptz;
-ALTER TABLE public.payu_events ADD COLUMN IF NOT EXISTS result text;
 CREATE INDEX IF NOT EXISTS payu_events_due_idx   ON public.payu_events (next_attempt_at) WHERE processed_at IS NULL;
 CREATE INDEX IF NOT EXISTS payu_events_order_idx ON public.payu_events (payu_order_id);
 CREATE INDEX IF NOT EXISTS payu_events_ext_idx   ON public.payu_events (ext_order_id);
-
 ALTER TABLE public.payu_events ENABLE ROW LEVEL SECURITY;   -- bez polityk: anon/authenticated nie widzą nic
 REVOKE ALL ON public.payu_events FROM PUBLIC, anon, authenticated;
 GRANT SELECT, INSERT, UPDATE, DELETE ON public.payu_events TO service_role;
 
+-- 7. Historyczne COMPLETED z kompletem dowodów realizacji → fulfilled_at (na dziś: 2 zamówienia z 13.10).
+WITH o AS (SELECT id, items FROM public.orders WHERE status = 'COMPLETED' AND fulfilled_at IS NULL),
+it AS (SELECT o.id AS oid, i->>'product_id' AS pid, COALESCE((i->>'quantity')::int, 1) AS q, i->>'kind' AS kind
+       FROM o, jsonb_array_elements(CASE WHEN jsonb_typeof(o.items) = 'array' THEN o.items ELSE '[]'::jsonb END) i),
+typ AS (SELECT it.*, p.product_type FROM it LEFT JOIN public.products p ON p.id::text = it.pid),
+ev AS (
+  SELECT o.id,
+    (SELECT count(*) FROM typ WHERE typ.oid = o.id AND typ.product_type IS NULL AND COALESCE(typ.kind, '') <> 'bilet') AS nieznane,
+    (SELECT count(*) FROM typ WHERE typ.oid = o.id AND typ.product_type IN ('pdf','audio','wideo','kurs','pakiet')) AS cyfrowe,
+    (SELECT count(*) FROM public.exm_access a WHERE a.data->'history' @> jsonb_build_array(jsonb_build_object('order_id', o.id))) AS dostepy,
+    (SELECT COALESCE(sum(q), 0) FROM typ WHERE typ.oid = o.id AND typ.kind = 'bilet') AS bilety_ocz,
+    (SELECT count(*) FROM public.event_tickets t WHERE t.order_id = o.id) AS bilety,
+    (SELECT COALESCE(sum(q), 0) FROM typ WHERE typ.oid = o.id AND typ.product_type = 'karta') AS karty_ocz,
+    (SELECT count(*) FROM public.exm_discountcode d WHERE d.data->>'opis' ILIKE '%zamówienie ' || upper(left(o.id, 8)) || '%') AS karty,
+    EXISTS (SELECT 1 FROM public.exm_mailqueue m WHERE m.data->>'kind' = 'zamowienie' AND m.data->>'ref' = o.id AND m.data->>'status' = 'wyslany') AS mail
+  FROM o)
+UPDATE public.orders x
+   SET fulfilled_at = COALESCE(x.updated_date, x.created_date, now()),
+       fulfill_review = 'migracja 2026-11-05: realizacja potwierdzona (dostępy, bilety, karty, mail)'
+  FROM ev
+ WHERE x.id = ev.id AND ev.nieznane = 0 AND ev.mail
+   AND (ev.cyfrowe = 0 OR ev.dostepy >= 1)
+   AND ev.bilety >= ev.bilety_ocz AND ev.karty >= ev.karty_ocz;
+
+-- 8. Pozostałe COMPLETED bez kompletu dowodów → ręczna weryfikacja, wyłączone z automatycznych ponowień.
+UPDATE public.orders
+   SET fulfill_review = 'DO RĘCZNEJ WERYFIKACJI: brak kompletu dowodów realizacji (migracja 2026-11-05)',
+       fulfill_tries = GREATEST(fulfill_tries, 9999)
+ WHERE status = 'COMPLETED' AND fulfilled_at IS NULL AND fulfill_review IS NULL;
+
+-- 9. Indeks dla ponowień realizacji (pozostałe indeksy orders już istnieją).
+CREATE INDEX IF NOT EXISTS orders_unfulfilled_idx ON public.orders (updated_date) WHERE status = 'COMPLETED' AND fulfilled_at IS NULL;
+
 COMMIT;
 
--- 6. Kontrola po migracji (tylko odczyt):
--- SELECT relrowsecurity FROM pg_class WHERE oid = 'public.payu_events'::regclass;                     -- true
--- SELECT has_table_privilege('anon', 'public.payu_events', 'SELECT'),
---        has_table_privilege('authenticated', 'public.payu_events', 'SELECT');                        -- false, false
--- SELECT count(*) FROM information_schema.columns WHERE table_schema = 'public' AND table_name = 'orders'
---    AND column_name IN ('payu_status','redirect_uri','fulfilled_at','fulfill_lock_at','fulfill_tries','fulfill_error'); -- 6
--- SELECT count(*) FROM public.orders WHERE status = 'COMPLETED' AND fulfilled_at IS NULL;              -- 0
--- SELECT (SELECT count(*) FROM public.orders) = (SELECT count(*) FROM backup.orders_przed_payu_20261105); -- true
+-- 10. Kontrola po migracji (tylko odczyt):
+-- SELECT relrowsecurity FROM pg_class WHERE oid = 'public.payu_events'::regclass;                          -- true
+-- SELECT has_table_privilege('anon','public.payu_events','SELECT'), has_table_privilege('authenticated','public.payu_events','SELECT'); -- false, false
+-- SELECT has_function_privilege('anon','public.exm_reserve_code(text,text,text,int)','EXECUTE');          -- false
+-- SELECT status, count(*), count(fulfilled_at), count(*) FILTER (WHERE fulfill_review LIKE 'DO RĘCZNEJ%') FROM public.orders GROUP BY 1;
+--    oczekiwane dziś: COMPLETED 2 / 2 / 0; FREE 12 / 0 / 0
+-- SELECT (SELECT count(*) FROM public.orders) = (SELECT count(*) FROM backup.orders_przed_payu_20261105);     -- true
