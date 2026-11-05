@@ -301,11 +301,13 @@ BEGIN
          AND p.sessions_used < p.sessions_total AND p.email_display IS NOT NULL
          AND (COALESCE(p_rule->>'type_id','') = '' OR p.type_id::text = p_rule->>'type_id');
   ELSIF p_rule->>'typ' = 'wszystkie_konta' THEN
-    -- Każda osoba z kontem (logowanie Supabase), bez kont usuniętych i zablokowanych.
+    -- Każda osoba z potwierdzonym kontem (logowanie Supabase), bez kont usuniętych i zablokowanych.
+    -- Niepotwierdzone adresy pomijamy — wiadomości nie trafiają na adresy z literówką ani cudze.
     RETURN QUERY
       SELECT DISTINCT lower(btrim(u.email::text))
         FROM auth.users u
-       WHERE u.email IS NOT NULL AND u.deleted_at IS NULL AND (u.banned_until IS NULL OR u.banned_until < now());
+       WHERE u.email IS NOT NULL AND u.email_confirmed_at IS NOT NULL AND u.deleted_at IS NULL
+         AND (u.banned_until IS NULL OR u.banned_until < now());
   END IF;
 END $ae$;
 

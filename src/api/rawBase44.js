@@ -7,14 +7,16 @@ import { readConsent } from '@/components/legal/cookieStore';
 
 const { appId, token, functionsVersion, appBaseUrl } = appParams;
 
-// Analityka Base44 działa dopiero po zgodzie na cookies „Analityczne” (od następnego wczytania strony).
+// Analityka Base44 działa dopiero po zgodzie na cookies „Analityczne” (od następnego wczytania strony)
+// i tylko na hostingu platformy — na exmortis.pl (statyczny hosting) jej adres /api/... nie istnieje (404).
+const onPlatform = typeof window !== "undefined" && /\.base44\.app$/.test(window.location.hostname);
 export const base44 = createClient({
   appId,
   token,
   functionsVersion,
   serverUrl: '',
   appBaseUrl,
-  analytics: { enabled: readConsent()?.analytics === true }
+  analytics: { enabled: onPlatform && readConsent()?.analytics === true }
 });
 
 // Bez zgody analitycznej nie zostawiamy identyfikatora sesji platformy w pamięci przeglądarki.

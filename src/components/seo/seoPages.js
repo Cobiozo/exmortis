@@ -8,7 +8,7 @@ export const PAGES = {
   "/": { t: "exmortis — powrót ze śmierci", d: "Mentoring dla osób, które funkcjonują, ale przestały żyć: wypalenie, rozstanie, żałoba, utrata sensu. Listy powrotu, program POWRÓT, spotkania online." },
   "/o-mnie": { t: "O mnie — exmortis", d: "Kim jestem i dlaczego uczę wracać? Moja droga przez śmierć mentalną, duchową i życiową - i to, co z niej wyniosłem dla innych." },
   "/powrot": { t: "POWRÓT - autorski program mentoringowy | exmortis", d: "Program mentoringowy w czterech etapach: Śmierć, Próg, Powrót, Inny. Indywidualna praca dla osób po kryzysie, wypaleniu, rozstaniu lub stracie." },
-  "/test": { t: "Test: gdzie jesteś na drodze powrotu? | exmortis", d: "Kilka minut uczciwych odpowiedzi. Sprawdź, którą ze śmierci przechodzisz: mentalną, duchową czy życiową - i od czego zacząć powrót." },
+  "/test": { t: "Test „Która śmierć jest Twoja?” | exmortis", d: "Kilka minut uczciwych odpowiedzi. Sprawdź, którą ze śmierci przechodzisz: mentalną, duchową czy życiową - i od czego zacząć powrót." },
   "/spotkania": { t: "Spotkania online — exmortis", d: "Spotkania na żywo o powrocie po kryzysie: terminy, tematy i zapisy. Kamera nieobowiązkowa (możesz po prostu słuchać)." },
   "/skarbiec": { t: "Skarbiec — materiały na drogę powrotu | exmortis", d: "E-booki, kursy wideo, nagrania i karty podarunkowe exmortis. Narzędzia do pracy we własnym tempie, z dostępem w Twoim koncie." },
   "/glos": { t: "Głos — muzyka i podcast | exmortis", d: "Muzyka i podcast exmortis: rozmowy o powrotach ze śmierci mentalnej, duchowej i życiowej. Posłuchaj odcinków albo zgłoś się jako gość." },

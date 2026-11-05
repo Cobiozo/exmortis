@@ -75,14 +75,20 @@ async function fetchRows(table, qs) {
 export function supabaseEntityOps(entityName) {
   const table = "exm_" + entityName.toLowerCase();
 
-  return {
+  // Metody wołane także bez obiektu (const op = ops[prop]; op(...)) — odwołania przez `ops`, nie `this`.
+  const ops = {
     async get(id) {
       const rows = await fetchRows(table, `id=eq.${val(id)}&limit=1`);
       return rows[0] || null;
     },
 
     // Bez options → tablica rekordów (jak Base44); z options → strona {items, next_cursor, has_more}.
-    async filter(query = {}, options) {
+    // Podpis pozycyjny Base44 filter(query, sort, limit) → tablica, posortowana i przycięta jak w Base44.
+    async filter(query = {}, options, limitArg) {
+      if (typeof options === "string" || (options == null && limitArg !== undefined)) {
+        const page = await ops.filter(query, { sort: options || undefined, limit: Number(limitArg) || 2000 });
+        return page.items;
+      }
       const parts = conditions(query);
       const sort = options?.sort ? `&order=${orderExpr(options.sort)}` : "";
       if (!options || (!options.limit && !options.cursor && !options.sort)) {
@@ -96,13 +102,16 @@ export function supabaseEntityOps(entityName) {
       return { items: has_more ? rows.slice(0, limit) : rows, next_cursor: has_more ? String(offset + limit) : null, has_more };
     },
 
-    async list(options = {}) {
+    // list(sort, limit) jak w Base44 → tablica; list({sort, limit, distinct}) → strona / wartości.
+    async list(a, b) {
+      if (!a || typeof a !== "object") return ops.filter({}, a || undefined, b);
+      const options = a;
       // list({distinct: 'pole'}) → {items: wartości} — jak w Base44.
       if (options.distinct) {
         const rows = await fetchRows(table, `select=v:${encodeURIComponent(`data->>${options.distinct}`)}&limit=2000`);
         return { items: [...new Set(rows.map((r) => r.v).filter((v) => v !== null && v !== undefined)) ] };
       }
-      return this.filter({}, options);
+      return ops.filter({}, options);
     },
 
     async count(query = {}) {
@@ -117,4 +126,5 @@ export function supabaseEntityOps(entityName) {
       return Number(range.split("/")[1]) || 0;
     },
   };
+  return ops;
 }
