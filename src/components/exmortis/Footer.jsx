@@ -7,6 +7,7 @@ import Logo from "./Logo";
 import FooterColumns from "./footer/FooterColumns";
 import usePrelaunch from "@/lib/usePrelaunch";
 import { openCookieSettings } from "@/components/legal/cookieStore";
+import { sanitizeHtml } from "@/lib/sanitizeHtml";
 
 // Wspólna stopka (5.11.2026): marka + trzy grupy linków, pas pomocy, dokumenty, dolna linia.
 // Jedna dla wszystkich stron w Layout; Minutnik ciszy (/cisza) jest poza Layout i zostaje bez stopki.
@@ -17,10 +18,10 @@ const LEGAL_CLS = "min-h-[44px] inline-flex items-center text-sm text-[#F5EFE1]/
 const TEL = "underline decoration-[#C9A24A]/60 underline-offset-4 hover:text-[#C9A24A] whitespace-nowrap";
 
 export default function Footer() {
-  const { str } = useSiteContent();
+  const { rich } = useSiteContent();
   const { gated } = usePrelaunch();
   const { open: openCrisis } = useCrisis();
-  const opis = str("footer", "opis", "Słowa, historie i spotkania na Twoją drogę powrotu.");
+  const opis = rich("footer", "opis", "Słowa, historie i spotkania na Twoją drogę powrotu.");
 
   return (
     <footer className="relative bg-[#0A0A0B] border-t hairline pb-16 md:pb-0">
@@ -35,7 +36,7 @@ export default function Footer() {
               <span className="relic-heading text-2xl gold-text tracking-[0.3em]">EXMORTIS</span>
             </Link>
             <p className="shop-heading text-2xl md:text-[1.7rem] leading-snug text-[#F5EFE1]">Wracam z siebie.<br />Uczę wracać.</p>
-            <p className="text-base text-[#F5EFE1]/75 leading-relaxed mt-4 max-w-[30ch]">{opis}</p>
+            <div className="rich-content text-base text-[#F5EFE1]/75 leading-relaxed mt-4 max-w-[30ch]" dangerouslySetInnerHTML={{ __html: sanitizeHtml(opis) }} />
           </div>
           {!gated && <FooterColumns />}
         </div>

@@ -290,7 +290,7 @@ export const CONTENT_PAGES = [
       {
         key: "opis",
         label: "Opis marki (pod hasłem „Wracam z siebie. Uczę wracać.”)",
-        type: "text",
+        type: "richtext",
         default: "Słowa, historie i spotkania na Twoją drogę powrotu.",
       },
     ],
