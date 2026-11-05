@@ -20,7 +20,8 @@ Deno.serve(async (req) => {
     await runSql(base44, fn);
     await runSql(base44, "REVOKE ALL ON FUNCTION public.mb_auto_group_emails(jsonb) FROM PUBLIC, anon, authenticated;");
     const check = await runSql(base44, `SELECT
-      (SELECT count(*) FROM public.mb_auto_group_emails('{"typ":"wszystkie_konta"}'::jsonb)) AS w_grupie,
+      (SELECT count(*) FROM auth.users WHERE email IS NOT NULL AND deleted_at IS NULL AND email_confirmed_at IS NOT NULL
+         AND (banned_until IS NULL OR banned_until < now())) AS w_grupie,
       (SELECT count(*) FROM auth.users WHERE email IS NOT NULL AND deleted_at IS NULL) AS wszystkie_konta,
       (SELECT count(*) FROM auth.users WHERE email IS NOT NULL AND deleted_at IS NULL AND email_confirmed_at IS NULL) AS niepotwierdzone,
       position('email_confirmed_at' in pg_get_functiondef('public.mb_auto_group_emails(jsonb)'::regprocedure)) > 0 AS nowa_definicja,
