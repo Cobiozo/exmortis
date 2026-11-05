@@ -3,22 +3,19 @@ import { base44 } from "@/api/base44Client";
 import { useNoIndex } from "@/lib/useNoIndex";
 import MyProducts from "@/components/account/MyProducts";
 import MyOrders from "@/components/account/MyOrders";
-import SeriesTiles from "@/components/obok/SeriesTiles";
-import ObokNotifications from "@/components/obok/ObokNotifications";
 import AccountSettings from "@/components/account/AccountSettings";
 import DailyThought from "@/components/account/DailyThought";
 import AccountAnnouncements from "@/components/account/announce/AccountAnnouncements";
 import MySessions from "@/components/account/sessions/MySessions";
 import MyEvents from "@/components/account/events/MyEvents";
-import { Link, useLocation, useNavigate } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
 import { listStories, cachedList } from "@/components/rozdroza/api";
-import { obok } from "@/components/obok/obokApi";
 import { libBundle } from "@/components/account/library/libApi";
 import MyLibrary from "@/components/account/library/MyLibrary";
 import MyMessages from "@/components/account/messages/MyMessages";
 import AccountUnreadMessage from "@/components/account/messages/AccountUnreadMessage";
 
-const HEAD = [["produkty", "Moje produkty"], ["obok", "Obok"], ["spotkania", "Spotkania"], ["sesje", "Umów spotkanie"]];
+const HEAD = [["produkty", "Moje produkty"], ["spotkania", "Spotkania"], ["sesje", "Umów spotkanie"]];
 const TAIL = [["zakupy", "Zakupy"], ["ustawienia", "Ustawienia"]];
 
 // /konto — tylko dla zalogowanych (ProtectedRoute). Zakładki biblioteki i wiadomości
@@ -30,8 +27,6 @@ export default function Account() {
   const { search } = useLocation();
   useEffect(() => { const t = new URLSearchParams(search).get("tab"); if (t) setTab(t); }, [search]);
   const [me, setMe] = useState(null);
-  const [hasObok, setHasObok] = useState(false);
-  const [obokTiles, setObokTiles] = useState([]);
   const [cfg, setCfg] = useState(null);
   const navigate = useNavigate();
   // ROZDROŻA: zakładka, gdy są opublikowane historie (admin widzi ją zawsze). Lekki odczyt w tle — bez tekstów.
@@ -40,7 +35,6 @@ export default function Account() {
   useEffect(() => {
     // Wszystko równolegle: konto, Obok i jedno wejście do modułu (przełączniki + biblioteka + wiadomości).
     base44.auth.me().then(setMe);
-    obok("home").then((d) => { setHasObok(!!d.tiles?.length); setObokTiles(d.tiles || []); }).catch(() => {});
     libBundle().then(setCfg).catch(() => setCfg({ library: false, messages: false }));
     const t = setTimeout(() => listStories().then((l) => l.length && setRz(true)).catch(() => {}), 600);
     return () => clearTimeout(t);
@@ -56,9 +50,9 @@ export default function Account() {
   }
 
   const TABS = [
-    ...HEAD.slice(0, 3),
+    ...HEAD.slice(0, 2),
     ...(rz || me?.role === "admin" ? [["rozdroza", "Rozdroża"]] : []),
-    ...HEAD.slice(3),
+    ...HEAD.slice(2),
     ...(cfg?.library ? [["biblioteka", "Moja biblioteka"]] : []),
     ...(cfg?.messages ? [["wiadomosci", "Wiadomości"]] : []),
     ...TAIL,
@@ -84,10 +78,9 @@ export default function Account() {
               />
             )}
             <AccountAnnouncements />
-            <DailyThought hasObok={hasObok} onObok={() => setTab("obok")} />
+            <DailyThought hasLibrary={!!cfg?.library} onLibrary={() => setTab("biblioteka")} />
           </div>
         </div>
-        <ObokLatest tiles={obokTiles} onAll={() => setTab("obok")} />
         <div className="flex gap-8 mt-12 mb-10 border-b hairline overflow-x-auto [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
           {TABS.map(([k, l]) => (
             <button
@@ -104,32 +97,8 @@ export default function Account() {
         {active === "sesje" && <MySessions />}
         {active === "biblioteka" && <MyLibrary initial={cfg?.library_data} onGoToOrders={() => setTab("zakupy")} />}
         {active === "wiadomosci" && <MyMessages initial={cfg?.messages_data} footer={cfg?.footer} />}
-        {active === "obok" && <><SeriesTiles /><div className="mt-14"><ObokNotifications /></div></>}
         {active === "zakupy" && <MyOrders />}
         {active === "ustawienia" && me && <AccountSettings me={me} />}
-      </div>
-    </div>
-  );
-}
-
-// Pasek nad zakładkami: najnowsze otwarte nagranie Obok i „Posłuchaj” (ostatnio otwarte w dowolnej serii).
-const fmtObok = new Intl.DateTimeFormat("pl-PL", { weekday: "long", day: "numeric", month: "long" });
-function ObokLatest({ tiles, onAll }) {
-  const pick = tiles
-    .filter((t) => t.latest)
-    .sort((a, b) => new Date(b.latest.at) - new Date(a.latest.at))[0];
-  if (!pick) return null;
-  const l = pick.latest;
-  return (
-    <div className="mt-12 border hairline p-5 md:p-6 flex flex-col md:flex-row md:items-center md:justify-between gap-5">
-      <div>
-        <p className="technical text-[10px] gold-text mb-2">OBOK · {l.heard ? "OSTATNIE NAGRANIE" : "NOWE NAGRANIE"}</p>
-        <p className="relic-heading text-xl text-[#F5EFE1]">{l.tytul}</p>
-        <p className="text-sm text-foreground/55 mt-1">{pick.nazwa} · {fmtObok.format(new Date(l.at))}</p>
-      </div>
-      <div className="flex flex-wrap gap-3">
-        <Link to={`/obok/${pick.slug}/${l.numer}`} className="btn-relic !py-2 !px-5">POSŁUCHAJ</Link>
-        <button type="button" onClick={onAll} className="btn-ghost !py-2 !px-5">WSZYSTKIE SERIE</button>
       </div>
     </div>
   );
