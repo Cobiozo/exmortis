@@ -1,4 +1,5 @@
 import React, { useRef, useState } from "react";
+import { useAccountPrefill, AccountContactLine, SignInHint } from "@/components/common/AccountContact";
 import useDialogA11y from "@/lib/useDialogA11y";
 import { X, Check } from "lucide-react";
 import { base44 } from "@/api/base44Client";
@@ -7,6 +8,9 @@ import { track } from "@/lib/track";
 // Małe okno zapisu na listę oczekujących przy produktach „wkrótce".
 export default function WaitlistDialog({ product, onClose }) {
   const [form, setForm] = useState({ first_name: "", email: "", consent: false });
+  const acc = useAccountPrefill((a) => setForm((x) => ({ ...x, first_name: x.first_name || a.firstName, email: x.email || a.email })));
+  const [manual, setManual] = useState(false);
+  const fromAccount = acc.signedIn && !manual;
   const [sending, setSending] = useState(false);
   const [sent, setSent] = useState(false);
   const [error, setError] = useState("");
@@ -73,6 +77,8 @@ export default function WaitlistDialog({ product, onClose }) {
               <p className="technical text-[9px] gold-text mb-2">{soldOut ? "LISTA REZERWOWA" : "LISTA OCZEKUJĄCYCH"}</p>
               <h3 className="shop-heading text-2xl text-[#F5EFE1]">{product.name}</h3>
             </div>
+            {fromAccount && <AccountContactLine email={acc.email} lead="Powiadomię na:" onChange={() => setManual(true)} />}
+            {(!fromAccount || !acc.firstName) && (
             <div>
               <label className="technical text-[9px] text-foreground/55 block mb-2">IMIĘ</label>
               <input
@@ -82,6 +88,8 @@ export default function WaitlistDialog({ product, onClose }) {
                 className={inputCls}
               />
             </div>
+            )}
+            {!fromAccount && (
             <div>
               <label className="technical text-[9px] text-foreground/55 block mb-2">E-MAIL</label>
               <input
@@ -92,6 +100,7 @@ export default function WaitlistDialog({ product, onClose }) {
                 className={inputCls}
               />
             </div>
+            )}
             <label className="flex items-start gap-3 cursor-pointer">
               <input
                 type="checkbox"

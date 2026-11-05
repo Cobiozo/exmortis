@@ -1,4 +1,5 @@
 import React, { useState } from "react";
+import { useAccountPrefill, AccountContactLine, SignInHint } from "@/components/common/AccountContact";
 import { Link } from "react-router-dom";
 import { sendForm } from "@/lib/outbox";
 import useSystemText from "@/content/useSystemText";
@@ -16,6 +17,9 @@ const check = (f) => ({
 // Moduł strony Kontakt: formularz, pod nim dane firmy (z Ustawień strony).
 export default function ContactPageForm() {
   const [f, setF] = useState({ name: "", email: "", message: "", website: "" });
+  const acc = useAccountPrefill((a) => setF((x) => ({ ...x, name: x.name || a.firstName, email: x.email || a.email })));
+  const [manual, setManual] = useState(false);
+  const fromAccount = acc.signedIn && !manual;
   const [errs, setErrs] = useState({});
   const [state, setState] = useState("form");
   const [msg, setMsg] = useState("");
@@ -34,8 +38,9 @@ export default function ContactPageForm() {
       <div className="mx-auto max-w-[70ch]">
         {state === "done" ? <div><p className="relic-heading text-2xl gold-text mb-3">{t("dz.kontakt.tytul")}</p><p className="text-foreground/60 leading-relaxed">{t("dz.kontakt")}</p></div> : (
           <form onSubmit={submit} noValidate className="space-y-5">
-            <ContactField id="c-name" label="Imię" value={f.name} onChange={set("name")} error={errs.name} autoComplete="given-name" />
-            <ContactField id="c-email" label="E-mail" type="email" value={f.email} onChange={set("email")} error={errs.email} autoComplete="email" />
+            {fromAccount && <AccountContactLine email={acc.email} lead="Odpowiem na:" onChange={() => setManual(true)} />}
+            {(!fromAccount || !acc.firstName || errs.name) && <ContactField id="c-name" label="Imię" value={f.name} onChange={set("name")} error={errs.name} autoComplete="given-name" />}
+            {(!fromAccount || errs.email) && <ContactField id="c-email" label="E-mail" type="email" value={f.email} onChange={set("email")} error={errs.email} autoComplete="email" />}
             <ContactField id="c-msg" label="Wiadomość" textarea value={f.message} onChange={set("message")} error={errs.message} />
             <div aria-hidden="true" className="absolute -left-[9999px] h-0 w-0 overflow-hidden">
               <label htmlFor="c-web">Strona www</label>

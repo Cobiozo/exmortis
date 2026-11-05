@@ -1,4 +1,5 @@
 import React, { useState } from "react";
+import { useAccountPrefill, AccountContactLine, SignInHint } from "@/components/common/AccountContact";
 import { Link } from "react-router-dom";
 import { Loader2 } from "lucide-react";
 import { base44 } from "@/api/base44Client";
@@ -20,6 +21,9 @@ const L = ({ t, hint, children }) => (
 export default function PodcastGuestForm() {
   const { open: openCrisis } = useCrisis();
   const [f, setF] = useState(EMPTY);
+  const acc = useAccountPrefill((a) => setF((x) => ({ ...x, email: x.email || a.email })));
+  const [manual, setManual] = useState(false);
+  const fromAccount = acc.signedIn && !manual;
   const [sending, setSending] = useState(false);
   const [sent, setSent] = useState(false);
   const firma = useFirma();
@@ -51,7 +55,9 @@ export default function PodcastGuestForm() {
     <form onSubmit={submit} className="space-y-6 min-w-0">
       <div className="grid sm:grid-cols-2 gap-6">
         <L t="IMIĘ LUB PSEUDONIM"><input required maxLength={120} value={f.name} onChange={set("name")} className={inp} /></L>
-        <L t="ADRES E-MAIL"><input required type="email" value={f.email} onChange={set("email")} className={inp} /></L>
+        {fromAccount
+          ? <AccountContactLine email={acc.email} lead="Odpowiem na:" onChange={() => setManual(true)} />
+          : <L t="ADRES E-MAIL"><input required type="email" value={f.email} onChange={set("email")} className={inp} /></L>}
       </div>
       <L t="NUMER TELEFONU" hint="opcjonalnie, jeśli wolisz rozmowę telefoniczną"><input type="tel" value={f.phone} onChange={set("phone")} className={inp} /></L>
       <L t="TWOJA ŚMIERĆ">

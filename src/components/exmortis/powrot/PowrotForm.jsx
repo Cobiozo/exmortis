@@ -1,4 +1,5 @@
 import React, { useRef, useState } from "react";
+import { useAccountPrefill, AccountContactLine, SignInHint } from "@/components/common/AccountContact";
 import { Link } from "react-router-dom";
 import { ArrowRight, Check } from "lucide-react";
 import { base44 } from "@/api/base44Client";
@@ -26,6 +27,9 @@ export default function PowrotForm() {
   const { open: openCrisis } = useCrisis();
   const [form, setForm] = useState(INITIAL);
   const [errors, setErrors] = useState({});
+  const acc = useAccountPrefill((a) => setForm((x) => ({ ...x, full_name: x.full_name || a.name, email: x.email || a.email })));
+  const [manual, setManual] = useState(false);
+  const fromAccount = acc.signedIn && !manual;
   const [sending, setSending] = useState(false);
   const [sent, setSent] = useState(false);
   const [error, setError] = useState("");
@@ -123,7 +127,9 @@ export default function PowrotForm() {
             <form onSubmit={submit} className="space-y-8">
               <div className="space-y-6">
                 <TextInput label="Imię i nazwisko" required {...field("full_name")} />
-                <TextInput label="E-mail" required {...field("email")} />
+                {fromAccount && !errors.email
+                  ? <AccountContactLine email={acc.email} lead="Odpowiem na:" onChange={() => setManual(true)} />
+                  : <TextInput label="E-mail" required {...field("email")} />}
                 <TextInput label="Telefon" required {...field("phone", "tel")} />
                 <TextArea
                   label="Co sprawia, że program POWRÓT jest dla Ciebie ważny właśnie teraz?"

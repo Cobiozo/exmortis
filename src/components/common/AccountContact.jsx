@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useEffect } from "react";
 import { Link, useLocation } from "react-router-dom";
 import { useAuth } from "@/lib/AuthContext";
 
@@ -9,6 +9,14 @@ export function useAccountContact() {
   const email = isAuthenticated && user?.email ? String(user.email).toLowerCase() : "";
   const name = isAuthenticated ? String(user?.imie || user?.full_name || "").trim() : "";
   return { signedIn: !!email, email, name, firstName: name.split(/\s+/)[0] || "" };
+}
+
+// Uzupełnia stan formularza danymi z konta (tylko puste pola) — dla formularzy z własnym stanem.
+export function useAccountPrefill(apply) {
+  const acc = useAccountContact();
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  useEffect(() => { if (acc.signedIn) apply(acc); }, [acc.signedIn, acc.email, acc.name]);
+  return acc;
 }
 
 // Linijka „Wyślę na: …” z przyciskiem „zmień” (dla zalogowanych).

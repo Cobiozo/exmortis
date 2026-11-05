@@ -1,4 +1,5 @@
 import React, { useState } from "react";
+import { useAccountPrefill, AccountContactLine, SignInHint } from "@/components/common/AccountContact";
 import { Link } from "react-router-dom";
 import { ArrowRight, Check, Mail, Instagram, Facebook, Youtube } from "lucide-react";
 import { sendForm } from "@/lib/outbox";
@@ -23,6 +24,10 @@ export default function ContactSection({ label } = {}) {
   const intro = rich("contact", "intro", "Nie ma botów i asystentów. Jeśli jesteś na progu — napisz pierwszy ruch, choćby jednym zdaniem.");
   const { open: openCrisis } = useCrisis();
   const [form, setForm] = useState({ name: "", email: "", message: "" });
+  // Zalogowana osoba: imię i e-mail z konta; „zmień” pokazuje pola.
+  const acc = useAccountPrefill((a) => setForm((f) => ({ ...f, name: f.name || a.firstName, email: f.email || a.email })));
+  const [manual, setManual] = useState(false);
+  const fromAccount = acc.signedIn && !manual;
   const [sending, setSending] = useState(false);
   const [sent, setSent] = useState(false);
   const t = useSystemText();
@@ -37,7 +42,7 @@ export default function ContactSection({ label } = {}) {
       track("Lead", { content_name: "kontakt" });
       setSent(true);
       if (res?.pilne) openCrisis();
-      setForm({ name: "", email: "", message: "" });
+      setForm({ name: acc.firstName || "", email: acc.email || "", message: "" });
     } catch (err) {
       setError(err?.response?.data?.error || "Nie udało się wysłać. Spróbuj ponownie albo napisz bezpośrednio na kontakt@exmortis.pl");
     } finally {
@@ -111,8 +116,9 @@ export default function ContactSection({ label } = {}) {
             </div>
           ) : (
             <form onSubmit={submit} className="space-y-6">
-              <div className="grid sm:grid-cols-2 gap-6">
-                <div>
+              {fromAccount && <AccountContactLine email={acc.email} lead="Odpowiem na:" onChange={() => setManual(true)} />}
+              <div className={`grid gap-6 ${fromAccount ? "" : "sm:grid-cols-2"}`}>
+                {(!fromAccount || !acc.firstName) && <div>
                   <label className="technical text-[10px] text-foreground/55 block mb-3">IMIĘ</label>
                   <input
                     required
@@ -121,8 +127,8 @@ export default function ContactSection({ label } = {}) {
                     onChange={(e) => setForm({ ...form, name: e.target.value })}
                     className="w-full bg-transparent border hairline px-5 py-4 focus:border-[#C9A24A] focus:outline-none transition-colors"
                   />
-                </div>
-                <div>
+                </div>}
+                {!fromAccount && <div>
                   <label className="technical text-[10px] text-foreground/55 block mb-3">EMAIL</label>
                   <input
                     required
@@ -131,7 +137,7 @@ export default function ContactSection({ label } = {}) {
                     onChange={(e) => setForm({ ...form, email: e.target.value })}
                     className="w-full bg-transparent border hairline px-5 py-4 focus:border-[#C9A24A] focus:outline-none transition-colors"
                   />
-                </div>
+                </div>}
               </div>
               <div>
                 <label className="technical text-[10px] text-foreground/55 block mb-3">WIADOMOŚĆ</label>
