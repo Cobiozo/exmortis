@@ -288,11 +288,10 @@ export const CONTENT_PAGES = [
           "Jeden list tygodniowo. Jeden temat powrotu. Jedno narzędzie. Prosto na Twój mail — z prezentem powitalnym: mini-PDF „3 pierwsze ruchy powrotu”.",
       },
       {
-        key: "about",
-        label: "Opis marki",
-        type: "richtext",
-        default:
-          "Wracam z siebie. Uczę wracać. Głos powrotu ze śmierci mentalnej, duchowej i życiowej. Siła nie jest warunkiem powrotu. Wystarczy pierwszy ruch.",
+        key: "opis",
+        label: "Opis marki (pod hasłem „Wracam z siebie. Uczę wracać.”)",
+        type: "text",
+        default: "Słowa, historie i spotkania na Twoją drogę powrotu.",
       },
     ],
   },

@@ -20,7 +20,7 @@ export default function NavPreview({ d }) {
         </div>
         <p className="technical text-[10px] text-foreground/50 pt-4">Stopka na telefonie</p>
         <div className="w-[360px] max-w-full border hairline pointer-events-none select-none px-4 py-10 bg-[#0A0A0B]" aria-hidden="true">
-          <FooterColumns mobile />
+          <FooterColumns />
         </div>
       </section>
     </NavDraftContext.Provider>
