@@ -27,7 +27,7 @@ function safeEq(a: string, b: string) {
   for (let i = 0; i < a.length; i++) r |= a.charCodeAt(i) ^ b.charCodeAt(i);
   return r === 0;
 }
-const redirect = (url: string) => new Response(null, { status: 302, headers: { Location: url, "Cache-Control": "no-store" } });
+const redirect = (url: string) => new Response(null, { status: 303, headers: { Location: url, "Cache-Control": "no-store" } });
 
 Deno.serve(async (req) => {
   const url = new URL(req.url);
