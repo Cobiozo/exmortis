@@ -1,41 +1,14 @@
-// TYMCZASOWA KONTROLA PŁATNOŚCI (tylko odczyt) — 6.11.2026, na polecenie właściciela. Potem funkcja wraca do 410.
-// Autoryzacja: nagłówek X-Exm-Deploy — jednorazowy klucz; w kodzie tylko skrót SHA-256. Bez danych osobowych w odpowiedziach.
-import { createClientFromRequest } from "npm:@base44/sdk@0.8.44";
-import { runSql } from "../../shared/supabase.ts";
-
-const KEY_SHA = "00218a438d668f36e0c41ba00cd8ff9e0c490c2a97e1b1e98502f27fba48e748";
-const hex = (b: ArrayBuffer) => [...new Uint8Array(b)].map((x) => x.toString(16).padStart(2, "0")).join("");
-const sha256 = async (s: string) => hex(await crypto.subtle.digest("SHA-256", new TextEncoder().encode(s)));
-const redact = (s: unknown) => String(s ?? "").replace(/eyJ[\w-]+\.[\w-]+\.[\w-]+/g, "[JWT]").replace(/[\w.+-]+@[\w-]+\.[\w.]+/g, "[e-mail]");
-
-Deno.serve(async (req) => {
-  const key = req.headers.get("x-exm-deploy") || "";
-  if (!key || (await sha256(key)) !== KEY_SHA) return Response.json({ error: "Brak autoryzacji" }, { status: 401 });
-  const base44 = createClientFromRequest(req);
-  const body = await req.json().catch(() => ({}));
-  try {
-    if (body.action === "sql_ro") return Response.json({ rows: await runSql(base44, String(body.q || ""), true) });
-    if (body.action === "payu_peek") {
-      const ids: string[] = (body.ids || []).map((x: string) => String(x).replace(/[^0-9a-f-]/gi, "")).filter(Boolean).slice(0, 8);
-      const [p] = await runSql(base44, `SELECT value FROM public.app_settings WHERE key='payu'`, true);
-      const payu = p?.value || {};
-      const base = payu.env === "sandbox" ? "https://secure.snd.payu.com" : "https://secure.payu.com";
-      const tr = await fetch(`${base}/pl/standard/user/oauth/authorize`, { method: "POST", headers: { "Content-Type": "application/x-www-form-urlencoded" },
-        body: new URLSearchParams({ grant_type: "client_credentials", client_id: String(payu.clientId || ""), client_secret: String(payu.clientSecret || "") }).toString() });
-      const tok = (await tr.json().catch(() => ({})))?.access_token;
-      const out: unknown[] = [{ oauth: tr.status, token: !!tok, env: payu.env || null, pos: /^\d+$/.test(String(payu.posId || "")), secondKey: String(payu.secondKey || "").length === 32 }];
-      if (!tok) return Response.json({ wyniki: out });
-      for (const id of ids) {
-        const [o] = await runSql(base44, `SELECT id, payu_order_id FROM public.orders WHERE id LIKE '${id}%' LIMIT 1`, true);
-        if (!o?.payu_order_id) { out.push({ id, blad: "brak" }); continue; }
-        const g = await fetch(`${base}/api/v2_1/orders/${encodeURIComponent(o.payu_order_id)}`, { headers: { Authorization: `Bearer ${tok}` } });
-        const po = ((await g.json().catch(() => ({}))) as any)?.orders?.[0] || {};
-        out.push({ id: String(o.id).slice(0, 8), http: g.status, status: po.status, kwota: po.totalAmount, opis: po.description, notifyUrl: po.notifyUrl });
-      }
-      return Response.json({ wyniki: out });
-    }
-    return Response.json({ error: "Nieznana akcja" }, { status: 400 });
-  } catch (e) {
-    return Response.json({ error: redact((e as Error)?.message || e).slice(0, 400) }, { status: 500 });
-  }
-});
+// Jednorazowe zadania wykonane 5.11.2026 (decyzje właściciela):
+// - quiz_result: usunięte imię, e-mail, forma zwracania się i zdanie refleksji (16 z 27 wierszy);
+// - kolejka poczty: treść 7 niewysłanych maili z wynikiem testu usunięta, status „pominiety”;
+// - Biblioteka: reguła grup „wszystkie_konta” w bazie i grupa „Wszystkie konta” (Obok → Biblioteka);
+// - anonimowy licznik ukończeń testu: tabela test_counts + funkcje test_done / test_stats
+//   (SQL: base44/shared/testCountSql.ts; kontrola: 2 funkcje, anon tylko test_done, tabela niedostępna);
+// - audyt: „wszystkie_konta” tylko z potwierdzonym adresem (mb_auto_group_emails z librarySchema.ts);
+//   kontrola: 6 kont, 6 w grupie, 0 niepotwierdzonych, funkcja niedostępna dla anon;
+// - inspekcja PayU (tylko odczyt, sesja administratora) — wykonana 5.11.2026 ok. 20:25, potem wyłączona;
+// - logowanie Google na exmortis.pl: ustawienia google_oauth (bez sekretu) i funkcja googleAuth — 6.11.2026, potem wyłączona.
+// - wdrożenie PayU (migracja v3, 28 funkcji Supabase z commita 046316db, cronTick przywrócony do v12) — 5.11.2026 ok. 21:45–22:05, potem wyłączona.
+// - PayU: odbiór płatności oczekujących i tytuł transakcji (4 funkcje Supabase z commita de11b00a) — 6.11.2026 ok. 17:00–17:20, potem wyłączona.
+// Funkcja wyłączona — każde wywołanie → 410.
+Deno.serve(() => Response.json({ error: "Wyłączone", disabled: true }, { status: 410 }));
