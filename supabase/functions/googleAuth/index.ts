@@ -3,11 +3,12 @@ import { createClientFromRequest } from "../_shared/compat.ts";
 
 // Logowanie przez Google pod adresem exmortis.pl (zamiast domeny Supabase w oknie Google).
 // 1. GET /functions/googleAuth?start=1 → przekierowanie do Google z redirect_uri = {APP_URL}/functions/googleAuth.
-// 2. Google wraca na ten sam adres z ?code&state → wymiana kodu na id_token (sekret klienta tylko tutaj),
-//    potem Supabase Auth (grant_type=id_token, provider google) wydaje sesję.
+// 2. Google odsyła formularzem (POST, response_mode=form_post) id_token i state na ten sam adres →
+//    Supabase Auth (grant_type=id_token, provider google) sprawdza podpis, odbiorcę i nonce, wydaje sesję.
+//    Sekret klienta Google nie jest potrzebny.
 // 3. Przekierowanie na {APP_URL}/login#access_token=… — strona logowania przejmuje sesję tak samo jak dotąd.
-// Dane klienta Google: app_settings „google_oauth” { clientId, clientSecret } (dostęp tylko backendu).
-// state podpisany HMAC (sekret klienta), ważny 15 min; nonce w id_token sprawdza Supabase.
+// Ustawienia: app_settings „google_oauth” { clientId, stateKey } (dostęp tylko backendu).
+// state podpisany HMAC (stateKey), ważny 15 min; nonce w id_token sprawdza Supabase.
 
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL") || "";
 const ANON = Deno.env.get("SUPABASE_ANON_KEY") || "";
@@ -35,7 +36,7 @@ Deno.serve(async (req) => {
     const base44 = createClientFromRequest(req);
     app = String((await loadAppUrl(base44)) || "").replace(/\/+$/, "");
     const cfg = await getSetting(base44, "google_oauth");
-    if (!app || !cfg?.clientId || !cfg?.clientSecret) throw new Error("brak konfiguracji");
+    if (!app || !cfg?.clientId || !cfg?.stateKey) throw new Error("brak konfiguracji");
     const callback = `${app}/functions/googleAuth`;
     const fail = (why: string) => redirect(`${app}/login#error=google&error_description=${encodeURIComponent(why)}`);
 
@@ -43,35 +44,30 @@ Deno.serve(async (req) => {
     if (url.searchParams.has("start")) {
       const nonce = b64u(crypto.getRandomValues(new Uint8Array(24)));
       const payload = b64u(enc.encode(JSON.stringify({ n: nonce, t: Date.now() })));
-      const state = `${payload}.${await hmac(cfg.clientSecret, payload)}`;
+      const state = `${payload}.${await hmac(cfg.stateKey, payload)}`;
       const hashedNonce = hex(await crypto.subtle.digest("SHA-256", enc.encode(nonce)));
       const q = new URLSearchParams({
-        client_id: cfg.clientId, redirect_uri: callback, response_type: "code", scope: "openid email profile",
+        client_id: cfg.clientId, redirect_uri: callback, response_type: "id_token", response_mode: "form_post", scope: "openid email profile",
         state, nonce: hashedNonce, prompt: "select_account",
       });
       return redirect(`https://accounts.google.com/o/oauth2/v2/auth?${q}`);
     }
 
-    // 2. Powrót z Google.
-    const code = url.searchParams.get("code");
-    const state = url.searchParams.get("state") || "";
-    if (url.searchParams.get("error")) return fail("Logowanie przez Google zostało przerwane.");
-    if (!code || !state.includes(".")) return fail("Nieprawidłowa odpowiedź Google.");
+    // 2. Powrót z Google (POST formularza).
+    if (req.method !== "POST") return fail("Nieprawidłowa odpowiedź Google.");
+    const form = new URLSearchParams(await req.text());
+    if (form.get("error")) return fail("Logowanie przez Google zostało przerwane.");
+    const idToken = form.get("id_token") || "";
+    const state = form.get("state") || "";
+    if (!idToken || !state.includes(".")) return fail("Nieprawidłowa odpowiedź Google.");
     const [payload, sig] = state.split(".");
-    if (!safeEq(sig, await hmac(cfg.clientSecret, payload))) return fail("Nieprawidłowa sesja logowania. Spróbuj ponownie.");
+    if (!safeEq(sig, await hmac(cfg.stateKey, payload))) return fail("Nieprawidłowa sesja logowania. Spróbuj ponownie.");
     const st = JSON.parse(fromB64u(payload));
     if (!st?.n || Date.now() - Number(st.t) > 15 * 60000) return fail("Sesja logowania wygasła. Spróbuj ponownie.");
 
-    const tok = await fetch("https://oauth2.googleapis.com/token", {
-      method: "POST", headers: { "Content-Type": "application/x-www-form-urlencoded" },
-      body: new URLSearchParams({ code, client_id: cfg.clientId, client_secret: cfg.clientSecret, redirect_uri: callback, grant_type: "authorization_code" }),
-      signal: AbortSignal.timeout(15000),
-    }).then((r) => r.json());
-    if (!tok?.id_token) { console.error("googleAuth token:", String(tok?.error || "").slice(0, 100)); return fail("Google nie potwierdził logowania."); }
-
     const s = await fetch(`${SUPABASE_URL}/auth/v1/token?grant_type=id_token`, {
       method: "POST", headers: { apikey: ANON, Authorization: `Bearer ${ANON}`, "Content-Type": "application/json" },
-      body: JSON.stringify({ provider: "google", id_token: tok.id_token, nonce: st.n }),
+      body: JSON.stringify({ provider: "google", id_token: idToken, nonce: st.n }),
       signal: AbortSignal.timeout(15000),
     });
     const d = await s.json().catch(() => ({}));
