@@ -10,6 +10,9 @@
 //  - płatność (status COMPLETED) i realizacja (fulfilled_at) są rozdzielone: fulfilled_at zapisujemy dopiero
 //    po skutecznej realizacji, a nieudaną realizację ponawiamy (blokada fulfill_lock_at chroni przed równoległym wykonaniem);
 //  - COMPLETED uznajemy wyłącznie przy zgodnej kwocie, walucie (PLN), POS i numerze zamówienia.
+//  - WAITING_FOR_CONFIRMATION („oczekuje na odbiór”, POS bez automatycznego odbioru): po tej samej weryfikacji
+//    sklep sam odbiera płatność w PayU; PayU przysyła potem COMPLETED i dopiero wtedy jest realizacja.
+//    Niezgodna płatność nie jest odbierana (PayU zwraca ją klientowi), a administrator dostaje alert.
 //  - zamówienia testowe (is_test — ustawiane wyłącznie przez backend testowy, nigdy z kasy) przechodzą całą ścieżkę
 //    płatności, ale realizacja jest pomijana: bez maili, faktur, dostępów, kart i biletów;
 //  - alerty dla administratora (jednorazowe): realizacja nieudana kilka razy, powiadomienie PayU zaległe;
@@ -19,7 +22,7 @@ import { runSql, escStr } from "./supabase.ts";
 import { getSetting } from "./settings.ts";
 import { findOrderForNotification, updateOrderStatus } from "./orders.ts";
 import { fulfillOrder } from "./fulfillOrder.ts";
-import { localPayuStatus, payuToken, payuGetOrder } from "./payu.ts";
+import { localPayuStatus, payuToken, payuGetOrder, payuCapture } from "./payu.ts";
 import { sendMail, adminTo } from "./smtp.ts";
 
 const LEASE_MIN = 5;      // na tyle minut zdarzenie jest „wzięte” przez jedno wywołanie
@@ -114,12 +117,69 @@ async function reportMismatch(base44, stored, payuOrderId, reason) {
       await sendMail(base44, {
         kind: "platnosc_niezgodna", ref: stored.id, to,
         subject: "EXMORTIS — płatność PayU niezgodna z zamówieniem",
-        html: `<p>Powiadomienie PayU o zakończonej płatności nie zgadza się z zamówieniem — zamówienie NIE zostało zrealizowane.</p>
+        html: `<p>Płatność PayU nie zgadza się z zamówieniem — zamówienie NIE zostało zrealizowane, a płatność oczekująca na odbiór NIE została odebrana.</p>
           <p>Powód: ${String(reason).replace(/</g, "&lt;")}</p><p>Zamówienie: ${String(stored.id).slice(0, 8).toUpperCase()} · PayU: ${String(payuOrderId).replace(/</g, "&lt;")}</p>
           <p>Sprawdź płatność w panelu PayU (Panel → Zamówienia).</p>`,
       });
     }
   } catch { /* informacja dla admina nie blokuje kolejki */ }
+}
+
+// ---------- odbiór płatności (WAITING_FOR_CONFIRMATION) ----------
+
+// Odbiera płatność w PayU po weryfikacji kwoty, waluty, POS i numeru zamówienia.
+// `order` — obiekt zamówienia z PayU (powiadomienie albo GET), `stored` — wiersz public.orders.
+// Błąd sieci lub odmowa PayU → wyjątek (zdarzenie wraca do kolejki, zadanie cykliczne ponowi).
+async function captureChecked(base44, payu, stored, order, payuOrderId, accessToken = null) {
+  if (stored.status === "COMPLETED") return "odbiór zbędny: już opłacone";
+  if (stored.status === "CANCELED") {
+    // Zamówienie u nas zamknięte — nie odbieramy; PayU zwróci środki klientowi po upływie terminu odbioru.
+    await reportMismatch(base44, stored, payuOrderId, "płatność oczekuje na odbiór, a zamówienie jest anulowane — nie odebrano");
+    return "nieodebrane: zamówienie anulowane";
+  }
+  const bad = paymentMismatch(order, stored, payu);
+  if (bad) {
+    await reportMismatch(base44, stored, payuOrderId, `oczekuje na odbiór: ${bad}`);
+    return `nieodebrane: ${bad}`;
+  }
+  const token = accessToken || (await payuToken(payu)).accessToken;
+  const c = await payuCapture(payu, token, payuOrderId);
+  if (!c.ok) throw new Error(`odbiór PayU odrzucony: HTTP ${c.http} ${c.code}`.trim());
+  await runSql(base44, `UPDATE public.orders SET payu_status = 'CAPTURE_REQUESTED', updated_date = now()
+     WHERE payu_order_id = ${escStr(payuOrderId)} AND status NOT IN ('COMPLETED', 'CANCELED')`);
+  return "odbiór zlecony";
+}
+
+// Zadanie cykliczne: zamówienia czekające na odbiór (albo z odbiorem zleconym, a bez COMPLETED) — stan sprawdzany
+// w API PayU. Oczekujące są odbierane; zakończone/anulowane idą zwykłą ścieżką powiadomienia (z weryfikacją).
+export async function captureWaiting(base44, limit = 5) {
+  const rows = await runSql(base44, `SELECT * FROM public.orders
+     WHERE status IN ('NEW', 'PENDING') AND COALESCE(payu_order_id, '') <> '' AND payu_order_id NOT LIKE 'FREE-%'
+       AND COALESCE(payu_status, '') IN ('WAITING_FOR_CONFIRMATION', 'CAPTURE_REQUESTED')
+       AND created_date > now() - interval '10 days'
+     ORDER BY updated_date LIMIT ${Math.max(1, Number(limit) || 5)}`, true).catch(() => []);
+  if (!Array.isArray(rows) || !rows.length) return 0;
+  const payu = await getSetting(base44, "payu");
+  const { accessToken } = await payuToken(payu);
+  let n = 0;
+  for (const stored of rows) {
+    const pid = String(stored.payu_order_id);
+    try {
+      const po = await payuGetOrder(payu, accessToken, pid);
+      const st = String(po?.status || "").toUpperCase();
+      if (st === "WAITING_FOR_CONFIRMATION") {
+        const r = await captureChecked(base44, payu, stored, po, pid, accessToken);
+        if (r === "odbiór zlecony") n++;
+      } else if (st && st !== "PENDING" && st !== "NEW") {
+        // Powiadomienie mogło nie dotrzeć — ten sam zapis i weryfikacja co przy webhooku.
+        await handleNotification(base44, payu, po);
+        n++;
+      }
+    } catch (e) {
+      console.error("odbiór PayU:", msg(e));
+    }
+  }
+  return n;
 }
 
 // ---------- kolejka powiadomień ----------
@@ -184,6 +244,12 @@ async function processEvent(base44, ev, payu) {
   if (!stored) {
     await retryEvent(base44, ev, "brak zamówienia");
     return { stored: false, queued: true };
+  }
+  if (status === "WAITING_FOR_CONFIRMATION") {
+    await updateOrderStatus(base44, payuOrderId, "PENDING", stored.status === "COMPLETED" ? null : status);
+    const r = await captureChecked(base44, payu, stored, order, payuOrderId);
+    await closeEvent(base44, ev.id, r);
+    return { stored: true, status: "PENDING", capture: r };
   }
   const local = localPayuStatus(status);
   if (local !== "COMPLETED") {
