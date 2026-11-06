@@ -62,6 +62,31 @@ Deno.serve(async (req) => {
       const rows = (r.body as any)?.result;
       return Response.json({ status: r.status, rows: Array.isArray(rows) ? rows.map((x: any) => ({ t: new Date(Number(x.timestamp) / 1000).toISOString(), m: x.method, s: x.status, u: String(x.url || "").split("?")[0].replace(/^https?:\/\/[^/]+/, "") })) : redact(JSON.stringify(r.body)).slice(0, 500) });
     }
+    if (action === "payu_peek") {
+      // Tylko odczyt: stan zamówienia i transakcji w PayU, bez danych kupującego.
+      const ids: string[] = (body.ids || []).map((x: string) => String(x).replace(/[^0-9a-f-]/gi, "")).filter(Boolean).slice(0, 5);
+      const [p] = await runSql(base44, `SELECT value FROM public.app_settings WHERE key='payu'`, true);
+      const payu = p?.value || {};
+      const base = payu.env === "sandbox" ? "https://secure.snd.payu.com" : "https://secure.payu.com";
+      const tr = await fetch(`${base}/pl/standard/user/oauth/authorize`, { method: "POST", headers: { "Content-Type": "application/x-www-form-urlencoded" },
+        body: new URLSearchParams({ grant_type: "client_credentials", client_id: String(payu.clientId || ""), client_secret: String(payu.clientSecret || "") }).toString() });
+      const tok = (await tr.json().catch(() => ({})))?.access_token;
+      if (!tok) throw new Error("OAuth PayU nieudany");
+      const out: unknown[] = [];
+      for (const id of ids) {
+        const [o] = await runSql(base44, `SELECT id, payu_order_id, status, payu_status, total FROM public.orders WHERE id LIKE '${id}%' LIMIT 1`, true);
+        if (!o) { out.push({ id, blad: "brak" }); continue; }
+        const g = await fetch(`${base}/api/v2_1/orders/${encodeURIComponent(o.payu_order_id)}`, { headers: { Authorization: `Bearer ${tok}` } });
+        const gj: any = await g.json().catch(() => ({}));
+        const po = gj?.orders?.[0] || {};
+        const t = await fetch(`${base}/api/v2_1/orders/${encodeURIComponent(o.payu_order_id)}/transactions`, { headers: { Authorization: `Bearer ${tok}` } });
+        const tj: any = await t.json().catch(() => ({}));
+        out.push({ id: String(o.id).slice(0, 8), baza: { status: o.status, payu_status: o.payu_status, total: o.total }, http: g.status,
+          payu: { status: po.status, totalAmount: po.totalAmount, currencyCode: po.currencyCode, pos_zgodny: String(po.merchantPosId) === String(payu.posId), ext_zgodny: po.extOrderId === o.id, payMethod: po.payMethod?.type, notifyUrl: po.notifyUrl, orderCreateDate: po.orderCreateDate, properties: gj?.properties },
+          transakcje: { http: t.status, lista: (tj?.transactions || []).map((x: any) => ({ payMethod: x?.payMethod?.value, status: x?.status, card: undefined })) } });
+      }
+      return Response.json({ wyniki: out });
+    }
     if (action === "functions") {
       const r = await mgmt(accessToken, "/functions");
       const want = new Set<string>(body.slugs || Object.keys(MANIFEST.fn));
