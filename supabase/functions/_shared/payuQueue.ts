@@ -143,7 +143,7 @@ async function captureChecked(base44, payu, stored, order, payuOrderId, accessTo
     return `nieodebrane: ${bad}`;
   }
   const token = accessToken || (await payuToken(payu)).accessToken;
-  const c = await payuCapture(payu, token, payuOrderId);
+  const c = await payuCapture(payu, token, payuOrderId, { amount: order?.totalAmount, currencyCode: order?.currencyCode || "PLN" });
   if (!c.ok) throw new Error(`odbiór PayU odrzucony: HTTP ${c.http} ${c.code}`.trim());
   await runSql(base44, `UPDATE public.orders SET payu_status = 'CAPTURE_REQUESTED', updated_date = now()
      WHERE payu_order_id = ${escStr(payuOrderId)} AND status NOT IN ('COMPLETED', 'CANCELED')`);

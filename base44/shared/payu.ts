@@ -131,8 +131,9 @@ export async function payuGetOrder(payu, accessToken, payuOrderId, { timeoutMs =
 
 // Odbiór płatności (PayU: „oczekuje na odbiór”, WAITING_FOR_CONFIRMATION). Gdy w POS wyłączony jest
 // automatyczny odbiór, PayU czeka na potwierdzenie sklepu. Najpierw klasyczne PUT …/status, a gdy
-// konto go nie obsługuje — POST …/captures. Zwraca { ok, http, code }; nie rzuca przy odmowie PayU.
-export async function payuCapture(payu, accessToken, payuOrderId, { timeoutMs = 15000 } = {}) {
+// konto go nie obsługuje — POST …/captures (kwota i waluta z zamówienia PayU). Zwraca { ok, http, code };
+// nie rzuca przy odmowie PayU (np. 409 ORDER_NOT_AUTHORIZED_YET — płatność jeszcze nieautoryzowana).
+export async function payuCapture(payu, accessToken, payuOrderId, { amount = null, currencyCode = "PLN", timeoutMs = 15000 } = {}) {
   const base = payuBase(payu?.env);
   const id = encodeURIComponent(String(payuOrderId));
   const call = async (path, init) => {
@@ -149,11 +150,14 @@ export async function payuCapture(payu, accessToken, payuOrderId, { timeoutMs = 
     }
     const data = await res.json().catch(() => null);
     const code = String(data?.status?.statusCode || "");
-    return { ok: res.ok && (!code || code.toUpperCase() === "SUCCESS"), http: res.status, code };
+    const literal = String(data?.status?.codeLiteral || "");
+    return { ok: res.ok && (!code || code.toUpperCase() === "SUCCESS"), http: res.status, code: literal || code };
   };
   const first = await call("/status", { method: "PUT", body: JSON.stringify({ orderId: String(payuOrderId), orderStatus: "COMPLETED" }) });
   if (first.ok) return { ...first, via: "status" };
-  const second = await call("/captures", { method: "POST", body: "{}" });
+  // Płatność jeszcze nieautoryzowana w PayU — odbiór niemożliwy niezależnie od metody; ponowi zadanie cykliczne.
+  if (first.http === 409) return first;
+  const second = await call("/captures", { method: "POST", body: JSON.stringify(amount ? { amount: String(amount), currencyCode } : {}) });
   return second.ok ? { ...second, via: "captures" } : { ...first, second };
 }
 

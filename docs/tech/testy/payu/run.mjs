@@ -64,6 +64,8 @@ globalThis.fetch = async (url, init) => {
     captures.push([decodeURIComponent(cm[1]), cm[2], init?.method]);
     const okNow = captureMode === cm[2] || (captureMode === "status" && cm[2] === "status");
     if (okNow) { const o = remote[decodeURIComponent(cm[1])]; if (o) o.status = "COMPLETED"; }
+    if (cm[2] === "captures" && !JSON.parse(init?.body || "{}").currencyCode) return new Response(JSON.stringify({ status: { statusCode: "ERROR_VALUE_INVALID" } }), { status: 400 });
+    if (captureMode === "unauthorized") return new Response(JSON.stringify({ status: { statusCode: "BUSINESS_ERROR", codeLiteral: "ORDER_NOT_AUTHORIZED_YET" } }), { status: 409 });
     return new Response(JSON.stringify({ status: { statusCode: okNow ? "SUCCESS" : "ERROR_VALUE_INVALID" } }), { status: okNow ? 200 : 405 });
   }
   if (u.includes("/oauth/authorize")) return new Response(JSON.stringify({ access_token: "tok", expires_in: 43199 }), { status: 200 });
@@ -222,6 +224,11 @@ await t("odbiór odrzucony przez PayU → zdarzenie wraca do kolejki, status bez
   const e = await ev("W5:WAITING_FOR_CONFIRMATION"); eq([thrown, e.done, e.later], [true, false, true]);
   eq((await row("w5")).payu_status, "WAITING_FOR_CONFIRMATION");
   captureMode = "status";
+});
+await t("płatność nieautoryzowana (409) → bez próby POST captures, zdarzenie wraca do kolejki", async () => {
+  await order("w12", "W12", 2); captures = []; captureMode = "unauthorized";
+  let thrown = false; try { await Q.handleNotification(null, PAYU, note("W12", "w12", "WAITING_FOR_CONFIRMATION", 200)); } catch { thrown = true; }
+  eq(thrown, true); eq(captures.map((c) => c[1]), ["status"]); captureMode = "status";
 });
 await t("WAITING dla zamówienia anulowanego → bez odbioru, alert", async () => {
   await order("w6", "W6", 2); await db.exec(`UPDATE public.orders SET status='CANCELED' WHERE id='w6'`); captures = []; const before = mails.length;
