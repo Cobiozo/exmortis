@@ -6,11 +6,10 @@ import { Image } from "@/components/ui/image";
 const PORTRAIT =
   "https://media.base44.com/images/public/6aa08bc6318b0f886cc3b9a3/74c8971f2_572398635_17869620246460401_6357932160691507676_n.jpg";
 
-// To samo zdjęcie z posługi, co w sekcji „Krótka historia" na podstronie O mnie.
-const PRIEST_PHOTO =
-  "https://media.base44.com/images/public/6aa08bc6318b0f886cc3b9a3/29c863d5e_Gemini_Generated_Image_5hhwtq5hhwtq5hhw.jpeg";
+// To samo zdjęcie z posługi, co w sekcji „Krótka historia" na podstronie O mnie (prawdziwe, na hostingu strony).
+const PRIEST_PHOTO = "/img/dawid-posluga.jpg";
 
-// Strona główna: „Krótka historia” — zdjęcie, historia i wejście do podstrony O mnie.
+// Strona główna: „Krótka historia” — zajawka (styl jak O mnie, wersja z 6.11.2026) i wejście do pełnej historii.
 export default function ShortHistory({ label } = {}) {
   return (
     <section id="historia" className="border-t hairline bg-[#070708]">
@@ -31,21 +30,17 @@ export default function ShortHistory({ label } = {}) {
         <div className="mx-auto max-w-[1400px]">
           <p className="technical text-[11px] gold-text mb-4">{label || "KRÓTKA HISTORIA · 04"}</p>
           <h2 className="relic-heading text-4xl md:text-6xl leading-[0.95] mb-12">
-            Ja tam byłem.<br />
+            Byłem tam.<br />
             <span className="gold-text">I wróciłem. Inny.</span>
           </h2>
 
           <div className="grid md:grid-cols-5 gap-12 md:gap-16 items-start">
             <div className="md:col-span-3">
               <div className="max-w-2xl space-y-5 text-lg leading-relaxed text-foreground/70">
-                <p>Byłem księdzem. Prowadziłem ludzi.</p>
+                <p>Byłem księdzem katolickim. Towarzyszyłem ludziom w ich najtrudniejszych chwilach.</p>
                 <p>
-                  A potem sam znalazłem się w miejscu, którego nie było na mapie. W odrzuceniu,
-                  w „trędowatości”, w braku perspektyw.
-                </p>
-                <p>
-                  Nie zaczynałem od dna. Do dna jeszcze pukałem od spodu.{" "}
-                  <strong className="text-[#E2E2E2]">Byłem niżej.</strong>
+                  Potem sam znalazłem się w miejscu, którego nie było na mojej mapie. Straciłem wiele z tego,
+                  na czym opierałem swoje życie.
                 </p>
                 <p className="text-foreground/60">
                   W piosence „exmortis” zapisałem zdanie, które długo w sobie nosiłem:
@@ -60,11 +55,8 @@ export default function ShortHistory({ label } = {}) {
               </blockquote>
 
               <div className="max-w-2xl space-y-5 text-lg leading-relaxed text-foreground/70">
-                <p>To cała moja historia w jednym zdaniu. Reszta to konsekwencje.</p>
-                <p>
-                  Dziś rosnę — jako szczęśliwy mąż i ojciec. I tę iskrę chcę dawać dalej:
-                  zamieniać „grzebanie” w „sadzenie”.
-                </p>
+                <p>Dziś jestem mężem i ojcem.</p>
+                <p>O tym, co wydarzyło się pomiędzy, opowiadam w pełnej historii.</p>
               </div>
 
               <Link to="/o-mnie?src=home-historia" className="btn-ghost mt-12">
@@ -75,7 +67,7 @@ export default function ShortHistory({ label } = {}) {
             <div className="md:col-span-2 border hairline">
               <Image
                 src={PRIEST_PHOTO}
-                alt="Dawid — posługa kapłańska"
+                alt="Dawid podczas posługi kapłańskiej"
                 fittingType="fill"
                 className="w-full aspect-[3/4]"
               />
