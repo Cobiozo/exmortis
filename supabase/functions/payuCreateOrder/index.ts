@@ -37,6 +37,23 @@ async function saveConsents(base44, req, orderId, email, hasDigital, newsletterC
   for (const c of made || []) await mirrorRecord(base44, "Consent", c.id);
 }
 
+// Tytuł transakcji w PayU (widoczny u klienta i w banku): „Exmortis - {produkt} ({typ})”.
+const TYPE_LABEL = { pdf: "ebook", audio: "audio", wideo: "wideo", kurs: "kurs", pakiet: "pakiet", usluga: "usługa", karta: "karta podarunkowa", bilet: "bilet" };
+function payuTitle(lines) {
+  const first = lines[0];
+  if (!first) return "Exmortis";
+  const name = String(first.name || "").replace(/\s+/g, " ").trim().slice(0, 90);
+  const type = TYPE_LABEL[first.type] || "";
+  let t = `Exmortis - ${name}${type ? ` (${type})` : ""}`;
+  const rest = lines.length - 1;
+  if (rest > 0) {
+    const m10 = rest % 10, m100 = rest % 100;
+    const word = rest === 1 ? "inna pozycja" : m10 >= 2 && m10 <= 4 && (m100 < 12 || m100 > 14) ? "inne pozycje" : "innych pozycji";
+    t += ` + ${rest} ${word}`;
+  }
+  return t;
+}
+
 const handler = async function (req) {
   let base44Ref = null;
   let reservedFor = null; // zamówienie, pod które zarezerwowano kod — zwalniane, gdy płatność się nie utworzy
@@ -101,11 +118,13 @@ const handler = async function (req) {
 
     const products = [];
     const stored = [];
+    const titleLines = [];
     let totalGrosze = 0;
     for (const t of tickets) {
       totalGrosze += Number(t.unitPrice) * t.quantity;
       products.push({ name: t.name, unitPrice: t.unitPrice, quantity: t.quantity });
       stored.push(t);
+      titleLines.push({ name: String(t.name || "").replace(/^Bilet — /, ""), type: "bilet" });
     }
     for (const it of productItems) {
       const p = byId.get(String((it || {}).id));
@@ -122,6 +141,7 @@ const handler = async function (req) {
       const label = card ? `${String(p.name).slice(0, 120)} ${(unit / 100).toFixed(0)} zł` : String(p.name).slice(0, 150);
       products.push({ name: label, unitPrice: String(unit), quantity: qty });
       stored.push({ product_id: String(p.id), name: label, unitPrice: String(unit), quantity: qty, ...(card ? { gift: card.gift } : {}) });
+      titleLines.push({ name: String(p.name || ""), type: card ? "karta" : String(p.product_type || "") });
     }
     // Limit miejsc (kohorta, warsztat): sprzedane + płatności w toku z ostatnich 30 min — sprawdzane na serwerze.
     const need = new Map();
@@ -209,7 +229,7 @@ const handler = async function (req) {
       continueUrl: `${APP_URL}/kasa?payu=done`,
       customerIp,
       merchantPosId: String(payu.posId),
-      description: tickets.length ? "EXMORTIS — bilety" : "EXMORTIS — skarbiec",
+      description: payuTitle(titleLines),
       currencyCode: "PLN",
       totalAmount: String(totalGrosze),
       extOrderId,

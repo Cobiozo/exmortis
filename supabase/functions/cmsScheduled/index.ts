@@ -8,7 +8,7 @@ import { unpaidReminders } from "../_shared/unpaidReminder.ts";
 import { safeEqual } from "../_shared/libraryAccess.ts";
 import { applyDataPatches } from "../_shared/dataPatches.ts";
 import { expireStaleCreating } from "../_shared/orders.ts";
-import { markPaid, fulfillPaid, drainPayuEvents, retryUnfulfilled, alertStale } from "../_shared/payuQueue.ts";
+import { markPaid, fulfillPaid, drainPayuEvents, retryUnfulfilled, alertStale, captureWaiting } from "../_shared/payuQueue.ts";
 import { loadAppUrl } from "../_shared/settings.ts";
 
 // Zamówienia za 0 zł (całość pokryta kartą/kodem) nie mają powiadomienia PayU, które by je ponowiło.
@@ -126,13 +126,15 @@ const handler = async function(req) {
     const expired = await expireStaleCreating(base44).catch(() => 0);
     // Kolejka powiadomień PayU i opłacone, a niezrealizowane zamówienia — niezależnie od nadejścia kolejnego webhooka.
     const payuQueue = await drainPayuEvents(base44, 10).catch((e) => { console.error("kolejka PayU:", e?.message); return 0; });
+    // Płatności „oczekuje na odbiór” (POS bez automatycznego odbioru) — weryfikacja i odbiór w PayU.
+    const captured = await captureWaiting(base44, 5).catch((e) => { console.error("odbiór PayU:", e?.message); return 0; });
     const refulfilled = await retryUnfulfilled(base44, 5).catch((e) => { console.error("realizacje:", e?.message); return 0; });
     // Jednorazowe alerty: realizacje nieudane kilka razy i zaległe powiadomienia PayU.
     const alerts = await alertStale(base44).catch((e) => { console.error("alerty PayU:", e?.message); return 0; });
     const pruned = await pruneSnapshots(base44).catch((e) => { console.error("kopie:", e.message); return 0; });
     const ready = await requireMail(base44).then(() => true).catch(() => false);
     const reminded = ready ? await unpaidReminders(base44).catch((e) => { console.error("przypomnienia:", e.message); return 0; }) : 0;
-    return Response.json({ ok: true, published: done, prices, released, reminded, patched, freeDone, expired, payuQueue, refulfilled, alerts, pruned });
+    return Response.json({ ok: true, published: done, prices, released, reminded, patched, freeDone, expired, payuQueue, captured, refulfilled, alerts, pruned });
   } catch (error) {
     return Response.json({ error: error.message }, { status: 500 });
   }
