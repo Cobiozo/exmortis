@@ -56,8 +56,16 @@ const O = await import("./out/o.mjs");
 const PAYU = { posId: "1234567", clientId: "1234567", clientSecret: "x".repeat(32), secondKey: "y".repeat(32), env: "sandbox" };
 globalThis.__settings = { payu: PAYU };
 let remote = {};   // stan zamówień „w PayU” dla payuGetOrder
+let captures = [], captureMode = "status";   // odbiór płatności: wywołania i tryb atrapy (status | captures | fail)
 globalThis.fetch = async (url, init) => {
   const u = String(url);
+  const cm = u.match(/\/api\/v2_1\/orders\/([^/?]+)\/(status|captures)$/);
+  if (cm) {
+    captures.push([decodeURIComponent(cm[1]), cm[2], init?.method]);
+    const okNow = captureMode === cm[2] || (captureMode === "status" && cm[2] === "status");
+    if (okNow) { const o = remote[decodeURIComponent(cm[1])]; if (o) o.status = "COMPLETED"; }
+    return new Response(JSON.stringify({ status: { statusCode: okNow ? "SUCCESS" : "ERROR_VALUE_INVALID" } }), { status: okNow ? 200 : 405 });
+  }
   if (u.includes("/oauth/authorize")) return new Response(JSON.stringify({ access_token: "tok", expires_in: 43199 }), { status: 200 });
   const m = u.match(/\/api\/v2_1\/orders\/([^/?]+)/);
   if (m) { const o = remote[decodeURIComponent(m[1])]; return o ? new Response(JSON.stringify({ orders: [o] }), { status: 200 }) : new Response("{}", { status: 404 }); }
@@ -180,6 +188,66 @@ await t("zamówienie testowe (is_test tylko backendem): pełna ścieżka, realiz
 await t("brak DDL w trakcie obsługi płatności (log zapytań)", async () => {
   const ddl = sqlLog.filter((q) => /\b(CREATE|ALTER|DROP)\s+(TABLE|INDEX|FUNCTION|SCHEMA)/i.test(q));
   eq(ddl.length, 0, ddl.slice(0, 2).join(" | "));
+});
+
+console.log("2b) ODBIÓR PŁATNOŚCI (WAITING_FOR_CONFIRMATION)");
+await t("WAITING zgodne → odbiór w PayU (PUT status), bez realizacji; potem COMPLETED → opłacone i zrealizowane", async () => {
+  await order("w1", "W1", 2); captures = []; captureMode = "status";
+  const r = await Q.handleNotification(null, PAYU, note("W1", "w1", "WAITING_FOR_CONFIRMATION", 200));
+  eq(r.capture, "odbiór zlecony"); eq(captures, [["W1", "status", "PUT"]]);
+  let x = await row("w1"); eq([x.status, x.payu_status, x.f], ["PENDING", "CAPTURE_REQUESTED", false]);
+  eq(calls.includes("W1"), false); eq((await ev("W1:WAITING_FOR_CONFIRMATION")).result, "odbiór zlecony");
+  const c = await Q.handleNotification(null, PAYU, note("W1", "w1", "COMPLETED", 200));
+  eq([c.status, c.fulfilled], ["COMPLETED", true]); x = await row("w1"); eq([x.status, x.payu_status, x.f], ["COMPLETED", "COMPLETED", true]);
+});
+await t("WAITING niezgodne (kwota) → bez odbioru, MISMATCH, alert", async () => {
+  await order("w2", "W2", 2); captures = []; const before = mails.length;
+  const r = await Q.handleNotification(null, PAYU, note("W2", "w2", "WAITING_FOR_CONFIRMATION", 150));
+  eq(captures.length, 0); eq(String(r.capture).startsWith("nieodebrane"), true);
+  const x = await row("w2"); eq([x.status, x.payu_status], ["PENDING", "MISMATCH"]); eq(mails.length, before + 1);
+});
+await t("WAITING inny POS → bez odbioru", async () => {
+  await order("w3", "W3", 2); captures = [];
+  await Q.handleNotification(null, PAYU, note("W3", "w3", "WAITING_FOR_CONFIRMATION", 200, { merchantPosId: "999" }));
+  eq(captures.length, 0); eq((await row("w3")).payu_status, "MISMATCH");
+});
+await t("PUT status odrzucony → zapasowo POST captures", async () => {
+  await order("w4", "W4", 2); captures = []; captureMode = "captures";
+  const r = await Q.handleNotification(null, PAYU, note("W4", "w4", "WAITING_FOR_CONFIRMATION", 200));
+  eq(r.capture, "odbiór zlecony"); eq(captures.map((c) => c[1]), ["status", "captures"]);
+});
+await t("odbiór odrzucony przez PayU → zdarzenie wraca do kolejki, status bez CAPTURE_REQUESTED", async () => {
+  await order("w5", "W5", 2); captureMode = "fail";
+  let thrown = false; try { await Q.handleNotification(null, PAYU, note("W5", "w5", "WAITING_FOR_CONFIRMATION", 200)); } catch { thrown = true; }
+  const e = await ev("W5:WAITING_FOR_CONFIRMATION"); eq([thrown, e.done, e.later], [true, false, true]);
+  eq((await row("w5")).payu_status, "WAITING_FOR_CONFIRMATION");
+  captureMode = "status";
+});
+await t("WAITING dla zamówienia anulowanego → bez odbioru, alert", async () => {
+  await order("w6", "W6", 2); await db.exec(`UPDATE public.orders SET status='CANCELED' WHERE id='w6'`); captures = []; const before = mails.length;
+  const r = await Q.handleNotification(null, PAYU, note("W6", "w6", "WAITING_FOR_CONFIRMATION", 200));
+  eq(captures.length, 0); eq(r.capture, "nieodebrane: zamówienie anulowane"); eq(mails.length, before + 1);
+});
+await t("zadanie cykliczne: stare oczekujące (zdarzenie już zamknięte) → odbiór; zakończone w PayU → opłacone i zrealizowane", async () => {
+  // w7: przed poprawką — powiadomienie WAITING przetworzone jako „status PENDING”, płatność wisi w PayU.
+  await order("w7", "W7", 2); await db.exec(`UPDATE public.orders SET payu_status='WAITING_FOR_CONFIRMATION' WHERE id='w7'`);
+  remote["W7"] = note("W7", "w7", "WAITING_FOR_CONFIRMATION", 200);
+  // w8: odbiór zlecony, ale powiadomienie COMPLETED nie dotarło.
+  await order("w8", "W8", 2); await db.exec(`UPDATE public.orders SET payu_status='CAPTURE_REQUESTED' WHERE id='w8'`);
+  remote["W8"] = note("W8", "w8", "COMPLETED", 200);
+  // w9: oczekujące, ale kwota w PayU inna — bez odbioru.
+  await order("w9", "W9", 2); await db.exec(`UPDATE public.orders SET payu_status='WAITING_FOR_CONFIRMATION' WHERE id='w9'`);
+  remote["W9"] = note("W9", "w9", "WAITING_FOR_CONFIRMATION", 900);
+  captures = []; captureMode = "status";
+  eq(await Q.captureWaiting(null, 10), 2);
+  eq(captures.map((c) => c[0]), ["W7"]);
+  eq((await row("w7")).payu_status, "CAPTURE_REQUESTED");
+  const x8 = await row("w8"); eq([x8.status, x8.f], ["COMPLETED", true]);
+  eq((await row("w9")).payu_status, "MISMATCH");
+  // kolejny przebieg: W7 w PayU już COMPLETED → opłacone; W9 (MISMATCH) już nie jest sprawdzane
+  captures = []; eq(await Q.captureWaiting(null, 10), 1); eq(captures.length, 0);
+  const x7 = await row("w7"); eq([x7.status, x7.f], ["COMPLETED", true]);
+  eq(await Q.captureWaiting(null, 10), 0);
 });
 
 console.log("3) PRAWDZIWA fulfillOrder dla is_test — wczesny powrót bez zapytań");
