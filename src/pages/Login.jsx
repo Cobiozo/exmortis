@@ -19,6 +19,12 @@ export default function Login() {
 
   useEffect(() => {
     let alive = true;
+    // Błąd logowania przez Google (/functions/googleAuth) wraca w #error_description — pokazujemy go nad formularzem.
+    const h = new URLSearchParams(window.location.hash.slice(1));
+    if (h.get("error_description")) {
+      setError(h.get("error_description"));
+      window.history.replaceState(null, "", window.location.pathname + window.location.search);
+    }
     loggedInTarget()
       .then((to) => { if (!alive) return; if (to) window.location.replace(to); else setChecking(false); })
       .catch(() => alive && setChecking(false));

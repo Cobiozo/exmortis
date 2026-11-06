@@ -154,6 +154,8 @@ export const supaAuth = {
 
   async loginWithProvider(provider, fromUrl) {
     try { if (fromUrl) sessionStorage.setItem("exm_auth_return", fromUrl); } catch { /* brak pamięci */ }
+    // Google przez exmortis.pl (/functions/googleAuth): w oknie Google widać exmortis.pl, nie domenę Supabase.
+    if (provider === "google") { window.location.href = "/functions/googleAuth?start=1"; return; }
     const p = provider === "microsoft" ? "azure" : provider;
     window.location.href = `${authUrl()}/authorize?provider=${encodeURIComponent(p)}&redirect_to=${encodeURIComponent(window.location.origin + "/login")}`;
   },
