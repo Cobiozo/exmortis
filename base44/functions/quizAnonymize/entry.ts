@@ -83,9 +83,34 @@ Deno.serve(async (req) => {
         const tj: any = await t.json().catch(() => ({}));
         out.push({ id: String(o.id).slice(0, 8), baza: { status: o.status, payu_status: o.payu_status, total: o.total }, http: g.status,
           payu: { status: po.status, totalAmount: po.totalAmount, currencyCode: po.currencyCode, pos_zgodny: String(po.merchantPosId) === String(payu.posId), ext_zgodny: po.extOrderId === o.id, payMethod: po.payMethod?.type, notifyUrl: po.notifyUrl, orderCreateDate: po.orderCreateDate, properties: gj?.properties },
-          transakcje: { http: t.status, lista: (tj?.transactions || []).map((x: any) => ({ payMethod: x?.payMethod?.value, status: x?.status, card: undefined })) } });
+          transakcje: { http: t.status, surowe: JSON.stringify(tj).replace(/[\w.+-]+@[\w-]+\.[\w.]+/g, "[e-mail]").slice(0, 1500) } });
       }
       return Response.json({ wyniki: out });
+    }
+    if (action === "capture_try") {
+      // Odbiór płatności właściciela (zatwierdzony w czacie): tylko przy zgodnej kwocie, walucie, POS i numerze zamówienia.
+      const id = String(body.id || "").replace(/[^0-9a-f-]/gi, "");
+      const [o] = await runSql(base44, `SELECT id, payu_order_id, status, total FROM public.orders WHERE id LIKE '${id}%' AND status = 'PENDING' LIMIT 1`, true);
+      if (!o || !id) throw new Error("brak zamówienia PENDING");
+      const [p] = await runSql(base44, `SELECT value FROM public.app_settings WHERE key='payu'`, true);
+      const payu = p?.value || {};
+      const base = payu.env === "sandbox" ? "https://secure.snd.payu.com" : "https://secure.payu.com";
+      const tr = await fetch(`${base}/pl/standard/user/oauth/authorize`, { method: "POST", headers: { "Content-Type": "application/x-www-form-urlencoded" },
+        body: new URLSearchParams({ grant_type: "client_credentials", client_id: String(payu.clientId || ""), client_secret: String(payu.clientSecret || "") }).toString() });
+      const tok = (await tr.json().catch(() => ({})))?.access_token;
+      if (!tok) throw new Error("OAuth PayU nieudany");
+      const pid = encodeURIComponent(o.payu_order_id);
+      const g: any = await (await fetch(`${base}/api/v2_1/orders/${pid}`, { headers: { Authorization: `Bearer ${tok}` } })).json().catch(() => ({}));
+      const po = g?.orders?.[0] || {};
+      const ok = String(po.totalAmount) === String(Math.round(Number(o.total) * 100)) && po.currencyCode === "PLN" && String(po.merchantPosId) === String(payu.posId) && po.extOrderId === o.id;
+      if (!ok) return Response.json({ odmowa: "niezgodna płatność", status: po.status });
+      const h = { Authorization: `Bearer ${tok}`, "Content-Type": "application/json", Accept: "application/json" };
+      const r1 = await fetch(`${base}/api/v2_1/orders/${pid}/status`, { method: "PUT", headers: h, body: JSON.stringify({ orderId: o.payu_order_id, orderStatus: "COMPLETED" }) });
+      const b1 = (await r1.text()).slice(0, 400);
+      let r2s = null, b2 = null;
+      if (!r1.ok) { const r2 = await fetch(`${base}/api/v2_1/orders/${pid}/captures`, { method: "POST", headers: h, body: "{}" }); r2s = r2.status; b2 = (await r2.text()).slice(0, 400); }
+      const after: any = await (await fetch(`${base}/api/v2_1/orders/${pid}`, { headers: { Authorization: `Bearer ${tok}` } })).json().catch(() => ({}));
+      return Response.json({ przed: po.status, put_status: r1.status, put_body: b1, captures_status: r2s, captures_body: b2, po: after?.orders?.[0]?.status });
     }
     if (action === "functions") {
       const r = await mgmt(accessToken, "/functions");
