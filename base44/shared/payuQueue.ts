@@ -150,13 +150,14 @@ async function captureChecked(base44, payu, stored, order, payuOrderId, accessTo
   return "odbiór zlecony";
 }
 
-// Zadanie cykliczne: zamówienia czekające na odbiór (albo z odbiorem zleconym, a bez COMPLETED) — stan sprawdzany
-// w API PayU. Oczekujące są odbierane; zakończone/anulowane idą zwykłą ścieżką powiadomienia (z weryfikacją).
+// Zadanie cykliczne: nieopłacone zamówienia PayU — stan sprawdzany w API PayU, niezależnie od powiadomień
+// (powiadomienie może nie dotrzeć). Oczekujące na odbiór są odbierane; zakończone/anulowane idą zwykłą ścieżką
+// powiadomienia (z weryfikacją). Najdawniej sprawdzane najpierw; po sprawdzeniu updated_date = teraz.
 export async function captureWaiting(base44, limit = 5) {
   const rows = await runSql(base44, `SELECT * FROM public.orders
      WHERE status IN ('NEW', 'PENDING') AND COALESCE(payu_order_id, '') <> '' AND payu_order_id NOT LIKE 'FREE-%'
-       AND COALESCE(payu_status, '') IN ('WAITING_FOR_CONFIRMATION', 'CAPTURE_REQUESTED')
-       AND created_date > now() - interval '10 days'
+       AND COALESCE(payu_status, '') NOT IN ('MISMATCH')
+       AND created_date < now() - interval '2 minutes' AND created_date > now() - interval '10 days'
      ORDER BY updated_date LIMIT ${Math.max(1, Number(limit) || 5)}`, true).catch(() => []);
   if (!Array.isArray(rows) || !rows.length) return 0;
   const payu = await getSetting(base44, "payu");
@@ -174,6 +175,8 @@ export async function captureWaiting(base44, limit = 5) {
         // Powiadomienie mogło nie dotrzeć — ten sam zapis i weryfikacja co przy webhooku.
         await handleNotification(base44, payu, po);
         n++;
+      } else {
+        await runSql(base44, `UPDATE public.orders SET updated_date = now() WHERE id = ${escStr(stored.id)} AND status IN ('NEW', 'PENDING')`);
       }
     } catch (e) {
       console.error("odbiór PayU:", msg(e));

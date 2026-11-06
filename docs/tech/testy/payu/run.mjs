@@ -238,16 +238,23 @@ await t("zadanie cykliczne: stare oczekujące (zdarzenie już zamknięte) → od
   // w9: oczekujące, ale kwota w PayU inna — bez odbioru.
   await order("w9", "W9", 2); await db.exec(`UPDATE public.orders SET payu_status='WAITING_FOR_CONFIRMATION' WHERE id='w9'`);
   remote["W9"] = note("W9", "w9", "WAITING_FOR_CONFIRMATION", 900);
+  // w10: oczekujące wg bazy jako PENDING (powiadomienie WAITING nie dotarło), w PayU czeka na odbiór → odbiór.
+  await order("w10", "W10", 2); remote["W10"] = note("W10", "w10", "WAITING_FOR_CONFIRMATION", 200);
+  // pozostałe PENDING z wcześniejszych testów bez stanu w PayU — GET nieudany, bez skutków
+  await db.exec(`UPDATE public.orders SET created_date = now() - interval '5 minutes' WHERE id IN ('w7','w8','w9','w10')`);
   captures = []; captureMode = "status";
-  eq(await Q.captureWaiting(null, 10), 2);
-  eq(captures.map((c) => c[0]), ["W7"]);
+  eq(await Q.captureWaiting(null, 50), 3);
+  eq(captures.map((c) => c[0]).sort(), ["W10", "W7"]);
   eq((await row("w7")).payu_status, "CAPTURE_REQUESTED");
   const x8 = await row("w8"); eq([x8.status, x8.f], ["COMPLETED", true]);
   eq((await row("w9")).payu_status, "MISMATCH");
   // kolejny przebieg: W7 w PayU już COMPLETED → opłacone; W9 (MISMATCH) już nie jest sprawdzane
-  captures = []; eq(await Q.captureWaiting(null, 10), 1); eq(captures.length, 0);
-  const x7 = await row("w7"); eq([x7.status, x7.f], ["COMPLETED", true]);
-  eq(await Q.captureWaiting(null, 10), 0);
+  captures = []; eq(await Q.captureWaiting(null, 50), 2); eq(captures.length, 0);
+  const x7 = await row("w7"); eq([x7.status, x7.f], ["COMPLETED", true]); eq((await row("w10")).f, true);
+  eq(await Q.captureWaiting(null, 50), 0);
+  // świeże zamówienie (< 2 min) nie jest sprawdzane
+  await order("w11", "W11", 2); remote["W11"] = note("W11", "w11", "WAITING_FOR_CONFIRMATION", 200); captures = [];
+  await Q.captureWaiting(null, 50); eq(captures.length, 0);
 });
 
 console.log("3) PRAWDZIWA fulfillOrder dla is_test — wczesny powrót bez zapytań");
