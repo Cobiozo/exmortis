@@ -138,8 +138,8 @@ export default function Test() {
             <p className="text-base text-[#F5EFE1]/75 mb-8">Nie pytam, jak długo trwa Twoja historia. Pytam, w którym miejscu siebie dzisiaj odnajdujesz.</p>
             <div className="space-y-3">
               {STAGES.map((o) => (
-                <button key={o.key} onClick={() => { setStage(o.key); setStep(S_RESULT); }} className={`${choice(stage === o.key)} flex-col items-start gap-1`}>
-                  <span className="technical text-[10px] gold-text">{o.key.toUpperCase()}</span>
+                <button key={o.key} onClick={() => { setStage(o.key); setStep(S_RESULT); }} className={`${choice(stage === o.key)} text-left`}>
+                  {/* Bez nazwy etapu (Śmierć, Próg, Powrót…) — nazwa podpowiadałaby odpowiedź. */}
                   <span className="text-base leading-relaxed">{o.text}</span>
                 </button>
               ))}
