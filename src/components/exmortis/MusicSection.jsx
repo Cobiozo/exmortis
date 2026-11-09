@@ -34,8 +34,9 @@ export default function MusicSection() {
           Muzyka<br /><span className="gold-text">powrotu</span>
         </h2>
         <p className="text-foreground/60 text-lg max-w-xl mb-16 leading-relaxed">
-          Są słowa, których nie da się powiedzieć — tylko zagrać. Muzykę tworzę z pomocą AI,
-          a w tekstach chcę nieść nadzieję tam, gdzie jej zabrakło. Słuchaj tam, gdzie jesteś.
+          Istnieją słowa, których nie da się wypowiedzieć albo które nie docierają wystarczająco głęboko.
+          Dlatego, choć nie jestem muzykiem, tworzę utwory z pomocą AI. W tekstach chcę nieść nadzieję tam,
+          gdzie jej zabrakło. Słuchaj tam, gdzie jesteś.
         </p>
 
         <YouTubePlaylist key={playlistVer} />
