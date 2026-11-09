@@ -3,7 +3,7 @@ import LegalPage from "@/components/legal/LegalPage";
 import WithdrawalForm from "@/components/legal/WithdrawalForm";
 import { REGULAMIN, WZOR } from "@/content/legal/regulamin";
 
-const doc = { title: "Odstąpienie od umowy", sections: [REGULAMIN.sections.find((s) => s.id === "p9")] };
+const doc = { title: "Odstąpienie od umowy", sections: [REGULAMIN.sections.find((s) => s.id === "p14")] };
 
 export default function Odstapienie() {
   return (

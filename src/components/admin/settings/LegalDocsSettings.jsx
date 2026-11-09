@@ -8,7 +8,7 @@ import { useFirma } from "@/lib/useSiteSettings";
 
 const FIELDS = [
   ["operator_nazwa", "Operator płatności — nazwa"], ["operator_adres", "Operator płatności — adres"],
-  ["metody", "Metody płatności", "BLIK, Przelewy24, karta płatnicza"], ["przelozenie_h", "Termin przełożenia sesji (godziny)", "24"],
+  ["metody", "Metody płatności", "BLIK, szybkie przelewy, przelew bankowy"], ["przelozenie_h", "Termin przełożenia sesji (godziny)", "24"],
   ["data_od", "Data wejścia w życie", "np. 1 listopada 2026"], ["poczta", "Dostawca poczty e-mail"],
   ["newsletter", "Narzędzie do newslettera", "np. MailerLite"], ["biuro", "Biuro rachunkowe"],
 ];

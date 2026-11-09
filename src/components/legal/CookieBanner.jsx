@@ -14,7 +14,7 @@ export default function CookieBanner() {
     return () => window.removeEventListener("exm:cookies", open);
   }, []);
   if (!show) return null;
-  const done = (a, m) => { saveConsent(a, m); setShow(false); setSettings(false); };
+  const done = (a, m, e) => { saveConsent(a, m, e); setShow(false); setSettings(false); };
   const btn = "btn-ghost !px-3 !py-1.5 sm:!px-4 sm:!py-2 text-[10px] flex-1 sm:flex-none";
 
   return (
@@ -28,8 +28,8 @@ export default function CookieBanner() {
               <Link to="/polityka-cookies" className="underline">Szczegóły</Link>
             </p>
             <div className="flex gap-2 items-center">
-              <button onClick={() => done(true, true)} className={btn}>Akceptuję</button>
-              <button onClick={() => done(false, false)} className={btn}>Odrzucam</button>
+              <button onClick={() => done(true, true, true)} className={btn}>Akceptuję</button>
+              <button onClick={() => done(false, false, false)} className={btn}>Odrzucam</button>
               <button onClick={() => setSettings(true)} className="technical text-[10px] underline text-foreground/70 px-2 py-2 shrink-0">Ustawienia</button>
             </div>
           </div>

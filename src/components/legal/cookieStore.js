@@ -12,9 +12,10 @@ export function readConsent() {
   } catch { return null; }
 }
 
-export function saveConsent(analytics, marketing) {
+// external — osobna zgoda na treści zewnętrzne (YouTube, Spotify, Vimeo, Instagram), niezależna od marketingu (od wersji 2.0).
+export function saveConsent(analytics, marketing, external = false) {
   if (!analytics) localStorage.removeItem("base44_analytics_session_id");
-  localStorage.setItem(KEY, JSON.stringify({ v: COOKIES_VERSION, at: Date.now(), analytics, marketing }));
+  localStorage.setItem(KEY, JSON.stringify({ v: COOKIES_VERSION, at: Date.now(), analytics, marketing, external }));
   if (!marketing) {
     // Usuń ciasteczka marketingowe Meta, które da się usunąć.
     ["_fbp", "_fbc"].forEach((n) => { document.cookie = `${n}=; Max-Age=0; path=/`; document.cookie = `${n}=; Max-Age=0; path=/; domain=.${location.hostname}`; });
