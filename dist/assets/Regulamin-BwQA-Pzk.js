@@ -1,0 +1,1 @@
+import"./rolldown-runtime-XKyaHtl9.js";import{In as e}from"./icons-DtcIm1V2.js";import{t}from"./jsx-runtime-t7J4o3Co.js";import{i as n}from"./legalRender-kVsDnbVZ.js";import{t as r}from"./LegalPage-Bu9jyQS1.js";e();var i=t();function a(){return(0,i.jsx)(r,{doc:n,docKey:`regulamin`})}export{a as default};
