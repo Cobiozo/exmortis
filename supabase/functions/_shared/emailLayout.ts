@@ -101,8 +101,6 @@ export function emailLayout(html, { firma = null, appUrl = APP_URL, kind = "", p
   const marketing = MARKETING.has(kind) || !!unsubUrl;
   const hasCrisis = /116\s?123/.test(body);
   const contact = firma?.email || "kontakt@exmortis.pl";
-  const firmLine = [firma?.nazwa || firma?.osoba, firma?.adres || firma?.korespondencja, firma?.nip && `NIP ${firma.nip}`, firma?.regon && `REGON ${firma.regon}`]
-    .filter(Boolean).map(esc).join(" · ");
   const link = (href, label) => `<a href="${esc(href)}" target="_blank" style="color:${BRAND.muted};text-decoration:underline;">${esc(label)}</a>`;
   const small = `font-family:${BRAND.sans};font-size:12px;line-height:1.7;color:${BRAND.faint};margin:0 0 10px;`;
 
@@ -126,7 +124,7 @@ export function emailLayout(html, { firma = null, appUrl = APP_URL, kind = "", p
     `<p style="${small}">${SOCIAL.map(([l, u]) => link(u, l)).join(" &nbsp;·&nbsp; ")}</p>`,
     `<p style="${small}">${link(`mailto:${contact}`, contact)}${host ? ` &nbsp;·&nbsp; ${link(site, host)}` : ""}</p>`,
     hasCrisis ? "" : `<p style="${small}">exmortis to mentoring, nie terapia. Jeśli jest Ci bardzo ciężko: <span style="color:${BRAND.muted};">116 123</span> · <span style="color:${BRAND.muted};">800 70 2222</span> (całą dobę, bezpłatnie) · w zagrożeniu życia <span style="color:${BRAND.muted};">112</span>.</p>`,
-    firmLine ? `<p style="${small}">${firmLine}</p>` : "",
+    `<p style="margin:4px 0 16px;"><a href="https://exmortis.pl/kontakt" target="_blank" style="display:inline-block;padding:10px 22px;border:1px solid ${BRAND.gold};color:${BRAND.gold};font-family:${BRAND.sans};font-size:12px;letter-spacing:2px;text-decoration:none;">KONTAKT</a></p>`,
     docs ? `<p style="${small}">${docs}</p>` : "",
     marketing
       ? `<p style="${small}">Dostajesz Listy powrotu, bo zapisano ten adres${onSite} i potwierdzono zapis.${unsubUrl ? ` ${link(unsubUrl, "Wypisz się jednym kliknięciem")}.` : " Aby się wypisać, odpowiedz na ten list słowem STOP."}</p>`
