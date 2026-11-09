@@ -24,7 +24,7 @@ async function loadCatalog(base44, slug: string, today: string) {
             button_label, checkout_url, next_step, is_featured, sort_order, cover_image,
             product_type, access_months, to_jsonb(p)->>'capacity' AS capacity,
             to_jsonb(p)->'price_steps' AS price_steps, to_jsonb(p)->'price_options' AS price_options,
-            to_jsonb(p)->'bundle_items' AS bundle_items,
+            to_jsonb(p)->'bundle_items' AS bundle_items, COALESCE((to_jsonb(p)->>'show_home')::boolean, FALSE) AS show_home,
             created_date, updated_date
      FROM public.products p
      WHERE ${where}

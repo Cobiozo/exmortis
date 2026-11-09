@@ -187,7 +187,7 @@ export default async function (req) {
                 p.button_label, p.checkout_url, p.next_step, p.is_featured, p.sort_order, p.cover_image, p.file_url,
                 p.product_type, p.access_months, p.private_file_uri, p.private_file_name, to_jsonb(p)->>'capacity' AS capacity,
                 to_jsonb(p)->'price_steps' AS price_steps, to_jsonb(p)->'price_options' AS price_options,
-                to_jsonb(p)->'bundle_items' AS bundle_items,
+                to_jsonb(p)->'bundle_items' AS bundle_items, COALESCE((to_jsonb(p)->>'show_home')::boolean, FALSE) AS show_home,
                 p.created_date, p.updated_date,
                 (SELECT COUNT(*)::int FROM public.waitlist w WHERE w.product_id = p.id) AS waitlist_count
          FROM public.products p
@@ -286,6 +286,9 @@ export default async function (req) {
       await runSql(base44, `UPDATE public.products SET release_at = ${rel}, release_note = ${rel === "NULL" ? "NULL" : textVal(p.release_note, 1500)} WHERE slug = ${v.slug}`);
       await runSql(base44, `ALTER TABLE public.products ADD COLUMN IF NOT EXISTS price_options jsonb`);
       await runSql(base44, `UPDATE public.products SET price_options = ${optionsSql} WHERE slug = ${v.slug}`);
+      // „Pokaż na stronie głównej” — moduł Skarbca na stronie głównej.
+      await runSql(base44, `ALTER TABLE public.products ADD COLUMN IF NOT EXISTS show_home boolean DEFAULT false`);
+      await runSql(base44, `UPDATE public.products SET show_home = ${p.show_home ? "TRUE" : "FALSE"} WHERE slug = ${v.slug}`);
       await recordPrices(base44, true).catch(() => {}); // historia cen (Omnibus) od razu po zmianie
       await clearSnap(base44, "products:").catch(() => {}); // katalog w Skarbcu odświeży się przy najbliższym wejściu
 

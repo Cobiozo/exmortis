@@ -54,6 +54,7 @@ export default function ProductEditor({ product, onSaved, onCancel }) {
     checkout_url: product?.checkout_url || "",
     next_step: product?.next_step || "",
     is_featured: !!product?.is_featured,
+    show_home: !!product?.show_home,
     sort_order: product?.sort_order != null ? String(product.sort_order) : "",
     cover_image: product?.cover_image || "",
     file_url: product?.file_url || "",
@@ -330,6 +331,15 @@ export default function ProductEditor({ product, onSaved, onCancel }) {
             className="accent-[#C9A24A] w-4 h-4"
           />
           <span className="technical text-[10px] text-foreground/60">WYRÓŻNIONY (DUŻA KARTA)</span>
+        </label>
+        <label className="flex items-center gap-3 cursor-pointer">
+          <input
+            type="checkbox"
+            checked={form.show_home}
+            onChange={(e) => set("show_home", e.target.checked)}
+            className="accent-[#C9A24A] w-4 h-4"
+          />
+          <span className="technical text-[10px] text-foreground/60">POKAŻ NA STRONIE GŁÓWNEJ</span>
         </label>
       </div>
 

@@ -6,17 +6,14 @@ import ProductCard from "@/components/exmortis/ProductCard";
 import { EXCLUDED_SLUGS } from "@/components/exmortis/shop/cardBits";
 import { SectionHead } from "../parts";
 
-const HOME_SLUGS = ["3-pierwsze-ruchy", "kiedy-kto-bliski-ga-nie-mini", "wracam-inny"];
-
 // Moduł Skarbca: nagłówek i wstęp z bloku, produkty z zakładki Skarbiec (3 — wyróżnione najpierw).
 export default function HomeSkarbiec({ d = {}, label }) {
   const [products, setProducts] = useState(null);
   useEffect(() => {
     base44.functions.invoke("shopProducts", {}).then((r) => setProducts(r.data.products)).catch(() => setProducts([]));
   }, []);
-  // Strona główna zaczyna od lekkiego wejścia: dwa ebooki, a „Wracam inny” dopiero, gdy jest dostępny.
-  const list = HOME_SLUGS.map((s) => (products || []).find((p) => p.slug === s))
-    .filter((p) => p && !EXCLUDED_SLUGS.includes(p.slug) && (p.status || "dostępny") === "dostępny");
+  // Produkty zaznaczone w panelu „Pokaż na stronie głównej” (kolejność jak w Skarbcu), najwyżej 3.
+  const list = (products || []).filter((p) => p.show_home && !EXCLUDED_SLUGS.includes(p.slug)).slice(0, 3);
 
   return (
     <section className="relative py-32 px-5 md:px-10 border-t hairline bg-[#070708]">
