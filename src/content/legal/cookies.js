@@ -16,7 +16,7 @@ export const COOKIE_TABLE = [
   ["exm_chunk_reload i pamięć podręczna stron", "exmortis", "Niezbędne", "Poprawne wczytanie strony po aktualizacji, szybsze ładowanie (sessionStorage)", "Do zamknięcia karty"],
   ["exm_view, exm_scan_event i podobne", "exmortis", "Niezbędne", "Tylko dla administratora (localStorage)", "Do usunięcia przez użytkownika"],
   ["exm_src", "exmortis", "Analityczne", "Źródło wizyty (np. Instagram) przy zapisie na Wydarzenie (sessionStorage) — tylko po zgodzie", "Do zamknięcia karty"],
-  ["_ga, _ga_[ID]", "Google", "Analityczne", "Statystyka odwiedzin (Google Analytics 4) — tylko jeśli jest włączona i tylko po zgodzie", "Do 2 lat"],
+  ["_ga, _ga_*", "Google", "Analityczne", "Statystyka odwiedzin (Google Analytics 4) — tylko jeśli jest włączona i tylko po zgodzie", "Do 2 lat"],
   ["_fbp, _fbc", "Meta", "Marketingowe", "Pomiar skuteczności reklam (piksel Meta) — tylko po zgodzie", "Do 90 dni"],
   ["cookies YouTube (np. VISITOR_INFO1_LIVE, YSC)", "Google / YouTube", "Treści zewnętrzne", "Odtwarzacz filmów i muzyki — ładuje się po kliknięciu albo po zgodzie na treści zewnętrzne", "YSC — do zamknięcia przeglądarki; VISITOR_INFO1_LIVE — ok. 6 miesięcy"],
   ["cookies Spotify i Vimeo", "Spotify, Vimeo", "Treści zewnętrzne", "Odtwarzacze — ładują się po kliknięciu albo po zgodzie na treści zewnętrzne", "Według polityk dostawców"],
