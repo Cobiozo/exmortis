@@ -221,6 +221,8 @@ export default function Shop() {
             view={view}
           />
         ))}
+        {/* Zapowiedzi widoczne także w domyślnej zakładce — pod tym, co można kupić teraz. */}
+        <ShopSoonSection products={soon} onWaitlist={setWaitlistProduct} view={view} />
         </>
       )}
 
