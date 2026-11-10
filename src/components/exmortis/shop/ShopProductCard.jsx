@@ -4,6 +4,7 @@ import CoverStage from "./CoverStage";
 import { CardTopBadge, PriceBlock, ProductButton, SeatsLine, isListenProduct, productHref, scrollToHash } from "./cardBits";
 import { RatingLine } from "./Stars";
 import { fixText } from "@/lib/typography";
+import { releaseDay } from "@/lib/releaseDate";
 
 // Link wewnętrzny albo zewnętrzny (produkty z własnym adresem, np. POWRÓT → /powrot).
 // Adres z kotwicą (np. /#listy-powrotu) przewija do sekcji po przejściu na stronę główną.
@@ -43,7 +44,7 @@ export default function ShopProductCard({ product: p, onWaitlist, index }) {
         )}
         <div className="absolute top-3 left-3 flex gap-1.5">
           <CardTopBadge p={p} index={index} />
-          {soon && <span className="technical text-[9px] px-2.5 py-1 bg-[#0A0A0B]/85 text-foreground/70 border hairline">W PRZYGOTOWANIU</span>}
+          {soon && <span className="technical text-[9px] px-2.5 py-1 bg-[#0A0A0B]/85 text-foreground/70 border hairline">{releaseDay(p) ? `OD ${releaseDay(p).toUpperCase()}` : "W PRZYGOTOWANIU"}</span>}
         </div>
       </To>
 

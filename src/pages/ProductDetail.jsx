@@ -19,6 +19,7 @@ import BundleBox from "@/components/exmortis/shop/BundleBox";
 import { SeatsLine } from "@/components/exmortis/shop/cardBits";
 import InBundleLink from "@/components/exmortis/shop/InBundleLink";
 import JumpToBuy from "@/components/exmortis/shop/JumpToBuy";
+import { releaseDay, soonLabel } from "@/lib/releaseDate";
 import { cardAmounts } from "@/components/exmortis/CartContext";
 import JsonLd from "@/components/seo/JsonLd";
 import { productJsonLd } from "@/lib/structuredData";
@@ -138,7 +139,7 @@ export default function ProductDetail() {
 
             <div className="flex items-baseline flex-wrap gap-x-4 gap-y-1 mb-8">
               <span className="font-mono text-4xl gold-text">
-                {soon ? "Wkrótce" : product.is_free ? "Bezpłatnie" : amounts.length > 1 ? amounts.map((a) => kwota(a)).join(" · ") + " zł" : onRequest ? "Po rozmowie" : `${kwota(unitPrice(product))} zł`}
+                {soon ? soonLabel(product) : product.is_free ? "Bezpłatnie" : amounts.length > 1 ? amounts.map((a) => kwota(a)).join(" · ") + " zł" : onRequest ? "Po rozmowie" : `${kwota(unitPrice(product))} zł`}
               </span>
               {promo && (
                 <span className="font-mono text-xl text-foreground/55 line-through">{kwota(regularPrice(product))} zł</span>
@@ -231,7 +232,9 @@ export default function ProductDetail() {
                 <button onClick={() => setWaitlist(true)} className="btn-relic w-full">
                   {product.product_type === "usluga" ? "POWIADOM MNIE O DOSTĘPNOŚCI" : "POWIADOM MNIE O PREMIERZE"} <ArrowRight className="h-4 w-4" />
                 </button>
-                <p className="text-sm text-foreground/55">Ten materiał jeszcze powstaje. Napiszę, kiedy będzie gotowy.</p>
+                <p className="text-sm text-foreground/55">
+                  {releaseDay(product) ? `Premiera ${releaseDay(product)}. Zostaw kontakt — napiszę w dniu premiery.` : "Ten materiał jeszcze powstaje. Napiszę, kiedy będzie gotowy."}
+                </p>
               </div>
             ) : soldOut ? (
               <div className="mt-auto space-y-3">

@@ -2,6 +2,7 @@ import React from "react";
 import { Link } from "react-router-dom";
 import { ArrowRight } from "lucide-react";
 import { useCart } from "../CartContext";
+import { releaseDay, soonLabel } from "@/lib/releaseDate";
 import { isPromoActive, priceOnRequest, lowestPrice30, zl, kwota, nextPriceText } from "@/lib/productPrice";
 
 // Wspólne elementy kart Skarbca: znaczki, cena, przycisk.
@@ -78,7 +79,7 @@ export { isPromoActive } from "@/lib/productPrice";
 
 export function PriceBlock({ p }) {
   if (p.status === "wkrótce") {
-    return <span className="technical text-[10px] text-foreground/55">WKRÓTCE</span>;
+    return <span className={`technical text-[10px] ${releaseDay(p) ? "gold-text" : "text-foreground/55"}`}>{soonLabel(p).toUpperCase()}</span>;
   }
   if (p.is_free) {
     return <span>Bezpłatnie</span>;

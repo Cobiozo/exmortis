@@ -4,6 +4,7 @@ import { ArrowRight } from "lucide-react";
 import { Image } from "@/components/ui/image";
 import { isPromoActive, priceOnRequest, regularPrice, unitPrice, lowestPrice30, zl } from "@/lib/productPrice";
 import { fixText } from "@/lib/typography";
+import { soonLabel } from "@/lib/releaseDate";
 
 // Karta produktu na stronie głównej (Skarbiec).
 export default function ProductCard({ product, index = 0 }) {
@@ -49,7 +50,7 @@ export default function ProductCard({ product, index = 0 }) {
           )}
           <div className="flex items-center justify-between pt-4 border-t hairline">
             <span className="font-mono text-lg text-foreground">
-              {product.status === "wkrótce" ? "WKRÓTCE"
+              {product.status === "wkrótce" ? soonLabel(product).toUpperCase()
                 : product.is_free ? "DARMOWE"
                 : priceOnRequest(product) ? "PO ROZMOWIE"
                 : isPromoActive(product)
