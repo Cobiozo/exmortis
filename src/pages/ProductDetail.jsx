@@ -18,6 +18,7 @@ import { GiftCardBuy } from "@/components/exmortis/shop/GiftCard";
 import BundleBox from "@/components/exmortis/shop/BundleBox";
 import { SeatsLine } from "@/components/exmortis/shop/cardBits";
 import InBundleLink from "@/components/exmortis/shop/InBundleLink";
+import JumpToBuy from "@/components/exmortis/shop/JumpToBuy";
 import { cardAmounts } from "@/components/exmortis/CartContext";
 import JsonLd from "@/components/seo/JsonLd";
 import { productJsonLd } from "@/lib/structuredData";
@@ -152,6 +153,9 @@ export default function ProductDetail() {
                   {kwota(product.old_price)} zł
                 </span>
               )}
+              {!soon && !soldOut && !onRequest && !(linkUrl && product.is_free) && (
+                <span className="sm:ml-auto"><JumpToBuy free={product.is_free} /></span>
+              )}
             </div>
 
             {promo && (
@@ -221,6 +225,7 @@ export default function ProductDetail() {
             )}
 
             {/* Wkrótce: lista oczekujących. Z linkiem: przycisk. Darmowe: formularz. Po rozmowie: kontakt. Płatne: koszyk. */}
+            <div id="kup-teraz" className="mt-auto flex flex-col scroll-mt-28">
             {soon ? (
               <div className="mt-auto space-y-3">
                 <button onClick={() => setWaitlist(true)} className="btn-relic w-full">
@@ -281,6 +286,7 @@ export default function ProductDetail() {
                 </p>
               </div>
             )}
+            </div>
           </div>
         </div>
         <ProductReviews productId={product.id} />
