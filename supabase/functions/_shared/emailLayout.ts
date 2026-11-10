@@ -94,6 +94,15 @@ function textOf(html) {
     .replace(/&nbsp;/g, " ").replace(/&amp;/g, "&").replace(/&[a-z]+;/g, " ").replace(/\s+/g, " ").trim();
 }
 
+// Dane nadawcy wymagane prawem (u.ś.u.d.e. art. 5, CEIDG): firma, imię i nazwisko, adres, NIP, REGON, kontakt.
+function firmaLine(f, style) {
+  if (!f || !f.nazwa) return "";
+  const nazwa = f.osoba && !String(f.nazwa).includes(f.osoba) ? `${f.nazwa} (${f.osoba})` : f.nazwa;
+  const parts = [nazwa, f.adres || f.korespondencja, f.nip && `NIP ${f.nip}`, f.regon && `REGON ${f.regon}`,
+    f.email && `e-mail: ${f.email}`, f.telefon && `tel. ${f.telefon}`].filter(Boolean).map(esc);
+  return `<p style="${style}font-size:11px;">Nadawca: ${parts.join(", ")}</p>`;
+}
+
 export function emailLayout(html, { firma = null, appUrl = APP_URL, kind = "", preheader = "", unsubUrl = "" } = {}) {
   const body = normalizeBody(html);
   const site = String(appUrl || APP_URL).replace(/\/+$/, "");
@@ -126,6 +135,7 @@ export function emailLayout(html, { firma = null, appUrl = APP_URL, kind = "", p
     hasCrisis ? "" : `<p style="${small}">exmortis to mentoring, nie terapia. Jeśli jest Ci bardzo ciężko: <span style="color:${BRAND.muted};">116 123</span> · <span style="color:${BRAND.muted};">800 70 2222</span> (całą dobę, bezpłatnie) · w zagrożeniu życia <span style="color:${BRAND.muted};">112</span>.</p>`,
     `<p style="margin:4px 0 16px;"><a href="https://exmortis.pl/kontakt" target="_blank" style="display:inline-block;padding:10px 22px;border:1px solid ${BRAND.gold};color:${BRAND.gold};font-family:${BRAND.sans};font-size:12px;letter-spacing:2px;text-decoration:none;">KONTAKT</a></p>`,
     docs ? `<p style="${small}">${docs}</p>` : "",
+    firmaLine(firma, small),
     marketing
       ? `<p style="${small}">Dostajesz Listy powrotu, bo zapisano ten adres${onSite} i potwierdzono zapis.${unsubUrl ? ` ${link(unsubUrl, "Wypisz się jednym kliknięciem")}.` : " Aby się wypisać, odpowiedz na ten list słowem STOP."}</p>`
       : `<p style="${small}">To wiadomość dotycząca Twojego konta, zamówienia lub zapisu${onSite}. Możesz na nią po prostu odpowiedzieć.</p>`,
