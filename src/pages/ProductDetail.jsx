@@ -38,7 +38,7 @@ const sameText = (a, b) => {
 export default function ProductDetail() {
   const { slug } = useParams();
   const navigate = useNavigate();
-  const { addItem } = useCart();
+  const { addItem, items: cartItems, setOpen: setCartOpen } = useCart();
   const [product, setProduct] = useState(null);
   const [loading, setLoading] = useState(true);
   const [qty, setQty] = useState(1);
@@ -65,6 +65,14 @@ export default function ProductDetail() {
     addItem(product, qty);
     setAdded(true);
     setTimeout(() => setAdded(false), 2000);
+  };
+
+  // Zakup od razu: produkt do koszyka (jeśli jeszcze go tam nie ma) i przejście do kasy.
+  const handleBuy = () => {
+    if (!product) return;
+    if (!cartItems.some((i) => !i.key && i.id === product.id)) addItem(product, qty);
+    setCartOpen(false);
+    navigate("/kasa");
   };
 
   if (loading) {
@@ -279,14 +287,14 @@ export default function ProductDetail() {
                       <Plus className="h-4 w-4" />
                     </button>
                   </div>
-                  <button onClick={handleAdd} className="btn-relic flex-1">
-                    {added ? "DODANO ✓" : "DOŁĄCZ DO POWROTU"} {!added && <ArrowRight className="h-4 w-4" />}
+                  <button onClick={handleBuy} className="btn-relic flex-1">
+                    PRZEJDŹ DO KASY <ArrowRight className="h-4 w-4" />
                   </button>
                 </div>
+                <button onClick={handleAdd} className="btn-ghost w-full">
+                  {added ? "DODANO DO KOSZYKA ✓" : "DODAJ DO KOSZYKA"}
+                </button>
                 {isDigital(product) && <p className="text-sm text-foreground/60">{accessLabel(product)}</p>}
-                <p className="technical text-[10px] text-foreground/55">
-                  Sprzedaję z dojrzałości, nie z presji. Decyzję zostawiam Tobie.
-                </p>
               </div>
             )}
             </div>
