@@ -238,8 +238,18 @@ const handler = async function (req) {
 
     // Zadanie cykliczne (cronTick) — dostęp tokenem zadania z mb_settings, nie sesją administratora.
     if (action === "campaigns.tick") {
-      const rows = await runSql(base44, `SELECT tick_token FROM public.mb_settings WHERE id = 1`, true).catch(() => null);
-      const stored = rows && rows[0] ? rows[0].tick_token : null;
+      // Chwilowy błąd bazy przy odczycie tokenu nie może wyglądać jak brak dostępu (alarm „kod 403” z 12.11):
+      // dwie próby, a gdy baza nie odpowiada — 503, które harmonogram powtórzy w następnym przebiegu.
+      let rows = null;
+      for (let i = 0; i < 2 && !rows; i++) {
+        rows = await runSql(base44, `SELECT tick_token FROM public.mb_settings WHERE id = 1`, true).catch((e) => {
+          console.error("campaigns.tick: odczyt tokenu:", String(e?.message || e).slice(0, 200));
+          return null;
+        });
+        if (!rows && i === 0) await new Promise((r) => setTimeout(r, 1500));
+      }
+      if (!rows) return Response.json({ error: "Baza chwilowo nie odpowiada" }, { status: 503 });
+      const stored = rows[0] ? rows[0].tick_token : null;
       const given = typeof body.tick_token === "string" ? body.tick_token : "";
       if (!stored || !given || !safeEqual(given, stored)) return Response.json({ error: "Brak dostępu" }, { status: 403 });
       return Response.json({ ok: true, ...(await scheduledTick(base44)) });
