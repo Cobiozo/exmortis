@@ -14,12 +14,15 @@ const TICK_MS = 60000; // zaplanowana wysyłka w jednym przebiegu zadań cyklicz
 const escHtml = (v) => String(v ?? "").replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
 const plWhen = (iso) => new Date(iso).toLocaleString("pl-PL", { weekday: "long", day: "numeric", month: "long", hour: "2-digit", minute: "2-digit", timeZone: "Europe/Warsaw" });
 
+// Odbiorcy kampanii: grupa (opcjonalnie) i — tylko gdy zaznaczono „pomiń osoby w trakcie serii startowej” —
+// wyłącznie osoby, które ukończyły serię. Domyślnie kampania (premiera, wydarzenie) idzie do wszystkich aktywnych.
+const audienceFilter = (c) =>
+  (c.group_id ? ` AND s.groups @> to_jsonb(${escStr(c.group_id)})` : "") + (c.skip_series === true ? CAMPAIGN_AFTER_START : "");
+
 // Jedna partia wysyłki kampanii (wspólna dla przycisku „Wyślij” i wysyłki zaplanowanej).
 async function sendBatch(base44, campaign, appUrl) {
   const id = String(campaign.id);
-  const groupFilter = campaign.group_id
-    ? ` AND s.groups @> to_jsonb(${escStr(campaign.group_id)})${CAMPAIGN_AFTER_START}`
-    : CAMPAIGN_AFTER_START;
+  const groupFilter = audienceFilter(campaign);
   const batch = await runSql(
     base44,
     `SELECT s.id, s.email, s.name, s.unsub_token FROM public.subscribers s
@@ -177,6 +180,7 @@ async function ensureTables(base44) {
   await runSql(base44, `ALTER TABLE public.campaigns ADD COLUMN IF NOT EXISTS buttons jsonb`);
   // Nazwa serii bieżących listów (np. „Listopad 2026”) — tylko do porządkowania w panelu.
   await runSql(base44, `ALTER TABLE public.campaigns ADD COLUMN IF NOT EXISTS series_name text`);
+  await runSql(base44, `ALTER TABLE public.campaigns ADD COLUMN IF NOT EXISTS skip_series boolean NOT NULL DEFAULT false`);
   await ensureSeriesTables(base44);
 }
 
@@ -212,9 +216,7 @@ const ctaOf = (b) => {
 
 // Ilu aktywnych odbiorców danej kampanii jeszcze nie dostało listu.
 async function remainingFor(base44, campaign) {
-  const groupFilter = campaign.group_id
-    ? ` AND s.groups @> to_jsonb(${escStr(campaign.group_id)})${CAMPAIGN_AFTER_START}`
-    : CAMPAIGN_AFTER_START;
+  const groupFilter = audienceFilter(campaign);
   const rows = await runSql(
     base44,
     `SELECT count(*) AS n FROM public.subscribers s
@@ -304,7 +306,7 @@ const handler = async function (req) {
       await ensureTables(base44);
       const campaigns = await runSql(
         base44,
-        `SELECT c.id, c.subject, c.group_id, c.status, c.sent_count, c.created_date, c.sent_date, c.scheduled_at, c.series_name,
+        `SELECT c.id, c.subject, c.group_id, c.status, c.sent_count, c.created_date, c.sent_date, c.scheduled_at, c.series_name, c.skip_series,
           g.name AS group_name
          FROM public.campaigns c
          LEFT JOIN public.newsletter_groups g ON g.id = c.group_id
@@ -319,7 +321,7 @@ const handler = async function (req) {
       const id = String(body.id || "");
       const rows = await runSql(
         base44,
-        `SELECT id, subject, content, group_id, status, preheader, cta_label, cta_url, buttons, scheduled_at, series_name FROM public.campaigns WHERE id = ${escStr(id)}`,
+        `SELECT id, subject, content, group_id, status, preheader, cta_label, cta_url, buttons, scheduled_at, series_name, skip_series FROM public.campaigns WHERE id = ${escStr(id)}`,
         true
       );
       if (!rows.length) throw new Error("Nie znaleziono kampanii");
@@ -336,7 +338,7 @@ const handler = async function (req) {
       const preheader = String(body.preheader || "").trim().slice(0, 140);
       const { cta_label, cta_url, buttons } = ctaOf(body);
       const seriesName = String(body.series_name || "").trim().slice(0, 80);
-      const extra = `preheader = ${escStr(preheader)}, cta_label = ${escStr(cta_label)}, cta_url = ${escStr(cta_url)}, buttons = ${escStr(JSON.stringify(buttons))}::jsonb, series_name = ${seriesName ? escStr(seriesName) : "NULL"}`;
+      const extra = `preheader = ${escStr(preheader)}, cta_label = ${escStr(cta_label)}, cta_url = ${escStr(cta_url)}, buttons = ${escStr(JSON.stringify(buttons))}::jsonb, series_name = ${seriesName ? escStr(seriesName) : "NULL"}, skip_series = ${body.skip_series === true ? "TRUE" : "FALSE"}`;
 
       let id;
       if (body.id) {
@@ -366,7 +368,7 @@ const handler = async function (req) {
       }
       const rows = await runSql(
         base44,
-        `SELECT id, subject, content, group_id, status, preheader, cta_label, cta_url, buttons FROM public.campaigns WHERE id = ${escStr(id)}`,
+        `SELECT id, subject, content, group_id, status, preheader, cta_label, cta_url, buttons, skip_series FROM public.campaigns WHERE id = ${escStr(id)}`,
         true
       );
       const remaining = await remainingFor(base44, rows[0]);

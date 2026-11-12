@@ -7,7 +7,7 @@ import useMailStatus, { MAIL_REQUIRED } from "@/lib/useMailStatus";
 const inputCls =
   "w-full bg-transparent border hairline px-4 py-2.5 focus:border-[#C9A24A] focus:outline-none transition-colors text-sm";
 
-const EMPTY = { id: null, subject: "", content: "", group_id: "", preheader: "", series_name: "", buttons: [{ label: "", url: "" }] };
+const EMPTY = { id: null, subject: "", content: "", group_id: "", preheader: "", series_name: "", skip_series: false, buttons: [{ label: "", url: "" }] };
 // „exmortis.pl/test” → „https://exmortis.pl/test” (to samo robi serwer).
 const fixUrl = (u) => {
   const v = String(u || "").trim();
@@ -19,7 +19,7 @@ const fixUrl = (u) => {
 const fields = (e) => {
   const buttons = (e.buttons || []).filter((b) => b.label.trim() || b.url.trim()).map((b) => ({ label: b.label.trim(), url: fixUrl(b.url) }));
   // cta_label / cta_url — zgodność z wcześniejszą wersją funkcji na serwerze (jeden przycisk).
-  return { subject: e.subject, content: e.content, preheader: e.preheader, buttons, series_name: e.series_name || "",
+  return { subject: e.subject, content: e.content, preheader: e.preheader, buttons, series_name: e.series_name || "", skip_series: !!e.skip_series,
     cta_label: buttons[0]?.label || "", cta_url: buttons[0]?.url || "" };
 };
 // Prawdziwy komunikat z serwera (np. „Przycisk … nie ma linku”), a nie ogólny tekst.
@@ -91,6 +91,7 @@ export default function CampaignsPanel() {
             : [{ label: camp.cta_label || "", url: camp.cta_url || "" }],
           status: camp.status || "draft",
           series_name: camp.series_name || "",
+          skip_series: camp.skip_series === true,
           scheduled_at: camp.scheduled_at || null,
           when: camp.scheduled_at ? toLocalInput(camp.scheduled_at) : nextMonday7(),
         });
@@ -281,8 +282,14 @@ export default function CampaignsPanel() {
           <datalist id="camp-series-list">
             {[...new Set(campaigns.map((c) => c.series_name).filter(Boolean))].map((n) => <option key={n} value={n} />)}
           </datalist>
-          <p className="text-[11px] text-foreground/40 mt-1">Tylko do porządku na liście. Bieżące listy dostają osoby, które ukończyły serię startową.</p>
+          <p className="text-[11px] text-foreground/40 mt-1">Tylko do porządku na liście.</p>
         </div>
+
+        <label className="flex items-start gap-3 mb-4 cursor-pointer">
+          <input type="checkbox" checked={!!editor.skip_series} onChange={(e) => setEditor({ ...editor, skip_series: e.target.checked })} className="accent-[#C9A24A] w-4 h-4 mt-0.5" />
+          <span className="text-sm text-foreground/75">Pomiń osoby, które są jeszcze w trakcie serii startowej
+            <span className="block text-[11px] text-foreground/40">Bez zaznaczenia list dostają wszyscy aktywni subskrybenci (np. premiera, wydarzenie). Seria startowa idzie dalej swoim rytmem.</span></span>
+        </label>
 
         <div className="mb-4">
           <label className="technical text-[10px] text-foreground/50 block mb-2">GRUPA ODBIORCÓW</label>
