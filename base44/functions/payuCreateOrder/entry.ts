@@ -21,7 +21,7 @@ import { giftLine } from "../../shared/giftCard.ts";
 import { ticketLines } from "../../shared/tickets.ts";
 
 const DIGITAL_CONSENT =
-  "Żądam dostarczenia treści cyfrowych przed upływem 14 dni od zawarcia umowy i przyjmuję do wiadomości, że z chwilą rozpoczęcia ich dostarczania tracę prawo odstąpienia od umowy.";
+  "Chcę otrzymać dostęp od razu po zapłacie, przed upływem 14 dni na odstąpienie od umowy. Wiem, że z chwilą rozpoczęcia dostarczania tracę prawo odstąpienia.";
 
 const SERVICE_CONSENT =
   "Żądam rozpoczęcia świadczenia usługi przed upływem 14 dni od zawarcia umowy. Przyjmuję do wiadomości, że jeśli odstąpię od umowy, zapłacę za część usługi wykonaną do chwili odstąpienia, a po pełnym wykonaniu usługi utracę prawo odstąpienia.";
