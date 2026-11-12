@@ -1,6 +1,7 @@
 import { REGULAMIN, WZOR } from "@/content/legal/regulamin";
 import { PRYWATNOSC } from "@/content/legal/prywatnosc";
 import { COOKIES, COOKIE_TABLE } from "@/content/legal/cookies";
+import { UMOWA_POWROT } from "@/content/legal/umowaPowrot";
 import { fillFirma } from "@/lib/firma";
 import { fillDocs } from "@/lib/legalFill";
 
@@ -8,6 +9,7 @@ export const LEGAL_DOCS = {
   regulamin: { doc: REGULAMIN, extra: [WZOR] },
   prywatnosc: { doc: PRYWATNOSC, extra: [] },
   cookies: { doc: COOKIES, extra: [] },
+  umowa_powrot: { doc: UMOWA_POWROT, extra: [] },
 };
 
 // Gotowa treść dokumentu (po wstawieniu pól) — ta sama dla strony i archiwum.

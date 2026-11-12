@@ -3,8 +3,8 @@ import { getSetting } from "./settings.ts";
 // Dane do dokumentów prawnych (app_settings: "dokumenty") + archiwum pełnych treści (LegalDocVersion).
 // Nowa wersja (+0.1) powstaje, gdy zmieni się gotowy tekst dokumentu — pole albo tekst w kodzie.
 export const DOC_KEYS = ["operator_nazwa", "operator_adres", "metody", "przelozenie_h", "data_od", "poczta", "newsletter", "biuro"];
-const DOCS = ["regulamin", "prywatnosc", "cookies"];
-const BASE = { regulamin: "1.0", prywatnosc: "1.1", cookies: "1.0" };
+const DOCS = ["regulamin", "prywatnosc", "cookies", "umowa_powrot"];
+const BASE = { regulamin: "1.0", prywatnosc: "1.1", cookies: "1.0", umowa_powrot: "1.0" };
 
 const warsawToday = () => new Intl.DateTimeFormat("sv-SE", { timeZone: "Europe/Warsaw" }).format(new Date());
 const bump = (v) => (Math.round(parseFloat(v || "1.0") * 10 + 1) / 10).toFixed(1);
