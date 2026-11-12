@@ -40,6 +40,8 @@ import ProtectedRoute from '@/components/ProtectedRoute';
 import LoginRedirect from '@/components/LoginRedirect';
 import { SiteContentProvider } from '@/components/exmortis/SiteContentProvider';
 const PrivacyPolicy = lazyPage(() => import('@/pages/PrivacyPolicy'));
+const UmowaPowrot = lazyPage(() => import('@/pages/UmowaPowrot'));
+const PowrotPlatnosc = lazyPage(() => import('@/pages/PowrotPlatnosc'));
 import { AdminModeProvider } from '@/components/admin/AdminModeContext';
 import AdminBar from '@/components/admin/AdminBar';
 const Account = lazyPage(() => import('@/pages/Account'));
@@ -145,6 +147,8 @@ const AuthenticatedApp = () => {
           <Route path="/spotkania/:slug/dolacz" element={<JoinMeeting />} />
           <Route path="/:short/dolacz" element={<JoinMeeting />} />
           <Route path="/polityka-prywatnosci" element={<PrivacyPolicy />} />
+          <Route path="/umowa-powrot" element={<UmowaPowrot />} />
+          <Route path="/powrot/platnosc" element={<PowrotPlatnosc />} />
           <Route path="/regulamin" element={<Regulamin />} />
           <Route path="/polityka-cookies" element={<PolitykaCookies />} />
           <Route path="/odstapienie" element={<Odstapienie />} />
