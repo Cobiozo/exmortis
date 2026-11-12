@@ -12,7 +12,7 @@ export default function AccountOption({ items, checked, onChange }) {
     return (
       <p className="text-xs text-foreground/55 leading-relaxed">
         Kupione materiały trafią do Twojego bezpłatnego konta exmortis ({perks}). Jeśli go nie masz, założę je na ten adres po
-        zapłacie. Masz już konto? <Link to="/login?next=/kasa" className="gold-text hover:underline">Zaloguj się</Link>.
+        zapłacie. Masz już konto? <Link to="/login?returnTo=%2Fkasa" className="gold-text hover:underline">Zaloguj się</Link>.
       </p>
     );
   }
