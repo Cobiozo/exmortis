@@ -11,7 +11,7 @@ export const hasEnd = (until) => !!until && new Date(until).getTime() < new Date
 
 // Adresy otwarte dla gości w czasie przerwy: dokumenty prawne, kontakt, logowanie i linki z maili
 // (potwierdzenia, bilety, karty, rezerwacje, dołączanie do spotkań, powrót z płatności PayU).
-const OPEN = ["/kontakt", "/regulamin", "/polityka-prywatnosci", "/polityka-cookies", "/odstapienie",
+const OPEN = ["/kontakt", "/regulamin", "/polityka-prywatnosci", "/polityka-cookies", "/odstapienie", "/umowa-powrot", "/powrot/platnosc",
   "/login", "/register", "/forgot-password", "/reset-password",
   "/listy/potwierdz", "/listy/wypis", "/zmiana-adresu", "/karta", "/bilet", "/rezerwacja/termin", "/rezerwacja/zarzadzaj"];
 export const isOpenPath = (pathname, search = "") => {

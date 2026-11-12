@@ -25,6 +25,7 @@ export const PAGES = {
   "/forgot-password": { t: "Nie pamiętam hasła — exmortis", d: "Ustaw nowe hasło do konta exmortis." },
   "/reset-password": { t: "Nowe hasło — exmortis", d: "Ustaw nowe hasło do konta exmortis." },
   "/konto": { t: "Moje konto — exmortis", d: "Twoje materiały, nagrania i zapisy na spotkania." },
+  "/umowa-powrot": { t: "Umowa POWRÓT — exmortis", d: "Wzór umowy o udział w programie mentoringowym POWRÓT: zakres, cena, terminy, zwroty i odstąpienie." },
   "/kasa": { t: "Kasa — exmortis", d: "Podsumowanie zamówienia w Skarbcu exmortis." },
   "/listy/potwierdz": { t: "Listy powrotu — exmortis", d: "Potwierdzenie zapisu na Listy powrotu." },
   "/zmiana-adresu": { t: "Zmiana adresu e-mail — exmortis", d: "Potwierdzenie zmiany adresu e-mail w koncie exmortis." },
