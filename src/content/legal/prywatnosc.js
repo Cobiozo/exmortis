@@ -50,7 +50,7 @@ export const PRYWATNOSC = {
       "- Zoom Video Communications, Inc. — sesje i Wydarzenia online (podmiot przetwarzający);",
       "- Google Ireland Ltd. — logowanie przez Google (odrębny administrator) i kalendarz terminów sesji (podmiot przetwarzający);",
       "- Meta Platforms Ireland Ltd. — w zakresie opisanym w §3 ust. 17–18;",
-      "- YouTube (Google), Spotify, Vimeo i Instagram (Meta) — odtwarzacze i zdjęcia ładowane dopiero po Twoim kliknięciu albo zgodzie na treści zewnętrzne (odrębni administratorzy);",
+      "- YouTube (Google), Spotify i Vimeo — odtwarzacze ładowane dopiero po Twoim kliknięciu albo zgodzie na treści zewnętrzne (odrębni administratorzy). Zdjęcia z naszego profilu na Instagramie pobiera nasz serwer — ich wyświetlenie nie przekazuje Meta Twoich danych;",
       "- biuro rachunkowe i doradcy prawni — gdy jest to potrzebne do rozliczeń lub obrony praw;",
       "- organy publiczne — wyłącznie gdy wymagają tego przepisy.",
     ]},

@@ -1,6 +1,6 @@
 // Polityka cookies — wersja z 9.11.2026: osobna zgoda na treści zewnętrzne (COOKIES_VERSION 2.0 w seller.js).
 export const BANNER_TEXT =
-  "Używamy plików cookies niezbędnych do działania strony. Za Twoją zgodą — także analitycznych, marketingowych (piksel Meta) i treści zewnętrznych (YouTube, Spotify, Instagram). Możesz zaakceptować, odrzucić lub wybrać ustawienia — i zmienić zdanie w każdej chwili („Ustawienia cookies” w stopce).";
+  "Używamy plików cookies niezbędnych do działania strony. Za Twoją zgodą — także analitycznych, marketingowych (piksel Meta) i treści zewnętrznych (YouTube, Spotify). Możesz zaakceptować, odrzucić lub wybrać ustawienia — i zmienić zdanie w każdej chwili („Ustawienia cookies” w stopce).";
 
 export const BANNER_TEXT_SHORT = "Używamy cookies niezbędnych do działania strony. Analityczne, marketingowe i treści zewnętrzne — tylko za Twoją zgodą.";
 
@@ -20,7 +20,6 @@ export const COOKIE_TABLE = [
   ["_fbp, _fbc", "Meta", "Marketingowe", "Pomiar skuteczności reklam (piksel Meta) — tylko po zgodzie", "Do 90 dni"],
   ["cookies YouTube (np. VISITOR_INFO1_LIVE, YSC)", "Google / YouTube", "Treści zewnętrzne", "Odtwarzacz filmów i muzyki — ładuje się po kliknięciu albo po zgodzie na treści zewnętrzne", "YSC — do zamknięcia przeglądarki; VISITOR_INFO1_LIVE — ok. 6 miesięcy"],
   ["cookies Spotify i Vimeo", "Spotify, Vimeo", "Treści zewnętrzne", "Odtwarzacze — ładują się po kliknięciu albo po zgodzie na treści zewnętrzne", "Według polityk dostawców"],
-  ["obrazy Instagrama", "Meta", "Treści zewnętrzne", "Zdjęcia z profilu na stronie głównej — po kliknięciu albo po zgodzie na treści zewnętrzne", "Według polityki Meta"],
   ["cookies operatora płatności", "PayU S.A.", "Niezbędne (na stronie PayU)", "Bezpieczeństwo płatności", "Według polityki cookies PayU"],
 ];
 
@@ -36,7 +35,7 @@ export const COOKIES = {
       "— Niezbędne: logowanie i sesja, bezpieczeństwo, koszyk i płatność, zapamiętanie Twojego wyboru cookies, ustawienia Minutnika ciszy.",
       "— Analityczne: statystyki odwiedzin i źródło wizyty — po zgodzie.",
       "— Marketingowe: piksel Meta (Facebook/Instagram) — pomiar skuteczności reklam — po zgodzie.",
-      "— Treści zewnętrzne: filmy YouTube i Vimeo, odtwarzacz Spotify i zdjęcia z Instagrama — ładują się od razu tylko po tej zgodzie. Bez niej każdy odtwarzacz włączysz pojedynczo przyciskiem; dopiero wtedy przeglądarka łączy się z dostawcą i przekazuje mu m.in. adres IP.",
+      "— Treści zewnętrzne: filmy YouTube i Vimeo oraz odtwarzacz Spotify — ładują się od razu tylko po tej zgodzie. Bez niej każdy odtwarzacz włączysz pojedynczo przyciskiem; dopiero wtedy przeglądarka łączy się z dostawcą i przekazuje mu m.in. adres IP. Zdjęcia z naszego Instagrama na stronie głównej pobiera nasz serwer, więc ich wyświetlenie nie łączy Twojej przeglądarki z Instagramem.",
       "Na stronie testu „Która śmierć jest Twoja?” narzędzia analityczne i marketingowe są wyłączone także po wyrażeniu zgody.",
     ]},
     { id: "p5", title: "5. Tabela cookies i pamięci przeglądarki", body: [], table: true },
