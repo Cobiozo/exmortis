@@ -95,6 +95,7 @@ export default function PowrotPanel() {
           notice={notice}
           onSend={() => send(open.id)}
           onDelete={() => setDelId(open.id)}
+          onReload={load}
           onClose={() => { setOpenId(null); setNotice(""); setError(""); }}
         />
       )}

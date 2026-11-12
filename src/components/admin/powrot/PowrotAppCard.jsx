@@ -1,5 +1,6 @@
 import React from "react";
 import { X, Send, Loader2, AlertTriangle, Trash2 } from "lucide-react";
+import PowrotPayBox from "./PowrotPayBox";
 
 // Karta jednego zgłoszenia POWRÓT: dane z etapu 1, odpowiedzi ankiety, wysyłka linku.
 export const surveyState = (a) => {
@@ -20,7 +21,7 @@ const Line = ({ label, value }) => (
   </div>
 );
 
-export default function PowrotAppCard({ a, onClose, onSend, sending, error, notice, onDelete }) {
+export default function PowrotAppCard({ a, onClose, onSend, sending, error, notice, onDelete, onReload }) {
   const st = surveyState(a);
   const lists = (v) => (Array.isArray(v) && v.length ? v.join(", ") : "—");
   return (
@@ -52,6 +53,8 @@ export default function PowrotAppCard({ a, onClose, onSend, sending, error, noti
       </div>
       {notice && <p className="text-xs gold-text">{notice}</p>}
       {error && <p className="text-xs blood-text flex items-center gap-2"><AlertTriangle className="h-3.5 w-3.5" />{error}</p>}
+
+      <PowrotPayBox a={a} onDone={onReload} />
 
       <div className="grid md:grid-cols-2 gap-5">
         <Line label="ETAP 1 · CO JEST WAŻNE TERAZ" value={a.situation} />
