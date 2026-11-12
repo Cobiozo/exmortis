@@ -1,6 +1,6 @@
 // Umowa o udział w programie POWRÓT — wzór z 13.11.2026 (projekt do akceptacji właściciela).
 // Parametry programu zgodne z src/lib/powrotOffer.js; dane firmy w nawiasach wstawia src/lib/firma.js,
-// a [24] (przełożenie sesji) — Ustawienia → Dokumenty prawne. Numer wersji nadaje archiwum (Zapisz w panelu).
+// Numer wersji nadaje archiwum (Ustawienia → Dokumenty prawne → Zapisz).
 // Klient dostaje tę umowę razem z osobistym linkiem do płatności (przed zapłatą) i w potwierdzeniu płatności.
 export const UMOWA_POWROT = {
   title: "Umowa o udział w programie POWRÓT",
@@ -36,8 +36,8 @@ export const UMOWA_POWROT = {
       "4. Mentor wystawia fakturę bez VAT na życzenie Uczestnika zgłoszone na stronie płatności albo e-mailem i przesyła ją e-mailem.",
     ]},
     { id: "u6", title: "§6. Terminy Sesji, przełożenie i nieobecność", body: [
-      "1. Uczestnik może bezpłatnie przełożyć Sesję najpóźniej [24] godziny przed jej rozpoczęciem. Strony ustalają wtedy nowy termin.",
-      "2. Nieobecność bez uprzedzenia albo przełożenie później niż [24] godziny przed Sesją oznacza wykorzystanie Sesji, chyba że wynika z przyczyn niezależnych od Uczestnika (np. nagła choroba, awaria łącza). Wtedy strony ustalają nowy termin.",
+      "1. Uczestnik może bezpłatnie przełożyć Sesję najpóźniej 24 godziny przed jej rozpoczęciem. Strony ustalają wtedy nowy termin.",
+      "2. Nieobecność bez uprzedzenia albo przełożenie później niż 24 godziny przed Sesją oznacza wykorzystanie Sesji, chyba że wynika z przyczyn niezależnych od Uczestnika (np. nagła choroba, awaria łącza). Wtedy strony ustalają nowy termin.",
       "3. Mentor może przełożyć Sesję z ważnej przyczyny, proponując nowy termin. Jeśli Uczestnik go nie przyjmie, otrzymuje zwrot ceny tej Sesji zgodnie z §8 ust. 2.",
       "4. Spóźnienie Uczestnika skraca Sesję. Sesja może zostać wydłużona tylko za zgodą obu stron.",
     ]},
