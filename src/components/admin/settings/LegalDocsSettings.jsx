@@ -12,7 +12,7 @@ const FIELDS = [
   ["data_od", "Data wejścia w życie", "np. 1 listopada 2026"], ["poczta", "Dostawca poczty e-mail"],
   ["newsletter", "Narzędzie do newslettera", "np. MailerLite"], ["biuro", "Biuro rachunkowe"],
 ];
-const NAMES = { regulamin: "Regulamin", prywatnosc: "Polityka prywatności", cookies: "Polityka cookies" };
+const NAMES = { regulamin: "Regulamin", prywatnosc: "Polityka prywatności", cookies: "Polityka cookies", umowa_powrot: "Umowa POWRÓT" };
 const inp = "w-full bg-transparent border hairline px-4 py-3 focus:border-[#C9A24A] focus:outline-none placeholder:text-foreground/30";
 
 // Dokumenty prawne → Dane do dokumentów. Zmiana pola = nowa wersja dokumentów, które go używają.
