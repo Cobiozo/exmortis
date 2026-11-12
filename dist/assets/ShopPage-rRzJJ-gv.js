@@ -1,0 +1,1 @@
+import"./rolldown-runtime-XKyaHtl9.js";import{In as e}from"./icons-DtcIm1V2.js";import{t}from"./jsx-runtime-t7J4o3Co.js";import{t as n}from"./index-DgFgFUk8.js";e();var r=t();function i(){return(0,r.jsx)(n,{slug:`sklep`})}export{i as default};
