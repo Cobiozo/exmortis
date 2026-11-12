@@ -198,7 +198,7 @@ export default function PowrotPlatnosc() {
           {busy ? "PRZYGOTOWUJĘ PŁATNOŚĆ..." : "Zamawiam z obowiązkiem zapłaty"} {!busy && <ArrowRight className="h-4 w-4" />}
         </button>
         <p className="text-xs text-foreground/55 leading-relaxed">
-          Bezpieczna płatność przez PayU: BLIK, przelew, karta — a także płatność odroczona lub w ratach PayPo, jeśli PayPo
+          Bezpieczna płatność przez PayU: BLIK, szybki przelew lub przelew bankowy — a także płatność odroczona lub w ratach PayPo, jeśli PayPo
           udostępni ją dla Twojej płatności (umowę o raty zawierasz z PayPo). Zasady przetwarzania danych:{" "}
           <Link to="/polityka-prywatnosci" className="underline">Polityka prywatności</Link>.
         </p>
