@@ -13,7 +13,7 @@ import { expandBundles } from "./bundles.ts";
 import { markPowrotPaid } from "./powrotPay.ts";
 import { issueInvoice } from "./invoices.ts";
 import { randomToken, sha256hex } from "./booking.ts";
-import { regulaminAttachment } from "./legalDocs.ts";
+import { regulaminAttachment, docAttachment } from "./legalDocs.ts";
 
 function packageEmailHtml(token) {
   const link = `${APP_URL}/rezerwacja/termin#t=${token}`;
@@ -47,7 +47,7 @@ const PL_DATE = (ymd) =>
   new Date(`${ymd}T12:00:00Z`).toLocaleDateString("pl-PL", { day: "numeric", month: "long", year: "numeric" });
 
 // Program POWRÓT: potwierdzenie zawarcia umowy (treść w załączniku) i następny krok.
-const POWROT_CONFIRM = `<div style="background:#0A0A0B;padding:0 32px 16px;font-family:Georgia,serif;"><p style="color:#E2E2E2;font-size:14px;line-height:1.6;">Potwierdzam zawarcie Umowy o udział w programie POWRÓT — jej treść w wersji, którą zaakceptowałeś(-aś), jest w załączniku. Odezwę się w ciągu kilku dni, żeby ustalić termin pierwszej sesji.</p></div>`;
+const POWROT_CONFIRM = `<div style="background:#0A0A0B;padding:0 32px 16px;font-family:Georgia,serif;"><p style="color:#E2E2E2;font-size:14px;line-height:1.6;">Potwierdzam zawarcie Umowy o udział w programie POWRÓT — jej zaakceptowana wersja jest w załączniku. Odezwę się w ciągu kilku dni, żeby ustalić termin pierwszej sesji.</p></div>`;
 
 // Potwierdzenie żądania rozpoczęcia usługi przed upływem 14 dni (zakup usługi wymaga tej zgody w kasie).
 const SERVICE_CONFIRM = `<div style="background:#0A0A0B;padding:0 32px 16px;font-family:Georgia,serif;"><p style="color:#8A8A8C;font-size:13px;line-height:1.6;">Potwierdzam Twoje żądanie rozpoczęcia świadczenia usługi przed upływem 14 dni od zawarcia umowy. Jeśli odstąpisz od umowy, zapłacisz za część usługi wykonaną do chwili odstąpienia; po pełnym wykonaniu usługi prawo odstąpienia wygasa.</p></div>`;
