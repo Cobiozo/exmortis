@@ -143,7 +143,8 @@ const handler = async function (req) {
       const realIp = clientIp(req);
       const created = await payuCreateOrder(payu, accessToken, {
         notifyUrl: `${APP_URL}/functions/payuNotification`,
-        continueUrl: `${APP_URL}/kasa?payu=done`,
+        // Powrót na stronę płatności POWRÓT (sprawdza stan zamówienia) — nie do kasy Skarbca z koszykiem.
+        continueUrl: `${APP_URL}/powrot/platnosc?t=${String(body.token).trim().toLowerCase()}&payu=done`,
         customerIp: realIp === "brak" ? "127.0.0.1" : realIp,
         merchantPosId: String(payu.posId),
         description: "Exmortis - Program POWRÓT (usługa)",
