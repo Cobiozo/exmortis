@@ -12,7 +12,9 @@ export default function InstagramFeed() {
     base44.functions
       .invoke("instagramFeed", {})
       .then((res) => {
-        if (res.data?.posts?.length) setFeed(res.data);
+        // Tylko miniatury podawane przez exmortis.pl — bez bezpośredniego łączenia z Instagramem bez zgody.
+        const posts = (res.data?.posts || []).filter((p) => String(p.image || "").startsWith("/functions/instagramFeed"));
+        if (posts.length) setFeed({ ...res.data, posts });
       })
       .catch(() => {});
   }, []);
