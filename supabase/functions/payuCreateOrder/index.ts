@@ -27,11 +27,16 @@ const SERVICE_CONSENT =
   "Żądam rozpoczęcia świadczenia usługi przed upływem 14 dni od zawarcia umowy. Przyjmuję do wiadomości, że jeśli odstąpię od umowy, zapłacę za część usługi wykonaną do chwili odstąpienia, a po pełnym wykonaniu usługi utracę prawo odstąpienia.";
 
 // Każda zgoda zapisana osobno, z wersją dokumentu.
-async function saveConsents(base44, req, orderId, email, hasDigital, newsletterConsent, hasService = false) {
+const ACCOUNT_TEXT =
+  "Chcę założyć bezpłatne konto exmortis na podany adres e-mail (Biblioteka, ROZDROŻA, kupione produkty w jednym miejscu). Link do ustawienia hasła otrzymam po zakupie.";
+
+async function saveConsents(base44, req, orderId, email, hasDigital, newsletterConsent, hasService = false, createAccount = false) {
   const cBase = { email, source: "kasa", order_id: orderId, doc_version: `regulamin ${await regulaminVersion(base44)}`, ip: clientIp(req), status: "udzielona" };
   const consents = [{ ...cBase, kind: "regulamin", text: "Akceptuję Regulamin." }];
   if (hasService) consents.push({ ...cBase, kind: "usluga", text: SERVICE_CONSENT });
   if (hasDigital) consents.push({ ...cBase, kind: "tresci_cyfrowe", text: DIGITAL_CONSENT });
+  // Prośba o konto: zapisana przy zamówieniu, konto powstaje dopiero po opłaceniu (fulfillOrder).
+  if (createAccount) consents.push({ ...cBase, kind: "konto", text: ACCOUNT_TEXT });
   if (newsletterConsent) consents.push({ ...cBase, kind: "newsletter", text: "Chcę otrzymywać Listy powrotu — newsletter exmortis z treściami oraz informacjami o produktach i wydarzeniach — na podany adres e-mail. Zgodę mogę wycofać w każdej chwili." });
   const made = await base44.asServiceRole.entities.Consent.bulkCreate(consents);
   for (const c of made || []) await mirrorRecord(base44, "Consent", c.id);
@@ -83,6 +88,7 @@ const handler = async function (req) {
     const buyerEmail = emailField(body);
     const note = textField(body, "note", { max: 2000, required: false }) || "";
     const newsletterConsent = body.newsletter_consent === true;
+    const createAccount = body.create_account === true;
     if (body.terms_consent !== true) throw new Error("Zaakceptuj Regulamin");
     const invoice = cleanInvoice(body.invoice);
     const items = Array.isArray(body.items) ? body.items.slice(0, 20) : [];
@@ -186,7 +192,7 @@ const handler = async function (req) {
         digitalConsent: hasDigital ? DIGITAL_CONSENT : null,
         discountCode: disc ? disc.code : null,
       });
-      await saveConsents(base44, req, id, buyerEmail, hasDigital, newsletterConsent, hasService);
+      await saveConsents(base44, req, id, buyerEmail, hasDigital, newsletterConsent, hasService, createAccount);
       if (newsletterConsent) await addSubscriber(base44, { email: buyerEmail, name: buyerName, consentGiven: true });
       // Bez bramki: zamówienie od razu opłacone; realizacja z fulfilled_at po sukcesie, a błąd ponawia zadanie cykliczne.
       await markPaid(base44, freeId);
@@ -240,7 +246,7 @@ const handler = async function (req) {
     // 5. Identyfikator PayU i adres płatności przy zamówieniu; status PENDING.
     await attachPayuOrder(base44, extOrderId, created.payuOrderId, created.redirectUri);
 
-    await saveConsents(base44, req, extOrderId, buyerEmail, hasDigital, newsletterConsent, hasService);
+    await saveConsents(base44, req, extOrderId, buyerEmail, hasDigital, newsletterConsent, hasService, createAccount);
 
     // Licznik użyć kodu rośnie dopiero po opłaceniu (payuNotification).
 
