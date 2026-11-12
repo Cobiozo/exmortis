@@ -10,6 +10,7 @@ import { runSql, rpc, escStr } from "./supabase.ts";
 import { DIGITAL, grantAccess, ensureAccount } from "./access.ts";
 import { accessFilter, consentFilter } from "./mirror.ts";
 import { expandBundles } from "./bundles.ts";
+import { markPowrotPaid } from "./powrotPay.ts";
 import { issueInvoice } from "./invoices.ts";
 import { randomToken, sha256hex } from "./booking.ts";
 import { regulaminAttachment } from "./legalDocs.ts";
@@ -44,6 +45,9 @@ async function grantThresholdPackage(base44, stored) {
 
 const PL_DATE = (ymd) =>
   new Date(`${ymd}T12:00:00Z`).toLocaleDateString("pl-PL", { day: "numeric", month: "long", year: "numeric" });
+
+// Program POWRÓT: potwierdzenie zawarcia umowy (treść w załączniku) i następny krok.
+const POWROT_CONFIRM = `<div style="background:#0A0A0B;padding:0 32px 16px;font-family:Georgia,serif;"><p style="color:#E2E2E2;font-size:14px;line-height:1.6;">Potwierdzam zawarcie Umowy o udział w programie POWRÓT — jej treść w wersji, którą zaakceptowałeś(-aś), jest w załączniku. Odezwę się w ciągu kilku dni, żeby ustalić termin pierwszej sesji.</p></div>`;
 
 // Potwierdzenie żądania rozpoczęcia usługi przed upływem 14 dni (zakup usługi wymaga tej zgody w kasie).
 const SERVICE_CONFIRM = `<div style="background:#0A0A0B;padding:0 32px 16px;font-family:Georgia,serif;"><p style="color:#8A8A8C;font-size:13px;line-height:1.6;">Potwierdzam Twoje żądanie rozpoczęcia świadczenia usługi przed upływem 14 dni od zawarcia umowy. Jeśli odstąpisz od umowy, zapłacisz za część usługi wykonaną do chwili odstąpienia; po pełnym wykonaniu usługi prawo odstąpienia wygasa.</p></div>`;
@@ -151,6 +155,10 @@ export async function fulfillOrder(base44, stored, payuOrderId) {
     }
   } catch { /* licznik kodu nie blokuje zamówienia */ }
 
+  // Program POWRÓT (link do płatności z panelu): data opłacenia przy zgłoszeniu, umowa w załączniku maila.
+  const powrot = items.find((i) => i && i.kind === "powrot" && i.powrot_app);
+  if (powrot) await markPowrotPaid(base44, powrot.powrot_app, stored.id).catch((e) => console.error("POWRÓT — oznaczenie płatności:", e?.message));
+
   let tix = "";
   if (issued.length) {
     try {
@@ -170,11 +178,14 @@ export async function fulfillOrder(base44, stored, payuOrderId) {
       const step = own.length ? await nextStep(base44, own, owned).then((s) => nextStepHtml(base44, s)).catch(() => "") : "";
       const svcRows = ids.length ? await runSql(base44, `SELECT 1 FROM public.products WHERE id IN (${ids.map((x) => escStr(String(x))).join(",")}) AND product_type = 'usluga' LIMIT 1`, true).catch(() => []) : [];
       const reg = await regulaminAttachment(base44);
+      const umowa = powrot ? await docAttachment(base44, "umowa_powrot", "Umowa-POWROT-exmortis") : null;
+      const atts = [umowa, reg].filter(Boolean);
+      const early = !!(powrot && powrot.service_early === true);
       await sendMail(base44, {
         kind: "zamowienie", ref: stored.id, to: stored.buyer_email,
-        ...(reg ? { attachments: [reg] } : {}),
+        ...(atts.length ? { attachments: atts } : {}),
         subject: Number(stored.total) > 0 ? "EXMORTIS — płatność przyjęta" : "EXMORTIS — zamówienie przyjęte",
-        html: orderEmailHtml(stored.buyer_name || "", items, stored.total, stored.id, stored.invoice || null) + accessEmailHtml(granted, !!stored.digital_consent_text, newAccount, stored.buyer_email) + (accountOnly ? accountEmailHtml(stored.buyer_email) : "") + (svcRows.length ? SERVICE_CONFIRM : "") + tix + cards + step,
+        html: orderEmailHtml(stored.buyer_name || "", items, stored.total, stored.id, stored.invoice || null) + accessEmailHtml(granted, !!stored.digital_consent_text, newAccount, stored.buyer_email) + (accountOnly ? accountEmailHtml(stored.buyer_email) : "") + (svcRows.length || early ? SERVICE_CONFIRM : "") + (powrot ? POWROT_CONFIRM : "") + tix + cards + step,
       });
     } catch { /* e-mail potwierdzenia jest opcjonalny */ }
   }
