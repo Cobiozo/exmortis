@@ -17,8 +17,13 @@ import { productSeats } from "../../shared/seats.ts";
 import { regulaminVersion } from "../../shared/legalDocs.ts";
 import { unitPrice } from "../../shared/productPrice.ts";
 import { cleanInvoice, invoiceText } from "../../shared/invoice.ts";
+import { appByPayToken, isPaid, isExpired, PROGRAM_NAME, CONTRACT_CONSENT, EARLY_CONSENT } from "../../shared/powrotPay.ts";
+import { docLatest } from "../../shared/legalDocs.ts";
 import { giftLine } from "../../shared/giftCard.ts";
 import { ticketLines } from "../../shared/tickets.ts";
+
+const firstNameOf = (full) => String(full ?? "").trim().split(/\s+/)[0] || "";
+const validation = (msg) => Object.assign(new Error(msg), { isValidation: true });
 
 const DIGITAL_CONSENT =
   "Chcę otrzymać dostęp od razu po zapłacie, przed upływem 14 dni na odstąpienie od umowy. Wiem, że z chwilą rozpoczęcia dostarczania tracę prawo odstąpienia.";
@@ -76,6 +81,90 @@ export default async function (req) {
       // Przy okazji dokańczamy zaległe kroki tego zamówienia (kolejka PayU, realizacja) — niezależnie od webhooka.
       await nudgeOrder(base44, id).catch(() => {});
       return Response.json({ status: await getOrderStatus(base44, id) });
+    }
+
+    // ===== Program POWRÓT: osobisty link do płatności z panelu (po rozmowie kwalifikacyjnej) =====
+    // Podgląd: imię, kwota, ważność i wersja umowy — po tokenie z e-maila; bez adresu e-mail w odpowiedzi.
+    if (body.action === "powrot.info") {
+      const app = await appByPayToken(base44, body.token);
+      if (!app) return Response.json({ error: "Link jest nieprawidłowy. Napisz do mnie — wyślę nowy." }, { status: 404 });
+      const umowa = await docLatest(base44, "umowa_powrot");
+      return Response.json({
+        name: firstNameOf(app.full_name),
+        amount: Number(app.pay_amount) || 0,
+        expires_at: app.pay_expires_at,
+        paid: isPaid(app),
+        expired: !isPaid(app) && isExpired(app),
+        umowa: umowa ? { version: umowa.version, date: umowa.date } : null,
+      });
+    }
+
+    if (body.action === "powrot.pay") {
+      if (!(await ipAllowed(base44, clientIp(req), "kasa", 20, 3600000))) {
+        return Response.json({ error: TOO_MANY }, { status: 429 });
+      }
+      const app = await appByPayToken(base44, body.token);
+      if (!app) throw validation("Link jest nieprawidłowy. Napisz do mnie — wyślę nowy.");
+      if (isPaid(app)) throw validation("Ten program jest już opłacony. Potwierdzenie jest w Twojej skrzynce e-mail.");
+      if (isExpired(app)) throw validation("Link wygasł. Napisz do mnie — wyślę nowy.");
+      const umowa = await docLatest(base44, "umowa_powrot");
+      if (!umowa) throw validation("Umowa jest chwilowo niedostępna. Napisz do mnie.");
+      if (body.contract_consent !== true) throw validation("Zaakceptuj Umowę i Regulamin");
+      const early = body.early_consent === true;
+      const invoice = cleanInvoice(body.invoice);
+      const grosze = Math.round(Number(app.pay_amount) * 100);
+      if (!Number.isFinite(grosze) || grosze < 100) throw validation("Niepoprawna kwota. Napisz do mnie.");
+
+      const payu = await getSetting(base44, "payu");
+      if (!payu || !payu.posId || !payu.clientId || !payu.clientSecret || !payu.secondKey) {
+        return Response.json({ error: "PAYU_NOT_CONFIGURED" }, { status: 400 });
+      }
+      const buyerName = String(app.full_name || "").slice(0, 100);
+      const buyerEmail = String(app.email || "").toLowerCase();
+      const extOrderId = crypto.randomUUID();
+      const item = {
+        name: PROGRAM_NAME, unitPrice: String(grosze), quantity: 1,
+        kind: "powrot", powrot_app: String(app.id), service_early: early, umowa_version: umowa.version,
+      };
+      const note = [
+        `Umowa POWRÓT, wersja ${umowa.version}`,
+        early ? "Żądanie rozpoczęcia przed upływem 14 dni: TAK" : "Żądanie rozpoczęcia przed upływem 14 dni: NIE — pierwsza sesja po 14 dniach od zawarcia umowy",
+        invoice ? invoiceText(invoice) : "",
+      ].filter(Boolean).join("\n");
+
+      createdOrderId = extOrderId;
+      await insertCreatingOrder(base44, {
+        id: extOrderId, buyerName, buyerEmail, note, invoice,
+        items: [item], total: grosze / 100, newsletterConsent: false, digitalConsent: null, discountCode: null,
+      });
+      await runSql(base44, `UPDATE public.powrot_applications SET pay_order_id = ${escStr(extOrderId)}, updated_date = now() WHERE id::text = ${escStr(String(app.id))}`);
+
+      const { accessToken } = await payuToken(payu);
+      const realIp = clientIp(req);
+      const created = await payuCreateOrder(payu, accessToken, {
+        notifyUrl: `${APP_URL}/functions/payuNotification`,
+        continueUrl: `${APP_URL}/kasa?payu=done`,
+        customerIp: realIp === "brak" ? "127.0.0.1" : realIp,
+        merchantPosId: String(payu.posId),
+        description: "Exmortis - Program POWRÓT (usługa)",
+        currencyCode: "PLN",
+        totalAmount: String(grosze),
+        extOrderId,
+        buyer: { email: buyerEmail, firstName: buyerName, language: "pl" },
+        products: [{ name: PROGRAM_NAME, unitPrice: String(grosze), quantity: 1 }],
+      });
+      await attachPayuOrder(base44, extOrderId, created.payuOrderId, created.redirectUri);
+
+      // Rejestr zgód: Umowa + Regulamin (z wersjami) i — jeśli zaznaczone — żądanie wcześniejszego rozpoczęcia.
+      const cBase = { email: buyerEmail, source: "powrot:platnosc", order_id: extOrderId, ip: clientIp(req), status: "udzielona" };
+      const consents = [
+        { ...cBase, kind: "umowa_powrot", text: CONTRACT_CONSENT(umowa.version), doc_version: `umowa ${umowa.version}; regulamin ${await regulaminVersion(base44)}` },
+        ...(early ? [{ ...cBase, kind: "usluga", text: EARLY_CONSENT, doc_version: `umowa ${umowa.version}` }] : []),
+      ];
+      const made = await base44.asServiceRole.entities.Consent.bulkCreate(consents);
+      for (const c of made || []) await mirrorRecord(base44, "Consent", c.id);
+
+      return Response.json({ redirectUri: created.redirectUri, orderId: extOrderId });
     }
 
     // Kasa jest publiczna, a każde zamówienie to dwa zapytania do PayU i wpis w bazie.
