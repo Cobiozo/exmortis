@@ -6,6 +6,7 @@ import { ArrowRight, Check } from "lucide-react";
 import { useCart } from "@/components/exmortis/CartContext";
 import { base44 } from "@/api/base44Client";
 import NewsletterConsent from "@/components/exmortis/shop/NewsletterConsent";
+import AccountOption from "@/components/exmortis/shop/AccountOption";
 import DiscountField from "@/components/exmortis/shop/DiscountField";
 import OrderSummaryInfo from "@/components/exmortis/shop/OrderSummaryInfo";
 import ChooseTermButton from "@/components/exmortis/shop/ChooseTermButton";
@@ -30,6 +31,7 @@ export default function Checkout() {
   const [submitting, setSubmitting] = useState(false);
   const [form, setForm] = useState({ name: "", email: "", note: "" });
   const [newsletterConsent, setNewsletterConsent] = useState(false);
+  const [createAccount, setCreateAccount] = useState(false);
   const [digitalConsent, setDigitalConsent] = useState(false);
   const [serviceConsent, setServiceConsent] = useState(false);
   const [termsConsent, setTermsConsent] = useState(false);
@@ -108,6 +110,7 @@ export default function Checkout() {
         email: form.email,
         note: form.note,
         newsletter_consent: newsletterConsent,
+        create_account: !user && createAccount,
         digital_consent: digitalConsent,
         service_consent: serviceConsent,
         terms_consent: termsConsent,
@@ -232,8 +235,9 @@ export default function Checkout() {
                 onChange={(e) => setForm({ ...form, email: e.target.value })}
                 className="w-full bg-transparent border hairline px-5 py-4 focus:border-[#C9A24A] focus:outline-none transition-colors"
               />
-              <div className="mt-3">
+              <div className="mt-3 space-y-3">
                 <NewsletterConsent checked={newsletterConsent} onChange={setNewsletterConsent} />
+                {!user && <AccountOption items={items} checked={createAccount} onChange={setCreateAccount} />}
               </div>
             </div>
             <div>
