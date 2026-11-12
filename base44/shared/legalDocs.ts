@@ -65,13 +65,19 @@ export async function regulaminVersion(base44) {
 // Regulamin w wersji z dnia zamówienia jako załącznik e-maila (trwały nośnik, art. 21 upk).
 // Treść z archiwum wersji (LegalDocVersion). Brak archiwum = brak załącznika (zostaje link w e-mailu).
 export async function regulaminAttachment(base44) {
+  return docAttachment(base44, "regulamin", "Regulamin-exmortis");
+}
+
+// Najnowsza zapisana wersja dokumentu (archiwum) jako załącznik HTML — trwały nośnik dla klienta.
+// null, gdy dokumentu nie ma jeszcze w archiwum (Ustawienia → Dokumenty prawne → Zapisz).
+export async function docAttachment(base44, doc, fileBase) {
   try {
-    const last = (await base44.asServiceRole.entities.LegalDocVersion.filter({ doc: "regulamin" }, "-created_date", 1))[0];
+    const last = (await base44.asServiceRole.entities.LegalDocVersion.filter({ doc }, "-created_date", 1))[0];
     if (!last?.sections?.length) return null;
     const e = (v) => String(v ?? "").replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
     const body = last.sections.map((s) => `<h2>${e(s.title)}</h2>${(s.body || []).map((p) => `<p>${e(p)}</p>`).join("")}`).join("");
     const html = `<!doctype html><html lang="pl"><head><meta charset="utf-8"><title>${e(last.title)}</title></head><body style="font-family:Georgia,serif;max-width:760px;margin:24px auto;line-height:1.6;"><h1>${e(last.title)}</h1><p>Wersja ${e(last.version)} z dnia ${e(last.date)}</p>${body}</body></html>`;
-    return { filename: `Regulamin-exmortis-${String(last.version).replace(/[^0-9.]/g, "")}.html`, content: html, contentType: "text/html; charset=utf-8" };
+    return { filename: `${fileBase}-${String(last.version).replace(/[^0-9.]/g, "")}.html`, content: html, contentType: "text/html; charset=utf-8", version: String(last.version) };
   } catch {
     return null;
   }
