@@ -8,7 +8,7 @@ import { markCodeUsed } from "./discounts.ts";
 import { issueOrderTickets, ticketsHtml, loadEvent } from "./tickets.ts";
 import { runSql, rpc, escStr } from "./supabase.ts";
 import { DIGITAL, grantAccess, ensureAccount } from "./access.ts";
-import { accessFilter } from "./mirror.ts";
+import { accessFilter, consentFilter } from "./mirror.ts";
 import { expandBundles } from "./bundles.ts";
 import { issueInvoice } from "./invoices.ts";
 import { randomToken, sha256hex } from "./booking.ts";
@@ -48,6 +48,14 @@ const PL_DATE = (ymd) =>
 // Potwierdzenie żądania rozpoczęcia usługi przed upływem 14 dni (zakup usługi wymaga tej zgody w kasie).
 const SERVICE_CONFIRM = `<div style="background:#0A0A0B;padding:0 32px 16px;font-family:Georgia,serif;"><p style="color:#8A8A8C;font-size:13px;line-height:1.6;">Potwierdzam Twoje żądanie rozpoczęcia świadczenia usługi przed upływem 14 dni od zawarcia umowy. Jeśli odstąpisz od umowy, zapłacisz za część usługi wykonaną do chwili odstąpienia; po pełnym wykonaniu usługi prawo odstąpienia wygasa.</p></div>`;
 
+// Konto założone na prośbę z kasy, gdy w zamówieniu nie było treści cyfrowych.
+function accountEmailHtml(email) {
+  return `<div style="background:#0A0A0B;padding:0 32px 24px;font-family:Georgia,serif;">
+    <p style="color:#8A8A8C;font-size:13px;line-height:1.6;">Założyłem Twoje bezpłatne konto exmortis na adres ${String(email).replace(/</g, "&lt;")}. Wejdź przez „Zaloguj przez Google” (jeśli to adres Gmail) albo ustaw hasło: na stronie logowania kliknij „Nie pamiętam hasła” i podaj ten adres.</p>
+    <p style="margin:12px 0 0;"><a href="${APP_URL}/konto" style="color:#C9A24A;">Przejdź do konta</a></p>
+  </div>`;
+}
+
 function accessEmailHtml(granted, consent, newAccount = false, email = "") {
   if (!granted.length) return "";
   const rows = granted
@@ -85,6 +93,16 @@ export async function fulfillOrder(base44, stored, payuOrderId) {
     }
   } catch (e) {
     throw e;
+  }
+  // Bezpłatne konto zaznaczone w kasie (zakup bez treści cyfrowych): zaproszenie dopiero po opłaceniu.
+  let accountOnly = false;
+  if (!granted.length && stored.buyer_email) {
+    try {
+      const asked = await consentFilter(base44, { order_id: stored.id, kind: "konto" }, "-created_date", 1);
+      if (asked.length) accountOnly = newAccount = await ensureAccount(base44, stored.buyer_email);
+    } catch (e) {
+      console.error("konto z kasy:", String(e?.message || e).slice(0, 200));
+    }
   }
 
   // Karty podarunkowe: powstają przed mailem, a nieudane wystawienie przerywa realizację.
@@ -156,7 +174,7 @@ export async function fulfillOrder(base44, stored, payuOrderId) {
         kind: "zamowienie", ref: stored.id, to: stored.buyer_email,
         ...(reg ? { attachments: [reg] } : {}),
         subject: Number(stored.total) > 0 ? "EXMORTIS — płatność przyjęta" : "EXMORTIS — zamówienie przyjęte",
-        html: orderEmailHtml(stored.buyer_name || "", items, stored.total, stored.id, stored.invoice || null) + accessEmailHtml(granted, !!stored.digital_consent_text, newAccount, stored.buyer_email) + (svcRows.length ? SERVICE_CONFIRM : "") + tix + cards + step,
+        html: orderEmailHtml(stored.buyer_name || "", items, stored.total, stored.id, stored.invoice || null) + accessEmailHtml(granted, !!stored.digital_consent_text, newAccount, stored.buyer_email) + (accountOnly ? accountEmailHtml(stored.buyer_email) : "") + (svcRows.length ? SERVICE_CONFIRM : "") + tix + cards + step,
       });
     } catch { /* e-mail potwierdzenia jest opcjonalny */ }
   }
