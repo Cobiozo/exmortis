@@ -61,6 +61,25 @@
     "buyer_email": {
       "type": "string",
       "description": "Karta podarunkowa: e-mail kupującego"
+    },
+    "email": {
+      "type": "string",
+      "description": "Kod przypisany do konta: działa tylko z tym adresem e-mail"
+    },
+    "powitalny": {
+      "type": "boolean",
+      "default": false,
+      "description": "Kod powitalny dla nowego konta (tworzony automatycznie)"
+    },
+    "typy": {
+      "type": "array",
+      "items": { "type": "string" },
+      "description": "Rodzaje produktów objęte kodem (pusta = wszystkie)"
+    },
+    "bez_promocji": {
+      "type": "boolean",
+      "default": false,
+      "description": "Kod tylko na produkty w cenie regularnej"
     }
   },
   "required": [
