@@ -6,6 +6,7 @@ import SalesStats from "./SalesStats";
 import RefundBox, { refundLabel } from "./RefundBox";
 import FakturaBlock from "./FakturaBlock";
 import RefundDialog from "./RefundDialog";
+import FreeDownloadsPanel from "./FreeDownloadsPanel";
 
 const zl = (n) => `${Number(n || 0).toFixed(2).replace(".", ",")} zł`;
 const when = (iso) => (iso ? new Date(iso).toLocaleString("pl-PL", { timeZone: "Europe/Warsaw", day: "numeric", month: "short", year: "numeric", hour: "2-digit", minute: "2-digit" }) : "");
@@ -102,7 +103,7 @@ function InvoiceBox({ o, onSaved }) {
   );
 }
 
-export default function OrdersPanel() {
+function SalesPanel() {
   const [status, setStatus] = useState("");
   const [todo, setTodo] = useState(false);
   const [q, setQ] = useState("");
@@ -208,6 +209,22 @@ export default function OrdersPanel() {
         </div>
       )}
       {refund && <RefundDialog order={refund} onClose={() => setRefund(null)} onDone={afterRefund} />}
+    </div>
+  );
+}
+
+// Zamówienia: sprzedaż (płatne) i osobno darmowe pobrania — kwoty 0 zł nie mieszają się ze sprzedażą.
+export default function OrdersPanel() {
+  const [view, setView] = useState("sales");
+  return (
+    <div className="space-y-8">
+      <div className="flex border hairline w-full sm:w-auto sm:inline-flex" role="tablist" aria-label="Rodzaj">
+        {[["sales", "Sprzedaż"], ["free", "Darmowe pobrania"]].map(([k, l]) => (
+          <button key={k} role="tab" aria-selected={view === k} onClick={() => setView(k)}
+            className={`flex-1 sm:flex-none px-5 py-2.5 technical text-[10px] ${view === k ? "bg-[#C9A24A] text-[#0A0A0B]" : "text-foreground/60 hover:text-foreground"}`}>{l.toUpperCase()}</button>
+        ))}
+      </div>
+      {view === "sales" ? <SalesPanel /> : <FreeDownloadsPanel />}
     </div>
   );
 }
