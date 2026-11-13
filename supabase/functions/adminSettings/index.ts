@@ -3,6 +3,7 @@ import { requireStaff } from "../_shared/supabase.ts";
 import { getSetting, saveSetting, deleteSetting, cleanAppUrl, DEFAULT_APP_URL } from "../_shared/settings.ts";
 import { cleanFirma, cleanPremiera, PREMIERA_DEFAULT } from "../_shared/firma.ts";
 import { cleanAplikacja } from "../_shared/appOffline.ts";
+import { cleanPopup, POPUP_DEFAULT } from "../_shared/popup.ts";
 import { cleanPomiar, validatePomiar, POMIAR_DEFAULT } from "../_shared/tracking.ts";
 import { cleanFaktury, fakturyToken } from "../_shared/invoices.ts";
 import { syncDocs, publicDocs } from "../_shared/legalDocs.ts";
@@ -119,6 +120,19 @@ const handler = async function (req) {
     if (body.action === "save" && body.target === "aplikacja") {
       await saveSetting(base44, "aplikacja", cleanAplikacja(body.data));
       return Response.json({ ok: true });
+    }
+
+    // Popup na stronie — tekst, przycisk i kod widoczne publicznie; zmienia administrator i zespół techniczny.
+    if (body.action === "get_popup") {
+      return Response.json({ popup: { ...POPUP_DEFAULT, ...((await getSetting(base44, "popup")) || {}) } });
+    }
+    if (body.action === "save" && body.target === "popup") {
+      const prev = (await getSetting(base44, "popup")) || {};
+      const value = cleanPopup(body.data, prev.wersja);
+      if (value.aktywny && !value.tytul && !value.tresc) return Response.json({ error: "Wpisz tytuł albo treść popupu." }, { status: 400 });
+      if (value.od && value.do && value.do <= value.od) return Response.json({ error: "Data końca musi być po dacie początku." }, { status: 400 });
+      await saveSetting(base44, "popup", value);
+      return Response.json({ ok: true, popup: value });
     }
 
     if (body.action === "save" && body.target === "app") {
