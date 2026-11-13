@@ -24,6 +24,8 @@ export default function ReadinessCard() {
   if (!d?.items?.length) return null;
   const open = d.items.filter((i) => i.status !== "ok");
   const done = d.items.filter((i) => i.status === "ok");
+  // Wszystko gotowe — karta znika z pulpitu i wraca sama, gdy któryś punkt przestanie działać.
+  if (open.length === 0) return null;
 
   return (
     <div className="border hairline bg-[#0F0F10] mb-8">
