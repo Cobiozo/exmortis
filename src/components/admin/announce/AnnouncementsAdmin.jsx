@@ -3,6 +3,7 @@ import { ann } from "@/components/account/announce/annApi";
 import AnnForm from "@/components/admin/announce/AnnForm.jsx";
 import AnnRow from "./AnnRow";
 import { EMPTY, fmtPl } from "./annForm";
+import PopupSettings from "./PopupSettings";
 
 // Panel → Ogłoszenia (tylko na stronie, bez e-maili). Dostęp: wyłącznie administrator.
 export default function AnnouncementsAdmin() {
@@ -22,6 +23,8 @@ export default function AnnouncementsAdmin() {
 
   return (
     <div className="space-y-8">
+      <PopupSettings />
+      <p className="technical text-[11px] gold-text">OGŁOSZENIA W MOIM KONCIE</p>
       <p className="text-sm text-foreground/60 max-w-[70ch]">Krótkie ogłoszenia widoczne w Moim koncie nad „Myślą na dziś”. Tylko na stronie — bez wysyłki e-mail. Zmiany widać przy kolejnym wejściu albo w ciągu 5 minut.</p>
       {err && <p role="alert" className="text-sm text-[#BC1E22]">{err}</p>}
       {edit ? <AnnForm key={edit.id || "nowe"} initial={{ ...EMPTY, ...edit }} options={options} busy={busy} onSave={save} onCancel={() => setEdit(null)} />

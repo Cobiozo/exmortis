@@ -12,7 +12,7 @@ export const COOKIE_TABLE = [
   ["exmortis_cart, exm_payu_order, exm_payu_value", "exmortis", "Niezbędne", "Koszyk i powrót z płatności (localStorage)", "Do opróżnienia koszyka lub zakończenia płatności"],
   ["exm_outbox", "exmortis", "Niezbędne", "Kopia formularza kontaktu lub zapisu, gdy serwer chwilowo nie odpowiada — wysyłana ponownie i usuwana (localStorage)", "Do wysłania"],
   ["exm_c_*", "exmortis", "Niezbędne", "Kopia publicznych treści strony do szybszego wyświetlenia, bez danych osobowych (localStorage)", "Do odświeżenia treści"],
-  ["exm_cisza, exm_shop_view, pod_pos_*, exm_ann_h, exm_install, exm_seen_*", "exmortis", "Niezbędne (Twoje ustawienia)", "Ustawienia Minutnika, widok Skarbca, miejsce w odcinku, ukryte ogłoszenia, podpowiedź instalacji, zapowiedzi (localStorage)", "Do usunięcia przez użytkownika"],
+  ["exm_cisza, exm_shop_view, pod_pos_*, exm_ann_h, exm_popup, exm_install, exm_seen_*", "exmortis", "Niezbędne (Twoje ustawienia)", "Ustawienia Minutnika, widok Skarbca, miejsce w odcinku, ukryte ogłoszenia, zamknięte okienko informacyjne, podpowiedź instalacji, zapowiedzi (localStorage)", "Do usunięcia przez użytkownika"],
   ["exm_chunk_reload i pamięć podręczna stron", "exmortis", "Niezbędne", "Poprawne wczytanie strony po aktualizacji, szybsze ładowanie (sessionStorage)", "Do zamknięcia karty"],
   ["exm_view, exm_scan_event i podobne", "exmortis", "Niezbędne", "Tylko dla administratora (localStorage)", "Do usunięcia przez użytkownika"],
   ["exm_src", "exmortis", "Analityczne", "Źródło wizyty (np. Instagram) przy zapisie na Wydarzenie (sessionStorage) — tylko po zgodzie", "Do zamknięcia karty"],
