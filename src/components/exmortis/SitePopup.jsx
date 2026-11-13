@@ -49,6 +49,8 @@ export default function SitePopup() {
     return () => { clearTimeout(timer); window.removeEventListener("exm:consent", onConsent); };
   }, [eligible, open, p?.wersja, preview]); // eslint-disable-line react-hooks/exhaustive-deps
 
+  const close = () => { if (!preview && p) markSeen(p.wersja); setOpen(false); };
+
   useEffect(() => {
     if (!open) return undefined;
     closeRef.current?.focus();
@@ -59,7 +61,6 @@ export default function SitePopup() {
 
   if (!open || !p) return null;
 
-  const close = () => { if (!preview) markSeen(p.wersja); setOpen(false); };
   const copy = async () => {
     try { await navigator.clipboard.writeText(p.kod); setCopied(true); setTimeout(() => setCopied(false), 2000); } catch { /* brak schowka */ }
   };
