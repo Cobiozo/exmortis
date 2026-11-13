@@ -123,6 +123,16 @@ const handler = async function (req) {
     }
 
     // Popup na stronie — tekst, przycisk i kod widoczne publicznie; zmienia administrator i zespół techniczny.
+    // Kod powitalny dla nowych kont (−20%, 7 dni) — włącznik.
+    if (body.action === "get_powitalny") {
+      const v = await getSetting(base44, "powitalny");
+      return Response.json({ wlaczony: v?.wlaczony !== false });
+    }
+    if (body.action === "save" && body.target === "powitalny") {
+      if (tech) return Response.json({ error: "Brak dostępu" }, { status: 403 });
+      await saveSetting(base44, "powitalny", { wlaczony: body.data?.wlaczony !== false });
+      return Response.json({ ok: true, wlaczony: body.data?.wlaczony !== false });
+    }
     if (body.action === "get_popup") {
       return Response.json({ popup: { ...POPUP_DEFAULT, ...((await getSetting(base44, "popup")) || {}) } });
     }

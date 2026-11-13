@@ -197,6 +197,15 @@ async function buildFeed(base44, me) {
         body: `Do ${plDate(end)} włącznie${next}.`, link: `/skarbiec/${p.slug}`, at: new Date(endsAt).toISOString(), important: true });
     }
   }
+  // Kod powitalny tego konta (jednorazowy, przypisany do e-maila) — widoczny tylko dla właściciela.
+  const mine = email ? await sr.DiscountCode.filter({ email, powitalny: true }, "-created_date", 1).catch(() => []) : [];
+  for (const c of mine) {
+    if (!c.active || (c.valid_until && c.valid_until < today)) continue;
+    if (c.max_uses && (c.uses || 0) >= c.max_uses) continue;
+    push({ key: `code:${c.id}`, kind: "kod", title: `Twój kod powitalny ${c.code}: −${c.value}%`,
+      body: `Na pierwszy ebook, audio albo kurs ze Skarbca w cenie regularnej. Ważny do ${plDate(c.valid_until)}.`,
+      link: "/skarbiec", at: iso(c.created_date), code: c.code, important: true });
+  }
   // Kody rabatowe, które Dawid oznaczył do pokazania.
   for (const c of g.codes) {
     if (c.valid_until && c.valid_until < today) continue;
