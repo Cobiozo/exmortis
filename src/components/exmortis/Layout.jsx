@@ -7,6 +7,7 @@ import CartDrawer from "@/components/exmortis/CartDrawer";
 import SiteLoader from "@/components/prelaunch/SiteLoader";
 import usePrelaunch from "@/lib/usePrelaunch";
 import ErrorBoundary from "@/components/errors/ErrorBoundary";
+import SitePopup from "@/components/exmortis/SitePopup";
 
 export default function Layout() {
   const { gated, loading } = usePrelaunch();
@@ -24,6 +25,7 @@ export default function Layout() {
       </main>
       <Footer />
       {!gated && <CartDrawer />}
+      {!gated && <SitePopup />}
     </div>
   );
 }
