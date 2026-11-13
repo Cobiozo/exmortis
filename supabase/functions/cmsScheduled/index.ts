@@ -10,6 +10,7 @@ import { applyDataPatches } from "../_shared/dataPatches.ts";
 import { expireStaleCreating } from "../_shared/orders.ts";
 import { markPaid, fulfillPaid, drainPayuEvents, retryUnfulfilled, alertStale, captureWaiting } from "../_shared/payuQueue.ts";
 import { loadAppUrl } from "../_shared/settings.ts";
+import { issueWelcomeCodes } from "../_shared/welcomeCode.ts";
 
 // Zamówienia za 0 zł (całość pokryta kartą/kodem) nie mają powiadomienia PayU, które by je ponowiło.
 // Gdy realizacja w kasie się nie udała, zamówienie zostaje PENDING — tu dokańczamy je (najwyżej 5 na przebieg, do doby wstecz).
@@ -134,7 +135,9 @@ const handler = async function(req) {
     const pruned = await pruneSnapshots(base44).catch((e) => { console.error("kopie:", e.message); return 0; });
     const ready = await requireMail(base44).then(() => true).catch(() => false);
     const reminded = ready ? await unpaidReminders(base44).catch((e) => { console.error("przypomnienia:", e.message); return 0; }) : 0;
-    return Response.json({ ok: true, published: done, prices, released, reminded, patched, freeDone, expired, payuQueue, captured, refulfilled, alerts, pruned });
+    // Kody powitalne dla nowych, potwierdzonych kont (−20%, 7 dni od założenia konta).
+    const welcome = ready ? await issueWelcomeCodes(base44).catch((e) => { console.error("kody powitalne:", e?.message); return 0; }) : 0;
+    return Response.json({ ok: true, published: done, prices, released, reminded, patched, freeDone, expired, payuQueue, captured, refulfilled, alerts, pruned, welcome });
   } catch (error) {
     return Response.json({ error: error.message }, { status: 500 });
   }
