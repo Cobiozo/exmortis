@@ -12,7 +12,7 @@ export async function applyDiscount(base44, rawCode, lines, buyerEmail = "") {
   // Kod przypisany do konta (powitalny): działa wyłącznie z adresem e-mail tego konta.
   if (found.email) {
     const who = String(buyerEmail || "").trim().toLowerCase();
-    if (!who) throw new Error("Ten kod jest przypisany do konta — najpierw wpisz adres e-mail, na który go otrzymałeś(-aś)");
+    if (!who) throw new Error("Ten kod jest przypisany do konta — najpierw wpisz w kasie adres e-mail tego konta");
     if (who !== String(found.email).toLowerCase()) throw new Error("Ten kod jest przypisany do innego adresu e-mail");
   }
   const ids = found.product_ids || [];
