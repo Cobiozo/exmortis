@@ -103,6 +103,29 @@ export default async function (req) {
       return Response.json({ orders, summary: summary[0] || {}, refunds });
     }
 
+    // Darmowe pobrania (zamówienia FREE z formularza darmowego materiału): kto, co, kiedy, zapis na Listy.
+    // Wyłącznie dla administratora — dane zbierane i tak, żeby wysłać materiał.
+    if (body.action === "free") {
+      const parts = ["o.status = 'FREE'"];
+      const q = String(body.q || "").trim().slice(0, 100);
+      if (q) {
+        const like = escStr(`%${q.replace(/[%_\\]/g, "")}%`);
+        parts.push(`(o.buyer_email ILIKE ${like} OR o.buyer_name ILIKE ${like} OR o.items::text ILIKE ${like})`);
+      }
+      const [rows, sum] = await Promise.all([
+        runSql(base44, `SELECT o.id, o.created_date, o.buyer_name, o.buyer_email, o.items,
+            (o.newsletter_consent_date IS NOT NULL) AS newsletter,
+            COALESCE((to_jsonb(o)->>'is_test')::boolean, false) AS is_test
+          FROM public.orders o WHERE ${parts.join(" AND ")} ORDER BY o.created_date DESC LIMIT 500`, true),
+        runSql(base44, `SELECT COUNT(*)::int AS total,
+            COUNT(*) FILTER (WHERE created_date > now() - interval '30 days')::int AS d30,
+            COUNT(DISTINCT lower(buyer_email))::int AS people,
+            COUNT(*) FILTER (WHERE newsletter_consent_date IS NOT NULL)::int AS newsletter
+          FROM public.orders WHERE status = 'FREE'`, true),
+      ]);
+      return Response.json({ downloads: rows || [], summary: (sum && sum[0]) || {} });
+    }
+
     if (body.action === "stats") {
       const days = [7, 30, 90, 365].includes(Number(body.days)) ? Number(body.days) : 30;
       const [row] = await runSql(base44, STATS_SQL(days, await hasRefundsTable(base44)), true);
