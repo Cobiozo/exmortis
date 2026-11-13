@@ -295,7 +295,7 @@ export default function Checkout() {
                 </div>
               ))}
               <div className="pt-4 border-t hairline">
-                <DiscountField items={items} applied={discount} onApply={setDiscount} />
+                <DiscountField items={items} applied={discount} onApply={setDiscount} email={form.email} />
               </div>
               <div className="pt-4 border-t hairline flex justify-between items-center">
                 <span className="technical text-[11px] text-foreground/60">RAZEM</span>

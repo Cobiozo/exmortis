@@ -3,7 +3,7 @@ import { Loader2 } from "lucide-react";
 import { base44 } from "@/api/base44Client";
 
 // Pole kodu rabatowego w podsumowaniu kasy. applied: { code, discount } | null
-export default function DiscountField({ items, applied, onApply }) {
+export default function DiscountField({ items, applied, onApply, email = "" }) {
   const [code, setCode] = useState("");
   const [busy, setBusy] = useState(false);
   const [err, setErr] = useState("");
@@ -12,7 +12,7 @@ export default function DiscountField({ items, applied, onApply }) {
     if (!code.trim()) return;
     setBusy(true); setErr("");
     try {
-      const r = await base44.functions.invoke("checkDiscount", { code, items: items.map((i) => ({ id: i.id, qty: i.qty })) });
+      const r = await base44.functions.invoke("checkDiscount", { code, email, items: items.map((i) => ({ id: i.id, qty: i.qty })) });
       onApply(r.data);
     } catch (e) {
       setErr(e?.response?.data?.error || "Nie udało się sprawdzić kodu");
@@ -22,9 +22,14 @@ export default function DiscountField({ items, applied, onApply }) {
 
   if (applied) {
     return (
-      <div className="flex justify-between items-center text-sm">
-        <span className="gold-text">Kod {applied.code}: −{applied.discount.toFixed(2)} zł</span>
-        <button type="button" onClick={() => { onApply(null); setCode(""); }} className="technical text-[10px] text-foreground/55 hover:gold-text">USUŃ</button>
+      <div className="space-y-1.5">
+        <div className="flex justify-between items-center text-sm">
+          <span className="gold-text">Kod {applied.code}: −{applied.discount.toFixed(2)} zł</span>
+          <button type="button" onClick={() => { onApply(null); setCode(""); }} className="technical text-[10px] text-foreground/55 hover:gold-text">USUŃ</button>
+        </div>
+        {(applied.lowest || []).map((l) => (
+          <p key={l.name} className="text-[11px] text-foreground/50">Najniższa cena z 30 dni przed obniżką ({l.name}): {Number(l.price).toFixed(2).replace(".", ",")} zł</p>
+        ))}
       </div>
     );
   }
