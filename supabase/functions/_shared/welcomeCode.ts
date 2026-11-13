@@ -54,7 +54,7 @@ export async function issueWelcomeCodes(base44, limit = 20) {
     const html = `<div style="background:#0A0A0B;color:#E2E2E2;font-family:Georgia,serif;padding:32px;max-width:560px">
       <p style="letter-spacing:4px;color:#C9A24A;font-size:13px">EXMORTIS</p>
       <h1 style="font-size:22px;font-weight:normal">Na początek drogi</h1>
-      <p style="line-height:1.7">Dziękuję, że założyłeś(-aś) konto — <span style="color:#8A8A8C">a właściwie: dziękuję, że jesteś.</span> Na pierwszy materiał ze Skarbca masz ode mnie 20% rabatu.</p>
+      <p style="line-height:1.7">Dziękuję za założenie konta. Na pierwszy materiał ze Skarbca masz ode mnie 20% rabatu.</p>
       <p style="font-family:monospace;font-size:22px;letter-spacing:3px;color:#C9A24A;border:1px dashed #C9A24A;padding:12px 16px;display:inline-block">${code}</p>
       <p style="line-height:1.7;color:#8A8A8C;font-size:13px">Kod jest ważny do ${plDate(until)} włącznie, jednorazowy i działa tylko z adresem tego konta. Obejmuje ebooki, audio i kursy w cenie regularnej (bez programu POWRÓT, kart podarunkowych, biletów i przedsprzedaży). Wpisz go w kasie w polu „Kod rabatowy”.</p>
       <p style="margin:24px 0">${emailButton("ZOBACZ SKARBIEC", `${APP_URL}/skarbiec`)}</p>
