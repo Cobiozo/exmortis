@@ -9,7 +9,14 @@ const KEY = "exm_popup";
 // Popup nie przeszkadza w zakupie, płatności, teście, logowaniu ani w dokumentach prawnych.
 const SKIP = ["/admin", "/kasa", "/powrot/platnosc", "/powrot/ankieta", "/test", "/login", "/register", "/forgot-password",
   "/reset-password", "/regulamin", "/polityka-prywatnosci", "/polityka-cookies", "/odstapienie", "/umowa-powrot",
-  "/bilet", "/karta", "/rezerwacja", "/zmiana-adresu", "/listy/", "/cisza"];
+  "/bilet", "/karta", "/rezerwacja", "/zmiana-adresu", "/listy/", "/cisza", "/spotkania"];
+
+// Link z popupu na adres tej strony (https://exmortis.pl/…) traktujemy jak wewnętrzny: ścieżka zamiast pełnego adresu.
+const ownPath = (link) => {
+  const s = String(link || "");
+  if (s.startsWith("/")) return s;
+  try { const u = new URL(s); return u.origin === window.location.origin || /(^|\.)exmortis\.pl$/.test(u.hostname) ? u.pathname + u.search + u.hash : null; } catch { return null; }
+};
 
 const seen = () => { try { return localStorage.getItem(KEY) || ""; } catch { return ""; } };
 const markSeen = (v) => { try { localStorage.setItem(KEY, String(v)); } catch { /* brak pamięci */ } };
@@ -32,6 +39,9 @@ export default function SitePopup() {
     if (!p || closedThisVisit) return false;
     if (preview) return true;
     if (SKIP.some((x) => pathname.startsWith(x)) || pathname.endsWith("/dolacz")) return false;
+    // Nie na stronie, do której popup prowadzi (np. zapis na to samo spotkanie).
+    const target = ownPath(p.przycisk_link);
+    if (target && target.split(/[?#]/)[0].replace(/\/+$/, "") === pathname.replace(/\/+$/, "")) return false;
     const now = Date.now() + (s?.offset || 0);
     if (p.od && Date.parse(p.od) > now) return false;
     if (p.do && Date.parse(p.do) < now) return false;
@@ -66,7 +76,8 @@ export default function SitePopup() {
   const copy = async () => {
     try { await navigator.clipboard.writeText(p.kod); setCopied(true); setTimeout(() => setCopied(false), 2000); } catch { /* brak schowka */ }
   };
-  const external = /^https:\/\//.test(p.przycisk_link || "");
+  const inner = ownPath(p.przycisk_link);
+  const external = !inner && /^https:\/\//.test(p.przycisk_link || "");
   const btnCls = "btn-relic w-full sm:w-auto";
 
   return (
@@ -94,7 +105,7 @@ export default function SitePopup() {
         {p.przycisk_napis && p.przycisk_link && (
           external
             ? <a href={p.przycisk_link} target="_blank" rel="noopener noreferrer" onClick={close} className={btnCls}>{p.przycisk_napis.toUpperCase()} <ArrowRight className="h-4 w-4" /></a>
-            : <Link to={p.przycisk_link} onClick={close} className={btnCls}>{p.przycisk_napis.toUpperCase()} <ArrowRight className="h-4 w-4" /></Link>
+            : <Link to={inner || p.przycisk_link} onClick={close} className={btnCls}>{p.przycisk_napis.toUpperCase()} <ArrowRight className="h-4 w-4" /></Link>
         )}
       </div>
     </div>
