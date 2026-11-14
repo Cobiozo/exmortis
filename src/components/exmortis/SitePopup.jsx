@@ -13,6 +13,8 @@ const SKIP = ["/admin", "/kasa", "/powrot/platnosc", "/powrot/ankieta", "/test",
 
 const seen = () => { try { return localStorage.getItem(KEY) || ""; } catch { return ""; } };
 const markSeen = (v) => { try { localStorage.setItem(KEY, String(v)); } catch { /* brak pamięci */ } };
+// Zamknięty w tej wizycie — nie wraca, nawet w podglądzie i gdy przeglądarka nie zapisuje localStorage.
+let closedThisVisit = false;
 
 // Popup na stronie (Panel → Ogłoszenia → Popup na stronie): raz na odwiedzającego dla każdej wersji,
 // po wyborze cookies i po kilku sekundach — nigdy w kasie, płatności ani w teście.
@@ -27,7 +29,7 @@ export default function SitePopup() {
   const preview = new URLSearchParams(search).has("popup");
 
   const eligible = (() => {
-    if (!p) return false;
+    if (!p || closedThisVisit) return false;
     if (preview) return true;
     if (SKIP.some((x) => pathname.startsWith(x)) || pathname.endsWith("/dolacz")) return false;
     const now = Date.now() + (s?.offset || 0);
@@ -49,7 +51,7 @@ export default function SitePopup() {
     return () => { clearTimeout(timer); window.removeEventListener("exm:consent", onConsent); };
   }, [eligible, open, p?.wersja, preview]); // eslint-disable-line react-hooks/exhaustive-deps
 
-  const close = () => { if (!preview && p) markSeen(p.wersja); setOpen(false); };
+  const close = () => { closedThisVisit = true; if (!preview && p) markSeen(p.wersja); setOpen(false); };
 
   useEffect(() => {
     if (!open) return undefined;
