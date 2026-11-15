@@ -160,13 +160,16 @@ export async function captureWaiting(base44, limit = 5) {
        AND created_date < now() - interval '2 minutes' AND created_date > now() - interval '10 days'
      ORDER BY updated_date LIMIT ${Math.max(1, Number(limit) || 5)}`, true).catch(() => []);
   if (!Array.isArray(rows) || !rows.length) return 0;
+  // Najwyżej ok. 35 s na cały krok i 8 s na jedno zapytanie; gdy PayU nie odpowiada — kończymy (ponowienie za 5 minut).
+  const t0 = Date.now();
   const payu = await getSetting(base44, "payu");
-  const { accessToken } = await payuToken(payu);
+  const { accessToken } = await payuToken(payu, { timeoutMs: 8000 });
   let n = 0;
   for (const stored of rows) {
+    if (Date.now() - t0 > 35000) break;
     const pid = String(stored.payu_order_id);
     try {
-      const po = await payuGetOrder(payu, accessToken, pid);
+      const po = await payuGetOrder(payu, accessToken, pid, { timeoutMs: 8000 });
       const st = String(po?.status || "").toUpperCase();
       if (st === "WAITING_FOR_CONFIRMATION") {
         const r = await captureChecked(base44, payu, stored, po, pid, accessToken);
@@ -180,6 +183,7 @@ export async function captureWaiting(base44, limit = 5) {
       }
     } catch (e) {
       console.error("odbiór PayU:", msg(e));
+      if (/timeout|abort|fetch|network/i.test(`${e?.name || ""} ${msg(e)}`)) break; // PayU nie odpowiada
     }
   }
   return n;

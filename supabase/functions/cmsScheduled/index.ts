@@ -101,6 +101,10 @@ const handler = async function(req) {
     if (!allowed) return Response.json({ error: "Forbidden" }, { status: 403 });
     const db = base44.asServiceRole.entities;
     const now = new Date().toISOString();
+    // Budżet czasu: cronTick czeka najwyżej 110 s. Kroki zależne od PayU i poboczne pomijamy, gdy przebieg się przeciąga
+    // (wrócą w kolejnym przebiegu za 5 minut) — dzięki temu wolne API PayU nie kończy się alarmem.
+    const T0 = Date.now();
+    const czas = () => Date.now() - T0;
     const due = await db.SitePage.filter({ status: "zaplanowana", publikacja: { $lte: now } }, { limit: 20 });
     const done = [];
     for (const page of due.items) {
@@ -126,17 +130,17 @@ const handler = async function(req) {
     // Zamówienia utknięte w CREATING (przerwana kasa) — zamykane po 15 minutach.
     const expired = await expireStaleCreating(base44).catch(() => 0);
     // Kolejka powiadomień PayU i opłacone, a niezrealizowane zamówienia — niezależnie od nadejścia kolejnego webhooka.
-    const payuQueue = await drainPayuEvents(base44, 10).catch((e) => { console.error("kolejka PayU:", e?.message); return 0; });
+    const payuQueue = czas() > 60000 ? 0 : await drainPayuEvents(base44, 10).catch((e) => { console.error("kolejka PayU:", e?.message); return 0; });
     // Płatności „oczekuje na odbiór” (POS bez automatycznego odbioru) — weryfikacja i odbiór w PayU.
-    const captured = await captureWaiting(base44, 5).catch((e) => { console.error("odbiór PayU:", e?.message); return 0; });
-    const refulfilled = await retryUnfulfilled(base44, 5).catch((e) => { console.error("realizacje:", e?.message); return 0; });
+    const captured = czas() > 60000 ? 0 : await captureWaiting(base44, 5).catch((e) => { console.error("odbiór PayU:", e?.message); return 0; });
+    const refulfilled = czas() > 70000 ? 0 : await retryUnfulfilled(base44, 5).catch((e) => { console.error("realizacje:", e?.message); return 0; });
     // Jednorazowe alerty: realizacje nieudane kilka razy i zaległe powiadomienia PayU.
-    const alerts = await alertStale(base44).catch((e) => { console.error("alerty PayU:", e?.message); return 0; });
-    const pruned = await pruneSnapshots(base44).catch((e) => { console.error("kopie:", e.message); return 0; });
+    const alerts = czas() > 80000 ? 0 : await alertStale(base44).catch((e) => { console.error("alerty PayU:", e?.message); return 0; });
+    const pruned = czas() > 85000 ? 0 : await pruneSnapshots(base44).catch((e) => { console.error("kopie:", e.message); return 0; });
     const ready = await requireMail(base44).then(() => true).catch(() => false);
-    const reminded = ready ? await unpaidReminders(base44).catch((e) => { console.error("przypomnienia:", e.message); return 0; }) : 0;
+    const reminded = ready && czas() < 85000 ? await unpaidReminders(base44).catch((e) => { console.error("przypomnienia:", e.message); return 0; }) : 0;
     // Kody powitalne dla nowych, potwierdzonych kont (−20%, 7 dni od założenia konta).
-    const welcome = ready ? await issueWelcomeCodes(base44).catch((e) => { console.error("kody powitalne:", e?.message); return 0; }) : 0;
+    const welcome = ready && czas() < 90000 ? await issueWelcomeCodes(base44).catch((e) => { console.error("kody powitalne:", e?.message); return 0; }) : 0;
     return Response.json({ ok: true, published: done, prices, released, reminded, patched, freeDone, expired, payuQueue, captured, refulfilled, alerts, pruned, welcome });
   } catch (error) {
     return Response.json({ error: error.message }, { status: 500 });
