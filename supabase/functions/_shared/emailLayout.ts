@@ -94,13 +94,20 @@ function textOf(html) {
     .replace(/&nbsp;/g, " ").replace(/&amp;/g, "&").replace(/&[a-z]+;/g, " ").replace(/\s+/g, " ").trim();
 }
 
-// Dane nadawcy wymagane prawem (u.ś.u.d.e. art. 5, CEIDG): firma, imię i nazwisko, adres, NIP, REGON, kontakt.
-function firmaLine(f, style) {
+// Dane nadawcy wymagane prawem (u.ś.u.d.e. art. 5, CEIDG): firma, imię i nazwisko, adres, NIP, REGON,
+// e-mail i telefon. Ułożone w krótkie wiersze; numery nie zamieniają się w niebieskie linki (iOS, Gmail).
+const telHref = (t) => "tel:" + (String(t).replace(/[^\d+]/g, "").replace(/^(?!\+)(\d{9})$/, "+48$1"));
+const telLabel = (t) => { const d = String(t).replace(/\D/g, ""); return d.length === 9 ? d.replace(/(\d{3})(\d{3})(\d{3})/, "$1 $2 $3") : String(t); };
+const nolink = (v) => esc(v).replace(/(\d)/g, "$1&#8288;"); // łącznik zerowej szerokości — bez autolinków
+function firmaBlock(f, style, link) {
   if (!f || !f.nazwa) return "";
   const nazwa = f.osoba && !String(f.nazwa).includes(f.osoba) ? `${f.nazwa} (${f.osoba})` : f.nazwa;
-  const parts = [nazwa, f.adres || f.korespondencja, f.nip && `NIP ${f.nip}`, f.regon && `REGON ${f.regon}`,
-    f.email && `e-mail: ${f.email}`, f.telefon && `tel. ${f.telefon}`].filter(Boolean).map(esc);
-  return `<p style="${style}font-size:11px;">Nadawca: ${parts.join(", ")}</p>`;
+  const ids = [f.nip && `NIP ${nolink(f.nip)}`, f.regon && `REGON ${nolink(f.regon)}`].filter(Boolean).join(" &nbsp;·&nbsp; ");
+  const kontakt = [f.email && link(`mailto:${f.email}`, f.email), f.telefon && link(telHref(f.telefon), `tel. ${telLabel(f.telefon)}`)]
+    .filter(Boolean).join(" &nbsp;·&nbsp; ");
+  const rows = [`<strong style="font-weight:600;color:#8E8E91;">${esc(nazwa)}</strong>`,
+    (f.adres || f.korespondencja) && nolink(f.adres || f.korespondencja), ids, kontakt].filter(Boolean);
+  return `<p style="${style}">${rows.join("<br>")}</p>`;
 }
 
 export function emailLayout(html, { firma = null, appUrl = APP_URL, kind = "", preheader = "", unsubUrl = "" } = {}) {
@@ -123,23 +130,39 @@ export function emailLayout(html, { firma = null, appUrl = APP_URL, kind = "", p
         <span style="font-family:${BRAND.sans};font-size:12px;letter-spacing:6px;color:${BRAND.gold};">EXMORTIS</span>
       </a>`
     : `<span style="font-family:${BRAND.sans};font-size:12px;letter-spacing:6px;color:${BRAND.gold};">EXMORTIS</span>`;
+  const linkF = (href, label) => `<a href="${esc(href)}" target="_blank" style="color:${BRAND.faint};text-decoration:underline;">${esc(label)}</a>`;
+  const legal = `font-family:${BRAND.sans};font-size:11px;line-height:1.75;color:${BRAND.faint};margin:0 0 12px;`;
+  const nav = site ? [["Skarbiec", "/skarbiec"], ["Spotkania", "/spotkania"], ["Kontakt", "/kontakt"]]
+    .map(([l, p]) => `<a href="${esc(site + p)}" target="_blank" style="color:${BRAND.gold};text-decoration:none;">${l.toUpperCase()}</a>`)
+    .join(`<span style="color:${BRAND.line};">&nbsp;&nbsp;|&nbsp;&nbsp;</span>`) : "";
   const docs = [
-    site && link(`${site}/regulamin`, "Regulamin"),
-    site && link(`${site}/polityka-prywatnosci`, "Polityka prywatności"),
+    site && linkF(`${site}/regulamin`, "Regulamin"),
+    site && linkF(`${site}/polityka-prywatnosci`, "Polityka prywatności"),
+    marketing && unsubUrl && linkF(unsubUrl, "Wypisz się"),
   ].filter(Boolean).join(" &nbsp;·&nbsp; ");
+  const why = marketing
+    ? `Otrzymujesz Listy powrotu, bo ten adres został zapisany${onSite} i zapis potwierdzono. ${unsubUrl ? "Wypis to jedno kliknięcie w link poniżej, bez podawania powodu." : "Aby się wypisać, odpowiedz na ten list słowem STOP."}`
+    : `Wiadomość dotyczy Twojego konta, zamówienia lub zapisu${onSite}. Możesz na nią po prostu odpowiedzieć.`;
+  const rule = (w, c) => `<table role="presentation" align="center" cellspacing="0" cellpadding="0" border="0" style="margin:0 auto;"><tr><td width="${w}" height="1" style="width:${w}px;height:1px;line-height:1px;font-size:1px;background:${c};">&nbsp;</td></tr></table>`;
 
   const footer = [
-    `<p style="font-family:${BRAND.sans};font-size:11px;letter-spacing:3px;color:${BRAND.gold};margin:0 0 14px;">WRACAM Z SIEBIE · UCZĘ WRACAĆ</p>`,
+    // 1. Marka
+    rule(48, BRAND.gold),
+    `<p style="font-family:${BRAND.serif};font-size:15px;font-style:italic;line-height:1.5;color:${BRAND.text};margin:22px 0 4px;">Wracam z siebie · uczę wracać</p>`,
+    `<p style="font-family:${BRAND.sans};font-size:10px;letter-spacing:3px;color:${BRAND.faint};margin:0 0 22px;">EXMORTIS · MENTORING POWROTU</p>`,
+    // 2. Nawigacja i social
+    nav ? `<p style="font-family:${BRAND.sans};font-size:11px;letter-spacing:2px;line-height:1.6;margin:0 0 14px;">${nav}</p>` : "",
     `<p style="${small}">${SOCIAL.map(([l, u]) => link(u, l)).join(" &nbsp;·&nbsp; ")}</p>`,
-    `<p style="${small}">${link(`mailto:${contact}`, contact)}${host ? ` &nbsp;·&nbsp; ${link(site, host)}` : ""}</p>`,
-    hasCrisis ? "" : `<p style="${small}">exmortis to mentoring, nie terapia. Jeśli jest Ci bardzo ciężko: <span style="color:${BRAND.muted};">116 123</span> · <span style="color:${BRAND.muted};">800 70 2222</span> (całą dobę, bezpłatnie) · w zagrożeniu życia <span style="color:${BRAND.muted};">112</span>.</p>`,
-    `<p style="margin:4px 0 16px;"><a href="https://exmortis.pl/kontakt" target="_blank" style="display:inline-block;padding:10px 22px;border:1px solid ${BRAND.gold};color:${BRAND.gold};font-family:${BRAND.sans};font-size:12px;letter-spacing:2px;text-decoration:none;">KONTAKT</a></p>`,
-    docs ? `<p style="${small}">${docs}</p>` : "",
-    firmaLine(firma, small),
-    marketing
-      ? `<p style="${small}">Dostajesz Listy powrotu, bo zapisano ten adres${onSite} i potwierdzono zapis.${unsubUrl ? ` ${link(unsubUrl, "Wypisz się jednym kliknięciem")}.` : " Aby się wypisać, odpowiedz na ten list słowem STOP."}</p>`
-      : `<p style="${small}">To wiadomość dotycząca Twojego konta, zamówienia lub zapisu${onSite}. Możesz na nią po prostu odpowiedzieć.</p>`,
-  ].join("");
+    // 3. Bezpieczeństwo (gdy treść jeszcze tego nie mówi)
+    hasCrisis ? "" : `<p style="font-family:${BRAND.sans};font-size:11px;line-height:1.7;color:${BRAND.faint};margin:16px auto 0;max-width:440px;">exmortis to mentoring, nie terapia. Jeśli jest Ci bardzo ciężko: ${nolink("116 123").replace(" ", "&nbsp;")} lub ${nolink("800 70 2222").replace(/ /g, "&nbsp;")} (całą dobę, bezpłatnie), w&nbsp;zagrożeniu życia ${nolink("112")}.</p>`,
+    // 4. Część formalna
+    `<div style="height:26px;line-height:26px;font-size:1px;">&nbsp;</div>`,
+    rule(520, BRAND.line),
+    `<div style="height:22px;line-height:22px;font-size:1px;">&nbsp;</div>`,
+    firmaBlock(firma, legal, linkF) || `<p style="${legal}">${linkF(`mailto:${contact}`, contact)}</p>`,
+    `<p style="${legal}">${why}</p>`,
+    docs ? `<p style="${legal}margin-bottom:0;">${docs}</p>` : "",
+  ].join("\n");
 
   return `<!DOCTYPE html>
 <html lang="pl" xmlns="http://www.w3.org/1999/xhtml">
@@ -147,6 +170,7 @@ export function emailLayout(html, { firma = null, appUrl = APP_URL, kind = "", p
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="x-apple-disable-message-reformatting">
+<meta name="format-detection" content="telephone=no, date=no, address=no, email=no">
 <meta name="color-scheme" content="dark light">
 <meta name="supported-color-schemes" content="dark light">
 <title>exmortis</title>
@@ -155,6 +179,7 @@ export function emailLayout(html, { firma = null, appUrl = APP_URL, kind = "", p
   a{color:${BRAND.gold};}
   img{border:0;line-height:100%;outline:none;text-decoration:none;}
   table{border-collapse:collapse;}
+  a[x-apple-data-detectors]{color:inherit !important;text-decoration:none !important;font-size:inherit !important;font-family:inherit !important;font-weight:inherit !important;line-height:inherit !important;}
   .exm-body p,.exm-body li,.exm-body td{font-size:16px;}
   @media (max-width:620px){
     .exm-card{padding:28px 22px !important;}
@@ -163,7 +188,7 @@ export function emailLayout(html, { firma = null, appUrl = APP_URL, kind = "", p
   }
 </style>
 </head>
-<body style="margin:0;padding:0;background:${BRAND.bg};">
+<body id="exm" style="margin:0;padding:0;background:${BRAND.bg};">
 <div style="display:none;max-height:0;overflow:hidden;opacity:0;color:${BRAND.bg};font-size:1px;line-height:1px;">${esc(pre)}${"&#8203;&zwnj;&nbsp;".repeat(40)}</div>
 <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0" style="background:${BRAND.bg};">
 <tr><td align="center" class="exm-wrap" style="padding:32px 16px;">
@@ -176,7 +201,7 @@ export function emailLayout(html, { firma = null, appUrl = APP_URL, kind = "", p
 ${body}
       </div>
     </td></tr>
-    <tr><td align="center" style="padding:30px 12px 8px;text-align:center;">
+    <tr><td align="center" style="padding:36px 16px 8px;text-align:center;">
 ${footer}
     </td></tr>
   </table>
