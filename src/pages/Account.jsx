@@ -3,6 +3,7 @@ import { useLocation, useNavigate } from "react-router-dom";
 import { base44 } from "@/api/base44Client";
 import { useNoIndex } from "@/lib/useNoIndex";
 import MyProducts from "@/components/account/MyProducts";
+import StartPanel from "@/components/account/StartPanel";
 import MyOrders from "@/components/account/MyOrders";
 import AccountSettings from "@/components/account/AccountSettings";
 import DailyThought from "@/components/account/DailyThought";
@@ -21,7 +22,7 @@ const INTRO = {
 };
 
 // /konto — tylko dla zalogowanych (ProtectedRoute). Sekcja wynika z adresu (?tab=…), więc odświeżenie,
-// wstecz/dalej i linki z dzwonka trafiają we właściwe miejsce. Domyślnie: Moje produkty.
+// wstecz/dalej i linki z dzwonka trafiają we właściwe miejsce. Domyślnie: Start (od 16.11.2026; wcześniej Moje produkty).
 // Biblioteka i Wiadomości pokazują się wyłącznie wtedy, gdy moduł jest dla tej osoby dostępny.
 export default function Account() {
   useNoIndex();
@@ -29,7 +30,7 @@ export default function Account() {
   const navigate = useNavigate();
   const state = useAccountState();
   const { me, cfg } = state;
-  const tab = new URLSearchParams(search).get("tab") || "produkty";
+  const tab = new URLSearchParams(search).get("tab") || "start";
   const go = (k) => navigate(`/konto?tab=${k}`);
 
   // Dawny adres zakładki Rozdroża prowadzi do jej trasy.
@@ -45,8 +46,9 @@ export default function Account() {
   }
 
   // Zanim przełączniki dojdą, nie przeskakujemy między sekcjami.
-  const active = !cfg || visibleSections(state).some((s) => s.key === tab) ? tab : "produkty";
-  const intro = INTRO[active] || { title: labelOf(active) };
+  const active = !cfg || visibleSections(state).some((s) => s.key === tab) ? tab : "start";
+  // Start ma własne nagłówki kart — bez dodatkowego tytułu sekcji.
+  const intro = active === "start" ? null : INTRO[active] || { title: labelOf(active) };
 
   const aside = (
     <>
@@ -63,10 +65,13 @@ export default function Account() {
 
   return (
     <AccountShell state={state} active={active} aside={aside} band={band}>
-      <div className="mb-4 lg:mb-6">
-        <h2 className="shop-heading text-[26px] leading-tight md:text-3xl text-[#F5EFE1] focus:outline-none">{intro.title}</h2>
-        {intro.text && <p className="text-base text-[#F5EFE1]/75 mt-1">{intro.text}</p>}
-      </div>
+      {intro && (
+        <div className="mb-4 lg:mb-6">
+          <h2 className="shop-heading text-[26px] leading-tight md:text-3xl text-[#F5EFE1] focus:outline-none">{intro.title}</h2>
+          {intro.text && <p className="text-base text-[#F5EFE1]/75 mt-1">{intro.text}</p>}
+        </div>
+      )}
+      {active === "start" && <StartPanel state={state} go={go} />}
       {active === "produkty" && <MyProducts />}
       {active === "spotkania" && <MyEvents />}
       {active === "sesje" && <MySessions />}
