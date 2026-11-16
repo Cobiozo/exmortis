@@ -5,7 +5,7 @@ const b = (id, typ, dane, uklad = {}) => ({ id, typ, widoczny: true, dane, uklad
 
 export const SPOTKANIA_BLOCKS = [
   b("spotkania-hero", "hero", { wariant: "standard", rozmiar: "kompakt", etykieta: "SPOTKANIA", linia1: "Spotkania", linia2: "",
-    lead: "Otwarte spotkania, warsztaty i kręgi — online i na żywo. Przestrzeń, w której można się zatrzymać, zostać wysłuchanym i zrobić kolejny krok.", przyciski: [], przyciemnienie: 60 }),
+    lead: "Otwarte spotkania, warsztaty i kręgi — online i na żywo. Przestrzeń na zatrzymanie się, rozmowę i kolejny krok.", przyciski: [], przyciemnienie: 60 }),
   b("spotkania-lista", "modul", { modul: "spotkania_lista" }),
 ];
 
