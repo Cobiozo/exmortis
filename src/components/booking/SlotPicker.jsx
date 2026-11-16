@@ -8,7 +8,7 @@ export default function SlotPicker({ slots, value, onPick }) {
     if (!days.length || days[days.length - 1].k !== k) days.push({ k, label: dayLabel(s.start), items: [] });
     days[days.length - 1].items.push(s);
   }
-  if (!slots.length) return <p className="text-foreground/60">Brak wolnych terminów w najbliższym czasie. Zajrzyj później.</p>;
+  if (!slots.length) return <p className="text-foreground/60">Brak wolnych terminów w najbliższym czasie. Sprawdź ponownie za kilka dni.</p>;
   const tz = viewerTz();
   return (
     <div className="space-y-6">
