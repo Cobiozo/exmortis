@@ -1,11 +1,12 @@
 import { useEffect, useState } from "react";
 import { base44 } from "@/api/base44Client";
 import { trackWarnings } from "@/components/admin/silence/library/libUtils";
+import { surveyState } from "@/components/admin/powrot/PowrotAppCard";
 
-// Dane pulpitu panelu: wszystkie zapytania startują RAZEM (równolegle), a każdy wynik
-// pokazuje się od razu, gdy przyjdzie — bez czekania na resztę.
-// Wynik zostaje w pamięci karty na 60 s: powrót na pulpit z modułu pokazuje liczby natychmiast,
-// a świeże dociągają się w tle. Serwer bez zmian — te same funkcje, co dotąd.
+// Dane pulpitu panelu — JEDNO zapytanie (adminDashboard → summary): serwer zbiera wszystko równolegle
+// i trzyma wynik 60 s. Gdyby serwer nie znał jeszcze „summary” (np. tuż po publikacji strony),
+// pulpit wraca do dawnych osobnych zapytań — z tym samym kształtem danych.
+// Wynik zostaje też w pamięci karty na 60 s: powrót na pulpit z modułu pokazuje liczby natychmiast.
 const TTL = 60000;
 let DATA = {};
 let AT = 0;
@@ -21,12 +22,27 @@ export const isKnownAdminBrowser = () => { try { return localStorage.getItem(FLA
 
 const call = (fn, body, pick) => base44.functions.invoke(fn, body).then((r) => pick(r.data));
 
-const SOURCES = {
+// Dawna ścieżka (zapas): te same funkcje co wcześniej, wyniki sprowadzone do kształtu „summary”.
+const LEGACY = {
   stats: () => call("adminDashboard", {}, (d) => d.stats || {}),
   ready: () => call("adminDashboard", { action: "readiness" }, (d) => d),
   events: () => call("eventsAdmin", { action: "list" }, (d) => d.events || []),
-  orders: () => call("adminOrders", { action: "list" }, (d) => ({ list: (d.orders || []).slice(0, 50), summary: d.summary || {} })),
-  powrot: () => call("adminPowrot", { action: "list" }, (d) => d.applications || []),
+  orders: () => call("adminOrders", { action: "list" }, (d) => {
+    const all = d.orders || [];
+    return {
+      list: all.slice(0, 5),
+      summary: { ...(d.summary || {}), fulfill_failed: all.filter((o) => o.status === "COMPLETED" && o.fulfill_error).length },
+    };
+  }),
+  powrot: () => call("adminPowrot", { action: "list" }, (d) => {
+    const list = d.applications || [];
+    const weekAgo = Date.now() - 7 * 86400000;
+    return {
+      fresh: list.filter((a) => new Date(a.created_date).getTime() >= weekAgo).length,
+      todo: list.filter((a) => ["none", "expired"].includes(surveyState(a).key)).length,
+      done: list.filter((a) => a.survey_done_at).length,
+    };
+  }),
   libOn: () => call("libraryAdmin", { action: "settings" }, (d) => d.settings.library_mode !== "off" || d.settings.messages_mode !== "off"),
   bookingKeys: () => call("bookingAdmin", { action: "status" }, (d) => d.keys_ok !== false),
   podcastNew: () => base44.entities.PodcastApplication.count({ status: "nowe" }),
@@ -34,16 +50,30 @@ const SOURCES = {
     .then((p) => (p.items || []).reduce((n, t) => n + trackWarnings(t).length, 0)),
 };
 
+const legacy = () => Promise.allSettled(
+  Object.entries(LEGACY).map(([k, load]) =>
+    load()
+      .then((v) => { DATA = { ...DATA, [k]: v }; emit(); })
+      .catch(() => { if (!(k in DATA)) { DATA = { ...DATA, [k]: null }; emit(); } })
+  )
+);
+
+const KEYS = Object.keys(LEGACY);
+
 export function warmDashboard(force = false) {
   if (RUN) return RUN;
   if (!force && AT && Date.now() - AT < TTL) return Promise.resolve(DATA);
-  RUN = Promise.allSettled(
-    Object.entries(SOURCES).map(([k, load]) =>
-      load()
-        .then((v) => { DATA = { ...DATA, [k]: v }; emit(); })
-        .catch(() => { if (!(k in DATA)) { DATA = { ...DATA, [k]: null }; emit(); } })
-    )
-  ).then(() => { AT = Date.now(); RUN = null; emit(); return DATA; });
+  RUN = base44.functions.invoke("adminDashboard", { action: "summary", fresh: force })
+    .then((r) => {
+      const s = r?.data;
+      if (!s || !s.at) throw new Error("brak summary");
+      const next = { ...DATA };
+      KEYS.forEach((k) => { next[k] = s[k] === undefined ? null : s[k]; });
+      DATA = next;
+      emit();
+    })
+    .catch(() => legacy())
+    .then(() => { AT = Date.now(); RUN = null; emit(); return DATA; });
   return RUN;
 }
 
