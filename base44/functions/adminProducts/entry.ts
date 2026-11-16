@@ -188,6 +188,8 @@ export default async function (req) {
                 p.product_type, p.access_months, p.private_file_uri, p.private_file_name, to_jsonb(p)->>'capacity' AS capacity,
                 to_jsonb(p)->'price_steps' AS price_steps, to_jsonb(p)->'price_options' AS price_options,
                 to_jsonb(p)->'bundle_items' AS bundle_items, COALESCE((to_jsonb(p)->>'show_home')::boolean, FALSE) AS show_home,
+                -- data premiery: bez niej edytor otwierał się z pustym polem i zapis kasował premierę
+                to_jsonb(p)->>'release_at' AS release_at, to_jsonb(p)->>'release_note' AS release_note,
                 p.created_date, p.updated_date,
                 (SELECT COUNT(*)::int FROM public.waitlist w WHERE w.product_id = p.id) AS waitlist_count
          FROM public.products p
