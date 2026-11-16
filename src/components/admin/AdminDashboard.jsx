@@ -30,7 +30,7 @@ function Kpi({ icon: Icon, label, value, sub, to, loading }) {
       <span className="flex items-center gap-2 text-xs text-foreground/55"><Icon className="h-4 w-4 text-[#C9A24A]" />{label}</span>
       {loading ? <><Sk className="h-9 w-20 mt-1" /><Sk className="h-3 w-24 mt-2" /></> : (
         <>
-          <span className="relic-heading text-4xl leading-tight tabular-nums">{value}</span>
+          <span className="relic-heading normal-case text-4xl leading-tight tabular-nums">{value}</span>
           <span className="text-xs text-foreground/45">{sub}</span>
         </>
       )}
@@ -95,7 +95,7 @@ export default function AdminDashboard({ d = {} }) {
   return (
     <div className="space-y-5 pb-8">
       {/* Liczby */}
-      <section aria-label="Najważniejsze liczby" className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-5 gap-3 md:gap-4">
+      <section aria-label="Najważniejsze liczby" className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-5 gap-3 md:gap-4 [&>*:first-child]:col-span-2 md:[&>*:first-child]:col-span-1">
         <Kpi icon={Wallet} label="Przychód w tym miesiącu" to="/admin/zamowienia" loading={d.orders === undefined}
           value={d.orders ? zl(d.orders.summary?.revenue_month) : "—"} sub={d.orders ? `opłacone: ${d.orders.summary?.paid_month ?? 0}` : ""} />
         <Kpi icon={ShoppingBag} label="Opłacone zamówienia" to="/admin/zamowienia" loading={loadingStats} value={v("paid_30")} sub="ostatnie 30 dni" />
