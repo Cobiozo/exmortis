@@ -14,6 +14,7 @@ const status = (e) => e?.response?.status || e?.status || 0;
 const message = (e, fb) => e?.response?.data?.error || fb;
 
 let list = null;
+let listRun = null; // trwające pobieranie listy (wspólne dla równoczesnych wywołań)
 let pvList = null; // lista w podglądzie administratora (z historiami zaplanowanymi) — tylko w pamięci
 const snaps = new Map();
 // Czy pokazana właśnie lista pochodzi z kopii przeglądarki (odświeżenie się nie udało).
@@ -53,7 +54,9 @@ export async function listStories({ fresh = false } = {}) {
   }
   if (!fresh && list && Date.now() - list.at < 20000) return list.items;
   try {
-    const d = await call({ action: "list" });
+    // Jedno zapytanie naraz: menu konta i karta Start pytają równocześnie — dzielą ten sam wynik.
+    if (!listRun) listRun = call({ action: "list" }).finally(() => { listRun = null; });
+    const d = await listRun;
     list = { at: Date.now(), items: d.items || [], next_at: d.next_at || null };
     store.set(LIST_KEY, list);
     listMeta.offline = false;
