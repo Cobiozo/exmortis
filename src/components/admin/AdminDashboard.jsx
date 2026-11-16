@@ -1,7 +1,6 @@
 import React from "react";
 import { Link } from "react-router-dom";
 import { ArrowRight, Check, Plus, Wallet, ShoppingBag, UsersRound, Download, Headphones, Gem, Newspaper, BarChart3, Contact, Library } from "lucide-react";
-import { surveyState } from "@/components/admin/powrot/PowrotAppCard";
 import { fallbackFresh } from "@/content/joinFallback";
 import { STALE_TEXT } from "@/components/admin/events/FallbackBadge";
 import { plWhenFull } from "@/components/exmortis/events/time";
@@ -48,11 +47,11 @@ function todoList(d) {
   (s.zoom_missing || []).forEach((e) => out.push({ tone: "err", title: `Spotkanie bez linku do Zoom: „${e.title}”`, detail: plWhenFull(e.start), to: "/admin/spotkania", cta: "Uzupełnij" }));
   (d.ready?.items || []).filter((i) => i.status !== "ok").forEach((i) => out.push({ tone: i.status === "err" ? "err" : "warn", title: i.title, detail: i.detail, to: i.to, cta: "Otwórz" }));
   (d.events || []).filter((e) => fallbackFresh(e) === false).forEach((e) => out.push({ tone: "warn", title: `„${e.title}”`, detail: STALE_TEXT, to: "/admin/spotkania", cta: "Spotkania" }));
-  const failed = (d.orders?.list || []).filter((o) => o.status === "COMPLETED" && o.fulfill_error).length;
+  const failed = d.orders?.summary?.fulfill_failed || 0;
   if (failed) out.push({ tone: "err", title: `${failed} opłaconych zamówień bez wydanego dostępu`, detail: "Wydanie produktu nie powiodło się — sprawdź i wznów.", to: "/admin/zamowienia", cta: "Sprawdź" });
   if (s.invoices_todo) out.push({ tone: "warn", title: `Faktury do wystawienia: ${s.invoices_todo}`, detail: "Zamówienia z prośbą o fakturę.", to: "/admin/zamowienia", cta: "Wystaw" });
   if (d.powrot) {
-    const todo = d.powrot.filter((a) => ["none", "expired"].includes(surveyState(a).key)).length;
+    const todo = d.powrot.todo || 0;
     if (todo) out.push({ tone: "warn", title: `Zgłoszenia POWRÓT — ankiety do wysłania: ${todo}`, detail: "Krótkie zgłoszenia czekają na pełną ankietę.", to: "/admin/powrot", cta: "Przejrzyj" });
   }
   if (d.podcastNew) out.push({ tone: "warn", title: `Nowe zgłoszenia do podcastu: ${d.podcastNew}`, detail: "Baza kontaktów → Podcast.", to: "/admin/kontakty", cta: "Przejrzyj" });
@@ -90,12 +89,8 @@ export default function AdminDashboard({ d = {} }) {
     .sort((a, b) => new Date(a.start_datetime) - new Date(b.start_datetime))
     .slice(0, 5);
 
-  const orders = (d.orders?.list || []).slice(0, 5);
-  const pc = d.powrot ? {
-    fresh: d.powrot.filter((a) => new Date(a.created_date).getTime() >= now - 7 * 86400000).length,
-    todo: d.powrot.filter((a) => ["none", "expired"].includes(surveyState(a).key)).length,
-    done: d.powrot.filter((a) => a.survey_done_at).length,
-  } : null;
+  const orders = (d.orders?.list || []).slice(0, 5); // serwer zwraca już tylko 5 ostatnich
+  const pc = d.powrot || null;
 
   return (
     <div className="space-y-5 pb-8">
