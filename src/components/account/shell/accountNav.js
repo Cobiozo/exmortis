@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { Package, Library, Compass, CalendarDays, CalendarPlus, Mail, Receipt, Settings } from "lucide-react";
+import { Home, Package, Library, Compass, CalendarDays, CalendarPlus, Mail, Receipt, Settings } from "lucide-react";
 import { base44 } from "@/api/base44Client";
 import { listStories, cachedList } from "@/components/rozdroza/api";
 import { libBundle } from "@/components/account/library/libApi";
@@ -8,6 +8,7 @@ import { libBundle } from "@/components/account/library/libApi";
 // `when` — warunek widoczności jak dotąd: Biblioteka i Wiadomości wg ustawień modułu, Rozdroża gdy są
 // opublikowane historie (administrator widzi je zawsze).
 export const SECTIONS = [
+  { key: "start", label: "Start", icon: Home, group: "tresci" },
   { key: "produkty", label: "Moje produkty", icon: Package, group: "tresci" },
   { key: "biblioteka", label: "Moja biblioteka", icon: Library, group: "tresci", when: (s) => !!s.cfg?.library },
   { key: "rozdroza", label: "Rozdroża", icon: Compass, group: "tresci", to: "/konto/rozdroza", when: (s) => s.rz || s.me?.role === "admin" },
