@@ -28,7 +28,12 @@ function Enroll({ onDone, onCancel }) {
   const [err, setErr] = useState("");
   const [busy, setBusy] = useState(false);
   const [qr, setQr] = useState("");
-  useEffect(() => { supaMfa.enroll().then(setF).catch((e) => setErr(e.message || "Nie udało się rozpocząć")); }, []);
+  // Nowy klucz i kod QR (przy starcie i po „Wygeneruj nowy kod”); poprzedni niedokończony klucz jest usuwany.
+  const start = () => {
+    setF(null); setQr(""); setErr("");
+    supaMfa.enroll().then(setF).catch((e) => setErr(e.message || "Nie udało się rozpocząć"));
+  };
+  useEffect(() => { start(); }, []);
   // Kod QR generowany lokalnie z adresu otpauth:// — SVG z Supabase nie wyświetla się w <img> (niezakodowany data URI).
   useEffect(() => {
     if (!f) return;
@@ -59,7 +64,10 @@ function Enroll({ onDone, onCancel }) {
       ) : !err && <p className="text-sm text-foreground/55">Przygotowuję kod…</p>}
       {f && <CodeForm onSubmit={verify} busy={busy} error={err} label="WŁĄCZ" />}
       {!f && err && <p className="text-sm text-[#E8C547]" role="alert">{err}</p>}
-      <button type="button" onClick={onCancel} className="text-sm text-foreground/55 underline underline-offset-4">Nie teraz</button>
+      <div className="flex flex-wrap gap-x-6 gap-y-2">
+        <button type="button" onClick={start} disabled={busy} className="text-sm gold-text underline underline-offset-4 disabled:opacity-50">Wygeneruj nowy kod</button>
+        <button type="button" onClick={onCancel} className="text-sm text-foreground/55 underline underline-offset-4">Nie teraz</button>
+      </div>
     </div>
   );
 }
