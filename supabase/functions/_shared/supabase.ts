@@ -65,7 +65,22 @@ export function esc(value: unknown) {
 
 // Serwer exmortis.pl (CyberFolks) przekazuje /functions/* do Supabase — wtedy cf-connecting-ip to jego adres,
 // a adres klienta jest w True-Client-IP ustawianym przez ten serwer.
-const PROXY_IPS = new Set(["185.208.164.71"]);
+// Adres serwera: znany na 16.11.2026 + aktualny z DNS (odświeżany co 10 min), żeby zmiana serwera u dostawcy
+// nie sprawiła, że wszyscy klienci liczą się jako jeden adres (limity zablokowałyby np. kasę).
+// Dodatkowo cmsScheduled wysyła alert, gdy z jednego adresu przychodzi nienaturalnie dużo zdarzeń (limitAlert.ts).
+const PROXY_SEED = ["185.208.164.71"];
+const PROXY_IPS = new Set(PROXY_SEED);
+let PROXY_AT = 0;
+async function refreshProxyIps() {
+  const found: string[] = [];
+  for (const name of ["exmortis.pl", "www.exmortis.pl"]) {
+    const r = await fetch(`https://cloudflare-dns.com/dns-query?name=${name}&type=A`, {
+      headers: { accept: "application/dns-json" }, signal: AbortSignal.timeout(3000),
+    }).then((x) => x.json()).catch(() => null);
+    for (const a of (r?.Answer || [])) if (a?.type === 1 && /^[0-9.]{7,15}$/.test(String(a.data))) found.push(String(a.data));
+  }
+  if (found.length) { PROXY_IPS.clear(); for (const ip of [...PROXY_SEED, ...found]) PROXY_IPS.add(ip); }
+}
 
 // Adres klienta do limitów prób (audyt SEC-04, 16.11.2026; sprawdzone funkcją diagnostyczną):
 // - wywołanie bezpośrednie: tylko cf-connecting-ip (ustawia go brzeg; nagłówki True-Client-IP i X-Forwarded-For
@@ -73,6 +88,7 @@ const PROXY_IPS = new Set(["185.208.164.71"]);
 // - przez serwer exmortis.pl: True-Client-IP ustawiony przez ten serwer.
 export function clientIp(req: Request) {
   const ok = (v: string) => /^[0-9a-fA-F:.]{3,45}$/.test(v);
+  if (Date.now() - PROXY_AT > 600000) { PROXY_AT = Date.now(); refreshProxyIps().catch(() => {}); }
   const cf = (req.headers.get("cf-connecting-ip") || "").trim();
   if (ok(cf) && !PROXY_IPS.has(cf)) return cf;
   const t = (req.headers.get("true-client-ip") || "").trim();
