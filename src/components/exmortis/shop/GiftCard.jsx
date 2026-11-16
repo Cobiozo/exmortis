@@ -82,7 +82,7 @@ export function GiftCardBuy({ product }) {
         {added ? "DODANO ✓" : `DO KOSZYKA — ${zl(amount)}`} {!added && <ArrowRight className="h-4 w-4" />}
       </button>
       <p className="text-xs text-foreground/55 leading-relaxed">
-        Po opłaceniu dostaniesz e-mailem kartę z kodem — do wydrukowania albo zapisania jako PDF i przekazania dalej.
+        Po opłaceniu otrzymasz w wiadomości e-mail kartę z kodem — do wydrukowania albo zapisania jako PDF i przekazania dalej.
         Kod wpisuje się w kasie Skarbca, działa jednorazowo, ważny 6 miesięcy.
       </p>
     </div>

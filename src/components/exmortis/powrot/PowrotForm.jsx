@@ -96,7 +96,7 @@ export default function PowrotForm() {
           </h2>
           <p className="text-foreground/60 leading-relaxed max-w-md">
             Trzy dane i jedno pytanie. Zgłoszenia rozpatruję w kolejności napływania —
-            odezwę się osobiście.
+            skontaktuję się osobiście.
           </p>
           <p className="technical text-[10px] text-foreground/55 mt-8">
             ROZMOWA KWALIFIKACYJNA · BEZPŁATNA · BEZ ZOBOWIĄZAŃ

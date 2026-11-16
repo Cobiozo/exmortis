@@ -31,7 +31,7 @@ export default function ListyWypis() {
           <h1 className="relic-heading text-3xl md:text-4xl">{drip ? "Wyłączone" : "Wypisane"}</h1>
           <p className="text-foreground/70">{drip
             ? "Nie wyślę już listów prowadzących po zakupie. Twoje materiały, zamówienia i powiadomienia o nich działają bez zmian."
-            : "Nie przyjdzie już żaden list. Jeśli zmienisz zdanie, możesz zapisać się ponownie — wystarczy podać adres."}</p>
+            : "Nie będziesz już otrzymywać listów. Jeśli zmienisz zdanie, możesz zapisać się ponownie — wystarczy podać adres."}</p>
         </>}
         {state === "bad" && <>
           <h1 className="relic-heading text-3xl md:text-4xl">Link nieaktywny</h1>

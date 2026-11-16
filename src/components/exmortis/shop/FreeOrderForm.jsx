@@ -112,7 +112,7 @@ export default function FreeOrderForm({ product }) {
       </button>
       {!acc.signedIn && <SignInHint />}
       <p className="technical text-[10px] text-foreground/55">
-        PDF przychodzi mailem — nie ma go do pobrania na stronie. Bez spamu, bez presji.
+        Plik PDF otrzymasz w wiadomości e-mail — nie jest dostępny do pobrania na stronie. Bez spamu i bez presji.
       </p>
     </form>
   );

@@ -112,7 +112,7 @@ export default function Pobierz() {
   if (!token) {
     return shell(<>
       <h1 className="relic-heading text-4xl md:text-5xl mb-6">Nie masz linku?</h1>
-      <p className="text-foreground/70 leading-relaxed mb-10">Podaj adres e-mail z zamówienia — wyślę na niego nowy link do Twoich materiałów. Działa 7 dni.</p>
+      <p className="text-foreground/70 leading-relaxed mb-10">Podaj adres e-mail z zamówienia — wyślę na niego nowy link do Twoich materiałów. Link jest ważny 7 dni.</p>
       <ResendForm />
       <p className="text-sm text-foreground/55 mt-10">Masz konto exmortis? Wszystkie zakupy są w <Link to="/konto" className="gold-text hover:underline">Moich produktach</Link>.</p>
     </>);
@@ -129,7 +129,7 @@ export default function Pobierz() {
   if (info.pending) {
     return shell(<>
       <h1 className="relic-heading text-4xl md:text-5xl mb-6">Czekam na potwierdzenie płatności</h1>
-      <p className="text-foreground/70 leading-relaxed mb-8">PayU jeszcze nie potwierdziło płatności. Zwykle trwa to kilka minut — ten sam link przyjdzie też mailem.</p>
+      <p className="text-foreground/70 leading-relaxed mb-8">PayU jeszcze nie potwierdziło płatności. Zwykle trwa to kilka minut — ten sam link otrzymasz również w wiadomości e-mail.</p>
       <button type="button" onClick={() => window.location.reload()} className="btn-ghost">SPRAWDŹ PONOWNIE</button>
     </>);
   }
@@ -182,7 +182,7 @@ export default function Pobierz() {
     {act?.done ? (
       <div className="border border-[#C9A24A]/60 p-6 md:p-8">
         <p className="flex items-center gap-3 relic-heading text-2xl gold-text mb-3"><Check className="h-6 w-6" /> Konto gotowe</p>
-        <p className="text-foreground/70 leading-relaxed">Zakup jest już w Moich produktach, razem z ROZDROŻAMI i Biblioteką.{act.code ? " Kod 20 zł na kolejny materiał przyszedł mailem i czeka w powiadomieniach." : ""}</p>
+        <p className="text-foreground/70 leading-relaxed">Zakup jest już w Moich produktach, razem z ROZDROŻAMI i Biblioteką.{act.code ? " Kod 20 zł na kolejny materiał wysłałem e-mailem — znajdziesz go także w powiadomieniach." : ""}</p>
         <p className="text-sm text-foreground/55 leading-relaxed mt-3">Hasło możesz ustawić później: na stronie logowania „Nie pamiętam hasła”. Z adresem Gmail wejdziesz też przez Google.</p>
         <button type="button" onClick={() => navigate("/konto")} className="btn-relic mt-6">PRZEJDŹ DO KONTA <ArrowRight className="h-4 w-4" /></button>
       </div>
@@ -196,7 +196,7 @@ export default function Pobierz() {
         <p className="technical text-[10px] gold-text mb-4">BEZPŁATNE KONTO EXMORTIS</p>
         <p className="relic-heading text-2xl mb-4">Zakup już czeka na Twoim koncie</p>
         <ul className="space-y-2 text-foreground/70 mb-6">
-          <li>· zakup na zawsze, bez szukania maili</li>
+          <li>· zakupy zawsze dostępne w jednym miejscu</li>
           <li>· aktualizacje e-booka</li>
           <li>· ROZDROŻA i Biblioteka</li>
           <li>· 20 zł na kolejny materiał (od 49 zł, ważne 30 dni)</li>

@@ -18,8 +18,8 @@ export default function AccountOption({ items, checked, onChange }) {
       </label>
       <p className="text-xs text-foreground/50 leading-relaxed pl-8">
         {course
-          ? "Kurs oglądasz na bezpłatnym koncie. Jeśli go nie zaznaczysz, aktywujesz konto jednym kliknięciem w mailu po zakupie."
-          : "Bez konta też dostaniesz wszystko: link do pobrania przyjdzie mailem."}{" "}
+          ? "Kurs jest dostępny na bezpłatnym koncie. Jeśli nie zaznaczysz tej opcji, konto aktywujesz po zakupie jednym kliknięciem — link otrzymasz w wiadomości e-mail."
+          : "Bez konta również otrzymasz pełny dostęp — link do pobrania materiałów otrzymasz w wiadomości e-mail."}{" "}
         Masz konto? <Link to="/login?returnTo=%2Fkasa" className="gold-text hover:underline">Zaloguj się</Link>.
       </p>
     </div>

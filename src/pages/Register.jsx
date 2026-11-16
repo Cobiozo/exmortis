@@ -76,7 +76,7 @@ export default function Register() {
         {error && <p className="mb-5 text-sm text-[#E8C547]">{error}</p>}
         {info && <p className="mb-5 text-sm gold-text">{info}</p>}
         <p className="mb-5 text-sm text-foreground/70 leading-relaxed">
-          Otwórz wiadomość i kliknij link w niej — rejestracja zakończy się sama, a wrócisz tu na moment.
+          Otwórz wiadomość i kliknij zawarty w niej link — rejestracja zakończy się automatycznie, a strona na chwilę wróci w to miejsce.
         </p>
         <button onClick={handleResend} disabled={loading} className="btn-ghost w-full disabled:opacity-60">
           {loading && <Loader2 className="h-4 w-4 animate-spin" />} WYŚLIJ PONOWNIE

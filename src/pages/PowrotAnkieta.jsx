@@ -33,7 +33,7 @@ import {
 const token = () => new URLSearchParams(window.location.search).get("t") || "";
 
 const NOTICE = {
-  invalid: ["Ten link jest nieaktualny", "Link mógł zostać wpisany niekompletnie albo dotyczy zgłoszenia, którego już nie ma. Odezwij się do mnie e-mailem — wyślę nowy."],
+  invalid: ["Ten link jest nieaktualny", "Link mógł zostać wpisany niekompletnie albo dotyczy zgłoszenia, którego już nie ma. Napisz do mnie e-mailem — prześlę nowy link."],
   done: ["Ankieta jest już wypełniona", "Dziękuję — odpowiedzi mam. Odezwę się osobiście, żeby umówić rozmowę."],
   expired: ["Link wygasł", "Ankiety wysyłam na 14 dni. Napisz do mnie — wyślę świeży link."],
 };
@@ -122,7 +122,7 @@ export default function PowrotAnkieta() {
 
   if (state !== "ok" || saved) {
     const [title, text] = saved
-      ? ["Ankieta przyjęta", "Dziękuję. Przeczytam odpowiedzi i odezwę się osobiście, żeby umówić rozmowę kwalifikacyjną."]
+      ? ["Ankieta przyjęta", "Dziękuję. Przeczytam Twoje odpowiedzi i skontaktuję się osobiście, aby umówić rozmowę kwalifikacyjną."]
       : NOTICE[state] || NOTICE.invalid;
     return shell(
       <div className="border border-[#C9A24A]/40 p-8 md:p-12 text-center space-y-6">

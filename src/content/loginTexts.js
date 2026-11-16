@@ -14,7 +14,7 @@ export const LOGIN_BLOCKS = [
   { key: "reset.tytul", label: "Reset — nagłówek", type: "text", default: "Nowe hasło" },
   { key: "reset.podtytul", label: "Reset — podtytuł", type: "text", default: "Wyślę Ci link do ustawienia nowego hasła." },
   { key: "reset.przycisk", label: "Reset — przycisk", type: "text", default: "WYŚLIJ LINK" },
-  { key: "reset.wyslano", label: "Reset — komunikat po wysłaniu", type: "text", default: "Jeśli konto z tym adresem istnieje, za chwilę dostaniesz link do ustawienia nowego hasła." },
+  { key: "reset.wyslano", label: "Reset — komunikat po wysłaniu", type: "text", default: "Jeśli konto z tym adresem istnieje, w ciągu kilku minut otrzymasz wiadomość e-mail z linkiem do ustawienia nowego hasła." },
   { key: "reset.powrot", label: "Reset — powrót do logowania", type: "text", default: "Wróć do logowania" },
   { key: "nowe.tytul", label: "Nowe hasło — nagłówek", type: "text", default: "Ustaw nowe hasło" },
   { key: "nowe.podtytul", label: "Nowe hasło — podtytuł", type: "text", default: "Wpisz nowe hasło dwa razy." },

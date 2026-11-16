@@ -79,7 +79,7 @@ export default function RegistrationForm({ event: ev }) {
     if (result.already) {
       return (
         <p className="text-foreground/70 leading-relaxed border border-[#C9A24A]/30 p-6">
-          Ten adres jest już zapisany — link przyjdzie e-mailem.
+          Ten adres jest już zapisany — link do spotkania otrzymasz w wiadomości e-mail.
         </p>
       );
     }

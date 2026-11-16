@@ -157,7 +157,7 @@ export default function Checkout() {
       const msg = err?.response?.data?.error || "";
       if (msg === "PAYU_NOT_CONFIGURED") {
         // Płatności nieaktywne — zamówienie NIE powstało, więc nie udajemy, że przyjęte.
-        setPayError("Płatności online jeszcze nie działają. Nic nie zostało pobrane, koszyk zostaje. Napisz do mnie przez formularz kontaktowy, a odezwę się z płatnością.");
+        setPayError("Płatności online jeszcze nie działają. Nic nie zostało pobrane, koszyk zostaje. Napisz do mnie przez formularz kontaktowy — prześlę Ci link do płatności.");
       } else if (msg && !/^PayU|Supabase|fetch/i.test(msg)) {
         setPayError(msg);
       } else {
@@ -190,7 +190,7 @@ export default function Checkout() {
             <h1 className="relic-heading text-3xl md:text-5xl">Płatność w weryfikacji</h1>
             <p className="text-foreground/60 text-lg max-w-md leading-relaxed">
               PayU jeszcze nie potwierdziło płatności. Nie traktujemy jej jako opłaconej, dopóki nie dotrze
-              powiadomienie z bramki. Koszyk zostaje na swoim miejscu, a dostęp i szczegóły wyślemy mailem —
+              powiadomienie z bramki. Koszyk zostaje na swoim miejscu, a dostęp i szczegóły otrzymasz w wiadomości e-mail —
               zwykle w kilka minut.
             </p>
             <button
@@ -209,12 +209,12 @@ export default function Checkout() {
             </div>
             <h1 className="relic-heading text-4xl md:text-6xl gold-text">Próg przekroczony</h1>
             <p className="text-foreground/60 text-lg max-w-md leading-relaxed">
-              Płatność dotarła. Potwierdzenie {doneLink ? "i link do materiałów są" : "jest"} już w drodze na Twój mail — pierwszy ruch jest już za Tobą.
+              Płatność została przyjęta. Potwierdzenie {doneLink ? "zamówienia i link do materiałów wysłałem" : "zamówienia wysłałem"} na Twój adres e-mail — pierwszy ruch jest już za Tobą.
             </p>
             {doneEmail && (
               <p className="text-sm text-foreground/55 max-w-md leading-relaxed">
-                Wysłałem na adres <span className="text-foreground/85 break-all">{doneEmail}</span>. Nie widać maila po kilku minutach? Zajrzyj do spamu albo{" "}
-                <Link to="/kontakt" className="underline underline-offset-4 hover:text-[#C9A24A]">napisz do mnie</Link> — jeśli w adresie jest literówka, wyślę na właściwy.
+                Wiadomość wysłałem na adres <span className="text-foreground/85 break-all">{doneEmail}</span>. Jeśli nie dotrze w ciągu kilku minut, sprawdź folder „Spam” lub{" "}
+                <Link to="/kontakt" className="underline underline-offset-4 hover:text-[#C9A24A]">napisz do mnie</Link> — w razie błędu w adresie wyślę materiały ponownie.
               </p>
             )}
             {doneLink && (
@@ -362,7 +362,7 @@ export default function Checkout() {
               </div>
               {form.email.trim() && (
                 <p className="text-sm text-foreground/65 leading-relaxed">
-                  Potwierdzenie i materiały wyślę na: <span className="text-foreground break-all">{form.email.trim()}</span>{" "}
+                  Potwierdzenie i materiały wyślę na adres: <span className="text-foreground break-all">{form.email.trim()}</span>{" "}
                   · <a href="#co-email" onClick={(e) => { e.preventDefault(); const el = document.getElementById("co-email"); el?.scrollIntoView({ behavior: "smooth", block: "center" }); el?.focus({ preventScroll: true }); }} className="underline underline-offset-4 hover:text-[#C9A24A]">zmień</a>
                 </p>
               )}
@@ -371,7 +371,7 @@ export default function Checkout() {
                 {!submitting && <ArrowRight className="h-4 w-4" />}
               </button>
               <p className="flex items-center justify-center gap-2 text-xs text-foreground/55 text-center">
-                <Lock className="h-3.5 w-3.5" /> Bezpieczna płatność online przez PayU · potwierdzenie przyjdzie mailem
+                <Lock className="h-3.5 w-3.5" /> Bezpieczna płatność online przez PayU · potwierdzenie otrzymasz w wiadomości e-mail
               </p>
             </div>
           </form>

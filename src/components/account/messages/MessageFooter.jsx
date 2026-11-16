@@ -11,7 +11,7 @@ export default function MessageFooter({ footer, title }) {
   return (
     <div className="mt-5 pt-5 border-t hairline space-y-4">
       <p className="font-body text-[14px] leading-relaxed text-foreground/60">
-        {footer && footer.reply ? footer.reply : "Na tę wiadomość odpowiesz e-mailem lub na WhatsAppie."}
+        {footer && footer.reply ? footer.reply : "Na tę wiadomość możesz odpowiedzieć e-mailem lub przez WhatsApp."}
       </p>
       <div className="flex flex-wrap gap-3">
         {href && (

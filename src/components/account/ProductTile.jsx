@@ -50,7 +50,7 @@ export default function ProductTile({ p }) {
         )}
         <div className="mt-auto pt-3 space-y-3">
           {!p.active ? null : !p.has_file && (p.type === "pdf" || p.type === "audio") ? (
-            <p className="text-xs text-foreground/55">Materiał jest przygotowywany. Dam znać mailem.</p>
+            <p className="text-xs text-foreground/55">Materiał jest w przygotowaniu. Poinformuję Cię e-mailem, gdy będzie dostępny.</p>
           ) : p.type === "pdf" ? (
             <div className="flex flex-wrap gap-3">
               <button onClick={open} disabled={busy} className="btn-relic !px-4 !py-2.5">{busy ? <Loader2 className={`${ico} animate-spin`} /> : <Download className={ico} strokeWidth={1.25} />} POBIERZ</button>

@@ -85,7 +85,7 @@ export default function TicketBuy({ event: ev }) {
         <Ticket className="h-4 w-4" /> KUPUJĘ — {zl(price * names.length)} <ArrowRight className="h-4 w-4" />
       </button>
       <p className="text-xs text-foreground/55 leading-relaxed">
-        Płatność przez PayU. Po opłaceniu dostaniesz e-mailem bilety w PDF — każdy z imieniem i nazwiskiem, numerem i kodem QR do pokazania przy wejściu.
+        Płatność przez PayU. Po opłaceniu otrzymasz w wiadomości e-mail bilety w PDF — każdy z imieniem i nazwiskiem, numerem i kodem QR do pokazania przy wejściu.
         Bilety będą też w Moim koncie (zakładka Spotkania), po zalogowaniu adresem podanym przy zakupie.
       </p>
     </form>

@@ -66,7 +66,7 @@ export default function CoursePlayer() {
         {data.valid_until && <p className="text-xs text-foreground/55 mt-2">Dostęp do {new Date(`${data.valid_until}T12:00:00Z`).toLocaleDateString("pl-PL", { day: "numeric", month: "long", year: "numeric" })}</p>}
       </div>
       {data.lessons.length === 0 ? (
-        <p className="mt-10 text-foreground/55">Lekcje są przygotowywane. Dam znać mailem, kiedy będą gotowe.</p>
+        <p className="mt-10 text-foreground/55">Lekcje są w przygotowaniu. Poinformuję Cię e-mailem, gdy będą dostępne.</p>
       ) : (
         <div className="mt-10 grid grid-cols-1 lg:grid-cols-[minmax(0,1fr)_340px] gap-10">
           {lesson && (consented ? <LessonPlayer key={lesson.id} accessId={accessId} lesson={lesson} onDone={markDone} onNext={next ? () => pick(next.id) : null} nextTitle={next?.title} /> : <LicenseConsent onAccept={() => setConsented(true)} />)}

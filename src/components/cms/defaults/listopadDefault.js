@@ -40,7 +40,7 @@ export const LISTOPAD_BLOCKS = [
     { tytul: "Pytania", opis: "Czas na Twoje pytania — możesz je zadać już przy zapisie." }] }),
   b("lis-faq", "faq", { etykieta: "PYTANIA", tytul: "Pytania i odpowiedzi", pytania: [
     { pytanie: "Ile kosztuje udział?", odpowiedz: "Udział jest bezpłatny." },
-    { pytanie: "Gdzie odbywa się spotkanie?", odpowiedz: "Online. Link do spotkania dostaniesz e-mailem po zapisie, razem z plikiem do kalendarza." },
+    { pytanie: "Gdzie odbywa się spotkanie?", odpowiedz: "Online. Link do spotkania otrzymasz w wiadomości e-mail po zapisie, razem z plikiem do kalendarza." },
     { pytanie: "Czy muszę włączać kamerę?", odpowiedz: "Nie. Możesz po prostu słuchać." },
     { pytanie: "Ile trwa spotkanie?", odpowiedz: "Około dwóch godzin: 90 minut spotkania i 30 minut na Twoje pytania." },
     { pytanie: "Na jakiej platformie odbywa się spotkanie?", odpowiedz: "Na Zoomie, w trybie webinaru. Nie musisz zakładać konta w Zoom." },

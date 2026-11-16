@@ -56,7 +56,7 @@ export default function ContactPageForm() {
         )}
         {/* Dane firmy pod formularzem (w stopce ich nie ma — decyzja 4.11.2026). */}
         <CompanyLines variant="block" className="mt-12 pt-8 border-t hairline text-sm" />
-        <p className="mt-10 text-sm text-foreground/60">Nie masz linku do kupionych materiałów? <Link to="/pobierz" className="gold-text underline">Wyślij sobie nowy link</Link> — przyjdzie na adres z zamówienia.</p>
+        <p className="mt-10 text-sm text-foreground/60">Nie masz linku do kupionych materiałów? <Link to="/pobierz" className="gold-text underline">Wyślij sobie nowy link</Link> — otrzymasz go na adres e-mail podany w zamówieniu.</p>
         <p className="mt-3 text-sm text-foreground/60">Chcesz odstąpić od umowy? <Link to="/odstapienie" className="gold-text underline">Odstąp od umowy tutaj</Link></p>
       </div>
     </section>

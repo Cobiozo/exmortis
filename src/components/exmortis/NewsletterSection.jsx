@@ -11,7 +11,7 @@ import WhatsAppChannelLink from "@/components/exmortis/WhatsAppChannelLink";
 export default function NewsletterSection({ label } = {}) {
   const { rich } = useSiteContent();
   const title = rich("footer", "newsletterTitle", 'Zapisz się.<br /><span class="blood-text">Wracaj</span> co tydzień.');
-  const desc = rich("footer", "newsletterDesc", "Jeden list tygodniowo. Jeden temat powrotu. Jedno narzędzie. Prosto na Twój mail — z prezentem powitalnym: mini-PDF „3 pierwsze ruchy powrotu”.");
+  const desc = rich("footer", "newsletterDesc", "Jeden list tygodniowo. Jeden temat powrotu. Jedno narzędzie. Bezpośrednio na Twoją skrzynkę e-mail — z prezentem powitalnym: mini-PDF „3 pierwsze ruchy powrotu”.");
   const [email, setEmail] = useState("");
   const [sent, setSent] = useState(false);
   const t = useSystemText();

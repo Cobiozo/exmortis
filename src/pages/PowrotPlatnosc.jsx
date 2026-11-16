@@ -110,7 +110,7 @@ export default function PowrotPlatnosc() {
         <p className="text-foreground/60 text-lg leading-relaxed max-w-md">
           {fail
             ? "Nic nie zostało pobrane albo PayU zwróci środki. Możesz spróbować jeszcze raz — link jest nadal ważny."
-            : "PayU jeszcze nie potwierdziło płatności. Potwierdzenie wyślę e-mailem, zwykle w kilka minut."}
+            : "PayU jeszcze nie potwierdziło płatności. Potwierdzenie otrzymasz w wiadomości e-mail, zwykle w ciągu kilku minut."}
         </p>
         {fail
           ? <button type="button" className="btn-relic" onClick={() => { setPayState(null); window.history.replaceState(null, "", `/powrot/platnosc?t=${token}`); }}>SPRÓBUJ PONOWNIE <ArrowRight className="h-4 w-4" /></button>

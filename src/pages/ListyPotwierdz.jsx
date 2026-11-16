@@ -20,7 +20,7 @@ export default function ListyPotwierdz() {
         {state === "loading" && <div className="mx-auto w-8 h-8 border-4 border-[#3D3D3F] border-t-[#C9A24A] rounded-full animate-spin" />}
         {state === "ok" && <>
           <h1 className="relic-heading text-3xl md:text-4xl">Zapis potwierdzony</h1>
-          <p className="text-foreground/70">Pierwszy list przyjdzie w najbliższy poniedziałek. Wypisać się możesz jednym kliknięciem w każdym liście.</p>
+          <p className="text-foreground/70">Pierwszy list otrzymasz w najbliższy poniedziałek. Wypisać się możesz jednym kliknięciem w każdym liście.</p>
         </>}
         {state === "already" && <>
           <h1 className="relic-heading text-3xl md:text-4xl">Już potwierdzone</h1>
@@ -28,7 +28,7 @@ export default function ListyPotwierdz() {
         </>}
         {state === "bad" && <>
           <h1 className="relic-heading text-3xl md:text-4xl">Link nieaktywny</h1>
-          <p className="text-foreground/70">Ten link wygasł (ważny 7 dni) albo adres został wcześniej wypisany. Możesz zapisać się ponownie — przyjdzie nowy link.</p>
+          <p className="text-foreground/70">Ten link wygasł (ważny 7 dni) albo adres został wcześniej wypisany. Możesz zapisać się ponownie — otrzymasz nowy link potwierdzający.</p>
         </>}
         {state !== "loading" && <Link to="/" className="btn-ghost">STRONA GŁÓWNA</Link>}
       </div>
