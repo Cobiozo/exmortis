@@ -25,7 +25,7 @@ const SOURCES = {
   stats: () => call("adminDashboard", {}, (d) => d.stats || {}),
   ready: () => call("adminDashboard", { action: "readiness" }, (d) => d),
   events: () => call("eventsAdmin", { action: "list" }, (d) => d.events || []),
-  orders: () => call("adminOrders", { action: "list" }, (d) => (d.orders || []).slice(0, 50)),
+  orders: () => call("adminOrders", { action: "list" }, (d) => ({ list: (d.orders || []).slice(0, 50), summary: d.summary || {} })),
   powrot: () => call("adminPowrot", { action: "list" }, (d) => d.applications || []),
   libOn: () => call("libraryAdmin", { action: "settings" }, (d) => d.settings.library_mode !== "off" || d.settings.messages_mode !== "off"),
   bookingKeys: () => call("bookingAdmin", { action: "status" }, (d) => d.keys_ok !== false),
