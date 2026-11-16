@@ -423,13 +423,21 @@ async function me() {
     profile = rows[0] || null;
   } catch { /* kolumna email może istnieć zamiast data->email */ }
   const d = ((profile?.data as Record<string, unknown>) || {}) as Record<string, unknown>;
+  // Weryfikacja dwuetapowa (audyt 16.11.2026): konto z aktywnym TOTP ma uprawnienia obsługi (admin/techniczna)
+  // tylko w sesji potwierdzonej kodem (aal2). Samo hasło (aal1) daje zwykłe konto — panel zwraca wtedy brak dostępu.
+  const mfa = Array.isArray(u.factors) && u.factors.some((f: { status?: string }) => f?.status === "verified");
+  let aal = "aal1";
+  try { aal = String(JSON.parse(atob(token.split(".")[1].replace(/-/g, "+").replace(/_/g, "/"))).aal || "aal1"); } catch { /* aal1 */ }
+  let role = String(d.role || "user");
+  if (mfa && aal !== "aal2" && (role === "admin" || role === "techniczna")) role = "user";
   return {
     id: String(u.id),
     email: u.email,
     full_name: d.full_name || u.user_metadata?.full_name || String(u.email || "").split("@")[0],
     // Rola wyłącznie z profilu exm_user (strażnik w bazie blokuje jej zmianę przez klienta).
     // Danych konta (user_metadata) klient może edytować sam — nie są źródłem roli.
-    role: d.role || "user",
+    role,
+    mfa, aal,
     created_date: profile?.created_date || u.created_at,
   };
 }
