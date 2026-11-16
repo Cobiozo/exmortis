@@ -63,7 +63,6 @@ export function esc(value: unknown) {
   return escStr(value);
 }
 
-// IP klienta — brzeg Supabase podaje X-Forwarded-For; pierwsza wartość to klient.
 // Serwer exmortis.pl (CyberFolks) przekazuje /functions/* do Supabase — wtedy cf-connecting-ip to jego adres,
 // a adres klienta jest w True-Client-IP ustawianym przez ten serwer.
 const PROXY_IPS = new Set(["185.208.164.71"]);
