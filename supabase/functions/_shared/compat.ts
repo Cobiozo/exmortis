@@ -427,7 +427,9 @@ async function me() {
     id: String(u.id),
     email: u.email,
     full_name: d.full_name || u.user_metadata?.full_name || String(u.email || "").split("@")[0],
-    role: d.role || u.user_metadata?.role || "user",
+    // Rola wyłącznie z profilu exm_user (strażnik w bazie blokuje jej zmianę przez klienta).
+    // Danych konta (user_metadata) klient może edytować sam — nie są źródłem roli.
+    role: d.role || "user",
     created_date: profile?.created_date || u.created_at,
   };
 }
