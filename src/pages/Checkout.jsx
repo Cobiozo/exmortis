@@ -16,10 +16,12 @@ import { GiftLine } from "@/components/exmortis/shop/GiftCard";
 import { TicketLine } from "@/components/exmortis/events/TicketBuy";
 import { track, trackPurchase } from "@/lib/track";
 import { TXT } from "@/content/legal/seller";
+import { suggestEmail } from "@/lib/emailTypo";
 
 const ORDER_KEY = "exm_payu_order";
 const ORDER_VALUE_KEY = "exm_payu_value";
 const ORDER_LINK_KEY = "exm_payu_link"; // osobisty link do materiałów (strona po zapłacie)
+const ORDER_EMAIL_KEY = "exm_payu_email"; // adres z zamówienia — pokazany na stronie po zapłacie
 
 // Sekcja formularza kasy (poza komponentem — inaczej pola traciłyby fokus przy każdym znaku).
 function Step({ n, title, hint, children }) {
@@ -47,6 +49,7 @@ export default function Checkout() {
   const [payState, setPayState] = useState("check"); // check | ok | wait | fail
   const [pollNonce, setPollNonce] = useState(0); // ponowne sprawdzenie stanu na żądanie klienta
   const [doneLink, setDoneLink] = useState("");
+  const [doneEmail, setDoneEmail] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const [form, setForm] = useState({ name: "", email: "", note: "" });
   const [newsletterConsent, setNewsletterConsent] = useState(false);
@@ -58,6 +61,7 @@ export default function Checkout() {
   const [discount, setDiscount] = useState(null);
   const [invoice, setInvoice] = useState({ want: false, company: "", nip: "", address: "" });
   const [showNote, setShowNote] = useState(false);
+  const emailTip = suggestEmail(form.email);
   const { user } = useAuth();
   useEffect(() => {
     if (user) setForm((f) => ({ ...f, name: f.name || user.imie || user.full_name || "", email: f.email || user.email }));
@@ -105,6 +109,7 @@ export default function Checkout() {
         clear();
         try { sessionStorage.removeItem(ORDER_KEY); } catch { /* */ }
         try { setDoneLink(sessionStorage.getItem(ORDER_LINK_KEY) || ""); } catch { /* */ }
+        try { setDoneEmail(sessionStorage.getItem(ORDER_EMAIL_KEY) || ""); } catch { /* */ }
         setPayState("ok");
         return;
       }
@@ -144,6 +149,7 @@ export default function Checkout() {
       try {
         sessionStorage.setItem(ORDER_KEY, res.data.orderId || "");
         if (res.data.link) sessionStorage.setItem(ORDER_LINK_KEY, res.data.link); else sessionStorage.removeItem(ORDER_LINK_KEY);
+        sessionStorage.setItem(ORDER_EMAIL_KEY, String(form.email || "").trim());
         sessionStorage.setItem(ORDER_VALUE_KEY, String(Math.round((Number(discount ? total - discount.discount : total) || 0) * 100) / 100));
       } catch { /* bez pamięci karty */ }
       window.location.href = res.data.redirectUri;
@@ -205,6 +211,12 @@ export default function Checkout() {
             <p className="text-foreground/60 text-lg max-w-md leading-relaxed">
               Płatność dotarła. Potwierdzenie {doneLink ? "i link do materiałów są" : "jest"} już w drodze na Twój mail — pierwszy ruch jest już za Tobą.
             </p>
+            {doneEmail && (
+              <p className="text-sm text-foreground/55 max-w-md leading-relaxed">
+                Wysłałem na adres <span className="text-foreground/85 break-all">{doneEmail}</span>. Nie widać maila po kilku minutach? Zajrzyj do spamu albo{" "}
+                <Link to="/kontakt" className="underline underline-offset-4 hover:text-[#C9A24A]">napisz do mnie</Link> — jeśli w adresie jest literówka, wyślę na właściwy.
+              </p>
+            )}
             {doneLink && (
               <a href={`/pobierz#t=${doneLink}`} className="btn-relic">POBIERZ MATERIAŁY <Download className="h-4 w-4" /></a>
             )}
@@ -287,7 +299,14 @@ export default function Checkout() {
                   <label htmlFor="co-email" className="technical text-[10px] text-foreground/55 block mb-3">E-MAIL</label>
                   <input id="co-email" autoComplete="email" inputMode="email" required type="email" value={form.email}
                     onChange={(e) => setForm({ ...form, email: e.target.value })} className={inputCls} aria-describedby="co-email-hint" />
-                  <p id="co-email-hint" className="text-xs text-foreground/50 mt-2">Na ten adres wyślę potwierdzenie i link do materiałów.</p>
+                  {emailTip ? (
+                    <p id="co-email-hint" className="text-sm text-[#E8C547] mt-2" role="status">
+                      Czy chodziło Ci o{" "}
+                      <button type="button" onClick={() => setForm({ ...form, email: emailTip })} className="underline underline-offset-4 font-medium break-all">{emailTip}</button>?
+                    </p>
+                  ) : (
+                    <p id="co-email-hint" className="text-xs text-foreground/50 mt-2">Na ten adres wyślę potwierdzenie i link do materiałów.</p>
+                  )}
                 </div>
               </div>
             </Step>
@@ -341,6 +360,12 @@ export default function Checkout() {
                 <span className="technical text-[11px] text-foreground/70">DO ZAPŁATY</span>
                 <span className="font-mono text-3xl gold-text">{sumPl} zł</span>
               </div>
+              {form.email.trim() && (
+                <p className="text-sm text-foreground/65 leading-relaxed">
+                  Potwierdzenie i materiały wyślę na: <span className="text-foreground break-all">{form.email.trim()}</span>{" "}
+                  · <a href="#co-email" onClick={(e) => { e.preventDefault(); const el = document.getElementById("co-email"); el?.scrollIntoView({ behavior: "smooth", block: "center" }); el?.focus({ preventScroll: true }); }} className="underline underline-offset-4 hover:text-[#C9A24A]">zmień</a>
+                </p>
+              )}
               <button type="submit" disabled={submitting} className="btn-relic w-full !py-5 text-base disabled:opacity-60">
                 {submitting ? "PRZYGOTOWUJĘ PŁATNOŚĆ..." : "Zamawiam z obowiązkiem zapłaty"}{" "}
                 {!submitting && <ArrowRight className="h-4 w-4" />}
