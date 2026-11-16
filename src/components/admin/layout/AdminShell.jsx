@@ -11,7 +11,7 @@ import { navFor } from "./adminNav";
 // Same linki i wyjścia co dotąd — zmienia się tylko wygląd i miejsce.
 const itemCls = (on) =>
   `group flex items-center gap-3 rounded-md px-3 py-2 text-[13px] transition-colors ${
-    on ? "bg-[#C9A24A]/12 text-[#F1EDE3]" : "text-foreground/65 hover:text-foreground hover:bg-white/[0.04]"
+    on ? "bg-[#C9A24A]/10 text-[#F1EDE3]" : "text-foreground/65 hover:text-foreground hover:bg-white/[0.04]"
   }`;
 
 function Badge({ n }) {
