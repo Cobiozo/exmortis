@@ -1,16 +1,21 @@
 import React from "react";
 import { Link } from "react-router-dom";
 
-export default function NextStepCard({ step }) {
+// „Następny krok” — polecany materiał (myAccount → products → next). Wygląd 16.11.2026.
+export default function NextStepCard({ step, className = "" }) {
   if (!step) return null;
   return (
-    <div className="border hairline p-6 mt-8 flex flex-col sm:flex-row sm:items-center gap-4 justify-between">
-      <div>
-        <p className="technical text-[10px] gold-text mb-2">NASTĘPNY KROK</p>
-        <p className="shop-heading text-xl text-[#F5EFE1]">{step.name}</p>
-        {step.text && <p className="text-sm text-foreground/60 mt-1">{step.text}</p>}
+    <section aria-label="Następny krok" className={`rounded-2xl border border-[#C9A24A]/30 p-5 md:p-6 flex flex-col gap-2 ${className}`}
+      style={{ background: "linear-gradient(180deg, rgba(201,162,74,.07), rgba(201,162,74,0))" }}>
+      <p className="technical text-[10px] gold-text">NASTĘPNY KROK</p>
+      <p className="shop-heading text-2xl text-[#F5EFE1] leading-tight">{step.name}</p>
+      {step.text && <p className="text-sm text-[#F5EFE1]/70">{step.text}</p>}
+      <div className="mt-auto pt-3">
+        <Link to={step.href || `/skarbiec/${step.slug}`}
+          className="inline-flex items-center justify-center min-h-[44px] px-5 rounded-lg bg-[#C9A24A] text-[#0A0A0B] text-sm font-semibold hover:bg-[#E2C27A] transition-colors">
+          {step.fallback === "free" ? "Pobierz materiał" : "Zobacz materiał"}
+        </Link>
       </div>
-      <Link to={step.href || `/skarbiec/${step.slug}`} className="btn-ghost shrink-0">{step.fallback === "free" ? "POBIERZ" : "ZOBACZ"}</Link>
-    </div>
+    </section>
   );
 }
