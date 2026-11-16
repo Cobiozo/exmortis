@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
-import { Home, Menu, X, Eye, ExternalLink, UserRound, LogOut, ShoppingBag, CalendarDays, Contact, PenLine, Settings } from "lucide-react";
+import { Home, Globe, Menu, X, Eye, ExternalLink, UserRound, LogOut, ShoppingBag, CalendarDays, Contact, PenLine, Settings } from "lucide-react";
 import { base44 } from "@/api/base44Client";
 import Logo from "@/components/exmortis/Logo";
 import { useAdminMode } from "@/components/admin/AdminModeContext";
@@ -30,7 +30,8 @@ function NavContent({ me, groups, active, badges, onPreload, onNavigate }) {
   const exit = "flex items-center gap-3 rounded-md px-3 py-2 text-[13px] text-foreground/65 hover:text-foreground hover:bg-white/[0.04] w-full text-left";
   return (
     <div className="flex flex-col h-full">
-      <Link to="/admin" onClick={onNavigate} className="flex items-center gap-3 px-3 pb-6">
+      {/* Logo prowadzi na stronę główną (z paskiem admina), jak na stronie publicznej. */}
+      <Link to="/" onClick={() => { setMode("admin"); onNavigate?.(); }} aria-label="Strona główna exmortis" title="Strona główna" className="flex items-center gap-3 px-3 pb-6">
         <Logo className="h-10 w-10" glow={false} />
         <span>
           <span className="block relic-heading text-lg leading-none">exmortis</span>
@@ -39,9 +40,14 @@ function NavContent({ me, groups, active, badges, onPreload, onNavigate }) {
       </Link>
 
       <nav aria-label="Moduły panelu" className="flex-1 space-y-5">
+        <div className="space-y-0.5">
+        <Link to="/" onClick={() => { setMode("admin"); onNavigate?.(); }} className={itemCls(false)}>
+          <Globe className="h-4 w-4 text-foreground/40 group-hover:text-foreground/70" /> Strona główna
+        </Link>
         <Link to="/admin" onClick={onNavigate} aria-current={!active ? "page" : undefined} className={itemCls(!active)}>
           <Home className={`h-4 w-4 ${!active ? "text-[#C9A24A]" : "text-foreground/40 group-hover:text-foreground/70"}`} /> Pulpit
         </Link>
+        </div>
         {groups.map(([name, items]) => (
           <div key={name}>
             <p className="px-3 pb-1.5 technical text-[10px] text-foreground/40">{name.toUpperCase()}</p>
@@ -64,7 +70,6 @@ function NavContent({ me, groups, active, badges, onPreload, onNavigate }) {
       </nav>
 
       <div className="mt-6 pt-4 border-t hairline space-y-0.5">
-        <Link to="/" onClick={() => setMode("admin")} className={exit}><Eye className="h-4 w-4 text-foreground/40" /> Zobacz stronę</Link>
         <a href="/" target="_blank" rel="noopener" className={exit}><ExternalLink className="h-4 w-4 text-foreground/40" /> Strona w nowej karcie</a>
         <button type="button" onClick={() => { setMode("guest"); navigate(siteFor(pathname)); }} className={exit}><Eye className="h-4 w-4 text-foreground/40" /> Widok gościa</button>
         <Link to="/konto" onClick={() => setMode("admin")} className={exit}><UserRound className="h-4 w-4 text-foreground/40" /> Moje konto</Link>
@@ -103,7 +108,7 @@ export default function AdminShell({ me, tech, techKeys, libOn, badges, active, 
         <button type="button" onClick={() => setOpen(true)} aria-label="Otwórz menu panelu" className="h-11 w-11 inline-flex items-center justify-center rounded-md border hairline">
           <Menu className="h-5 w-5" />
         </button>
-        <Link to="/admin" className="flex items-center gap-2"><Logo className="h-8 w-8" glow={false} /><span className="technical text-[10px] text-foreground/55">ZAPLECZE</span></Link>
+        <Link to="/" onClick={() => setMode("admin")} aria-label="Strona główna exmortis" className="flex items-center gap-2"><Logo className="h-8 w-8" glow={false} /><span className="technical text-[10px] text-foreground/55">ZAPLECZE</span></Link>
         <span className="w-11" />
       </div>
 
