@@ -72,10 +72,11 @@ export default function HeroBlock({ d }) {
     </section>
   );
 
-  // Rozmiar „kompakt” (np. Spotkania, 17.11.2026): niższa sekcja i mniejszy tytuł — treść strony szybciej widoczna.
-  const k = d.rozmiar === "kompakt";
+  // Od 17.11.2026 wszystkie nagłówki stron (wariant standard) są kompaktowe: niższa sekcja i mniejszy tytuł,
+  // treść strony szybciej widoczna. Dawny duży nagłówek: rozmiar „duzy” w danych bloku.
+  const k = d.rozmiar !== "duzy";
   const box = k
-    ? "min-h-[34svh] md:min-h-[42vh] pt-28 md:pt-32 pb-10 md:pb-14"
+    ? `${d.tlo?.url ? "min-h-[50vh] md:min-h-[56vh]" : "min-h-[34svh] md:min-h-[42vh]"} pt-28 md:pt-32 pb-10 md:pb-14`
     : `${d.tlo?.url ? "min-h-[70vh] pt-40" : "min-h-[50svh] md:min-h-[70vh] pt-32 md:pt-40"} pb-16 md:pb-20`;
   return (
     // Bez zdjęcia w tle na telefonie niższy nagłówek — inaczej nad tytułem zostaje pusty ekran.
