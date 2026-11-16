@@ -99,9 +99,12 @@ const handler = async function (req) {
       if (!email.includes("@")) return Response.json({ error: "Podaj e-mail" }, { status: 400 });
       const rows = await runSql(base44, `SELECT data->>'role' AS role FROM public.exm_user WHERE lower(data->>'email') = ${escStr(email)} LIMIT 1`, true);
       if (!rows.length) return Response.json({ error: "To konto nie ma jeszcze profilu." }, { status: 404 });
-      const cur = ["admin", "techniczna"].includes(String(rows[0].role)) ? String(rows[0].role) : "user";
+      const raw = String(rows[0].role || "user");
+      const cur = ["admin", "techniczna"].includes(raw) ? raw : "user";
       const self = email === String(admin.email || "").toLowerCase();
-      if (body.action === "role") return Response.json({ role: cur, self });
+      const locked = raw === "zablokowane"; // konto nieaktywne — tej roli nie zmieniamy z tego miejsca
+      if (body.action === "role") return Response.json({ role: cur, self, locked });
+      if (locked) return Response.json({ error: "Konto jest nieaktywne — rola nie może być tu zmieniona." }, { status: 400 });
 
       const role = String(body.role || "");
       if (!["admin", "techniczna", "user"].includes(role)) return Response.json({ error: "Nieznana rola." }, { status: 400 });
