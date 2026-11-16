@@ -117,6 +117,53 @@ async function api(path, init) {
   return d;
 }
 
+// --- weryfikacja dwuetapowa (TOTP) — audyt bezpieczeństwa 16.11.2026 ---
+// Poziom sesji (aal1 = hasło/link, aal2 = potwierdzona kodem) z tokenu; czynniki z /user.
+const aalOf = (token) => {
+  try { return JSON.parse(atob(String(token).split(".")[1].replace(/-/g, "+").replace(/_/g, "/"))).aal || "aal1"; } catch { return "aal1"; }
+};
+
+export const supaMfa = {
+  async state() {
+    const s = await session();
+    if (!s) return null;
+    const u = await api("/user", { headers: headers(s.access_token) });
+    const factors = (u.factors || []).filter((f) => f.factor_type === "totp");
+    const verified = factors.filter((f) => f.status === "verified");
+    return { aal: aalOf(s.access_token), verified, unverified: factors.filter((f) => f.status !== "verified") };
+  },
+  // Nowy czynnik TOTP: QR do zeskanowania w aplikacji (Google Authenticator, Microsoft Authenticator, 1Password…).
+  async enroll() {
+    const s = await session();
+    if (!s) throw new Error("Brak sesji");
+    const st = await this.state();
+    for (const f of st.unverified) {
+      await api(`/factors/${f.id}`, { method: "DELETE", headers: headers(s.access_token) }).catch(() => {});
+    }
+    const d = await api("/factors", { method: "POST", headers: headers(s.access_token),
+      body: JSON.stringify({ factor_type: "totp", friendly_name: `exmortis ${new Date().toISOString().slice(0, 10)}` }) });
+    return { id: d.id, qr: d.totp?.qr_code, secret: d.totp?.secret };
+  },
+  // Kod z aplikacji → sesja aal2 (zapisywana zamiast dotychczasowej).
+  async verify(factorId, code) {
+    const s = await session();
+    if (!s) throw new Error("Brak sesji");
+    const ch = await api(`/factors/${factorId}/challenge`, { method: "POST", headers: headers(s.access_token), body: "{}" });
+    const d = await api(`/factors/${factorId}/verify`, { method: "POST", headers: headers(s.access_token),
+      body: JSON.stringify({ challenge_id: ch.id, code: String(code).replace(/\s+/g, "") }) });
+    if (!d.access_token) throw new Error("Kod nieprawidłowy");
+    store(keep(d));
+    return true;
+  },
+  // Wyłączenie wymaga sesji aal2 (Supabase).
+  async remove(factorId) {
+    const s = await session();
+    if (!s) throw new Error("Brak sesji");
+    await api(`/factors/${factorId}`, { method: "DELETE", headers: headers(s.access_token) });
+    await refreshSession();
+  },
+};
+
 export const supaAuth = {
   // Rejestracja nie loguje — konto czeka na kliknięcie linku z maila; link wraca na /register.
   async register({ email, password, name, letters }) {
