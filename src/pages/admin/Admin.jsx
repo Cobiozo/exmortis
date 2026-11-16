@@ -45,6 +45,7 @@ const LOAD = {
   ustawienia: () => import("@/components/admin/settings/SiteSettingsPanel"),
 };
 const C = Object.fromEntries(Object.entries(LOAD).map(([k, f]) => [k, lazyPage(f)]));
+const PersonData = C["dane-osoby"];
 const PRELOAD = { statystyki: ["funnel", "free", "silenceStats", "testy"] };
 const preloaded = new Set();
 const preload = (key) => {
@@ -77,7 +78,7 @@ const SECTIONS = {
   historia: ["Historia zmian", () => <C.historia />],
   rabaty: ["Kody rabatowe", () => <C.rabaty />],
   bezpieczenstwo: ["Bezpieczeństwo", () => <C.bezpieczenstwo />],
-  "dane-osoby": ["Dane osoby (RODO)", () => <C["dane-osoby"] />],
+  "dane-osoby": ["Dane osoby (RODO)", () => <PersonData />],
   newsletter: ["Newsletter i subskrybenci", () => <C.newsletter />],
   tresci: ["Treści stron", () => <C.tresci />],
   menu: ["Menu i stopka", () => <C.menu />],

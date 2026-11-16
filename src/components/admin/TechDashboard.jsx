@@ -8,7 +8,7 @@ export default function TechDashboard({ sections }) {
       <p className="text-foreground/60 text-sm max-w-xl">Rola techniczna: ustawienia, treści stron i wygląd. Zapisy, zgłoszenia, wyniki testu, subskrybenci, zamówienia i narzędzie RODO są niedostępne.</p>
       <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
         {sections.map(([k, title]) => (
-          <Link key={k} to={`/admin/${k}`} className="border hairline p-6 hover:border-[#C9A24A] transition-colors">
+          <Link key={k} to={`/admin/${k}`} className="rounded-xl border hairline bg-[#111113] p-6 hover:border-[#C9A24A]/60 transition-colors">
             <p className="relic-heading text-xl">{title}</p>
           </Link>
         ))}
