@@ -16,6 +16,7 @@ import HeroContent from "@/components/exmortis/events/HeroContent";
 import StickySignup from "@/components/exmortis/events/StickySignup";
 import CalendarButtons from "@/components/exmortis/events/CalendarButtons";
 import ZoomFaq from "@/components/exmortis/events/ZoomFaq";
+import WhoLeads from "@/components/exmortis/events/WhoLeads";
 import RegistrationBlock from "@/components/exmortis/events/RegistrationBlock";
 import { whenText, durationText, priceText } from "@/components/exmortis/events/time";
 import JsonLd from "@/components/seo/JsonLd";
@@ -155,6 +156,7 @@ export default function EventDetail() {
         })()}
 
         <CalendarButtons event={event} className="mt-12" />
+        {event.kto_prowadzi !== false && <WhoLeads />}
         <ZoomFaq event={event} />
        </div>
 
