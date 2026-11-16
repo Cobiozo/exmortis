@@ -101,6 +101,9 @@ const handler = async function(req) {
       allowed = !!stored && !!given && safeEqual(given, stored);
     }
     if (!allowed) return Response.json({ error: "Forbidden" }, { status: 403 });
+    // Rozgrzewanie funkcji pulpitu panelu (co 5 min) — panel admina otwiera się bez „zimnego startu”.
+    // Wywołanie "warm" nie zwraca żadnych danych; błąd nie wpływa na resztę przebiegu.
+    const warm = base44.functions.invoke("adminDashboard", { action: "warm" }).then(() => 1).catch(() => 0);
     const db = base44.asServiceRole.entities;
     const now = new Date().toISOString();
     // Budżet czasu: cronTick czeka najwyżej 110 s. Kroki zależne od PayU i poboczne pomijamy, gdy przebieg się przeciąga
@@ -147,7 +150,8 @@ const handler = async function(req) {
     const accessRemind = ready && czas() < 95000 ? await accessReminders(base44).catch((e) => { console.error("przypomnienia o materiałach:", e?.message); return 0; }) : 0;
     // Alert: nietypowo dużo zdarzeń limitów z jednego adresu (np. zmiana adresu serwera strony) — audyt 16.11.2026.
     const limitAlerts = czas() < 100000 ? await limitAlert(base44).catch((e) => { console.error("alert limitów:", e?.message); return 0; }) : 0;
-    return Response.json({ ok: true, published: done, prices, released, reminded, patched, freeDone, expired, payuQueue, captured, refulfilled, alerts, pruned, welcome, accessRemind, limitAlerts });
+    const warmed = await warm;
+    return Response.json({ ok: true, published: done, prices, released, reminded, patched, freeDone, expired, payuQueue, captured, refulfilled, alerts, pruned, welcome, accessRemind, limitAlerts, warmed });
   } catch (error) {
     return Response.json({ error: error.message }, { status: 500 });
   }
