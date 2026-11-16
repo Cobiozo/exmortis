@@ -12,6 +12,9 @@ export const KEEP = 8;    // ile najnowszych kopii zostawiamy
 const SUPABASE_TABLES = [
   "orders", "order_refunds", "registrations", "events", "event_tickets", "products",
   "subscribers", "waitlist", "product_reviews", "discount_reservations", "app_settings",
+  // Od 16.11.2026 (audyt bezpieczeństwa SEC-06): płatności, linki do materiałów, serie listów, zgłoszenia i wiadomości.
+  "payu_events", "order_links", "nl_series", "nl_series_letters", "nl_series_progress", "nl_series_sends",
+  "onboarding_mails", "contact_messages", "powrot_applications", "podcast_applications",
 ];
 
 // Tabele aplikacji (Base44) — bez dużych dzienników i danych technicznych.
@@ -19,6 +22,7 @@ const ENTITIES = [
   "Access", "License", "DiscountCode", "Consent", "PublishedPage", "SitePage",
   "Announcement", "RozdrozaStory", "RozdrozaScene", "RozdrozaChoice",
   "Withdrawal", "ContactMessage", "PowrotApplication",
+  "User", // profile kont (rola, imię) — od 16.11.2026
 ];
 
 // Pola, których nie zapisujemy w kopii (hasła, tokeny, klucze).
