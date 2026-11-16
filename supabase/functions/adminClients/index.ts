@@ -91,6 +91,36 @@ const handler = async function (req) {
       });
     }
 
+    // ---- Rola konta (16.11.2026) ----
+    // Zmienia wyłącznie administrator; nie można zmienić własnej roli ani odebrać uprawnień ostatniemu
+    // administratorowi. Każda zmiana trafia do dziennika bezpieczeństwa. Rola jest czytana przez serwer
+    // wyłącznie z profilu (exm_user.data.role) — przeglądarka nie może jej zmienić (wyzwalacz exm_user_role_guard).
+    if (body.action === "role" || body.action === "set_role") {
+      if (!email.includes("@")) return Response.json({ error: "Podaj e-mail" }, { status: 400 });
+      const rows = await runSql(base44, `SELECT data->>'role' AS role FROM public.exm_user WHERE lower(data->>'email') = ${escStr(email)} LIMIT 1`, true);
+      if (!rows.length) return Response.json({ error: "To konto nie ma jeszcze profilu." }, { status: 404 });
+      const cur = ["admin", "techniczna"].includes(String(rows[0].role)) ? String(rows[0].role) : "user";
+      const self = email === String(admin.email || "").toLowerCase();
+      if (body.action === "role") return Response.json({ role: cur, self });
+
+      const role = String(body.role || "");
+      if (!["admin", "techniczna", "user"].includes(role)) return Response.json({ error: "Nieznana rola." }, { status: 400 });
+      if (self) return Response.json({ error: "Nie możesz zmienić własnej roli." }, { status: 400 });
+      if (role === cur) return Response.json({ ok: true, role });
+      if (cur === "admin") {
+        const [c] = await runSql(base44, `SELECT COUNT(*)::int AS n FROM public.exm_user WHERE data->>'role' = 'admin'`, true);
+        if (Number(c?.n || 0) <= 1) return Response.json({ error: "To ostatni administrator — najpierw nadaj rolę admin innemu kontu." }, { status: 400 });
+      }
+      await runSql(base44, `UPDATE public.exm_user SET data = jsonb_set(COALESCE(data, '{}'::jsonb), '{role}', to_jsonb(${escStr(role)}::text), true), updated_date = now()
+        WHERE lower(data->>'email') = ${escStr(email)}`);
+      const LABEL = { admin: "admin", techniczna: "techniczna", user: "klient" };
+      await sr.SecurityLog.create({
+        type: "rola", user_email: email, ip: "", resolved: true,
+        details: `zmiana roli: ${LABEL[cur]} → ${LABEL[role]} · ${admin.email}`,
+      }).catch(() => {});
+      return Response.json({ ok: true, role });
+    }
+
     if (body.action === "security") {
       const alerts = await sr.SecurityLog.filter({ type: { $in: ["blokada", "wspoldzielenie", "znak_wodny", "wideo_limit", "rabat"] } }, "-created_date", 100);
       return Response.json({ alerts });
