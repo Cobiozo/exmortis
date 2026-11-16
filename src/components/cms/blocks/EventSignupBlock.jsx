@@ -17,7 +17,7 @@ function NotYet({ od }) {
   return (
     <div className="text-center py-2">
       <p className="technical text-[11px] gold-text mb-3">ZAPISY RUSZAJĄ {plDay(parseWaw(od)).toUpperCase()}</p>
-      <p className="text-foreground/70 leading-relaxed">Formularz zapisu pojawi się tutaj {plDay(parseWaw(od))}. Spotkanie jest bezpłatne, a link przyjdzie e-mailem po zapisie.</p>
+      <p className="text-foreground/70 leading-relaxed">Formularz zapisu pojawi się tutaj {plDay(parseWaw(od))}. Spotkanie jest bezpłatne, a link otrzymasz w wiadomości e-mail po zapisie.</p>
     </div>
   );
 }
