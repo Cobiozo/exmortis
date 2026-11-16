@@ -142,7 +142,7 @@ export const supaMfa = {
     }
     const d = await api("/factors", { method: "POST", headers: headers(s.access_token),
       body: JSON.stringify({ factor_type: "totp", friendly_name: `exmortis ${new Date().toISOString().slice(0, 10)}` }) });
-    return { id: d.id, qr: d.totp?.qr_code, secret: d.totp?.secret };
+    return { id: d.id, qr: d.totp?.qr_code, uri: d.totp?.uri, secret: d.totp?.secret };
   },
   // Kod z aplikacji → sesja aal2 (zapisywana zamiast dotychczasowej).
   async verify(factorId, code) {
