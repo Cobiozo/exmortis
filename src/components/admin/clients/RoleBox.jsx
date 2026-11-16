@@ -18,6 +18,7 @@ export default function RoleBox({ email, onChange }) {
   const [busy, setBusy] = useState(false);
   const [msg, setMsg] = useState("");
   const [err, setErr] = useState("");
+  const [sure, setSure] = useState(false); // drugi klik = potwierdzenie (bez okien przeglądarki)
 
   useEffect(() => {
     base44.functions.invoke("adminClients", { action: "role", email })
@@ -29,8 +30,8 @@ export default function RoleBox({ email, onChange }) {
   if (cur === null) return <Loader2 className="h-4 w-4 animate-spin gold-text" />;
 
   const save = async () => {
-    const label = ROLES.find(([k]) => k === pick)?.[1] || pick;
-    if (!window.confirm(`Zmienić rolę konta ${email} na „${label}”?`)) return;
+    if (!sure) { setSure(true); return; }
+    setSure(false);
     setBusy(true); setErr(""); setMsg("");
     try {
       const r = await base44.functions.invoke("adminClients", { action: "set_role", email, role: pick });
@@ -52,7 +53,7 @@ export default function RoleBox({ email, onChange }) {
           <legend className="sr-only">Rola konta</legend>
           {ROLES.map(([k, label, desc]) => (
             <label key={k} className={`flex items-start gap-3 rounded-lg border p-3 cursor-pointer ${pick === k ? "border-[#C9A24A]/60 bg-[#C9A24A]/[0.06]" : "border-white/10"}`}>
-              <input type="radio" name={`rola-${email}`} value={k} checked={pick === k} onChange={() => setPick(k)} className="mt-1 accent-[#C9A24A]" />
+              <input type="radio" name={`rola-${email}`} value={k} checked={pick === k} onChange={() => { setPick(k); setSure(false); }} className="mt-1 accent-[#C9A24A]" />
               <span><span className="block text-sm font-medium">{label}{cur === k ? " · obecna" : ""}</span><span className="block text-xs text-foreground/55">{desc}</span></span>
             </label>
           ))}
@@ -61,8 +62,9 @@ export default function RoleBox({ email, onChange }) {
           <div className="flex flex-wrap items-center gap-3">
             <button type="button" onClick={save} disabled={busy || pick === cur}
               className="inline-flex items-center gap-2 min-h-[40px] px-4 rounded-md bg-[#C9A24A] text-[#0A0A0B] text-sm font-semibold disabled:opacity-40">
-              {busy && <Loader2 className="h-4 w-4 animate-spin" />} Zapisz rolę
+              {busy && <Loader2 className="h-4 w-4 animate-spin" />} {sure ? `Potwierdź: ${ROLES.find(([k]) => k === pick)?.[1]}` : "Zapisz rolę"}
             </button>
+            {sure && <button type="button" onClick={() => setSure(false)} className="text-sm text-foreground/60 underline underline-offset-4">Anuluj</button>}
             {msg && <span className="text-sm text-[#9FD0AA]" role="status">{msg}</span>}
             {err && <span className="text-sm text-[#E8C547]" role="alert">{err}</span>}
           </div>
