@@ -64,13 +64,26 @@ export function esc(value: unknown) {
 }
 
 // IP klienta — brzeg Supabase podaje X-Forwarded-For; pierwsza wartość to klient.
+// Serwer exmortis.pl (CyberFolks) przekazuje /functions/* do Supabase — wtedy cf-connecting-ip to jego adres,
+// a adres klienta jest w True-Client-IP ustawianym przez ten serwer.
+const PROXY_IPS = new Set(["185.208.164.71"]);
+
+// Adres klienta do limitów prób (audyt SEC-04, 16.11.2026; sprawdzone funkcją diagnostyczną):
+// - wywołanie bezpośrednie: tylko cf-connecting-ip (ustawia go brzeg; nagłówki True-Client-IP i X-Forwarded-For
+//   od klienta są dla Supabase przezroczyste, więc można je podrobić);
+// - przez serwer exmortis.pl: True-Client-IP ustawiony przez ten serwer.
 export function clientIp(req: Request) {
   const ok = (v: string) => /^[0-9a-fA-F:.]{3,45}$/.test(v);
+  const cf = (req.headers.get("cf-connecting-ip") || "").trim();
+  if (ok(cf) && !PROXY_IPS.has(cf)) return cf;
   const t = (req.headers.get("true-client-ip") || "").trim();
+  if (ok(cf) && ok(t)) return t; // żądanie przyszło przez serwer exmortis.pl
+  if (ok(cf)) return cf;
+  // Inne środowisko (np. Base44) bez cf-connecting-ip: dotychczasowe źródła.
   if (ok(t)) return t;
   const xff = (req.headers.get("x-forwarded-for") || "").split(",")[0].trim();
   if (ok(xff)) return xff;
-  const v = (req.headers.get("cf-connecting-ip") || req.headers.get("x-real-ip") || "").trim();
+  const v = (req.headers.get("x-real-ip") || "").trim();
   return ok(v) ? v : "brak";
 }
 
