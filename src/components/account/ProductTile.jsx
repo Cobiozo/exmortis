@@ -32,7 +32,7 @@ export default function ProductTile({ p }) {
   const open = async () => { const u = await getUrl(); if (u) window.open(u, "_blank", "noopener,noreferrer"); };
 
   return (
-    <div className={`border hairline flex flex-col ${p.active ? "" : "opacity-50"}`}>
+    <div className={`rounded-2xl border hairline bg-[#111113] overflow-hidden flex flex-col hover:border-[#C9A24A]/45 transition-colors ${p.active ? "" : "opacity-50"}`}>
       <div className="aspect-[16/9] sm:aspect-[4/3] bg-[#0F0F10] relative">
         {p.cover ? <CoverStage src={p.cover} alt={p.name} /> : (
           <div className="absolute inset-0 flex items-center justify-center"><Icon className="h-10 w-10 gold-text" strokeWidth={1} /></div>
