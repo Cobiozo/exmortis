@@ -6,7 +6,7 @@ const WA = String(WHATSAPP_CHANNEL || "").trim();
 export const NAV = [
   { label: "O mnie", to: "/o-mnie" },
   { label: "Powrót", to: "/powrot" },
-  { label: "Skarbiec", to: "/skarbiec" },
+  { label: "Sklep", to: "/skarbiec" }, // nazwa w menu od 17.11.2026; adres strony bez zmian
   { label: "Spotkania", to: "/spotkania?src=nav" },
   { label: "Cisza", to: "/cisza" },
   { label: "Głos", to: "/glos" },
