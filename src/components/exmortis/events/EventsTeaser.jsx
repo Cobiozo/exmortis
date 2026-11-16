@@ -31,7 +31,7 @@ export default function EventsTeaser({ label } = {}) {
           Najbliższe<br />spotkania
         </h2>
 
-        <div className="grid gap-5 min-[641px]:grid-cols-2 min-[1101px]:grid-cols-3 items-stretch">
+        <div className="grid gap-5 min-[520px]:grid-cols-2 min-[1101px]:grid-cols-3 items-stretch">
           {events.map((ev) => (
             <EventTile key={ev.id} event={ev} compact />
           ))}
