@@ -9,7 +9,6 @@ import AdminDashboard from "@/components/admin/AdminDashboard";
 import TechDashboard from "@/components/admin/TechDashboard";
 import AdminShell from "@/components/admin/layout/AdminShell";
 import useDashboardData, { warmDashboard, markAdminBrowser, isKnownAdminBrowser } from "@/components/admin/layout/useDashboardData";
-import { surveyState } from "@/components/admin/powrot/PowrotAppCard";
 
 // Moduły ładowane na żądanie (telefon nie pobiera całego panelu naraz).
 // Najechanie na pozycję menu zaczyna pobierać moduł zawczasu — po kliknięciu otwiera się od razu.
@@ -128,9 +127,8 @@ export default function Admin() {
   }
 
   const current = section ? SECTIONS[section] : null;
-  const pc = d.powrot ? d.powrot.filter((a) => ["none", "expired"].includes(surveyState(a).key)).length : 0;
   const badges = isAdmin ? {
-    powrot: pc,
+    powrot: d.powrot?.todo || 0,
     zamowienia: d.stats?.invoices_todo || 0,
     kontakty: d.podcastNew || 0,
   } : {};
