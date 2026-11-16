@@ -4,8 +4,8 @@ import { LAYOUT_DEFAULT as L } from "../blockTypes";
 const b = (id, typ, dane, uklad = {}) => ({ id, typ, widoczny: true, dane, uklad: { ...L, numer: "brak", ...uklad } });
 
 export const SPOTKANIA_BLOCKS = [
-  b("spotkania-hero", "hero", { wariant: "standard", etykieta: "SPOTKANIA", linia1: "Spotkania", linia2: "",
-    lead: "Czasem trzeba po prostu posiedzieć razem. Tu znajdziesz spotkania otwarte, warsztaty i kręgi.", przyciski: [], przyciemnienie: 60 }),
+  b("spotkania-hero", "hero", { wariant: "standard", rozmiar: "kompakt", etykieta: "SPOTKANIA", linia1: "Spotkania", linia2: "",
+    lead: "Otwarte spotkania, warsztaty i kręgi — online i na żywo. Przestrzeń, w której można się zatrzymać, zostać wysłuchanym i zrobić kolejny krok.", przyciski: [], przyciemnienie: 60 }),
   b("spotkania-lista", "modul", { modul: "spotkania_lista" }),
 ];
 
