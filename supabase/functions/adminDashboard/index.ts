@@ -4,6 +4,8 @@ import { getSetting } from "../_shared/settings.ts";
 import { mailReady } from "../_shared/smtp.ts";
 import { cleanFaktury, fakturyToken, FAKTURY_DEFAULT, DOKUMENT_OSOBA } from "../_shared/invoices.ts";
 import { freeStats } from "../_shared/freeMaterials.ts";
+import { libSettings } from "../_shared/libraryAccess.ts";
+import { loadKeys } from "../_shared/booking.ts";
 
 const STATS_SQL = `SELECT
   (SELECT COUNT(*)::int FROM public.events WHERE status = 'Opublikowane' AND start_datetime > now()) AS upcoming_events,
@@ -208,11 +210,87 @@ async function readiness(base44) {
   return READY;
 }
 
+// ============ Pulpit w jednym zapytaniu (16.11.2026) ============
+// Zamiast ~9 osobnych wywołań z przeglądarki: jedno, a serwer pobiera wszystko równolegle.
+// Wynik trzymany 60 s w pamięci instancji („Odśwież” w panelu wysyła fresh: true i omija pamięć).
+// Każda część osobno: błąd jednej daje null tylko w tym miejscu, reszta pulpitu działa.
+const AGENDA_SQL = `SELECT e.id, e.title, e.slug, e.status, e.format, e.start_datetime,
+    to_jsonb(e)->>'duration_minutes' AS duration_minutes, to_jsonb(e)->>'open_minutes' AS open_minutes,
+    to_jsonb(e)->>'short_path' AS short_path,
+    (SELECT COUNT(*) FROM public.registrations r WHERE r.event_id = e.id AND r.status IN ('Zapisany','Obecny'))::int AS registered,
+    (SELECT COUNT(*) FROM public.registrations r WHERE r.event_id = e.id AND r.status = 'Lista rezerwowa')::int AS waitlist
+  FROM public.events e
+  WHERE e.status IN ('Opublikowane', 'Odwołane') AND e.start_datetime > now() - interval '1 day'
+  ORDER BY e.start_datetime LIMIT 50`;
+
+const ORDERS_SQL = `SELECT o.id, o.created_date, o.buyer_name, o.items, o.total::float8 AS total, o.status,
+    COALESCE((to_jsonb(o)->>'is_test')::boolean, false) AS is_test
+  FROM public.orders o WHERE COALESCE(o.total, 0) > 0 ORDER BY o.created_date DESC LIMIT 5`;
+
+const ORDER_SUM_SQL = `SELECT
+  COALESCE(SUM(total) FILTER (WHERE status = 'COMPLETED' AND created_date >= date_trunc('month', now() AT TIME ZONE 'Europe/Warsaw') AT TIME ZONE 'Europe/Warsaw'), 0)::float8 AS revenue_month,
+  COUNT(*) FILTER (WHERE status = 'COMPLETED' AND created_date >= date_trunc('month', now() AT TIME ZONE 'Europe/Warsaw') AT TIME ZONE 'Europe/Warsaw')::int AS paid_month,
+  COUNT(*) FILTER (WHERE status = 'COMPLETED' AND COALESCE(to_jsonb(o)->>'fulfill_error', '') <> '')::int AS fulfill_failed
+  FROM public.orders o WHERE COALESCE(o.total, 0) > 0`;
+
+// Te same reguły co w panelu POWRÓT (surveyState): „do wysłania” = nie wysłano albo link wygasł.
+const POWROT_SQL = `SELECT
+  COUNT(*) FILTER (WHERE a.created_date >= now() - interval '7 days')::int AS fresh,
+  COUNT(*) FILTER (WHERE COALESCE(to_jsonb(a)->>'survey_done_at', '') = '' AND (
+    COALESCE(to_jsonb(a)->>'survey_sent_at', '') = ''
+    OR COALESCE(to_jsonb(a)->>'survey_expires_at', '') = ''
+    OR (to_jsonb(a)->>'survey_expires_at')::timestamptz <= now()))::int AS todo,
+  COUNT(*) FILTER (WHERE COALESCE(to_jsonb(a)->>'survey_done_at', '') <> '')::int AS done
+  FROM public.powrot_applications a`;
+
+const PODCAST_SQL = `SELECT COUNT(*)::int AS n FROM public.podcast_applications p WHERE to_jsonb(p)->>'status' = 'nowe'`;
+
+let SUMMARY = null, SUMMARY_AT = 0;
+
+async function summary(base44, fresh) {
+  if (!fresh && SUMMARY && Date.now() - SUMMARY_AT < 60000) return { ...SUMMARY, cached: true };
+  if (fresh) READY_AT = 0;
+  const part = (p) => p.catch((e) => { console.error("pulpit:", String(e?.message || e).slice(0, 200)); return null; });
+  const [stats, ready, events, orders, orderSum, powrot, podcast, lib, keys, tracks] = await Promise.all([
+    part(runSql(base44, STATS_SQL, true).then((r) => r[0] || {})),
+    part(readiness(base44)),
+    part(runSql(base44, AGENDA_SQL, true)),
+    part(runSql(base44, ORDERS_SQL, true)),
+    part(runSql(base44, ORDER_SUM_SQL, true).then((r) => r[0] || {})),
+    part(runSql(base44, POWROT_SQL, true).then((r) => r[0] || {})),
+    part(runSql(base44, PODCAST_SQL, true).then((r) => Number(r[0]?.n || 0))),
+    part(libSettings(base44, true)),
+    part(loadKeys()),
+    part(base44.asServiceRole.entities.SilenceTrack.filter({}, { limit: 200 })),
+  ]);
+  const list = Array.isArray(tracks) ? tracks : tracks?.items || null;
+  // Ostrzeżenia Ciszy — te same reguły co w panelu (libUtils.trackWarnings).
+  const soundWarnings = list ? list.reduce((n, t) => n + (!t.plik ? 1 : 0)
+    + (t.dlugosc_s && t.dlugosc_s < 3600 && t.zapetlaj === false && !t.nastepny_id ? 1 : 0), 0) : null;
+  SUMMARY = {
+    stats, ready, events,
+    orders: orders && orderSum ? { list: orders, summary: orderSum } : null,
+    powrot, podcastNew: podcast,
+    libOn: lib ? lib.library_mode !== "off" || lib.messages_mode !== "off" : null,
+    bookingKeys: keys ? !!keys.ok : null,
+    soundWarnings,
+    at: new Date().toISOString(),
+  };
+  SUMMARY_AT = Date.now();
+  return SUMMARY;
+}
+
 const handler = async function (req) {
   try {
+    const body0 = await req.clone().json().catch(() => ({}));
+    // Rozgrzewanie (co 5 min z harmonogramu): uruchamia instancję, nie zwraca żadnych danych.
+    if (body0.action === "warm") return Response.json({ ok: true });
     const base44 = createClientFromRequest(req);
     await requireAdmin(base44);
-    const body = await req.json().catch(() => ({}));
+    const body = body0;
+    if (body.action === "summary") {
+      return Response.json(await summary(base44, body.fresh === true));
+    }
     if (body.action === "readiness") {
       return Response.json(await readiness(base44));
     }
