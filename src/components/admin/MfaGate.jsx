@@ -81,7 +81,7 @@ export default function MfaGate({ children }) {
 
   // Sprawdzanie trwa — panel rysuje się od razu (dane i tak chroni serwer: bez kodu me() odbiera
   // uprawnienia, więc zapytania zwrócą „Brak dostępu”). Gdy okaże się, że kod jest wymagany, ekran kodu zastępuje panel.
-  if (st === undefined) return <>{children}</>;
+  if (st === undefined) return <>{null}{children}</>; // ta sama pozycja dzieci co niżej — bez ponownego montowania
 
   // Kod włączony, sesja bez kodu → najpierw kod.
   if (st && st.verified.length && st.aal !== "aal2") {
