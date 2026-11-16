@@ -4,11 +4,11 @@ import { HeartHandshake } from "lucide-react";
 import { useCrisis } from "./CrisisContext";
 
 // Dyskretna etykieta przy dolnej krawędzi. Widoczna na stronach publicznych i w koncie;
-// ukryta w panelu admina i na /skaner. Nie zasłania treści ani przycisku zakupu/zapisu.
+// ukryta w panelu admina, na /skaner i w kasie (na telefonie zasłaniała zgody; numery pomocowe są w stopce).
 export default function CrisisHelpButton() {
   const { open, isOpen } = useCrisis();
   const { pathname } = useLocation();
-  if (pathname.startsWith("/admin") || pathname.startsWith("/skaner")) return null;
+  if (pathname.startsWith("/admin") || pathname.startsWith("/skaner") || pathname.startsWith("/kasa")) return null;
   return (
     <button
       type="button"
