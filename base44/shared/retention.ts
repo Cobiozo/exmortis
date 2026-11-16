@@ -35,7 +35,8 @@ async function purgePodcastApps(base44) {
 
 // Audyt bezpieczeństwa 16.11.2026 (decyzja właściciela: najdłużej 12 miesięcy, gdy polityka nie mówi krócej):
 // - wiadomości z formularza kontaktowego — usuwane po 12 miesiącach;
-// - zapisy na bezpłatne wydarzenia — dane osobowe usuwane 90 dni po wydarzeniu (Polityka prywatności §3 pkt 7);
+// - zapisy na bezpłatne wydarzenia — dane osobowe usuwane 12 miesięcy po wydarzeniu (Polityka prywatności od 17.11.2026, §3 pkt 7);
+//   zapisy sprzed 17.11.2026 — 90 dni po wydarzeniu, jak obiecywała poprzednia wersja Polityki;
 //   wiersz zostaje (liczba zapisanych i obecnych), płatne bilety („bilet”) — jak Zamówienia, bez zmian.
 async function purgeContactAndEvents(base44) {
   const [kontakt, kontaktApp, zapisy] = await Promise.all([
@@ -45,10 +46,11 @@ async function purgeContactAndEvents(base44) {
         SET first_name = 'usunięto', email = 'usunieto-' || r.id || '@anonim.invalid', question_for_dawid = NULL, ip = NULL, tz = NULL
       FROM public.events e
       WHERE e.id = r.event_id AND COALESCE(r.source, '') <> 'bilet' AND r.email NOT LIKE 'usunieto-%@anonim.invalid'
-        AND e.start_datetime + make_interval(mins => COALESCE(e.duration_minutes, 60)) < now() - interval '90 days'
+        AND e.start_datetime + make_interval(mins => COALESCE(e.duration_minutes, 60)) < now()
+          - CASE WHEN r.created_at >= '2026-11-16T23:00:00Z' THEN interval '12 months' ELSE interval '90 days' END
       RETURNING 1`).catch(() => []),
   ]);
-  return { kontakt_12m: (kontakt?.length || 0) + (kontaktApp?.length || 0), zapisy_90d: zapisy?.length || 0 };
+  return { kontakt_12m: (kontakt?.length || 0) + (kontaktApp?.length || 0), zapisy_anonim: zapisy?.length || 0 };
 }
 
 export async function runRetention(base44) {
@@ -68,7 +70,7 @@ export async function runRetention(base44) {
     purgeLogs(base44.asServiceRole.entities.SecurityLog, before),
   ]);
   const podcast_6m = await purgePodcastApps(base44);
-  const { kontakt_12m, zapisy_90d } = await purgeContactAndEvents(base44);
-  return { podcast_6m, kontakt_12m, zapisy_90d, quiz_12m: quiz.length, quiz_wycofane: quizW.length, powrot: powrot.length, listy_niepotwierdzone: listy,
+  const { kontakt_12m, zapisy_anonim } = await purgeContactAndEvents(base44);
+  return { podcast_6m, kontakt_12m, zapisy_anonim, quiz_12m: quiz.length, quiz_wycofane: quizW.length, powrot: powrot.length, listy_niepotwierdzone: listy,
     dziennik_odtworzen, dziennik_bezpieczenstwa };
 }
