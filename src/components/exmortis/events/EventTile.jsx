@@ -144,9 +144,10 @@ export default function EventTile({ event: ev, compact = false, past = false }) 
       </article>
 
       <Dialog open={open} onOpenChange={setOpen}>
-        <DialogContent className="bg-[#121212] border-[#2A2A2A] max-w-md">
+        {/* Okno zapisu: kompaktowe pola, przewijanie w środku; dolny margines na telefonie, żeby przycisk „Nagła pomoc” nie zasłaniał „Zapisuję się”. */}
+        <DialogContent className="bg-[#121212] border-[#2A2A2A] max-w-md p-5 sm:p-6 pb-16 sm:pb-6 gap-3 [&_input:not([type=checkbox])]:py-3 [&_input:not([type=checkbox])]:min-h-[44px] [&_textarea]:py-3 [&_form]:space-y-4">
           <DialogHeader>
-            <DialogTitle className="shop-heading text-xl text-[#F5EFE1]">{ev.title}</DialogTitle>
+            <DialogTitle className="shop-heading text-xl text-[#F5EFE1] pr-8">{ev.title}</DialogTitle>
             <DialogDescription className="text-foreground/55">
               {tbd ? "Termin do ustalenia" : whenText(ev.start_datetime)} · {formatText(ev.format)}
               {!tbd && <WarsawNote iso={ev.start_datetime} />}
