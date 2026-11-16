@@ -40,7 +40,7 @@ export default function EventsListing() {
               ))}
             </div>
           </div>
-          <div className="px-5 md:px-10 pb-20 md:pb-24 mx-auto max-w-[1400px] grid gap-5 min-[641px]:grid-cols-2 min-[1101px]:grid-cols-3 items-stretch">
+          <div className="px-5 md:px-10 pb-20 md:pb-24 mx-auto max-w-[1400px] grid gap-5 min-[520px]:grid-cols-2 min-[1101px]:grid-cols-3 items-stretch">
             {filtered.map((ev) => <EventTile key={ev.id} event={ev} />)}
             {filtered.length === 0 && <p className="text-foreground/55 py-16 col-span-full">W tym filtrze nie ma teraz żadnych spotkań.</p>}
           </div>
