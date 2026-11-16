@@ -124,7 +124,7 @@ export default function StartPanel({ state, go }) {
             </>
           ) : (
             <>
-              <p className="text-sm text-[#F5EFE1]/70">Tu pojawi się kurs, który przerabiasz — z miejscem, w którym skończyłeś lub skończyłaś.</p>
+              <p className="text-sm text-[#F5EFE1]/70">Tu pojawi się kurs, który przerabiasz, razem z Twoim postępem.</p>
               <div className="mt-auto"><Link to="/skarbiec" className={btnLine}><Gem className="h-4 w-4" /> Zajrzyj do Skarbca</Link></div>
             </>
           )}
@@ -140,7 +140,7 @@ export default function StartPanel({ state, go }) {
             <p className="technical text-[10px] gold-text">ROZDROŻA · INTERAKTYWNE HISTORIE</p>
             <h2 id="st-rz" className={`${h2} mt-1 break-words`}>{story.title}</h2>
             <p className="text-sm text-[#F5EFE1]/70 mt-1">
-              {reading ? "Twoje wybory prowadzą dalej — wróć tam, gdzie przerwałeś lub przerwałaś." : "Historia, w której to Ty wybierasz drogę."}
+              {reading ? "Twoje wybory prowadzą dalej — wróć tam, gdzie zatrzymała się Twoja historia." : "Historia, w której to Ty wybierasz drogę."}
               {list.length > 1 ? ` W bibliotece: ${list.length} historii.` : ""}
             </p>
           </div>
