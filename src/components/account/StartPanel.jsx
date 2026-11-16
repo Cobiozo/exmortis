@@ -56,6 +56,7 @@ export default function StartPanel({ state, go }) {
   // Kontynuuj: kurs w trakcie (najpierw rozpoczęty, potem nierozpoczęty).
   const courses = (products || []).filter((p) => p.active && p.lessons_total > 0 && p.lessons_done < p.lessons_total);
   const course = courses.find((p) => p.lessons_done > 0) || courses[0];
+  const showCourse = products === undefined || !!course;
   const pct = course ? Math.round((course.lessons_done / course.lessons_total) * 100) : 0;
 
   // Rozdroża: ostatnio czytana, niedokończona historia z tej przeglądarki; inaczej pierwsza do odkrycia.
@@ -67,7 +68,8 @@ export default function StartPanel({ state, go }) {
 
   return (
     <div className="space-y-6">
-      <div className="grid gap-5 md:grid-cols-2">
+      {/* Karta „Kontynuuj” tylko gdy jest kurs w trakcie (albo dane jeszcze się wczytują) — bez pustej karty. */}
+      <div className={`grid gap-5 ${showCourse ? "md:grid-cols-2" : ""}`}>
         {/* Najbliższe spotkanie */}
         <section className={`${card} p-5 md:p-6 flex flex-col gap-4 min-w-0`} aria-labelledby="st-ev">
           <div className="flex items-center justify-between gap-3">
@@ -104,7 +106,7 @@ export default function StartPanel({ state, go }) {
         </section>
 
         {/* Kontynuuj */}
-        <section className={`${card} p-5 md:p-6 flex flex-col gap-4 min-w-0`} aria-labelledby="st-co">
+        {showCourse && <section className={`${card} p-5 md:p-6 flex flex-col gap-4 min-w-0`} aria-labelledby="st-co">
           <h2 id="st-co" className={h2}>Kontynuuj</h2>
           {products === undefined ? (
             <><Sk className="h-4 w-2/3" /><Sk className="h-1.5 w-full" /><Sk className="h-11 w-44" /></>
@@ -128,7 +130,7 @@ export default function StartPanel({ state, go }) {
               <div className="mt-auto"><Link to="/skarbiec" className={btnLine}><Gem className="h-4 w-4" /> Zajrzyj do Skarbca</Link></div>
             </>
           )}
-        </section>
+        </section>}
       </div>
 
       {/* Rozdroża */}
@@ -146,7 +148,7 @@ export default function StartPanel({ state, go }) {
           </div>
           <div className="grid grid-cols-2 md:flex gap-2 shrink-0">
             <Link to={`/konto/rozdroza/${story.slug}${reading ? "/czytaj" : ""}`} className={btnGold}>{reading ? "Czytaj dalej" : "Zacznij czytać"}</Link>
-            <Link to="/konto/rozdroza/biblioteka" className={btnLine}>Wszystkie historie</Link>
+            <Link to="/konto/rozdroza/biblioteka" className={btnLine}>Wszystkie<span className="hidden sm:inline">&nbsp;historie</span></Link>
           </div>
         </section>
       )}
