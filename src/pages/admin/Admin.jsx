@@ -3,6 +3,7 @@ import lazyPage from "@/lib/lazyPage";
 import { Link, useParams } from "react-router-dom";
 import { useAuth } from "@/lib/AuthContext";
 import Logo from "@/components/exmortis/Logo";
+import MfaGate from "@/components/admin/MfaGate";
 const ProductsManager = lazyPage(() => import("@/components/admin/ProductsManager"));
 const NewsletterManager = lazyPage(() => import("@/components/admin/NewsletterManager"));
 const ContentHub = lazyPage(() => import("@/components/admin/cms/ContentHub"));
@@ -123,10 +124,12 @@ export default function Admin() {
         )}
 
         <div className="mt-10">
+          <MfaGate>
           {/* Sekcje panelu ładują się osobno — telefon nie pobiera całego panelu naraz. */}
           <Suspense fallback={<div className="py-16 flex justify-center"><div className="w-6 h-6 border-2 border-[#3D3D3F] border-t-[#C9A24A] rounded-full animate-spin" /></div>}>
             {!section ? (tech ? <TechDashboard sections={TECH.map((k) => [k, SECTIONS[k][0]])} /> : <AdminDashboard />) : current ? current[1]() : <p className="text-foreground/55">Nie ma takiej sekcji.</p>}
           </Suspense>
+          </MfaGate>
         </div>
       </div>
     </div>
