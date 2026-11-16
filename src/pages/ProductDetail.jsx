@@ -216,7 +216,7 @@ export default function ProductDetail() {
             {!product.is_free && Number(product.price) > 0 && product.product_type !== "karta" &&
               !/\/o-mnie/.test(`${product.long_description || ""} ${product.description || ""}`) && (
               <p className="text-sm text-foreground/60 mb-8">
-                {product.product_type === "usluga" ? "Prowadzę: Dawid" : "Autor: Dawid"} ·{" "}
+                {product.product_type === "usluga" ? "Prowadzi: Dawid" : "Autor: Dawid"} ·{" "}
                 <Link to="/o-mnie" className="gold-text hover:underline">poznaj moją historię →</Link>
               </p>
             )}
