@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { ShieldCheck, ShieldAlert } from "lucide-react";
+import QRCode from "qrcode";
 import { supaMfa } from "@/api/exmAuth";
 
 // Weryfikacja dwuetapowa w panelu (audyt bezpieczeństwa 16.11.2026).
@@ -26,7 +27,14 @@ function Enroll({ onDone, onCancel }) {
   const [f, setF] = useState(null);
   const [err, setErr] = useState("");
   const [busy, setBusy] = useState(false);
+  const [qr, setQr] = useState("");
   useEffect(() => { supaMfa.enroll().then(setF).catch((e) => setErr(e.message || "Nie udało się rozpocząć")); }, []);
+  // Kod QR generowany lokalnie z adresu otpauth:// — SVG z Supabase nie wyświetla się w <img> (niezakodowany data URI).
+  useEffect(() => {
+    if (!f) return;
+    if (f.uri) QRCode.toDataURL(f.uri, { margin: 1, width: 352 }).then(setQr).catch(() => setQr(""));
+    else if (f.qr) setQr(f.qr.startsWith("data:image/svg+xml;utf-8,") ? `data:image/svg+xml;charset=utf-8,${encodeURIComponent(f.qr.slice(25))}` : f.qr);
+  }, [f]);
   const verify = async (code) => {
     setBusy(true); setErr("");
     try { await supaMfa.verify(f.id, code); onDone(); } catch { setErr("Kod się nie zgadza. Sprawdź godzinę w telefonie i wpisz aktualny kod."); }
@@ -40,9 +48,9 @@ function Enroll({ onDone, onCancel }) {
         <li>Zeskanuj kod QR albo wpisz klucz ręcznie.</li>
         <li>Wpisz 6-cyfrowy kod, który pokaże aplikacja.</li>
       </ol>
-      {f?.qr ? (
+      {f && qr ? (
         <div className="flex flex-col sm:flex-row gap-6 items-start">
-          <img src={f.qr} alt="Kod QR do aplikacji uwierzytelniającej" className="w-44 h-44 bg-white p-2 rounded-sm" />
+          <img src={qr} alt="Kod QR do aplikacji uwierzytelniającej" className="w-44 h-44 bg-white p-2 rounded-sm" />
           <div className="text-xs text-foreground/60 break-all">
             <p className="technical text-[10px] text-foreground/50 mb-1">KLUCZ (gdy nie możesz zeskanować)</p>
             <span className="font-mono text-foreground/85">{f.secret}</span>
