@@ -105,7 +105,7 @@ export default function EventTile({ event: ev, compact = false, past = false }) 
           past ? "opacity-50" : ""
         }`}
       >
-        <CoverTile ev={ev} />
+        <CoverTile ev={ev} className="aspect-[16/9]" />
         <div className={`flex flex-col gap-4 flex-1 ${cancelled ? "opacity-60" : ""} ${compact ? "p-4 md:p-5" : "p-5 md:p-6"}`}>
           <div className="flex gap-4 items-start">
             {/* kwadrat daty */}
