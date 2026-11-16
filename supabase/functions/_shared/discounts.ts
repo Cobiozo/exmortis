@@ -45,6 +45,12 @@ export async function applyDiscount(base44, rawCode, lines, buyerEmail = "") {
     .reduce((s, l) => s + l.unit * l.qty, 0);
   const onlyCards = lines.length > 0 && lines.every((l) => cards.includes(String(l.product_id)));
   if (base === 0) throw new Error(onlyCards ? (fromCard ? "Kodem z karty podarunkowej nie opłacisz innej karty podarunkowej" : "Kodów rabatowych nie łączy się z kartą podarunkową") : "Kod nie obejmuje produktów w koszyku");
+  // Minimalna wartość objętych kodem produktów (np. kod 20 zł po zakupie: od 49 zł).
+  const minZl = Number(found.min_zl) || 0;
+  if (minZl > 0 && base < Math.round(minZl * 100)) {
+    const e = new Error(`Ten kod działa przy zamówieniu od ${minZl} zł (e-booki, audio, kursy, pakiety)`);
+    throw e;
+  }
   const off = found.kind === "kwota"
     ? Math.min(base, Math.round(found.value * 100))
     : Math.round((base * Math.min(100, found.value)) / 100);

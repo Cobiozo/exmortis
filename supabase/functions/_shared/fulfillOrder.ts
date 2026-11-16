@@ -8,6 +8,7 @@ import { markCodeUsed } from "./discounts.ts";
 import { issueOrderTickets, ticketsHtml, loadEvent } from "./tickets.ts";
 import { runSql, rpc, escStr } from "./supabase.ts";
 import { DIGITAL, grantAccess, ensureAccount } from "./access.ts";
+import { createLink, orderMaterials, hasAccount, materialsEmailHtml } from "./orderLinks.ts";
 import { accessFilter, consentFilter } from "./mirror.ts";
 import { expandBundles } from "./bundles.ts";
 import { markPowrotPaid } from "./powrotPay.ts";
@@ -55,22 +56,8 @@ const SERVICE_CONFIRM = `<div style="background:#0A0A0B;padding:0 32px 16px;font
 // Konto założone na prośbę z kasy, gdy w zamówieniu nie było treści cyfrowych.
 function accountEmailHtml(email) {
   return `<div style="background:#0A0A0B;padding:0 32px 24px;font-family:Georgia,serif;">
-    <p style="color:#8A8A8C;font-size:13px;line-height:1.6;">Założyłem Twoje bezpłatne konto exmortis na adres ${String(email).replace(/</g, "&lt;")}. Wejdź przez „Zaloguj przez Google” (jeśli to adres Gmail) albo ustaw hasło: na stronie logowania kliknij „Nie pamiętam hasła” i podaj ten adres.</p>
+    <p style="color:#8A8A8C;font-size:13px;line-height:1.6;">Zgodnie z Twoją prośbą założyłem bezpłatne konto exmortis na adres ${String(email).replace(/</g, "&lt;")} — zakup już tam jest. Hasło ustawisz linkiem z osobnego maila (albo na stronie logowania: „Nie pamiętam hasła”); z adresem Gmail wejdziesz też przez „Zaloguj przez Google”. Po pierwszym zalogowaniu przyjdzie kod 20 zł na kolejny materiał.</p>
     <p style="margin:12px 0 0;"><a href="${APP_URL}/konto" style="color:#C9A24A;">Przejdź do konta</a></p>
-  </div>`;
-}
-
-function accessEmailHtml(granted, consent, newAccount = false, email = "") {
-  if (!granted.length) return "";
-  const rows = granted
-    .map((g) => `<p style="color:#E2E2E2;margin:0 0 6px;">${String(g.name).replace(/</g, "&lt;")} · Dostęp ${g.until ? `do ${PL_DATE(g.until)}` : "bezterminowo"}</p>`)
-    .join("");
-  return `<div style="background:#0A0A0B;padding:0 32px 32px;font-family:Georgia,serif;">
-    ${rows}
-    <p style="margin:20px 0;"><a href="${APP_URL}/konto" style="color:#C9A24A;">Otwórz w Moich produktach</a></p>
-    ${newAccount ? `<p style="color:#8A8A8C;font-size:13px;line-height:1.6;">Konto założyłem na adres ${String(email).replace(/</g, "&lt;")}. Wejdź przez „Zaloguj przez Google” (jeśli to adres Gmail) albo ustaw hasło: na stronie logowania kliknij „Nie pamiętam hasła” i podaj ten adres.</p>` : ""}
-    ${consent ? `<p style="color:#8A8A8C;font-size:13px;line-height:1.6;">Potwierdzam Twoje żądanie dostarczenia treści cyfrowych przed upływem 14 dni od zawarcia umowy oraz przyjęcie do wiadomości utraty prawa odstąpienia od umowy z chwilą rozpoczęcia dostarczania.</p>` : ""}
-    <p style="color:#5C5C5E;font-size:12px;line-height:1.6;">exmortis to mentoring, nie terapia. Jeśli jest Ci bardzo ciężko: 116 123 · 800 70 2222 · w zagrożeniu życia 112.</p>
   </div>`;
 }
 
@@ -93,17 +80,17 @@ export async function fulfillOrder(base44, stored, payuOrderId) {
         const until = await grantAccess(base44, { email: stored.buyer_email, product: p, source: "zakup", orderId: stored.id });
         granted.push({ name: p.name, until });
       }
-      if (granted.length) newAccount = await ensureAccount(base44, stored.buyer_email);
+      // Konto NIE powstaje samo (decyzja 16.11.2026): materiały są pod osobistym linkiem z maila,
+      // a konto zakłada klient — polem w kasie albo przyciskiem „Aktywuj” w mailu.
     }
   } catch (e) {
     throw e;
   }
-  // Bezpłatne konto zaznaczone w kasie (zakup bez treści cyfrowych): zaproszenie dopiero po opłaceniu.
-  let accountOnly = false;
-  if (!granted.length && stored.buyer_email) {
+  // Bezpłatne konto zaznaczone w kasie (dobrowolne): zaproszenie dopiero po opłaceniu.
+  if (stored.buyer_email) {
     try {
       const asked = await consentFilter(base44, { order_id: stored.id, kind: "konto" }, "-created_date", 1);
-      if (asked.length) accountOnly = newAccount = await ensureAccount(base44, stored.buyer_email);
+      if (asked.length) newAccount = await ensureAccount(base44, stored.buyer_email);
     } catch (e) {
       console.error("konto z kasy:", String(e?.message || e).slice(0, 200));
     }
@@ -181,11 +168,26 @@ export async function fulfillOrder(base44, stored, payuOrderId) {
       const umowa = powrot ? await docAttachment(base44, "umowa_powrot", "Umowa-POWROT-exmortis") : null;
       const atts = [umowa, reg].filter(Boolean);
       const early = !!(powrot && powrot.service_early === true);
+      // Materiały cyfrowe: osobisty link (7 dni) do pobrania / aktywacji, zachęta do konta.
+      let mats = "";
+      if (granted.length) {
+        try {
+          const materials = await orderMaterials(base44, items);
+          if (materials.length) {
+            const token = await createLink(base44, String(stored.id), stored.buyer_email, "mail");
+            mats = materialsEmailHtml({ materials, token, account: await hasAccount(base44, stored.buyer_email), consent: !!stored.digital_consent_text });
+          }
+        } catch (e) {
+          // Bez linku mail i tak wychodzi — z odesłaniem do formularza „wyślij nowy link”.
+          console.error("link do materiałów:", String(e?.message || e).slice(0, 200));
+          mats = `<p>Twoje materiały są gotowe. Link do pobrania wyślesz sobie na stronie <a href="${APP_URL}/pobierz" style="color:#C9A24A;">exmortis.pl/pobierz</a> — podaj ten adres e-mail.</p>`;
+        }
+      }
       await sendMail(base44, {
         kind: "zamowienie", ref: stored.id, to: stored.buyer_email,
         ...(atts.length ? { attachments: atts } : {}),
         subject: Number(stored.total) > 0 ? "EXMORTIS — płatność przyjęta" : "EXMORTIS — zamówienie przyjęte",
-        html: orderEmailHtml(stored.buyer_name || "", items, stored.total, stored.id, stored.invoice || null) + accessEmailHtml(granted, !!stored.digital_consent_text, newAccount, stored.buyer_email) + (accountOnly ? accountEmailHtml(stored.buyer_email) : "") + (svcRows.length || early ? SERVICE_CONFIRM : "") + (powrot ? POWROT_CONFIRM : "") + tix + cards + step,
+        html: orderEmailHtml(stored.buyer_name || "", items, stored.total, stored.id, stored.invoice || null) + mats + (newAccount ? accountEmailHtml(stored.buyer_email) : "") + (svcRows.length || early ? SERVICE_CONFIRM : "") + (powrot ? POWROT_CONFIRM : "") + tix + cards + step,
       });
     } catch { /* e-mail potwierdzenia jest opcjonalny */ }
   }

@@ -21,6 +21,7 @@ import { appByPayToken, isPaid, isExpired, PROGRAM_NAME, CONTRACT_CONSENT, EARLY
 import { docLatest } from "../_shared/legalDocs.ts";
 import { giftLine } from "../_shared/giftCard.ts";
 import { ticketLines } from "../_shared/tickets.ts";
+import { createLink } from "../_shared/orderLinks.ts";
 
 const firstNameOf = (full) => String(full ?? "").trim().split(/\s+/)[0] || "";
 const validation = (msg) => Object.assign(new Error(msg), { isValidation: true });
@@ -33,7 +34,7 @@ const SERVICE_CONSENT =
 
 // Każda zgoda zapisana osobno, z wersją dokumentu.
 const ACCOUNT_TEXT =
-  "Chcę założyć bezpłatne konto exmortis na podany adres e-mail (Biblioteka, ROZDROŻA, kupione produkty w jednym miejscu). Link do ustawienia hasła otrzymam po zakupie.";
+  "Załóż mi bezpłatne konto exmortis na podany adres: zakup zawsze pod ręką, ROZDROŻA, Biblioteka i 20 zł na kolejny materiał. Link do ustawienia hasła przyjdzie po zakupie.";
 
 async function saveConsents(base44, req, orderId, email, hasDigital, newsletterConsent, hasService = false, createAccount = false) {
   const cBase = { email, source: "kasa", order_id: orderId, doc_version: `regulamin ${await regulaminVersion(base44)}`, ip: clientIp(req), status: "udzielona" };
@@ -287,7 +288,8 @@ const handler = async function (req) {
       // Bez bramki: zamówienie od razu opłacone; realizacja z fulfilled_at po sukcesie, a błąd ponawia zadanie cykliczne.
       await markPaid(base44, freeId);
       await fulfillPaid(base44, freeId).catch((e) => console.error("zamówienie 0 zł:", String(e?.message || e).slice(0, 200)));
-      return Response.json({ redirectUri: `${APP_URL}/kasa?payu=done`, orderId: id, free: true });
+      const link = hasDigital ? await createLink(base44, id, buyerEmail, "kasa").catch(() => "") : "";
+      return Response.json({ redirectUri: `${APP_URL}/kasa?payu=done`, orderId: id, free: true, link });
     }
 
     const payu = await getSetting(base44, "payu");
@@ -345,7 +347,9 @@ const handler = async function (req) {
     }
 
     // 6. Klient idzie do PayU; realizacja dopiero po podpisanym powiadomieniu COMPLETED.
-    return Response.json({ redirectUri: created.redirectUri, orderId: extOrderId, payuOrderId: created.payuOrderId });
+    // Osobisty link do materiałów dla strony po zapłacie (działa dopiero, gdy zamówienie jest opłacone).
+    const link = hasDigital ? await createLink(base44, extOrderId, buyerEmail, "kasa").catch(() => "") : "";
+    return Response.json({ redirectUri: created.redirectUri, orderId: extOrderId, payuOrderId: created.payuOrderId, link });
   } catch (error) {
     if (reservedFor) await releaseCode(base44Ref, reservedFor);
     // Zamówienie zapisane jako CREATING, ale płatność nie powstała — nie zostawiamy go w zawieszeniu.

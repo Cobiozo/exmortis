@@ -7,7 +7,7 @@ import { readConsent } from "@/components/legal/cookieStore";
 
 const KEY = "exm_popup";
 // Popup nie przeszkadza w zakupie, płatności, teście, logowaniu ani w dokumentach prawnych.
-const SKIP = ["/admin", "/kasa", "/powrot/platnosc", "/powrot/ankieta", "/test", "/login", "/register", "/forgot-password",
+const SKIP = ["/admin", "/kasa", "/pobierz", "/powrot/platnosc", "/powrot/ankieta", "/test", "/login", "/register", "/forgot-password",
   "/reset-password", "/regulamin", "/polityka-prywatnosci", "/polityka-cookies", "/odstapienie", "/umowa-powrot",
   "/bilet", "/karta", "/rezerwacja", "/zmiana-adresu", "/listy/", "/cisza", "/spotkania"];
 

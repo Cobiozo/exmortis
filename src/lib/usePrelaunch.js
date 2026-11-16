@@ -13,7 +13,7 @@ export const hasEnd = (until) => !!until && new Date(until).getTime() < new Date
 // (potwierdzenia, bilety, karty, rezerwacje, dołączanie do spotkań, powrót z płatności PayU).
 const OPEN = ["/kontakt", "/regulamin", "/polityka-prywatnosci", "/polityka-cookies", "/odstapienie", "/umowa-powrot", "/powrot/platnosc",
   "/login", "/register", "/forgot-password", "/reset-password",
-  "/listy/potwierdz", "/listy/wypis", "/zmiana-adresu", "/karta", "/bilet", "/rezerwacja/termin", "/rezerwacja/zarzadzaj"];
+  "/listy/potwierdz", "/listy/wypis", "/zmiana-adresu", "/karta", "/bilet", "/rezerwacja/termin", "/rezerwacja/zarzadzaj", "/pobierz"];
 export const isOpenPath = (pathname, search = "") => {
   const p = pathname.replace(/\/+$/, "") || "/";
   if (OPEN.includes(p) || p.endsWith("/dolacz")) return true;

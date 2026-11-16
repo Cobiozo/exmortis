@@ -2,12 +2,15 @@ import { listAuthUsers } from "./supabase.ts";
 import { getSetting, APP_URL } from "./settings.ts";
 import { sendMail } from "./smtp.ts";
 import { emailButton } from "./emailLayout.ts";
+import { hasPaidOrder, issueBuyerCode } from "./orderLinks.ts";
 
 // Kod powitalny: każde nowe, potwierdzone konto dostaje jednorazowy kod −20%, ważny 7 dni od założenia konta.
 // Zasady (decyzja właściciela 14.11.2026): kod przypisany do e-maila konta, jednorazowy; tylko materiały cyfrowe
 // ze Skarbca (ebooki, audio, wideo, kursy, pakiety) w cenie regularnej — bez POWRÓT, kart, biletów i przedsprzedaży;
 // jeden kod w zamówieniu. Konta z Google są potwierdzone od razu.
 // Wyłącznik: app_settings „powitalny” { wlaczony: false }.
+// Od 16.11.2026: konto założone po zakupie (opłacone zamówienie na ten adres) dostaje zamiast −20% kod 20 zł
+// (orderLinks.issueBuyerCode); oba kody mają znacznik „powitalny”, więc osoba dostaje tylko jeden.
 export const WELCOME = { value: 20, days: 7, typy: ["pdf", "audio", "wideo", "kurs", "pakiet"] };
 export const WELCOME_FROM = "2026-11-14T00:00:00Z"; // konta założone wcześniej nie dostają kodu
 export const WELCOME_TEXT = "Na początek drogi: 20% na pierwszy materiał ze Skarbca";
@@ -43,6 +46,10 @@ export async function issueWelcomeCodes(base44, limit = 20) {
     const email = String(u.email).toLowerCase();
     const has = await E.filter({ email, powitalny: true }, "-created_date", 1).catch(() => null);
     if (!has || has.length) continue; // błąd odczytu albo kod już jest — nic nie robimy
+    if (await hasPaidOrder(base44, email)) {
+      if (await issueBuyerCode(base44, email).catch(() => null)) n++;
+      continue;
+    }
     const until = warsawDate(Date.parse(String(u.created_at)) + WELCOME.days * 86400000);
     const code = newCode();
     await E.create({

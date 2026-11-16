@@ -136,6 +136,14 @@ export const supaAuth = {
     return { access_token: d.access_token };
   },
 
+  // Jednorazowy link logowania z aktywacji konta po zakupie (orderAccess → token_hash) → sesja.
+  async loginWithTokenHash(tokenHash) {
+    const d = await api("/verify", { method: "POST", headers: headers(), body: JSON.stringify({ type: "magiclink", token_hash: tokenHash }) });
+    if (!d.access_token) throw new Error("Nie udało się zalogować — spróbuj ponownie");
+    store(keep(d));
+    return { access_token: d.access_token };
+  },
+
   async resendOtp(email) {
     await api("/resend", { method: "POST", headers: headers(), body: JSON.stringify({ type: "signup", email }) });
   },

@@ -202,8 +202,10 @@ async function buildFeed(base44, me) {
   for (const c of mine) {
     if (!c.active || (c.valid_until && c.valid_until < today)) continue;
     if (c.max_uses && (c.uses || 0) >= c.max_uses) continue;
-    push({ key: `code:${c.id}`, kind: "kod", title: `Twój kod powitalny ${c.code}: −${c.value}%`,
-      body: `Na pierwszy ebook, audio albo kurs ze Skarbca w cenie regularnej. Ważny do ${plDate(c.valid_until)}.`,
+    const kwota = c.kind === "kwota";
+    push({ key: `code:${c.id}`, kind: "kod", title: kwota ? `Twój kod ${c.code}: −${c.value} zł` : `Twój kod powitalny ${c.code}: −${c.value}%`,
+      body: kwota ? `Na kolejny ebook, audio, kurs albo pakiet przy zamówieniu od ${Number(c.min_zl) || 49} zł. Ważny do ${plDate(c.valid_until)}.`
+        : `Na pierwszy ebook, audio albo kurs ze Skarbca w cenie regularnej. Ważny do ${plDate(c.valid_until)}.`,
       link: "/skarbiec", at: iso(c.created_date), code: c.code, important: true });
   }
   // Kody rabatowe, które Dawid oznaczył do pokazania.

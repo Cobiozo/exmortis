@@ -44,9 +44,10 @@ export const REGULAMIN = {
       "5. Sprzedawca może zakończyć świadczenie Usługi bezpłatnej z ważnej przyczyny (trwałe zakończenie usługi, rażące naruszenie Regulaminu) z 14-dniowym wypowiedzeniem przesłanym e-mailem. Nie wpływa to na dostęp do opłaconych Treści cyfrowych.",
     ]},
     { id: "p6", title: "§6. Konto", body: [
-      "1. Założenie Konta jest bezpłatne. Wymaga podania imienia, adresu e-mail i hasła albo logowania przez Google, potwierdzenia pełnoletności i akceptacji Regulaminu. Przy pierwszym zakupie Konto może powstać automatycznie — Klient otrzymuje wtedy e-mail z linkiem do ustawienia hasła.",
+      "1. Założenie Konta jest bezpłatne i dobrowolne — zakupy można składać bez Konta. Konto zakłada się przez rejestrację (imię, adres e-mail i hasło albo logowanie przez Google, potwierdzenie pełnoletności i akceptacja Regulaminu), polem „Załóż mi konto” przy Zamówieniu (Klient otrzymuje wtedy e-mail z linkiem do ustawienia hasła) albo po zakupie, przyciskiem „Aktywuj konto” z e-maila lub ze strony z materiałami — wtedy Konto powstaje na adres z Zamówienia i Klient zostaje od razu zalogowany; hasło może ustawić później. Zakupy złożone na adres Konta pojawiają się w nim automatycznie, także te sprzed jego założenia.",
       "2. Konto jest osobiste. Zabronione jest udostępnianie Konta i danych logowania innym osobom.",
       "3. Klient może pobrać swoje dane i usunąć Konto w ustawieniach Konta. Usunięcie Konta kończy dostęp do Treści cyfrowych udostępnianych w Koncie, dlatego warto wcześniej pobrać pliki PDF i audio. Usunięcie Konta nie jest odstąpieniem od umowy i nie wpływa na uprawnienia z §14 i §15.",
+      "4. Klient, który założy Konto w związku z zakupem (polem przy Zamówieniu, przyciskiem „Aktywuj konto” albo rejestracją na adres z opłaconego Zamówienia), otrzymuje jednorazowy kod rabatowy o wartości 20 zł, ważny 30 dni i przypisany do adresu Konta. Kod obejmuje e-booki, audio, kursy i pakiety, gdy ich wartość w Zamówieniu wynosi co najmniej 49 zł; nie obejmuje sesji, programu POWRÓT, biletów ani Kart podarunkowych. Osoba, która zakłada Konto bez zakupu, otrzymuje kod powitalny na warunkach podanych przy jego udostępnieniu. W jednym Zamówieniu można użyć jednego kodu — kody się nie sumują.",
     ]},
     { id: "p7", title: "§7. Zamówienia, ceny i płatności", body: [
       "1. Informacje w Serwisie nie stanowią oferty w rozumieniu Kodeksu cywilnego, lecz zaproszenie do zawarcia umowy.",
@@ -61,7 +62,7 @@ export const REGULAMIN = {
     ]},
     { id: "p8", title: "§8. Realizacja zamówienia i terminy", body: [
       "1. Wszystkie świadczenia są dostarczane elektronicznie albo wykonywane osobiście — Sprzedawca nie wysyła przesyłek. Terminy liczy się od zaksięgowania płatności; przy tradycyjnym przelewie bankowym księgowanie trwa zwykle do 2 dni roboczych.",
-      "2. Treści cyfrowe — udostępniane w Koncie (zakładka „Moje produkty”), a niektóre pliki także e-mailem: zwykle w ciągu kilku minut, najpóźniej w ciągu 1 dnia roboczego.",
+      "2. Treści cyfrowe — pliki PDF i audio: osobisty link do pobrania wysyłany e-mailem i pokazywany na stronie po płatności; link działa 7 dni, a nowy Klient może zamówić w każdej chwili na stronie exmortis.pl/pobierz (przychodzi na adres z Zamówienia). Kursy i filmy — w Koncie, które Klient może aktywować jednym kliknięciem z e-maila. Klient z Kontem ma wszystkie zakupy także w zakładce „Moje produkty”. Termin: zwykle kilka minut, najpóźniej 1 dzień roboczy.",
       "3. Karta podarunkowa — kod wysyłany e-mailem: zwykle w ciągu kilku minut, najpóźniej w ciągu 1 dnia roboczego.",
       "4. Bilet na Wydarzenie — e-mail z biletem i kodem QR albo z linkiem do Wydarzenia online: zwykle w ciągu kilku minut, najpóźniej w ciągu 1 dnia roboczego.",
       "5. Sesja 1:1 — w terminie wybranym w kalendarzu rezerwacji; jeśli Klient nie wybrał terminu, Sprzedawca proponuje go w ciągu 3 dni roboczych.",
@@ -151,7 +152,7 @@ export const REGULAMIN = {
     { id: "p23", title: "§23. Postanowienia końcowe", body: [
       "1. Regulamin podlega prawu polskiemu. Wybór prawa nie pozbawia Konsumenta ochrony przysługującej mu na podstawie bezwzględnie obowiązujących przepisów państwa jego zwykłego pobytu.",
       "2. Postanowienia Regulaminu nie wyłączają ani nie ograniczają praw Konsumentów i PNPK wynikających z bezwzględnie obowiązujących przepisów.",
-      "3. Regulamin w tym brzmieniu obowiązuje od 10 listopada 2026 r. dla umów zawieranych od tego dnia. Wobec osób, które przed tym dniem założyły Konto lub zapisały się na newsletter, w zakresie Usług bezpłatnych obowiązuje od 24 listopada 2026 r. (po 14-dniowym powiadomieniu); do tego czasu stosuje się wobec nich poprzednią wersję, dostępną w części „Poprzednie wersje”.",
+      "3. Regulamin w tym brzmieniu obowiązuje od 16 listopada 2026 r. dla umów zawieranych od tego dnia. Wobec osób, które przed 10 listopada 2026 r. założyły Konto lub zapisały się na newsletter, w zakresie Usług bezpłatnych obowiązuje od 24 listopada 2026 r. (po 14-dniowym powiadomieniu); do tego czasu stosuje się wobec nich wersję wcześniejszą, dostępną w części „Poprzednie wersje”.",
     ]},
   ],
 };

@@ -2,7 +2,8 @@ import React, { useEffect, useRef, useState } from "react";
 import { useAuth } from "@/lib/AuthContext";
 import DigitalConsent from "@/components/exmortis/shop/DigitalConsent";
 import { Link, useNavigate } from "react-router-dom";
-import { ArrowRight, Check } from "lucide-react";
+import { ArrowRight, Check, Download, Lock } from "lucide-react";
+import { Image } from "@/components/ui/image";
 import { useCart } from "@/components/exmortis/CartContext";
 import { base44 } from "@/api/base44Client";
 import NewsletterConsent from "@/components/exmortis/shop/NewsletterConsent";
@@ -18,6 +19,23 @@ import { TXT } from "@/content/legal/seller";
 
 const ORDER_KEY = "exm_payu_order";
 const ORDER_VALUE_KEY = "exm_payu_value";
+const ORDER_LINK_KEY = "exm_payu_link"; // osobisty link do materiałów (strona po zapłacie)
+
+// Sekcja formularza kasy (poza komponentem — inaczej pola traciłyby fokus przy każdym znaku).
+function Step({ n, title, hint, children }) {
+  return (
+    <fieldset className="border-t hairline pt-8">
+      <legend className="sr-only">{title}</legend>
+      <p className="flex items-baseline gap-3 mb-6">
+        <span className="font-mono text-xs gold-text">{n}</span>
+        <span className="technical text-[11px] text-foreground/80">{title}</span>
+        {hint && <span className="text-xs text-foreground/45">{hint}</span>}
+      </p>
+      {children}
+    </fieldset>
+  );
+}
+const inputCls = "w-full bg-transparent border hairline px-5 py-4 focus:border-[#C9A24A] focus:outline-none transition-colors";
 
 export default function Checkout() {
   const { items, total, clear, refresh } = useCart();
@@ -28,6 +46,7 @@ export default function Checkout() {
   const [payuError] = useState(() => !!new URLSearchParams(window.location.search).get("error"));
   const [payState, setPayState] = useState("check"); // check | ok | wait | fail
   const [pollNonce, setPollNonce] = useState(0); // ponowne sprawdzenie stanu na żądanie klienta
+  const [doneLink, setDoneLink] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const [form, setForm] = useState({ name: "", email: "", note: "" });
   const [newsletterConsent, setNewsletterConsent] = useState(false);
@@ -38,6 +57,7 @@ export default function Checkout() {
   const [payError, setPayError] = useState("");
   const [discount, setDiscount] = useState(null);
   const [invoice, setInvoice] = useState({ want: false, company: "", nip: "", address: "" });
+  const [showNote, setShowNote] = useState(false);
   const { user } = useAuth();
   useEffect(() => {
     if (user) setForm((f) => ({ ...f, name: f.name || user.imie || user.full_name || "", email: f.email || user.email }));
@@ -84,6 +104,7 @@ export default function Checkout() {
         trackPurchase(orderId, value);
         clear();
         try { sessionStorage.removeItem(ORDER_KEY); } catch { /* */ }
+        try { setDoneLink(sessionStorage.getItem(ORDER_LINK_KEY) || ""); } catch { /* */ }
         setPayState("ok");
         return;
       }
@@ -122,6 +143,7 @@ export default function Checkout() {
       // Koszyk czyszczę dopiero po potwierdzeniu płatności — przerwana płatność go nie traci.
       try {
         sessionStorage.setItem(ORDER_KEY, res.data.orderId || "");
+        if (res.data.link) sessionStorage.setItem(ORDER_LINK_KEY, res.data.link); else sessionStorage.removeItem(ORDER_LINK_KEY);
         sessionStorage.setItem(ORDER_VALUE_KEY, String(Math.round((Number(discount ? total - discount.discount : total) || 0) * 100) / 100));
       } catch { /* bez pamięci karty */ }
       window.location.href = res.data.redirectUri;
@@ -181,10 +203,21 @@ export default function Checkout() {
             </div>
             <h1 className="relic-heading text-4xl md:text-6xl gold-text">Próg przekroczony</h1>
             <p className="text-foreground/60 text-lg max-w-md leading-relaxed">
-              Płatność dotarła. Dostęp i szczegóły są już w drodze na Twój mail — pierwszy ruch jest już za Tobą.
+              Płatność dotarła. Potwierdzenie {doneLink ? "i link do materiałów są" : "jest"} już w drodze na Twój mail — pierwszy ruch jest już za Tobą.
             </p>
+            {doneLink && (
+              <a href={`/pobierz#t=${doneLink}`} className="btn-relic">POBIERZ MATERIAŁY <Download className="h-4 w-4" /></a>
+            )}
             <ChooseTermButton />
-            <Link to="/konto" className="btn-ghost">MOJE PRODUKTY</Link>
+            {user ? (
+              <Link to="/konto" className="btn-ghost">MOJE PRODUKTY</Link>
+            ) : doneLink ? (
+              <div className="border hairline p-6 max-w-md text-left">
+                <p className="technical text-[10px] gold-text mb-3">BEZPŁATNE KONTO EXMORTIS</p>
+                <p className="text-foreground/70 leading-relaxed">Załóż je jednym kliknięciem na ten sam adres — zakup już tam czeka. Dostaniesz też ROZDROŻA, Bibliotekę i 20 zł na kolejny materiał.</p>
+                <a href={`/pobierz#t=${doneLink}&a=1`} className="btn-ghost mt-5">AKTYWUJ KONTO <ArrowRight className="h-4 w-4" /></a>
+              </div>
+            ) : null}
           </>
         )}
       </div>
@@ -201,108 +234,122 @@ export default function Checkout() {
     );
   }
 
+  const sum = discount ? (total - discount.discount).toFixed(2) : total;
+  const sumPl = String(sum).replace(".", ",");
+
   return (
     <div className="bg-[#0A0A0B] pt-20">
-      <section className="mx-auto max-w-[1100px] px-5 md:px-10 py-16 md:py-24">
-        <p className="technical text-[11px] gold-text mb-6">KASA · FINALNY RUCH</p>
-        <h1 className="relic-heading text-4xl md:text-6xl mb-16 leading-[0.95]">
-          Przejdź<br /><span className="gold-text">przez próg</span>
+      <section className="mx-auto max-w-[1120px] px-5 md:px-10 py-12 md:py-20">
+        <p className="technical text-[11px] gold-text mb-4">KASA · PODSUMOWANIE ZAMÓWIENIA</p>
+        <h1 className="relic-heading text-3xl md:text-5xl mb-10 md:mb-14 leading-[1]">
+          Przejdź <span className="gold-text">przez próg</span>
         </h1>
 
-        <div className="grid md:grid-cols-5 gap-10">
-          {/* Form */}
-          <form onSubmit={submit} className="md:col-span-3 space-y-8">
-            <div>
-              <label htmlFor="co-name" className="technical text-[10px] text-foreground/55 block mb-3">IMIĘ I NAZWISKO</label>
-              <input
-                id="co-name"
-                autoComplete="name"
-                required
-                value={form.name}
-                onChange={(e) => setForm({ ...form, name: e.target.value })}
-                className="w-full bg-transparent border hairline px-5 py-4 focus:border-[#C9A24A] focus:outline-none transition-colors"
-              />
-            </div>
-            <div>
-              <label htmlFor="co-email" className="technical text-[10px] text-foreground/55 block mb-3">E-MAIL</label>
-              <input
-                id="co-email"
-                autoComplete="email"
-                inputMode="email"
-                required
-                type="email"
-                value={form.email}
-                onChange={(e) => setForm({ ...form, email: e.target.value })}
-                className="w-full bg-transparent border hairline px-5 py-4 focus:border-[#C9A24A] focus:outline-none transition-colors"
-              />
-              <div className="mt-3 space-y-3">
-                <NewsletterConsent checked={newsletterConsent} onChange={setNewsletterConsent} />
-                {!user && <AccountOption items={items} checked={createAccount} onChange={setCreateAccount} />}
-              </div>
-            </div>
-            <div>
-              <label htmlFor="co-note" className="technical text-[10px] text-foreground/55 block mb-3">NOTATKA (OPCJONALNIE)</label>
-              <textarea
-                id="co-note"
-                rows={4}
-                value={form.note}
-                onChange={(e) => setForm({ ...form, note: e.target.value })}
-                className="w-full bg-transparent border hairline px-5 py-4 focus:border-[#C9A24A] focus:outline-none transition-colors resize-none"
-              />
-            </div>
-
-            <InvoiceFields value={invoice} onChange={setInvoice} />
-
-            <OrderSummaryInfo items={items} total={discount ? (total - discount.discount).toFixed(2) : total} />
-            <label className="flex gap-3 text-sm text-foreground/65 leading-relaxed">
-              <input type="checkbox" required className="mt-0.5 h-5 w-5 shrink-0 accent-[#C9A24A]" checked={termsConsent} onChange={(e) => setTermsConsent(e.target.checked)} />
-              <span>Akceptuję <Link to="/regulamin" className="underline">Regulamin</Link>.</span>
-            </label>
-            <DigitalConsent items={items} checked={digitalConsent} onChange={setDigitalConsent} />
-            {items.some((i) => i.product_type === "usluga") && (
-              <label className="flex gap-3 text-sm text-foreground/65 leading-relaxed">
-                <input type="checkbox" required className="mt-0.5 h-5 w-5 shrink-0 accent-[#C9A24A]" checked={serviceConsent} onChange={(e) => setServiceConsent(e.target.checked)} />
-                <span>{TXT.service}</span>
-              </label>
-            )}
-            <p className="text-xs text-foreground/55">Zasady przetwarzania danych: <Link to="/polityka-prywatnosci" className="underline">Polityka prywatności</Link>.</p>
-            {cartNote && <p className="text-sm text-foreground/70" role="status">{cartNote}</p>}
-            {payError && <p className="text-sm text-[#E8C547]" role="alert">{payError}</p>}
-            <button type="submit" disabled={submitting} className="btn-relic w-full disabled:opacity-60">
-              {submitting ? "PRZYGOTOWUJĘ PŁATNOŚĆ..." : "Zamawiam z obowiązkiem zapłaty"}{" "}
-              {!submitting && <ArrowRight className="h-4 w-4" />}
-            </button>
-            <p className="technical text-[10px] text-foreground/55">
-              Bezpieczna płatność online przez PayU. Potwierdzenie otrzymasz na maila.
-            </p>
-          </form>
-
-          {/* Summary */}
-          <div className="md:col-span-2">
-            <div className="border hairline p-6 space-y-4 sticky top-28">
-              <p className="technical text-[11px] gold-text pb-4 border-b hairline">TWOJE ZAPISY</p>
-              {items.map((item) => (
-                <div key={item.key || item.id} className="flex gap-4">
-                  <div className="w-14 h-14 bg-card border hairline overflow-hidden flex-shrink-0">
-                    {item.image_url && <img src={item.image_url} alt="" className="w-full h-full object-cover" />}
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <p className="relic-heading text-sm gold-text truncate">{item.name}</p>
-                    <p className="font-mono text-xs text-foreground/55">{item.qty} × {item.price} zł</p>
-                    {item.gift && <GiftLine gift={item.gift} />}
-                    {item.kind === "bilet" && <TicketLine holders={item.holders} />}
-                  </div>
-                </div>
-              ))}
-              <div className="pt-4 border-t hairline">
+        <div className="grid lg:grid-cols-[minmax(0,1fr)_380px] gap-10 lg:gap-14 items-start">
+          {/* Podsumowanie — na telefonie na górze, na komputerze po prawej */}
+          <aside className="lg:order-2 lg:sticky lg:top-28" aria-label="Twoje zamówienie">
+            <div className="border hairline bg-[#0D0D0E]">
+              <p className="technical text-[11px] gold-text px-5 sm:px-6 pt-5 pb-4 border-b hairline">TWOJE ZAMÓWIENIE</p>
+              <ul className="divide-y divide-[#2A2A2C]">
+                {items.map((item) => (
+                  <li key={item.key || item.id} className="flex gap-4 px-5 sm:px-6 py-4">
+                    <div className="relative w-16 h-20 sm:w-20 sm:h-24 bg-[#070708] border hairline overflow-hidden shrink-0">
+                      {item.image_url && <Image src={item.image_url} alt="" fittingType="fill" className="absolute inset-0 w-full h-full" />}
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <p className="relic-heading text-base gold-text leading-snug">{item.name}</p>
+                      <p className="font-mono text-xs text-foreground/60 mt-1">{item.qty} × {String(item.price).replace(".", ",")} zł</p>
+                      {item.gift && <GiftLine gift={item.gift} />}
+                      {item.kind === "bilet" && <TicketLine holders={item.holders} />}
+                    </div>
+                  </li>
+                ))}
+              </ul>
+              <div className="px-5 sm:px-6 py-4 border-t hairline">
                 <DiscountField items={items} applied={discount} onApply={setDiscount} email={form.email} />
               </div>
-              <div className="pt-4 border-t hairline flex justify-between items-center">
-                <span className="technical text-[11px] text-foreground/60">RAZEM</span>
-                <span className="font-mono text-2xl gold-text">{discount ? (total - discount.discount).toFixed(2) : total} zł</span>
+              <div className="px-5 sm:px-6 py-5 border-t hairline flex justify-between items-baseline">
+                <span className="technical text-[11px] text-foreground/70">DO ZAPŁATY</span>
+                <span className="font-mono text-2xl gold-text">{sumPl} zł</span>
               </div>
             </div>
-          </div>
+          </aside>
+
+          {/* Formularz */}
+          <form onSubmit={submit} className="lg:order-1 space-y-10" noValidate={false}>
+            <Step n="01" title="TWOJE DANE">
+              <div className="space-y-5">
+                <div>
+                  <label htmlFor="co-name" className="technical text-[10px] text-foreground/55 block mb-3">IMIĘ I NAZWISKO</label>
+                  <input id="co-name" autoComplete="name" required value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} className={inputCls} />
+                </div>
+                <div>
+                  <label htmlFor="co-email" className="technical text-[10px] text-foreground/55 block mb-3">E-MAIL</label>
+                  <input id="co-email" autoComplete="email" inputMode="email" required type="email" value={form.email}
+                    onChange={(e) => setForm({ ...form, email: e.target.value })} className={inputCls} aria-describedby="co-email-hint" />
+                  <p id="co-email-hint" className="text-xs text-foreground/50 mt-2">Na ten adres wyślę potwierdzenie i link do materiałów.</p>
+                </div>
+              </div>
+            </Step>
+
+            <Step n="02" title={user ? "LISTY POWROTU" : "KONTO I LISTY POWROTU"} hint="opcjonalnie">
+              <div className="space-y-4">
+                {!user && <AccountOption items={items} checked={createAccount} onChange={setCreateAccount} />}
+                <NewsletterConsent checked={newsletterConsent} onChange={setNewsletterConsent} />
+              </div>
+            </Step>
+
+            <Step n="03" title="FAKTURA I UWAGI" hint="opcjonalnie">
+              <div className="space-y-5">
+                <InvoiceFields value={invoice} onChange={setInvoice} />
+                {showNote || form.note ? (
+                  <div>
+                    <label htmlFor="co-note" className="technical text-[10px] text-foreground/55 block mb-3">NOTATKA DO ZAMÓWIENIA</label>
+                    <textarea id="co-note" rows={3} value={form.note} onChange={(e) => setForm({ ...form, note: e.target.value })} className={`${inputCls} resize-none`} />
+                  </div>
+                ) : (
+                  <button type="button" onClick={() => setShowNote(true)} className="text-sm text-foreground/60 underline underline-offset-4 hover:text-[#C9A24A]">+ Dodaj notatkę do zamówienia</button>
+                )}
+              </div>
+            </Step>
+
+            <Step n="04" title="ZGODY I INFORMACJE">
+              <div className="space-y-5">
+                <OrderSummaryInfo items={items} total={sum} />
+                <div className="border hairline p-5 space-y-4">
+                  <p className="technical text-[10px] text-foreground/55">WYMAGANE DO ZAMÓWIENIA</p>
+                  <label className="flex gap-3 text-sm text-foreground/75 leading-relaxed cursor-pointer">
+                    <input type="checkbox" required className="mt-0.5 h-5 w-5 shrink-0 accent-[#C9A24A]" checked={termsConsent} onChange={(e) => setTermsConsent(e.target.checked)} />
+                    <span>Akceptuję <Link to="/regulamin" target="_blank" rel="noopener" className="underline">Regulamin</Link>.</span>
+                  </label>
+                  <DigitalConsent items={items} checked={digitalConsent} onChange={setDigitalConsent} />
+                  {items.some((i) => i.product_type === "usluga") && (
+                    <label className="flex gap-3 text-sm text-foreground/75 leading-relaxed cursor-pointer">
+                      <input type="checkbox" required className="mt-0.5 h-5 w-5 shrink-0 accent-[#C9A24A]" checked={serviceConsent} onChange={(e) => setServiceConsent(e.target.checked)} />
+                      <span>{TXT.service}</span>
+                    </label>
+                  )}
+                  <p className="text-xs text-foreground/50">Dane przetwarzam do realizacji zamówienia: <Link to="/polityka-prywatnosci" target="_blank" rel="noopener" className="underline">Polityka prywatności</Link>.</p>
+                </div>
+              </div>
+            </Step>
+
+            <div className="border-t hairline pt-8 space-y-4">
+              {cartNote && <p className="text-sm text-foreground/70" role="status">{cartNote}</p>}
+              {payError && <p className="text-sm text-[#E8C547] border border-[#E8C547]/40 px-4 py-3" role="alert">{payError}</p>}
+              <div className="flex justify-between items-baseline">
+                <span className="technical text-[11px] text-foreground/70">DO ZAPŁATY</span>
+                <span className="font-mono text-3xl gold-text">{sumPl} zł</span>
+              </div>
+              <button type="submit" disabled={submitting} className="btn-relic w-full !py-5 text-base disabled:opacity-60">
+                {submitting ? "PRZYGOTOWUJĘ PŁATNOŚĆ..." : "Zamawiam z obowiązkiem zapłaty"}{" "}
+                {!submitting && <ArrowRight className="h-4 w-4" />}
+              </button>
+              <p className="flex items-center justify-center gap-2 text-xs text-foreground/55 text-center">
+                <Lock className="h-3.5 w-3.5" /> Bezpieczna płatność online przez PayU · potwierdzenie przyjdzie mailem
+              </p>
+            </div>
+          </form>
         </div>
       </section>
     </div>

@@ -35,6 +35,7 @@ export const PAGES = {
 export const PAGE_PATTERNS = [
   [/\/dolacz$/, { t: "Dołącz do spotkania — exmortis", d: "Link do spotkania online i nagranie dla zapisanych." }],
   [/^\/rezerwacja\//, { t: "Rezerwacja rozmowy — exmortis", d: "Wybierz termin rozmowy online." }],
+  [/^\/pobierz$/, { t: "Twoje materiały — exmortis", d: "Pobierz materiały z zamówienia." }],
 ];
 
 export const pageMeta = (pathname) => PAGES[pathname] || PAGE_PATTERNS.find(([re]) => re.test(pathname))?.[1] || PAGES["/"];

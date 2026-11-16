@@ -1,4 +1,4 @@
-// Polityka prywatności — wersja z 9.11.2026 (opis zgodny z działaniem kodu; RODO art. 13; wymagania PayU 08.2026).
+// Polityka prywatności — wersja z 16.11.2026 (zakup bez konta); wcześniej 9.11.2026 (opis zgodny z działaniem kodu; RODO art. 13; wymagania PayU 08.2026).
 // Dane firmy w nawiasach kwadratowych wstawia src/lib/firma.js z Ustawień → Dane firmy.
 export const PRYWATNOSC = {
   title: "Polityka prywatności exmortis.pl",
@@ -12,7 +12,7 @@ export const PRYWATNOSC = {
     ]},
     { id: "p3", title: "§3. Cele, dane, podstawy prawne i okresy przechowywania", body: [
       "1. Konto — imię, e-mail, hasło (przechowywane w postaci zabezpieczonej u dostawcy logowania) albo dane z logowania przez Google, ustawienia. Podstawa: wykonanie umowy (art. 6 ust. 1 lit. b RODO). Okres: do usunięcia Konta. Bez tych danych nie założysz Konta.",
-      "2. Zamówienia i płatności — imię i nazwisko, e-mail, dane do faktury, produkt, kwota, złożone oświadczenia, numer transakcji PayU. Podstawa: wykonanie umowy (art. 6 ust. 1 lit. b), a w zakresie rozliczeń — obowiązek prawny wynikający z przepisów podatkowych i o rachunkowości (art. 6 ust. 1 lit. c). Okres: czas trwania umowy i dostępu; dokumenty rozliczeniowe — 5 lat od końca roku kalendarzowego, w którym upłynął termin płatności podatku. Bez tych danych nie złożysz Zamówienia.",
+      "2. Zamówienia i płatności — imię i nazwisko, e-mail, dane do faktury, produkt, kwota, złożone oświadczenia, numer transakcji PayU. Podstawa: wykonanie umowy (art. 6 ust. 1 lit. b), a w zakresie rozliczeń — obowiązek prawny wynikający z przepisów podatkowych i o rachunkowości (art. 6 ust. 1 lit. c). Okres: czas trwania umowy i dostępu; dokumenty rozliczeniowe — 5 lat od końca roku kalendarzowego, w którym upłynął termin płatności podatku. Bez tych danych nie złożysz Zamówienia. Zamówienie można złożyć bez Konta: materiały udostępniamy wtedy pod osobistym linkiem wysłanym na Twój e-mail (w bazie przechowujemy tylko skrót linku, datę ważności i liczbę pobrań) i raz, po 3 dniach, przypominamy o nich, jeśli nic nie pobrano. Podstawa: wykonanie umowy (art. 6 ust. 1 lit. b). Okres: jak dane Zamówienia.",
       "3. Dowody oświadczeń i zgód (treść oświadczenia, data, wersja dokumentu, e-mail) — Podstawa: obowiązek wykazania zgody (art. 6 ust. 1 lit. c w zw. z art. 7 ust. 1 RODO) i nasz prawnie uzasadniony interes w obronie przed roszczeniami (art. 6 ust. 1 lit. f). Okres: do przedawnienia roszczeń, nie dłużej niż 6 lat od wygaśnięcia zgody lub umowy.",
       "4. Odstąpienia od umowy, reklamacje i korespondencja — dane z wiadomości, numer zamówienia, adres IP przy formularzu odstąpienia. Podstawa: obowiązek prawny (art. 6 ust. 1 lit. c) i prawnie uzasadniony interes (art. 6 ust. 1 lit. f). Okres: do zakończenia sprawy, a następnie do przedawnienia roszczeń.",
       "5. Newsletter „Listy powrotu” — e-mail, imię (opcjonalnie), data i treść zgody, źródło zapisu. Podstawa: Twoja zgoda (art. 6 ust. 1 lit. a RODO) i zgoda na otrzymywanie informacji handlowych e-mailem (art. 398 Prawa komunikacji elektronicznej). Zapis staje się aktywny po kliknięciu linku potwierdzającego. Okres: do wypisania się; niepotwierdzone zapisy usuwamy po 7 dniach.",
@@ -70,7 +70,7 @@ export const PRYWATNOSC = {
       "Konto i usługi odpłatne są przeznaczone dla osób pełnoletnich. Jeśli dowiemy się, że przetwarzamy dane osoby poniżej 18. roku życia bez podstawy, usuniemy je.",
     ]},
     { id: "p12", title: "§12. Zmiany Polityki", body: [
-      "O istotnych zmianach informujemy na stronie i e-mailem posiadaczy Kont. Poprzednie wersje są dostępne na tej stronie w części „Poprzednie wersje”. Ta wersja obowiązuje od 10 listopada 2026 r.",
+      "O istotnych zmianach informujemy na stronie i e-mailem posiadaczy Kont. Poprzednie wersje są dostępne na tej stronie w części „Poprzednie wersje”. Ta wersja obowiązuje od 16 listopada 2026 r.",
     ]},
   ],
 };

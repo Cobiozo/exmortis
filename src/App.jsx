@@ -62,6 +62,7 @@ const JoinMeeting = lazyPage(() => import('@/pages/JoinMeeting'));
 import ErrorBoundary from '@/components/errors/ErrorBoundary';
 const Rezerwacja = lazyPage(() => import('@/pages/Rezerwacja'));
 const RezerwacjaTermin = lazyPage(() => import('@/pages/RezerwacjaTermin'));
+const Pobierz = lazyPage(() => import('@/pages/Pobierz'));
 const RezerwacjaZarzadzaj = lazyPage(() => import('@/pages/RezerwacjaZarzadzaj'));
 import { CrisisProvider } from '@/components/crisis/CrisisContext';
 import CrisisHelpButton from '@/components/crisis/CrisisHelpButton';
@@ -154,6 +155,7 @@ const AuthenticatedApp = () => {
           <Route path="/odstapienie" element={<Odstapienie />} />
           <Route path="/kontakt" element={<Kontakt />} />
           <Route path="/rezerwacja/termin" element={<RezerwacjaTermin />} />
+          <Route path="/pobierz" element={<Pobierz />} />
           <Route path="/rezerwacja/zarzadzaj" element={<RezerwacjaZarzadzaj />} />
           <Route path="/rezerwacja/:slug" element={<Rezerwacja />} />
           <Route path="/strona/:slug" element={<CmsPage />} />

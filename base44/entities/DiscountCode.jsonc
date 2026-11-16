@@ -33,6 +33,15 @@
         "type": "string"
       }
     },
+    "po_zakupie": {
+      "type": "boolean",
+      "default": false,
+      "description": "Kod 20 zł dla kupującego, który założył konto po zakupie"
+    },
+    "min_zl": {
+      "type": "number",
+      "description": "Minimalna wartość objętych kodem produktów (zł)"
+    },
     "active": {
       "type": "boolean",
       "default": true
