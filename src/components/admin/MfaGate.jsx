@@ -79,9 +79,9 @@ export default function MfaGate({ children }) {
   const [enroll, setEnroll] = useState(false);
   useEffect(() => { supaMfa.state().then(setSt).catch(() => setSt(null)); }, []);
 
-  if (st === undefined) {
-    return <div className="py-16 flex justify-center"><div className="w-6 h-6 border-2 border-[#3D3D3F] border-t-[#C9A24A] rounded-full animate-spin" /></div>;
-  }
+  // Sprawdzanie trwa — panel rysuje się od razu (dane i tak chroni serwer: bez kodu me() odbiera
+  // uprawnienia, więc zapytania zwrócą „Brak dostępu”). Gdy okaże się, że kod jest wymagany, ekran kodu zastępuje panel.
+  if (st === undefined) return <>{children}</>;
 
   // Kod włączony, sesja bez kodu → najpierw kod.
   if (st && st.verified.length && st.aal !== "aal2") {
@@ -106,14 +106,14 @@ export default function MfaGate({ children }) {
     <>
       {st && !st.verified.length && (
         enroll ? (
-          <div className="mb-10"><Enroll onDone={() => window.location.reload()} onCancel={() => setEnroll(false)} /></div>
+          <div className="mb-6"><Enroll onDone={() => window.location.reload()} onCancel={() => setEnroll(false)} /></div>
         ) : (
-          <div className="mb-10 border border-[#E8C547]/40 p-5 flex flex-col sm:flex-row sm:items-center gap-4 justify-between">
-            <p className="flex items-start gap-3 text-sm text-foreground/80">
-              <ShieldAlert className="h-5 w-5 text-[#E8C547] shrink-0 mt-0.5" />
-              Panel chroni teraz tylko hasło. Włącz weryfikację dwuetapową — do logowania będzie potrzebny też kod z telefonu.
+          <div className="mb-5 rounded-xl border border-[#C9A24A]/30 bg-[#C9A24A]/[0.06] px-5 py-3.5 flex flex-col sm:flex-row sm:items-center gap-3 justify-between">
+            <p className="flex items-start sm:items-center gap-3 text-sm text-foreground/85">
+              <ShieldAlert className="h-5 w-5 text-[#C9A24A] shrink-0" />
+              <span>Panel chroni teraz tylko hasło. Włącz weryfikację dwuetapową — do logowania będzie potrzebny też kod z telefonu.</span>
             </p>
-            <button type="button" onClick={() => setEnroll(true)} className="btn-relic shrink-0">WŁĄCZ</button>
+            <button type="button" onClick={() => setEnroll(true)} className="shrink-0 min-h-[40px] px-4 rounded-md bg-[#C9A24A] text-[#0A0A0B] text-sm font-semibold hover:bg-[#E2C27A]">Włącz 2FA</button>
           </div>
         )
       )}
