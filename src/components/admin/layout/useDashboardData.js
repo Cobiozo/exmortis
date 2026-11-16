@@ -8,7 +8,10 @@ import { surveyState } from "@/components/admin/powrot/PowrotAppCard";
 // pulpit wraca do dawnych osobnych zapytań — z tym samym kształtem danych.
 // Wynik zostaje też w pamięci karty na 60 s: powrót na pulpit z modułu pokazuje liczby natychmiast.
 const TTL = 60000;
-let DATA = {};
+// Widoczność modułów biblioteki w menu zapamiętana z poprzedniej wizyty — menu nie „przeskakuje” przy wczytywaniu.
+const LIB_KEY = "exm_panel_libon";
+const libSaved = () => { try { const v = localStorage.getItem(LIB_KEY); return v === null ? undefined : v === "1"; } catch { return undefined; } };
+let DATA = libSaved() === undefined ? {} : { libOn: libSaved() };
 let AT = 0;
 let RUN = null;
 const subs = new Set();
@@ -70,6 +73,7 @@ export function warmDashboard(force = false) {
       const next = { ...DATA };
       KEYS.forEach((k) => { next[k] = s[k] === undefined ? null : s[k]; });
       DATA = next;
+      if (typeof s.libOn === "boolean") { try { localStorage.setItem(LIB_KEY, s.libOn ? "1" : "0"); } catch { /* */ } }
       emit();
     })
     .catch(() => legacy())
