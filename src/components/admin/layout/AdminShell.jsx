@@ -83,6 +83,7 @@ function NavContent({ me, groups, active, badges, onPreload, onNavigate }) {
 export default function AdminShell({ me, tech, techKeys, libOn, badges, active, title, actions, onPreload, children }) {
   const [open, setOpen] = useState(false);
   const { pathname } = useLocation();
+  const { setMode } = useAdminMode();
   useEffect(() => { setOpen(false); }, [pathname]);
   useEffect(() => {
     if (!open) return undefined;
