@@ -211,6 +211,16 @@ export default function ProductDetail() {
               );
             })()}
 
+            {/* Autor — jedna linijka przy produktach płatnych; bez karty podarunkowej, darmowych materiałów
+                i produktów, których opis już linkuje do „O mnie”. */}
+            {!product.is_free && Number(product.price) > 0 && product.product_type !== "karta" &&
+              !/\/o-mnie/.test(`${product.long_description || ""} ${product.description || ""}`) && (
+              <p className="text-sm text-foreground/60 mb-8">
+                {product.product_type === "usluga" ? "Prowadzę: Dawid" : "Autor: Dawid"} ·{" "}
+                <Link to="/o-mnie" className="gold-text hover:underline">poznaj moją historię →</Link>
+              </p>
+            )}
+
             {(product.product_type === "kurs" || product.product_type === "wideo") && <Curriculum productId={product.id} />}
 
             {/* Details */}

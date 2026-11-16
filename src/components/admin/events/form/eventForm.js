@@ -32,7 +32,7 @@ export function initForm(ev) {
     location: "", description: "", for_whom: "", price: 0, checkout_url: "", capacity: "", registration_type: "Zapis na stronie",
     external_url: "", join_link: "", join_password: "", recording_url: "", recording_until: "", registration_deadline: "",
     what_registered: "", mailing_group: "", cancel_reason: "", stage: "Wszystkie", status: "Szkic", cover: null,
-    open_minutes: 15, zoom_faq: true, short_path: "", tickets: false,
+    open_minutes: 15, zoom_faq: true, kto_prowadzi: true, short_path: "", tickets: false,
   };
   if (!ev) return { ...base, date: "", time: defaultTime(), paid: false };
   let cover = ev.cover;

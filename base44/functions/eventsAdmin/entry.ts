@@ -95,6 +95,7 @@ export async function ensureEventColumns(base44) {
        ADD COLUMN IF NOT EXISTS ticket_template jsonb,
        ADD COLUMN IF NOT EXISTS open_minutes int DEFAULT 15,
        ADD COLUMN IF NOT EXISTS zoom_faq boolean DEFAULT true,
+       ADD COLUMN IF NOT EXISTS kto_prowadzi boolean DEFAULT true,
        ADD COLUMN IF NOT EXISTS short_path text`
   );
 }
@@ -215,6 +216,7 @@ export default async function (req) {
       if (format === "Online" && join_link && !/^https:\/\/([a-z0-9-]+\.)*zoom\.us\//i.test(join_link)) throw new Error("To nie wygląda na link do Zoom");
       const open_minutes = Math.min(120, Math.max(0, Math.round(Number(ev.open_minutes ?? 15))));
       const zoom_faq = ev.zoom_faq !== false;
+      const kto_prowadzi = ev.kto_prowadzi !== false;
       const short_path = String(ev.short_path || "").trim().toLowerCase().replace(/[^a-z0-9-]/g, "").slice(0, 80);
 
       let startSql = "NULL";
@@ -237,7 +239,7 @@ export default async function (req) {
         location, description, for_whom, price, checkout_url, capacity, registration_type,
         external_url, join_link, join_password, recording_url, recording_until,
         registration_deadline, what_registered, mailing_group, stage, cover_image,
-        cancel_reason, status, cover, open_minutes, zoom_faq, short_path, tickets`;
+        cancel_reason, status, cover, open_minutes, zoom_faq, short_path, tickets, kto_prowadzi`;
       const vals = `${escStr(title)}, ${escStr(slug)}, ${subtitle ? escStr(subtitle) : "NULL"},
         ${escStr(event_type)}, ${escStr(format)}, ${startSql}, ${duration},
         ${location ? escStr(location) : "NULL"}, ${description ? escStr(description) : "NULL"},
@@ -250,7 +252,7 @@ export default async function (req) {
         ${mailing_group ? escStr(mailing_group) : "NULL"}, ${escStr(stage)},
         ${cover_image ? escStr(cover_image) : "NULL"},
         ${cancel_reason ? escStr(cancel_reason) : "NULL"}, ${escStr(status)},
-        ${cover ? `${escStr(JSON.stringify(cover))}::jsonb` : "NULL"}, ${open_minutes}, ${zoom_faq}, ${short_path ? escStr(short_path) : "NULL"}, ${ev.tickets === true && format !== "Online" ? "TRUE" : "FALSE"}`;
+        ${cover ? `${escStr(JSON.stringify(cover))}::jsonb` : "NULL"}, ${open_minutes}, ${zoom_faq}, ${short_path ? escStr(short_path) : "NULL"}, ${ev.tickets === true && format !== "Online" ? "TRUE" : "FALSE"}, ${kto_prowadzi}`;
 
       let rows;
       let rescheduled = 0;
@@ -297,13 +299,13 @@ export default async function (req) {
            (id, title, slug, subtitle, event_type, format, start_datetime, duration_minutes,
             location, description, for_whom, price, checkout_url, capacity, registration_type,
             external_url, join_password, recording_url, recording_until, registration_deadline,
-            what_registered, mailing_group, stage, cover_image, cover, status, created_at)
+            what_registered, mailing_group, stage, cover_image, cover, status, created_at, kto_prowadzi)
          SELECT gen_random_uuid()::text, title,
             slug || '-kopia-' || substr(md5(random()::text), 1, 6),
             subtitle, event_type, format, NULL, duration_minutes,
             location, description, for_whom, price, checkout_url, capacity, registration_type,
             external_url, NULL, NULL, NULL, NULL,
-            what_registered, mailing_group, stage, cover_image, cover, 'Szkic', now()
+            what_registered, mailing_group, stage, cover_image, cover, 'Szkic', now(), COALESCE(kto_prowadzi, TRUE)
          FROM public.events WHERE id = ${escStr(id)}
          RETURNING id, slug, title`
       );
@@ -336,13 +338,13 @@ export default async function (req) {
              (id, title, slug, subtitle, event_type, format, start_datetime, duration_minutes,
               location, description, for_whom, price, checkout_url, capacity, registration_type,
               external_url, join_password, recording_url, recording_until, registration_deadline,
-              what_registered, mailing_group, stage, cover_image, cover, status, created_at)
+              what_registered, mailing_group, stage, cover_image, cover, status, created_at, kto_prowadzi)
            SELECT gen_random_uuid()::text, title,
               ${escStr((ev.slug || slugify(ev.title) || "wieczor") + "-" + y + "-" + String(m).padStart(2, "0"))},
               subtitle, event_type, format, ${escStr(iso)}::timestamptz, duration_minutes,
               location, description, for_whom, price, checkout_url, capacity, registration_type,
               external_url, NULL, NULL, NULL, NULL,
-              what_registered, mailing_group, stage, cover_image, cover, 'Szkic', now()
+              what_registered, mailing_group, stage, cover_image, cover, 'Szkic', now(), COALESCE(kto_prowadzi, TRUE)
            FROM public.events WHERE id = ${escStr(id)}
            RETURNING id, slug, title`
         );

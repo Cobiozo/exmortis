@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import RichTextEditor from "@/components/admin/RichTextEditor";
-import { Field, Input, Group, Chips, inputCls } from "./ui";
+import { Field, Input, Group, Chips, Toggle, inputCls } from "./ui";
 import { EVENT_TYPES, STAGES } from "./eventForm";
 
 import TermFields from "./TermFields";
@@ -31,6 +31,8 @@ export default function StepBasics(p) {
         <Field id="description" label="Opis (co się wydarzy, jak się przygotować)">
           <div className="rich-admin rich-mobile"><RichTextEditor value={f.description} onChange={(v) => set({ description: v })} /></div>
         </Field>
+        <Toggle id="kto_prowadzi" label="Pokaż sekcję „Kto prowadzi” (o mnie)" hint="Wyłącz, gdy spotkanie prowadzisz z kimś lub prowadzi je ktoś inny — wtedy opisz prowadzących w opisie."
+          checked={f.kto_prowadzi !== false} onChange={(v) => set({ kto_prowadzi: v })} />
       </Group>
       <Group title="Termin">
         <TermFields {...p} />
