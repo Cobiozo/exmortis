@@ -7,6 +7,7 @@ Disallow: /forgot-password
 Disallow: /reset-password
 Disallow: /kasa
 Disallow: /rezerwacja/termin
+Disallow: /pobierz
 Disallow: /rezerwacja/zarzadzaj
 
 Sitemap: https://exmortis.pl/functions/sitemap
