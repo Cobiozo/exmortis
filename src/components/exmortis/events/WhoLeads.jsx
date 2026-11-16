@@ -1,6 +1,7 @@
 import React from "react";
 import { Link } from "react-router-dom";
 import { ArrowRight } from "lucide-react";
+import { Image } from "@/components/ui/image";
 
 // „Kto prowadzi” na stronie każdego spotkania — jak na stronie 1 listopada, w skrócie.
 // Teksty i zdjęcie wyłącznie z zakładki „O mnie”; pełna historia pod linkiem.
@@ -10,8 +11,10 @@ export default function WhoLeads() {
   return (
     <section aria-labelledby="kto-prowadzi" className="mt-12 border hairline bg-[#0D0D0E] p-5 sm:p-7">
       <div className="grid gap-6 sm:grid-cols-[140px_1fr] items-start">
-        <img src={PHOTO} alt="Dawid — exmortis" loading="lazy" width="140" height="175"
-          className="w-28 sm:w-full aspect-[4/5] object-cover" />
+        {/* Przez komponent Image (przetworzony adres) — surowy adres pliku z media.base44.com zwraca 404. */}
+        <div className="relative w-28 sm:w-full aspect-[4/5] overflow-hidden bg-[#070708]">
+          <Image src={PHOTO} alt="Dawid — exmortis" fittingType="fill" className="absolute inset-0 w-full h-full" />
+        </div>
         <div className="min-w-0">
           <p className="technical text-[10px] gold-text mb-3">KTO PROWADZI</p>
           <h2 id="kto-prowadzi" className="shop-heading text-2xl text-[#F5EFE1]">Byłem tam. I wróciłem. Inny.</h2>
