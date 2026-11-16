@@ -105,7 +105,7 @@ export function onboardingMail(step, ctx) {
         LABEL("NASTĘPNY KROK"),
         `<p style="margin:0 0 10px;font-size:21px;line-height:1.35;color:#F5EFE1;">${esc(nx.name)}</p>`,
         nx.text ? P(`<span style="color:#C8C6C1;">${esc(nx.text)}</span>`) : "",
-        emailButton("ZOBACZ", `${ctx.site}/skarbiec/${encodeURIComponent(nx.slug)}`),
+        emailButton(nx.fallback === "free" ? "POBIERZ ZA DARMO" : "ZOBACZ", nx.href ? `${ctx.site}${nx.href}` : `${ctx.site}/skarbiec/${encodeURIComponent(nx.slug)}`),
         `</div>`,
       ].join("") : [
         P(`Jeśli nie wiesz, gdzie dziś jesteś, zrób krótki test. Pokaże, ile jest w Tobie każdej z trzech śmierci — i od czego warto zacząć teraz.`),

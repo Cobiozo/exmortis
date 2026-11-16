@@ -10,7 +10,7 @@ export default function NextStepCard({ step }) {
         <p className="shop-heading text-xl text-[#F5EFE1]">{step.name}</p>
         {step.text && <p className="text-sm text-foreground/60 mt-1">{step.text}</p>}
       </div>
-      <Link to={`/skarbiec/${step.slug}`} className="btn-ghost shrink-0">{step.fallback ? "POSŁUCHAJ" : "ZOBACZ"}</Link>
+      <Link to={step.href || `/skarbiec/${step.slug}`} className="btn-ghost shrink-0">{step.fallback === "free" ? "POBIERZ" : "ZOBACZ"}</Link>
     </div>
   );
 }
