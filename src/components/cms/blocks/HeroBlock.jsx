@@ -72,17 +72,22 @@ export default function HeroBlock({ d }) {
     </section>
   );
 
+  // Rozmiar „kompakt” (np. Spotkania, 17.11.2026): niższa sekcja i mniejszy tytuł — treść strony szybciej widoczna.
+  const k = d.rozmiar === "kompakt";
+  const box = k
+    ? "min-h-[34svh] md:min-h-[42vh] pt-28 md:pt-32 pb-10 md:pb-14"
+    : `${d.tlo?.url ? "min-h-[70vh] pt-40" : "min-h-[50svh] md:min-h-[70vh] pt-32 md:pt-40"} pb-16 md:pb-20`;
   return (
     // Bez zdjęcia w tle na telefonie niższy nagłówek — inaczej nad tytułem zostaje pusty ekran.
-    <section className={`relative ${d.tlo?.url ? "min-h-[70vh] pt-40" : "min-h-[50svh] md:min-h-[70vh] pt-32 md:pt-40"} flex items-end overflow-hidden grain px-5 md:px-10 pb-16 md:pb-20`}>
+    <section className={`relative ${box} flex items-end overflow-hidden grain px-5 md:px-10`}>
       <Bg d={d} />
       <div className="relative z-10 mx-auto max-w-[1400px] w-full">
-        {d.etykieta && <p className="technical text-[11px] gold-text mb-6">{d.etykieta}</p>}
-        <h1 className="relic-heading text-[clamp(2rem,10.5vw,3rem)] md:text-7xl lg:text-8xl">
+        {d.etykieta && <p className={`technical text-[11px] gold-text ${k ? "mb-4" : "mb-6"}`}>{d.etykieta}</p>}
+        <h1 className={`relic-heading ${k ? "text-[clamp(2rem,9vw,2.75rem)] md:text-6xl lg:text-[4.25rem]" : "text-[clamp(2rem,10.5vw,3rem)] md:text-7xl lg:text-8xl"}`}>
           <span className="block">{nbsp(d.linia1)}</span>
           {d.linia2 && <span className="block gold-text">{nbsp(d.linia2)}</span>}
         </h1>
-        {d.lead && <p className="no-hyph mt-8 text-lg md:text-xl text-foreground/70 max-w-2xl leading-relaxed">{nbsp(d.lead)}</p>}
+        {d.lead && <p className={`no-hyph ${k ? "mt-5 text-base md:text-lg" : "mt-8 text-lg md:text-xl"} text-foreground/70 max-w-2xl leading-relaxed`}>{nbsp(d.lead)}</p>}
         {d.podlead && <p className="no-hyph mt-3 text-foreground/55 max-w-2xl">{d.podlead}</p>}
         <Zapowiedz d={d} />
         <HeroButtons d={d} className="mt-10" />
