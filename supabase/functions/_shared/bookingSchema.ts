@@ -210,6 +210,9 @@ CREATE TABLE IF NOT EXISTS public.bk_types (
   sort int NOT NULL DEFAULT 0,
   created_at timestamptz NOT NULL DEFAULT now()
 );
+-- POWRÓT v2 (18.11.2026): limit tygodniowy jednego rodzaju i rodzaje bezpłatne (bez zgody o 14 dniach).
+ALTER TABLE public.bk_types ADD COLUMN IF NOT EXISTS weekly_limit int CHECK (weekly_limit IS NULL OR weekly_limit BETWEEN 1 AND 100);
+ALTER TABLE public.bk_types ADD COLUMN IF NOT EXISTS free_service boolean NOT NULL DEFAULT false;
 
 CREATE TABLE IF NOT EXISTS public.bk_hours (
   id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
