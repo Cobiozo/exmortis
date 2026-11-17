@@ -33,6 +33,6 @@
 // Supabase: eventsPublic z commita 475b0486 (retencja zapisów 12 mies. od 17.11.2026) — 16.11.2026 ok. 19:20, potem wyłączona
 // Supabase: adminDashboard + cmsScheduled z commita 288b5d7f (pulpit panelu w jednym zapytaniu, rozgrzewanie) — 16.11.2026 ok. 20:35, potem wyłączona
 // Supabase: adminClients z commita f64cfbd5 (zmiana roli konta w panelu) — 17.11.2026 ok. 00:25, potem wyłączona
-// 17.11.2026: tymczasowo użyta do wdrożenia 7 funkcji (kampanie popup, opcje kodów rabatowych) z commitu 2d2d531c; klucz jednorazowy unieważniony.
+// Supabase: 7 funkcji z commita 2d2d531c (kampanie popup, opcje kodów: od / tylko subskrybenci / tylko konto) — 17.11.2026 ok. 01:25, potem wyłączona
 // Funkcja wyłączona — każde wywołanie → 410.
 Deno.serve(() => Response.json({ error: "Wyłączone", disabled: true }, { status: 410 }));
