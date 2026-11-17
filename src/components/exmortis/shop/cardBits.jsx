@@ -191,7 +191,8 @@ export function ProductButton({ p, onWaitlist }) {
   if (p.is_free) {
     return (
       <Link to={`/skarbiec/${p.slug}`} className={cls}>
-        Pobierz <ArrowRight className="h-3.5 w-3.5" />
+        {/* Przycisk otwiera stronę materiału (opis i formularz), nie pobiera pliku od razu (audyt 17.11.2026, X-36). */}
+        Zobacz bezpłatny materiał <ArrowRight className="h-3.5 w-3.5" />
       </Link>
     );
   }
