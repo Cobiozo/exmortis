@@ -256,6 +256,17 @@ const handler = async function (req) {
         }
       }
     }
+    // Rozmowa na progu: jednorazowe spotkanie, kolejne najwcześniej po miesiącu (decyzja właściciela 17.11.2026).
+    const progu = await runSql(base44, `SELECT id::text AS id FROM public.products WHERE slug = 'rozmowa-na-progu' LIMIT 1`, true).catch(() => []);
+    const proguId = progu && progu[0] ? String(progu[0].id) : "";
+    if (proguId && need.has(proguId)) {
+      if ((need.get(proguId) || 0) > 1) throw new Error("Rozmowę na progu można zamówić jedną naraz");
+      const recent = await runSql(base44, `SELECT 1 FROM public.orders o
+         WHERE lower(o.buyer_email) = lower(${escStr(buyerEmail)}) AND o.status = 'COMPLETED'
+           AND o.created_date > now() - interval '30 days'
+           AND o.items @> ${escStr(JSON.stringify([{ product_id: proguId }]))}::jsonb LIMIT 1`, true).catch(() => []);
+      if (recent && recent.length) throw new Error("Kolejną Rozmowę na progu możesz zamówić najwcześniej miesiąc po poprzedniej. Jeśli to pilne, napisz do mnie.");
+    }
     const sessionEmail = body.code ? String((await base44.auth.me().catch(() => null))?.email || "") : "";
     const disc = await applyDiscount(base44, body.code, stored.map((s) => ({
       product_id: s.product_id, unit: Number(s.unitPrice), qty: s.quantity,
