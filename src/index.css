@@ -412,3 +412,31 @@
 .exm-soft .btn-ghost { border-color: rgba(255,255,255,.15); background: transparent; color: #F5EFE1; }
 .exm-soft .btn-ghost:hover { border-color: rgba(201,162,74,.6); background: rgba(201,162,74,.05); }
 .exm-soft .btn-relic:focus-visible, .exm-soft .btn-ghost:focus-visible { outline: 2px solid #C9A24A; outline-offset: 2px; }
+
+/* ==== PODSTRONY TREŚCI — styl „jak w Moim koncie” (17.11.2026) ====
+   Tylko wewnątrz .exm-soft-page (O mnie, Mentoring, Spotkania, Głos, Kontakt, Zacznij bezpłatnie).
+   Sam wygląd: treść, bloki i funkcje bez zmian. Wzór: panel admina (.adm) i nowa strona główna (.exm-soft). */
+.exm-soft-page .relic-heading {
+  font-family: "EB Garamond", ui-serif, Georgia, serif; font-weight: 400;
+  text-transform: none; letter-spacing: -0.005em; line-height: 1.08;
+}
+.exm-soft-page h3.relic-heading, .exm-soft-page h4.relic-heading { line-height: 1.15; }
+.exm-soft-page .max-w-\[1400px\] { max-width: 1200px; }
+.exm-soft-page .btn-relic, .exm-soft-page .btn-ghost, .exm-soft-page .btn-blood {
+  font-family: var(--font-body); text-transform: none; letter-spacing: 0; font-size: 15px; font-weight: 500;
+  padding: 0 1.4rem; min-height: 48px; border-radius: 10px; line-height: 1.2;
+}
+.exm-soft-page .btn-relic { font-weight: 600; }
+.exm-soft-page .btn-relic:hover, .exm-soft-page .btn-blood:hover { letter-spacing: 0; }
+.exm-soft-page .btn-relic:hover { background: #E2C27A; }
+.exm-soft-page .btn-ghost { border-color: rgba(255,255,255,.15); background: transparent; }
+.exm-soft-page .btn-ghost:hover { border-color: rgba(201,162,74,.6); background: rgba(201,162,74,.05); }
+.exm-soft-page .btn-relic:focus-visible, .exm-soft-page .btn-ghost:focus-visible { outline: 2px solid #C9A24A; outline-offset: 2px; }
+/* Karty, ramki i okna z pełną ramką: zaokrąglenie jak w koncie (bez elementów, które mają już własne zaokrąglenie). */
+.exm-soft-page :where(div, section, article, aside, form, details, figure, li, a, blockquote).border:not([class*="rounded"]) { border-radius: 16px; }
+.exm-soft-page :where(input, textarea, select).border:not([class*="rounded"]) { border-radius: 10px; }
+.exm-soft-page iframe { border-radius: 12px; }
+/* Blok „Karty”: osobne karty zamiast siatki z liniami. */
+.exm-soft-page .cms-cards { gap: 20px; background: transparent; }
+.exm-soft-page .cms-card { background: #111113; border: 1px solid rgba(70,70,73,.75); border-radius: 16px; transition: border-color .3s, background-color .3s; }
+.exm-soft-page .cms-card:hover { background: #131315; border-color: rgba(201,162,74,.45); }
