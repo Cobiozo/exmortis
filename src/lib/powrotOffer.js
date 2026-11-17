@@ -14,7 +14,7 @@ export const POWROT = {
   form: "Zoom",
   start: "styczeń 2027", // potwierdzony przez właściciela 2.11.2026
   tools: 8,
-  toolsLine: "Arsenał 8 narzędzi głębi — po jednym na każdą sesję",
+  toolsLine: "8 ćwiczeń i narzędzi pracy — po jednym na każdą sesję",
 };
 
 export const POWROT_LEAD = `${POWROT.months}. ${POWROT.sessionsTitle}. Jedna decyzja: „chcę wrócić inny.”`;
@@ -34,7 +34,7 @@ export const POWROT_INCLUDES = [
   POWROT.toolsLine,
   "Dziennik powrotu z zadaniami między sesjami",
   "Kontakt między sesjami (wiadomości, audio — z granicami)",
-  "Domknięcie: osobisty plan „jak nie wrócić do śmierci”",
+  "Domknięcie: osobisty plan na dalszą drogę",
   "Dostęp do zamkniętej ścieżki „Listów powrotu” tylko dla uczestników programu",
 ];
 
