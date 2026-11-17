@@ -21,8 +21,8 @@ const FAQ = [
     a: "Cały program prowadzony jest przez platformę Zoom — po to, żeby był dostępny niezależnie od miasta. Uczestnicy POWRÓT-u mają pierwszeństwo i specjalne warunki w zapisach na doroczny retreat „exmortis” w Bieszczadach.",
   },
   {
-    q: "Jak często rusza nowa kohorta?",
-    a: "Nie prowadzę kohort. Program jest indywidualny — startujesz wtedy, kiedy Ty i ja jesteśmy gotowi.",
+    q: "Kiedy mogę zacząć?",
+    a: "Program jest indywidualny, nie grupowy. Zgłoszenia rozpatruję w kolejności napływania, a termin startu ustalamy wspólnie po rozmowie kwalifikacyjnej.",
   },
 ];
 
