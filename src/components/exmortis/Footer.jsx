@@ -77,7 +77,7 @@ export default function Footer() {
 
         {/* 4. Dolna linia */}
         <div className="border-t hairline pt-5 flex flex-col sm:flex-row sm:justify-between gap-2 text-sm text-[#F5EFE1]/70">
-          <p>© {new Date().getFullYear()} EXMORTIS</p>
+          <p>© {new Date().getFullYear()} Dawid Kowalczyk · EXMORTIS</p>
           <p>Wszelkie prawa zastrzeżone.</p>
         </div>
       </div>
