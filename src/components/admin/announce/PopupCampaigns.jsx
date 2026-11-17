@@ -23,6 +23,7 @@ const STATUS = {
   szkic: ["Szkic", "bg-white/10 text-foreground/75"],
   wstrzymana: ["Wstrzymana", "bg-white/10 text-foreground/60"],
   zakonczona: ["Zakończona", "bg-white/5 text-foreground/45"],
+  czeka: ["Czeka na kod", "bg-[#E8C547]/15 text-[#E8C547]"],
 };
 const KOMU = { wszyscy: "Wszyscy", goscie: "Niezalogowani", zalogowani: "Zalogowani" };
 const GDZIE = { wszedzie: "Cała witryna", glowna: "Strona główna", sklep: "Sklep", wybrane: "Wybrane strony" };
@@ -50,8 +51,11 @@ const zl = (n) => `${Number(n).toFixed(2).replace(".", ",").replace(",00", "")} 
 const kodOpis = (c) => `${c.kind === "procent" ? `−${c.value}%` : `−${c.value} zł`}`;
 
 // Status widoczny w panelu: aktywna z datą „od” w przyszłości = zaplanowana; po dacie „do” = zakończona.
-const viewStatus = (k) => {
+// Aktywna kampania z kodem, który teraz nie działa (np. „tylko cena regularna” w czasie promocji) = czeka na kod.
+const viewStatus = (k, kody = []) => {
   const now = Date.now();
+  const c = k.kod ? kody.find((x) => x.kod === k.kod) : null;
+  if (k.status === "aktywna" && k.kod && (!c || !c.ok) && !(k.do && Date.parse(k.do) < now)) return "czeka";
   if (k.status === "aktywna" && k.do && Date.parse(k.do) < now) return "zakonczona";
   if (k.status === "aktywna" && k.od && Date.parse(k.od) > now) return "zaplanowana";
   return k.status;
@@ -97,12 +101,13 @@ export default function PopupCampaigns() {
 
   const stat = Object.fromEntries((data.stats || []).map((s) => [s.kampania, s]));
   const sale = Object.fromEntries((data.sales || []).map((s) => [s.kod, s]));
-  const items = data.items.map((k) => ({ ...k, vs: viewStatus(k) }));
+  const items = data.items.map((k) => ({ ...k, vs: viewStatus(k, data.kody) }));
+  const kodOf = (k) => data.kody.find((x) => x.kod === k.kod);
   const count = (st) => items.filter((k) => k.vs === st).length;
   const shown = filter === "wszystkie" ? items : items.filter((k) => k.vs === filter);
   const live = items.filter((k) => k.vs === "aktywna").sort((a, b) => a.priorytet - b.priorytet);
   const FILTERS = [["wszystkie", `Wszystkie (${items.length})`], ["aktywna", `Aktywne (${count("aktywna")})`], ["zaplanowana", `Zaplanowane (${count("zaplanowana")})`],
-    ["szkic", `Szkice (${count("szkic")})`], ["wstrzymana", `Wstrzymane (${count("wstrzymana")})`], ["zakonczona", `Zakończone (${count("zakonczona")})`]];
+    ["czeka", `Czekają na kod (${count("czeka")})`], ["szkic", `Szkice (${count("szkic")})`], ["wstrzymana", `Wstrzymane (${count("wstrzymana")})`], ["zakonczona", `Zakończone (${count("zakonczona")})`]];
 
   return (
     <section className="space-y-4" aria-labelledby="kp-h">
@@ -147,6 +152,7 @@ export default function PopupCampaigns() {
                   <button type="button" onClick={() => setEdit(k)} className="text-left min-w-0">
                     <span className="block font-semibold text-[#F1EDE3] hover:text-[#E2C27A] truncate">{k.nazwa}</span>
                     <span className="block text-xs text-foreground/55 truncate">{RODZAJ_LABEL[k.rodzaj]}{k.kod ? ` · kod ${k.kod}` : ""} · priorytet {k.priorytet}</span>
+                    {k.vs === "czeka" && <span className="block text-xs text-[#E8C547] mt-0.5">Niewidoczna: {kodOf(k)?.powod || "kod nie istnieje"}. Pokaże się sama, gdy kod zacznie działać.</span>}
                   </button>
                   <span><span className={`inline-block px-2.5 py-0.5 rounded-full text-[11px] font-semibold ${stC}`}>{stL}</span></span>
                   <span className="text-[13px] text-foreground/65">{period(k)}</span>
