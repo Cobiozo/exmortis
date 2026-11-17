@@ -274,6 +274,26 @@ const handler = async function (req) {
       return Response.json({ ok: true, mail, pay_amount: amount, pay_sent_at: updated?.[0]?.pay_sent_at ?? null, pay_expires_at: updated?.[0]?.pay_expires_at ?? null });
     }
 
+    // Dostęp do rezerwacji ośmiu sesji POWRÓT (pakiet „Sesja POWRÓT”, ważny 9 miesięcy, odstęp min. 10 dni).
+    if (a === "grant") {
+      const app = await getApp(base44, idOf(body));
+      if (!app) return Response.json({ error: "Nie znaleziono zgłoszenia." }, { status: 404 });
+      if (!app.paid_at && body.force !== true) return Response.json({ error: "Płatność nie jest jeszcze potwierdzona.", needs_force: true }, { status: 409 });
+      const [t] = await runSql(base44, `SELECT id FROM public.bk_types WHERE slug = 'sesja-powrot'`, true) || [];
+      if (!t) return Response.json({ error: "Brak rodzaju „Sesja POWRÓT” w kalendarzu." }, { status: 400 });
+      const email = String(app.email).toLowerCase();
+      const dup = await runSql(base44, `SELECT id FROM public.bk_packages WHERE type_id = ${escStr(t.id)}::uuid AND lower(email_display) = ${escStr(email)}
+        AND valid_until > now() AND sessions_used < sessions_total LIMIT 1`, true);
+      if (dup?.length) return Response.json({ error: "Ta osoba ma już aktywny dostęp do sesji POWRÓT." }, { status: 409 });
+      const users = await base44.asServiceRole.entities.User.filter({ email }, "-created_date", 1).catch(() => []);
+      const uid = users?.[0]?.id || `email:${email}`;
+      const [row] = await runSql(base44, `INSERT INTO public.bk_packages (user_id, email_display, type_id, sessions_total, valid_until, min_gap_days, source, payment_status)
+        VALUES (${escStr(uid)}, ${escStr(email)}, ${escStr(t.id)}::uuid, 8, now() + interval '9 months', 10, 'reczny', 'oplacony') RETURNING id`);
+      await log(base44, app.id, "system", `Dostęp do 8 sesji POWRÓT nadany (ważny 9 miesięcy)${users?.[0] ? "" : " — bez konta, dopasowanie po e-mailu"}`, actor);
+      if (app.status !== "w_programie") await setStatus(base44, app, "w_programie", actor, "Przyjęty do programu");
+      return Response.json({ ok: true, id: row?.id, has_account: !!users?.[0] });
+    }
+
     // Notatki z sesji (wyłącznie mentor). Retencja: razem ze zgłoszeniem, 12 miesięcy po zakończeniu współpracy.
     if (a === "session_note") {
       const id = idOf(body);
@@ -316,7 +336,7 @@ const handler = async function (req) {
       await loadAppUrl(base44).catch(() => {});
       await sendMail(base44, {
         kind: "powrot", ref: app.id, to: app.email, subject: "Nowa wiadomość od Dawida — program POWRÓT",
-        html: wrap(`<p>${escHtml(firstName(app.full_name))}, w Twoim koncie czeka nowa wiadomość ode mnie.</p><p style="margin:28px 0">${emailButton("Otwórz Mój POWRÓT", `${APP}/konto/powrot`)}</p><p>Dawid<br>EXMORTIS</p>`),
+        html: wrap(`<p>${escHtml(firstName(app.full_name))}, w Twoim koncie czeka nowa wiadomość ode mnie.</p><p style="margin:28px 0">${emailButton("Otwórz Mój POWRÓT", `${APP}/konto?tab=powrot`)}</p><p>Dawid<br>EXMORTIS</p>`),
       }).catch(() => {});
       await log(base44, app.id, "wiadomosc", "Odpowiedź w Moim koncie", actor);
       return Response.json({ ok: true });
