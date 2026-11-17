@@ -68,7 +68,7 @@ export default function CartDrawer() {
                       {item.gift && <GiftLine gift={item.gift} />}
                       {item.kind === "bilet" && <TicketLine holders={item.holders} />}
                       <div className="flex items-center gap-3 mt-3">
-                        {item.kind === "bilet" ? <span className="font-mono text-xs text-foreground/60">× {item.qty}</span> : (
+                        {item.kind === "bilet" || item.product_type === "pdf" ? <span className="font-mono text-xs text-foreground/60">× {item.kind === "bilet" ? item.qty : 1}</span> : (
                         <div className="flex items-center border hairline">
                           <button
                             onClick={() => updateQty(lineKey(item), item.qty - 1)}
