@@ -64,7 +64,8 @@ export default function Navbar() {
             {!collapsed && <DesktopNav className="ml-auto" />}
 
             <div ref={rightRef} className="flex items-center gap-1 sm:gap-2 shrink-0">
-              {collapsed && <TestLink small />}
+              {/* Na telefonie „Zrób test” jest na dole menu — w belce od 640 px. */}
+              {collapsed && <span className="hidden sm:inline-flex"><TestLink small /></span>}
               <NotificationBell />
               <AccountMenu />
               <button onClick={() => setOpen(true)} className="relative p-2 min-h-11 min-w-11 inline-flex items-center justify-center text-foreground/80 hover:gold-text transition-colors" aria-label="Koszyk">
@@ -72,9 +73,9 @@ export default function Navbar() {
                 {count > 0 && <span className="absolute -top-0.5 -right-0.5 bg-[#BC1E22] text-[10px] font-mono w-4 h-4 flex items-center justify-center rounded-full">{count}</span>}
               </button>
               {collapsed && (
-                <button ref={burgerRef} onClick={() => (mobile ? close() : setMobile(true))} className="p-2 min-h-11 min-w-11 inline-flex items-center justify-center gold-text"
+                <button ref={burgerRef} onClick={() => (mobile ? close() : setMobile(true))} className="ml-1 h-11 w-11 inline-flex items-center justify-center rounded-lg border hairline bg-[#111113] text-[#F5EFE1] hover:border-[#C9A24A]/60 transition-colors"
                   aria-label={mobile ? "Zamknij menu" : "Otwórz menu"} aria-expanded={mobile} aria-controls="mobile-menu">
-                  {mobile ? <X className="h-6 w-6" strokeWidth={1.25} /> : <Menu className="h-6 w-6" strokeWidth={1.25} />}
+                  {mobile ? <X className="h-5 w-5" strokeWidth={1.5} /> : <Menu className="h-5 w-5" strokeWidth={1.5} />}
                 </button>
               )}
             </div>
