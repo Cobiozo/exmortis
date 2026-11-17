@@ -2,12 +2,15 @@ import React from "react";
 import { Buttons, Rich, SectionHead } from "../parts";
 import SafeImg from "../SafeImg";
 
-import { ratioClass } from "../ratios";
+import { ratioClass, fitStyle } from "../ratios";
 
+// Zdjęcie bloku: kadr z proporcji, a wysokość ograniczona do ok. 72% ekranu (wyśrodkowane w kolumnie).
 export function Img({ img, ratio, className = "", sizes = "(min-width: 768px) 50vw, 100vw" }) {
-  if (!img?.url) return <div className={`${ratioClass(null, ratio)} bg-[#0F0F10] border hairline ${className}`} />;
+  if (!img?.url) return <div style={fitStyle(null, ratio)} className={`mx-auto w-full ${ratioClass(null, ratio)} bg-[#0F0F10] border hairline ${className}`} />;
   return (
-    <SafeImg img={img} sizes={sizes} className={`w-full ${ratioClass(img, ratio)} ${className}`} />
+    <div style={fitStyle(img, ratio)} className="mx-auto w-full">
+      <SafeImg img={img} sizes={sizes} className={`w-full ${ratioClass(img, ratio)} ${className}`} />
+    </div>
   );
 }
 
@@ -31,7 +34,7 @@ export function ImageBlock({ d }) {
   return (
     <figure>
       <Img img={d.zdjecie} ratio={d.proporcja} sizes="(min-width: 1470px) 1320px, (min-width: 768px) calc(100vw - 80px), calc(100vw - 40px)" />
-      {d.podpis && <figcaption className="technical text-[10px] text-foreground/55 mt-3 px-5 md:px-0">{d.podpis}</figcaption>}
+      {d.podpis && <figcaption style={fitStyle(d.zdjecie, d.proporcja)} className="mx-auto technical text-[10px] text-foreground/55 mt-3 px-5 md:px-0">{d.podpis}</figcaption>}
     </figure>
   );
 }
@@ -74,7 +77,7 @@ export function TextImageBlock({ d, label }) {
     <div className={`grid ${(COLS[d.kolumny] || COLS["50-50"])[right ? 1 : 0]} gap-10 md:gap-16 items-center`}>
       <figure className={`${imgOrder} ${right ? "md:order-2" : "md:order-1"}`}>
         <Img img={d.zdjecie} ratio={d.proporcja} />
-        {d.podpis && <figcaption className="technical text-[10px] text-foreground/55 mt-3">{d.podpis}</figcaption>}
+        {d.podpis && <figcaption style={fitStyle(d.zdjecie, d.proporcja)} className="mx-auto technical text-[10px] text-foreground/55 mt-3">{d.podpis}</figcaption>}
       </figure>
       <div className={`${d.mobile === "dol" ? "order-1" : "order-2"} ${right ? "md:order-1" : "md:order-2"}`}>
         <SectionHead label={label} title={d.tytul} center />

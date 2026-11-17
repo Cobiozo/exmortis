@@ -116,7 +116,8 @@ export default function ProductDetail() {
       <section className="mx-auto max-w-[1400px] px-5 md:px-10 pb-24">
         <div className="grid md:grid-cols-2 gap-10 md:gap-16">
           {/* Image */}
-          <div className={`relative ${product.image_url ? "aspect-square" : "aspect-[16/9] md:aspect-square"} bg-card border hairline overflow-hidden`}>
+          {/* Okładka nie wyższa niż ok. 72% ekranu — na laptopie mieści się razem z ceną i przyciskiem. */}
+          <div style={{ maxWidth: "min(100%, min(72svh, 720px))" }} className={`relative w-full mx-auto md:mx-0 md:self-start ${product.image_url ? "aspect-square" : "aspect-[16/9] md:aspect-square"} bg-card border hairline overflow-hidden`}>
             {product.image_url ? (
               <Image
                 src={product.image_url}

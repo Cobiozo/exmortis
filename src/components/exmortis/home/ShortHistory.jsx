@@ -64,7 +64,7 @@ export default function ShortHistory({ label } = {}) {
               </Link>
             </div>
 
-            <div className="md:col-span-2 border hairline">
+            <div className="md:col-span-2 border hairline mx-auto w-full" style={{ maxWidth: "min(100%, calc(min(72svh, 720px) * 0.75))" }}>
               <Image
                 src={PRIEST_PHOTO}
                 alt="Dawid podczas posługi kapłańskiej"
