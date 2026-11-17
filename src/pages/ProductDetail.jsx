@@ -13,7 +13,7 @@ import Logo from "@/components/exmortis/Logo";
 import WaitlistDialog from "@/components/exmortis/shop/WaitlistDialog";
 import Curriculum from "@/components/exmortis/shop/Curriculum";
 import ProductReviews from "@/components/exmortis/shop/ProductReviews";
-import { isPromoActive, priceOnRequest, regularPrice, unitPrice, lowestPrice30, zl, kwota, nextPriceText } from "@/lib/productPrice";
+import { isPromoActive, isPresale, priceOnRequest, regularPrice, unitPrice, lowestPrice30, zl, kwota, nextPriceText } from "@/lib/productPrice";
 import { GiftCardBuy } from "@/components/exmortis/shop/GiftCard";
 import BundleBox from "@/components/exmortis/shop/BundleBox";
 import { SeatsLine } from "@/components/exmortis/shop/cardBits";
@@ -95,6 +95,7 @@ export default function ProductDetail() {
 
   const soon = product.status === "wkrótce";
   const promo = !soon && !product.is_free && product.product_type !== "karta" && isPromoActive(product);
+  const presale = promo && isPresale(product);
   const onRequest = !soon && priceOnRequest(product);
   const amounts = product.product_type === "karta" ? cardAmounts(product) : [];
   const linkUrl = (product.checkout_url || "").trim();
@@ -151,12 +152,12 @@ export default function ProductDetail() {
               <span className="font-mono text-4xl gold-text">
                 {soon ? soonLabel(product) : product.is_free ? "Bezpłatnie" : amounts.length > 1 ? amounts.map((a) => kwota(a)).join(" · ") + " zł" : onRequest ? "Po rozmowie" : `${kwota(unitPrice(product))} zł`}
               </span>
-              {promo && (
+              {promo && !presale && (
                 <span className="font-mono text-xl text-foreground/55 line-through">{kwota(regularPrice(product))} zł</span>
               )}
               {promo && (
                 <span className="technical text-[10px] text-foreground/55">
-                  DO {new Date(`${String(product.promo_end_date).slice(0, 10)}T12:00:00`).toLocaleDateString("pl-PL", { day: "numeric", month: "long" }).toUpperCase()}
+                  {presale ? "CENA W PRZEDSPRZEDAŻY DO " : "DO "}{new Date(`${String(product.promo_end_date).slice(0, 10)}T12:00:00`).toLocaleDateString("pl-PL", { day: "numeric", month: "long" }).toUpperCase()}
                 </span>
               )}
               {!promo && !soon && Number(product.old_price) > 0 && (
@@ -172,7 +173,7 @@ export default function ProductDetail() {
             {promo && (
               <p className="text-xs text-foreground/55 -mt-6 mb-8">
                 {nextPriceText(product) && <span className="block text-sm gold-text mb-1">{nextPriceText(product)}</span>}
-                Najniższa cena z 30 dni przed obniżką: {zl(lowestPrice30(product))}
+                {!presale && <>Najniższa cena z 30 dni przed obniżką: {zl(lowestPrice30(product))}</>}
               </p>
             )}
 
