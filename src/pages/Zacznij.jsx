@@ -42,7 +42,7 @@ export default function Zacznij() {
   }, []);
 
   return (
-    <div className="px-5 md:px-10 pt-28 md:pt-36 pb-20">
+    <div className="exm-soft-page px-5 md:px-10 pt-28 md:pt-36 pb-20">
       <div className="mx-auto max-w-[1400px]">
         <header className="max-w-3xl pb-12 md:pb-16">
           <p className="technical text-[11px] gold-text mb-4">ZACZNIJ BEZPŁATNIE</p>
