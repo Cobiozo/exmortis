@@ -36,6 +36,7 @@ function WelcomeBox({ codes }) {
 export default function DiscountsPanel() {
   const [codes, setCodes] = useState(null);
   const [confirm, setConfirm] = useState(null);
+  const [editing, setEditing] = useState(null);
   const load = () => E.list("-created_date", 200).then(setCodes);
   useEffect(() => { load(); }, []);
 
@@ -46,7 +47,7 @@ export default function DiscountsPanel() {
   return (
     <div className="grid lg:grid-cols-[360px_1fr] gap-10">
       {codes && <WelcomeBox codes={codes.filter((c) => c.powitalny)} />}
-      <DiscountForm onDone={load} />
+      <DiscountForm onDone={load} editing={editing} onCancel={() => setEditing(null)} />
       {!codes ? <Loader2 className="h-5 w-5 animate-spin gold-text" /> : codes.filter((c) => !c.powitalny).length === 0 ? (
         <p className="text-sm text-foreground/50">Brak kodów rabatowych.</p>
       ) : (
@@ -57,10 +58,12 @@ export default function DiscountsPanel() {
                 <p className="font-mono gold-text">{c.code}</p>
                 <p className="text-xs text-foreground/50">
                   −{c.value}{c.kind === "procent" ? "%" : " zł"} · użyto {c.uses || 0}{c.max_uses ? `/${c.max_uses}` : ""}
-                  {c.valid_until ? ` · do ${c.valid_until}` : ""} · {c.product_ids?.length ? `${c.product_ids.length} prod.` : "wszystkie produkty"}
+                  {c.od ? ` · od ${c.od}` : ""}{c.valid_until ? ` · do ${c.valid_until}` : ""} · {c.product_ids?.length ? `${c.product_ids.length} prod.` : "wszystkie produkty"}
+                  {c.bez_promocji ? " · tylko cena regularna" : ""}{c.tylko_subskrybenci ? " · tylko subskrybenci Listów Powrotu" : ""}{c.tylko_konto ? " · tylko z kontem" : ""}
                   {c.w_powiadomieniach ? " · widoczny w powiadomieniach klientów" : ""}
                 </p>
               </div>
+              <button onClick={() => { setEditing(c); window.scrollTo({ top: 0, behavior: "smooth" }); }} className="btn-ghost !px-3 !py-1.5 text-[10px]">EDYTUJ</button>
               <button onClick={() => togglePublic(c)} className="btn-ghost !px-3 !py-1.5 text-[10px]" title="Pokaż / ukryj kod w powiadomieniach (dzwoneczek) zalogowanych klientów">
                 {c.w_powiadomieniach ? "UKRYJ Z POWIADOMIEŃ" : "POKAŻ W POWIADOMIENIACH"}
               </button>
