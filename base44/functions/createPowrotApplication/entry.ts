@@ -50,7 +50,8 @@ export default async function (req) {
     const body = await req.json().catch(() => ({}));
 
     const fullName = textField(body, "full_name", { max: 200 });
-    const phone = textField(body, "phone", { max: 50 });
+    // Telefon opcjonalny od 17.11.2026 (plan naprawczy 2.6) — osoba w kryzysie może najpierw tylko napisać.
+    const phone = textField(body, "phone", { max: 50, required: false });
     const email = emailField(body);
 
     const age = textField(body, "age", { max: 20, required: false });
