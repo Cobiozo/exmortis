@@ -8,6 +8,7 @@ export function Tags({ c }) {
     <span className="flex flex-wrap gap-1">
       {c.zespol && <span className="px-1.5 py-px text-[9px] technical border border-sky-400/40 text-sky-300">ZESPÓŁ</span>}
       {c.test && <span className="px-1.5 py-px text-[9px] technical border border-[#E8C547]/40 text-[#E8C547]">TEST</span>}
+      {c.bez_konta && <span className="px-1.5 py-px text-[9px] technical border border-white/20 text-foreground/60">BEZ KONTA</span>}
       {c.kupujacy && <span className="px-1.5 py-px text-[9px] technical border border-emerald-400/40 text-emerald-300">KUPUJĄCY</span>}
     </span>
   );
