@@ -56,9 +56,9 @@ export default function Zacznij() {
         </header>
 
         <Group label="01 · KILKA MINUT" title="Na początek">
-          <Item to="/test?src=zacznij" meta="OK. 3 MINUTY" title="Która śmierć jest Twoja?"
+          <Item to="/test?src=zacznij" meta="KILKA MINUT" title="Która śmierć jest Twoja?"
             text="Piętnaście pytań, na które odpowiadasz tylko sobie. Pomagają nazwać, przez co przechodzisz, i podpowiadają pierwszy krok." cta="ZRÓB TEST" />
-          <Item to="/cisza?src=zacznij" meta="1–20 MINUT" title="Chwila ciszy"
+          <Item to="/cisza?src=zacznij" meta="TYLE, ILE CHCESZ" title="Chwila ciszy"
             text="Minutnik ciszy w przeglądarce. Wybierasz czas, siadasz i po prostu jesteś. Bez rozpraszaczy." cta="WEJDŹ W CISZĘ" />
         </Group>
 
