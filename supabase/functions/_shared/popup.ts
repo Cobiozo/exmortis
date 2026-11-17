@@ -132,6 +132,15 @@ export async function codeInfo(base44, code: string, product: any = null) {
   if (c.max_uses && (Number(c.uses) || 0) >= Number(c.max_uses)) return { ok: false, powod: "Limit użyć wyczerpany", c };
   if (c.email) return { ok: false, powod: "Kod przypisany do jednego konta", c };
   let cenaPo = null;
+  // Kod „tylko cena regularna” bez wskazanego produktu w kampanii: działa, jeśli którykolwiek z jego produktów
+  // ma teraz cenę regularną. Gdy wszystkie są w promocji / przedsprzedaży — popup z kodem się nie pokazuje.
+  if (!product && c.bez_promocji === true && Array.isArray(c.product_ids) && c.product_ids.length) {
+    const rows = await runSql(base44, `SELECT id::text AS id, price::float8 AS price, price_regular::float8 AS price_regular,
+        price_start::float8 AS price_start, promo_end_date::text AS promo_end_date, price_steps
+      FROM public.products WHERE id::text IN (${c.product_ids.map(escStr).join(",")})`, true);
+    const regularNow = rows.some((p) => unitPrice(p) >= Number(p.price_regular ?? p.price));
+    if (!regularNow) return { ok: false, powod: "Kod działa tylko w cenie regularnej (teraz trwa promocja)", c };
+  }
   if (product) {
     const ids = Array.isArray(c.product_ids) ? c.product_ids.map(String) : [];
     if (ids.length && !ids.includes(String(product.id))) return { ok: false, powod: "Kod nie obejmuje tego produktu", c };
