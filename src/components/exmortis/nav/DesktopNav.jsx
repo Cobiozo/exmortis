@@ -3,21 +3,23 @@ import { Link, useLocation } from "react-router-dom";
 import { isActive } from "./navItems";
 import { useSiteNav } from "./useSiteNav";
 
-// Pełne menu w jednej linii; TEST na końcu z ramką.
+// Pełne menu w jednej linii; „Zrób test” na końcu z ramką. Od 17.11.2026 wygląd jak menu Mojego konta:
+// zwykły krój Inter, zaokrąglone podświetlenie, aktywna pozycja na złotym tle. Pozycje z desktop: false są tylko w menu telefonu.
 const DesktopNav = forwardRef(function DesktopNav({ className = "", ...rest }, ref) {
   const { pathname } = useLocation();
   const { menu: NAV } = useSiteNav();
   return (
-    <nav ref={ref} aria-label="Menu główne" className={`flex items-center gap-6 xl:gap-9 whitespace-nowrap ${className}`} {...rest}>
-      {NAV.map((n) => {
+    <nav ref={ref} aria-label="Menu główne" className={`flex items-center gap-0.5 xl:gap-1 whitespace-nowrap ${className}`} {...rest}>
+      {NAV.filter((n) => n.desktop !== false).map((n) => {
         const on = isActive(pathname, n.to);
         return (
           <Link key={n.to} to={n.to} aria-current={on ? "page" : undefined}
-            className={`technical text-[12px] xl:text-[13px] !tracking-[0.08em] xl:!tracking-[0.12em] whitespace-nowrap py-1 border-b transition-colors ${on ? "gold-text border-[#C9A24A]" : "text-foreground/70 hover:gold-text border-transparent"}`}>
+            className={`inline-flex items-center min-h-10 px-3 xl:px-3.5 rounded-lg text-[14px] whitespace-nowrap transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-[#C9A24A] ${on ? "bg-[#C9A24A]/[0.12] text-[#F5EFE1]" : "text-[#F5EFE1]/75 hover:text-[#F5EFE1] hover:bg-white/[0.04]"}`}>
             {n.label}
           </Link>
         );
       })}
+      <span className="w-3 xl:w-4" aria-hidden="true" />
       <TestLink />
     </nav>
   );
@@ -29,7 +31,7 @@ export function TestLink({ small }) {
   const on = isActive(pathname, TEST.to);
   return (
     <Link to={TEST.to} aria-current={on ? "page" : undefined}
-      className={`relative after:absolute after:-inset-2 after:content-[''] technical gold-text border border-[#C9A24A]/70 hover:border-[#C9A24A] hover:text-[#E2C170] whitespace-nowrap transition-colors ${small ? "text-[10px] px-2.5 py-1" : "text-[11px] !tracking-[0.12em] xl:!tracking-[0.18em] px-3 py-1.5"} ${on ? "bg-[#C9A24A]/10" : ""}`}>
+      className={`relative inline-flex items-center rounded-lg gold-text border border-[#C9A24A]/55 hover:border-[#C9A24A] hover:text-[#E2C170] hover:bg-[#C9A24A]/[0.06] whitespace-nowrap font-medium transition-colors ${small ? "text-[13px] px-3 min-h-9 after:absolute after:-inset-1 after:content-['']" : "text-[14px] px-4 min-h-10"} ${on ? "bg-[#C9A24A]/10" : ""}`}>
       {TEST.label}
     </Link>
   );
