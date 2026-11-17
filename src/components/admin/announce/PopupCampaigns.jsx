@@ -197,7 +197,6 @@ function CampaignEditor({ initial, opt, onBack, onSaved }) {
   const set = (k, v) => setF((x) => ({ ...x, [k]: v }));
   const setRodzaj = (r) => setF((x) => ({ ...x, rodzaj: r, akcja: AKCJE[r][0][0], ukryj_posiadaczy: r === "produkt" || r === "rabat", bez_subskrybentow: r === "listy" }));
   const prod = opt.products.find((p) => p.id === f.produkt_id);
-  const ev = opt.events.find((e) => e.id === f.wydarzenie_id);
   const code = opt.kody.find((c) => c.kod === f.kod);
   const pv = useMemo(() => previewOf(f, opt), [f, opt]);
   const needsProduct = f.rodzaj === "produkt" || (f.rodzaj === "rabat" && f.akcja === "produkt_kod");
