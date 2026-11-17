@@ -288,10 +288,14 @@ export default function ProductDetail() {
             ) : (
               <div className="mt-auto space-y-4">
                 {product.product_type === "pdf" && (
-                  <p className="text-xs text-foreground/55">Plik jest osobisty — oznaczony Twoim adresem e-mail i numerem zamówienia.</p>
+                  <p className="text-xs text-foreground/55">
+                    Plik jest osobisty — oznaczony Twoim adresem e-mail i numerem zamówienia. Chcesz go komuś podarować?{" "}
+                    <Link to="/skarbiec/karta-podarunkowa" className="gold-text hover:underline">Karta podarunkowa</Link>.
+                  </p>
                 )}
                 <div className="flex items-center gap-4">
-                  <div className="flex items-center border hairline">
+                  {/* Osobisty plik PDF (znak wodny z adresem kupującego) — bez wyboru ilości; prezent: karta podarunkowa (X-34). */}
+                  {product.product_type !== "pdf" && <div className="flex items-center border hairline">
                     <button onClick={() => setQty((q) => Math.max(1, q - 1))} aria-label="Mniej" className="p-3 text-foreground/60 hover:gold-text">
                       <Minus className="h-4 w-4" />
                     </button>
@@ -299,7 +303,7 @@ export default function ProductDetail() {
                     <button onClick={() => setQty((q) => Math.min(20, q + 1))} aria-label="Więcej" className="p-3 text-foreground/60 hover:gold-text">
                       <Plus className="h-4 w-4" />
                     </button>
-                  </div>
+                  </div>}
                   <button onClick={handleBuy} className="btn-relic flex-1">
                     PRZEJDŹ DO KASY <ArrowRight className="h-4 w-4" />
                   </button>
