@@ -385,6 +385,7 @@
 
 /* Zakładki modułów zrobione z przycisków w ramkach: lekkie „pigułki”, wybrana na złoto. */
 .adm main button.technical.border { border-radius: 999px; padding-inline: 14px; min-height: 36px; }
+.adm main button.technical { border-radius: 999px; }
 
 /* Tabele: odstępy, nagłówek jak etykieta, podświetlenie wiersza. */
 .adm main table { border-collapse: separate; border-spacing: 0; width: 100%; }
