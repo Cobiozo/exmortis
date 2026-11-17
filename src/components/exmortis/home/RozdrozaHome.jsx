@@ -26,6 +26,7 @@ const COVERS = [
 // Biblioteka ROZDROŻY w koncie klienta. Gość wraca tu po zalogowaniu (returnTo sprawdza lib/authReturnTo).
 const BIBLIOTEKA = "/konto/rozdroza/biblioteka";
 const LOGIN_TO = `/login?returnTo=${encodeURIComponent(BIBLIOTEKA)}`;
+const REGISTER_TO = `/register?returnTo=${encodeURIComponent(BIBLIOTEKA)}`;
 
 export default function RozdrozaHome() {
   const { user, isLoadingAuth } = useAuth();
@@ -55,7 +56,7 @@ export default function RozdrozaHome() {
         <div className="md:col-span-7">
           <p className="technical text-[11px] gold-text mb-4">ROZDROŻA / INTERAKTYWNE HISTORIE</p>
           <h2 id="home-rozdroza-tytul" className="relic-heading text-[26px] sm:text-4xl lg:text-[2.9rem] leading-[1.06] text-[#F5EFE1] mb-8 max-w-[46rem]">
-            A gdybyś mógł zobaczyć, dokąd prowadzi inna decyzja?
+            A gdyby dało się zobaczyć, dokąd prowadzi inna decyzja?
           </h2>
 
           <div className="space-y-5 text-[17px] leading-[1.75] text-foreground/60 max-w-[40rem]">
@@ -80,15 +81,16 @@ export default function RozdrozaHome() {
                 ODKRYJ ROZDROŻA <ArrowRight className="h-4 w-4" aria-hidden="true" />
               </Link>
             ) : (
-              <Link to={LOGIN_TO} onClick={() => track("rozdroza_cta_click", { zalogowany: false })}
+              // Gość: etykieta mówi wprost, że potrzebne jest darmowe konto (audyt 17.11.2026, X-40).
+              <Link to={REGISTER_TO} onClick={() => track("rozdroza_cta_click", { zalogowany: false })}
                 className="btn-relic min-h-[44px] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#C9A24A]">
-                ODKRYJ ROZDROŻA <ArrowRight className="h-4 w-4" aria-hidden="true" />
+                ZAŁÓŻ DARMOWE KONTO I CZYTAJ <ArrowRight className="h-4 w-4" aria-hidden="true" />
               </Link>
             )}
 
             {!zalogowany && !isLoadingAuth && (
               <p className="mt-4 text-sm text-foreground/55 max-w-[34rem] leading-relaxed">
-                ROZDROŻA są bezpłatne. Zaloguj się lub załóż konto EXMORTIS, aby odkrywać interaktywne historie.
+                ROZDROŻA są bezpłatne. Masz już konto? <Link to={LOGIN_TO} className="underline underline-offset-4 hover:text-[#C9A24A]">Zaloguj się</Link>.
               </p>
             )}
             <p className="technical text-[10px] text-foreground/40 mt-4">Bezpłatnie · Dostęp po zalogowaniu lub założeniu konta</p>
