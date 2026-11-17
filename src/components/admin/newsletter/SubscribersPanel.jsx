@@ -168,7 +168,7 @@ export default function SubscribersPanel() {
           disabled={busy}
           className="btn-relic !px-5 !py-2.5 whitespace-nowrap disabled:opacity-60"
         >
-          <Plus className="h-4 w-4" /> DODAJ
+          <Plus className="h-4 w-4" /> Dodaj
         </button>
         <button onClick={() => setBulk(bulk === null ? "" : null)} className="btn-ghost !px-5 !py-2.5 whitespace-nowrap">
           Wklej listę
@@ -179,7 +179,7 @@ export default function SubscribersPanel() {
           <textarea value={bulk} onChange={(e) => setBulk(e.target.value)} rows={6} className={inputCls}
             placeholder={"Jeden adres w linii albo po przecinku, np.\nanna@example.com\nJan Kowalski <jan@example.com>"} />
           <button onClick={importList} disabled={busy || !bulk.trim()} className="btn-relic !px-5 !py-2.5 mt-3 disabled:opacity-60">
-            DODAJ ADRESY Z LISTY
+            Dodaj adresy z listy
           </button>
         </div>
       )}
