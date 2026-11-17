@@ -20,9 +20,9 @@ export function CardsBlock({ d, label, center }) {
   return (
     <>
       <SectionHead label={label} title={d.tytul} intro={d.intro} center={center} />
-      <div className={`grid ${GRID[cols]} gap-px bg-[#3D3D3F]/40 text-left`}>
+      <div className={`cms-cards grid ${GRID[cols]} gap-px bg-[#3D3D3F]/40 text-left`}>
         {cards.map((c, i) => (
-          <div key={i} className={`bg-[#0A0A0B] p-8 sm:p-10 md:p-8 lg:p-12 min-w-0 group hover:bg-[#070708] transition-colors duration-500 flex flex-col ${span && i === cards.length - 1 ? SPAN[span] : ""}`}>
+          <div key={i} className={`cms-card bg-[#0A0A0B] p-8 sm:p-10 md:p-8 lg:p-12 min-w-0 group hover:bg-[#070708] transition-colors duration-500 flex flex-col ${span && i === cards.length - 1 ? SPAN[span] : ""}`}>
             {c.obraz?.url && <Img img={c.obraz} ratio="3:2" className="mb-8" />}
             {d.numerowane && <p aria-hidden="true" data-n={String(i + 1).padStart(2, "0")} className="font-mono text-5xl leading-none text-foreground/15 mb-8 before:content-[attr(data-n)]" />}
             <h3 className="relic-heading text-2xl md:text-xl lg:text-2xl gold-text mb-5 [overflow-wrap:break-word]">{c.tytul}</h3>
