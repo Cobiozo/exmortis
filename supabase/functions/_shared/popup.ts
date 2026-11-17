@@ -1,3 +1,6 @@
+import { runSql, escStr } from "./supabase.ts";
+import { unitPrice, warsawToday } from "./productPrice.ts";
+
 // Popup na stronie (Panel → Ogłoszenia → Popup): krótka informacja dla odwiedzających,
 // np. o nadchodzącym spotkaniu albo kodzie rabatowym. Ustawienie publiczne (app_settings: "popup").
 // Każdy zapis podnosi wersję — odwiedzający, którzy zamknęli poprzedni popup, zobaczą nowy.
