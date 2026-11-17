@@ -14,7 +14,7 @@ const SIDE_PHOTO = "https://media.base44.com/images/public/6aa08bc6318b0f886cc3b
 export default function ShortHistory({ label } = {}) {
   return (
     <section id="historia" className="border-t hairline bg-[#070708]">
-      <div className="relative h-[55vh] md:h-[75vh] overflow-hidden">
+      <div className="relative h-[42vh] md:h-[75vh] overflow-hidden">
         <Image
           src={PORTRAIT}
           alt="Dawid — exmortis"
@@ -27,10 +27,10 @@ export default function ShortHistory({ label } = {}) {
         </p>
       </div>
 
-      <div className="py-24 md:py-32 px-5 md:px-10">
+      <div className="py-16 md:py-32 px-5 md:px-10">
         <div className="mx-auto max-w-[1400px]">
           <p className="technical text-[11px] gold-text mb-4">{label || "KRÓTKA HISTORIA · 04"}</p>
-          <h2 className="relic-heading text-4xl md:text-6xl leading-[0.95] mb-12">
+          <h2 className="relic-heading text-4xl md:text-6xl leading-[0.95] mb-8 md:mb-12">
             Byłem tam.<br />
             <span className="gold-text">I wróciłem. Inny.</span>
           </h2>
@@ -48,7 +48,7 @@ export default function ShortHistory({ label } = {}) {
                 </p>
               </div>
 
-              <blockquote className="border-l border-[#C9A24A] pl-6 md:pl-10 my-12 max-w-3xl">
+              <blockquote className="border-l border-[#C9A24A] pl-6 md:pl-10 my-8 md:my-12 max-w-3xl">
                 <p className="shop-heading text-2xl md:text-4xl gold-text leading-snug">
                   „Byłem pewien, że grzebią mnie żywcem… a Ty, w tej ciemności, po prostu mnie
                   zasadziłeś.”
@@ -60,12 +60,13 @@ export default function ShortHistory({ label } = {}) {
                 <p>O tym, co wydarzyło się pomiędzy, opowiadam w pełnej historii.</p>
               </div>
 
-              <Link to="/o-mnie?src=home-historia" className="btn-ghost mt-12">
+              <Link to="/o-mnie?src=home-historia" className="btn-ghost mt-8 md:mt-12">
                 Przeczytaj całą historię <ArrowRight className="h-4 w-4" />
               </Link>
             </div>
 
-            <div className="md:col-span-2 border hairline mx-auto w-full" style={{ maxWidth: "min(100%, calc(min(72svh, 720px) * 0.75))" }}>
+            {/* Na telefonie bez drugiego zdjęcia — portret jest wyżej (krótsza strona główna, audyt X-37). */}
+            <div className="hidden md:block md:col-span-2 border hairline mx-auto w-full" style={{ maxWidth: "min(100%, calc(min(72svh, 720px) * 0.75))" }}>
               <Image
                 src={SIDE_PHOTO}
                 alt="Dawid — exmortis"

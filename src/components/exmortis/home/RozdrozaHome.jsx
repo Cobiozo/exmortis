@@ -50,7 +50,7 @@ export default function RozdrozaHome() {
   const zalogowany = !!user;
 
   return (
-    <section ref={ref} aria-labelledby="home-rozdroza-tytul" className="relative py-24 md:py-32 px-5 md:px-10 border-t hairline bg-[#0A0A0B]">
+    <section ref={ref} aria-labelledby="home-rozdroza-tytul" className="relative py-16 md:py-32 px-5 md:px-10 border-t hairline bg-[#0A0A0B]">
       <div aria-hidden="true" className="pointer-events-none absolute inset-y-0 right-0 w-1/2 bg-[radial-gradient(ellipse_at_right,rgba(92,26,27,0.35),transparent_65%)]" />
       <div className="relative mx-auto max-w-[1400px] grid md:grid-cols-12 gap-12 lg:gap-16 items-center">
         <div className="md:col-span-7">
@@ -65,8 +65,9 @@ export default function RozdrozaHome() {
               ROZDROŻA to interaktywne historie EXMORTIS, w których nie jesteś tylko czytelnikiem.
             </p>
             <p>Poznajesz bohaterów, ich relacje, konflikty i trudne życiowe sytuacje. W kluczowych momentach to Ty podejmujesz decyzje, które wpływają na dalszy przebieg opowieści.</p>
-            <p>Możesz wrócić do wcześniejszego wyboru. Sprawdzić inną możliwość. Zobaczyć odmienne zakończenie.</p>
-            <p>Nie chodzi o znalezienie jednej poprawnej odpowiedzi. Chodzi o dostrzeżenie tego, jak bardzo zmienia się nasze spojrzenie, kiedy poznajemy więcej niż jedną perspektywę.</p>
+            {/* Na telefonie dwa ostatnie akapity są ukryte — sedno mówią akapity wyżej (krótsza strona główna). */}
+            <p className="hidden md:block">Możesz wrócić do wcześniejszego wyboru. Sprawdzić inną możliwość. Zobaczyć odmienne zakończenie.</p>
+            <p className="hidden md:block">Nie chodzi o znalezienie jednej poprawnej odpowiedzi. Chodzi o dostrzeżenie tego, jak bardzo zmienia się nasze spojrzenie, kiedy poznajemy więcej niż jedną perspektywę.</p>
           </div>
 
           <p className="mt-8 border-l-2 border-[#C9A24A] pl-4 text-[15px] leading-relaxed text-foreground/75">
@@ -99,7 +100,7 @@ export default function RozdrozaHome() {
 
         {/* Okładki opublikowanych historii — nic z przyszłych publikacji. */}
         <div className="md:col-span-5">
-          <ul className="grid grid-cols-3 gap-3 md:gap-4">
+          <ul className="grid grid-cols-3 gap-3 md:gap-4 max-w-[300px] md:max-w-none">
             {COVERS.map((c, i) => (
               <li key={c.src} className={`relative overflow-hidden border hairline bg-[#070708] ${i === 1 ? "md:-mt-6" : ""}`}>
                 <Image src={c.src} alt={c.alt} fittingType="fill" className="block w-full aspect-[2/3]" />

@@ -30,6 +30,8 @@ export default function ContactSection({ label } = {}) {
   const fromAccount = acc.signedIn && !manual;
   const [sending, setSending] = useState(false);
   const [sent, setSent] = useState(false);
+  // Telefon: formularz rozwija się po kliknięciu (strona główna krótsza o ok. 1 ekran, audyt X-37). Komputer: zawsze widoczny.
+  const [showForm, setShowForm] = useState(false);
   const t = useSystemText();
   const [error, setError] = useState("");
 
@@ -51,13 +53,13 @@ export default function ContactSection({ label } = {}) {
   };
 
   return (
-    <section id="kontakt" className="py-32 px-5 md:px-10 border-t hairline bg-[#070708]">
+    <section id="kontakt" className="py-20 md:py-32 px-5 md:px-10 border-t hairline bg-[#070708]">
       <div className="mx-auto max-w-[1400px] grid md:grid-cols-2 gap-12 md:gap-20">
         {/* Lewa kolumna — kanały kontaktu */}
         <div>
           <p className="technical text-[11px] gold-text mb-4">{label || "KONTAKT · 10"}</p>
           <h2 className="relic-heading text-4xl lg:text-5xl xl:text-6xl mb-6 leading-[0.95] [overflow-wrap:break-word]" dangerouslySetInnerHTML={{ __html: sanitizeHtml(heading) }} />
-          <div className="rich-content text-foreground/60 text-lg leading-relaxed max-w-md mb-12" dangerouslySetInnerHTML={{ __html: sanitizeHtml(intro) }} />
+          <div className="rich-content text-foreground/60 text-lg leading-relaxed max-w-md mb-8 md:mb-12" dangerouslySetInnerHTML={{ __html: sanitizeHtml(intro) }} />
 
           <div className="space-y-6">
             <a
@@ -100,6 +102,12 @@ export default function ContactSection({ label } = {}) {
 
         {/* Prawa kolumna — formularz */}
         <div>
+          {!showForm && !sent && (
+            <button type="button" onClick={() => setShowForm(true)} aria-expanded={false} aria-controls="kontakt-formularz" className="btn-relic w-full md:hidden">
+              NAPISZ WIADOMOŚĆ <ArrowRight className="h-4 w-4" />
+            </button>
+          )}
+          <div id="kontakt-formularz" className={showForm || sent ? "" : "hidden md:block"}>
           {sent ? (
             <div className="border border-[#C9A24A]/40 p-10 flex flex-col items-center justify-center text-center gap-6 h-full">
               <div className="w-14 h-14 border-2 border-[#C9A24A] rounded-full flex items-center justify-center">
@@ -170,6 +178,7 @@ export default function ContactSection({ label } = {}) {
               </p>
             </form>
           )}
+          </div>
         </div>
       </div>
     </section>
