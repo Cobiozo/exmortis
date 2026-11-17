@@ -43,7 +43,7 @@ const handler = async function (req) {
         await loadAppUrl(base44).catch(() => {});
         const admin = await adminTo(base44).catch(() => null);
         if (admin) await sendMail(base44, { kind: "powrot", ref: app.id, to: admin, subject: "Nowa wiadomość od uczestnika POWRÓT",
-          html: wrap(`<p>${escHtml(app.full_name)} napisał(a) w Moim koncie. Odpowiedź do 48 godzin w dni robocze.</p><p>Treść jest tylko w panelu.</p><p><a style="color:#C9A24A" href="${APP}/admin/powrot">Otwórz panel</a></p>`) }).catch(() => {});
+          html: wrap(`<p>Nowa wiadomość w Moim koncie od: ${escHtml(app.full_name)}. Odpowiedź do 48 godzin w dni robocze.</p><p>Treść jest tylko w panelu.</p><p><a style="color:#C9A24A" href="${APP}/admin/powrot">Otwórz panel</a></p>`) }).catch(() => {});
       })());
     }
 
