@@ -221,7 +221,7 @@ function CampaignEditor({ initial, opt, onBack, onSaved }) {
   // Ustawienia kodu edytowane w kampanii (zapisują się do kodu przy zapisie kampanii).
   const [ks, setKs] = useState(null);
   const ksFrom = (c) => (c ? { od_promocji: !c.bez_promocji, od: c.od || "", do: c.valid_until || "" } : null);
-  useEffect(() => { setKs(ksFrom(rawCode)); }, [f.kod, rawCode?.bez_promocji, rawCode?.od, rawCode?.valid_until]); // eslint-disable-line react-hooks/exhaustive-deps
+  useEffect(() => { setKs(ksFrom(rawCode)); }, [f.kod, rawCode?.bez_promocji, rawCode?.od, rawCode?.valid_until]);  
   const ksDirty = !!(ks && rawCode && JSON.stringify(ks) !== JSON.stringify(ksFrom(rawCode)));
   const code = effCode(rawCode, ks, prod);
   const pv = useMemo(() => previewOf(f, opt, ks), [f, opt, ks]);
