@@ -39,7 +39,7 @@ export default function NewsletterSection({ label } = {}) {
   };
 
   return (
-    <section id="listy-powrotu" className="py-32 px-5 md:px-10 border-t hairline bg-[#070708]">
+    <section id="listy-powrotu" className="py-16 md:py-24 px-4 sm:px-5 md:px-10 border-t hairline bg-[#070708]">
       <div className="mx-auto max-w-[1400px] grid md:grid-cols-2 gap-12 md:gap-20 items-center">
         <div>
           <p className="technical text-[11px] gold-text mb-4">{label || "LISTY POWROTU · 09"}</p>

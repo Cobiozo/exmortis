@@ -50,7 +50,7 @@ export default function RozdrozaHome() {
   const zalogowany = !!user;
 
   return (
-    <section ref={ref} aria-labelledby="home-rozdroza-tytul" className="relative py-16 md:py-32 px-5 md:px-10 border-t hairline bg-[#0A0A0B]">
+    <section ref={ref} aria-labelledby="home-rozdroza-tytul" className="relative py-16 md:py-24 px-4 sm:px-5 md:px-10 border-t hairline bg-[#0A0A0B]">
       <div aria-hidden="true" className="pointer-events-none absolute inset-y-0 right-0 w-1/2 bg-[radial-gradient(ellipse_at_right,rgba(92,26,27,0.35),transparent_65%)]" />
       <div className="relative mx-auto max-w-[1400px] grid md:grid-cols-12 gap-12 lg:gap-16 items-center">
         <div className="md:col-span-7">

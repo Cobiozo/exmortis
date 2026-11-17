@@ -53,7 +53,7 @@ export default function ContactSection({ label } = {}) {
   };
 
   return (
-    <section id="kontakt" className="py-20 md:py-32 px-5 md:px-10 border-t hairline bg-[#070708]">
+    <section id="kontakt" className="py-16 md:py-24 px-4 sm:px-5 md:px-10 border-t hairline bg-[#070708]">
       <div className="mx-auto max-w-[1400px] grid md:grid-cols-2 gap-12 md:gap-20">
         {/* Lewa kolumna — kanały kontaktu */}
         <div>

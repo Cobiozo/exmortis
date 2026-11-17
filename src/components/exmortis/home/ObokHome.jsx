@@ -13,7 +13,7 @@ export default function ObokHome() {
   const zalogowany = !!user;
   const back = encodeURIComponent(KONTO_BIBLIOTEKA);
   return (
-    <section aria-labelledby="home-biblioteka-tytul" className="py-20 md:py-24 px-5 md:px-10 border-t hairline bg-[#0A0A0B]">
+    <section aria-labelledby="home-biblioteka-tytul" className="py-12 md:py-16 px-4 sm:px-5 md:px-10 border-t hairline bg-[#0A0A0B]">
       <div className="mx-auto max-w-[1400px] grid md:grid-cols-12 gap-8 md:gap-16 items-end">
         <div className="md:col-span-7">
           <p className="technical text-[11px] gold-text mb-4">BIBLIOTEKA</p>

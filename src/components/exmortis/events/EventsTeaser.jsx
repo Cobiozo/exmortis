@@ -23,7 +23,7 @@ export default function EventsTeaser({ label } = {}) {
   if (!events || events.length === 0) return null;
 
   return (
-    <section className="relative py-32 px-5 md:px-10 border-t hairline">
+    <section className="relative py-16 md:py-24 px-4 sm:px-5 md:px-10 border-t hairline">
       <div className="absolute right-0 top-0 bottom-0 w-px spine opacity-30" />
       <div className="mx-auto max-w-[1400px]">
         <p className="technical text-[11px] gold-text mb-4">{label || "SPOTKANIA · 07"}</p>

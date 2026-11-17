@@ -22,7 +22,7 @@ export default function InstagramFeed() {
   if (!feed) return null;
 
   return (
-    <section className="py-24 md:py-32 px-5 md:px-10 border-t hairline">
+    <section className="py-16 md:py-24 px-4 sm:px-5 md:px-10 border-t hairline">
       <div className="mx-auto max-w-[1400px]">
         <div className="flex items-end justify-between mb-10">
           <div>

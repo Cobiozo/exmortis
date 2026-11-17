@@ -3,8 +3,6 @@ import { Link } from "react-router-dom";
 import { ArrowRight } from "lucide-react";
 import { Image } from "@/components/ui/image";
 
-const PORTRAIT =
-  "https://media.base44.com/images/public/6aa08bc6318b0f886cc3b9a3/74c8971f2_572398635_17869620246460401_6357932160691507676_n.jpg";
 
 // Strona główna bez wątku kapłańskiego (decyzja właściciela 17.11.2026) — ta historia jest tylko w O mnie.
 // Zdjęcie z sekcji „Próg” na podstronie O mnie.
@@ -14,22 +12,10 @@ const SIDE_PHOTO = "https://media.base44.com/images/public/6aa08bc6318b0f886cc3b
 export default function ShortHistory({ label } = {}) {
   return (
     <section id="historia" className="border-t hairline bg-[#070708]">
-      <div className="relative h-[42vh] md:h-[75vh] overflow-hidden">
-        <Image
-          src={PORTRAIT}
-          alt="Dawid — exmortis"
-          fittingType="fill"
-          className="absolute inset-0 w-full h-full"
-        />
-        <div className="absolute inset-0 bg-gradient-to-t from-[#070708] via-[#070708]/20 to-[#070708]/40" />
-        <p className="absolute bottom-6 left-5 md:left-10 technical text-[10px] gold-text">
-          DAWID · EXMORTIS
-        </p>
-      </div>
-
-      <div className="py-16 md:py-32 px-5 md:px-10">
+      {/* Duży baner ze zdjęciem usunięty 17.11.2026 — portret jest już w nagłówku strony (krótsza strona, lepszy rytm). */}
+      <div className="py-16 md:py-24 px-4 sm:px-5 md:px-10">
         <div className="mx-auto max-w-[1400px]">
-          <p className="technical text-[11px] gold-text mb-4">{label || "KRÓTKA HISTORIA · 04"}</p>
+          <p className="technical text-[11px] gold-text mb-4">{label || "KRÓTKA HISTORIA"}</p>
           <h2 className="relic-heading text-4xl md:text-6xl leading-[0.95] mb-8 md:mb-12">
             Byłem tam.<br />
             <span className="gold-text">I wróciłem. Inny.</span>
@@ -66,7 +52,7 @@ export default function ShortHistory({ label } = {}) {
             </div>
 
             {/* Na telefonie bez drugiego zdjęcia — portret jest wyżej (krótsza strona główna, audyt X-37). */}
-            <div className="hidden md:block md:col-span-2 border hairline mx-auto w-full" style={{ maxWidth: "min(100%, calc(min(72svh, 720px) * 0.75))" }}>
+            <div className="hidden md:block md:col-span-2 border hairline mx-auto w-full" style={{ maxWidth: "min(100%, 400px)" }}>
               <Image
                 src={SIDE_PHOTO}
                 alt="Dawid — exmortis"
