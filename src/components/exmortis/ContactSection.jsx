@@ -161,7 +161,7 @@ export default function ContactSection({ label } = {}) {
                 {!sending && <ArrowRight className="h-4 w-4" />}
               </button>
               <p className="technical text-[10px] text-foreground/55">
-                Twoja wiadomość ląduje tylko u mnie. Nikt jej nie zobaczy poza nami.
+                Wiadomość czytam osobiście. Dane przechowuję bezpiecznie i wykorzystuję tylko do odpowiedzi — szczegóły w Polityce prywatności.
               </p>
             </form>
           )}
