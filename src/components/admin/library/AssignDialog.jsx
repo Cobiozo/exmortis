@@ -59,7 +59,7 @@ export default function AssignDialog({ open, onClose, materialId, materialIds, c
         <>
           <button className="btn-ghost" onClick={onClose}>Zamknij</button>
           <button className="btn-relic" onClick={submit} disabled={busy || !prev}>
-            {busy ? <Loader2 className="h-4 w-4 animate-spin" /> : "PRZYDZIEL"}
+            {busy ? <Loader2 className="h-4 w-4 animate-spin" /> : "Przydziel"}
           </button>
         </>
       }

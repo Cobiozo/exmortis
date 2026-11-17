@@ -41,8 +41,8 @@ function ResumeBox({ o, onDone }) {
       {o.fulfill_error && <p className="text-xs text-[#E8C547]">Ostatni błąd: {o.fulfill_error}</p>}
       <p className="text-xs text-foreground/50">Przed wznowieniem sprawdzam płatność w PayU (status, kwota, waluta, POS). Bez potwierdzenia nic się nie zmienia.</p>
       <div className="flex flex-wrap gap-3">
-        {!confirm && <button onClick={() => run(false)} disabled={busy} className="btn-ghost !px-4 !py-2 text-[10px]">{busy ? <Loader2 className="h-4 w-4 animate-spin" /> : "WZNÓW REALIZACJĘ"}</button>}
-        {confirm && <button onClick={() => run(true)} disabled={busy} className="btn-relic !px-4 !py-2 text-[10px]">{busy ? <Loader2 className="h-4 w-4 animate-spin" /> : "POTWIERDZAM — ZREALIZUJ ZAMÓWIENIE SPORNE"}</button>}
+        {!confirm && <button onClick={() => run(false)} disabled={busy} className="btn-ghost !px-4 !py-2 text-[10px]">{busy ? <Loader2 className="h-4 w-4 animate-spin" /> : "Wznów realizację"}</button>}
+        {confirm && <button onClick={() => run(true)} disabled={busy} className="btn-relic !px-4 !py-2 text-[10px]">{busy ? <Loader2 className="h-4 w-4 animate-spin" /> : "Potwierdzam — zrealizuj zamówienie sporne"}</button>}
       </div>
       {msg && <p className="text-xs text-foreground/70" role="status">{msg}</p>}
     </div>
@@ -95,7 +95,7 @@ function InvoiceBox({ o, onSaved }) {
       ) : (
         <div className="flex flex-wrap items-center gap-3">
           <input value={num} onChange={(e) => setNum(e.target.value)} placeholder="Nr faktury (opcjonalnie)" className="bg-transparent border hairline px-3 py-2 text-sm min-w-0 basis-full sm:basis-auto flex-1 focus:border-[#C9A24A] focus:outline-none" />
-          <button onClick={() => save(true)} disabled={busy} className="btn-relic !px-4 !py-2 text-[10px]">{busy ? <Loader2 className="h-4 w-4 animate-spin" /> : "OZNACZ JAKO WYSTAWIONĄ"}</button>
+          <button onClick={() => save(true)} disabled={busy} className="btn-relic !px-4 !py-2 text-[10px]">{busy ? <Loader2 className="h-4 w-4 animate-spin" /> : "Oznacz jako wystawioną"}</button>
         </div>
       )}
       {err && <p className="text-xs text-[#E8C547]">{err}</p>}

@@ -41,7 +41,7 @@ export default function PlaylistsTab() {
         <Droppable droppableId="all" isDropDisabled>
           {(d) => (
             <div ref={d.innerRef} {...d.droppableProps} className="border hairline p-3 space-y-1 h-fit">
-              <p className="technical text-[10px] text-foreground/45 mb-2">ODCINKI — PRZECIĄGNIJ DO PLAYLISTY</p>
+              <p className="technical text-[10px] text-foreground/45 mb-2">Odcinki — przeciągnij do playlisty</p>
               {eps.map((e, i) => <Draggable key={e.id} draggableId={`all-${e.id}`} index={i}>{(x) => <div ref={x.innerRef} {...x.draggableProps} {...x.dragHandleProps} className="text-xs border hairline px-2 py-1.5 bg-[#0A0A0B]">#{e.numer ?? "—"} {e.tytul}</div>}</Draggable>)}
               {d.placeholder}
             </div>

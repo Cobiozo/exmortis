@@ -31,7 +31,7 @@ export default function Participants({ seria }) {
           <span className="flex-1 text-[#F5EFE1]">{u.imie || "—"} · {u.user_email}</span>
           <span className="text-foreground/45">{new Date(u.joined_at || u.created_date).toLocaleDateString("pl-PL")}</span>
           <span className="text-foreground/45">{u.powiadomienia ? "e-maile: tak" : "e-maile: nie"}</span>
-          <button onClick={async () => { if (window.confirm("Usunąć tę osobę z serii?")) { await base44.entities.ObokUczestnik.delete(u.id); load(); } }} className="technical text-[10px] blood-text">USUŃ</button>
+          <button onClick={async () => { if (window.confirm("Usunąć tę osobę z serii?")) { await base44.entities.ObokUczestnik.delete(u.id); load(); } }} className="technical text-[10px] blood-text">Usuń</button>
         </li>
       ))}</ul>
     </section>

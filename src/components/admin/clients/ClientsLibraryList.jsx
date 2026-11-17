@@ -143,7 +143,7 @@ export default function ClientsLibraryList() {
         open={!!confirm} onClose={() => setConfirm(null)} title={confirm?.kind === "add" ? "Dodać do grupy?" : "Usunąć z grupy?"}
         footer={<>
           <button className="btn-ghost" onClick={() => setConfirm(null)}>Anuluj</button>
-          <button className="btn-relic" onClick={() => runBulk(confirm)} disabled={busy}>{busy ? <Loader2 className="h-4 w-4 animate-spin" /> : "WYKONAJ"}</button>
+          <button className="btn-relic" onClick={() => runBulk(confirm)} disabled={busy}>{busy ? <Loader2 className="h-4 w-4 animate-spin" /> : "Wykonaj"}</button>
         </>}
       >
         <p className="text-sm text-foreground/70">
@@ -153,7 +153,7 @@ export default function ClientsLibraryList() {
           {sel.map((e) => <p key={e}>{e}</p>)}
         </div>
         <div>
-          <label className="technical text-[10px] text-foreground/50 block mb-2">GRUPA</label>
+          <label className="technical text-[10px] text-foreground/50 block mb-2">Grupa</label>
           <select value={confirm?.group_id || ""} onChange={(e) => setConfirm((c) => ({ ...c, group_id: e.target.value }))} className={inputCls}>
             <option value="">— wybierz —</option>
             {grupy.map((g) => <option key={g.id} value={g.id}>{g.name}</option>)}

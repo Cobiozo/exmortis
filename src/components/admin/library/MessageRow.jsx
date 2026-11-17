@@ -107,7 +107,7 @@ export default function MessageRow({ m, onChanged, onEdit }) {
               <>
                 <button className="btn-ghost !px-3 !py-2" onClick={() => onEdit(m)}><Pencil className="h-4 w-4" /> Edytuj</button>
                 <button className="btn-relic !px-3 !py-2" onClick={sendNow} disabled={!!busy}>
-                  {busy === "send" ? <Loader2 className="h-4 w-4 animate-spin" /> : "WYŚLIJ TERAZ"}
+                  {busy === "send" ? <Loader2 className="h-4 w-4 animate-spin" /> : "Wyślij teraz"}
                 </button>
               </>
             )}

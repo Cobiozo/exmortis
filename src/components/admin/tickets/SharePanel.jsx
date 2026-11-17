@@ -56,7 +56,7 @@ export default function SharePanel({ event }) {
       <div className="border hairline p-4 flex flex-wrap gap-5 items-center">
         {qr && <img src={qr} alt={`Kod QR do strony ${event.title}`} className="w-36 h-36 bg-white" />}
         <div className="flex-1 min-w-[200px] space-y-3">
-          <p className="technical text-[10px] text-foreground/50">KOD QR NA PLAKAT / ULOTKĘ</p>
+          <p className="technical text-[10px] text-foreground/50">Kod QR na plakat / ulotkę</p>
           <p className="text-sm text-foreground/65">Prowadzi na stronę wydarzenia. Wydrukuj co najmniej 3×3 cm.</p>
           {qr && <a href={qr} download={`qr-${event.slug}.png`} className="btn-ghost !px-4 !py-2.5"><Download className="h-4 w-4" /> Pobierz PNG</a>}
         </div>

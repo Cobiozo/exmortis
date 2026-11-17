@@ -140,7 +140,7 @@ export default function MessageForm({ open, onClose, item, editSent, presetTarge
       <LibModal open={open} onClose={onClose} wide title="Popraw treść wysłanej"
         footer={<>
           <button className="btn-ghost" onClick={onClose}>Zamknij</button>
-          <button className="btn-relic" onClick={() => run("editSent")} disabled={!!busy}>{busy ? <Loader2 className="h-4 w-4 animate-spin" /> : "ZAPISZ POPRAWKĘ"}</button>
+          <button className="btn-relic" onClick={() => run("editSent")} disabled={!!busy}>{busy ? <Loader2 className="h-4 w-4 animate-spin" /> : "Zapisz poprawkę"}</button>
         </>}>
         {err && <p role="alert" className="text-sm blood-text">{err}</p>}
         <p className="text-xs text-foreground/45">Poprawka nie wysyła ponownie e-maila.</p>
@@ -161,10 +161,10 @@ export default function MessageForm({ open, onClose, item, editSent, presetTarge
       {step < 2 && <button className="btn-relic" disabled={!canNext} onClick={() => setStep(step + 1)}>Dalej</button>}
       {step === 2 && (
         <>
-          <button className="btn-ghost" onClick={() => run("draft")} disabled={!!busy || !target}>{busy === "draft" ? <Loader2 className="h-4 w-4 animate-spin" /> : "ZAPISZ SZKIC"}</button>
+          <button className="btn-ghost" onClick={() => run("draft")} disabled={!!busy || !target}>{busy === "draft" ? <Loader2 className="h-4 w-4 animate-spin" /> : "Zapisz szkic"}</button>
           {kiedy === "plan"
-            ? <button className="btn-relic" onClick={() => run("schedule")} disabled={!!busy || !count || !when}>{busy === "schedule" ? <Loader2 className="h-4 w-4 animate-spin" /> : "ZAPLANUJ"}</button>
-            : <button className="btn-relic" onClick={() => setAsk(true)} disabled={!!busy || !count}>{busy === "now" ? <Loader2 className="h-4 w-4 animate-spin" /> : "WYŚLIJ"}</button>}
+            ? <button className="btn-relic" onClick={() => run("schedule")} disabled={!!busy || !count || !when}>{busy === "schedule" ? <Loader2 className="h-4 w-4 animate-spin" /> : "Zaplanuj"}</button>
+            : <button className="btn-relic" onClick={() => setAsk(true)} disabled={!!busy || !count}>{busy === "now" ? <Loader2 className="h-4 w-4 animate-spin" /> : "Wyślij"}</button>}
         </>
       )}
     </>

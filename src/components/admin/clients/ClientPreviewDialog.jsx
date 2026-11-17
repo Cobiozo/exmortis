@@ -22,7 +22,7 @@ export default function ClientPreviewDialog({ email, onClose }) {
       {!d ? <Loader2 className="h-5 w-5 animate-spin gold-text" /> : (
         <div className="space-y-8">
           <section>
-            <p className="technical text-[10px] text-foreground/50 mb-3">BIBLIOTEKA ({d.library?.items?.length || 0})</p>
+            <p className="technical text-[10px] text-foreground/50 mb-3">Biblioteka ({d.library?.items?.length || 0})</p>
             {d.library?.items?.length ? (
               <div className="border hairline divide-y divide-[#3D3D3F]/60">
                 {d.library.items.map((m) => (

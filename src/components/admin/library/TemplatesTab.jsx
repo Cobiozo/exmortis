@@ -59,7 +59,7 @@ export default function TemplatesTab({ onUse, onChanged }) {
         open={!!edit} onClose={() => setEdit(null)} wide title={edit?.id ? "Szablon" : "Nowy szablon"}
         footer={<>
           <button className="btn-ghost" onClick={() => setEdit(null)}>Anuluj</button>
-          <button className="btn-relic" onClick={save} disabled={busy === "save"}>{busy === "save" ? <Loader2 className="h-4 w-4 animate-spin" /> : "ZAPISZ"}</button>
+          <button className="btn-relic" onClick={save} disabled={busy === "save"}>{busy === "save" ? <Loader2 className="h-4 w-4 animate-spin" /> : "Zapisz"}</button>
         </>}
       >
         <div>

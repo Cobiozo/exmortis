@@ -74,7 +74,7 @@ export default function MaterialForm({ open, onClose, item, onDone, onRefresh })
         <>
           <button className="btn-ghost" onClick={onClose}>Anuluj</button>
           <button className="btn-relic" onClick={save} disabled={busy || (isFile && !f.id)}>
-            {busy ? <Loader2 className="h-4 w-4 animate-spin" /> : "ZAPISZ"}
+            {busy ? <Loader2 className="h-4 w-4 animate-spin" /> : "Zapisz"}
           </button>
         </>
       }

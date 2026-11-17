@@ -64,7 +64,7 @@ function SaveAsGroup({ emails, onCreated }) {
       ) : (
         <div className="flex flex-wrap gap-2 items-center">
           <input value={name} onChange={(e) => setName(e.target.value)} placeholder="Nazwa grupy, np. Kohorta 2" aria-label="Nazwa nowej grupy" className={`${inputCls} max-w-[260px]`} />
-          <button type="button" className="btn-relic !px-3 !py-2" disabled={busy} onClick={go}>{busy ? <Loader2 className="h-4 w-4 animate-spin" /> : "UTWÓRZ GRUPĘ"}</button>
+          <button type="button" className="btn-relic !px-3 !py-2" disabled={busy} onClick={go}>{busy ? <Loader2 className="h-4 w-4 animate-spin" /> : "Utwórz grupę"}</button>
           <button type="button" className="btn-ghost !px-3 !py-2" onClick={() => setName(null)}>Anuluj</button>
         </div>
       )}

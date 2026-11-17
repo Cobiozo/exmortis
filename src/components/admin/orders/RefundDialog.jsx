@@ -104,7 +104,7 @@ export default function RefundDialog({ order, onClose, onDone }) {
 
             <div className="flex flex-wrap gap-3">
               <button onClick={submit} disabled={busy || !confirmOk} className="btn-relic !px-5 !py-2.5 text-[10px] disabled:opacity-50">
-                {busy ? <Loader2 className="h-4 w-4 animate-spin" /> : "ZLEĆ ZWROT"}
+                {busy ? <Loader2 className="h-4 w-4 animate-spin" /> : "Zleć zwrot"}
               </button>
               <button onClick={onClose} className="btn-ghost !px-5 !py-2.5 text-[10px]">Anuluj</button>
             </div>

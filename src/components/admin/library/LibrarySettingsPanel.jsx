@@ -111,7 +111,7 @@ export default function LibrarySettingsPanel() {
       {saved && <p className="text-sm gold-text">{saved}</p>}
 
       <button onClick={() => save(s)} disabled={busy} className="btn-relic">
-        {busy ? <Loader2 className="h-4 w-4 animate-spin" /> : "ZAPISZ"}
+        {busy ? <Loader2 className="h-4 w-4 animate-spin" /> : "Zapisz"}
       </button>
 
       <LibModal

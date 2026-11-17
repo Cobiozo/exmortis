@@ -106,7 +106,7 @@ export default function ClientLibraryBox({ email, onChange }) {
                   </p>
                 </div>
                 <button onClick={() => revoke(a.id)} disabled={busy === a.id} className="btn-ghost !px-3 !py-2">
-                  {busy === a.id ? <Loader2 className="h-4 w-4 animate-spin" /> : "ODEBIERZ"}
+                  {busy === a.id ? <Loader2 className="h-4 w-4 animate-spin" /> : "Odebierz"}
                 </button>
               </div>
             ))}

@@ -62,7 +62,7 @@ export default function CollectionsTab() {
       <LibModal open={!!del} onClose={() => setDel(null)} title="Usunąć kolekcję?"
         footer={<>
           <button className="btn-ghost" onClick={() => setDel(null)}>Anuluj</button>
-          <button className="btn-blood" onClick={doDelete} disabled={busy}>{busy ? <Loader2 className="h-4 w-4 animate-spin" /> : "USUŃ"}</button>
+          <button className="btn-blood" onClick={doDelete} disabled={busy}>{busy ? <Loader2 className="h-4 w-4 animate-spin" /> : "Usuń"}</button>
         </>}>
         <p className="text-sm text-foreground/70">Kolekcja „{del?.title}" zostanie usunięta wraz z przydziałami. Same materiały zostaną w bibliotece.</p>
       </LibModal>

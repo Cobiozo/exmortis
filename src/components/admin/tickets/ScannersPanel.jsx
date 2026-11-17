@@ -59,7 +59,7 @@ export default function ScannersPanel({ event }) {
       ) : <p className="text-foreground/50 border hairline p-6 text-center">Na razie tylko Ty możesz skanować bilety.</p>}
 
       <form onSubmit={addOne} className="border hairline p-5 space-y-4">
-        <p className="technical text-[10px] gold-text">DODAJ OSOBĘ SPRAWDZAJĄCĄ BILETY</p>
+        <p className="technical text-[10px] gold-text">Dodaj osobę sprawdzającą bilety</p>
         <div className="grid sm:grid-cols-2 gap-3">
           <input type="email" required value={add.email} onChange={(e) => setAdd({ ...add, email: e.target.value })} placeholder="E-mail konta" aria-label="E-mail konta" className={inp} />
           <input value={add.note} onChange={(e) => setAdd({ ...add, note: e.target.value })} placeholder="Notatka (np. obsługa wejścia)" aria-label="Notatka" className={inp} maxLength={120} />

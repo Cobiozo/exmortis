@@ -54,7 +54,7 @@ export default function CollectionForm({ open, onClose, item, onDone }) {
       footer={
         <>
           <button className="btn-ghost" onClick={onClose}>Anuluj</button>
-          <button className="btn-relic" onClick={save} disabled={busy}>{busy ? <Loader2 className="h-4 w-4 animate-spin" /> : "ZAPISZ"}</button>
+          <button className="btn-relic" onClick={save} disabled={busy}>{busy ? <Loader2 className="h-4 w-4 animate-spin" /> : "Zapisz"}</button>
         </>
       }
     >

@@ -17,7 +17,7 @@ export default function FindOwner() {
       <p className="technical text-[10px] gold-text mb-3">ZNAJDŹ WŁAŚCICIELA KOPII</p>
       <form onSubmit={find} className="flex gap-3 max-w-xl">
         <input required value={q} onChange={(e) => setQ(e.target.value)} placeholder="EXM-…, numer zamówienia, ID z filmu albo e-mail" className="flex-1 bg-[#0A0A0B] border hairline px-3 py-2 text-sm focus:border-[#C9A24A] focus:outline-none" />
-        <button className="btn-relic !px-5 !py-2">{busy ? <Loader2 className="h-4 w-4 animate-spin" /> : "SZUKAJ"}</button>
+        <button className="btn-relic !px-5 !py-2">{busy ? <Loader2 className="h-4 w-4 animate-spin" /> : "Szukaj"}</button>
       </form>
       {res && res.length === 0 && <p className="text-sm text-foreground/50 mt-4">Nic nie znaleziono.</p>}
       {res?.map((p) => (
