@@ -3,12 +3,15 @@ import { Link } from "react-router-dom";
 import { Pause, Play, X } from "lucide-react";
 import { Image } from "@/components/ui/image";
 import { usePodcastPlayer } from "./PlayerContext";
+import { useBottomBar } from "@/lib/bottomBar";
 
 export default function MiniPlayer() {
   const p = usePodcastPlayer();
+  const barRef = React.useRef(null);
+  useBottomBar(barRef);
   const pct = p.dur ? (p.t / p.dur) * 100 : 0;
   return (
-    <div className="fixed bottom-0 inset-x-0 z-50 bg-[#0A0A0B] border-t border-[#C9A24A]/30 pb-[env(safe-area-inset-bottom)]">
+    <div ref={barRef} className="fixed bottom-0 inset-x-0 z-50 bg-[#0A0A0B] border-t border-[#C9A24A]/30 pb-[env(safe-area-inset-bottom)]">
       <div className="h-0.5 bg-[#3D3D3F]"><div className="h-full bg-[#C9A24A]" style={{ width: `${pct}%` }} /></div>
       <div className="flex items-center gap-4 px-4 py-2 max-w-[1400px] mx-auto">
         {p.ep.okladka && <Image src={p.ep.okladka} alt="" className="h-10 w-10 shrink-0" />}
