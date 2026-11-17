@@ -1,0 +1,1 @@
+import"./rolldown-runtime-XKyaHtl9.js";import{er as e}from"./icons-DvfZxe0D.js";import{t}from"./jsx-runtime-DbDIypjJ.js";import{t as n}from"./index-Bi7aSl_9.js";e();var r=t();function i(){return(0,r.jsx)(n,{slug:`glos`})}export{i as default};
