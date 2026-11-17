@@ -240,11 +240,6 @@ export default function ProductDetail() {
 
             <BundleBox product={product} />
 
-            {product.category === "mentoring" && linkUrl !== "/powrot" && (
-              <Link to="/powrot" className="btn-ghost w-full mb-4">
-                Poznaj program POWRÓT <ArrowRight className="h-4 w-4" />
-              </Link>
-            )}
 
             {/* Wkrótce: lista oczekujących. Z linkiem: przycisk. Darmowe: formularz. Po rozmowie: kontakt. Płatne: koszyk. */}
             <div id="kup-teraz" className="mt-auto flex flex-col scroll-mt-28">
@@ -261,7 +256,7 @@ export default function ProductDetail() {
               <div className="mt-auto space-y-3">
                 <button disabled className="btn-relic w-full opacity-40 cursor-not-allowed">Brak miejsc</button>
                 <button onClick={() => setWaitlist(true)} className="btn-ghost w-full">
-                  DAJ ZNAĆ, GDY ZWOLNI SIĘ MIEJSCE <ArrowRight className="h-4 w-4" />
+                  Daj znać, gdy zwolni się miejsce <ArrowRight className="h-4 w-4" />
                 </button>
                 <p className="text-sm text-foreground/55">
                   Limit miejsc został wykorzystany. Zostaw kontakt — napiszę, gdy zwolni się miejsce.
@@ -270,9 +265,9 @@ export default function ProductDetail() {
             ) : linkUrl && (product.is_free || onRequest) ? (
               <div className="mt-auto">
                 {linkUrl.startsWith("/") ? (
-                  <Link to={linkUrl} className="btn-relic w-full">{(product.button_label || (onRequest ? "Umów rozmowę" : "Zobacz")).toUpperCase()} <ArrowRight className="h-4 w-4" /></Link>
+                  <Link to={linkUrl} className="btn-relic w-full">{product.button_label || (onRequest ? "Umów rozmowę" : "Zobacz")} <ArrowRight className="h-4 w-4" /></Link>
                 ) : (
-                  <a href={linkUrl} target="_blank" rel="noreferrer" className="btn-relic w-full">{(product.button_label || (onRequest ? "Umów rozmowę" : "Zobacz")).toUpperCase()} <ArrowRight className="h-4 w-4" /></a>
+                  <a href={linkUrl} target="_blank" rel="noreferrer" className="btn-relic w-full">{product.button_label || (onRequest ? "Umów rozmowę" : "Zobacz")} <ArrowRight className="h-4 w-4" /></a>
                 )}
               </div>
             ) : product.is_free ? (
@@ -295,7 +290,7 @@ export default function ProductDetail() {
                 )}
                 <div className="flex items-center gap-4">
                   {/* Osobisty plik PDF (znak wodny z adresem kupującego) — bez wyboru ilości; prezent: karta podarunkowa (X-34). */}
-                  {product.product_type !== "pdf" && <div className="flex items-center border hairline">
+                  {product.product_type !== "pdf" && product.product_type !== "usluga" && <div className="flex items-center border hairline">
                     <button onClick={() => setQty((q) => Math.max(1, q - 1))} aria-label="Mniej" className="p-3 text-foreground/60 hover:gold-text">
                       <Minus className="h-4 w-4" />
                     </button>
@@ -309,13 +304,27 @@ export default function ProductDetail() {
                   </button>
                 </div>
                 <button onClick={handleAdd} className="btn-ghost w-full">
-                  {added ? "DODANO DO KOSZYKA ✓" : "Dodaj do koszyka"}
+                  {added ? "Dodano do koszyka ✓" : "Dodaj do koszyka"}
                 </button>
+                {product.product_type === "usluga" && (
+                  <p className="text-sm text-foreground/60 leading-relaxed">
+                    Po płatności wybierasz termin w kalendarzu rezerwacji albo proponuję go w ciągu 3 dni roboczych.
+                    Termin możesz bezpłatnie przełożyć najpóźniej 24 godziny przed spotkaniem.
+                  </p>
+                )}
                 {isDigital(product) && <p className="text-sm text-foreground/60">{accessLabel(product)}</p>}
                 {isDigital(product) && <GuaranteeInfo />}
               </div>
             )}
             </div>
+
+            {/* Przegląd lejka 17.11: POWRÓT jako spokojna alternatywa pod zakupem, nie przycisk tuż nad kasą. */}
+            {product.category === "mentoring" && linkUrl !== "/powrot" && (
+              <p className="text-sm text-foreground/60 mt-6">
+                Szukasz dłuższej pracy?{" "}
+                <Link to="/powrot?src=produkt" className="gold-text hover:underline">Poznaj program POWRÓT →</Link>
+              </p>
+            )}
           </div>
         </div>
         <ProductReviews productId={product.id} />
