@@ -421,7 +421,8 @@
   text-transform: none; letter-spacing: -0.005em; line-height: 1.08;
 }
 .exm-soft-page h3.relic-heading, .exm-soft-page h4.relic-heading { line-height: 1.15; }
-.exm-soft-page .max-w-\[1400px\] { max-width: 1200px; }
+/* Treść węższa (1200 px), belka zostaje szeroka — inaczej menu chowa się w hamburgerze przy 1440 px po zalogowaniu. */
+.exm-soft-page .max-w-\[1400px\]:not(header .max-w-\[1400px\]) { max-width: 1200px; }
 .exm-soft-page .btn-relic, .exm-soft-page .btn-ghost, .exm-soft-page .btn-blood {
   font-family: var(--font-body); text-transform: none; letter-spacing: 0; font-size: 15px; font-weight: 500;
   padding: 0 1.4rem; min-height: 48px; border-radius: 10px; line-height: 1.2;
