@@ -3,17 +3,17 @@ import { WHATSAPP_CHANNEL } from "@/lib/whatsappChannel";
 
 const WA = String(WHATSAPP_CHANNEL || "").trim();
 
-// Belka od 17.11.2026 (decyzja właściciela): O mnie · Mentoring (POWRÓT) · Skarbiec · Spotkania · Głos · Kontakt.
-// desktop: false = pozycja tylko w menu na telefonie (grupa „Bezpłatnie”). sub = drobny dopisek w menu telefonu.
+// Belka (decyzja właściciela 17.11.2026): te same pozycje co wcześniej — O mnie · Powrót · Sklep · Spotkania · Cisza · Głos · Kontakt.
+// desktop: false = pozycja tylko w menu rozwijanym (☰). sub = drobny dopisek w menu rozwijanym.
 export const NAV = [
   { label: "O mnie", to: "/o-mnie" },
-  { label: "Mentoring", to: "/powrot", sub: "POWRÓT" },
-  { label: "Skarbiec", to: "/skarbiec" },
+  { label: "Powrót", to: "/powrot", sub: "mentoring 1:1" },
+  { label: "Sklep", to: "/skarbiec" },
   { label: "Spotkania", to: "/spotkania?src=nav" },
+  { label: "Cisza", to: "/cisza", sub: "minutnik" },
   { label: "Głos", to: "/glos", sub: "podcast i muzyka" },
   { label: "Kontakt", to: "/kontakt" },
   { label: "Zacznij bezpłatnie", to: "/zacznij?src=nav", desktop: false },
-  { label: "Cisza", to: "/cisza", sub: "minutnik", desktop: false },
 ];
 export const TEST = { label: "Zrób test", to: "/test?src=nav" };
 
