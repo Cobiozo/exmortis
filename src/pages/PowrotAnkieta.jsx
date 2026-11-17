@@ -174,7 +174,7 @@ export default function PowrotAnkieta() {
           <TextArea
             label="Co sprawia, że rozważasz mentoring właśnie teraz?"
             required
-            hint="Kilka zdań wystarczy. Możesz zmienić to, co napisałeś(-aś) w zgłoszeniu."
+            hint="Kilka zdań wystarczy. Poniżej jest treść ze zgłoszenia — możesz ją uzupełnić."
             {...field("situation")}
           />
           <SingleChoice label="Od jak dawna to trwa?" required options={DURATION_OPTIONS} {...choice("duration")} />
