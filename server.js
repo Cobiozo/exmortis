@@ -22,13 +22,38 @@ const app = express();
 app.disable("x-powered-by");
 app.set("trust proxy", true);
 
-// Nagłówki bezpieczeństwa na każdej odpowiedzi (bez CSP).
+// Adres z www → ten sam adres bez www (301). Tylko dokładnie www.exmortis.pl, więc bez ryzyka pętli.
+app.use((req, res, next) => {
+  if (String(req.hostname || "").toLowerCase() === "www.exmortis.pl") return res.redirect(301, `https://exmortis.pl${req.originalUrl}`);
+  next();
+});
+
+// CSP na razie TYLKO w trybie raportowania (17.11.2026, plan naprawczy 3.11): przeglądarka niczego nie blokuje,
+// a naruszenia widać w konsoli. Po przeglądzie (etap 4.1) ten sam zestaw przejdzie na Content-Security-Policy.
+const CSP_REPORT_ONLY = [
+  "default-src 'self'",
+  "script-src 'self' 'unsafe-inline' https://www.googletagmanager.com https://connect.facebook.net",
+  "style-src 'self' 'unsafe-inline'",
+  "img-src 'self' data: blob: https:",
+  "media-src 'self' blob: https:",
+  "font-src 'self' data:",
+  "connect-src 'self' https://*.supabase.co wss://*.supabase.co https://base44.app https://*.base44.app https://*.google-analytics.com https://*.analytics.google.com https://www.googletagmanager.com https://www.facebook.com https://connect.facebook.net",
+  "frame-src https://www.youtube.com https://www.youtube-nocookie.com https://player.vimeo.com https://iframe.mediadelivery.net https://open.spotify.com https://wideo.exmortis.pl https://www.facebook.com",
+  "worker-src 'self' blob:",
+  "manifest-src 'self'",
+  "object-src 'none'",
+  "base-uri 'self'",
+  "frame-ancestors 'self'",
+].join("; ");
+
+// Nagłówki bezpieczeństwa na każdej odpowiedzi.
 app.use((_req, res, next) => {
   res.setHeader("Strict-Transport-Security", "max-age=31536000");
   res.setHeader("X-Frame-Options", "SAMEORIGIN");
   res.setHeader("X-Content-Type-Options", "nosniff");
   res.setHeader("Referrer-Policy", "strict-origin-when-cross-origin");
   res.setHeader("Permissions-Policy", "camera=(), microphone=(), geolocation=(), payment=()");
+  res.setHeader("Content-Security-Policy-Report-Only", CSP_REPORT_ONLY);
   next();
 });
 
@@ -343,6 +368,9 @@ app.use(express.static(dist, {
     // Service worker i manifest zawsze świeże — inaczej PWA po zobaczy zmian.
     if (file.endsWith("sw.js") || file.endsWith(".webmanifest") || file.endsWith("index.html")) {
       res.setHeader("Cache-Control", "no-cache");
+    } else if (file.includes(`${path.sep}assets${path.sep}`)) {
+      // Pliki z builda mają skrót treści w nazwie — nowa wersja = nowa nazwa, więc mogą zostać w przeglądarce na rok.
+      res.setHeader("Cache-Control", "public, max-age=31536000, immutable");
     }
   },
 }));
