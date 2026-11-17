@@ -1,50 +1,57 @@
-// Pytania i opcje pełnej ankiety POWRÓT (drugi etap zgłoszenia) — bez zmian względem
-// dotychczasowego formularza kwalifikacyjnego.
+// Pytania i opcje szczegółowej ankiety POWRÓT (drugi etap zgłoszenia).
+// Nowa redakcja 18.11.2026 (master prompt v2): część A bez danych o zdrowiu,
+// część B (wsparcie i zdrowie) nieobowiązkowa i wyłącznie za osobną, wyraźną zgodą (art. 9 ust. 2 lit. a RODO).
+import { POWROT } from "@/lib/powrotOffer";
+
 export const AGE_OPTIONS = ["18–25", "26–35", "36–45", "46–55", "56+"];
 export const RETURN_FROM = [
-  "Wypalenie, zmęczenie, życie na autopilocie",
-  "Utrata sensu, pustka, kryzys wiary lub wartości",
-  "Rozstanie, rozwód, kryzys w relacji",
-  "Żałoba lub strata",
-  "Kryzys finansowy lub zawodowy",
-  "Choroba (własna lub bliskiej osoby)",
-  "Inne",
+  "Wypalenie i przeciążenie",
+  "Utrata sensu, wartości lub kierunku",
+  "Rozstanie lub zmiana w relacjach",
+  "Ważna zmiana życiowa",
+  "Utrata roli lub tożsamości",
+  "Doświadczenie straty",
+  "Inna sytuacja",
+  "Jeszcze nie potrafię tego nazwać",
 ];
 export const DURATION_OPTIONS = ["Mniej niż 3 miesiące", "3–12 miesięcy", "1–3 lata", "Dłużej niż 3 lata"];
-export const AREA_OPTIONS = [
-  "Zdrowie i energia",
-  "Relacje i rodzina",
-  "Praca i finanse",
-  "Duchowość i sens",
-  "Poczucie własnej wartości",
+export const EXPECT_OPTIONS = [
+  "Szerszej perspektywy",
+  "Uporządkowania ważnych decyzji",
+  "Towarzyszenia w procesie zmiany",
+  "Pomocy w przełożeniu decyzji na działania",
+  "Gotowych instrukcji i rozwiązań",
+  "Nie mam jeszcze pewności",
 ];
+export const START_OPTIONS = ["W najbliższym wolnym terminie", "W ciągu 1–3 miesięcy", "Później", "Jeszcze nie wiem"];
+export const TIME_OPTIONS = ["Tak", "Prawdopodobnie tak, ale wymaga to organizacji", "Obecnie nie"];
+export const INVEST_OPTIONS = ["Tak", "Chcę porozmawiać o formie płatności", "Obecnie nie", "Jeszcze nie wiem"];
+export const DECISION_OPTIONS = ["Tak", "Potrzebuję jeszcze ją przemyśleć", "Zgłaszam się głównie za namową innej osoby"];
 export const THERAPY_OPTIONS = ["Tak", "Nie", "Wolę nie odpowiadać"];
-export const TIME_OPTIONS = ["Do 1 h", "1–3 h", "Powyżej 3 h"];
-export const FORM_OPTIONS = ["W grupie", "Indywidualnie", "Samodzielnie ze wsparciem", "Jeszcze nie wiem"];
-export const INVEST_OPTIONS = ["Tak", "Potrzebuję więcej informacji", "Nie w tej chwili"];
-export const SOURCE_OPTIONS = ["Facebook", "Instagram", "Newsletter «Listy powrotu»", "Polecenie", "Webinar", "Inne"];
+export const SOURCE_OPTIONS = ["Facebook", "Instagram", "Newsletter «Listy powrotu»", "Podcast", "Otwarte spotkanie", "Polecenie", "Inne"];
 export const CONTACT_OPTIONS = ["E-mail", "Telefon", "Obojętnie"];
 
-// Odpowiedź z etapu 1 („co jest dla Ciebie ważne właśnie teraz”) jest wpisana w pole sytuacji.
+export const INVEST_LABEL = `Program kosztuje ${POWROT.priceText}, ${POWROT.installmentsShort}. Czy taki koszt jest dla Ciebie realny?`;
+
+// Odpowiedź z etapu 1 („co sprawia, że rozważasz program teraz”) jest wpisana w pole sytuacji.
 export const surveyInitial = (situation = "") => ({
   age: "",
   return_from: [],
   return_from_other: "",
   situation,
   duration: "",
-  affected_areas: [],
-  tried_before: "",
-  therapy_support: "",
   goal: "",
-  obstacle: "",
-  readiness: null,
+  oczekiwania: [],
+  tried_before: "",
+  start_kiedy: "",
   weekly_time: "",
-  work_form: "",
   investment: "",
+  decyzja: "",
   anything_else: "",
   source: "",
   contact_pref: "",
-  consent_health: false,
-  consent_terms: false,
   consent_paid: false,
+  consent_health: false,
+  therapy_support: "",
+  zdrowie_uwagi: "",
 });
