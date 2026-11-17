@@ -120,9 +120,13 @@ export const REGULAMIN = {
       "3. Reklamację można złożyć formularzem na stronie Kontakt, e-mailem na [E-MAIL KONTAKTOWY] albo pocztą na [ADRES DO KORESPONDENCJI]. Warto opisać problem, podać numer zamówienia i swoje żądanie — brak tych informacji nie powoduje odrzucenia reklamacji.",
       "4. Sprzedawca odpowiada na reklamację w ciągu 14 dni od jej otrzymania, e-mailem albo na piśmie. Brak odpowiedzi w tym terminie oznacza uznanie reklamacji (art. 7a ustawy o prawach konsumenta).",
     ]},
-    { id: "p16", title: "§16. Gwarancja i pomoc po zakupie", body: [
-      "1. Sprzedawca nie udziela gwarancji handlowej. Jeżeli opis produktu albo umowa POWRÓT przewiduje dobrowolną gwarancję zwrotu, jej warunki są podane przed zakupem i nie ograniczają uprawnień z §14 i §15.",
-      "2. Pomoc w sprawach technicznych (dostęp, pobieranie, odtwarzanie) jest bezpłatna: e-mail [E-MAIL KONTAKTOWY] albo formularz Kontakt. Sprzedawca odpowiada zwykle w ciągu 2 dni roboczych.",
+    { id: "p16", title: "§16. Gwarancja zwrotu i pomoc po zakupie", body: [
+      "1. Sprzedawca udziela dobrowolnej gwarancji zwrotu ceny („Gwarancja 14 dni”) na Treści cyfrowe kupione w Serwisie, także w pakietach. Gwarantem jest Sprzedawca. Warunki gwarancji są podane również na stronie każdego produktu objętego gwarancją.",
+      "2. W ciągu 14 dni od zakupu Klient może zażądać zwrotu ceny bez podawania przyczyny, wysyłając wiadomość na adres [E-MAIL KONTAKTOWY] z numerem zamówienia.",
+      "3. Sprzedawca zwraca pełną zapłaconą cenę w ciągu 14 dni od otrzymania żądania, tym samym sposobem płatności, którego użył Klient, chyba że Klient wskaże inny sposób, niewiążący się dla niego z kosztami. Po zwrocie dostęp do Treści cyfrowej zostaje wyłączony.",
+      "4. Gwarancja nie obejmuje Sesji 1:1, Programu POWRÓT, Wydarzeń ani Kart podarunkowych. Zasady zwrotu w Programie POWRÓT określa umowa POWRÓT. Gwarancja obowiązuje bez ograniczeń terytorialnych.",
+      "5. Gwarancja nie wyłącza, nie ogranicza ani nie zawiesza uprawnień Klienta z §14 i §15.",
+      "6. Pomoc w sprawach technicznych (dostęp, pobieranie, odtwarzanie) jest bezpłatna: e-mail [E-MAIL KONTAKTOWY] albo formularz Kontakt. Sprzedawca odpowiada zwykle w ciągu 2 dni roboczych.",
     ]},
     { id: "p17", title: "§17. Opinie i treści użytkowników", body: [
       "1. Opinię o produkcie może dodać tylko osoba, która kupiła ten produkt w Serwisie — system sprawdza to na podstawie opłaconego zamówienia przypisanego do Konta. Każda opinia jest przeglądana przed publikacją. Publikowane są opinie pozytywne i negatywne; Sprzedawca nie płaci za opinie.",
@@ -152,7 +156,7 @@ export const REGULAMIN = {
     { id: "p23", title: "§23. Postanowienia końcowe", body: [
       "1. Regulamin podlega prawu polskiemu. Wybór prawa nie pozbawia Konsumenta ochrony przysługującej mu na podstawie bezwzględnie obowiązujących przepisów państwa jego zwykłego pobytu.",
       "2. Postanowienia Regulaminu nie wyłączają ani nie ograniczają praw Konsumentów i PNPK wynikających z bezwzględnie obowiązujących przepisów.",
-      "3. Regulamin w tym brzmieniu obowiązuje od 16 listopada 2026 r. dla umów zawieranych od tego dnia. Wobec osób, które przed 10 listopada 2026 r. założyły Konto lub zapisały się na newsletter, w zakresie Usług bezpłatnych obowiązuje od 24 listopada 2026 r. (po 14-dniowym powiadomieniu); do tego czasu stosuje się wobec nich wersję wcześniejszą, dostępną w części „Poprzednie wersje”.",
+      "3. Regulamin w tym brzmieniu obowiązuje od 18 listopada 2026 r. dla umów zawieranych od tego dnia. Wobec osób, które przed 10 listopada 2026 r. założyły Konto lub zapisały się na newsletter, w zakresie Usług bezpłatnych obowiązuje od 24 listopada 2026 r. (po 14-dniowym powiadomieniu); do tego czasu stosuje się wobec nich wersję wcześniejszą, dostępną w części „Poprzednie wersje”.",
     ]},
   ],
 };
