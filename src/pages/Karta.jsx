@@ -38,7 +38,7 @@ export default function Karta() {
 
   const c = state.card;
   return (
-    <main className="min-h-[100svh] bg-[#0A0A0B] text-foreground px-4 py-10 sm:py-16">
+    <main className="exm-soft-page min-h-[100svh] bg-[#0A0A0B] text-foreground px-4 py-10 sm:py-16">
       <style>{PRINT_CSS}</style>
       <div className="max-w-3xl mx-auto">
         {state.loading && <p className="text-foreground/55 text-center">Ładowanie…</p>}

@@ -13,7 +13,7 @@ export default function Layout() {
   const { gated, loading } = usePrelaunch();
   if (loading) return <SiteLoader />;
   return (
-    <div className="min-h-screen flex flex-col bg-[#0A0A0B]">
+    <div className="exm-soft-page min-h-screen flex flex-col bg-[#0A0A0B]">
       {/* Link pomijania nawigacji — widoczny dopiero po Tab (WCAG 2.4.1, audyt 17.11.2026, X-27). */}
       <a href="#tresc" className="sr-only focus:not-sr-only focus:fixed focus:top-3 focus:left-3 focus:z-[300] focus:bg-[#0A0A0B] focus:border focus:border-[#C9A24A] focus:px-4 focus:py-2 focus:text-[#C9A24A] text-sm">Przejdź do treści</a>
       <Navbar />

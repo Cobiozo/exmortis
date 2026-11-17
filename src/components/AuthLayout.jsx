@@ -18,7 +18,7 @@ export default function AuthLayout({ title, subtitle, footer, children, tabs = f
     </Link>
   );
   return (
-    <div className="min-h-screen flex items-center justify-center bg-[#0A0A0B] px-5 py-20">
+    <div className="exm-soft-page min-h-screen flex items-center justify-center bg-[#0A0A0B] px-5 py-20">
       <div className="w-full max-w-md">
         <div className="text-center mb-10">
           <Link to="/" className="inline-block mb-6"><Logo className="h-14 w-14" glow={false} /></Link>

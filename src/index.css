@@ -416,7 +416,7 @@
 /* ==== PODSTRONY TREŚCI — styl „jak w Moim koncie” (17.11.2026) ====
    Tylko wewnątrz .exm-soft-page (O mnie, Mentoring, Spotkania, Głos, Kontakt, Zacznij bezpłatnie).
    Sam wygląd: treść, bloki i funkcje bez zmian. Wzór: panel admina (.adm) i nowa strona główna (.exm-soft). */
-.exm-soft-page .relic-heading {
+.exm-soft-page .relic-heading:not(.exm-wordmark) {
   font-family: "EB Garamond", ui-serif, Georgia, serif; font-weight: 400;
   text-transform: none; letter-spacing: -0.005em; line-height: 1.08;
 }

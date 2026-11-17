@@ -32,7 +32,7 @@ export default function Bilet() {
 
   const t = state.ticket;
   return (
-    <main className="min-h-[100svh] bg-[#0A0A0B] text-foreground px-4 py-8 sm:py-14">
+    <main className="exm-soft-page min-h-[100svh] bg-[#0A0A0B] text-foreground px-4 py-8 sm:py-14">
       <div className="max-w-md mx-auto">
         {state.loading && <p className="text-foreground/55 text-center">Ładowanie…</p>}
         {state.error && (

@@ -58,7 +58,7 @@ export default function Navbar() {
 
             <Link ref={logoRef} to="/" aria-label="exmortis — strona główna" className="flex items-center gap-3 shrink-0 whitespace-nowrap min-h-11">
               <Logo className="h-9 w-9 md:h-10 md:w-10" />
-              <span className="relic-heading text-xl gold-text tracking-[0.3em] hidden sm:block">EXMORTIS</span>
+              <span className="exm-wordmark relic-heading text-xl gold-text tracking-[0.3em] hidden sm:block">EXMORTIS</span>
             </Link>
 
             {!collapsed && <DesktopNav className="ml-auto" />}

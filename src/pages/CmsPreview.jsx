@@ -30,7 +30,7 @@ export default function CmsPreview() {
   }, []);
   if (!blocks) return <div className="min-h-screen bg-[#0A0A0B]" />;
   return (
-    <div onDoubleClick={(e) => startInlineEdit(e, latest.current, post)}>
+    <div className="exm-soft-page" onDoubleClick={(e) => startInlineEdit(e, latest.current, post)}>
       <BlockRenderer blocks={blocks} editable selectedId={sel} onSelect={(id) => post({ type: "cms-select", id })}
         tools={(b) => <PreviewTools name={blockName(b)} onAction={(a) => post({ type: "cms-action", action: a, id: b.id })} />} />
     </div>

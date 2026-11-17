@@ -39,7 +39,7 @@ export default function Footer() {
           <div className="min-w-0">
             <Link to="/" className="inline-flex items-center gap-3 mb-6 min-h-[44px] focus-visible:outline focus-visible:outline-2 focus-visible:outline-[#C9A24A]" aria-label="EXMORTIS — strona główna">
               <Logo className="h-11 w-11" glow={false} />
-              <span className="relic-heading text-2xl gold-text tracking-[0.3em]">EXMORTIS</span>
+              <span className="exm-wordmark relic-heading text-2xl gold-text tracking-[0.3em]">EXMORTIS</span>
             </Link>
             <p className="shop-heading text-2xl md:text-[1.7rem] leading-snug text-[#F5EFE1]">Wracam z siebie.<br />Uczę wracać.</p>
             <div className="rich-content text-base text-[#F5EFE1]/75 leading-relaxed mt-4 max-w-[30ch]" dangerouslySetInnerHTML={{ __html: sanitizeHtml(opis) }} />

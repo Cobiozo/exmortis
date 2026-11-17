@@ -68,7 +68,7 @@ export default function Cisza() {
   const home = () => navigate("/");
 
   return (
-    <div className="min-h-[100dvh] bg-[#0A0A0B] overflow-hidden">
+    <div className="exm-soft-page min-h-[100dvh] bg-[#0A0A0B] overflow-hidden">
       {/* Nagłówek strony dla wyszukiwarek i czytników ekranu — wygląd minutnika bez zmian. */}
       <h1 className="sr-only">Cisza — minutnik ciszy exmortis</h1>
       <Backdrop bg={backdrop} reduced={reduced} fadeMs={phase === "session" ? 1500 : 800} zoomMs={phase === "session" ? (minutes * 60000) / speed : 0} />
