@@ -104,7 +104,7 @@ export default function RozdrozaHome() {
             {COVERS.map((c, i) => (
               <li key={c.src} className={`relative overflow-hidden border hairline bg-[#070708] ${i === 1 ? "md:-mt-6" : ""}`}>
                 <Image src={c.src} alt={c.alt} fittingType="fill" className="block w-full aspect-[2/3]" />
-                <span aria-hidden="true" className="pointer-events-none absolute inset-0 border border-[#C9A24A]/25" />
+                <span aria-hidden="true" className="pointer-events-none absolute inset-0 border border-[#C9A24A]/25 rounded-[inherit]" />
               </li>
             ))}
           </ul>
