@@ -446,3 +446,5 @@
 .exm-soft-page .cms-cards { gap: 20px; background: transparent; }
 .exm-soft-page .cms-card { background: #111113; border: 1px solid rgba(70,70,73,.75); border-radius: 16px; transition: border-color .3s, background-color .3s; }
 .exm-soft-page .cms-card:hover { background: #131315; border-color: rgba(201,162,74,.45); }
+/* Nagłówek strony głównej (.exm-soft) zachowuje swoje większe przyciski także wewnątrz .exm-soft-page. */
+.exm-soft-page .exm-soft .btn-relic, .exm-soft-page .exm-soft .btn-ghost { min-height: 52px; padding: 0 1.5rem; }
