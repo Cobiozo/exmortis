@@ -119,8 +119,10 @@ export default function ContactSection({ label } = {}) {
               {fromAccount && <AccountContactLine email={acc.email} lead="Odpowiem na:" onChange={() => setManual(true)} />}
               <div className={`grid gap-6 ${fromAccount ? "" : "sm:grid-cols-2"}`}>
                 {(!fromAccount || !acc.firstName) && <div>
-                  <label className="technical text-[10px] text-foreground/55 block mb-3">IMIĘ</label>
+                  <label htmlFor="kontakt-imie" className="technical text-[10px] text-foreground/55 block mb-3">IMIĘ</label>
                   <input
+                    id="kontakt-imie"
+                    autoComplete="given-name"
                     required
                     maxLength={200}
                     value={form.name}
@@ -129,8 +131,10 @@ export default function ContactSection({ label } = {}) {
                   />
                 </div>}
                 {!fromAccount && <div>
-                  <label className="technical text-[10px] text-foreground/55 block mb-3">EMAIL</label>
+                  <label htmlFor="kontakt-email" className="technical text-[10px] text-foreground/55 block mb-3">EMAIL</label>
                   <input
+                    id="kontakt-email"
+                    autoComplete="email"
                     required
                     type="email"
                     value={form.email}
@@ -140,8 +144,9 @@ export default function ContactSection({ label } = {}) {
                 </div>}
               </div>
               <div>
-                <label className="technical text-[10px] text-foreground/55 block mb-3">WIADOMOŚĆ</label>
+                <label htmlFor="kontakt-wiadomosc" className="technical text-[10px] text-foreground/55 block mb-3">WIADOMOŚĆ</label>
                 <textarea
+                  id="kontakt-wiadomosc"
                   required
                   rows={5}
                   maxLength={10000}
