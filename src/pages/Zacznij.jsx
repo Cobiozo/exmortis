@@ -17,7 +17,7 @@ function Item({ to, title, text, meta, cta }) {
       {meta && <p className="technical text-[10px] text-foreground/55 mb-3">{meta}</p>}
       <h3 className="relic-heading text-2xl leading-[1.05] mb-3 group-hover:text-[#C9A24A] transition-colors">{title}</h3>
       <p className="text-foreground/70 leading-relaxed flex-1">{text}</p>
-      <span className="technical text-[11px] gold-text mt-6 inline-flex items-center gap-2">{cta} <ArrowRight className="h-3.5 w-3.5" aria-hidden="true" /></span>
+      <span className="text-[15px] font-medium gold-text mt-6 inline-flex items-center gap-2">{cta} <ArrowRight className="h-3.5 w-3.5" aria-hidden="true" /></span>
     </Link>
   );
 }
@@ -59,24 +59,24 @@ export default function Zacznij() {
           <Item to="/test?src=zacznij" meta="KILKA MINUT" title="Która śmierć jest Twoja?"
             text="Piętnaście stwierdzeń, które oceniasz tylko dla siebie. Pomagają nazwać, przez co przechodzisz, i podpowiadają pierwszy krok." cta="Zrób test" />
           <Item to="/cisza?src=zacznij" meta="TYLE, ILE CHCESZ" title="Chwila ciszy"
-            text="Minutnik ciszy w przeglądarce. Wybierasz czas, siadasz i po prostu jesteś. Bez rozpraszaczy." cta="WEJDŹ W CISZĘ" />
+            text="Minutnik ciszy w przeglądarce. Wybierasz czas, siadasz i po prostu jesteś. Bez rozpraszaczy." cta="Wejdź w ciszę" />
         </Group>
 
         <Group label="02 · DO CZYTANIA I SŁUCHANIA" title="Na kolejne dni">
           <Item to="/#listy-powrotu" meta="RAZ W TYGODNIU · E-MAIL" title="Listy powrotu"
-            text="Jeden list w tygodniu: historia, myśl i pytanie na kolejne dni. Wypisujesz się jednym kliknięciem." cta="CHCĘ DOSTAWAĆ LISTY" />
+            text="Jeden list w tygodniu: historia, myśl i pytanie na kolejne dni. Wypisujesz się jednym kliknięciem." cta="Chcę dostawać Listy" />
           <Item to="/glos?src=zacznij" meta="PODCAST I MUZYKA" title="Głos"
-            text="Rozmowy o kryzysach, które często pozostają niewidoczne, i muzyka EXMORTIS. Możesz słuchać od razu na stronie." cta="POSŁUCHAJ" />
+            text="Rozmowy o kryzysach, które często pozostają niewidoczne, i muzyka EXMORTIS. Możesz słuchać od razu na stronie." cta="Posłuchaj" />
           {pdfs.map((p) => (
             <Item key={p.id} to={`/skarbiec/${p.slug}?src=zacznij`} meta="BEZPŁATNY PDF · WYSYŁAM E-MAILEM" title={p.name}
               text={String(p.description || "").slice(0, 180).replace(/\s+\S*$/, "") + (String(p.description || "").length > 180 ? "…" : "")}
-              cta="ZOBACZ BEZPŁATNY MATERIAŁ" />
+              cta="Zobacz bezpłatny materiał" />
           ))}
         </Group>
 
         <Group label="03 · Z INNYMI" title="Kiedy chcesz wyjść z tym do ludzi">
           <Item to="/spotkania?src=zacznij" meta="ONLINE · KAMERA NIEOBOWIĄZKOWA" title="Otwarte spotkania"
-            text="Spotkania na żywo o powrocie po kryzysie. Możesz mówić albo po prostu słuchać." cta="ZOBACZ TERMINY" />
+            text="Spotkania na żywo o powrocie po kryzysie. Możesz mówić albo po prostu słuchać." cta="Zobacz terminy" />
           <div className="flex flex-col justify-between border hairline bg-[#070708] p-6 md:p-8">
             <div>
               <p className="technical text-[10px] text-foreground/55 mb-3">WhatsApp</p>
@@ -90,7 +90,7 @@ export default function Zacznij() {
         <Group label="04 · Z DARMOWYM KONTEM" title="Kiedy chcesz wejść głębiej">
           <Item to={user ? ROZDROZA : `/register?returnTo=${encodeURIComponent(ROZDROZA)}`} meta="BEZPŁATNIE · PO ZAŁOŻENIU KONTA" title="Rozdroża"
             text="Interaktywne historie, w których to Ty podejmujesz decyzje i możesz zobaczyć, dokąd prowadzi inna droga. Nowa historia w każdy piątek."
-            cta={user ? "OTWÓRZ ROZDROŻA" : "Załóż darmowe konto"} />
+            cta={user ? "Otwórz Rozdroża" : "Załóż darmowe konto"} />
         </Group>
 
         <section className="pt-12 md:pt-16 border-t hairline max-w-3xl">

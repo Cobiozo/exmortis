@@ -36,7 +36,7 @@ export default function ShopTestBlock({ part, d = {} }) {
                 <Link
                   key={i}
                   to={b.link || "/test"}
-                  className="inline-flex w-full sm:w-auto items-center justify-center gap-3 bg-[#C9A24A] text-[#0A0A0B] px-8 py-4 technical text-xs hover:bg-[#E2C170] transition-colors"
+                  className="inline-flex w-full sm:w-auto items-center justify-center gap-3 bg-[#C9A24A] text-[#0A0A0B] px-7 min-h-[52px] rounded-[10px] text-[15px] font-semibold hover:bg-[#E2C170] transition-colors"
                 >
                   {b.etykieta || "Zrób test"}
                   <ArrowRight className="h-4 w-4" />
