@@ -31,8 +31,21 @@ const modules = {
 
 const formats = ["header", "bold", "italic", "list", "bullet", "link"];
 
-export default function RichLite({ value, onChange, semantic, token, placeholder }) {
+export default function RichLite({ value, onChange, semantic, token, placeholder, apiRef }) {
   const ref = useRef(null);
+  // apiRef.current.insert(tekst, { bold }) — wstawienie w miejscu kursora (np. kod rabatowy z listy).
+  if (apiRef) {
+    apiRef.current = {
+      insert: (text, fmt = {}) => {
+        const q = ref.current?.getEditor?.();
+        if (!q) return;
+        const sel = q.getSelection(true);
+        const at = sel ? sel.index : Math.max(0, q.getLength() - 1);
+        q.insertText(at, text, fmt, "user");
+        q.setSelection(at + text.length, 0);
+      },
+    };
+  }
 
   const emit = (content, _delta, _source, editor) => {
     onChange(semantic && editor ? editor.getSemanticHTML() : content);

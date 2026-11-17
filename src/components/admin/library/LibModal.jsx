@@ -3,12 +3,17 @@ import { X } from "lucide-react";
 
 // Proste okno panelu: nagłówek, treść, stopka. Stopka zawsze widoczna (treść przewija się pod nią),
 // Esc zamyka. Na telefonie okno zajmuje całą szerokość i nie wychodzi poza ekran.
+// Otwarte okna (najnowsze na końcu) — Esc zamyka tylko to na wierzchu (np. potwierdzenie nad formularzem).
+const STACK = [];
+
 export default function LibModal({ open, onClose, title, children, footer, wide }) {
   useEffect(() => {
     if (!open) return undefined;
-    const onKey = (e) => { if (e.key === "Escape") { e.stopPropagation(); onClose?.(); } };
+    const me = {};
+    STACK.push(me);
+    const onKey = (e) => { if (e.key === "Escape" && STACK[STACK.length - 1] === me) onClose?.(); };
     window.addEventListener("keydown", onKey);
-    return () => window.removeEventListener("keydown", onKey);
+    return () => { window.removeEventListener("keydown", onKey); const i = STACK.indexOf(me); if (i >= 0) STACK.splice(i, 1); };
   }, [open, onClose]);
   if (!open) return null;
   return (
