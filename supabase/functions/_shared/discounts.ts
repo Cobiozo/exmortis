@@ -1,4 +1,6 @@
 import { runSql, escStr } from "./supabase.ts";
+// Błąd dla klienta (400, komunikat widoczny w kasie) — nie generyczny błąd serwera.
+const bad = (msg: string) => Object.assign(new Error(msg), { isValidation: true });
 // Kody rabatowe: weryfikacja i wyliczenie rabatu (w groszach) po stronie serwera.
 // lines: [{ product_id, unit, qty }] — ceny w groszach. buyerEmail — dla kodów przypisanych do konta (np. powitalnych).
 // sessionEmail — e-mail zalogowanego konta (z sesji, nie z formularza); potrzebny dla kodów „tylko dla osób z kontem”.
@@ -8,27 +10,27 @@ export async function applyDiscount(base44, rawCode, lines, buyerEmail = "", ses
   const found = (await base44.asServiceRole.entities.DiscountCode.filter({ code, active: true }))[0];
   if (!found) throw new Error("Nieprawidłowy kod rabatowy");
   const today = new Date().toLocaleDateString("sv-SE", { timeZone: "Europe/Warsaw" });
-  if (found.od && String(found.od) > today) throw new Error(`Ten kod działa od ${String(found.od).split("-").reverse().join(".")}`);
+  if (found.od && String(found.od) > today) throw bad(`Ten kod działa od ${String(found.od).split("-").reverse().join(".")}`);
   if (found.valid_until && found.valid_until < today) throw new Error("Kod rabatowy wygasł");
   const buyer = String(buyerEmail || "").trim().toLowerCase();
   // Tylko dla osób z kontem: trzeba być zalogowanym i kupować na adres tego konta.
   if (found.tylko_konto === true) {
     const me = String(sessionEmail || "").trim().toLowerCase();
-    if (!me) throw new Error("Ten kod działa po zalogowaniu na konto");
-    if (buyer && buyer !== me) throw new Error("Ten kod działa dla adresu e-mail zalogowanego konta");
+    if (!me) throw bad("Ten kod działa po zalogowaniu na konto");
+    if (buyer && buyer !== me) throw bad("Ten kod działa dla adresu e-mail zalogowanego konta");
   }
   // Tylko dla subskrybentów Listów Powrotu: adres kupującego musi mieć potwierdzony zapis.
   if (found.tylko_subskrybenci === true) {
-    if (!buyer) throw new Error("Ten kod jest dla subskrybentów Listów Powrotu — najpierw wpisz w kasie swój adres e-mail");
+    if (!buyer) throw bad("Ten kod jest dla subskrybentów Listów Powrotu — najpierw wpisz w kasie swój adres e-mail");
     const [s] = await runSql(base44, `SELECT 1 AS ok FROM public.subscribers WHERE lower(email) = ${escStr(buyer)} AND status = 'active' LIMIT 1`, true);
-    if (!s?.ok) throw new Error("Ten kod jest dla subskrybentów Listów Powrotu — ten adres e-mail nie ma potwierdzonego zapisu");
+    if (!s?.ok) throw bad("Ten kod jest dla subskrybentów Listów Powrotu — ten adres e-mail nie ma potwierdzonego zapisu");
   }
   if (found.max_uses && (found.uses || 0) >= found.max_uses) throw new Error("Kod rabatowy został już wykorzystany");
   // Kod przypisany do konta (powitalny): działa wyłącznie z adresem e-mail tego konta.
   if (found.email) {
     const who = String(buyerEmail || "").trim().toLowerCase();
-    if (!who) throw new Error("Ten kod jest przypisany do konta — najpierw wpisz w kasie adres e-mail tego konta");
-    if (who !== String(found.email).toLowerCase()) throw new Error("Ten kod jest przypisany do innego adresu e-mail");
+    if (!who) throw bad("Ten kod jest przypisany do konta — najpierw wpisz w kasie adres e-mail tego konta");
+    if (who !== String(found.email).toLowerCase()) throw bad("Ten kod jest przypisany do innego adresu e-mail");
   }
   const ids = found.product_ids || [];
   // Karty podarunkowe nie wchodzą do podstawy żadnego rabatu: kodem z karty nie opłaca się innej karty,
@@ -59,7 +61,7 @@ export async function applyDiscount(base44, rawCode, lines, buyerEmail = "", ses
     .filter((l) => !allowed || allowed.has(String(l.product_id)))
     .reduce((s, l) => s + l.unit * l.qty, 0);
   const onlyCards = lines.length > 0 && lines.every((l) => cards.includes(String(l.product_id)));
-  if (base === 0 && found.bez_promocji === true && !onlyCards && allowed && allowed.size === 0) throw new Error("Ten kod działa tylko w cenie regularnej — teraz obowiązuje niższa cena promocyjna");
+  if (base === 0 && found.bez_promocji === true && !onlyCards && allowed && allowed.size === 0) throw bad("Ten kod działa tylko w cenie regularnej — teraz obowiązuje niższa cena promocyjna");
   if (base === 0) throw new Error(onlyCards ? (fromCard ? "Kodem z karty podarunkowej nie opłacisz innej karty podarunkowej" : "Kodów rabatowych nie łączy się z kartą podarunkową") : "Kod nie obejmuje produktów w koszyku");
   // Minimalna wartość objętych kodem produktów (np. kod 20 zł po zakupie: od 49 zł).
   const minZl = Number(found.min_zl) || 0;
