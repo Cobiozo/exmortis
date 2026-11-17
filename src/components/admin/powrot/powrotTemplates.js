@@ -58,7 +58,7 @@ export const TEMPLATES = [
     key: "inna_forma", label: "Inna forma wsparcia",
     make: (a) => ({
       subject: "Twoje zgłoszenie do programu POWRÓT",
-      body: `${first(a)}, dziękuję, że napisałeś do mnie o tym, co przeżywasz.\n\nPo przeczytaniu Twojego zgłoszenia uważam, że mentoring nie jest teraz najlepszą formą wsparcia dla Ciebie. To, o czym piszesz, zasługuje na pomoc specjalisty — psychologa, psychoterapeuty albo lekarza — i warto z niej skorzystać w pierwszej kolejności.\n\nJeśli nie wiesz, od czego zacząć, możesz zadzwonić pod 800 70 2222 (Centrum Wsparcia, całą dobę, bezpłatnie). Pomogą też znaleźć pomoc blisko Ciebie.\n\n${POMOC}\n\nGdy poczujesz, że to dobry moment na mentoring, możesz zgłosić się ponownie.\n\n${PODPIS}`,
+      body: `${first(a)}, dziękuję za Twoje zgłoszenie i za to, że piszesz o tym, co przeżywasz.\n\nPo przeczytaniu Twojego zgłoszenia uważam, że mentoring nie jest teraz najlepszą formą wsparcia dla Ciebie. To, o czym piszesz, zasługuje na pomoc specjalisty — psychologa, psychoterapeuty albo lekarza — i warto z niej skorzystać w pierwszej kolejności.\n\nJeśli nie wiesz, od czego zacząć, możesz zadzwonić pod 800 70 2222 (Centrum Wsparcia, całą dobę, bezpłatnie). Pomogą też znaleźć pomoc blisko Ciebie.\n\n${POMOC}\n\nGdy poczujesz, że to dobry moment na mentoring, możesz zgłosić się ponownie.\n\n${PODPIS}`,
     }),
   },
   {
