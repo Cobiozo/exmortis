@@ -13,7 +13,7 @@ export default function ExternalEmbed({ provider = "YouTube", what = "film", cla
   return (
     <div className={`${className} bg-[#0A0A0B] border hairline flex flex-col items-center justify-center text-center gap-4 p-6`}>
       <button type="button" onClick={() => setClicked(true)} className="btn-ghost inline-flex items-center gap-2 min-h-11">
-        <Play className="h-4 w-4" /> ZAŁADUJ {what.toUpperCase()} ({provider.toUpperCase()})
+        <Play className="h-4 w-4" /> Załaduj {what} ({provider})
       </button>
       <p className="text-xs text-foreground/60 leading-relaxed max-w-sm">
         Po kliknięciu {provider} otrzyma Twój adres IP i może zapisać pliki cookies.{" "}
