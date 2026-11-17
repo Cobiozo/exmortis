@@ -11,7 +11,10 @@ const IMG = "https://media.base44.com/images/public/6aa08bc6318b0f886cc3b9a3/";
 
 export const POWROT_BLOCKS = [
   b("hero", "hero", { wariant: "standard", etykieta: "AUTORSKI PROGRAM MENTORSKI EXMORTIS", linia1: "", linia2: "POWRÓT",
-    lead: POWROT_LEAD, przyciski: [{ etykieta: "Wypełnij zgłoszenie", link: "#formularz", styl: "zloty", strzalka: true }], przyciemnienie: 60 }),
+    lead: POWROT_LEAD, przyciski: [
+      { etykieta: "Wypełnij zgłoszenie", link: "#formularz", styl: "zloty", strzalka: true },
+      { etykieta: "Zacznij od jednej rozmowy", link: "/skarbiec/rozmowa-na-progu?src=powrot-hero", styl: "obrys", strzalka: false },
+    ], przyciemnienie: 60 }),
   b("otwarcie", "tekst", { etykieta: "OTWARCIE · 01", tytul: "Są ludzie, którzy przychodzą do mnie, bo coś w nich umarło.",
     tresc: `<p class="exm-styl-lead">Nie mówią tego wprost. Mówią, że są zmęczeni, stracili sens, nie poznają siebie — mają wszystko, na co pracowali, i jednocześnie nic nie czują. Zwłaszcza szczęścia, satysfakcji, radości z życia.</p><p class="exm-styl-lead">Często dopiero po czasie nazywają to po imieniu: coś w nich umarło.</p><h2 class="exm-akcent-zloty">POWRÓT jest dla tych, którzy są gotowi to nazwać.</h2>` }),
   b("dla-kogo", "tekst", { etykieta: "DLA KOGO · 02", tytul: "To praca dla Ciebie, jeśli:",
@@ -40,6 +43,11 @@ export const POWROT_BLOCKS = [
   b("dostajesz", "tekst", { etykieta: "CO OTRZYMUJESZ · 07", tytul: "Co otrzymujesz",
     tresc: ul(POWROT_INCLUDES)
       + `<h3>To nie jest kurs do odhaczenia.</h3><h3 class="exm-akcent-zloty">To praca nad własnym życiem.</h3>` }, { tlo: G }),
+  // Przegląd lejka 17.11: przycisk w połowie strony, żeby nie trzeba było przewijać do samego formularza.
+  b("srodek-przyciski", "przyciski", { przyciski: [
+    { etykieta: "Wypełnij zgłoszenie", link: "#formularz", styl: "zloty", strzalka: true },
+    { etykieta: "Najpierw jedna Rozmowa na progu", link: "/skarbiec/rozmowa-na-progu?src=powrot-srodek", styl: "obrys", strzalka: false },
+  ] }, { tlo: G, odstep: "maly" }),
   b("kwalifikacja", "etapy", { etykieta: "KWALIFIKACJA · 08", tytul: "Zero pośpiechu.", uklad: "pionowy", elementy: [
     { tytul: "Zgłoszenie", opis: "Wypełniasz krótkie zgłoszenie (kilka pytań o to, z czego wracasz i czego szukasz)" },
     { tytul: "Ankieta", opis: "Otrzymujesz osobisty link do pełnej ankiety — kilka pytań, które porządkują Twoją sytuację" },
@@ -55,15 +63,15 @@ export const POWROT_BLOCKS = [
     { pytanie: "Czy widujemy się na żywo?", odpowiedz: `Cały program prowadzony jest przez platformę ${POWROT.form} — po to, żeby był dostępny niezależnie od miasta. Uczestnicy POWRÓT-u mają pierwszeństwo i specjalne warunki w zapisach na doroczny retreat „exmortis” w Bieszczadach.` },
     { pytanie: "Kiedy mogę zacząć?", odpowiedz: "Program jest indywidualny, nie grupowy. Zgłoszenia rozpatruję w kolejności napływania, a termin startu ustalamy wspólnie po rozmowie kwalifikacyjnej." },
   ] }, { tlo: G }),
-  b("ostatnie", "tekst", { etykieta: "OSTATNIE SŁOWO", tytul: "Nie musisz decydować się dziś.",
-    tresc: `<p class="exm-styl-lead">Jeśli po tej lekturze coś w Tobie mówi „to o mnie”, możesz zacząć od krótkiego zgłoszenia albo najpierw przyjść na otwarte spotkanie i zobaczyć, jak pracuję. Tempo wybierasz Ty.</p>` }, { odstep: "maly" }),
-  b("spotkanie", "modul", { modul: "powrot_spotkanie" }),
-  b("ostatnie-przyciski", "przyciski", { przyciski: [
-    { etykieta: "Wypełnij formularz kwalifikacyjny", link: "#formularz", styl: "zloty", strzalka: true },
-    { etykieta: "Najpierw przyjdź na otwarte spotkanie", link: "/spotkania", styl: "obrys", strzalka: false },
-  ] }, { odstep: "maly" }),
+  // Przegląd lejka 17.11: najpierw podsumowanie i formularz, potem spokojna alternatywa dla osób, które potrzebują więcej czasu.
   b("podsumowanie", "modul", { modul: "powrot_podsumowanie" }),
   b("formularz", "modul", { modul: "powrot_formularz" }),
+  b("ostatnie", "tekst", { etykieta: "OSTATNIE SŁOWO", tytul: "Nie musisz decydować się dziś.",
+    tresc: `<p class="exm-styl-lead">Jeśli coś w Tobie mówi „to o mnie”, ale potrzebujesz więcej czasu, możesz najpierw przyjść na bezpłatne otwarte spotkanie i zobaczyć, jak pracuję. Możesz też umówić jedną Rozmowę na progu. Tempo wybierasz Ty.</p>` }, { odstep: "maly" }),
+  b("ostatnie-przyciski", "przyciski", { przyciski: [
+    { etykieta: "Przyjdź na otwarte spotkanie", link: "/spotkania?src=powrot", styl: "zloty", strzalka: true },
+    { etykieta: "Zobacz Rozmowę na progu", link: "/skarbiec/rozmowa-na-progu?src=powrot-koniec", styl: "obrys", strzalka: false },
+  ] }, { odstep: "maly" }),
   b("koniec", "cytat", { tekst: "„Wracam z siebie. Uczę wracać.”", podpis: "EXMORTIS — ZE ŚMIERCI" }, { wyrownanie: "srodek", szerokosc: "waska" }),
 ];
 
