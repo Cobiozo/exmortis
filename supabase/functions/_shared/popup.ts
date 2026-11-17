@@ -191,7 +191,7 @@ export async function publicCampaigns(base44, items: any[]) {
       if (k.rodzaj === "spotkanie" && !ev) continue;          // spotkanie minęło albo zapisy zamknięte
       const ci = k.kod ? await codeInfo(base44, k.kod, prod) : null;
       if (k.rodzaj === "rabat" && !ci?.ok) continue;          // kampania rabatowa bez ważnego kodu nie pokazuje się
-      const href = k.akcja === "spotkanie" ? ev?.href || "" : (k.akcja === "produkt" || k.akcja === "produkt_kod") ? prod?.href || "" : k.akcja === "listy" ? "/#listy" : k.przycisk_link;
+      const href = k.akcja === "spotkanie" ? ev?.href || "" : (k.akcja === "produkt" || k.akcja === "produkt_kod") ? prod?.href || "" : k.akcja === "listy" ? "/#listy-powrotu" : k.przycisk_link;
       out.push({
         id: k.id, rodzaj: k.rodzaj, priorytet: k.priorytet, zmieniono: k.zmieniono, od: k.od, do: k.do,
         komu: k.komu, ukryj_posiadaczy: k.ukryj_posiadaczy, bez_subskrybentow: k.bez_subskrybentow,
