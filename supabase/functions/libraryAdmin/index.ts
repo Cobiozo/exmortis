@@ -9,6 +9,7 @@ import { normalizeVideo, normalizeServerVideo, videoDomains, extOf, sniff, pdfHa
 import { libLog, deliverMessage, sendMessageEmail, renderBody } from "../_shared/libraryNotify.ts";
 import { libraryData, messagesData } from "../_shared/libraryView.ts";
 import { getSettingsFast } from "../_shared/settings.ts";
+import { codeInfo } from "../_shared/popup.ts";
 
 // Panel biblioteki i wiadomości. Wyłącznie rola „admin" (konto techniczne nie ma dostępu),
 // wszystko sprawdzane na serwerze, nieznana akcja = 404.
@@ -541,11 +542,15 @@ const handler = async function (req) {
     // ---- klienci ----
     if (a === "clients_list") {
       // Konta Base44 i fakty z tabel mb_* (grupy, pakiet) — równolegle, jednym zapytaniem do bazy.
-      const [users, mb, groups] = await Promise.all([
+      const [users, mb, groups, buyers] = await Promise.all([
         sr.User.list("-created_date", 2000).catch(() => []),
         rpc(base44, "mb_admin_clients_mb", {}),
         rpc(base44, "mb_admin_groups", {}),
+        // Kupujący = ma dostęp do produktu albo opłacone / darmowe zamówienie (bez testowych).
+        runSql(base44, `SELECT lower(data->>'user_email') AS email FROM public.exm_access WHERE COALESCE((data->>'revoked')::boolean, false) = false
+          UNION SELECT lower(buyer_email) FROM public.orders WHERE status IN ('COMPLETED','FREE') AND COALESCE(is_test, false) = false`, true).catch(() => []),
       ]);
+      const kupujacy = new Set((buyers || []).map((r) => lower(r.email)).filter(Boolean));
       const facts = new Map(((mb || [])).map((r) => [lower(r.email), r]));
       const rows = [];
       for (const u of users || []) {
@@ -555,6 +560,10 @@ const handler = async function (req) {
         rows.push({
           email: e, name: String(u.imie || u.full_name || "").trim(), joined: u.created_date || null,
           groups: f.groups || [], package: !!f.package, blocked: u.role === "zablokowane",
+          // Oznaczenia w wyborze odbiorców: zespół (admin / techniczna), konto testowe, kupujący.
+          zespol: u.role === "admin" || u.role === "techniczna",
+          test: /\+test|(^|[._-])test[0-9]*@|@example\.(com|org|pl)$/.test(e),
+          kupujacy: kupujacy.has(e),
         });
       }
       const q = lower(body.q);
@@ -715,6 +724,38 @@ const handler = async function (req) {
     }
 
     // ---- wiadomości ----
+    // Osoby z aktywnym dostępem do produktu (wybór odbiorców „Klienci, którzy mają produkt”).
+    if (a === "product_holders") {
+      const pid = uuidOrNull(body.product_id);
+      if (!pid) return bad("Wybierz produkt.");
+      const today = new Date().toLocaleDateString("sv-SE", { timeZone: "Europe/Warsaw" });
+      const rows = await runSql(base44, `SELECT DISTINCT lower(data->>'user_email') AS email FROM public.exm_access
+        WHERE data->>'product_id' = ${escStr(pid)} AND COALESCE((data->>'revoked')::boolean, false) = false
+          AND (COALESCE(data->>'valid_until', '') = '' OR data->>'valid_until' >= ${escStr(today)})`, true);
+      return Response.json({ emails: (rows || []).map((r) => r.email).filter(Boolean) });
+    }
+    if (a === "products_for_message") {
+      const rows = await runSql(base44, `SELECT id::text AS id, name FROM public.products WHERE COALESCE(product_type, '') <> 'karta'
+        ORDER BY sort_order NULLS LAST, name LIMIT 300`, true);
+      return Response.json({ items: rows || [] });
+    }
+    // Kody rabatowe do wstawienia w wiadomość — ze stanem „działa teraz / nie działa i dlaczego”.
+    if (a === "codes_for_message") {
+      const rows = await runSql(base44, `SELECT data FROM public.exm_discountcode WHERE COALESCE((data->>'active')::boolean, false) = true
+        AND COALESCE(data->>'email', '') = '' AND COALESCE(data->>'opis', '') NOT LIKE 'Karta podarunkowa%'
+        AND COALESCE((data->>'powitalny')::boolean, false) = false ORDER BY created_date DESC LIMIT 60`, true);
+      const items = [];
+      for (const r of rows || []) {
+        const c = r.data || {};
+        if (!c.code) continue;
+        const ci = await codeInfo(base44, String(c.code).toUpperCase(), null).catch(() => null);
+        items.push({ kod: String(c.code).toUpperCase(), opis: `−${c.value}${c.kind === "procent" ? "%" : " zł"}`,
+          od: c.od || null, do: c.valid_until || null, tylko_subskrybenci: c.tylko_subskrybenci === true, tylko_konto: c.tylko_konto === true,
+          bez_promocji: c.bez_promocji === true, ok: !!ci?.ok, powod: ci?.ok ? "" : ci?.powod || "" });
+      }
+      return Response.json({ items });
+    }
+
     if (a === "messages_list") {
       const d = (await rpc(base44, "mb_admin_messages", {})) || { items: [], liczniki: null };
       const items = (d.items || []).map((m) => ({
@@ -723,7 +764,11 @@ const handler = async function (req) {
           ? `Grupa: ${m.group_name || "—"}${m.target.group_mode === "TYLKO_OBECNI" ? " (tylko obecni)" : ""}`
           : m.target && m.target.emails && m.target.emails.length ? `Osoby: ${m.target.emails.length}` : "—",
       }));
-      return Response.json({ items, liczniki: d.liczniki || { wyslane: 0, zaplanowane: 0, szkice: 0, wycofane: 0 } });
+      // Dla podpowiedzi w panelu: ile jest kont, a ilu potwierdzonych subskrybentów Listów Powrotu (ci są w Newsletterze).
+      const [cnt] = await runSql(base44, `SELECT (SELECT count(*) FROM public.subscribers WHERE status = 'active')::int AS subskrybenci,
+        (SELECT count(*) FROM public.exm_user WHERE COALESCE(data->>'role', 'user') <> 'zablokowane')::int AS konta`, true).catch(() => [{}]);
+      return Response.json({ items, liczniki: d.liczniki || { wyslane: 0, zaplanowane: 0, szkice: 0, wycofane: 0 },
+        subskrybenci: cnt?.subskrybenci ?? null, konta: cnt?.konta ?? null });
     }
 
     // Podgląd „tak zobaczy to [osoba]" — ta sama ścieżka renderBody + sanitizeHtml co u klienta.
