@@ -134,7 +134,7 @@ export default function LessonPlayer({ accessId, lesson, onDone, onNext, nextTit
       </div>
       {onNext && (
         <button onClick={onNext} className={`mt-5 ${done ? "btn-relic" : "btn-ghost"} !px-5 !py-3 text-[10px] max-w-full`}>
-          <span className="truncate">Dalej: {String(nextTitle || "").toUpperCase()}</span> <ArrowRight className="h-4 w-4 shrink-0" />
+          <span className="truncate">Dalej: {String(nextTitle || "")}</span> <ArrowRight className="h-4 w-4 shrink-0" />
         </button>
       )}
       {lesson.description && <p className="mt-4 text-foreground/65 leading-relaxed whitespace-pre-line">{lesson.description}</p>}
