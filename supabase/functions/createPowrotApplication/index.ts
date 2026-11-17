@@ -95,7 +95,7 @@ const handler = async function (req) {
     if (Array.isArray(dupe) && dupe[0]) {
       await runSql(base44, `UPDATE public.powrot_applications SET full_name = ${esc(fullName)}, phone = ${esc(phone)},
         situation = ${esc(situation)}, consent_paid = ${consentPaid}, consent_adult = ${consentAdult},
-        pilne = (COALESCE(pilne, FALSE) OR ${esc(pilne)}::boolean), updated_date = now() WHERE id = ${esc(dupe[0].id)}`);
+        pilne = (COALESCE(pilne, FALSE) OR ${pilne ? "TRUE" : "FALSE"}), updated_date = now() WHERE id = ${esc(dupe[0].id)}`);
       await runSql(base44, `INSERT INTO public.powrot_log (application_id, kind, summary, actor)
         VALUES (${esc(dupe[0].id)}, 'system', 'Ponowne wysłanie zgłoszenia — dane zaktualizowane, bez nowego rekordu', 'kandydat')`).catch(() => {});
       if (pilne) waitUntil(notifyUrgent(base44).catch(() => {}));
