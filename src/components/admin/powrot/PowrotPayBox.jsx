@@ -70,7 +70,7 @@ export default function PowrotPayBox({ a, onDone }) {
         )}
       </div>
       <p className="text-xs text-foreground/45">
-        Wysyłaj po rozmowie kwalifikacyjnej. Klient dostaje Umowę POWRÓT i Regulamin w załączniku oraz link ważny 7 dni (PayU, także raty PayPo). Nowy link unieważnia poprzedni.
+        Wysyłaj po rozmowie wstępnej i wspólnej decyzji. Kandydat dostaje Umowę POWRÓT i Regulamin w załączniku oraz link ważny 7 dni (PayU, także raty, jeśli operator je udostępni). Nowy link unieważnia poprzedni. Status zmieni się na „Oferta wysłana”.
       </p>
       {msg && <p className="text-xs gold-text">{msg}</p>}
       {err && <p className="text-xs blood-text flex items-center gap-2"><AlertTriangle className="h-3.5 w-3.5" />{err}</p>}
