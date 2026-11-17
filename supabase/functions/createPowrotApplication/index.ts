@@ -79,6 +79,8 @@ const handler = async function (req) {
     // Zgody wymagane także po stronie serwera (formularz w przeglądarce można obejść).
     // Etap 1: pełnoletność. Dane przetwarzane w ramach działań przed umową (art. 6 ust. 1 lit. b) — bez osobnej zgody (4.11.2026).
     if (!consentAdult) return Response.json({ error: "Zaznacz wymagane zgody (w tym potwierdzenie ukończenia 18 lat)." }, { status: 400 });
+    // Od 18.11.2026: potwierdzenie znajomości ceny i zasad kwalifikacji przed wysłaniem zgłoszenia.
+    if (!consentPaid) return Response.json({ error: "Potwierdź, że znasz cenę programu i zasady kwalifikacji." }, { status: 400 });
     if (!adultCol) { await runSql(base44, `ALTER TABLE public.powrot_applications ADD COLUMN IF NOT EXISTS consent_adult boolean`); adultCol = true; }
     const pilne = isUrgent(situation, triedBefore, goal, obstacle, anythingElse, returnOther);
     await ensurePilne(base44);
@@ -86,38 +88,54 @@ const handler = async function (req) {
     // Limit zgłoszeń z jednego połączenia (ochrona przed zasypaniem formularza).
     if (!(await ipAllowed(base44, clientIp(req), "powrot", 5, 3600000))) return Response.json({ error: TOO_MANY }, { status: 429 });
 
+    // Ochrona przed duplikatem: ten sam e-mail w ciągu 24 h przy niezmienionym statusie „nowe” = aktualizacja, nie nowy rekord.
+    const dupe = await runSql(base44, `SELECT id FROM public.powrot_applications
+      WHERE lower(email) = lower(${esc(email)}) AND created_date::timestamptz > now() - interval '24 hours'
+        AND COALESCE(status, 'nowe') = 'nowe' ORDER BY created_date DESC LIMIT 1`, true).catch(() => []);
+    if (Array.isArray(dupe) && dupe[0]) {
+      await runSql(base44, `UPDATE public.powrot_applications SET full_name = ${esc(fullName)}, phone = ${esc(phone)},
+        situation = ${esc(situation)}, consent_paid = ${consentPaid}, consent_adult = ${consentAdult},
+        pilne = (COALESCE(pilne, FALSE) OR ${esc(pilne)}::boolean), updated_date = now() WHERE id = ${esc(dupe[0].id)}`);
+      await runSql(base44, `INSERT INTO public.powrot_log (application_id, kind, summary, actor)
+        VALUES (${esc(dupe[0].id)}, 'system', 'Ponowne wysłanie zgłoszenia — dane zaktualizowane, bez nowego rekordu', 'kandydat')`).catch(() => {});
+      if (pilne) waitUntil(notifyUrgent(base44).catch(() => {}));
+      return Response.json({ ok: true, id: dupe[0].id, pilne, updated: true });
+    }
+
     const rows = await runSql(
       base44,
       `INSERT INTO public.powrot_applications
          (id, full_name, phone, email, age, return_from, return_from_other, situation,
           duration, affected_areas, tried_before, therapy_support, goal, obstacle,
           readiness, weekly_time, work_form, investment, anything_else, source,
-          contact_pref, consent_rodo, consent_paid, consent_adult, pilne, created_date, updated_date)
+          contact_pref, consent_rodo, consent_paid, consent_adult, pilne, status, status_at, created_date, updated_date)
        VALUES
          (gen_random_uuid()::text, ${esc(fullName)}, ${esc(phone)}, ${esc(email)}, ${esc(age)},
           ${jsonb(returnFrom)}, ${esc(returnOther)}, ${esc(situation)}, ${esc(duration)},
           ${jsonb(affectedAreas)}, ${esc(triedBefore)}, ${esc(therapySupport)}, ${esc(goal)},
           ${esc(obstacle)}, ${esc(readiness)}, ${esc(weeklyTime)}, ${esc(workForm)},
           ${esc(investment)}, ${esc(anythingElse)}, ${esc(source)}, ${esc(contactPref)},
-          ${consentRodo}, ${consentPaid}, ${consentAdult}, ${esc(pilne)}, now(), now())
+          ${consentRodo}, ${consentPaid}, ${consentAdult}, ${esc(pilne)}, 'nowe', now(), now(), now())
        RETURNING id`
     );
 
     // Potwierdzenie dla kandydata i powiadomienie do mnie — jak w zgłoszeniu do podcastu (kolejka, bez blokowania odpowiedzi).
     const appId = rows && rows[0] ? rows[0].id : null;
+    if (appId) await runSql(base44, `INSERT INTO public.powrot_log (application_id, kind, to_status, summary, actor)
+      VALUES (${esc(appId)}, 'status', 'nowe', 'Zgłoszenie wysłane ze strony /powrot', 'kandydat')`).catch(() => {});
     await loadAppUrl(base44).catch(() => {});
     waitUntil((async () => {
       const admin = await adminTo(base44).catch(() => null);
       const link = `${APP}/admin/powrot`;
       if (pilne) {
         await sendMail(base44, { kind: "powrot", ref: appId, to: email, subject: "Dziękuję za Twoją wiadomość",
-          html: wrap(`<p>Dziękuję za tę wiadomość. Przeczytam Twoje zgłoszenie osobiście.</p><p>Jeśli jest Ci teraz bardzo ciężko, nie czekaj na moją odpowiedź. Zadzwoń teraz:</p>${HELP}<p>Twoja historia poczeka. Ty jesteś ważniejszy(-a).</p><p>Dawid, exmortis</p>`) }).catch(() => {});
+          html: wrap(`<p>Dziękuję za tę wiadomość. Przeczytam Twoje zgłoszenie osobiście.</p><p>Jeśli jest Ci teraz bardzo ciężko, nie czekaj na moją odpowiedź. Zadzwoń teraz:</p>${HELP}<p>Twoja historia poczeka. Teraz najważniejsze jest Twoje bezpieczeństwo.</p><p>Dawid, exmortis</p>`) }).catch(() => {});
         await notifyUrgent(base44);
       } else {
-        await sendMail(base44, { kind: "powrot", ref: appId, to: email, subject: "Twoje zgłoszenie POWRÓT",
-          html: wrap(`<p>Dziękuję za zaufanie. Każdy powrót zaczyna się od pierwszego kroku — właśnie został zrobiony. Przeczytam Twoje zgłoszenie osobiście i odezwę się w ciągu 72 godzin, żeby umówić rozmowę.</p><p>Dawid, exmortis</p>`) }).catch(() => {});
+        await sendMail(base44, { kind: "powrot", ref: appId, to: email, subject: "Twoje zgłoszenie do programu POWRÓT",
+          html: wrap(`<p>Dziękuję za przesłanie zgłoszenia do programu POWRÓT.</p><p>Przeczytam je osobiście i odpowiem w ciągu 72 godzin. Jeśli zobaczę sens dalszej rozmowy, wyślę Ci link do szczegółowej ankiety, a po niej — zaproszenie do wyboru terminu krótkiej rozmowy wstępnej.</p><p>Samo zgłoszenie nie zobowiązuje Cię do zakupu i nie oznacza automatycznego przyjęcia do programu.</p><p>Dawid<br>EXMORTIS</p>`) }).catch(() => {});
         if (admin) await sendMail(base44, { kind: "powrot", ref: appId, to: admin, subject: "Nowe zgłoszenie kwalifikacyjne POWRÓT",
-          html: wrap(`<p>Przyszło nowe zgłoszenie kwalifikacyjne od ${escHtml(fullName)} (${escHtml(email)}).</p><p><a style="color:#C9A24A" href="${link}">Otwórz panel</a></p>`) }).catch(() => {});
+          html: wrap(`<p>Nowe zgłoszenie POWRÓT: ${escHtml(fullName)}. Odpowiedź do 72 godzin.</p><p>Treść jest tylko w panelu.</p><p><a style="color:#C9A24A" href="${link}">Otwórz panel</a></p>`) }).catch(() => {});
       }
     })());
 
