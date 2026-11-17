@@ -1,4 +1,5 @@
 import { readConsent } from "@/components/legal/cookieStore";
+import { countEvent } from "@/lib/siteStats";
 
 // Warstwa pomiaru (Meta Pixel + GA4). Skrypty ładują się i zdarzenia wychodzą WYŁĄCZNIE za zgodą
 // z banera cookies: analityczne → GA4 (consent mode, analytics_storage), marketingowe → Meta Pixel.
@@ -88,6 +89,8 @@ export function applyConsent() {
 export function track(name, params) {
   if (isQuiet()) return;
   const p = params || {};
+  // Własny licznik: tylko nazwa zdarzenia w sumie dziennej (bez zgody — brak danych osobowych i cookies).
+  countEvent(name, p);
   if (gaAllowed()) { loadGa(); window.gtag("event", name, p); }
   if (fbAllowed()) { loadFb(); window.fbq("track", name, p); }
 }
