@@ -77,7 +77,7 @@ export default function SitePopup() {
 
   const pick = () => {
     if (!list.length) return null;
-    if (preview) return list.find((k) => k.id === previewId) || (previewId ? null : list[0]) || null;
+    if (preview) return list.find((k) => k.id === previewId) || list[0] || null;
     if (visitDone()) return null;
     if (SKIP.some((x) => pathname.startsWith(x)) || pathname.endsWith("/dolacz")) return null;
     const now = Date.now() + (s?.offset || 0);
