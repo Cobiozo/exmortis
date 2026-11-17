@@ -8,6 +8,11 @@ import { setTrackingQuiet } from "@/lib/track";
 import { SITE_URL } from "@/config/site";
 import { nextSteps } from "@/lib/testNextSteps";
 import { countCompletion } from "@/lib/testCount";
+import { useAuth } from "@/lib/AuthContext";
+
+// Biblioteka ROZDROŻY w koncie (17.11.2026, decyzja właściciela: po wyniku Głos, Skarbiec i Rozdroża zamiast
+// nieistniejącej strony „Listy powrotu” w Skarbcu). Gość zakłada darmowe konto i wraca do biblioteki.
+const ROZDROZA = "/konto/rozdroza/biblioteka";
 
 const SHARE_URL = `${SITE_URL}/test`;
 const N = QUESTIONS.length;
@@ -39,6 +44,7 @@ const choice = (on) => `w-full text-left px-5 py-4 min-h-[56px] border transitio
 // Zapytania strony: publiczna lista produktów (bez parametrów) do linków „dalej” oraz — po wyniku —
 // anonimowy licznik ukończeń (sama nazwa wyniku, raz na wczytanie strony; src/lib/testCount.js, decyzja 5.11.2026).
 export default function Test() {
+  const { user } = useAuth();
   const [step, setStep] = useState(0);
   const [answers, setAnswers] = useState(Array(N).fill(null));
   const [stage, setStage] = useState(null);
@@ -203,19 +209,27 @@ export default function Test() {
               <div className="space-y-4 text-lg text-[#F5EFE1]/85 leading-relaxed">
                 <p>Są rzeczy, za którymi będziemy tęsknić. Są takie, których długo nie potrafimy zrozumieć. I takie, do których — choć kiedyś były całym naszym światem — nie chcemy już wracać.</p>
                 <p>Nie powiem Ci, co powinno wydarzyć się dalej. Nie znam całej Twojej historii. Ale wiem, że człowieka nie da się sprowadzić do jednego wydarzenia, jednej roli ani jednego wyniku.</p>
-                <p>Jeżeli chcesz dalej przyglądać się tym pytaniom, piszę o nich w <strong className="text-[#F5EFE1] font-semibold">Listach powrotu</strong>. Nie po to, żeby mówić Ci, kim masz zostać. Po to, żeby łatwiej było usłyszeć siebie.</p>
+                <p>Jeżeli chcesz dalej przyglądać się tym pytaniom, piszę o nich w <Link to="/#listy-powrotu" className="text-[#F5EFE1] font-semibold underline underline-offset-4 hover:text-[#C9A24A]">Listach powrotu</Link>. Nie po to, żeby mówić Ci, kim masz zostać. Po to, żeby łatwiej było usłyszeć siebie.</p>
               </div>
-              <Link to="/skarbiec/listy-powrotu" className="btn-relic mt-8">CZYTAJ LISTY POWROTU <ArrowRight className="h-4 w-4" /></Link>
+              <div className="mt-8 flex flex-col sm:flex-row gap-3">
+                <Link to="/glos" className="btn-relic">POSŁUCHAJ — MUZYKA I PODCAST <ArrowRight className="h-4 w-4" /></Link>
+                <Link to="/skarbiec" className="btn-ghost">ZAJRZYJ DO SKARBCA <ArrowRight className="h-4 w-4" /></Link>
+              </div>
               <p className="shop-heading italic text-lg text-[#F5EFE1]/80 mt-10">Wracam z siebie. Uczę wracać.</p>
               <p className="technical text-[10px] gold-text mt-2">EXMORTIS — ZE ŚMIERCI</p>
             </section>
 
             <section className="mb-12" aria-label="Dalej">
               <p className="technical text-[10px] text-[#F5EFE1]/70 mb-4">MOŻESZ TEŻ</p>
-              <Link to="/skarbiec" className="flex items-center justify-between gap-4 border hairline px-5 py-5 mb-4 min-h-11 text-[#F5EFE1] hover:border-[#C9A24A]/60 transition-colors">
-                <span><span className="shop-heading text-xl block">Zajrzyj do Skarbca</span><span className="text-sm text-[#F5EFE1]/75">Materiały na każdy etap drogi — bezpłatne i płatne.</span></span>
-                <ArrowRight className="h-4 w-4 shrink-0 gold-text" />
-              </Link>
+              <div className="border hairline px-5 py-5 mb-4 text-[#F5EFE1]">
+                <span className="shop-heading text-xl block">Rozdroża</span>
+                <span className="text-sm text-[#F5EFE1]/75 block mt-1">Interaktywne historie, w których to Ty podejmujesz decyzje i widzisz, dokąd prowadzą. Bezpłatnie, po zalogowaniu.</span>
+                {user ? (
+                  <Link to={ROZDROZA} className="btn-ghost !px-5 !py-3 text-[11px] mt-4">OTWÓRZ ROZDROŻA <ArrowRight className="h-4 w-4" /></Link>
+                ) : (
+                  <Link to={`/register?returnTo=${encodeURIComponent(ROZDROZA)}`} className="btn-ghost !px-5 !py-3 text-[11px] mt-4">ZAŁÓŻ DARMOWE KONTO <ArrowRight className="h-4 w-4" /></Link>
+                )}
+              </div>
               {next && next.free.length > 0 && (
                 <div className="grid sm:grid-cols-3 gap-4 my-6">{next.free.map((p) => <ShopProductCard key={p.id || p.slug} product={p} />)}</div>
               )}
