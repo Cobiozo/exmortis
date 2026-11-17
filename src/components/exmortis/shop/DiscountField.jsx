@@ -4,7 +4,8 @@ import { base44 } from "@/api/base44Client";
 
 // Pole kodu rabatowego w podsumowaniu kasy. applied: { code, discount } | null
 export default function DiscountField({ items, applied, onApply, email = "" }) {
-  const [code, setCode] = useState("");
+  // Kod z popupu (kampania „Rabat”) czeka w tej karcie przeglądarki — wpisuje się sam, użycie zatwierdza klient.
+  const [code, setCode] = useState(() => { try { return sessionStorage.getItem("exm_kod") || ""; } catch { return ""; } });
   const [busy, setBusy] = useState(false);
   const [err, setErr] = useState("");
 

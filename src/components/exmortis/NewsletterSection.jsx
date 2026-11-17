@@ -28,6 +28,8 @@ export default function NewsletterSection({ label } = {}) {
       track("Lead", { content_name: "newsletter" });
       setSent(true);
       setEmail("");
+      // Popupy „bez subskrybentów” nie pokazują się już w tej przeglądarce.
+      try { localStorage.setItem("exm_sub", "1"); } catch { /* brak pamięci */ }
       // Potwierdzenie zostaje na ekranie — pod nim jest zaproszenie do kanału WhatsApp.
     } catch {
       setError("Nie udało się zapisać. Spróbuj ponownie.");
