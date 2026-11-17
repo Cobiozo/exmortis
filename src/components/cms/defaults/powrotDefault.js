@@ -7,12 +7,13 @@ const b = (id, typ, dane, uklad = {}) => ({ id: `powrot-${id}`, typ, widoczny: t
 const ul = (items) => `<ul>${items.map((i) => `<li>${i}</li>`).join("")}</ul>`;
 const META = ul(POWROT_HOW_ROWS.map((r) => `<strong>${r.label}:</strong> ${r.value}`));
 const G = "grafit";
+const IMG = "https://media.base44.com/images/public/6aa08bc6318b0f886cc3b9a3/";
 
 export const POWROT_BLOCKS = [
   b("hero", "hero", { wariant: "standard", etykieta: "AUTORSKI PROGRAM MENTORSKI EXMORTIS", linia1: "", linia2: "POWRÓT",
     lead: POWROT_LEAD, przyciski: [{ etykieta: "WYPEŁNIJ ZGŁOSZENIE", link: "#formularz", styl: "zloty", strzalka: true }], przyciemnienie: 60 }),
   b("otwarcie", "tekst", { etykieta: "OTWARCIE · 01", tytul: "Są ludzie, którzy przychodzą do mnie, bo coś w nich umarło.",
-    tresc: `<p class="exm-styl-lead">Nie mówią tego wprost. Mówią, że są zmęczeni, stracili sens, nie poznają siebie — mają wszystko, na co pracowali, i jednocześnie nic nie czują. Zwłaszcza szczęścia, satysfakcji, radości z życia.</p><p class="exm-styl-lead">Umarli. Tylko jeszcze o tym nie wiedzą.</p><h2 class="exm-akcent-zloty">POWRÓT jest dla tych, którzy już wiedzą.</h2>` }),
+    tresc: `<p class="exm-styl-lead">Nie mówią tego wprost. Mówią, że są zmęczeni, stracili sens, nie poznają siebie — mają wszystko, na co pracowali, i jednocześnie nic nie czują. Zwłaszcza szczęścia, satysfakcji, radości z życia.</p><p class="exm-styl-lead">Często dopiero po czasie nazywają to po imieniu: coś w nich umarło.</p><h2 class="exm-akcent-zloty">POWRÓT jest dla tych, którzy są gotowi to nazwać.</h2>` }),
   b("dla-kogo", "tekst", { etykieta: "DLA KOGO · 02", tytul: "To praca dla Ciebie, jeśli:",
     tresc: ul(["Wracasz z wypalenia, które nie mija po urlopie", "Wracasz z kryzysu, który zdarł Ci maskę", "Wracasz z rozstania, które zabrało więcej niż osobę", "Wracasz z pozycji, w której łatwo się zgubić", "Wracasz z sukcesu, który nie smakuje", "Wracasz z ciszy po stracie", "Wracasz z siebie sprzed kilku lat, do którego nie chcesz już wrócić"])
       + `<h3>Nie musisz wiedzieć, dokąd wracasz.</h3><h3 class="exm-akcent-zloty">Wystarczy, że wiesz, że tak dalej nie chcesz.</h3>` }),
@@ -22,13 +23,18 @@ export const POWROT_BLOCKS = [
   b("ramka", "ramka", { tytul: "JEŚLI JEST CI BARDZO CIĘŻKO", rozmiar: "mala",
     tresc: "<p>exmortis to mentoring, nie terapia. Zadzwoń pod <strong>116 123</strong> lub <strong>800 70 2222</strong> (całą dobę, bezpłatnie). W zagrożeniu życia: <strong>112</strong>.</p>" }, { szerokosc: "waska", tlo: G }),
   b("obietnica", "tekst", { etykieta: "BEZ OBIETNIC · 04", tytul: "Nie obiecuję Ci, że poczujesz się lepiej.",
-    tresc: `<p class="exm-styl-lead">Nie obiecuję gotowych rozwiązań ani szybkiej ulgi. Moją rolą jest iść obok Ciebie, kiedy szukasz perspektywy i kolejnych kroków.</p><p class="exm-styl-lead">Razem przyglądamy się temu, co po cichu Cię wyniszcza, i szukamy sensu, na którym można budować dłużej niż przez tydzień. Tempo i kierunek zależą od Ciebie.</p><h2 class="exm-akcent-zloty">Nowa wersja Ciebie nie powstanie z tej samej gliny, co poprzednia. Trzeba ją wypalić. Właśnie tego uczę.</h2>` }),
+    tresc: `<p class="exm-styl-lead">Nie obiecuję gotowych rozwiązań ani szybkiej ulgi. Moją rolą jest iść obok Ciebie, kiedy szukasz perspektywy i kolejnych kroków.</p><p class="exm-styl-lead">Razem przyglądamy się temu, co po cichu Cię wyniszcza, i szukamy sensu, na którym można budować dłużej niż przez tydzień. Tempo i kierunek zależą od Ciebie.</p><h2 class="exm-akcent-zloty">Nie wracamy do tego, co było. Szukamy tego, co może być dalej.</h2>` }),
   b("etapy", "karty", { etykieta: "CZTERY ETAPY · 05", tytul: "Cztery etapy\npowrotu", intro: "Program stoi na czterech etapach. To nie jest teoria — to droga, którą sam przeszedłem.", numerowane: true, kolumny: "2", karty: [
     { tytul: "I · Śmierć", opis: "Nazywamy, co w Tobie umarło. Bez dramatu i bez pocieszania. Prawda jest fundamentem powrotu." },
     { tytul: "II · Próg", opis: "Podejmujesz decyzję — nie deklarację, ale konkretny wybór, od którego zaczyna się dalsza praca." },
     { tytul: "III · Powrót", opis: "Odbudowujemy sens. Wnętrze. Codzienność. Tu dzieje się praca właściwa." },
     { tytul: "IV · Inny", opis: "Kim jesteś teraz. Jak dbać o to, co udało się odbudować, i jak iść dalej." },
   ] }, { tlo: G }),
+  // Kto prowadzi (audyt 17.11.2026, X-05): twarz i imię przed opisem pracy; bez wątku kapłańskiego (decyzja 17.11).
+  b("kto", "tekst_zdjecie", { etykieta: "KTO PROWADZI", tytul: "Każdą sesję prowadzę osobiście.", strona: "lewo", kolumny: "40-60", proporcja: "4:5", mobile: "gora",
+    podpis: "DAWID · MENTOR EXMORTIS", zdjecie: { url: `${IMG}480c7c335_702144182_17895011880460401_728690723499574380_n.jpg`, alt: "Dawid — mentor programu POWRÓT" },
+    tresc: "<p>Jestem Dawid. Kiedyś skończyło się życie, które znałem, i musiałem zbudować nowe od zera. Z tej drogi wyrósł POWRÓT — cztery etapy, przez które sam przeszedłem.</p><p>Pracuję jako mentor, nie terapeuta. Słucham, zadaję pytania i pomagam znaleźć następny krok. Decyzje podejmujesz Ty.</p>",
+    przyciski: [{ etykieta: "POZNAJ MOJĄ HISTORIĘ", link: "/o-mnie", styl: "obrys", strzalka: true }] }),
   b("jak", "tekst", { etykieta: "JAK TO WYGLĄDA · 06", tytul: "Jak to wygląda",
     tresc: `${META}<p>Osiem sesji, cztery etapy. Od nazwania, gdzie jesteś i co w Tobie umarło, po plan na dalszą drogę.</p><p>Między sesjami: zadania szyte pod Ciebie, dziennik powrotu, kontakt ze mną w ustalonych granicach.</p>` }),
   b("dostajesz", "tekst", { etykieta: "CO OTRZYMUJESZ · 07", tytul: "Co otrzymujesz",
@@ -47,14 +53,14 @@ export const POWROT_BLOCKS = [
     { pytanie: "Czy muszę być osobą wierzącą?", odpowiedz: "Nie. Treści i współpraca są dla osób wierzących i niewierzących. Moja droga ma swoje źródło w wierze, ale nie jest warunkiem pracy ze mną — szanuję Twój światopogląd." },
     { pytanie: "Jaka jest cena?", odpowiedz: POWROT_FAQ_PRICE },
     { pytanie: "Czy widujemy się na żywo?", odpowiedz: `Cały program prowadzony jest przez platformę ${POWROT.form} — po to, żeby był dostępny niezależnie od miasta. Uczestnicy POWRÓT-u mają pierwszeństwo i specjalne warunki w zapisach na doroczny retreat „exmortis” w Bieszczadach.` },
-    { pytanie: "Jak często rusza nowa kohorta?", odpowiedz: "Nie prowadzę kohort. Program jest indywidualny — startujesz wtedy, kiedy Ty i ja jesteśmy gotowi." },
+    { pytanie: "Kiedy mogę zacząć?", odpowiedz: "Program jest indywidualny, nie grupowy. Zgłoszenia rozpatruję w kolejności napływania, a termin startu ustalamy wspólnie po rozmowie kwalifikacyjnej." },
   ] }, { tlo: G }),
   b("ostatnie", "tekst", { etykieta: "OSTATNIE SŁOWO", tytul: "Nie musisz decydować się dziś.",
-    tresc: `<p class="exm-styl-lead">Ale jeśli po tej lekturze coś w Tobie mówi „to o mnie” — nie odkładaj tego na kwartał, w którym „będzie lepszy moment”. Powrót nie zaczyna się w lepszym momencie. Powrót zaczyna się od decyzji, żeby przestać czekać.</p>` }, { odstep: "maly" }),
+    tresc: `<p class="exm-styl-lead">Jeśli po tej lekturze coś w Tobie mówi „to o mnie”, możesz zacząć od krótkiego zgłoszenia albo najpierw przyjść na otwarte spotkanie i zobaczyć, jak pracuję. Tempo wybierasz Ty.</p>` }, { odstep: "maly" }),
   b("spotkanie", "modul", { modul: "powrot_spotkanie" }),
   b("ostatnie-przyciski", "przyciski", { przyciski: [
     { etykieta: "WYPEŁNIJ FORMULARZ KWALIFIKACYJNY", link: "#formularz", styl: "zloty", strzalka: true },
-    { etykieta: "ZOBACZ SKARBIEC — RÓŻNE DROGI POWROTU", link: "/skarbiec", styl: "obrys", strzalka: false },
+    { etykieta: "NAJPIERW PRZYJDŹ NA OTWARTE SPOTKANIE", link: "/spotkania", styl: "obrys", strzalka: false },
   ] }, { odstep: "maly" }),
   b("podsumowanie", "modul", { modul: "powrot_podsumowanie" }),
   b("formularz", "modul", { modul: "powrot_formularz" }),
