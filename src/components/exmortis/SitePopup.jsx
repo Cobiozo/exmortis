@@ -14,7 +14,7 @@ import { SUPABASE_URL, ANON_KEY } from "@/api/exmSupabase";
 // • liczniki (wyświetlenie / kliknięcie / zamknięcie) bez żadnych danych osobowych.
 const SKIP = ["/admin", "/kasa", "/pobierz", "/powrot/platnosc", "/powrot/ankieta", "/test", "/login", "/register", "/forgot-password",
   "/reset-password", "/regulamin", "/polityka-prywatnosci", "/polityka-cookies", "/odstapienie", "/umowa-powrot",
-  "/bilet", "/karta", "/rezerwacja", "/zmiana-adresu", "/listy/", "/cisza", "/spotkania", "/konto"];
+  "/bilet", "/karta", "/rezerwacja", "/zmiana-adresu", "/listy/", "/cisza", "/spotkania"];
 const MEM = "exm_popup_k";
 const DAY = 86400000;
 
