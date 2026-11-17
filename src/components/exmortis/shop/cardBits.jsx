@@ -3,7 +3,7 @@ import { Link } from "react-router-dom";
 import { ArrowRight } from "lucide-react";
 import { useCart } from "../CartContext";
 import { releaseDay, soonLabel } from "@/lib/releaseDate";
-import { isPromoActive, priceOnRequest, lowestPrice30, zl, kwota, nextPriceText } from "@/lib/productPrice";
+import { isPromoActive, isPresale, priceOnRequest, lowestPrice30, zl, kwota, nextPriceText } from "@/lib/productPrice";
 
 // Wspólne elementy kart Skarbca: znaczki, cena, przycisk.
 
@@ -95,11 +95,11 @@ export function PriceBlock({ p }) {
     });
     return (
       <span className="flex items-baseline gap-2 flex-wrap">
-        <s className="text-foreground/55">{kwota(p.price_regular)} zł</s>
+        {!isPresale(p) && <s className="text-foreground/55">{kwota(p.price_regular)} zł</s>}
         <span className="text-[#C9A24A] text-lg">{kwota(p.price_start)} zł</span>
-        <span className="technical text-[9px] text-foreground/55">DO {until.toUpperCase()}</span>
+        <span className="technical text-[9px] text-foreground/55">{isPresale(p) ? "PRZEDSPRZEDAŻ DO " : "DO "}{until.toUpperCase()}</span>
         {nextPriceText(p) && <span className="basis-full text-[11px] text-[#C9A24A]/80">{nextPriceText(p)}</span>}
-        <span className="basis-full text-[11px] text-foreground/55">Najniższa cena z 30 dni przed obniżką: {zl(lowestPrice30(p))}</span>
+        {!isPresale(p) && <span className="basis-full text-[11px] text-foreground/55">Najniższa cena z 30 dni przed obniżką: {zl(lowestPrice30(p))}</span>}
       </span>
     );
   }
