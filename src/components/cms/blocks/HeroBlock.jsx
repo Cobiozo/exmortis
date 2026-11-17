@@ -1,4 +1,5 @@
 import React from "react";
+import { Link } from "react-router-dom";
 import Logo from "@/components/exmortis/Logo";
 import { CmsButton } from "../parts";
 import SafeImg from "../SafeImg";
@@ -21,13 +22,13 @@ const Dopisek = ({ t }) => t ? <p className="technical text-xs text-foreground/7
 function Autor({ d }) {
   if (!d.autor_zdjecie?.url && !d.autor_podpis) return null;
   return (
-    <a href="/o-mnie" className="group mt-6 md:mt-8 inline-flex items-center gap-3 text-left">
+    <Link to="/o-mnie" className="group mt-6 md:mt-8 inline-flex items-center gap-3 text-left min-h-11">
       {d.autor_zdjecie?.url && (
-        <SafeImg img={{ ...d.autor_zdjecie, alt: d.autor_zdjecie.alt || d.autor_podpis || "" }} eager
-          className="h-12 w-12 md:h-14 md:w-14 rounded-full object-cover border border-[#C9A24A]/50 shrink-0" />
+        <SafeImg img={{ ...d.autor_zdjecie, alt: d.autor_zdjecie.alt || d.autor_podpis || "" }} sizes="56px"
+          className="h-12 w-12 md:h-14 md:w-14 rounded-full border border-[#C9A24A]/50 shrink-0" />
       )}
       {d.autor_podpis && <span className="text-sm text-foreground/75 group-hover:text-[#C9A24A] transition-colors">{d.autor_podpis}</span>}
-    </a>
+    </Link>
   );
 }
 
