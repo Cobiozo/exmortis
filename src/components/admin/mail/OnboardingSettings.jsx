@@ -51,8 +51,8 @@ export default function OnboardingSettings() {
       {pv && (
         <div className="fixed inset-0 z-[100] bg-black/80 flex flex-col items-center p-4 overflow-auto" role="dialog" aria-modal="true" aria-label="Podgląd listu">
           <div className="flex items-center gap-2 mb-3">
-            <button onClick={() => setPv({ ...pv, w: 390 })} className={`btn-ghost !px-4 !py-2 ${pv.w === 390 ? "!border-[#C9A24A]" : ""}`}><Smartphone className="h-4 w-4" /> TELEFON</button>
-            <button onClick={() => setPv({ ...pv, w: 720 })} className={`btn-ghost !px-4 !py-2 ${pv.w === 720 ? "!border-[#C9A24A]" : ""}`}><Monitor className="h-4 w-4" /> KOMPUTER</button>
+            <button onClick={() => setPv({ ...pv, w: 390 })} className={`btn-ghost !px-4 !py-2 ${pv.w === 390 ? "!border-[#C9A24A]" : ""}`}><Smartphone className="h-4 w-4" /> Telefon</button>
+            <button onClick={() => setPv({ ...pv, w: 720 })} className={`btn-ghost !px-4 !py-2 ${pv.w === 720 ? "!border-[#C9A24A]" : ""}`}><Monitor className="h-4 w-4" /> Komputer</button>
             <button onClick={() => setPv(null)} className="btn-ghost !px-4 !py-2" aria-label="Zamknij podgląd"><X className="h-4 w-4" /></button>
           </div>
           <p className="text-xs text-foreground/60 mb-2 text-center max-w-md">Temat: <span className="text-foreground">{pv.subject}</span></p>

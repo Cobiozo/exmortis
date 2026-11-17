@@ -61,12 +61,12 @@ export default function RefundDialog({ order, onClose, onDone }) {
                 ? `PayU przyjęło zwrot ${zl(done.amount)}. Dostęp, bilety i karty z tego zamówienia zostały rozliczone, a klient dostał wiadomość.`
                 : `PayU przyjęło zgłoszenie zwrotu ${zl(done.amount)} — potwierdzenie przyjdzie powiadomieniem i wtedy wykonają się skutki.`}
             </p>
-            <button onClick={onDone} className="btn-relic !px-5 !py-2.5 text-[10px]">ZAMKNIJ</button>
+            <button onClick={onDone} className="btn-relic !px-5 !py-2.5 text-[10px]">Zamknij</button>
           </div>
         ) : (
           <div className="space-y-5">
             <div>
-              <p className="technical text-[10px] gold-text">ZWROT — ZAMÓWIENIE {shortNo(order.id)}</p>
+              <p className="technical text-[10px] gold-text">Zwrot — zamówienie {shortNo(order.id)}</p>
               <p className="text-sm text-foreground/70 mt-2">
                 Zapłacono {zl(paid)}{refunded > 0 ? `, zwrócono ${zl(refunded)}` : ""}. Do zwrotu zostało <span className="gold-text">{zl(left)}</span>.
               </p>
@@ -106,7 +106,7 @@ export default function RefundDialog({ order, onClose, onDone }) {
               <button onClick={submit} disabled={busy || !confirmOk} className="btn-relic !px-5 !py-2.5 text-[10px] disabled:opacity-50">
                 {busy ? <Loader2 className="h-4 w-4 animate-spin" /> : "ZLEĆ ZWROT"}
               </button>
-              <button onClick={onClose} className="btn-ghost !px-5 !py-2.5 text-[10px]">ANULUJ</button>
+              <button onClick={onClose} className="btn-ghost !px-5 !py-2.5 text-[10px]">Anuluj</button>
             </div>
           </div>
         )}

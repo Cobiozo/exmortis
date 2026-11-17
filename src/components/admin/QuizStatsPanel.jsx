@@ -133,7 +133,7 @@ export default function QuizStatsPanel() {
           onChange={(e) => setFilter({ ...filter, date_to: e.target.value })}
           className={selectCls}
         />
-        <button type="submit" className="btn-ghost !px-5 !py-2 text-[10px]">FILTRUJ</button>
+        <button type="submit" className="btn-ghost !px-5 !py-2 text-[10px]">Filtruj</button>
         <button type="button" onClick={() => { const empty = { dominant: "", stage: "", form_of_address: "", source: "", date_from: "", date_to: "" }; setFilter(empty); setApplied(empty); }} className="technical text-[9px] text-foreground/40 hover:text-foreground/70 px-2 py-2">
           WYCZYŚĆ
         </button>

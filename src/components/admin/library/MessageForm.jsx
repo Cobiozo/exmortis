@@ -139,12 +139,12 @@ export default function MessageForm({ open, onClose, item, editSent, presetTarge
     return (
       <LibModal open={open} onClose={onClose} wide title="Popraw treść wysłanej"
         footer={<>
-          <button className="btn-ghost" onClick={onClose}>ZAMKNIJ</button>
+          <button className="btn-ghost" onClick={onClose}>Zamknij</button>
           <button className="btn-relic" onClick={() => run("editSent")} disabled={!!busy}>{busy ? <Loader2 className="h-4 w-4 animate-spin" /> : "ZAPISZ POPRAWKĘ"}</button>
         </>}>
         {err && <p role="alert" className="text-sm blood-text">{err}</p>}
         <p className="text-xs text-foreground/45">Poprawka nie wysyła ponownie e-maila.</p>
-        <label className="block"><span className="technical text-[10px] text-foreground/50 block mb-2">TYTUŁ</span>
+        <label className="block"><span className="technical text-[10px] text-foreground/50 block mb-2">Tytuł</span>
           <input value={m.title} onChange={(e) => setM({ ...m, title: e.target.value })} className={inputCls} /></label>
         <RichLite semantic token value={m.body_html} onChange={(v) => setM({ ...m, body_html: v })} placeholder="Treść wiadomości…" />
       </LibModal>
@@ -153,12 +153,12 @@ export default function MessageForm({ open, onClose, item, editSent, presetTarge
 
   const footer = done ? (
     <><span className="mr-auto text-sm gold-text inline-flex items-center gap-2" role="status"><Check className="h-4 w-4" /> {done}</span>
-      <button className="btn-relic" onClick={() => onDone?.()}>GOTOWE</button></>
+      <button className="btn-relic" onClick={() => onDone?.()}>Gotowe</button></>
   ) : (
     <>
       {summary}
-      {step > 0 && <button className="btn-ghost" onClick={() => setStep(step - 1)}>WSTECZ</button>}
-      {step < 2 && <button className="btn-relic" disabled={!canNext} onClick={() => setStep(step + 1)}>DALEJ</button>}
+      {step > 0 && <button className="btn-ghost" onClick={() => setStep(step - 1)}>Wstecz</button>}
+      {step < 2 && <button className="btn-relic" disabled={!canNext} onClick={() => setStep(step + 1)}>Dalej</button>}
       {step === 2 && (
         <>
           <button className="btn-ghost" onClick={() => run("draft")} disabled={!!busy || !target}>{busy === "draft" ? <Loader2 className="h-4 w-4 animate-spin" /> : "ZAPISZ SZKIC"}</button>
@@ -222,7 +222,7 @@ export default function MessageForm({ open, onClose, item, editSent, presetTarge
                   {(codes || []).map((c) => <option key={c.kod} value={c.kod}>{c.kod} · {c.opis}{c.ok ? " · działa" : " · teraz nie działa"}</option>)}
                 </select>
                 <button type="button" className="btn-ghost !px-3 !py-2" disabled={!kod} onClick={() => editor.current?.insert(kod, { bold: true })}>
-                  {kodSel && !kodSel.ok ? "WSTAW MIMO TO" : "WSTAW W TREŚĆ"}
+                  {kodSel && !kodSel.ok ? "Wstaw mimo to" : "Wstaw w treść"}
                 </button>
               </div>
               {kodSel && (
@@ -268,12 +268,12 @@ export default function MessageForm({ open, onClose, item, editSent, presetTarge
             <MessagePreview data={prev} email={pick} onPick={setPick} busy={prevBusy} />
             <div className="border hairline p-3">
               {tplName === null ? (
-                <button type="button" className="btn-ghost !px-3 !py-2" onClick={() => setTplName(m.title || "")}>ZAPISZ TREŚĆ JAKO SZABLON</button>
+                <button type="button" className="btn-ghost !px-3 !py-2" onClick={() => setTplName(m.title || "")}>Zapisz treść jako szablon</button>
               ) : (
                 <div className="flex flex-wrap gap-2 items-center">
                   <input value={tplName} onChange={(e) => setTplName(e.target.value)} placeholder="Nazwa szablonu" className={`${inputCls} max-w-[260px]`} />
-                  <button className="btn-relic !px-3 !py-2" onClick={() => run("template")} disabled={!!busy}>ZAPISZ</button>
-                  <button type="button" className="btn-ghost !px-3 !py-2" onClick={() => setTplName(null)}>ANULUJ</button>
+                  <button className="btn-relic !px-3 !py-2" onClick={() => run("template")} disabled={!!busy}>Zapisz</button>
+                  <button type="button" className="btn-ghost !px-3 !py-2" onClick={() => setTplName(null)}>Anuluj</button>
                 </div>
               )}
             </div>
@@ -283,8 +283,8 @@ export default function MessageForm({ open, onClose, item, editSent, presetTarge
 
       <LibModal open={ask} onClose={() => setAsk(false)} title="Wysłać wiadomość?"
         footer={<>
-          <button className="btn-ghost" onClick={() => setAsk(false)}>WRÓĆ</button>
-          <button className="btn-relic" onClick={() => run("now")}>WYŚLIJ DO {count} {osob(count).toUpperCase()}</button>
+          <button className="btn-ghost" onClick={() => setAsk(false)}>Wróć</button>
+          <button className="btn-relic" onClick={() => run("now")}>Wyślij do {count} {osob(count).toUpperCase()}</button>
         </>}>
         <ul className="text-sm text-foreground/75 space-y-1.5">
           <li>Odbiorcy: <strong className="text-[#F1EDE3]">{count} {osob(count)}</strong></li>

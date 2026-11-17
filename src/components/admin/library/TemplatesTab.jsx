@@ -34,7 +34,7 @@ export default function TemplatesTab({ onUse, onChanged }) {
   return (
     <div className="space-y-6">
       <div className="flex justify-end">
-        <button className="btn-relic" onClick={() => setEdit({ id: null, name: "", title: "", body_html: "" })}><Plus className="h-4 w-4" /> NOWY SZABLON</button>
+        <button className="btn-relic" onClick={() => setEdit({ id: null, name: "", title: "", body_html: "" })}><Plus className="h-4 w-4" /> Nowy szablon</button>
       </div>
       {err && <p className="text-sm blood-text">{err}</p>}
       {items.length === 0 ? <p className="text-sm text-foreground/50">Nie ma jeszcze żadnego szablonu.</p> : (
@@ -46,7 +46,7 @@ export default function TemplatesTab({ onUse, onChanged }) {
                 {t.preview && <p className="text-xs text-foreground/40 mt-1 truncate">{t.preview}</p>}
               </div>
               <div className="flex flex-wrap gap-2">
-                <button className="btn-relic !px-3 !py-2" onClick={() => onUse(t)}>UŻYJ</button>
+                <button className="btn-relic !px-3 !py-2" onClick={() => onUse(t)}>Użyj</button>
                 <button className="btn-ghost !px-3 !py-2" onClick={() => setEdit(t)} title="Zmień"><Pencil className="h-4 w-4" /></button>
                 <button className="btn-ghost !px-3 !py-2" onClick={() => setDel(t)} title="Usuń"><Trash2 className="h-4 w-4" /></button>
               </div>
@@ -58,12 +58,12 @@ export default function TemplatesTab({ onUse, onChanged }) {
       <LibModal
         open={!!edit} onClose={() => setEdit(null)} wide title={edit?.id ? "Szablon" : "Nowy szablon"}
         footer={<>
-          <button className="btn-ghost" onClick={() => setEdit(null)}>ANULUJ</button>
+          <button className="btn-ghost" onClick={() => setEdit(null)}>Anuluj</button>
           <button className="btn-relic" onClick={save} disabled={busy === "save"}>{busy === "save" ? <Loader2 className="h-4 w-4 animate-spin" /> : "ZAPISZ"}</button>
         </>}
       >
         <div>
-          <label className="technical text-[10px] text-foreground/50 block mb-2">NAZWA</label>
+          <label className="technical text-[10px] text-foreground/50 block mb-2">Nazwa</label>
           <input value={edit?.name || ""} onChange={(e) => setEdit({ ...edit, name: e.target.value })} className="w-full bg-[#0A0A0B] border hairline px-3 py-2 text-sm focus:border-[#C9A24A] outline-none" />
         </div>
         <div>
@@ -79,8 +79,8 @@ export default function TemplatesTab({ onUse, onChanged }) {
       <LibModal
         open={!!del} onClose={() => setDel(null)} title="Usunąć szablon?"
         footer={<>
-          <button className="btn-ghost" onClick={() => setDel(null)}>WRÓĆ</button>
-          <button className="btn-blood" onClick={remove} disabled={busy === "del"}>USUŃ</button>
+          <button className="btn-ghost" onClick={() => setDel(null)}>Wróć</button>
+          <button className="btn-blood" onClick={remove} disabled={busy === "del"}>Usuń</button>
         </>}
       >
         <p className="text-sm text-foreground/70">Szablon „{del?.name}" zniknie. Wysłane wiadomości zostają bez zmian.</p>

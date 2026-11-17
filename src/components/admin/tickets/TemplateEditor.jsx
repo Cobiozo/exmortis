@@ -125,12 +125,12 @@ export default function TemplateEditor({ event, reload }) {
 
       <div className="flex flex-wrap gap-3">
         <button type="button" onClick={() => fileRef.current?.click()} disabled={!!busy} className="btn-ghost !px-4 !py-3 disabled:opacity-50">
-          {busy === "upload" ? <Loader2 className="h-4 w-4 animate-spin" /> : <ImagePlus className="h-4 w-4" />} {t?.src ? "ZMIEŃ OBRAZ WZORU" : "WGRAJ WZÓR BILETU"}
+          {busy === "upload" ? <Loader2 className="h-4 w-4 animate-spin" /> : <ImagePlus className="h-4 w-4" />} {t?.src ? "Zmień obraz wzoru" : "Wgraj wzór biletu"}
         </button>
         <input ref={fileRef} type="file" accept="image/jpeg,image/png,image/webp" className="sr-only" aria-label="Wybierz obraz wzoru" onChange={(e) => { upload(e.target.files[0]); e.target.value = ""; }} />
-        <button type="button" onClick={preview} disabled={!!busy} className="btn-ghost !px-4 !py-3 disabled:opacity-50">{busy === "pdf" ? <Loader2 className="h-4 w-4 animate-spin" /> : <Eye className="h-4 w-4" />} PODGLĄD PDF</button>
-        {t?.src && <button type="button" onClick={() => save(t)} disabled={!!busy} className="btn-relic !px-5 !py-3 disabled:opacity-50">{busy === "save" ? <Loader2 className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4" />} ZAPISZ WZÓR</button>}
-        {(t?.src || saved?.src) && <button type="button" onClick={() => window.confirm("Wrócić do wzoru domyślnego exmortis?") && save(null)} disabled={!!busy} className="btn-ghost !px-4 !py-3 disabled:opacity-50"><RotateCcw className="h-4 w-4" /> WZÓR DOMYŚLNY</button>}
+        <button type="button" onClick={preview} disabled={!!busy} className="btn-ghost !px-4 !py-3 disabled:opacity-50">{busy === "pdf" ? <Loader2 className="h-4 w-4 animate-spin" /> : <Eye className="h-4 w-4" />} Podgląd PDF</button>
+        {t?.src && <button type="button" onClick={() => save(t)} disabled={!!busy} className="btn-relic !px-5 !py-3 disabled:opacity-50">{busy === "save" ? <Loader2 className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4" />} Zapisz wzór</button>}
+        {(t?.src || saved?.src) && <button type="button" onClick={() => window.confirm("Wrócić do wzoru domyślnego exmortis?") && save(null)} disabled={!!busy} className="btn-ghost !px-4 !py-3 disabled:opacity-50"><RotateCcw className="h-4 w-4" /> Wzór domyślny</button>}
       </div>
       {msg && <p className="technical text-[10px] gold-text" role="status">{msg}</p>}
 

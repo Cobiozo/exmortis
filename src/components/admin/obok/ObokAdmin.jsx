@@ -33,7 +33,7 @@ export default function ObokAdmin() {
   if (!list) return <p className="technical text-[10px] text-foreground/40">WCZYTUJĘ…</p>;
   return (
     <div>
-      <div className="flex justify-between items-center mb-6"><p className="text-sm text-foreground/55">Obok — nagrania na drogę powrotu, dla osób z kontem.</p><button onClick={create} className="btn-relic">NOWA SERIA</button></div>
+      <div className="flex justify-between items-center mb-6"><p className="text-sm text-foreground/55">Obok — nagrania na drogę powrotu, dla osób z kontem.</p><button onClick={create} className="btn-relic">Nowa seria</button></div>
       <div className="table-scroll"><table className="w-full text-sm">
         <thead><tr className="text-left technical text-[10px] text-foreground/45"><th className="py-3">Nazwa</th><th>Typ</th><th>Uczestnicy</th><th>Edycja</th><th>Status</th></tr></thead>
         <tbody>{list.map((s) => (

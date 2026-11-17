@@ -53,8 +53,8 @@ export default function MailTextsPanel() {
         </label>
         <p className="text-xs text-foreground/45">Pola: {VARS.join(" · ")}</p>
         <div className="flex flex-wrap gap-3">
-          <button onClick={save} className="btn-relic !py-3 text-[10px]">ZAPISZ</button>
-          <button onClick={() => reset(open)} className="btn-ghost !py-3 text-[10px]">PRZYWRÓĆ DOMYŚLNĄ</button>
+          <button onClick={save} className="btn-relic !py-3 text-[10px]">Zapisz</button>
+          <button onClick={() => reset(open)} className="btn-ghost !py-3 text-[10px]">Przywróć domyślną</button>
         </div>
         {msg && <p className="text-sm gold-text" role="status">{msg}</p>}
         {err && <p className="text-sm text-[#E8C547]" role="alert">{err}</p>}

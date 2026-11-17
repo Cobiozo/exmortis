@@ -37,7 +37,7 @@ export default function GrantForm({ onDone }) {
         <option value="">Wybierz produkt</option>
         {products.map((p) => <option key={p.id} value={p.id}>{p.name}</option>)}
       </select>
-      <button disabled={busy} className="btn-relic w-full !py-2.5">{busy && <Loader2 className="h-4 w-4 animate-spin" />} NADAJ</button>
+      <button disabled={busy} className="btn-relic w-full !py-2.5">{busy && <Loader2 className="h-4 w-4 animate-spin" />} Nadaj</button>
       {msg && <p className="text-xs gold-text">{msg}</p>}
     </form>
   );

@@ -33,7 +33,7 @@ export default function RecordingForm({ rec, seria, onClose }) {
         <F l="Status"><select value={r.status || "szkic"} onChange={set("status")} className={`${inp} bg-[#0A0A0B]`}><option value="szkic">Szkic</option><option value="zaplanowane">Zaplanowane</option><option value="opublikowane">Opublikowane</option></select></F>
       </div>
       <label className="flex gap-3 items-center text-sm"><input type="checkbox" checked={!!r.ostrzezenie} onChange={set("ostrzezenie")} className="accent-[#C9A24A]" />Ostrzeżenie o trudnych tematach (ramka z numerami pomocowymi)</label>
-      <div className="flex gap-4"><button onClick={save} className="btn-relic">ZAPISZ NAGRANIE</button><button onClick={del} className="btn-ghost">USUŃ</button></div>
+      <div className="flex gap-4"><button onClick={save} className="btn-relic">Zapisz nagranie</button><button onClick={del} className="btn-ghost">Usuń</button></div>
     </section>
   );
 }

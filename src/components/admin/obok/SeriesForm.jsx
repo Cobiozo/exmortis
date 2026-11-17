@@ -44,7 +44,7 @@ export default function SeriesForm({ seria, onSaved }) {
         <F l="Kolejność w koncie"><input type="number" value={s.kolejnosc || 0} onChange={set("kolejnosc")} className={inp} /></F>
         <label className="flex gap-3 items-center text-sm"><input type="checkbox" checked={!!s.powiadomienia} onChange={set("powiadomienia")} className="accent-[#C9A24A]" />Powiadomienia e-mail przy odblokowaniu</label>
       </div>
-      <div className="flex items-center gap-4 mt-6"><button onClick={save} className="btn-relic">ZAPISZ SERIĘ</button>{msg && <span className="text-sm gold-text">{msg}</span>}</div>
+      <div className="flex items-center gap-4 mt-6"><button onClick={save} className="btn-relic">Zapisz serię</button>{msg && <span className="text-sm gold-text">{msg}</span>}</div>
     </section>
   );
 }

@@ -28,8 +28,8 @@ export default function IcalPanel() {
       </p>
       <div className="flex flex-wrap gap-2">
         <code className="flex-1 min-w-[240px] text-[11px] break-all bg-[#0F0F10] border hairline px-3 py-2">{d.url}</code>
-        <button onClick={copy} className="btn-ghost !py-2 text-[10px]"><Copy className="h-3 w-3" /> {copied ? "SKOPIOWANE" : "KOPIUJ"}</button>
-        <button onClick={rotate} className="btn-ghost !py-2 text-[10px]"><RefreshCw className="h-3 w-3" /> OBRÓĆ</button>
+        <button onClick={copy} className="btn-ghost !py-2 text-[10px]"><Copy className="h-3 w-3" /> {copied ? "Skopiowane" : "Kopiuj"}</button>
+        <button onClick={rotate} className="btn-ghost !py-2 text-[10px]"><RefreshCw className="h-3 w-3" /> Obróć</button>
       </div>
       {d.rotated_at && <p className="text-[11px] text-foreground/40">Ostatnia zmiana adresu: {plDateTime(d.rotated_at)}</p>}
       {err && <p className="text-sm text-[#E8C547]" role="alert">{err}</p>}

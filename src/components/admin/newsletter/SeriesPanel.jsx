@@ -128,15 +128,15 @@ export default function SeriesPanel() {
         {info && <p className="text-sm gold-text mt-4">{info}</p>}
         {error && <p className="text-sm blood-text mt-4">{error}</p>}
         <div className="flex flex-wrap gap-3 mt-6">
-          <button onClick={save} disabled={busy} className="btn-relic !px-5 !py-2.5 disabled:opacity-60">ZAPISZ LIST</button>
-          <button onClick={showPreview} disabled={busy} className="btn-ghost !px-5 !py-2.5 disabled:opacity-60"><Eye className="h-4 w-4" /> PODGLĄD</button>
-          <button onClick={sendTest} disabled={busy || !mailOk} title={mailOk ? undefined : MAIL_REQUIRED} className="btn-ghost !px-5 !py-2.5 disabled:opacity-60"><FlaskConical className="h-4 w-4" /> WYŚLIJ TEST DO MNIE</button>
+          <button onClick={save} disabled={busy} className="btn-relic !px-5 !py-2.5 disabled:opacity-60">Zapisz list</button>
+          <button onClick={showPreview} disabled={busy} className="btn-ghost !px-5 !py-2.5 disabled:opacity-60"><Eye className="h-4 w-4" /> Podgląd</button>
+          <button onClick={sendTest} disabled={busy || !mailOk} title={mailOk ? undefined : MAIL_REQUIRED} className="btn-ghost !px-5 !py-2.5 disabled:opacity-60"><FlaskConical className="h-4 w-4" /> Wyślij test do mnie</button>
         </div>
         {preview && (
           <div className="fixed inset-0 z-[100] bg-black/80 flex flex-col items-center p-4 overflow-auto" role="dialog" aria-modal="true" aria-label="Podgląd listu">
             <div className="flex gap-2 mb-3">
-              <button onClick={() => setPreview({ ...preview, w: 390 })} className={`btn-ghost !px-4 !py-2 ${preview.w === 390 ? "!border-[#C9A24A]" : ""}`}><Smartphone className="h-4 w-4" /> TELEFON</button>
-              <button onClick={() => setPreview({ ...preview, w: 720 })} className={`btn-ghost !px-4 !py-2 ${preview.w === 720 ? "!border-[#C9A24A]" : ""}`}><Monitor className="h-4 w-4" /> KOMPUTER</button>
+              <button onClick={() => setPreview({ ...preview, w: 390 })} className={`btn-ghost !px-4 !py-2 ${preview.w === 390 ? "!border-[#C9A24A]" : ""}`}><Smartphone className="h-4 w-4" /> Telefon</button>
+              <button onClick={() => setPreview({ ...preview, w: 720 })} className={`btn-ghost !px-4 !py-2 ${preview.w === 720 ? "!border-[#C9A24A]" : ""}`}><Monitor className="h-4 w-4" /> Komputer</button>
               <button onClick={() => setPreview(null)} className="btn-ghost !px-4 !py-2" aria-label="Zamknij podgląd"><X className="h-4 w-4" /></button>
             </div>
             <iframe title="Podgląd listu" srcDoc={preview.html} sandbox="" style={{ width: preview.w, maxWidth: "100%" }} className="h-[80vh] bg-white border-0" />
@@ -173,8 +173,8 @@ export default function SeriesPanel() {
         </div>
         <div className="flex flex-wrap gap-3 mt-5">
           {series.active
-            ? <button onClick={() => toggle(false)} disabled={busy} className="btn-ghost !px-5 !py-2.5 disabled:opacity-60">WYŁĄCZ SERIĘ</button>
-            : <button onClick={() => toggle(true)} disabled={busy || !mailOk || !letters.length} title={!letters.length ? "Najpierw dodaj listy" : undefined} className="btn-relic !px-5 !py-2.5 disabled:opacity-60">WŁĄCZ SERIĘ</button>}
+            ? <button onClick={() => toggle(false)} disabled={busy} className="btn-ghost !px-5 !py-2.5 disabled:opacity-60">Wyłącz serię</button>
+            : <button onClick={() => toggle(true)} disabled={busy || !mailOk || !letters.length} title={!letters.length ? "Najpierw dodaj listy" : undefined} className="btn-relic !px-5 !py-2.5 disabled:opacity-60">Włącz serię</button>}
         </div>
         {info && <p className="text-sm gold-text mt-3">{info}</p>}
         {error && <p className="text-sm blood-text mt-3">{error}</p>}
@@ -200,7 +200,7 @@ export default function SeriesPanel() {
           </div>
         ))}
       </div>
-      <button onClick={() => open(null)} disabled={busy} className="btn-ghost !px-5 !py-2.5 mt-4 disabled:opacity-60"><Plus className="h-4 w-4" /> DODAJ LIST {letters.length + 1}</button>
+      <button onClick={() => open(null)} disabled={busy} className="btn-ghost !px-5 !py-2.5 mt-4 disabled:opacity-60"><Plus className="h-4 w-4" /> Dodaj list {letters.length + 1}</button>
     </div>
   );
 }

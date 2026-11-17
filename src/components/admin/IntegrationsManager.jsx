@@ -195,7 +195,7 @@ export default function IntegrationsManager() {
                 onClick={copyNotify}
                 className="btn-ghost !px-3 !py-1.5 !text-[10px]"
               >
-                {copied ? "SKOPIOWANO" : "KOPIUJ"}
+                {copied ? "Skopiowano" : "Kopiuj"}
               </button>
             </>
           ) : (
@@ -208,7 +208,7 @@ export default function IntegrationsManager() {
             disabled={payuBusy}
             className="btn-relic !px-5 !py-2.5 disabled:opacity-60"
           >
-            {payuBusy ? "ZAPISUJĘ..." : "ZAPISZ"} {!payuBusy && <Save className="h-4 w-4" />}
+            {payuBusy ? "Zapisuję..." : "Zapisz"} {!payuBusy && <Save className="h-4 w-4" />}
           </button>
           <button
             onClick={() => clearData("payu", setPayuBusy, setPayuMsg)}
@@ -223,7 +223,7 @@ export default function IntegrationsManager() {
             disabled={testBusy}
             className="btn-ghost !px-5 !py-2.5 disabled:opacity-60"
           >
-            {testBusy ? "ŁĄCZĘ..." : "TESTUJ POŁĄCZENIE"}
+            {testBusy ? "Łączę..." : "Testuj połączenie"}
           </button>
         </div>
         <Msg msg={payuMsg} />

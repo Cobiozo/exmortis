@@ -75,7 +75,7 @@ function Grant({ types, defaults, onDone }) {
         </label>
       </div>
       {msg && <p className="text-sm text-[#E8C547]" role="status">{msg}</p>}
-      <button type="submit" disabled={busy || !f.type_id} className="btn-relic text-[10px] disabled:opacity-40">{busy ? "ZAPISUJĘ…" : "NADAJ DOSTĘP"}</button>
+      <button type="submit" disabled={busy || !f.type_id} className="btn-relic text-[10px] disabled:opacity-40">{busy ? "Zapisuję…" : "Nadaj dostęp"}</button>
     </form>
   );
 }
@@ -105,7 +105,7 @@ function Defaults({ types, defaults, onSaved }) {
             <Num label="Ważność (miesiące)" value={f.valid_months} onChange={set("valid_months")} min={1} max={36} />
           </div>
           {msg && <p className="text-sm text-[#E8C547]">{msg}</p>}
-          <button type="button" onClick={save} className="btn-ghost text-[10px]">ZAPISZ PARAMETRY</button>
+          <button type="button" onClick={save} className="btn-ghost text-[10px]">Zapisz parametry</button>
         </div>
       )}
     </div>
@@ -142,17 +142,17 @@ function Row({ p, onChanged }) {
           {active && next && next.getTime() > Date.now() && <p className="text-xs text-foreground/40">Kolejne spotkanie najwcześniej {plDate(next)}</p>}
         </div>
         <div className="flex flex-wrap gap-2">
-          <button onClick={() => setEdit(!edit)} className="btn-ghost text-[10px]">{edit ? "ANULUJ" : "ZMIEŃ"}</button>
+          <button onClick={() => setEdit(!edit)} className="btn-ghost text-[10px]">{edit ? "Anuluj" : "Zmień"}</button>
           <button onClick={() => run("give", () => bk("return_session", { package_id: p.id, note: "oddanie sesji w panelu" }))}
             disabled={!!busy || p.sessions_used === 0} className="btn-ghost text-[10px] disabled:opacity-40">
-            {busy === "give" ? "ODDAJĘ…" : "ODDAJ SESJĘ"}
+            {busy === "give" ? "Oddaję…" : "Oddaj sesję"}
           </button>
           {new Date(p.valid_until).getTime() > Date.now() && (ending ? (
             <button onClick={() => run("end", () => bk("update_package", { package_id: p.id, end_now: true }))} disabled={!!busy} className="btn-ghost text-[10px] border-[#8B1E1E] text-[#E8C547]">
-              {busy === "end" ? "KOŃCZĘ…" : "NA PEWNO ZAKOŃCZYĆ?"}
+              {busy === "end" ? "Kończę…" : "Na pewno zakończyć?"}
             </button>
           ) : (
-            <button onClick={() => setEnding(true)} className="btn-ghost text-[10px]">ZAKOŃCZ DOSTĘP</button>
+            <button onClick={() => setEnding(true)} className="btn-ghost text-[10px]">Zakończ dostęp</button>
           ))}
         </div>
       </div>
@@ -165,7 +165,7 @@ function Row({ p, onChanged }) {
             <input type="date" className={inputCls} value={f.valid_until} onChange={(e) => setF({ ...f, valid_until: e.target.value })} />
           </label>
           <button onClick={() => run("save", () => bk("update_package", { package_id: p.id, ...f }))} disabled={!!busy} className="btn-relic text-[10px]">
-            {busy === "save" ? "ZAPISUJĘ…" : "ZAPISZ"}
+            {busy === "save" ? "Zapisuję…" : "Zapisz"}
           </button>
         </div>
       )}

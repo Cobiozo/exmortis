@@ -24,7 +24,7 @@ export default function CoverAiButton({ form, onDone }) {
         className="w-full bg-transparent border hairline px-3 py-2 text-sm text-foreground" />
       <button type="button" onClick={go} disabled={busy} className="btn-ghost !px-4 !py-2 text-[10px] disabled:opacity-50">
         {busy ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Sparkles className="h-3.5 w-3.5" />}
-        {busy ? "GENERUJĘ (DO 1 MIN)..." : "WYGENERUJ OKŁADKĘ AI"}
+        {busy ? "Generuję (do 1 min)..." : "Wygeneruj okładkę AI"}
       </button>
       {err && <p className="text-xs blood-text">{err}</p>}
     </div>

@@ -87,7 +87,7 @@ export default function FakturySettings({ initial }) {
       </div>
 
       <div className="flex flex-wrap items-center gap-4 mt-6">
-        <button onClick={save} disabled={busy} className="btn-relic">{busy ? "ZAPISUJĘ…" : "ZAPISZ FAKTURY"}</button>
+        <button onClick={save} disabled={busy} className="btn-relic">{busy ? "Zapisuję…" : "Zapisz faktury"}</button>
         {msg && <span className={`text-sm ${msg.ok ? "gold-text" : "blood-text"}`}>{msg.text}</span>}
       </div>
       <p className="text-xs text-foreground/45 mt-4">

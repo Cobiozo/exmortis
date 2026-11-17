@@ -34,7 +34,7 @@ export default function TicketsPanel({ event, onClose, initialTab = "bilety" }) 
               </p>
             )}
           </div>
-          <a href="/skaner" target="_blank" rel="noreferrer" className="btn-ghost !px-3 !py-2 hidden sm:inline-flex"><ScanLine className="h-4 w-4" /> SKANER</a>
+          <a href="/skaner" target="_blank" rel="noreferrer" className="btn-ghost !px-3 !py-2 hidden sm:inline-flex"><ScanLine className="h-4 w-4" /> Skaner</a>
           <button type="button" onClick={onClose} className="h-11 w-11 flex items-center justify-center text-foreground/60 hover:text-foreground" aria-label="Zamknij"><X className="h-5 w-5" /></button>
         </div>
         <div className="mx-auto max-w-[1200px] flex gap-2 mt-4 overflow-x-auto" role="tablist">

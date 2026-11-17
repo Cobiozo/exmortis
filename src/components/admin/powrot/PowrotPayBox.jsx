@@ -64,7 +64,7 @@ export default function PowrotPayBox({ a, onDone }) {
             </label>
             <button onClick={send} disabled={busy} className="btn-ghost !py-2 !px-4 text-[10px] disabled:opacity-40">
               {busy ? <Loader2 className="h-4 w-4 animate-spin" /> : <CreditCard className="h-3.5 w-3.5" />}
-              {st.key === "none" ? "WYŚLIJ LINK DO PŁATNOŚCI" : "WYŚLIJ NOWY LINK"}
+              {st.key === "none" ? "Wyślij link do płatności" : "Wyślij nowy link"}
             </button>
           </div>
         )}

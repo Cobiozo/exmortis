@@ -48,7 +48,7 @@ export default function LegalDocsSettings({ initial }) {
         ))}
       </div>
       <div className="flex flex-wrap items-center gap-4 mt-6">
-        <button onClick={() => save()} disabled={busy} className="btn-relic">{busy ? "ZAPISUJĘ…" : "ZAPISZ DANE DO DOKUMENTÓW"}</button>
+        <button onClick={() => save()} disabled={busy} className="btn-relic">{busy ? "Zapisuję…" : "Zapisz dane do dokumentów"}</button>
         {msg && <span className={`text-sm ${msg.ok ? "gold-text" : "blood-text"}`}>{msg.text}</span>}
       </div>
     </section>

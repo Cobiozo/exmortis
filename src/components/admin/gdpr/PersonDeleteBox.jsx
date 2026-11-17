@@ -18,7 +18,7 @@ export default function PersonDeleteBox({ email, busy, onDelete, onDone, icon: I
       <div className="flex flex-wrap gap-3">
         <input value={confirm} onChange={(e) => setConfirm(e.target.value)} placeholder={email}
           className="flex-1 min-w-[220px] bg-transparent border hairline px-4 py-3 focus:border-[#BC1E22] focus:outline-none" />
-        <button onClick={run} disabled={!ok || busy} className="btn-blood !py-3 disabled:opacity-40">{busy ? <Loader2 className="h-4 w-4 animate-spin" /> : <Icon className="h-4 w-4" />} USUŃ DANE</button>
+        <button onClick={run} disabled={!ok || busy} className="btn-blood !py-3 disabled:opacity-40">{busy ? <Loader2 className="h-4 w-4 animate-spin" /> : <Icon className="h-4 w-4" />} Usuń dane</button>
       </div>
       {result && (
         <div className="text-sm text-foreground/70">

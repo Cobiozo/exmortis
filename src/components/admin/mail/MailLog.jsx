@@ -13,7 +13,7 @@ export default function MailLog() {
     <div className="border hairline p-5">
       <div className="flex items-center gap-4 mb-3">
         <p className="technical text-[10px] text-foreground/50">DZIENNIK WYSYŁEK</p>
-        <button onClick={load} className="btn-ghost !px-3 !py-1.5">{rows ? "ODŚWIEŻ" : "POKAŻ"}</button>
+        <button onClick={load} className="btn-ghost !px-3 !py-1.5">{rows ? "Odśwież" : "Pokaż"}</button>
       </div>
       {rows && rows.length === 0 && <p className="text-sm text-foreground/40">Brak wpisów.</p>}
       {rows && rows.length > 0 && (

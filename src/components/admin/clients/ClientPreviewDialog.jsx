@@ -16,8 +16,8 @@ export default function ClientPreviewDialog({ email, onClose }) {
 
   return (
     <LibModal open onClose={onClose} wide title={`Podgląd — ${email}`}
-      footer={<button className="btn-ghost" onClick={onClose}>ZAMKNIJ</button>}>
-      <p className="technical text-[10px] gold-text border hairline px-3 py-2">PODGLĄD — NIC NIE ZOSTANIE OZNACZONE JAKO PRZECZYTANE</p>
+      footer={<button className="btn-ghost" onClick={onClose}>Zamknij</button>}>
+      <p className="technical text-[10px] gold-text border hairline px-3 py-2">Podgląd — nic nie zostanie oznaczone jako przeczytane</p>
       {err && <p className="text-sm blood-text">{err}</p>}
       {!d ? <Loader2 className="h-5 w-5 animate-spin gold-text" /> : (
         <div className="space-y-8">

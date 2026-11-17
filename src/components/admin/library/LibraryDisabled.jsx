@@ -10,7 +10,7 @@ export default function LibraryDisabled() {
       <p className="text-sm text-foreground/50 max-w-md mx-auto">
         Ten moduł jest wyłączony. Włącz go w sekcji Ustawienia → „Biblioteka i wiadomości".
       </p>
-      <Link to="/admin/ustawienia" className="btn-relic inline-flex">USTAWIENIA</Link>
+      <Link to="/admin/ustawienia" className="btn-relic inline-flex">Ustawienia</Link>
     </div>
   );
 }

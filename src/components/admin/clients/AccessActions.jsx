@@ -17,13 +17,13 @@ export default function AccessActions({ a, onDone }) {
   return (
     <div className="flex items-center gap-2">
       <input type="number" min="1" max="60" value={months} onChange={(e) => setMonths(e.target.value)} className="w-16 bg-[#0A0A0B] border hairline px-2 py-1.5 text-xs" />
-      <button onClick={() => run("extend")} className="btn-ghost !px-3 !py-1.5 text-[10px]">+ MIES.</button>
+      <button onClick={() => run("extend")} className="btn-ghost !px-3 !py-1.5 text-[10px]">+ Mies.</button>
       {a.revoked ? (
-        <button onClick={() => run("restore")} className="btn-ghost !px-3 !py-1.5 text-[10px]">PRZYWRÓĆ</button>
+        <button onClick={() => run("restore")} className="btn-ghost !px-3 !py-1.5 text-[10px]">Przywróć</button>
       ) : confirm ? (
-        <button onClick={() => run("revoke")} className="btn-blood !px-3 !py-1.5 text-[10px]">NA PEWNO ODBIERZ</button>
+        <button onClick={() => run("revoke")} className="btn-blood !px-3 !py-1.5 text-[10px]">Na pewno odbierz</button>
       ) : (
-        <button onClick={() => setConfirm(true)} className="btn-ghost !px-3 !py-1.5 text-[10px]">ODBIERZ</button>
+        <button onClick={() => setConfirm(true)} className="btn-ghost !px-3 !py-1.5 text-[10px]">Odbierz</button>
       )}
     </div>
   );

@@ -21,7 +21,7 @@ function WelcomeBox({ codes }) {
       <div className="flex flex-wrap items-center gap-3">
         <p className="technical text-[10px] gold-text flex-1">KOD POWITALNY DLA NOWYCH KONT</p>
         {on !== null && (
-          <button onClick={flip} disabled={busy} className="btn-ghost !px-3 !py-1.5 text-[10px]">{on ? "WYŁĄCZ" : "WŁĄCZ"}</button>
+          <button onClick={flip} disabled={busy} className="btn-ghost !px-3 !py-1.5 text-[10px]">{on ? "Wyłącz" : "Włącz"}</button>
         )}
       </div>
       <p className="text-xs text-foreground/55">
@@ -63,14 +63,14 @@ export default function DiscountsPanel() {
                   {c.w_powiadomieniach ? " · widoczny w powiadomieniach klientów" : ""}
                 </p>
               </div>
-              <button onClick={() => { setEditing(c); window.scrollTo({ top: 0, behavior: "smooth" }); }} className="btn-ghost !px-3 !py-1.5 text-[10px]">EDYTUJ</button>
+              <button onClick={() => { setEditing(c); window.scrollTo({ top: 0, behavior: "smooth" }); }} className="btn-ghost !px-3 !py-1.5 text-[10px]">Edytuj</button>
               <button onClick={() => togglePublic(c)} className="btn-ghost !px-3 !py-1.5 text-[10px]" title="Pokaż / ukryj kod w powiadomieniach (dzwoneczek) zalogowanych klientów">
-                {c.w_powiadomieniach ? "UKRYJ Z POWIADOMIEŃ" : "POKAŻ W POWIADOMIENIACH"}
+                {c.w_powiadomieniach ? "Ukryj z powiadomień" : "Pokaż w powiadomieniach"}
               </button>
-              <button onClick={() => toggle(c)} className="btn-ghost !px-3 !py-1.5 text-[10px]">{c.active ? "WYŁĄCZ" : "WŁĄCZ"}</button>
+              <button onClick={() => toggle(c)} className="btn-ghost !px-3 !py-1.5 text-[10px]">{c.active ? "Wyłącz" : "Włącz"}</button>
               {confirm === c.id
-                ? <button onClick={() => remove(c)} className="btn-blood !px-3 !py-1.5 text-[10px]">NA PEWNO USUŃ</button>
-                : <button onClick={() => setConfirm(c.id)} className="btn-ghost !px-3 !py-1.5 text-[10px]">USUŃ</button>}
+                ? <button onClick={() => remove(c)} className="btn-blood !px-3 !py-1.5 text-[10px]">Na pewno usuń</button>
+                : <button onClick={() => setConfirm(c.id)} className="btn-ghost !px-3 !py-1.5 text-[10px]">Usuń</button>}
             </div>
           ))}
         </div>

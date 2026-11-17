@@ -37,12 +37,12 @@ export default function GroupForm({ open, onClose, item, onDone }) {
     <LibModal
       open={open} onClose={onClose} wide title={item ? "Edytuj grupę" : "Nowa grupa"}
       footer={<>
-        <button className="btn-ghost" onClick={onClose}>ANULUJ</button>
+        <button className="btn-ghost" onClick={onClose}>Anuluj</button>
         <button className="btn-relic" onClick={save} disabled={busy}>{busy ? <Loader2 className="h-4 w-4 animate-spin" /> : "ZAPISZ"}</button>
       </>}
     >
       <div>
-        <label className="technical text-[10px] text-foreground/50 block mb-2">NAZWA</label>
+        <label className="technical text-[10px] text-foreground/50 block mb-2">Nazwa</label>
         <input value={f.name} onChange={(e) => set("name", e.target.value)} className={inputCls} />
       </div>
 

@@ -16,7 +16,7 @@ export default function RecordingsList({ seria }) {
   if (edit) return <RecordingForm rec={edit} seria={seria} onClose={() => { setEdit(null); load(); }} />;
   return (
     <section>
-      <div className="flex justify-between items-center mb-4"><p className="technical text-[10px] gold-text">NAGRANIA</p><button onClick={add} className="btn-ghost !py-2 !px-4">DODAJ NAGRANIE</button></div>
+      <div className="flex justify-between items-center mb-4"><p className="technical text-[10px] gold-text">Nagrania</p><button onClick={add} className="btn-ghost !py-2 !px-4">Dodaj nagranie</button></div>
       <ul className="border-t hairline">
         {recs.map((r, i) => (
           <li key={r.id} className="flex items-center gap-3 py-3 border-b hairline text-sm">

@@ -47,12 +47,12 @@ export default function BlockForm({ onSaved }) {
       )}
       <input className={inputCls} placeholder="Notatka (widzi tylko admin)" value={f.note} onChange={(e) => set("note", e.target.value)} />
       <div className="flex items-center gap-4">
-        <button onClick={save} disabled={busy} className="btn-relic">{busy ? "ZAPISUJĘ…" : "ZAPISZ"}</button>
+        <button onClick={save} disabled={busy} className="btn-relic">{busy ? "Zapisuję…" : "Zapisz"}</button>
         {msg && <span className="text-sm text-foreground/70">{msg}</span>}
       </div>
       {coll.length > 0 && (
         <div className="border border-[#BC1E22] p-4 text-sm">
-          <p className="blood-text technical text-[10px] mb-2">UWAGA: W TYM CZASIE SĄ REZERWACJE (NIE ZOSTAŁY ANULOWANE)</p>
+          <p className="blood-text technical text-[10px] mb-2">Uwaga: w tym czasie są rezerwacje (nie zostały anulowane)</p>
           {coll.map((c) => <p key={c.id}>{plDateTime(c.starts_at)} · {c.type} · {c.first_name}</p>)}
         </div>
       )}

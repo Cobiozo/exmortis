@@ -34,7 +34,7 @@ export default function GooglePanel() {
       <p className="text-xs text-foreground/50">
         Kalendarz „exmortis · sesje”: {g.calendar_id ? <span className="font-mono">{g.calendar_id}</span> : "jeszcze nie utworzony"}
       </p>
-      {!g.calendar_id && <button onClick={make} disabled={busy} className="btn-ghost !py-2 text-[10px]">{busy ? "TWORZĘ…" : "UTWÓRZ KALENDARZ"}</button>}
+      {!g.calendar_id && <button onClick={make} disabled={busy} className="btn-ghost !py-2 text-[10px]">{busy ? "Tworzę…" : "Utwórz kalendarz"}</button>}
 
       <label className="flex items-center gap-3 text-sm">
         <input type="checkbox" checked={g.busy} disabled={busy} onChange={toggle} />

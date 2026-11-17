@@ -48,7 +48,7 @@ export default function PowrotAppCard({ a, onClose, onSend, sending, error, noti
           className="btn-ghost !py-2 !px-4 text-[10px] ml-auto disabled:opacity-40"
         >
           {sending ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-3.5 w-3.5" />}
-          {st.key === "none" ? "WYŚLIJ PEŁNĄ ANKIETĘ" : "WYŚLIJ PONOWNIE"}
+          {st.key === "none" ? "Wyślij pełną ankietę" : "Wyślij ponownie"}
         </button>
       </div>
       {notice && <p className="text-xs gold-text">{notice}</p>}

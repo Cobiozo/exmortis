@@ -56,7 +56,7 @@ export default function AssignList({ materialId, collectionId, version, onChange
               </div>
               <div className="flex gap-2">
                 {a.target_kind === "grupa" && (
-                  <button className="btn-ghost !px-3 !py-2" onClick={() => revokeGroup(a)} disabled={busy === a.id}>ODEBIERZ GRUPIE</button>
+                  <button className="btn-ghost !px-3 !py-2" onClick={() => revokeGroup(a)} disabled={busy === a.id}>Odebierz grupie</button>
                 )}
                 <button className="btn-ghost !px-3 !py-2" onClick={() => revoke(a.id, a.id)} disabled={busy === a.id} title="Odbierz dostęp">
                   {busy === a.id ? <Loader2 className="h-4 w-4 animate-spin" /> : <X className="h-4 w-4" />}

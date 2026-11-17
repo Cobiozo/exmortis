@@ -53,7 +53,7 @@ export default function CollectionForm({ open, onClose, item, onDone }) {
       open={open} onClose={onClose} wide title={item ? "Edytuj kolekcję" : "Nowa kolekcja"}
       footer={
         <>
-          <button className="btn-ghost" onClick={onClose}>ANULUJ</button>
+          <button className="btn-ghost" onClick={onClose}>Anuluj</button>
           <button className="btn-relic" onClick={save} disabled={busy}>{busy ? <Loader2 className="h-4 w-4 animate-spin" /> : "ZAPISZ"}</button>
         </>
       }
@@ -69,7 +69,7 @@ export default function CollectionForm({ open, onClose, item, onDone }) {
 
       <div className="flex items-center justify-between gap-3">
         <label className="technical text-[10px] text-foreground/50">MATERIAŁY ({f.items.length})</label>
-        <button className="btn-ghost !px-3 !py-2" onClick={() => setPick(true)}><Plus className="h-4 w-4" /> DODAJ</button>
+        <button className="btn-ghost !px-3 !py-2" onClick={() => setPick(true)}><Plus className="h-4 w-4" /> Dodaj</button>
       </div>
 
       {f.items.length === 0 ? (

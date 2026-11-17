@@ -105,7 +105,7 @@ export default function MessageRow({ m, onChanged, onEdit }) {
           <div className="flex flex-wrap gap-2">
             {m.status === "SZKIC" && (
               <>
-                <button className="btn-ghost !px-3 !py-2" onClick={() => onEdit(m)}><Pencil className="h-4 w-4" /> EDYTUJ</button>
+                <button className="btn-ghost !px-3 !py-2" onClick={() => onEdit(m)}><Pencil className="h-4 w-4" /> Edytuj</button>
                 <button className="btn-relic !px-3 !py-2" onClick={sendNow} disabled={!!busy}>
                   {busy === "send" ? <Loader2 className="h-4 w-4 animate-spin" /> : "WYŚLIJ TERAZ"}
                 </button>
@@ -113,8 +113,8 @@ export default function MessageRow({ m, onChanged, onEdit }) {
             )}
             {m.status === "ZAPLANOWANA" && (
               <>
-                <button className="btn-ghost !px-3 !py-2" onClick={() => onEdit(m)}><Pencil className="h-4 w-4" /> EDYTUJ</button>
-                <button className="btn-ghost !px-3 !py-2" onClick={() => setAsk("cancel")} disabled={!!busy}>ANULUJ</button>
+                <button className="btn-ghost !px-3 !py-2" onClick={() => onEdit(m)}><Pencil className="h-4 w-4" /> Edytuj</button>
+                <button className="btn-ghost !px-3 !py-2" onClick={() => setAsk("cancel")} disabled={!!busy}>Anuluj</button>
               </>
             )}
             {m.status === "WYSLANA" && (
@@ -124,15 +124,15 @@ export default function MessageRow({ m, onChanged, onEdit }) {
                 )}
                 {m.email_mode !== "BRAK" && unread > 0 && (
                   <button className="btn-ghost !px-3 !py-2" onClick={() => run("notify")} disabled={!!busy}>
-                    {busy === "notify" ? <Loader2 className="h-4 w-4 animate-spin" /> : <><Mail className="h-4 w-4" /> PRZYPOMNIJ NIEPRZECZYTANYM ({unread})</>}
+                    {busy === "notify" ? <Loader2 className="h-4 w-4 animate-spin" /> : <><Mail className="h-4 w-4" /> Przypomnij nieprzeczytanym ({unread})</>}
                   </button>
                 )}
-                <button className="btn-ghost !px-3 !py-2" onClick={() => onEdit(m, true)}><Pencil className="h-4 w-4" /> POPRAW LITERÓWKĘ</button>
-                <button className="btn-ghost !px-3 !py-2" onClick={() => setAsk("withdraw")} disabled={!!busy}>WYCOFAJ</button>
+                <button className="btn-ghost !px-3 !py-2" onClick={() => onEdit(m, true)}><Pencil className="h-4 w-4" /> Popraw literówkę</button>
+                <button className="btn-ghost !px-3 !py-2" onClick={() => setAsk("withdraw")} disabled={!!busy}>Wycofaj</button>
               </>
             )}
             {(m.status === "SZKIC" || m.status === "WYCOFANA") && (
-              <button className="btn-ghost !px-3 !py-2" onClick={() => setAsk("delete")} disabled={!!busy}>USUŃ</button>
+              <button className="btn-ghost !px-3 !py-2" onClick={() => setAsk("delete")} disabled={!!busy}>Usuń</button>
             )}
           </div>
         </div>
@@ -141,8 +141,8 @@ export default function MessageRow({ m, onChanged, onEdit }) {
       <LibModal
         open={ask === "send"} onClose={() => setAsk("")} title="Wysłać wiadomość?"
         footer={<>
-          <button className="btn-ghost" onClick={() => setAsk("")}>ANULUJ</button>
-          <button className="btn-relic" onClick={() => run("send")}>WYŚLIJ</button>
+          <button className="btn-ghost" onClick={() => setAsk("")}>Anuluj</button>
+          <button className="btn-relic" onClick={() => run("send")}>Wyślij</button>
         </>}
       >
         <p className="text-sm text-foreground/70">Ta wiadomość trafi do {m.recipient_count || 0} osób · {KANAL[m.email_mode] || "tylko w koncie"}.</p>
@@ -151,8 +151,8 @@ export default function MessageRow({ m, onChanged, onEdit }) {
       <LibModal
         open={ask === "withdraw"} onClose={() => setAsk("")} title="Wycofać wiadomość?"
         footer={<>
-          <button className="btn-ghost" onClick={() => setAsk("")}>ANULUJ</button>
-          <button className="btn-blood" onClick={() => run("withdraw")}>WYCOFAJ</button>
+          <button className="btn-ghost" onClick={() => setAsk("")}>Anuluj</button>
+          <button className="btn-blood" onClick={() => run("withdraw")}>Wycofaj</button>
         </>}
       >
         <p className="text-sm text-foreground/70">Wiadomość zniknie z kont odbiorców. Wysłanego e-maila nie da się cofnąć.</p>
@@ -161,8 +161,8 @@ export default function MessageRow({ m, onChanged, onEdit }) {
       <LibModal
         open={ask === "cancel"} onClose={() => setAsk("")} title="Anulować wysyłkę?"
         footer={<>
-          <button className="btn-ghost" onClick={() => setAsk("")}>WRÓĆ</button>
-          <button className="btn-relic" onClick={() => run("cancel")}>ANULUJ WYSYŁKĘ</button>
+          <button className="btn-ghost" onClick={() => setAsk("")}>Wróć</button>
+          <button className="btn-relic" onClick={() => run("cancel")}>Anuluj wysyłkę</button>
         </>}
       >
         <p className="text-sm text-foreground/70">Wiadomość wróci do szkiców. Można to zrobić tylko do chwili, gdy zadanie ją przejmie.</p>
@@ -171,8 +171,8 @@ export default function MessageRow({ m, onChanged, onEdit }) {
       <LibModal
         open={ask === "delete"} onClose={() => setAsk("")} title="Usunąć wiadomość?"
         footer={<>
-          <button className="btn-ghost" onClick={() => setAsk("")}>WRÓĆ</button>
-          <button className="btn-blood" onClick={() => run("delete")}>USUŃ</button>
+          <button className="btn-ghost" onClick={() => setAsk("")}>Wróć</button>
+          <button className="btn-blood" onClick={() => run("delete")}>Usuń</button>
         </>}
       >
         <p className="text-sm text-foreground/70">Wiadomość zniknie razem z listą odbiorców. Wysłanej wiadomości nie usuwamy — tę się wycofuje.</p>

@@ -84,7 +84,7 @@ export default function ProductAccessFields({ form, set }) {
         <div className="space-y-3">
           <label className="btn-ghost cursor-pointer !px-4 !py-2 text-[10px]">
             {busy ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Upload className="h-3.5 w-3.5" strokeWidth={1.25} />}
-            {form.private_file_uri ? "ZAMIEŃ PLIK PRYWATNY" : "WGRAJ PLIK PRYWATNY"}
+            {form.private_file_uri ? "Zamień plik prywatny" : "Wgraj plik prywatny"}
             <input type="file" className="hidden" accept={form.product_type === "pdf" ? ".pdf" : ".mp3,.m4a"} onChange={upload} />
           </label>
           {form.private_file_uri && (

@@ -90,13 +90,13 @@ export default function SchedulePlan({ items, onDone }) {
         </ol>
         {!confirm ? (
           <button type="button" className="btn-relic !px-4 !py-2 text-[10px] disabled:opacity-40" disabled={!valid || busy} onClick={() => setConfirm(true)}>
-            {busy ? <Loader2 className="h-4 w-4 animate-spin" /> : <CalendarClock className="h-4 w-4" />} ZAPLANUJ ({chosen.length})
+            {busy ? <Loader2 className="h-4 w-4 animate-spin" /> : <CalendarClock className="h-4 w-4" />} Zaplanuj ({chosen.length})
           </button>
         ) : (
           <div className="flex flex-wrap items-center gap-2 border border-[#E8C547]/60 p-3">
             <span className="text-sm text-[#E8C547]">Zaplanować {chosen.length} {plural(chosen.length)}? Historie widoczne teraz znikną z biblioteki do swojej daty.</span>
-            <button type="button" className="btn-relic !px-3 !py-1.5 text-[10px]" onClick={apply}>TAK, ZAPLANUJ</button>
-            <button type="button" className="btn-ghost !px-3 !py-1.5 text-[10px]" onClick={() => setConfirm(false)}>ANULUJ</button>
+            <button type="button" className="btn-relic !px-3 !py-1.5 text-[10px]" onClick={apply}>Tak, zaplanuj</button>
+            <button type="button" className="btn-ghost !px-3 !py-1.5 text-[10px]" onClick={() => setConfirm(false)}>Anuluj</button>
           </div>
         )}
         {err && <p className="text-sm text-[#E8676A]" role="alert">{err}</p>}

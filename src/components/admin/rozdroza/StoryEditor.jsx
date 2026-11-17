@@ -52,7 +52,7 @@ function SceneRow({ s, choices, titleOf, onSaved, story }) {
             <p className={lab}>OBRAZ SCENY (16:9)</p>
             <ImageField value={img} onChange={setImg} defaultKadr="16:9" />
             <div className="flex items-center gap-3">
-              <button type="button" onClick={save} disabled={!dirty || busy} className="btn-relic !px-4 !py-2 text-[10px] disabled:opacity-40">{busy ? <Loader2 className="h-4 w-4 animate-spin" /> : null} ZAPISZ OBRAZ</button>
+              <button type="button" onClick={save} disabled={!dirty || busy} className="btn-relic !px-4 !py-2 text-[10px] disabled:opacity-40">{busy ? <Loader2 className="h-4 w-4 animate-spin" /> : null} Zapisz obraz</button>
               {msg && <span className="text-xs text-foreground/60">{msg}</span>}
             </div>
             <GenBlock kind="scene" id={s.id} url={s.image_url} candidate={s.image_candidate_url} prompt={s.image_prompt} story={story}
@@ -95,7 +95,7 @@ function ScheduleField({ story, busy, onSave }) {
       <p className={lab}>TERMIN PUBLIKACJI (CZAS POLSKI)</p>
       <div className="flex flex-wrap items-center gap-3">
         <input type="datetime-local" className={`${inp} !w-auto`} value={v} onChange={(e) => setV(e.target.value)} aria-label="Widoczna dla klientów od" />
-        <button type="button" className="btn-ghost !px-4 !py-2 text-[10px] disabled:opacity-40" disabled={busy || !v || v === cur} onClick={() => onSave(warsawLocalToIso(v))}>ZAPISZ TERMIN</button>
+        <button type="button" className="btn-ghost !px-4 !py-2 text-[10px] disabled:opacity-40" disabled={busy || !v || v === cur} onClick={() => onSave(warsawLocalToIso(v))}>Zapisz termin</button>
         {story.visible_from && <button type="button" className="text-xs text-foreground/50 underline hover:text-foreground" disabled={busy} onClick={() => onSave("")}>usuń termin (widoczna od razu)</button>}
       </div>
       <p className="text-xs text-foreground/55">{info}</p>
@@ -157,13 +157,13 @@ export default function StoryEditor({ id, onClose }) {
             <ul className="list-disc pl-5 mt-2 space-y-1">{r.warnings.map((w, i) => <li key={i}>{w}</li>)}</ul></details>
         )}
         <div className="flex flex-wrap items-center gap-3 pt-2">
-          <Link to={`/konto/rozdroza/podglad?id=${encodeURIComponent(id)}`} className="btn-ghost !px-4 !py-2 text-[10px]" title="Karta historii i czytanie tak jak u klienta (bez publikacji)"><Eye className="h-4 w-4" /> PODGLĄD JAK KLIENT</Link>
+          <Link to={`/konto/rozdroza/podglad?id=${encodeURIComponent(id)}`} className="btn-ghost !px-4 !py-2 text-[10px]" title="Karta historii i czytanie tak jak u klienta (bez publikacji)"><Eye className="h-4 w-4" /> Podgląd jak klient</Link>
           <button type="button" onClick={() => run("publish", {}, isScheduled(d.story) ? `Opublikowano — klienci zobaczą historię ${fmtWhen(d.story.visible_from)}.` : "Opublikowano — klienci widzą nową wersję w ciągu minuty.")} disabled={!!busy || r.errors.length > 0} className="btn-relic !px-4 !py-2 text-[10px] disabled:opacity-40">
-            {busy === "publish" && <Loader2 className="h-4 w-4 animate-spin" />}{d.story.status === "published" ? "OPUBLIKUJ PONOWNIE" : "OPUBLIKUJ"}
+            {busy === "publish" && <Loader2 className="h-4 w-4 animate-spin" />}{d.story.status === "published" ? "Opublikuj ponownie" : "Opublikuj"}
           </button>
-          {d.story.status === "published" && <button type="button" onClick={() => run("unpublish", {}, "Wycofano — historia zniknie z biblioteki w ciągu minuty.")} disabled={!!busy} className="btn-ghost !px-4 !py-2 text-[10px]">WYCOFAJ PUBLIKACJĘ</button>}
+          {d.story.status === "published" && <button type="button" onClick={() => run("unpublish", {}, "Wycofano — historia zniknie z biblioteki w ciągu minuty.")} disabled={!!busy} className="btn-ghost !px-4 !py-2 text-[10px]">Wycofaj publikację</button>}
           {d.story.status !== "published" && (confirmDel
-            ? <button type="button" onClick={async () => { if (await run("delete")) onClose(); }} className="btn-blood !px-4 !py-2 text-[10px]">NA PEWNO USUŃ SZKIC</button>
+            ? <button type="button" onClick={async () => { if (await run("delete")) onClose(); }} className="btn-blood !px-4 !py-2 text-[10px]">Na pewno usuń szkic</button>
             : <button type="button" onClick={() => setConfirmDel(true)} className="text-xs text-foreground/45 underline hover:text-[#E8676A]">usuń szkic</button>)}
         </div>
         <ScheduleField story={d.story} busy={!!busy} onSave={(iso) => run("schedule", { visible_from: iso }, iso ? `Termin zapisany: ${fmtWhen(iso)}.` : "Termin usunięty.")} />

@@ -187,7 +187,7 @@ export default function ParticipantsPanel({ event, onClose }) {
                         p.status === "Obecny" ? "!border-[#8FBF7F]/50 !text-[#8FBF7F]" : ""
                       }`}
                     >
-                      {p.status === "Obecny" ? "OBECNY ✓" : "OZNACZ OBECNY"}
+                      {p.status === "Obecny" ? "Obecny ✓" : "Oznacz obecny"}
                     </button>
                     <button
                       onClick={() => removeParticipant(p.id)}
@@ -222,7 +222,7 @@ export default function ParticipantsPanel({ event, onClose }) {
           {error && <p className="technical text-[10px] blood-text">{error}</p>}
           {!mailOk && <p className="technical text-[10px] text-foreground/40">{MAIL_REQUIRED.toUpperCase()}</p>}
           <button type="submit" disabled={sending || !subject || !text || !mailOk} className="btn-relic !px-5 !py-3 disabled:opacity-50">
-            <Send className="h-4 w-4" /> {sending ? "WYSYŁAM..." : "WYŚLIJ"}
+            <Send className="h-4 w-4" /> {sending ? "Wysyłam..." : "Wyślij"}
           </button>
         </form>
       </div>

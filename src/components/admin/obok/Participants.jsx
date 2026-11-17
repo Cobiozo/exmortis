@@ -24,8 +24,8 @@ export default function Participants({ seria }) {
   };
   return (
     <section>
-      <div className="flex flex-wrap justify-between items-center gap-3 mb-4"><p className="technical text-[10px] gold-text">UCZESTNICY ({list.length})</p><button onClick={csv} className="btn-ghost !py-2 !px-4">EKSPORT CSV</button></div>
-      <div className="flex gap-3 mb-4"><input value={email} onChange={(e) => setEmail(e.target.value)} placeholder="e-mail osoby" className="flex-1 bg-transparent border hairline px-4 py-2" /><button onClick={add} className="btn-ghost !py-2 !px-4">DODAJ</button></div>
+      <div className="flex flex-wrap justify-between items-center gap-3 mb-4"><p className="technical text-[10px] gold-text">Uczestnicy ({list.length})</p><button onClick={csv} className="btn-ghost !py-2 !px-4">Eksport CSV</button></div>
+      <div className="flex gap-3 mb-4"><input value={email} onChange={(e) => setEmail(e.target.value)} placeholder="e-mail osoby" className="flex-1 bg-transparent border hairline px-4 py-2" /><button onClick={add} className="btn-ghost !py-2 !px-4">Dodaj</button></div>
       <ul className="border-t hairline">{list.map((u) => (
         <li key={u.id} className="flex flex-wrap items-center gap-3 py-3 border-b hairline text-sm">
           <span className="flex-1 text-[#F5EFE1]">{u.imie || "—"} · {u.user_email}</span>

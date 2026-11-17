@@ -42,7 +42,7 @@ export default function ZoomFixedSettings() {
       </div>
       {notZoom && <p className="text-sm text-[#E8676A]">To nie wygląda na link do Zoom — sprawdź, czy to na pewno ten adres.</p>}
       <div className="flex flex-wrap items-center gap-4">
-        <button onClick={save} disabled={busy || !dirty} className="btn-relic disabled:opacity-50">{busy ? "ZAPISUJĘ…" : "ZAPISZ LINK"}</button>
+        <button onClick={save} disabled={busy || !dirty} className="btn-relic disabled:opacity-50">{busy ? "Zapisuję…" : "Zapisz link"}</button>
         {msg && <span className="text-sm text-foreground/70">{msg}</span>}
       </div>
     </section>

@@ -12,9 +12,9 @@ export default function PowrotCoop({ rows, call, onDone }) {
       <p className="text-foreground/70">Współpraca od: {day(r.wspolpraca_od)} · do: {day(r.wspolpraca_do)}</p>
       <p className="text-foreground/50 text-xs">{!r.wspolpraca_od ? "Bez współpracy: usunięcie 6 miesięcy od zgłoszenia." : !r.wspolpraca_do ? "Trwa współpraca: dane zostają." : "Usunięcie 12 miesięcy po zakończeniu."}</p>
       <div className="flex flex-wrap gap-2">
-        {!r.wspolpraca_od && <button onClick={() => set("od")} className="btn-ghost !py-2 !px-4 text-[10px]">ROZPOCZĘTO WSPÓŁPRACĘ (DZIŚ)</button>}
-        {r.wspolpraca_od && !r.wspolpraca_do && <button onClick={() => set("do")} className="btn-ghost !py-2 !px-4 text-[10px]">ZAKOŃCZONO (DZIŚ)</button>}
-        {r.wspolpraca_od && <button onClick={() => set(r.wspolpraca_do ? "do" : "od", true)} className="technical text-[10px] text-foreground/40 hover:gold-text">COFNIJ</button>}
+        {!r.wspolpraca_od && <button onClick={() => set("od")} className="btn-ghost !py-2 !px-4 text-[10px]">Rozpoczęto współpracę (dziś)</button>}
+        {r.wspolpraca_od && !r.wspolpraca_do && <button onClick={() => set("do")} className="btn-ghost !py-2 !px-4 text-[10px]">Zakończono (dziś)</button>}
+        {r.wspolpraca_od && <button onClick={() => set(r.wspolpraca_do ? "do" : "od", true)} className="technical text-[10px] text-foreground/40 hover:gold-text">Cofnij</button>}
       </div>
     </div>
   );

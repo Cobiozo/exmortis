@@ -17,7 +17,7 @@ function CodeForm({ onSubmit, busy, error, label = "POTWIERDŹ" }) {
         onChange={(e) => setCode(e.target.value.replace(/[^\d ]/g, ""))} className={inputCls} placeholder="000000" aria-label="Kod z aplikacji" />
       {error && <p className="text-sm text-[#E8C547]" role="alert">{error}</p>}
       <button type="submit" disabled={busy || code.replace(/\D/g, "").length !== 6} className="btn-relic w-full disabled:opacity-50">
-        {busy ? "SPRAWDZAM…" : label}
+        {busy ? "Sprawdzam…" : label}
       </button>
     </form>
   );

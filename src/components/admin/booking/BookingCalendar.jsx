@@ -172,8 +172,8 @@ export default function BookingCalendar() {
           {!move.slots ? <p className="text-sm text-foreground/50">Szukam terminów…</p>
             : <SlotPicker slots={move.slots} value={move.pick} onPick={(p) => setMove((m) => ({ ...m, pick: p }))} />}
           <div className="flex gap-3">
-            <button onClick={doMove} disabled={!move.pick || busy} className="btn-relic !py-3 text-[10px] disabled:opacity-50">{busy ? "PRZENOSZĘ…" : "PRZENIEŚ"}</button>
-            <button onClick={() => setMove(null)} className="btn-ghost !py-3 text-[10px]">ANULUJ</button>
+            <button onClick={doMove} disabled={!move.pick || busy} className="btn-relic !py-3 text-[10px] disabled:opacity-50">{busy ? "Przenoszę…" : "Przenieś"}</button>
+            <button onClick={() => setMove(null)} className="btn-ghost !py-3 text-[10px]">Anuluj</button>
           </div>
         </div>
       )}

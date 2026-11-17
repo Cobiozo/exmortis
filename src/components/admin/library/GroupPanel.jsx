@@ -20,12 +20,12 @@ export default function GroupPanel({ group, onWrite, onAssign }) {
   return (
     <div className="border-t hairline pt-4 space-y-5">
       <div className="flex flex-wrap gap-2">
-        <button className="btn-relic !px-3 !py-2" onClick={() => onWrite(group)}>NAPISZ DO GRUPY</button>
-        <button className="btn-ghost !px-3 !py-2" onClick={() => onAssign(group)}>PRZYDZIEL GRUPIE</button>
+        <button className="btn-relic !px-3 !py-2" onClick={() => onWrite(group)}>Napisz do grupy</button>
+        <button className="btn-ghost !px-3 !py-2" onClick={() => onAssign(group)}>Przydziel grupie</button>
       </div>
 
       <div>
-        <p className="technical text-[10px] text-foreground/50 mb-2">CZŁONKOWIE ({d.members.length})</p>
+        <p className="technical text-[10px] text-foreground/50 mb-2">Członkowie ({d.members.length})</p>
         <div className="text-xs text-foreground/60 space-y-1 max-h-40 overflow-y-auto">
           {d.members.length ? d.members.map((p) => <p key={p.email}>{p.name ? `${p.name} · ` : ""}{p.email}</p>)
             : <p className="text-foreground/40">Nikt nie pasuje do tej reguły.</p>}

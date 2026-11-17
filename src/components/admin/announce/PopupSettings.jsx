@@ -75,11 +75,11 @@ export default function PopupSettings() {
 
       <div className="flex flex-wrap gap-3">
         <button className="btn-relic" disabled={busy} onClick={() => save({ aktywny: true })}>
-          {busy ? <Loader2 className="h-4 w-4 animate-spin" /> : f.aktywny ? "ZAPISZ ZMIANY" : "ZAPISZ I WŁĄCZ"}
+          {busy ? <Loader2 className="h-4 w-4 animate-spin" /> : f.aktywny ? "Zapisz zmiany" : "Zapisz i włącz"}
         </button>
-        {f.aktywny && <button className="btn-ghost" disabled={busy} onClick={() => save({ aktywny: false })}>WYŁĄCZ POPUP</button>}
+        {f.aktywny && <button className="btn-ghost" disabled={busy} onClick={() => save({ aktywny: false })}>Wyłącz popup</button>}
         {f.aktywny && (
-          <a href="/?popup=1" target="_blank" rel="noopener" className="btn-ghost"><ExternalLink className="h-4 w-4" /> PODGLĄD NA STRONIE</a>
+          <a href="/?popup=1" target="_blank" rel="noopener" className="btn-ghost"><ExternalLink className="h-4 w-4" /> Podgląd na stronie</a>
         )}
       </div>
     </section>

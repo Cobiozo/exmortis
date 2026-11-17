@@ -39,7 +39,7 @@ export default function BookingDashboard({ onGo }) {
           <p className="text-sm flex-1">
             {d.unmarked} {d.unmarked === 1 ? "spotkanie czeka" : "spotkania czekają"} na oznaczenie (odbyła się / nieobecność / przełożona).
           </p>
-          <button onClick={() => onGo?.("kalendarz")} className="btn-ghost !py-2 text-[10px]">OZNACZ</button>
+          <button onClick={() => onGo?.("kalendarz")} className="btn-ghost !py-2 text-[10px]">Oznacz</button>
         </div>
       )}
 
@@ -52,12 +52,12 @@ export default function BookingDashboard({ onGo }) {
               : `Kalendarz Google: ${d.google.pending} zmian czeka na ponowienie.`}
             {d.google.error ? <span className="text-foreground/50"> ({d.google.error})</span> : null}
           </p>
-          <button onClick={() => onGo?.("ustawienia")} className="btn-ghost !py-2 text-[10px]">USTAWIENIA</button>
+          <button onClick={() => onGo?.("ustawienia")} className="btn-ghost !py-2 text-[10px]">Ustawienia</button>
         </div>
       )}
 
       <section>
-        <p className="technical text-[10px] text-foreground/50 mb-3">DZIŚ I JUTRO</p>
+        <p className="technical text-[10px] text-foreground/50 mb-3">Dziś i jutro</p>
         {items.length === 0 ? <p className="text-sm text-foreground/40">Nic zaplanowanego.</p> : (
           <div className="border hairline divide-y divide-[#3D3D3F]/60">
             {items.map((x) => (

@@ -47,7 +47,7 @@ export default function SharePanel({ event }) {
         <p className="technical text-[10px] text-foreground/50 mb-3">UDOSTĘPNIJ</p>
         <div className="flex flex-wrap gap-2">
           {typeof navigator !== "undefined" && navigator.share && (
-            <button type="button" onClick={() => navigator.share({ title: event.title, text, url: share("udostepnij") }).catch(() => {})} className="btn-relic !px-4 !py-2.5"><Share2 className="h-4 w-4" /> UDOSTĘPNIJ…</button>
+            <button type="button" onClick={() => navigator.share({ title: event.title, text, url: share("udostepnij") }).catch(() => {})} className="btn-relic !px-4 !py-2.5"><Share2 className="h-4 w-4" /> Udostępnij…</button>
           )}
           {nets.map(([l, href]) => <a key={l} href={href} target="_blank" rel="noopener noreferrer" className="btn-ghost !px-4 !py-2.5">{l.toUpperCase()}</a>)}
         </div>
@@ -58,7 +58,7 @@ export default function SharePanel({ event }) {
         <div className="flex-1 min-w-[200px] space-y-3">
           <p className="technical text-[10px] text-foreground/50">KOD QR NA PLAKAT / ULOTKĘ</p>
           <p className="text-sm text-foreground/65">Prowadzi na stronę wydarzenia. Wydrukuj co najmniej 3×3 cm.</p>
-          {qr && <a href={qr} download={`qr-${event.slug}.png`} className="btn-ghost !px-4 !py-2.5"><Download className="h-4 w-4" /> POBIERZ PNG</a>}
+          {qr && <a href={qr} download={`qr-${event.slug}.png`} className="btn-ghost !px-4 !py-2.5"><Download className="h-4 w-4" /> Pobierz PNG</a>}
         </div>
       </div>
       {msg && <p className="technical text-[10px] gold-text break-all" role="status">{msg}</p>}

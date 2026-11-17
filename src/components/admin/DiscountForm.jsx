@@ -87,8 +87,8 @@ export default function DiscountForm({ onDone, editing = null, onCancel }) {
       </fieldset>
       {f.w_powiadomieniach && <input value={f.opis} onChange={set("opis")} maxLength={120} placeholder="Krótki opis dla klienta (np. Na otwarcie Skarbca)" className={inp} />}
       <div className="flex gap-2">
-        <button disabled={busy} className="btn-relic flex-1 !py-2.5">{editing ? "ZAPISZ ZMIANY" : "DODAJ KOD"}</button>
-        {editing && <button type="button" onClick={onCancel} className="btn-ghost !py-2.5">ANULUJ</button>}
+        <button disabled={busy} className="btn-relic flex-1 !py-2.5">{editing ? "Zapisz zmiany" : "Dodaj kod"}</button>
+        {editing && <button type="button" onClick={onCancel} className="btn-ghost !py-2.5">Anuluj</button>}
       </div>
       {msg && <p className="text-xs gold-text" role="status">{msg}</p>}
     </form>

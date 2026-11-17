@@ -56,7 +56,7 @@ export default function ClientDataBox({ email, onDone }) {
             className="w-full bg-transparent border hairline px-3 py-2 text-sm focus:border-[#BC1E22] outline-none" />
           <button onClick={remove} disabled={busy === "delete" || confirm.toLowerCase() !== email.toLowerCase()}
             className="btn-blood !py-3 text-[10px] disabled:opacity-40">
-            {busy === "delete" ? "USUWAM…" : "POTWIERDZAM USUNIĘCIE"}
+            {busy === "delete" ? "Usuwam…" : "Potwierdzam usunięcie"}
           </button>
         </div>
       )}

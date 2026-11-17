@@ -60,12 +60,12 @@ function SaveAsGroup({ emails, onCreated }) {
   return (
     <div className="space-y-2">
       {name === null ? (
-        <button type="button" className="btn-ghost !px-3 !py-2" onClick={() => { setName(""); setMsg(""); }}>ZAPISZ ZAZNACZONE ({emails.length}) JAKO NOWĄ GRUPĘ</button>
+        <button type="button" className="btn-ghost !px-3 !py-2" onClick={() => { setName(""); setMsg(""); }}>Zapisz zaznaczone ({emails.length}) Jako nową grupę</button>
       ) : (
         <div className="flex flex-wrap gap-2 items-center">
           <input value={name} onChange={(e) => setName(e.target.value)} placeholder="Nazwa grupy, np. Kohorta 2" aria-label="Nazwa nowej grupy" className={`${inputCls} max-w-[260px]`} />
           <button type="button" className="btn-relic !px-3 !py-2" disabled={busy} onClick={go}>{busy ? <Loader2 className="h-4 w-4 animate-spin" /> : "UTWÓRZ GRUPĘ"}</button>
-          <button type="button" className="btn-ghost !px-3 !py-2" onClick={() => setName(null)}>ANULUJ</button>
+          <button type="button" className="btn-ghost !px-3 !py-2" onClick={() => setName(null)}>Anuluj</button>
         </div>
       )}
       {msg && <p className="text-xs gold-text" role="status">{msg}</p>}

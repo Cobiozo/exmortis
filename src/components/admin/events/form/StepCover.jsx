@@ -52,17 +52,17 @@ export default function StepCover({ form: f, set, touch, errors, img, setImg }) 
             {c.stale && (
               <div className="border border-[#E8C547]/50 p-3 flex flex-col sm:flex-row sm:items-center gap-3">
                 <p className="text-sm text-[#E8C547] flex-1">Punkt skupienia się zmienił — kadry zostaną przeliczone przy zapisie.</p>
-                {img && <button type="button" onClick={recrop} className="btn-ghost !px-4 !py-3"><RefreshCw className="h-4 w-4" /> PRZELICZ TERAZ</button>}
+                {img && <button type="button" onClick={recrop} className="btn-ghost !px-4 !py-3"><RefreshCw className="h-4 w-4" /> Przelicz teraz</button>}
               </div>
             )}
             <div className="flex flex-wrap gap-2">
-              <button type="button" onClick={() => { set({ cover: { alt: c.alt, dim: c.dim } }); setImg(null); }} className="btn-ghost !px-4 !py-3">ZMIEŃ ZDJĘCIE</button>
-              <button type="button" onClick={() => { set({ cover: null }); setImg(null); }} className="btn-ghost !px-4 !py-3 hover:!text-[#BC1E22]"><Trash2 className="h-4 w-4" /> USUŃ OKŁADKĘ</button>
+              <button type="button" onClick={() => { set({ cover: { alt: c.alt, dim: c.dim } }); setImg(null); }} className="btn-ghost !px-4 !py-3">Zmień zdjęcie</button>
+              <button type="button" onClick={() => { set({ cover: null }); setImg(null); }} className="btn-ghost !px-4 !py-3 hover:!text-[#BC1E22]"><Trash2 className="h-4 w-4" /> Usuń okładkę</button>
             </div>
           </>
         )}
         {err && <p role="alert" className="text-sm text-[#E5484D]">{err}</p>}
-        {!tpl && <button type="button" onClick={() => setTpl(true)} className="btn-ghost !px-4 !py-3 w-full sm:w-auto"><Wand2 className="h-4 w-4" /> GENERUJ Z SZABLONU</button>}
+        {!tpl && <button type="button" onClick={() => setTpl(true)} className="btn-ghost !px-4 !py-3 w-full sm:w-auto"><Wand2 className="h-4 w-4" /> Generuj z szablonu</button>}
         {tpl && <CoverTemplate form={f} bgImg={c?.source === "wgrana" ? img : null} onUse={(fl, im, v) => upload(fl, im, v)} onClose={() => setTpl(false)} />}
       </Group>
 

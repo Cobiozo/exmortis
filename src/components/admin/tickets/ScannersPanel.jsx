@@ -72,8 +72,8 @@ export default function ScannersPanel({ event }) {
           <label className="text-sm text-foreground/60 flex items-center gap-2">Ważne do <input type="date" value={add.until} onChange={(e) => setAdd({ ...add, until: e.target.value })} className={`${inp} flex-1`} /></label>
         </div>
         <div className="flex flex-wrap gap-3">
-          <button type="submit" disabled={busy} className="btn-relic !px-5 !py-3 disabled:opacity-50">{busy ? <Loader2 className="h-4 w-4 animate-spin" /> : <Plus className="h-4 w-4" />} DODAJ</button>
-          <a href="/skaner" target="_blank" rel="noreferrer" className="btn-ghost !px-4 !py-3"><ScanLine className="h-4 w-4" /> OTWÓRZ SKANER</a>
+          <button type="submit" disabled={busy} className="btn-relic !px-5 !py-3 disabled:opacity-50">{busy ? <Loader2 className="h-4 w-4 animate-spin" /> : <Plus className="h-4 w-4" />} Dodaj</button>
+          <a href="/skaner" target="_blank" rel="noreferrer" className="btn-ghost !px-4 !py-3"><ScanLine className="h-4 w-4" /> Otwórz skaner</a>
         </div>
       </form>
       {msg && <p className="technical text-[10px] gold-text break-all" role="status">{msg}</p>}

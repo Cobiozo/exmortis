@@ -39,7 +39,7 @@ export default function GroupsTab() {
   return (
     <div className="space-y-6">
       <div className="flex justify-end">
-        <button className="btn-relic" onClick={() => setForm({ item: null })}><Plus className="h-4 w-4" /> NOWA GRUPA</button>
+        <button className="btn-relic" onClick={() => setForm({ item: null })}><Plus className="h-4 w-4" /> Nowa grupa</button>
       </div>
 
       {err && <p className="text-sm blood-text">{err}</p>}
@@ -74,7 +74,7 @@ export default function GroupsTab() {
                       <Users className="h-4 w-4" />
                     </button>
                     {starter && (
-                      <button onClick={() => accept(g)} className="btn-relic !px-3 !py-2" disabled={busy === g.id}>ZOSTAW</button>
+                      <button onClick={() => accept(g)} className="btn-relic !px-3 !py-2" disabled={busy === g.id}>Zostaw</button>
                     )}
                     {!auto && (
                       <button onClick={() => setForm({ item: g })} className="btn-ghost !px-3 !py-2" title="Zmień nazwę"><Pencil className="h-4 w-4" /></button>
@@ -104,9 +104,9 @@ export default function GroupsTab() {
       <LibModal
         open={!!del} onClose={() => setDel(null)} title="Usunąć grupę?"
         footer={<>
-          <button className="btn-ghost" onClick={() => setDel(null)}>ANULUJ</button>
-          <button className="btn-ghost" onClick={() => doDelete("zostaw")} disabled={busy === "del"}>ZOSTAW INDYWIDUALNIE</button>
-          <button className="btn-blood" onClick={() => doDelete("odbierz")} disabled={busy === "del"}>ODEBIERZ MATERIAŁY</button>
+          <button className="btn-ghost" onClick={() => setDel(null)}>Anuluj</button>
+          <button className="btn-ghost" onClick={() => doDelete("zostaw")} disabled={busy === "del"}>Zostaw indywidualnie</button>
+          <button className="btn-blood" onClick={() => doDelete("odbierz")} disabled={busy === "del"}>Odebierz materiały</button>
         </>}
       >
         <p className="text-sm text-foreground/70">Grupa „{del?.name}" zniknie. Co zrobić z materiałami, które miała przydzielone?</p>

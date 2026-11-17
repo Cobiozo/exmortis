@@ -33,7 +33,7 @@ export default function MailQueueBox({ status, ready, onDone }) {
         </ul>
       )}
       {ready && q.total > 0 && (
-        <button onClick={flush} disabled={busy} className="btn-relic !px-5 !py-2.5 disabled:opacity-60">{busy ? "WYSYŁAM…" : "WYŚLIJ ZALEGŁE"}</button>
+        <button onClick={flush} disabled={busy} className="btn-relic !px-5 !py-2.5 disabled:opacity-60">{busy ? "Wysyłam…" : "Wyślij zaległe"}</button>
       )}
       {!ready && q.total > 0 && <p className="text-xs text-foreground/40">Wysyłka zaległych będzie możliwa po udanym teście.</p>}
       {res && <p className="text-sm gold-text">{res}</p>}

@@ -92,11 +92,11 @@ export default function WaitlistPanel({ product, onClose }) {
 
         <div className="flex flex-wrap gap-3">
           {run && !run.done ? (
-            <button type="button" onClick={() => { stop.current = true; }} className="btn-ghost !px-5 !py-3 text-[10px]">ZATRZYMAJ</button>
+            <button type="button" onClick={() => { stop.current = true; }} className="btn-ghost !px-5 !py-3 text-[10px]">Zatrzymaj</button>
           ) : confirm ? (
             <>
-              <button type="button" onClick={send} className="btn-relic !px-5 !py-3">TAK, WYŚLIJ DO {pending}</button>
-              <button type="button" onClick={() => setConfirm(false)} className="btn-ghost !px-5 !py-3 text-[10px]">ANULUJ</button>
+              <button type="button" onClick={send} className="btn-relic !px-5 !py-3">Tak, wyślij do {pending}</button>
+              <button type="button" onClick={() => setConfirm(false)} className="btn-ghost !px-5 !py-3 text-[10px]">Anuluj</button>
             </>
           ) : (
             <button type="button" disabled={!ready || !pending} onClick={() => setConfirm(true)} className="btn-relic !px-5 !py-3 disabled:opacity-40">

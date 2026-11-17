@@ -422,7 +422,7 @@ export default function ProductEditor({ product, onSaved, onCancel }) {
           </div>
           <div className="flex-1 space-y-3">
             <label className="btn-ghost cursor-pointer !px-4 !py-2 text-[10px]">
-              <Upload className="h-3.5 w-3.5" /> {uploading ? "WGRAWAM..." : "WGRAW Z URZĄDZENIA"}
+              <Upload className="h-3.5 w-3.5" /> {uploading ? "Wgrawam..." : "Wgraw z urządzenia"}
               <input type="file" accept="image/*" className="hidden" onChange={(e) => upload(e, "cover_image")} />
             </label>
             {form.category !== "ebook" && <CoverAiButton form={form} onDone={(url) => set("cover_image", url)} />}
@@ -450,7 +450,7 @@ export default function ProductEditor({ product, onSaved, onCancel }) {
       <p className="technical text-[10px] gold-text mb-6">PLIK DO POBRANIA (BEZPŁATNE MATERIAŁY)</p>
       <div className="mb-10 space-y-3">
         <label className="btn-ghost cursor-pointer !px-4 !py-2 text-[10px]">
-          <Upload className="h-3.5 w-3.5" /> {uploading ? "WGRAWAM..." : "WGRAW PLIK"}
+          <Upload className="h-3.5 w-3.5" /> {uploading ? "Wgrawam..." : "Wgraw plik"}
           <input
             type="file"
             className="hidden"
@@ -537,7 +537,7 @@ export default function ProductEditor({ product, onSaved, onCancel }) {
             </div>
             <div className="flex-1 space-y-3">
               <label className="btn-ghost cursor-pointer !px-4 !py-2 text-[10px]">
-                <Upload className="h-3.5 w-3.5" /> {uploading ? "WGRAWAM..." : "WGRAW Z URZĄDZENIA"}
+                <Upload className="h-3.5 w-3.5" /> {uploading ? "Wgrawam..." : "Wgraw z urządzenia"}
                 <input type="file" accept="image/*" className="hidden" onChange={(e) => upload(e, "image_url")} />
               </label>
               {form.image_url && (
@@ -568,7 +568,7 @@ export default function ProductEditor({ product, onSaved, onCancel }) {
             ))}
           </div>
           <label className="btn-ghost cursor-pointer !px-4 !py-2 text-[10px]">
-            <Upload className="h-3.5 w-3.5" /> {uploading ? "WGRAWAM..." : "DODAJ ZDJĘCIA"}
+            <Upload className="h-3.5 w-3.5" /> {uploading ? "Wgrawam..." : "Dodaj zdjęcia"}
             <input type="file" accept="image/*" multiple className="hidden" onChange={uploadGallery} />
           </label>
         </div>
@@ -652,7 +652,7 @@ export default function ProductEditor({ product, onSaved, onCancel }) {
 
       <div className="flex gap-4 pb-10">
         <button onClick={save} disabled={saving} className="btn-relic disabled:opacity-60">
-          {saving ? "ZAPISUJĘ..." : "ZAPISZ PRODUKT"}
+          {saving ? "Zapisuję..." : "Zapisz produkt"}
         </button>
         <button onClick={onCancel} className="btn-ghost">
           ANULUJ

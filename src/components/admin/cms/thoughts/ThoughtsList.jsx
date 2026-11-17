@@ -23,7 +23,7 @@ export default function ThoughtsList({ items, onChange }) {
           <button type="button" className={ICO} onClick={() => onChange(items.filter((_, j) => j !== i))} aria-label="Usuń"><Trash2 className="h-4 w-4" /></button>
         </div>
       ))}
-      <button type="button" onClick={() => onChange([...items, { t: "", on: true }])} className="btn-ghost !py-2 mt-2"><Plus className="h-4 w-4" /> DODAJ ZDANIE</button>
+      <button type="button" onClick={() => onChange([...items, { t: "", on: true }])} className="btn-ghost !py-2 mt-2"><Plus className="h-4 w-4" /> Dodaj zdanie</button>
     </div>
   );
 }

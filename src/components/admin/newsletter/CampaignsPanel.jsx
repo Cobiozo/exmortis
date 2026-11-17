@@ -357,7 +357,7 @@ export default function CampaignsPanel() {
               onChange={(e) => setEditor({ ...editor, when: e.target.value })}
               className={`${inputCls} !w-auto bg-[#0A0A0B] [color-scheme:dark]`} />
             <button onClick={schedule} disabled={busy || !mailOk} className="btn-ghost !px-5 !py-2.5 disabled:opacity-60">
-              <CalendarClock className="h-4 w-4" /> {editor.status === "scheduled" ? "ZMIEŃ TERMIN" : "ZAPLANUJ"}
+              <CalendarClock className="h-4 w-4" /> {editor.status === "scheduled" ? "Zmień termin" : "Zaplanuj"}
             </button>
             {editor.status === "scheduled" && (
               <button onClick={() => unschedule(editor)} disabled={busy} className="technical text-[10px] text-foreground/50 hover:blood-text underline underline-offset-4">
@@ -407,8 +407,8 @@ export default function CampaignsPanel() {
         {preview && (
           <div className="fixed inset-0 z-[100] bg-black/80 flex flex-col items-center p-4 overflow-auto" role="dialog" aria-modal="true" aria-label="Podgląd listu">
             <div className="flex items-center gap-2 mb-3 sticky top-0">
-              <button onClick={() => setPreview({ ...preview, w: 390 })} className={`btn-ghost !px-4 !py-2 ${preview.w === 390 ? "!border-[#C9A24A]" : ""}`}><Smartphone className="h-4 w-4" /> TELEFON</button>
-              <button onClick={() => setPreview({ ...preview, w: 720 })} className={`btn-ghost !px-4 !py-2 ${preview.w === 720 ? "!border-[#C9A24A]" : ""}`}><Monitor className="h-4 w-4" /> KOMPUTER</button>
+              <button onClick={() => setPreview({ ...preview, w: 390 })} className={`btn-ghost !px-4 !py-2 ${preview.w === 390 ? "!border-[#C9A24A]" : ""}`}><Smartphone className="h-4 w-4" /> Telefon</button>
+              <button onClick={() => setPreview({ ...preview, w: 720 })} className={`btn-ghost !px-4 !py-2 ${preview.w === 720 ? "!border-[#C9A24A]" : ""}`}><Monitor className="h-4 w-4" /> Komputer</button>
               <button onClick={() => setPreview(null)} className="btn-ghost !px-4 !py-2" aria-label="Zamknij podgląd"><X className="h-4 w-4" /></button>
             </div>
             <p className="text-xs text-foreground/60 mb-2 text-center max-w-md">Temat: <span className="text-foreground">{editor.subject || "—"}</span></p>

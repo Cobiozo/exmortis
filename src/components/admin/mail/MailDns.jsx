@@ -17,7 +17,7 @@ export default function MailDns() {
     <div className="border hairline p-5 space-y-3">
       <div className="flex items-center gap-4">
         <p className="technical text-[10px] text-foreground/50">DNS DOMENY NADAWCY</p>
-        <button onClick={check} disabled={busy} className="btn-ghost !px-3 !py-1.5 disabled:opacity-50">{busy ? "SPRAWDZAM…" : "SPRAWDŹ"}</button>
+        <button onClick={check} disabled={busy} className="btn-ghost !px-3 !py-1.5 disabled:opacity-50">{busy ? "Sprawdzam…" : "Sprawdź"}</button>
       </div>
       {d === false && <p className="text-sm text-foreground/50">Wpisz i zapisz adres nadawcy, aby sprawdzić domenę.</p>}
       {d && (

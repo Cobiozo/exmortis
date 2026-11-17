@@ -14,9 +14,9 @@ export default function LeaveDialog({ onSave, onLeave, onStay }) {
       <div className="w-full max-w-md bg-[#0D0D0E] border hairline p-6 space-y-5">
         <p id="leave-t" className="shop-heading text-2xl text-[#F5EFE1]">Masz niezapisane zmiany</p>
         <div className="flex flex-col gap-2">
-          <button ref={ref} type="button" onClick={onSave} className="btn-relic">ZAPISZ SZKIC</button>
-          <button type="button" onClick={onLeave} className="btn-ghost hover:!border-[#BC1E22] hover:!text-[#BC1E22]">WYJDŹ BEZ ZAPISU</button>
-          <button type="button" onClick={onStay} className="btn-ghost">ZOSTAŃ</button>
+          <button ref={ref} type="button" onClick={onSave} className="btn-relic">Zapisz szkic</button>
+          <button type="button" onClick={onLeave} className="btn-ghost hover:!border-[#BC1E22] hover:!text-[#BC1E22]">Wyjdź bez zapisu</button>
+          <button type="button" onClick={onStay} className="btn-ghost">Zostań</button>
         </div>
       </div>
     </div>

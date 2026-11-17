@@ -61,10 +61,10 @@ export default function RecordingField(p) {
           {hostMissing ? (
             <>
               <span className="text-xs text-[#E8C547]">Domena {host} nie jest na liście zaufanych — nagranie się nie odtworzy.</span>
-              <button type="button" onClick={addDomain} className="btn-ghost !px-3 !py-1.5 text-[10px]">DODAJ {host.toUpperCase()}</button>
+              <button type="button" onClick={addDomain} className="btn-ghost !px-3 !py-1.5 text-[10px]">Dodaj {host.toUpperCase()}</button>
             </>
           ) : domains ? <span className="text-xs text-[#9FD3A0]">Twój serwer ({host}) — domena zaufana.</span> : null}
-          <button type="button" onClick={preview} className="btn-ghost !px-3 !py-1.5 text-[10px]">{test ? "ZAMKNIJ PODGLĄD" : "SPRAWDŹ ODTWARZANIE"}</button>
+          <button type="button" onClick={preview} className="btn-ghost !px-3 !py-1.5 text-[10px]">{test ? "Zamknij podgląd" : "Sprawdź odtwarzanie"}</button>
         </div>
       )}
       {host && test && (

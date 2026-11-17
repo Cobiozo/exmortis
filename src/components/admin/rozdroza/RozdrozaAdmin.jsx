@@ -61,8 +61,8 @@ export default function RozdrozaAdmin() {
         <h2 className="relic-heading text-2xl">ROZDROŻA</h2>
         <p className="text-sm text-foreground/55 mt-3 max-w-3xl leading-relaxed">Interaktywne historie w Moim koncie (zakładka „Rozdroża”, widoczna dla klientów, gdy opublikujesz co najmniej jedną historię). Klienci widzą tylko opublikowane, sprawdzone wersje. Zmiany w szkicu działają po ponownej publikacji. Teksty scen i decyzji zmieniasz ponownym importem pliku — tutaj ustawiasz okładki, obrazy scen i publikację.</p>
         <div className="flex flex-wrap gap-3 mt-4">
-          <Link to="/konto/rozdroza/biblioteka?jak_klient=0" className="btn-ghost !px-4 !py-2 text-[10px]" title="Dokładnie to, co klient widzi w tej chwili"><Eye className="h-4 w-4" /> BIBLIOTEKA JAK KLIENT</Link>
-          <Link to="/konto/rozdroza/biblioteka?jak_klient=1" className="btn-ghost !px-4 !py-2 text-[10px]" title="Jak klient, plus historie zaplanowane z datą"><Eye className="h-4 w-4" /> BIBLIOTEKA + ZAPLANOWANE</Link>
+          <Link to="/konto/rozdroza/biblioteka?jak_klient=0" className="btn-ghost !px-4 !py-2 text-[10px]" title="Dokładnie to, co klient widzi w tej chwili"><Eye className="h-4 w-4" /> Biblioteka jak klient</Link>
+          <Link to="/konto/rozdroza/biblioteka?jak_klient=1" className="btn-ghost !px-4 !py-2 text-[10px]" title="Jak klient, plus historie zaplanowane z datą"><Eye className="h-4 w-4" /> Biblioteka + zaplanowane</Link>
         </div>
       </div>
 

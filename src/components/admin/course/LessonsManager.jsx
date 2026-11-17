@@ -45,7 +45,7 @@ export default function LessonsManager({ productId }) {
       )}
       {domErr && <p className="text-xs text-[#E8C547]">{domErr}</p>}
       {lessons?.map((l) => <LessonRow key={l.id} lesson={l} onChange={load} domains={domains} onAddDomain={addDomain} />)}
-      <button type="button" onClick={add} className="btn-ghost !px-4 !py-2 text-[10px]"><Plus className="h-4 w-4" /> DODAJ LEKCJĘ</button>
+      <button type="button" onClick={add} className="btn-ghost !px-4 !py-2 text-[10px]"><Plus className="h-4 w-4" /> Dodaj lekcję</button>
     </div>
   );
 }

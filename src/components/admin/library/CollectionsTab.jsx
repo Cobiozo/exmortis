@@ -28,7 +28,7 @@ export default function CollectionsTab() {
   return (
     <div className="space-y-6">
       <div className="flex justify-end">
-        <button className="btn-relic" onClick={() => setForm({ item: null })}><Plus className="h-4 w-4" /> NOWA KOLEKCJA</button>
+        <button className="btn-relic" onClick={() => setForm({ item: null })}><Plus className="h-4 w-4" /> Nowa kolekcja</button>
       </div>
 
       {err && <p className="text-sm blood-text">{err}</p>}
@@ -61,7 +61,7 @@ export default function CollectionsTab() {
 
       <LibModal open={!!del} onClose={() => setDel(null)} title="Usunąć kolekcję?"
         footer={<>
-          <button className="btn-ghost" onClick={() => setDel(null)}>ANULUJ</button>
+          <button className="btn-ghost" onClick={() => setDel(null)}>Anuluj</button>
           <button className="btn-blood" onClick={doDelete} disabled={busy}>{busy ? <Loader2 className="h-4 w-4 animate-spin" /> : "USUŃ"}</button>
         </>}>
         <p className="text-sm text-foreground/70">Kolekcja „{del?.title}" zostanie usunięta wraz z przydziałami. Same materiały zostaną w bibliotece.</p>

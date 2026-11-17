@@ -116,7 +116,7 @@ export default function BlockEditor({ block, value, modified, onSave, onReset })
 
       <div className="flex items-center gap-3 mt-5">
         <button onClick={save} disabled={saving} className="btn-relic !px-5 !py-2.5 text-[10px] disabled:opacity-60">
-          <Save className="h-3.5 w-3.5" /> {saving ? "ZAPISUJĘ..." : "ZAPISZ"}
+          <Save className="h-3.5 w-3.5" /> {saving ? "Zapisuję..." : "Zapisz"}
         </button>
         {modified && (
           <button onClick={onReset} className="btn-ghost !px-4 !py-2.5 text-[10px]">

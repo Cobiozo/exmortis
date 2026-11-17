@@ -41,13 +41,13 @@ export default function PrelaunchSettings({ initial }) {
       <label className="block technical text-[10px] text-foreground/60 mb-2">Koniec przerwy (czas polski, opcjonalnie — puste: kończysz ręcznie)</label>
       <div className="flex flex-wrap gap-3 mb-6">
         <input type="datetime-local" value={local} onChange={(e) => setLocal(e.target.value)} className={inp} />
-        {active && <button onClick={() => save({ ...p, do: endIso(), wylaczony: false }, local ? "Zapisano godzinę końca. Przerwa skończy się sama." : "Przerwa trwa do czasu, aż ją zakończysz.")} className="btn-ghost">ZAPISZ GODZINĘ KOŃCA</button>}
+        {active && <button onClick={() => save({ ...p, do: endIso(), wylaczony: false }, local ? "Zapisano godzinę końca. Przerwa skończy się sama." : "Przerwa trwa do czasu, aż ją zakończysz.")} className="btn-ghost">Zapisz godzinę końca</button>}
       </div>
       <div className="flex flex-wrap gap-3 mb-6">
         {active
-          ? <button onClick={() => save({ ...p, wylaczony: true }, "Przerwa zakończona. Wszyscy widzą pełną stronę.")} className="btn-relic">ZAKOŃCZ PRZERWĘ TERAZ</button>
-          : <button onClick={() => setConfirm(true)} className="btn-blood">WŁĄCZ PRZERWĘ TECHNICZNĄ</button>}
-        <button onClick={preview} className="btn-ghost">PODGLĄD: JAK WIDZI TO GOŚĆ</button>
+          ? <button onClick={() => save({ ...p, wylaczony: true }, "Przerwa zakończona. Wszyscy widzą pełną stronę.")} className="btn-relic">Zakończ przerwę teraz</button>
+          : <button onClick={() => setConfirm(true)} className="btn-blood">Włącz przerwę techniczną</button>}
+        <button onClick={preview} className="btn-ghost">Podgląd: jak widzi to gość</button>
       </div>
       <p className="text-sm text-foreground/55 leading-relaxed">
         Otwarte dla gości także w czasie przerwy: logowanie i rejestracja, Kontakt, dokumenty prawne oraz linki z maili (bilety, karty,

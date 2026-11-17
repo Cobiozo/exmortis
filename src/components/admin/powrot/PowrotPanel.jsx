@@ -127,7 +127,7 @@ export default function PowrotPanel() {
                       className="btn-ghost !py-1.5 !px-3 text-[9px] mt-2 whitespace-nowrap disabled:opacity-40"
                     >
                       {sendingId === r.id ? <Loader2 className="h-3 w-3 animate-spin" /> : <Send className="h-3 w-3" />}
-                      {st.key === "none" ? "WYŚLIJ ANKIETĘ" : "WYŚLIJ PONOWNIE"}
+                      {st.key === "none" ? "Wyślij ankietę" : "Wyślij ponownie"}
                     </button>
                   </td>
                   <td className="p-3">

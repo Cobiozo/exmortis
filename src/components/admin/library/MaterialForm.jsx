@@ -72,7 +72,7 @@ export default function MaterialForm({ open, onClose, item, onDone, onRefresh })
       open={open} onClose={onClose} wide title={item ? "Edytuj materiał" : "Nowy materiał"}
       footer={
         <>
-          <button className="btn-ghost" onClick={onClose}>ANULUJ</button>
+          <button className="btn-ghost" onClick={onClose}>Anuluj</button>
           <button className="btn-relic" onClick={save} disabled={busy || (isFile && !f.id)}>
             {busy ? <Loader2 className="h-4 w-4 animate-spin" /> : "ZAPISZ"}
           </button>
@@ -109,7 +109,7 @@ export default function MaterialForm({ open, onClose, item, onDone, onRefresh })
           {f.prev_file_name && (
             <div className="flex items-center justify-between gap-3 border hairline px-3 py-2">
               <p className="text-xs text-foreground/50">Poprzednia wersja: {f.prev_file_name}</p>
-              <button className="btn-ghost !px-3 !py-2" onClick={restore} disabled={busy}>PRZYWRÓĆ</button>
+              <button className="btn-ghost !px-3 !py-2" onClick={restore} disabled={busy}>Przywróć</button>
             </div>
           )}
         </>
@@ -143,7 +143,7 @@ export default function MaterialForm({ open, onClose, item, onDone, onRefresh })
               {f.id && f.prev_file_name && (
                 <div className="flex items-center justify-between gap-3 border hairline px-3 py-2">
                   <p className="text-xs text-foreground/50">Poprzednia wersja: {f.prev_file_name}</p>
-                  <button className="btn-ghost !px-3 !py-2" onClick={restore} disabled={busy}>PRZYWRÓĆ</button>
+                  <button className="btn-ghost !px-3 !py-2" onClick={restore} disabled={busy}>Przywróć</button>
                 </div>
               )}
             </div>

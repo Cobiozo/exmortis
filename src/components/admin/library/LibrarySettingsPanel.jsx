@@ -120,8 +120,8 @@ export default function LibrarySettingsPanel() {
         title="Włączyć moduł?"
         footer={
           <>
-            <button className="btn-ghost" onClick={() => setConfirm(null)}>ANULUJ</button>
-            <button className="btn-relic" onClick={() => { const c = confirm; setConfirm(null); save({ ...s, [c.key]: c.val }); }}>WŁĄCZ</button>
+            <button className="btn-ghost" onClick={() => setConfirm(null)}>Anuluj</button>
+            <button className="btn-relic" onClick={() => { const c = confirm; setConfirm(null); save({ ...s, [c.key]: c.val }); }}>Włącz</button>
           </>
         }
       >

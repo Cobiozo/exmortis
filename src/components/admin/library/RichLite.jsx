@@ -65,7 +65,7 @@ export default function RichLite({ value, onChange, semantic, token, placeholder
     <div className="rich-admin">
       {token && (
         <div className="flex flex-wrap items-center gap-3 mb-2">
-          <button type="button" onClick={insertToken} className="btn-ghost !px-3 !py-2">WSTAW {"{imię}"}</button>
+          <button type="button" onClick={insertToken} className="btn-ghost !px-3 !py-2">Wstaw {"{imię}"}</button>
           <span className="text-xs text-foreground/45">gdy brak imienia, zdanie zostanie dopasowane</span>
         </div>
       )}

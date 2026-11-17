@@ -41,13 +41,13 @@ export default function ClientMessagesBox({ email, onChange }) {
       <p className="technical text-[10px] gold-text">WIADOMOŚCI</p>
 
       <div className="flex flex-wrap gap-2">
-        <button className="btn-relic !px-3 !py-2" onClick={() => setWrite(true)}>NAPISZ WIADOMOŚĆ</button>
-        <button className="btn-ghost !px-3 !py-2" onClick={() => setAssign(true)}>PRZYDZIEL MATERIAŁ</button>
+        <button className="btn-relic !px-3 !py-2" onClick={() => setWrite(true)}>Napisz wiadomość</button>
+        <button className="btn-ghost !px-3 !py-2" onClick={() => setAssign(true)}>Przydziel materiał</button>
         <select onChange={(e) => { addGroup(e.target.value); e.target.value = ""; }} disabled={busy === "add"} className={`${inputCls} max-w-[220px]`}>
           <option value="">— dodaj do grupy —</option>
           {grupy.map((g) => <option key={g.id} value={g.id}>{g.name}</option>)}
         </select>
-        {bookOn && <a href="/admin/rezerwacje" className="btn-ghost !px-3 !py-2">UMÓW SESJĘ</a>}
+        {bookOn && <a href="/admin/rezerwacje" className="btn-ghost !px-3 !py-2">Umów sesję</a>}
       </div>
 
       {err && <p className="text-sm blood-text">{err}</p>}

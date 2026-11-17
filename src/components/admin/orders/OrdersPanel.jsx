@@ -90,7 +90,7 @@ function InvoiceBox({ o, onSaved }) {
       {inv.wystawiona ? (
         <div className="flex flex-wrap items-center gap-3">
           <span className="text-sm text-[#9FD3A0] flex items-center gap-1.5"><Check className="h-4 w-4" /> Wystawiona{inv.numer ? `: ${inv.numer}` : ""}{inv.data ? ` (${inv.data})` : ""}</span>
-          <button onClick={() => save(false)} disabled={busy} className="btn-ghost !px-3 !py-1.5 text-[10px]">COFNIJ</button>
+          <button onClick={() => save(false)} disabled={busy} className="btn-ghost !px-3 !py-1.5 text-[10px]">Cofnij</button>
         </div>
       ) : (
         <div className="flex flex-wrap items-center gap-3">

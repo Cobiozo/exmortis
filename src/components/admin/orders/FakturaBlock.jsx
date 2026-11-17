@@ -47,7 +47,7 @@ export default function FakturaBlock({ o }) {
       )}
       <div className="flex flex-wrap items-center gap-3">
         <button onClick={retry} disabled={busy} className="btn-ghost !px-3 !py-1.5 text-[10px]">
-          {busy ? <Loader2 className="h-4 w-4 animate-spin" /> : <><RefreshCw className="h-3.5 w-3.5" /> {err ? "WYSTAW PONOWNIE" : "WYSTAW FAKTURĘ"}</>}
+          {busy ? <Loader2 className="h-4 w-4 animate-spin" /> : <><RefreshCw className="h-3.5 w-3.5" /> {err ? "Wystaw ponownie" : "Wystaw fakturę"}</>}
         </button>
         {done && <span className="text-xs gold-text">{done}</span>}
       </div>

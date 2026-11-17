@@ -119,11 +119,11 @@ export default function VideoProtectionSettings() {
 
           <div className="flex flex-wrap gap-3">
             <button type="button" onClick={() => act("video_new_key")} disabled={!!busy} className="btn-ghost !px-4 !py-2.5 text-[10px]">
-              {busy === "video_new_key" ? <Loader2 className="h-4 w-4 animate-spin" /> : <KeyRound className="h-4 w-4" />} {s.has_key ? "NOWY KLUCZ" : "WYGENERUJ KLUCZ"}
+              {busy === "video_new_key" ? <Loader2 className="h-4 w-4 animate-spin" /> : <KeyRound className="h-4 w-4" />} {s.has_key ? "Nowy klucz" : "Wygeneruj klucz"}
             </button>
             {s.has_key && (
               <button type="button" onClick={() => act("video_save", { enabled: !s.enabled, ttl_h: s.ttl_h })} disabled={!!busy} className={s.enabled ? "btn-ghost !px-4 !py-2.5 text-[10px]" : "btn-relic !px-4 !py-2.5 text-[10px]"}>
-                {s.enabled ? "WYŁĄCZ OCHRONĘ" : "WŁĄCZ OCHRONĘ"}
+                {s.enabled ? "Wyłącz ochronę" : "Włącz ochronę"}
               </button>
             )}
           </div>
@@ -133,9 +133,9 @@ export default function VideoProtectionSettings() {
             <div className="border border-[#C9A24A]/40 p-4 space-y-3">
               <p className="text-sm text-[#F5EFE1]">Pliki dla serwera (klucz jest już w środku stream.php):</p>
               <div className="flex flex-wrap gap-3">
-                <button type="button" onClick={() => save("stream.php", phpScript(key))} className="btn-relic !px-4 !py-2.5 text-[10px]"><Download className="h-4 w-4" /> STREAM.PHP</button>
-                <button type="button" onClick={() => save("htaccess-katalog-domeny.txt", HTACCESS_ROOT)} className="btn-ghost !px-4 !py-2.5 text-[10px]"><Download className="h-4 w-4" /> .HTACCESS (DOMENA)</button>
-                <button type="button" onClick={() => save("htaccess-katalog-_wideo.txt", HTACCESS_FILES)} className="btn-ghost !px-4 !py-2.5 text-[10px]"><Download className="h-4 w-4" /> .HTACCESS (_WIDEO)</button>
+                <button type="button" onClick={() => save("stream.php", phpScript(key))} className="btn-relic !px-4 !py-2.5 text-[10px]"><Download className="h-4 w-4" /> Stream.Php</button>
+                <button type="button" onClick={() => save("htaccess-katalog-domeny.txt", HTACCESS_ROOT)} className="btn-ghost !px-4 !py-2.5 text-[10px]"><Download className="h-4 w-4" /> .Htaccess (domena)</button>
+                <button type="button" onClick={() => save("htaccess-katalog-_wideo.txt", HTACCESS_FILES)} className="btn-ghost !px-4 !py-2.5 text-[10px]"><Download className="h-4 w-4" /> .Htaccess (_wideo)</button>
               </div>
               <p className="text-xs text-foreground/50">Pliki .txt po wgraniu zmień na nazwę <code>.htaccess</code>. Nie wysyłaj nikomu stream.php — zawiera klucz.</p>
             </div>

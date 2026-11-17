@@ -47,7 +47,7 @@ export default function SecurityPanel() {
               <option value={30}>30 dni</option>
             </select>
           </label>
-          <button onClick={block} disabled={busy} className="btn-ghost !px-4 !py-2 text-[10px]">{busy ? "BLOKUJĘ…" : "ZABLOKUJ ODTWARZANIE"}</button>
+          <button onClick={block} disabled={busy} className="btn-ghost !px-4 !py-2 text-[10px]">{busy ? "Blokuję…" : "Zablokuj odtwarzanie"}</button>
         </div>
         {msg && <p className="text-xs gold-text mb-3">{msg}</p>}
         {!alerts ? <Loader2 className="h-5 w-5 animate-spin gold-text" /> : alerts.length === 0 ? <p className="text-sm text-foreground/50">Brak alertów.</p> : (
@@ -60,7 +60,7 @@ export default function SecurityPanel() {
                     <p className={activeBlock ? "blood-text" : ""}>{LABEL[a.type]} · {a.user_email}</p>
                     <p className="text-xs text-foreground/45">{new Date(a.created_date).toLocaleString("pl-PL")} · {a.ip} · {a.details}</p>
                   </div>
-                  {activeBlock && <button onClick={() => unblock(a.id)} className="btn-ghost !px-3 !py-1.5 text-[10px]">ODBLOKUJ</button>}
+                  {activeBlock && <button onClick={() => unblock(a.id)} className="btn-ghost !px-3 !py-1.5 text-[10px]">Odblokuj</button>}
                 </div>
               );
             })}

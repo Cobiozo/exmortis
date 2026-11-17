@@ -115,18 +115,18 @@ export default function BulkImages({ id, story, scenes, onChanged }) {
         )}
         {!running && !confirm && (
           <button type="button" className="btn-relic !px-4 !py-2 text-[10px] disabled:opacity-40" disabled={!targets.length || !!busy} onClick={() => setConfirm(true)}>
-            <Sparkles className="h-4 w-4" /> GENERUJ {n} Z {targets.length}
+            <Sparkles className="h-4 w-4" /> Generuj {n} Z {targets.length}
           </button>
         )}
         {confirm && (
           <span className="flex flex-wrap items-center gap-2 border border-[#E8C547]/60 p-2">
             <span className="text-xs text-[#E8C547]">{n} generowań ({ai?.provider === "openai" ? "płatne z konta OpenAI" : "z kredytów AI Base44"}). Potwierdzasz?</span>
-            <button type="button" className="btn-relic !px-3 !py-1.5 text-[10px]" onClick={generateAll}>TAK, GENERUJ</button>
-            <button type="button" className="btn-ghost !px-3 !py-1.5 text-[10px]" onClick={() => setConfirm(false)}>ANULUJ</button>
+            <button type="button" className="btn-relic !px-3 !py-1.5 text-[10px]" onClick={generateAll}>Tak, generuj</button>
+            <button type="button" className="btn-ghost !px-3 !py-1.5 text-[10px]" onClick={() => setConfirm(false)}>Anuluj</button>
           </span>
         )}
         {running && (
-          <button type="button" className={btn} onClick={() => { stop.current = true; }}><Square className="h-3.5 w-3.5" /> ZATRZYMAJ PO BIEŻĄCYM</button>
+          <button type="button" className={btn} onClick={() => { stop.current = true; }}><Square className="h-3.5 w-3.5" /> Zatrzymaj po bieżącym</button>
         )}
         <button type="button" className={btn} disabled={running || !!busy || !noImage} onClick={fill}>
           {busy === "fill" ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <CornerLeftUp className="h-3.5 w-3.5" />} UZUPEŁNIJ RESZTĘ Z POPRZEDNICH SCEN
@@ -152,8 +152,8 @@ export default function BulkImages({ id, story, scenes, onChanged }) {
                 <p className="text-xs text-foreground/70 truncate">{t.label}{t.has && <span className="text-[#E8C547]"> · zastąpi obecne</span>}</p>
                 <div className="flex gap-2">
                   <button type="button" className="btn-relic !px-3 !py-1.5 text-[10px]" disabled={!!busy || running} onClick={() => decide(t, "accept")}>
-                    {busy === `${t.kind}:${t.id}` ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Check className="h-3.5 w-3.5" />} ZATWIERDŹ</button>
-                  <button type="button" className="btn-ghost !px-3 !py-1.5 text-[10px]" disabled={!!busy || running} onClick={() => decide(t, "reject")}><X className="h-3.5 w-3.5" /> ODRZUĆ</button>
+                    {busy === `${t.kind}:${t.id}` ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Check className="h-3.5 w-3.5" />} Zatwierdź</button>
+                  <button type="button" className="btn-ghost !px-3 !py-1.5 text-[10px]" disabled={!!busy || running} onClick={() => decide(t, "reject")}><X className="h-3.5 w-3.5" /> Odrzuć</button>
                 </div>
               </li>
             ))}

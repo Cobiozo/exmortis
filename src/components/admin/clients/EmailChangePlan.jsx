@@ -11,7 +11,7 @@ export default function EmailChangePlan({ plan, busy, onTransfer }) {
         ))}</tbody>
       </table>
       <p className="text-xs text-foreground/40">Przed przeniesieniem zapisuje się automatyczna kopia wszystkich danych tej osoby.</p>
-      <button disabled={busy} onClick={onTransfer} className="btn-relic !px-5 !py-2.5 disabled:opacity-60">{busy ? "PRZENOSZĘ…" : "PRZENIEŚ"}</button>
+      <button disabled={busy} onClick={onTransfer} className="btn-relic !px-5 !py-2.5 disabled:opacity-60">{busy ? "Przenoszę…" : "Przenieś"}</button>
     </div>
   );
 }

@@ -42,7 +42,7 @@ export default function MaterialsTab() {
             </button>
           ))}
         </div>
-        <button className="btn-relic" onClick={() => setForm({ item: null })}><Plus className="h-4 w-4" /> DODAJ MATERIAŁ</button>
+        <button className="btn-relic" onClick={() => setForm({ item: null })}><Plus className="h-4 w-4" /> Dodaj materiał</button>
       </div>
 
       <input value={q} onChange={(e) => setQ(e.target.value)} placeholder="Szukaj w tytule i opisie" className={inputCls} />
@@ -51,8 +51,8 @@ export default function MaterialsTab() {
         <div className="sticky top-2 z-10 flex flex-wrap items-center justify-between gap-3 border hairline bg-[#0A0A0B] p-3">
           <span className="text-sm">Zaznaczone: {sel.size}</span>
           <div className="flex flex-wrap gap-2">
-            <button className="btn-ghost !px-3 !py-2" onClick={() => setSel(new Set())}>WYCZYŚĆ</button>
-            <button className="btn-relic !px-3 !py-2" onClick={() => setAssignMany([...sel])}>PRZYDZIEL ZAZNACZONE ({sel.size})</button>
+            <button className="btn-ghost !px-3 !py-2" onClick={() => setSel(new Set())}>Wyczyść</button>
+            <button className="btn-relic !px-3 !py-2" onClick={() => setAssignMany([...sel])}>Przydziel zaznaczone ({sel.size})</button>
           </div>
         </div>
       )}

@@ -81,11 +81,11 @@ export default function MailSettings({ profile = "main" }) {
         ))}
       </div>
       <p className="text-xs text-foreground/40">Hasło zapisuje się tylko na serwerze i po zapisie nie jest wyświetlane. Zostaw maskę, aby zachować zapisane.</p>
-      <button onClick={() => run("save", { data: f })} disabled={busy} className="btn-relic !px-5 !py-2.5 disabled:opacity-60">{busy ? "CHWILĘ…" : "ZAPISZ I SPRAWDŹ"}</button>
-      <p className="text-xs text-foreground/40 -mt-3">Po zapisie od razu wysyłam test (na adres poniżej, a gdy pusty — na adres REPLY-TO lub nadawcy). Wysyłka działa dopiero po udanym teście.</p>
+      <button onClick={() => run("save", { data: f })} disabled={busy} className="btn-relic !px-5 !py-2.5 disabled:opacity-60">{busy ? "Chwilę…" : "Zapisz i sprawdź"}</button>
+      <p className="text-xs text-foreground/40 -mt-3">Po zapisie od razu wysyłam test (na adres poniżej, a gdy pusty — na adres Reply-To lub nadawcy). Wysyłka działa dopiero po udanym teście.</p>
       <div className="flex flex-col sm:flex-row gap-3 pt-6 border-t hairline">
         <input type="email" value={to} onChange={(e) => setTo(e.target.value)} placeholder="adres do testu" className={inp} />
-        <button onClick={() => run("test", { to })} disabled={busy || !to} className="btn-ghost !px-5 !py-2.5 whitespace-nowrap disabled:opacity-50">{busy ? "CHWILĘ…" : "WYŚLIJ TEST"}</button>
+        <button onClick={() => run("test", { to })} disabled={busy || !to} className="btn-ghost !px-5 !py-2.5 whitespace-nowrap disabled:opacity-50">{busy ? "Chwilę…" : "Wyślij test"}</button>
       </div>
       {mkt && /simply\.com/i.test(f.host || "") && (
         <p className="text-sm blood-text">To ten sam serwer co skrzynka główna (Simply) — to nie jest osobny kanał i Simply nie pozwala wysyłać nim newsletterów. Zostaw tę sekcję pustą, dopóki nie założysz konta w Brevo (host smtp-relay.brevo.com).</p>

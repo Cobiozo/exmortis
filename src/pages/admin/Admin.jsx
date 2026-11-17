@@ -121,7 +121,7 @@ export default function Admin() {
         <ShieldAlert className="h-12 w-12 blood-text" />
         <p className="relic-heading text-3xl">Nie masz dostępu</p>
         <p className="text-foreground/55 max-w-sm">Ta część strony jest dostępna tylko dla administratora.</p>
-        <Link to="/" className="btn-relic">STRONA GŁÓWNA</Link>
+        <Link to="/" className="btn-relic">Strona główna</Link>
       </div>
     );
   }

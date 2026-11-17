@@ -28,7 +28,7 @@ export default function HoursEditor({ typeId, initial, onSaved }) {
       ))}
       <div className="flex flex-wrap gap-4 items-center pt-2">
         <button onClick={() => setRows([...rows, { weekday: 2, from: "10:00", to: "12:00" }])} className="text-xs gold-text inline-flex items-center gap-1"><Plus className="h-3 w-3" /> Dodaj przedział</button>
-        <button onClick={save} className="btn-ghost !py-2">ZAPISZ GODZINY</button>
+        <button onClick={save} className="btn-ghost !py-2">Zapisz godziny</button>
         {msg && <span className="text-sm text-foreground/70">{msg}</span>}
       </div>
     </div>

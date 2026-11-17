@@ -48,7 +48,7 @@ export default function BackupsPanel() {
 
       <div className="flex flex-wrap items-center gap-4 mb-6">
         <button onClick={make} disabled={busy} className="btn-relic">
-          {busy ? "ROBIĘ KOPIĘ…" : "ZRÓB KOPIĘ TERAZ"}
+          {busy ? "Robię kopię…" : "Zrób kopię teraz"}
         </button>
         {msg && <span className={`text-sm ${msg.ok ? "gold-text" : "blood-text"}`}>{msg.text}</span>}
       </div>

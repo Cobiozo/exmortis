@@ -37,7 +37,7 @@ export default function PersonDataPanel() {
       <div className="flex flex-wrap gap-3">
         <input type="email" value={email} onChange={(e) => { setEmail(e.target.value); setFound(null); }} placeholder="adres@e-mail.pl"
           className="flex-1 min-w-[240px] bg-transparent border hairline px-4 py-3 focus:border-[#C9A24A] focus:outline-none" />
-        <button onClick={find} disabled={!email || !!busy} className="btn-relic !py-3">{busy === "find" ? <Loader2 className="h-4 w-4 animate-spin" /> : <Search className="h-4 w-4" />} ZNAJDŹ</button>
+        <button onClick={find} disabled={!email || !!busy} className="btn-relic !py-3">{busy === "find" ? <Loader2 className="h-4 w-4 animate-spin" /> : <Search className="h-4 w-4" />} Znajdź</button>
       </div>
       {error && <p role="alert" className="text-sm text-[#E8C547]">{error}</p>}
       {found && (
@@ -51,7 +51,7 @@ export default function PersonDataPanel() {
             </table>
           )}
           <div className="flex flex-wrap gap-3">
-            <button onClick={exportData} disabled={!!busy} className="btn-ghost !py-3">{busy === "export" ? <Loader2 className="h-4 w-4 animate-spin" /> : <Download className="h-4 w-4" />} EKSPORTUJ (JSON)</button>
+            <button onClick={exportData} disabled={!!busy} className="btn-ghost !py-3">{busy === "export" ? <Loader2 className="h-4 w-4 animate-spin" /> : <Download className="h-4 w-4" />} Eksportuj (JSON)</button>
           </div>
           <EmailAliases email={email.trim()} onPick={(e) => { setEmail(e); setFound(null); }} />
           <PowrotCoop rows={found.powrot} call={call} onDone={find} />

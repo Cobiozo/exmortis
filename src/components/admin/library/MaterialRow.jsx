@@ -59,7 +59,7 @@ export default function MaterialRow({ item, selected, onSelect, onEdit, onAssign
         open={!!del} onClose={() => setDel(null)} title="Usunąć materiał?"
         footer={
           <>
-            <button className="btn-ghost" onClick={() => setDel(null)}>ANULUJ</button>
+            <button className="btn-ghost" onClick={() => setDel(null)}>Anuluj</button>
             <button className="btn-blood" onClick={doDelete} disabled={busy}>{busy ? <Loader2 className="h-4 w-4 animate-spin" /> : "USUŃ"}</button>
           </>
         }

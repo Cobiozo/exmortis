@@ -48,7 +48,7 @@ export default function BookForClient({ types, onDone }) {
           </div>
           {slots && <SlotPicker slots={slots} value={pick} onPick={setPick} />}
           <button onClick={submit} disabled={!pick || !form.first_name.trim() || !form.email.trim() || busy} className="btn-relic !py-3 text-[10px] disabled:opacity-50">
-            {busy ? "ZAPISUJĘ…" : "UMÓW I WYŚLIJ POTWIERDZENIE"}
+            {busy ? "Zapisuję…" : "Umów i wyślij potwierdzenie"}
           </button>
           <p className="text-xs text-foreground/45">Reguła 24 godzin nie obowiązuje administratora. Zajętego terminu nie da się wybrać.</p>
         </div>

@@ -27,11 +27,11 @@ export default function EmailChangeBox({ email }) {
       <p className="technical text-[10px] gold-text">ADRES E-MAIL KONTA</p>
       {c && <p className="text-sm text-foreground/70">{EC_STATUS[c.status]}{c.new ? ` · nowy: ${c.new}` : ""} · {new Date(c.created_date).toLocaleString("pl-PL")}{c.blad ? ` · ${c.blad}` : ""}</p>}
       <div className="flex flex-wrap gap-3 items-center">
-        {!active && <button disabled={blocked || !!busy} onClick={() => run("start", { action: "start", email }, "Wysłano link na obecny adres.")} className="btn-ghost !px-4 !py-2 disabled:opacity-40">ZMIEŃ ADRES E-MAIL</button>}
-        {!active && blocked && <span className="technical text-[10px] text-foreground/40">{!s.on ? "FUNKCJA WYŁĄCZONA W USTAWIENIACH" : "WYMAGA SKONFIGUROWANEJ WYSYŁKI E-MAIL"}</span>}
-        {c && ["przyjeto", "blad"].includes(c.status) && !plan && <button disabled={!!busy} onClick={async () => { setBusy("plan"); setPlan((await ecCall({ action: "plan", id: c.id })).plan); setBusy(""); }} className="btn-ghost !px-4 !py-2">CO ZOSTANIE PRZENIESIONE</button>}
-        {c?.ma_kopie && <button onClick={async () => downloadJson(`kopia-${c.id}.json`, (await ecCall({ action: "backup", id: c.id })).kopia)} className="btn-ghost !px-4 !py-2">KOPIA (JSON)</button>}
-        {c?.ma_kopie && c.status === "przeniesiono" && <button disabled={!!busy} onClick={() => window.confirm("Przywrócić stan sprzed przeniesienia?") && run("restore", { action: "restore", id: c.id }, "Przywrócono z kopii.")} className="btn-ghost !px-4 !py-2">PRZYWRÓĆ Z KOPII</button>}
+        {!active && <button disabled={blocked || !!busy} onClick={() => run("start", { action: "start", email }, "Wysłano link na obecny adres.")} className="btn-ghost !px-4 !py-2 disabled:opacity-40">Zmień adres e-mail</button>}
+        {!active && blocked && <span className="technical text-[10px] text-foreground/40">{!s.on ? "Funkcja wyłączona w ustawieniach" : "Wymaga skonfigurowanej wysyłki e-mail"}</span>}
+        {c && ["przyjeto", "blad"].includes(c.status) && !plan && <button disabled={!!busy} onClick={async () => { setBusy("plan"); setPlan((await ecCall({ action: "plan", id: c.id })).plan); setBusy(""); }} className="btn-ghost !px-4 !py-2">Co zostanie przeniesione</button>}
+        {c?.ma_kopie && <button onClick={async () => downloadJson(`kopia-${c.id}.json`, (await ecCall({ action: "backup", id: c.id })).kopia)} className="btn-ghost !px-4 !py-2">Kopia (JSON)</button>}
+        {c?.ma_kopie && c.status === "przeniesiono" && <button disabled={!!busy} onClick={() => window.confirm("Przywrócić stan sprzed przeniesienia?") && run("restore", { action: "restore", id: c.id }, "Przywrócono z kopii.")} className="btn-ghost !px-4 !py-2">Przywróć z kopii</button>}
         {busy && <Loader2 className="h-4 w-4 animate-spin gold-text" />}
       </div>
       {plan && <EmailChangePlan plan={plan} busy={busy === "transfer"} onTransfer={() => run("transfer", { action: "transfer", id: c.id }, "Przeniesiono. Stare konto zablokowane.")} />}

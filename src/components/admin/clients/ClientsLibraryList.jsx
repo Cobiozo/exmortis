@@ -87,12 +87,12 @@ export default function ClientsLibraryList() {
           <div className="border hairline p-3 space-y-2">
             <p className="text-sm">Wybrane: {sel.length}</p>
             <div className="flex flex-wrap gap-2">
-              <button onClick={() => setSel(emails)} className="btn-ghost !px-3 !py-2">ZAZNACZ WSZYSTKIE WYNIKI FILTRA</button>
-              <button onClick={() => ask("add")} disabled={!grupy.length} className="btn-ghost !px-3 !py-2">DODAJ DO GRUPY</button>
-              <button onClick={() => ask("remove")} disabled={!grupy.length} className="btn-ghost !px-3 !py-2">USUŃ Z GRUPY</button>
-              <button onClick={() => setAssign(true)} className="btn-relic !px-3 !py-2">PRZYDZIEL MATERIAŁ</button>
-              <button onClick={() => setWrite(true)} className="btn-ghost !px-3 !py-2">NAPISZ WIADOMOŚĆ</button>
-              <button onClick={() => setSel([])} className="btn-ghost !px-3 !py-2">WYCZYŚĆ</button>
+              <button onClick={() => setSel(emails)} className="btn-ghost !px-3 !py-2">Zaznacz wszystkie wyniki filtra</button>
+              <button onClick={() => ask("add")} disabled={!grupy.length} className="btn-ghost !px-3 !py-2">Dodaj do grupy</button>
+              <button onClick={() => ask("remove")} disabled={!grupy.length} className="btn-ghost !px-3 !py-2">Usuń z grupy</button>
+              <button onClick={() => setAssign(true)} className="btn-relic !px-3 !py-2">Przydziel materiał</button>
+              <button onClick={() => setWrite(true)} className="btn-ghost !px-3 !py-2">Napisz wiadomość</button>
+              <button onClick={() => setSel([])} className="btn-ghost !px-3 !py-2">Wyczyść</button>
             </div>
           </div>
         )}
@@ -142,7 +142,7 @@ export default function ClientsLibraryList() {
       <LibModal
         open={!!confirm} onClose={() => setConfirm(null)} title={confirm?.kind === "add" ? "Dodać do grupy?" : "Usunąć z grupy?"}
         footer={<>
-          <button className="btn-ghost" onClick={() => setConfirm(null)}>ANULUJ</button>
+          <button className="btn-ghost" onClick={() => setConfirm(null)}>Anuluj</button>
           <button className="btn-relic" onClick={() => runBulk(confirm)} disabled={busy}>{busy ? <Loader2 className="h-4 w-4 animate-spin" /> : "WYKONAJ"}</button>
         </>}
       >

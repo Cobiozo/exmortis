@@ -10,8 +10,8 @@ export default function EmailChangeLog({ onPick }) {
   return (
     <div className="space-y-4">
       <p className="text-foreground/40 text-sm">Wybierz klienta z listy.</p>
-      {me && <button onClick={() => onPick(me.email)} className="btn-ghost !px-4 !py-2">MOJE KONTO</button>}
-      <p className="technical text-[10px] gold-text pt-4">DZIENNIK ZMIAN ADRESU E-MAIL</p>
+      {me && <button onClick={() => onPick(me.email)} className="btn-ghost !px-4 !py-2">Moje konto</button>}
+      <p className="technical text-[10px] gold-text pt-4">Dziennik zmian adresu e-mail</p>
       {rows && rows.length === 0 && <p className="text-sm text-foreground/40">Brak wpisów.</p>}
       {rows && rows.length > 0 && (
         <ul className="divide-y hairline text-sm">

@@ -57,7 +57,7 @@ export default function AiSettings() {
           </div>
         )}
         <div className="flex flex-wrap items-center gap-3">
-          <button type="button" className="btn-relic !px-4 !py-2 text-[10px]" disabled={!!busy} onClick={() => save()}>{busy === "save" && <Loader2 className="h-4 w-4 animate-spin" />} ZAPISZ</button>
+          <button type="button" className="btn-relic !px-4 !py-2 text-[10px]" disabled={!!busy} onClick={() => save()}>{busy === "save" && <Loader2 className="h-4 w-4 animate-spin" />} Zapisz</button>
           {d.has_key && <button type="button" className="text-xs text-foreground/50 underline hover:text-[#E8676A]" disabled={!!busy} onClick={() => save({ remove_key: true, provider: "base44" })}>usuń zapisany klucz</button>}
           {msg && <span className="text-xs text-[#9FD3A0]" role="status">{msg}</span>}
           {err && <span className="text-xs text-[#E8676A]" role="alert">{err}</span>}

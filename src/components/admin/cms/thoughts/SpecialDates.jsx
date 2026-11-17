@@ -17,7 +17,7 @@ export default function SpecialDates({ items, onChange }) {
           <button type="button" className="p-2 text-foreground/50 hover:text-[#C9A24A]" onClick={() => onChange(items.filter((_, j) => j !== i))} aria-label="Usuń"><Trash2 className="h-4 w-4" /></button>
         </div>
       ))}
-      <button type="button" onClick={() => onChange([...items, { d: "", t: "" }])} className="btn-ghost !py-2 mt-2"><Plus className="h-4 w-4" /> DODAJ DATĘ</button>
+      <button type="button" onClick={() => onChange([...items, { d: "", t: "" }])} className="btn-ghost !py-2 mt-2"><Plus className="h-4 w-4" /> Dodaj datę</button>
     </div>
   );
 }

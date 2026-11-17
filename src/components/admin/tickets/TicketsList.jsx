@@ -92,7 +92,7 @@ export default function TicketsList({ event, tickets, reload }) {
           <input type="email" value={add.email} onChange={(e) => setAdd({ ...add, email: e.target.value })} placeholder="E-mail (nieobowiązkowo)" aria-label="E-mail" className={inp} />
         </div>
         <label className="flex items-center gap-3 text-sm text-foreground/70"><input type="checkbox" checked={add.send} disabled={!add.email} onChange={(e) => setAdd({ ...add, send: e.target.checked })} className="h-5 w-5 accent-[#C9A24A]" /> Wyślij bilet e-mailem</label>
-        <button type="submit" disabled={!!busy} className="btn-relic !px-5 !py-3 disabled:opacity-50"><Plus className="h-4 w-4" /> DODAJ BILET</button>
+        <button type="submit" disabled={!!busy} className="btn-relic !px-5 !py-3 disabled:opacity-50"><Plus className="h-4 w-4" /> Dodaj bilet</button>
         <p className="text-xs text-foreground/45">Bilet ręczny ma cenę 0 zł i liczy się do limitu miejsc.</p>
       </form>
     </div>

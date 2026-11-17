@@ -79,7 +79,7 @@ export default function LessonRow({ lesson, onChange, domains, onAddDomain }) {
             {hostMissing ? (
               <>
                 <span className="text-xs text-[#E8C547]">Domena {serverHost} nie jest na liście zaufanych — klient nie zobaczy filmu.</span>
-                <button type="button" onClick={() => onAddDomain(serverHost)} className="btn-ghost !px-3 !py-1.5 text-[10px]">DODAJ {serverHost.toUpperCase()}</button>
+                <button type="button" onClick={() => onAddDomain(serverHost)} className="btn-ghost !px-3 !py-1.5 text-[10px]">Dodaj {serverHost.toUpperCase()}</button>
               </>
             ) : domains ? <span className="text-xs text-[#9FD3A0]">Twój serwer ({serverHost}) — domena zaufana.</span> : null}
             <button type="button" onClick={async () => {
@@ -89,7 +89,7 @@ export default function LessonRow({ lesson, onChange, domains, onAddDomain }) {
               const r = await base44.functions.invoke("adminSettings", { action: "video_sign_preview", url: String(f.video_url).trim() }).catch(() => null);
               if (r?.data?.url) setTestUrl(r.data.url);
               setTest("load");
-            }} className="btn-ghost !px-3 !py-1.5 text-[10px]">{test ? "ZAMKNIJ PODGLĄD" : "SPRAWDŹ ODTWARZANIE"}</button>
+            }} className="btn-ghost !px-3 !py-1.5 text-[10px]">{test ? "Zamknij podgląd" : "Sprawdź odtwarzanie"}</button>
           </div>
         )}
         {serverHost && test && (
@@ -109,7 +109,7 @@ export default function LessonRow({ lesson, onChange, domains, onAddDomain }) {
       </div>
       <div className="flex flex-wrap items-center gap-3">
         <label className="btn-ghost cursor-pointer !px-3 !py-2 text-[10px]">
-          {busy === "up" ? <Loader2 className="h-4 w-4 animate-spin" /> : <Upload className="h-4 w-4" />} {f.video_uri ? "ZMIEŃ WIDEO" : "WGRAJ WIDEO"}
+          {busy === "up" ? <Loader2 className="h-4 w-4 animate-spin" /> : <Upload className="h-4 w-4" />} {f.video_uri ? "Zmień wideo" : "Wgraj wideo"}
           <input type="file" accept="video/*" className="hidden" onChange={upload} disabled={!!busy} />
         </label>
         <span className="text-xs text-foreground/50">{f.video_name || (f.video_url ? "wideo z adresu" : "brak wideo")}</span>
@@ -124,7 +124,7 @@ export default function LessonRow({ lesson, onChange, domains, onAddDomain }) {
           {busy === "save" ? <Loader2 className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4" />} ZAPISZ
         </button>
         {confirmDel ? (
-          <button type="button" onClick={async () => { await base44.entities.CourseLesson.delete(lesson.id); onChange(); }} className="btn-blood !px-3 !py-2 text-[10px]">NA PEWNO USUŃ</button>
+          <button type="button" onClick={async () => { await base44.entities.CourseLesson.delete(lesson.id); onChange(); }} className="btn-blood !px-3 !py-2 text-[10px]">Na pewno usuń</button>
         ) : (
           <button type="button" onClick={() => setConfirmDel(true)} className="btn-ghost !px-3 !py-2"><Trash2 className="h-4 w-4" /></button>
         )}

@@ -90,7 +90,7 @@ export default function ModeSettings({ settings, types = [], onSaved }) {
       </div>
 
       <div className="flex items-center gap-4">
-        <button onClick={save} disabled={busy} className="btn-relic">{busy ? "ZAPISUJĘ…" : "ZAPISZ"}</button>
+        <button onClick={save} disabled={busy} className="btn-relic">{busy ? "Zapisuję…" : "Zapisz"}</button>
         {msg && <span className="text-sm text-foreground/70">{msg}</span>}
       </div>
     </div>

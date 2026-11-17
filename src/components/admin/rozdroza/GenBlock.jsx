@@ -54,8 +54,8 @@ export default function GenBlock({ kind, id, url, candidate, prompt, story, onSa
           <img src={thumb(candidate, 960)} alt="" className={`w-full max-w-sm object-cover bg-[#141416] ${kind === "cover_portrait" ? "aspect-[2/3] max-w-[200px]" : "aspect-video"}`} />
           {url && <p className="text-xs text-foreground/50">Zatwierdzenie zastąpi obecny obraz.</p>}
           <div className="flex gap-2">
-            <button type="button" className="btn-relic !px-3 !py-2 text-[10px]" disabled={!!busy} onClick={() => act("ok", () => rz("candidate", { kind, id, decision: "accept" }), "Zatwierdzono.")}><Check className="h-3.5 w-3.5" /> ZATWIERDŹ</button>
-            <button type="button" className="btn-ghost !px-3 !py-2 text-[10px]" disabled={!!busy} onClick={() => act("no", () => rz("candidate", { kind, id, decision: "reject" }), "Odrzucono.")}><X className="h-3.5 w-3.5" /> ODRZUĆ</button>
+            <button type="button" className="btn-relic !px-3 !py-2 text-[10px]" disabled={!!busy} onClick={() => act("ok", () => rz("candidate", { kind, id, decision: "accept" }), "Zatwierdzono.")}><Check className="h-3.5 w-3.5" /> Zatwierdź</button>
+            <button type="button" className="btn-ghost !px-3 !py-2 text-[10px]" disabled={!!busy} onClick={() => act("no", () => rz("candidate", { kind, id, decision: "reject" }), "Odrzucono.")}><X className="h-3.5 w-3.5" /> Odrzuć</button>
           </div>
         </div>
       )}

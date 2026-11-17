@@ -47,7 +47,7 @@ export default function ThoughtsEditor() {
         ))}
       </section>
       <div className="flex items-center gap-4">
-        <button type="button" onClick={save} disabled={busy} className="btn-relic">{busy && <Loader2 className="h-4 w-4 animate-spin" />} ZAPISZ</button>
+        <button type="button" onClick={save} disabled={busy} className="btn-relic">{busy && <Loader2 className="h-4 w-4 animate-spin" />} Zapisz</button>
         {msg && <span className="text-sm gold-text">{msg}</span>}
       </div>
     </div>

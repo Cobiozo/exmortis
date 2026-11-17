@@ -25,7 +25,7 @@ export default function ApplicationsTab() {
       {open && <ApplicationCard key={open.id} a={open} onChange={changed} onClose={() => setOpen(null)} />}
       <div className="overflow-x-auto border hairline">
         <table className="w-full text-sm">
-          <thead className="technical text-[9px] text-foreground/40 text-left"><tr><th className="p-3">DATA</th><th className="p-3">IMIĘ</th><th className="p-3">ŚMIERĆ</th><th className="p-3">FORMA</th><th className="p-3">STATUS</th><th className="p-3">OZNACZENIA</th></tr></thead>
+          <thead className="technical text-[9px] text-foreground/40 text-left"><tr><th className="p-3">Data</th><th className="p-3">Imię</th><th className="p-3">Śmierć</th><th className="p-3">Forma</th><th className="p-3">Status</th><th className="p-3">Oznaczenia</th></tr></thead>
           <tbody>
             {shown.map((r) => (
               <tr key={r.id} onClick={() => setOpen(r)} className="border-t hairline cursor-pointer hover:bg-[#121212]">

@@ -51,7 +51,7 @@ export default function MessagesPanel({ presetTarget }) {
             </button>
           ))}
         </div>
-        <button className="btn-relic mb-2" onClick={() => setForm({ presetTarget })}><Plus className="h-4 w-4" /> NOWA WIADOMOŚĆ</button>
+        <button className="btn-relic mb-2" onClick={() => setForm({ presetTarget })}><Plus className="h-4 w-4" /> Nowa wiadomość</button>
       </div>
 
       <div className="flex gap-3 border hairline bg-[#C9A24A]/[.05] p-3 text-sm text-foreground/75">

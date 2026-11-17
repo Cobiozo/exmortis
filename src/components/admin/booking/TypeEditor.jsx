@@ -39,7 +39,7 @@ export default function TypeEditor({ type, onSaved }) {
       </div>
       <QuestionsEditor value={t.questions || []} onChange={(q) => set("questions", q)} />
       <div className="flex items-center gap-4">
-        <button onClick={save} disabled={busy} className="btn-relic">{busy ? "ZAPISUJĘ…" : "ZAPISZ RODZAJ"}</button>
+        <button onClick={save} disabled={busy} className="btn-relic">{busy ? "Zapisuję…" : "Zapisz rodzaj"}</button>
         {msg && <span className="text-sm text-foreground/70">{msg}</span>}
       </div>
       <HoursEditor typeId={type.id} initial={type.hours} onSaved={onSaved} />
