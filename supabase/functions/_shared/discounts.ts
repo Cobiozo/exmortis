@@ -66,8 +66,7 @@ export async function applyDiscount(base44, rawCode, lines, buyerEmail = "", ses
   // Minimalna wartość objętych kodem produktów (np. kod 20 zł po zakupie: od 49 zł).
   const minZl = Number(found.min_zl) || 0;
   if (minZl > 0 && base < Math.round(minZl * 100)) {
-    const e = new Error(`Ten kod działa przy zamówieniu od ${minZl} zł (e-booki, audio, kursy, pakiety)`);
-    throw e;
+    throw bad(`Ten kod działa przy zamówieniu od ${minZl} zł (e-booki, audio, kursy, pakiety)`);
   }
   const off = found.kind === "kwota"
     ? Math.min(base, Math.round(found.value * 100))
