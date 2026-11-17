@@ -17,6 +17,20 @@ function Bg({ d }) {
 
 const Dopisek = ({ t }) => t ? <p className="technical text-xs text-foreground/75 mt-3">{t}</p> : null;
 
+// Kto stoi za stroną: małe zdjęcie i podpis z linkiem do „O mnie” (audyt 17.11.2026, X-07).
+function Autor({ d }) {
+  if (!d.autor_zdjecie?.url && !d.autor_podpis) return null;
+  return (
+    <a href="/o-mnie" className="group mt-6 md:mt-8 inline-flex items-center gap-3 text-left">
+      {d.autor_zdjecie?.url && (
+        <SafeImg img={{ ...d.autor_zdjecie, alt: d.autor_zdjecie.alt || d.autor_podpis || "" }} eager
+          className="h-12 w-12 md:h-14 md:w-14 rounded-full object-cover border border-[#C9A24A]/50 shrink-0" />
+      )}
+      {d.autor_podpis && <span className="text-sm text-foreground/75 group-hover:text-[#C9A24A] transition-colors">{d.autor_podpis}</span>}
+    </a>
+  );
+}
+
 // Podpis pod głównym przyciskiem — drobny tekst, zawsze bezpośrednio pod pierwszym przyciskiem.
 const Podpis = ({ t }) => t
   ? <p className="text-[11px] md:text-xs text-foreground/55 leading-relaxed max-w-[280px]">{t}</p>
@@ -65,6 +79,7 @@ export default function HeroBlock({ d }) {
         {/* Główny komunikat (wyraźny) i opis zwykłym tekstem — bez wersalików, czytelny na telefonie. */}
         {d.lead && <p className="no-hyph mt-6 md:mt-10 text-[1.375rem] sm:text-2xl md:text-[2rem] leading-snug text-[#F5EFE1] font-light max-w-2xl">{nbsp(d.lead)}</p>}
         {d.podlead && <p className="no-hyph mt-4 md:mt-5 text-base md:text-lg leading-relaxed text-foreground/75 font-light max-w-xl">{nbsp(d.podlead)}</p>}
+        <Autor d={d} />
         <Zapowiedz d={d} center />
         <HeroButtons d={d} className="mt-7 md:mt-12" center />
         <Dopisek t={d.dopisek} />
