@@ -35,6 +35,9 @@ export function CartProvider({ children }) {
     }
   }, [items]);
 
+  // Osobisty PDF (znak wodny z adresem kupującego) — zawsze 1 sztuka; prezent: karta podarunkowa (audyt 17.11.2026, X-34).
+  const maxQty = (t) => (t === "pdf" ? 1 : MAX_QTY);
+
   const addItem = useCallback((product, qty = 1, gift = null) => {
     if (product.seats && product.seats.left <= 0) return; // limit miejsc wykorzystany (kasa i tak by odrzuciła)
     track(FUNNEL.addToCart, { slug: product.slug });
@@ -53,7 +56,7 @@ export function CartProvider({ children }) {
       const existing = prev.find((i) => !i.key && i.id === product.id);
       if (existing) {
         return prev.map((i) =>
-          !i.key && i.id === product.id ? { ...i, qty: Math.min(MAX_QTY, i.qty + qty) } : i
+          !i.key && i.id === product.id ? { ...i, qty: Math.min(maxQty(i.product_type), i.qty + qty) } : i
         );
       }
       return [
@@ -66,7 +69,7 @@ export function CartProvider({ children }) {
           slug: product.slug,
           product_type: product.product_type,
           access_months: product.access_months,
-          qty: Math.min(MAX_QTY, qty),
+          qty: Math.min(maxQty(product.product_type), qty),
         },
       ];
     });
@@ -91,7 +94,7 @@ export function CartProvider({ children }) {
   const updateQty = useCallback((k, qty) => {
     if (qty < 1) return;
     if (String(k).startsWith("bilet:")) return; // liczba biletów = liczba osób z imionami (zmiana na stronie wydarzenia)
-    setItems((prev) => prev.map((i) => (lineKey(i) === k ? { ...i, qty: Math.min(MAX_QTY, qty) } : i)));
+    setItems((prev) => prev.map((i) => (lineKey(i) === k ? { ...i, qty: Math.min(maxQty(i.product_type), qty) } : i)));
   }, []);
 
   // Aktualne ceny i dostępność z serwera (np. koniec promocji, produkt wycofany) — zwraca true, gdy coś się zmieniło.
