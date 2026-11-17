@@ -30,7 +30,7 @@ export default function ListyPotwierdz() {
           <h1 className="relic-heading text-3xl md:text-4xl">Link nieaktywny</h1>
           <p className="text-foreground/70">Ten link wygasł (ważny 7 dni) albo adres został wcześniej wypisany. Możesz zapisać się ponownie — otrzymasz nowy link potwierdzający.</p>
         </>}
-        {state !== "loading" && <Link to="/" className="btn-ghost">STRONA GŁÓWNA</Link>}
+        {state !== "loading" && <Link to="/" className="btn-ghost">Strona główna</Link>}
       </div>
     </section>
   );

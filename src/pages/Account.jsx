@@ -40,7 +40,7 @@ export default function Account() {
     return (
       <div className="bg-[#0A0A0B] pt-28 pb-24 min-h-screen px-5 text-center space-y-6">
         <p className="relic-heading text-3xl">Konto nieaktywne</p>
-        <button onClick={() => base44.auth.logout("/")} className="btn-ghost">WYLOGUJ</button>
+        <button onClick={() => base44.auth.logout("/")} className="btn-ghost">Wyloguj</button>
       </div>
     );
   }

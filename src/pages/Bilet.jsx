@@ -69,8 +69,8 @@ export default function Bilet() {
             </div>
             {t.status !== "anulowany" && (
               <div className="p-6 pt-0 space-y-3">
-                <a href={t.pdf} className="btn-relic w-full"><Download className="h-4 w-4" /> POBIERZ PDF</a>
-                {t.event.slug && <Link to={`/spotkania/${t.event.slug}`} className="btn-ghost w-full">STRONA WYDARZENIA</Link>}
+                <a href={t.pdf} className="btn-relic w-full"><Download className="h-4 w-4" /> Pobierz PDF</a>
+                {t.event.slug && <Link to={`/spotkania/${t.event.slug}`} className="btn-ghost w-full">Strona wydarzenia</Link>}
               </div>
             )}
           </div>

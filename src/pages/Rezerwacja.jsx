@@ -32,7 +32,7 @@ export default function Rezerwacja() {
   if (typeErr) return (
     <div className="pt-32 pb-24 container-exm max-w-2xl">
       <p role="alert" className="text-sm text-[#E8C547]">Nie udało się wczytać rezerwacji. Sprawdź połączenie.</p>
-      <button onClick={loadAll} className="btn-ghost mt-6">SPRÓBUJ PONOWNIE</button>
+      <button onClick={loadAll} className="btn-ghost mt-6">Spróbuj ponownie</button>
     </div>
   );
   if (!type) return <NotFoundContent />;
@@ -60,7 +60,7 @@ export default function Rezerwacja() {
             {slotsErr ? (
               <div className="border hairline p-6">
                 <p role="alert" className="text-sm text-[#E8C547]">Nie udało się wczytać terminów. Sprawdź połączenie.</p>
-                <button onClick={loadSlots} className="btn-ghost mt-4">SPRÓBUJ PONOWNIE</button>
+                <button onClick={loadSlots} className="btn-ghost mt-4">Spróbuj ponownie</button>
               </div>
             ) : slots ? <SlotPicker slots={slots} value={pick} onPick={(s) => { setNotice(""); setPick(s); }} /> : <p className="text-foreground/55">Ładowanie terminów…</p>}
           </>

@@ -167,7 +167,7 @@ export default function Skaner() {
         <div className="max-w-sm space-y-5">
           <p className="technical text-[10px] gold-text">EXMORTIS · SKANER BILETÓW</p>
           <p className="text-foreground/75 leading-relaxed">{info.error ? "Nie udało się sprawdzić uprawnień. Spróbuj ponownie." : "To konto nie ma uprawnienia do sprawdzania biletów. Poproś administratora o dodanie Twojego adresu e-mail."}</p>
-          <Link to="/" className="btn-ghost">STRONA GŁÓWNA</Link>
+          <Link to="/" className="btn-ghost">Strona główna</Link>
         </div>
       </main>
     );
@@ -199,7 +199,7 @@ export default function Skaner() {
             {cam === "denied" && <p className="text-sm text-[#E8C547] max-w-xs">Brak zgody na kamerę. Zezwól na kamerę w ustawieniach przeglądarki albo wpisuj numery biletów ręcznie.</p>}
             {cam === "none" && <p className="text-sm text-[#E8C547] max-w-xs">Nie udało się włączyć kamery. Wpisuj numery biletów ręcznie.</p>}
             <button type="button" onClick={startCam} disabled={cam === "starting"} className="btn-relic !px-8 !py-4 disabled:opacity-50">
-              <Camera className="h-5 w-5" /> {cam === "starting" ? "WŁĄCZAM…" : "WŁĄCZ KAMERĘ"}
+              <Camera className="h-5 w-5" /> {cam === "starting" ? "Włączam…" : "Włącz kamerę"}
             </button>
           </div>
         )}
@@ -228,11 +228,11 @@ export default function Skaner() {
           <form onSubmit={(e) => { e.preventDefault(); if (code.trim()) { check({ code: code.trim() }); setCode(""); } }} className="flex gap-2">
             <input value={code} onChange={(e) => setCode(e.target.value.toUpperCase())} placeholder="Numer biletu, np. KRT-4821" autoCapitalize="characters" autoComplete="off"
               aria-label="Numer biletu" className="flex-1 min-w-0 bg-transparent border hairline px-4 py-3 font-mono text-base focus:border-[#C9A24A] focus:outline-none" />
-            <button type="submit" className="btn-relic !px-5">SPRAWDŹ</button>
+            <button type="submit" className="btn-relic !px-5">Sprawdź</button>
             <button type="button" onClick={() => setManual(false)} className="btn-ghost !px-3" aria-label="Zamknij wpisywanie"><X className="h-4 w-4" /></button>
           </form>
         ) : (
-          <button type="button" onClick={() => setManual(true)} className="btn-ghost w-full"><Keyboard className="h-4 w-4" /> WPISZ NUMER BILETU</button>
+          <button type="button" onClick={() => setManual(true)} className="btn-ghost w-full"><Keyboard className="h-4 w-4" /> Wpisz numer biletu</button>
         )}
         {recent.length > 0 && (
           <div>

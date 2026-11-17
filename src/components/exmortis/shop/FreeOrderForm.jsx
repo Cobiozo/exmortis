@@ -108,7 +108,7 @@ export default function FreeOrderForm({ product }) {
       </div>
       {error && <p className="text-xs blood-text">{error}</p>}
       <button type="submit" disabled={sending} className="btn-relic w-full disabled:opacity-60">
-        {sending ? "Wysyłam…" : "WYŚLIJ NA MÓJ E-MAIL"} {!sending && <ArrowRight className="h-4 w-4" />}
+        {sending ? "Wysyłam…" : "Wyślij na mój e-mail"} {!sending && <ArrowRight className="h-4 w-4" />}
       </button>
       {!acc.signedIn && <SignInHint />}
       <p className="technical text-[10px] text-foreground/55">

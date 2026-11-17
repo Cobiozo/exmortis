@@ -89,7 +89,7 @@ export default function JoinMeeting() {
             {data.recording_in_account && (
               <div className="mt-6 border hairline p-5">
                 <p className="text-foreground/75 leading-relaxed text-sm">Nagranie jest w koncie osób zapisanych na to spotkanie. Zaloguj się adresem e-mail podanym przy zapisie.</p>
-                <Link to="/konto?tab=spotkania" className="btn-relic mt-4">OBEJRZYJ W KONCIE</Link>
+                <Link to="/konto?tab=spotkania" className="btn-relic mt-4">Obejrzyj w koncie</Link>
               </div>
             )}
           </>
@@ -97,7 +97,7 @@ export default function JoinMeeting() {
         {data.state === "odwolane" && (
           <>
             <p className="text-foreground/80 mt-8">{t("odwolane")}</p>
-            <Link to="/spotkania" className="btn-ghost mt-6">ZOBACZ KOLEJNE SPOTKANIA</Link>
+            <Link to="/spotkania" className="btn-ghost mt-6">Zobacz kolejne spotkania</Link>
           </>
         )}
       </div>

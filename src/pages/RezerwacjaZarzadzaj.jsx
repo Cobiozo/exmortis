@@ -92,20 +92,20 @@ export default function RezerwacjaZarzadzaj() {
             <h1 className="relic-heading text-3xl">{b.type}</h1>
             <p>{fullLabel(b.starts_at)}{note && <span className="text-foreground/55"> ({note})</span>}</p>
             {b.zoom_link
-              ? <a href={b.zoom_link} target="_blank" rel="noreferrer" className="btn-relic text-[10px]">WEJDŹ NA SPOTKANIE</a>
+              ? <a href={b.zoom_link} target="_blank" rel="noreferrer" className="btn-relic text-[10px]">Wejdź na spotkanie</a>
               : <p className="text-xs text-foreground/55">Link do spotkania pojawi się 15 minut przed terminem.</p>}
             {b.can_change || b.can_cancel ? (
               <>
                 <div className="flex flex-wrap gap-3">
-                  {b.can_change && <button onClick={wantChange} className="btn-ghost text-[10px]">PRZENIEŚ</button>}
-                  {b.can_cancel && !confirmCancel && <button onClick={() => setConfirmCancel(true)} disabled={busy} className="btn-ghost text-[10px]">ANULUJ</button>}
+                  {b.can_change && <button onClick={wantChange} className="btn-ghost text-[10px]">Przenieś</button>}
+                  {b.can_cancel && !confirmCancel && <button onClick={() => setConfirmCancel(true)} disabled={busy} className="btn-ghost text-[10px]">Anuluj</button>}
                 </div>
                 {b.can_cancel && confirmCancel && (
                   <div className="border border-[#5C1A1B] p-5 space-y-3">
                     <p className="text-sm">Anulować to spotkanie? Jeśli anulujesz w czasie dozwolonym, sesja wróci do pakietu.</p>
                     <div className="flex flex-wrap gap-3">
-                      <button onClick={doCancel} disabled={busy} className="btn-blood text-[10px]">{busy ? "Anuluję…" : "TAK, ANULUJ"}</button>
-                      <button onClick={() => setConfirmCancel(false)} disabled={busy} className="btn-ghost text-[10px]">ZOSTAW</button>
+                      <button onClick={doCancel} disabled={busy} className="btn-blood text-[10px]">{busy ? "Anuluję…" : "Tak, anuluj"}</button>
+                      <button onClick={() => setConfirmCancel(false)} disabled={busy} className="btn-ghost text-[10px]">Zostaw</button>
                     </div>
                   </div>
                 )}
@@ -117,7 +117,7 @@ export default function RezerwacjaZarzadzaj() {
             {slotsErr && (
               <div className="border hairline p-6">
                 <p role="alert" className="text-sm text-[#E8C547]">Nie udało się wczytać terminów. Sprawdź połączenie.</p>
-                <button onClick={wantChange} className="btn-ghost mt-4 text-[10px]">SPRÓBUJ PONOWNIE</button>
+                <button onClick={wantChange} className="btn-ghost mt-4 text-[10px]">Spróbuj ponownie</button>
               </div>
             )}
             {slots && (

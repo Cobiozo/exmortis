@@ -14,6 +14,6 @@ export default function ChooseTermButton() {
   }, []);
   if (!ready) return null;
   return (
-    <Link to="/konto?tab=sesje" className="btn-relic">WYBIERZ TERMIN TERAZ <ArrowRight className="h-4 w-4" /></Link>
+    <Link to="/konto?tab=sesje" className="btn-relic">Wybierz termin teraz <ArrowRight className="h-4 w-4" /></Link>
   );
 }

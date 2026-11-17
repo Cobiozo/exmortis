@@ -112,7 +112,7 @@ export default function RegistrationForm({ event: ev }) {
         {result.join_url ? (
           <>
             <p className="text-foreground/70 mt-5 leading-relaxed">Poniżej znajduje się Twój unikalny link dostępowy:</p>
-            <a href={result.join_url} className="btn-relic !px-6 !py-3 mt-3">DOŁĄCZ DO SPOTKANIA</a>
+            <a href={result.join_url} className="btn-relic !px-6 !py-3 mt-3">Dołącz do spotkania</a>
             <p className="text-foreground/60 text-sm mt-4 leading-relaxed">
               Zachęcam do zapisania linku lub dodania wydarzenia do kalendarza. Ponieważ jest to link spersonalizowany, proszę o nieudostępnianie go osobom trzecim.
               {Number(ev.price) > 0 ? null : " Do spotkania możesz dołączyć również bezpośrednio przez stronę wydarzenia, podając adres e-mail użyty podczas rejestracji."}

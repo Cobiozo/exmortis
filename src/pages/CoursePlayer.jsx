@@ -40,8 +40,8 @@ export default function CoursePlayer() {
     <div className="min-h-[60vh] flex flex-col items-center justify-center gap-6 px-5 text-center pt-28">
       <p className="text-foreground/60">{err}</p>
       <div className="flex flex-wrap justify-center gap-4">
-        {/Nie udało się/.test(err) && <button onClick={load} className="btn-relic !px-5 !py-3 text-[10px]">SPRÓBUJ PONOWNIE</button>}
-        <Link to="/konto" className="btn-ghost">MOJE PRODUKTY</Link>
+        {/Nie udało się/.test(err) && <button onClick={load} className="btn-relic !px-5 !py-3 text-[10px]">Spróbuj ponownie</button>}
+        <Link to="/konto" className="btn-ghost">Moje produkty</Link>
       </div>
     </div>
   );

@@ -30,7 +30,7 @@ export default function MyEvents() {
   if (!items.length) return (
     <div className="border hairline p-6 md:p-8 max-w-2xl">
       <p className="text-foreground/75 leading-relaxed">Nie widzę tu zapisów na spotkania. Pokazuję zapisy na adres <strong className="text-[#F5EFE1]">{user?.email}</strong> — jeśli zapis był na inny adres, zaloguj się nim.</p>
-      <Link to="/spotkania" className="btn-ghost mt-6">ZOBACZ SPOTKANIA <ArrowRight className="h-4 w-4" /></Link>
+      <Link to="/spotkania" className="btn-ghost mt-6">Zobacz spotkania <ArrowRight className="h-4 w-4" /></Link>
     </div>
   );
 
@@ -50,9 +50,9 @@ export default function MyEvents() {
                     <p className="technical text-[10px] text-[#E8C547] mt-3">DOSTĘPNE JESZCZE {leftText(i.recording.until).toUpperCase()} · DO {whenText(i.recording.until).toUpperCase()}</p>
                   </div>
                   {playing === i.id ? (
-                    <button onClick={() => setPlaying(null)} className="btn-ghost !px-4 !py-2 text-[10px] shrink-0"><X className="h-4 w-4" /> ZAMKNIJ</button>
+                    <button onClick={() => setPlaying(null)} className="btn-ghost !px-4 !py-2 text-[10px] shrink-0"><X className="h-4 w-4" /> Zamknij</button>
                   ) : (
-                    <button onClick={() => setPlaying(i.id)} className="btn-relic !px-5 !py-3 text-[10px] shrink-0"><Play className="h-4 w-4" /> OBEJRZYJ</button>
+                    <button onClick={() => setPlaying(i.id)} className="btn-relic !px-5 !py-3 text-[10px] shrink-0"><Play className="h-4 w-4" /> Obejrzyj</button>
                   )}
                 </div>
                 {playing === i.id && (
@@ -79,7 +79,7 @@ export default function MyEvents() {
                 </div>
                 {i.status === "Odwołane" ? <span className="technical text-[10px] text-foreground/55">ODWOŁANE</span>
                   : i.reg_status === "Lista rezerwowa" ? <span className="technical text-[10px] text-[#E8C547]">Lista rezerwowa</span>
-                  : i.event_url || i.join_url ? <Link to={i.event_url || i.join_url} className="btn-ghost !px-4 !py-2 text-[10px]">STRONA SPOTKANIA <ArrowRight className="h-4 w-4" /></Link>
+                  : i.event_url || i.join_url ? <Link to={i.event_url || i.join_url} className="btn-ghost !px-4 !py-2 text-[10px]">Strona spotkania <ArrowRight className="h-4 w-4" /></Link>
                   : <span className="technical text-[10px] text-foreground/55">ZAPISANO</span>}
               </div>
             ))}

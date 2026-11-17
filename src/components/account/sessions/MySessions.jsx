@@ -31,10 +31,10 @@ function NoAccess({ closed }) {
         </>
       )}
       <div className="flex flex-wrap gap-3">
-        <Link to="/kontakt" className="btn-relic">NAPISZ DO EXMORTIS <ArrowRight className="h-4 w-4" /></Link>
-        <Link to="/spotkania" className="btn-ghost">SPOTKANIA OGÓLNE</Link>
-        <Link to="/skarbiec/rozmowa-na-progu" className="btn-ghost">ROZMOWA NA PROGU</Link>
-        {!closed && <Link to="/powrot" className="btn-ghost">O PROGRAMIE POWRÓT</Link>}
+        <Link to="/kontakt" className="btn-relic">Napisz do exmortis <ArrowRight className="h-4 w-4" /></Link>
+        <Link to="/spotkania" className="btn-ghost">Spotkania ogólne</Link>
+        <Link to="/skarbiec/rozmowa-na-progu" className="btn-ghost">Rozmowa na progu</Link>
+        {!closed && <Link to="/powrot" className="btn-ghost">O programie POWRÓT</Link>}
       </div>
     </div>
   );
@@ -94,7 +94,7 @@ export default function MySessions() {
                     <p className="text-xs text-foreground/60">Najbliższy możliwy termin: od {day(next)}</p>
                   )}
                   {p.sessions_left > 0 && new Date(p.valid_until).getTime() > now && (
-                    <button onClick={() => setBookFrom(p)} className="btn-relic text-[10px]">UMÓW SPOTKANIE</button>
+                    <button onClick={() => setBookFrom(p)} className="btn-relic text-[10px]">Umów spotkanie</button>
                   )}
                 </div>
               );

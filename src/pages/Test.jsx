@@ -214,7 +214,7 @@ export default function Test() {
               <div className="mt-8 flex flex-col sm:flex-row sm:flex-wrap gap-3">
                 <Link to="/#listy-powrotu" className="btn-relic">Zapisz się na Listy powrotu <ArrowRight className="h-4 w-4" /></Link>
                 <Link to="/glos" className="btn-ghost">POSŁUCHAJ — MUZYKA I PODCAST <ArrowRight className="h-4 w-4" /></Link>
-                <Link to="/skarbiec" className="btn-ghost">ZAJRZYJ DO SKARBCA <ArrowRight className="h-4 w-4" /></Link>
+                <Link to="/skarbiec" className="btn-ghost">Zajrzyj do Skarbca <ArrowRight className="h-4 w-4" /></Link>
               </div>
               <p className="shop-heading italic text-lg text-[#F5EFE1]/80 mt-10">Wracam z siebie. Uczę wracać.</p>
               <p className="technical text-[10px] gold-text mt-2">EXMORTIS — ZE ŚMIERCI</p>
@@ -226,7 +226,7 @@ export default function Test() {
                 <span className="shop-heading text-xl block">Rozdroża</span>
                 <span className="text-sm text-[#F5EFE1]/75 block mt-1">Interaktywne historie, w których to Ty podejmujesz decyzje i widzisz, dokąd prowadzą. Bezpłatnie, po zalogowaniu.</span>
                 {user ? (
-                  <Link to={ROZDROZA} className="btn-ghost !px-5 !py-3 text-[11px] mt-4">OTWÓRZ ROZDROŻA <ArrowRight className="h-4 w-4" /></Link>
+                  <Link to={ROZDROZA} className="btn-ghost !px-5 !py-3 text-[11px] mt-4">Otwórz Rozdroża <ArrowRight className="h-4 w-4" /></Link>
                 ) : (
                   <Link to={`/register?returnTo=${encodeURIComponent(ROZDROZA)}`} className="btn-ghost !px-5 !py-3 text-[11px] mt-4">Załóż darmowe konto <ArrowRight className="h-4 w-4" /></Link>
                 )}
@@ -255,8 +255,8 @@ export default function Test() {
             </div>
             <div className="text-center">
               <button onClick={share} className="btn-ghost !px-5 !py-3 text-[10px]">
-                {copied ? <span className="flex items-center gap-2"><Check className="h-3.5 w-3.5" /> SKOPIOWANO LINK</span>
-                  : <span className="flex items-center gap-2"><Share2 className="h-3.5 w-3.5" /> WYŚLIJ TEST KOMUŚ BLISKIEMU</span>}
+                {copied ? <span className="flex items-center gap-2"><Check className="h-3.5 w-3.5" /> Skopiowano link</span>
+                  : <span className="flex items-center gap-2"><Share2 className="h-3.5 w-3.5" /> Wyślij test komuś bliskiemu</span>}
               </button>
             </div>
           </div>

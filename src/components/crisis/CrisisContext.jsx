@@ -31,7 +31,7 @@ function CrisisFallback({ open, onOpenChange }) {
             </a>
           ))}
         </div>
-        <button type="button" onClick={() => onOpenChange(false)} className="btn-ghost w-full">ZAMKNIJ</button>
+        <button type="button" onClick={() => onOpenChange(false)} className="btn-ghost w-full">Zamknij</button>
       </div>
     </div>
   );

@@ -115,11 +115,11 @@ export default function RzReader({ previewId = null }) {
   );
   if (incompatible) return (
     <RzProblem text="Ta historia została zmieniona i nie da się bezpiecznie wrócić do zapisanego miejsca. Możesz zacząć ją od nowa."
-      extra={<button type="button" onClick={restart} className="btn-relic">ZACZNIJ OD NOWA</button>} />
+      extra={<button type="button" onClick={restart} className="btn-relic">Zacznij od nowa</button>} />
   );
   if (!st || !scene || st.error) return (
     <RzProblem text={st?.error ? "W tej historii brakuje kolejnej sceny. Możesz wrócić do poprzedniej sceny albo do biblioteki." : "Nie udało się otworzyć sceny."}
-      extra={st?.error ? <button type="button" onClick={() => setSt((s) => { const { error, ...rest } = s; void error; return rest; })} className="btn-relic">WRÓĆ DO SCENY</button> : <button type="button" onClick={restart} className="btn-relic">OD POCZĄTKU</button>} />
+      extra={st?.error ? <button type="button" onClick={() => setSt((s) => { const { error, ...rest } = s; void error; return rest; })} className="btn-relic">Wróć do sceny</button> : <button type="button" onClick={restart} className="btn-relic">Od początku</button>} />
   );
 
   // Podgląd szkicu: powrót na kartę historii w podglądzie (tak jak klient wraca do karty/biblioteki).
@@ -161,7 +161,7 @@ export default function RzReader({ previewId = null }) {
         <Body text={scene.b} className="mt-6 text-foreground/85" />
 
         {scene.y === "narrative" && (
-          <button type="button" onClick={() => act(E.next)} className="btn-relic mt-10 w-full sm:w-auto focus-visible:ring-2 focus-visible:ring-[#C9A24A]/60">DALEJ <ArrowRight className="h-4 w-4" /></button>
+          <button type="button" onClick={() => act(E.next)} className="btn-relic mt-10 w-full sm:w-auto focus-visible:ring-2 focus-visible:ring-[#C9A24A]/60">Dalej <ArrowRight className="h-4 w-4" /></button>
         )}
 
         {scene.y === "decision" && (
@@ -192,10 +192,10 @@ export default function RzReader({ previewId = null }) {
               <p className="mt-10 text-sm text-foreground/60">Ta historia ma {ends.total} zakończenia. „Zobacz inną drogę” zmienia tylko ostatnią decyzję — pozostałe zakończenia czekają za inną pierwszą decyzją.</p>
             )}
             <div className="mt-6 flex flex-col sm:flex-row flex-wrap gap-3">
-              {lastDec && <button type="button" onClick={() => act(E.otherPath)} className="btn-relic focus-visible:ring-2 focus-visible:ring-[#C9A24A]/60">ZOBACZ INNĄ DROGĘ</button>}
-              {firstDec && lastDec && firstDec.key !== lastDec.key && <button type="button" onClick={() => act(E.toFirstDecision)} className="btn-ghost">WRÓĆ DO PIERWSZEJ DECYZJI</button>}
-              <button type="button" onClick={restart} className="btn-ghost">PRZEJDŹ PONOWNIE</button>
-              <button type="button" onClick={() => nav(libraryHref)} className="btn-ghost">WRÓĆ DO BIBLIOTEKI</button>
+              {lastDec && <button type="button" onClick={() => act(E.otherPath)} className="btn-relic focus-visible:ring-2 focus-visible:ring-[#C9A24A]/60">Zobacz inną drogę</button>}
+              {firstDec && lastDec && firstDec.key !== lastDec.key && <button type="button" onClick={() => act(E.toFirstDecision)} className="btn-ghost">Wróć do pierwszej decyzji</button>}
+              <button type="button" onClick={restart} className="btn-ghost">Przejdź ponownie</button>
+              <button type="button" onClick={() => nav(libraryHref)} className="btn-ghost">Wróć do biblioteki</button>
             </div>
           </>
         )}

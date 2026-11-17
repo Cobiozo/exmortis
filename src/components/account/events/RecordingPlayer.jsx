@@ -78,7 +78,7 @@ export default function RecordingPlayer({ item, onExpired }) {
       {err ? (
         <div className="absolute inset-0 flex flex-col items-center justify-center gap-4 px-6 text-center">
           <p className="text-sm text-[#E8C547]">{err}</p>
-          {!/minął|wstrzyman/i.test(err) && <button onClick={() => { setErr(""); setSrc(null); load(); }} className="btn-ghost !px-4 !py-2 text-[10px]">SPRÓBUJ PONOWNIE</button>}
+          {!/minął|wstrzyman/i.test(err) && <button onClick={() => { setErr(""); setSrc(null); load(); }} className="btn-ghost !px-4 !py-2 text-[10px]">Spróbuj ponownie</button>}
         </div>
       ) : !src ? (
         <Loader2 className="absolute inset-0 m-auto h-6 w-6 animate-spin gold-text" />

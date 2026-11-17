@@ -8,8 +8,8 @@ export default function ErrorFallback({ full }) {
         <h1 className="relic-heading text-2xl md:text-3xl mb-5">Coś poszło nie tak na tej stronie.</h1>
         <p className="text-foreground/70 mb-8">Wróć na stronę główną albo odśwież.</p>
         <div className="flex flex-wrap gap-3 justify-center">
-          <a href="/" className="btn-relic">STRONA GŁÓWNA</a>
-          <button onClick={() => window.location.reload()} className="btn-ghost">ODŚWIEŻ</button>
+          <a href="/" className="btn-relic">Strona główna</a>
+          <button onClick={() => window.location.reload()} className="btn-ghost">Odśwież</button>
         </div>
       </div>
     </div>

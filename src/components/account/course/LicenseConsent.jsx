@@ -21,7 +21,7 @@ export default function LicenseConsent({ onAccept }) {
       <p id="lic-h" className="technical text-[10px] gold-text">LICENCJA OSOBISTA</p>
       <p className="text-foreground/80 leading-relaxed">Te materiały są przeznaczone tylko dla Ciebie. Nie udostępniaj konta ani nagrań — każdy film jest oznaczony Twoim adresem.</p>
       {err && <p role="alert" className="text-sm text-[#E8C547]">{err}</p>}
-      <button onClick={accept} disabled={busy} className="btn-relic disabled:opacity-50">ROZUMIEM</button>
+      <button onClick={accept} disabled={busy} className="btn-relic disabled:opacity-50">Rozumiem</button>
     </div>
   );
 }

@@ -94,10 +94,10 @@ export default function LessonPlayer({ accessId, lesson, onDone, onNext, nextTit
           <div className="absolute inset-0 flex flex-col items-center justify-center gap-4 px-6 text-center">
             <p className="text-sm text-[#E8C547]">{err}</p>
             {!/innym urządzeniu|wstrzyman/i.test(err) && (
-              <button onClick={() => { setErr(""); setSrc(null); retried.current = false; loadUrl(); }} className="btn-ghost !px-4 !py-2 text-[10px]">SPRÓBUJ PONOWNIE</button>
+              <button onClick={() => { setErr(""); setSrc(null); retried.current = false; loadUrl(); }} className="btn-ghost !px-4 !py-2 text-[10px]">Spróbuj ponownie</button>
             )}
             {/innym urządzeniu/i.test(err) && (
-              <button onClick={() => { setErr(""); setSrc(null); loadUrl(); }} className="btn-ghost !px-4 !py-2 text-[10px]">OGLĄDAJ TUTAJ</button>
+              <button onClick={() => { setErr(""); setSrc(null); loadUrl(); }} className="btn-ghost !px-4 !py-2 text-[10px]">Oglądaj tutaj</button>
             )}
           </div>
         ) : !src ? (
@@ -129,12 +129,12 @@ export default function LessonPlayer({ accessId, lesson, onDone, onNext, nextTit
       <div className="mt-6 flex flex-wrap sm:flex-nowrap items-start justify-between gap-4 sm:gap-6">
         <h2 className="shop-heading text-2xl text-[#F5EFE1]">{lesson.title}</h2>
         {done ? <span className="technical text-[10px] gold-text flex items-center gap-1 shrink-0"><Check className="h-4 w-4" /> UKOŃCZONA</span> : (
-          <button onClick={() => { setDone(true); onDone(lesson.id); send({ completed: true }); }} className="btn-ghost !px-4 !py-2 text-[10px] shrink-0">OZNACZ JAKO UKOŃCZONĄ</button>
+          <button onClick={() => { setDone(true); onDone(lesson.id); send({ completed: true }); }} className="btn-ghost !px-4 !py-2 text-[10px] shrink-0">Oznacz jako ukończoną</button>
         )}
       </div>
       {onNext && (
         <button onClick={onNext} className={`mt-5 ${done ? "btn-relic" : "btn-ghost"} !px-5 !py-3 text-[10px] max-w-full`}>
-          <span className="truncate">DALEJ: {String(nextTitle || "").toUpperCase()}</span> <ArrowRight className="h-4 w-4 shrink-0" />
+          <span className="truncate">Dalej: {String(nextTitle || "").toUpperCase()}</span> <ArrowRight className="h-4 w-4 shrink-0" />
         </button>
       )}
       {lesson.description && <p className="mt-4 text-foreground/65 leading-relaxed whitespace-pre-line">{lesson.description}</p>}

@@ -18,7 +18,7 @@ export default function RzIntro() {
         <p>Nie ma tu punktów, zwycięzców ani jednej właściwej odpowiedzi. Są za to wybory, których konsekwencje potrafią zaskoczyć.</p>
         <p>Czasami zobaczysz w tych historiach coś znajomego. Czasami zrozumiesz, dlaczego ktoś postąpił zupełnie inaczej niż Ty.</p>
       </div>
-      <Link to="/konto/rozdroza/biblioteka" className="btn-relic mt-10 focus-visible:ring-2 focus-visible:ring-[#C9A24A]/60">WEJDŹ W HISTORIĘ <ArrowRight className="h-4 w-4" /></Link>
+      <Link to="/konto/rozdroza/biblioteka" className="btn-relic mt-10 focus-visible:ring-2 focus-visible:ring-[#C9A24A]/60">Wejdź w historię <ArrowRight className="h-4 w-4" /></Link>
       <section className="mt-16 border-t hairline pt-8 text-left" aria-labelledby="rz-czym">
         <h2 id="rz-czym" className="technical text-[11px] gold-text">CZYM SĄ ROZDROŻA?</h2>
         <p className="mt-4 text-sm text-foreground/60 leading-relaxed">ROZDROŻA to autorskie, interaktywne opowieści EXMORTIS. Ich bohaterowie mierzą się ze stratą, odpowiedzialnością, utratą sensu, zmianą i decyzjami, których nie można podjąć bez konsekwencji.</p>

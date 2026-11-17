@@ -49,7 +49,7 @@ export default function PackageBooker({ packageId, token, purchasedAt, consent, 
   if (slotsErr) return (
     <div className="border hairline p-6">
       <p role="alert" className="text-sm text-[#E8C547]">Nie udało się wczytać terminów. Sprawdź połączenie.</p>
-      <button onClick={load} className="btn-ghost mt-4">SPRÓBUJ PONOWNIE</button>
+      <button onClick={load} className="btn-ghost mt-4">Spróbuj ponownie</button>
     </div>
   );
   if (slots === null) return <p className="text-foreground/55">Ładowanie terminów…</p>;
@@ -84,7 +84,7 @@ export default function PackageBooker({ packageId, token, purchasedAt, consent, 
         </label>
       )}
       {err && <p className="text-sm text-[#E8C547]" role="alert">{err}</p>}
-      <button type="submit" disabled={busy} className="btn-relic w-full sm:w-auto">{busy ? "REZERWUJĘ…" : "REZERWUJĘ"}</button>
+      <button type="submit" disabled={busy} className="btn-relic w-full sm:w-auto">{busy ? "Rezerwuję…" : "Rezerwuję"}</button>
     </form>
   );
 }

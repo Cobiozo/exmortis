@@ -8,9 +8,9 @@ export default function RzProblem({ text, onRetry, extra }) {
       <p className="technical text-[10px] text-[#E8676A]">ROZDROŻA</p>
       <p className="text-foreground/80 mt-3 leading-relaxed">{text || "Coś poszło nie tak."}</p>
       <div className="flex flex-wrap gap-3 mt-6">
-        {onRetry && <button type="button" onClick={onRetry} className="btn-relic">SPRÓBUJ PONOWNIE</button>}
+        {onRetry && <button type="button" onClick={onRetry} className="btn-relic">Spróbuj ponownie</button>}
         {extra}
-        <Link to="/konto/rozdroza/biblioteka" className="btn-ghost">WRÓĆ DO BIBLIOTEKI</Link>
+        <Link to="/konto/rozdroza/biblioteka" className="btn-ghost">Wróć do biblioteki</Link>
       </div>
     </div>
   );

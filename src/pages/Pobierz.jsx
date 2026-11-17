@@ -130,7 +130,7 @@ export default function Pobierz() {
     return shell(<>
       <h1 className="relic-heading text-4xl md:text-5xl mb-6">Czekam na potwierdzenie płatności</h1>
       <p className="text-foreground/70 leading-relaxed mb-8">PayU jeszcze nie potwierdziło płatności. Zwykle trwa to kilka minut — ten sam link otrzymasz również w wiadomości e-mail.</p>
-      <button type="button" onClick={() => window.location.reload()} className="btn-ghost">SPRAWDŹ PONOWNIE</button>
+      <button type="button" onClick={() => window.location.reload()} className="btn-ghost">Sprawdź ponownie</button>
     </>);
   }
 
@@ -152,7 +152,7 @@ export default function Pobierz() {
             </div>
             {info.expired ? null : (
               <button type="button" onClick={() => download(m)} disabled={!!busy || !m.has_file} className="btn-relic shrink-0 disabled:opacity-60">
-                {busy === m.id ? "PRZYGOTOWUJĘ..." : m.has_file ? "POBIERZ" : "PLIK W PRZYGOTOWANIU"} <Download className="h-4 w-4" />
+                {busy === m.id ? "Przygotowuję..." : m.has_file ? "Pobierz" : "Plik w przygotowaniu"} <Download className="h-4 w-4" />
               </button>
             )}
           </div>
@@ -172,7 +172,7 @@ export default function Pobierz() {
         <p className="technical text-[10px] gold-text mb-4">{courses.length > 1 ? "KURSY" : "KURS"} NA TWOIM KONCIE</p>
         {courses.map((m) => <p key={m.id} className="relic-heading text-lg mb-2">{m.name}</p>)}
         {loggedIn || info.account ? (
-          <Link to="/konto" className="btn-relic mt-4">OTWÓRZ KURS <PlayCircle className="h-4 w-4" /></Link>
+          <Link to="/konto" className="btn-relic mt-4">Otwórz kurs <PlayCircle className="h-4 w-4" /></Link>
         ) : (
           <p className="text-foreground/60 leading-relaxed mt-2">Kurs oglądasz na bezpłatnym koncie — aktywujesz je przyciskiem poniżej, bez hasła.</p>
         )}
@@ -184,7 +184,7 @@ export default function Pobierz() {
         <p className="flex items-center gap-3 relic-heading text-2xl gold-text mb-3"><Check className="h-6 w-6" /> Konto gotowe</p>
         <p className="text-foreground/70 leading-relaxed">Zakup jest już w Moich produktach, razem z ROZDROŻAMI i Biblioteką.{act.code ? " Kod 20 zł na kolejny materiał wysłałem e-mailem — znajdziesz go także w powiadomieniach." : ""}</p>
         <p className="text-sm text-foreground/55 leading-relaxed mt-3">Hasło możesz ustawić później: na stronie logowania „Nie pamiętam hasła”. Z adresem Gmail wejdziesz też przez Google.</p>
-        <button type="button" onClick={() => navigate("/konto")} className="btn-relic mt-6">PRZEJDŹ DO KONTA <ArrowRight className="h-4 w-4" /></button>
+        <button type="button" onClick={() => navigate("/konto")} className="btn-relic mt-6">Przejdź do konta <ArrowRight className="h-4 w-4" /></button>
       </div>
     ) : act?.exists || (info.account && !user) ? (
       <div className="border hairline p-6">
@@ -202,7 +202,7 @@ export default function Pobierz() {
           <li>· 20 zł na kolejny materiał (od 49 zł, ważne 30 dni)</li>
         </ul>
         <button type="button" onClick={activate} disabled={!!busy} className="btn-relic disabled:opacity-60">
-          {busy === "activate" ? "ZAKŁADAM KONTO..." : courses.length ? "AKTYWUJ DOSTĘP I KONTO" : "AKTYWUJ KONTO"} <ArrowRight className="h-4 w-4" />
+          {busy === "activate" ? "Zakładam konto..." : courses.length ? "Aktywuj dostęp i konto" : "Aktywuj konto"} <ArrowRight className="h-4 w-4" />
         </button>
         <p className="text-xs text-foreground/55 leading-relaxed mt-4">
           Jedno kliknięcie zakłada konto na adres {info.email} i od razu loguje. Zasady: <Link to="/regulamin" className="underline">Regulamin</Link> i <Link to="/polityka-prywatnosci" className="underline">Polityka prywatności</Link>. Konto usuniesz w każdej chwili w ustawieniach.

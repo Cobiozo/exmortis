@@ -88,7 +88,7 @@ export default function ProductDetail() {
     return (
       <div className="min-h-screen flex flex-col items-center justify-center bg-[#0A0A0B] pt-20 gap-6">
         <p className="relic-heading text-4xl text-foreground/55">Nie znaleziono</p>
-        <Link to="/skarbiec" className="btn-ghost">WRÓĆ DO SKLEPU</Link>
+        <Link to="/skarbiec" className="btn-ghost">Wróć do sklepu</Link>
       </div>
     );
   }
@@ -251,7 +251,7 @@ export default function ProductDetail() {
             {soon ? (
               <div className="mt-auto space-y-3">
                 <button onClick={() => setWaitlist(true)} className="btn-relic w-full">
-                  {product.product_type === "usluga" ? "POWIADOM MNIE O DOSTĘPNOŚCI" : "POWIADOM MNIE O PREMIERZE"} <ArrowRight className="h-4 w-4" />
+                  {product.product_type === "usluga" ? "Powiadom mnie o dostępności" : "Powiadom mnie o premierze"} <ArrowRight className="h-4 w-4" />
                 </button>
                 <p className="text-sm text-foreground/55">
                   {releaseDay(product) ? `Premiera ${releaseDay(product)}. Zostaw kontakt — napiszę w dniu premiery.` : "Ten materiał jeszcze powstaje. Napiszę, kiedy będzie gotowy."}
@@ -259,7 +259,7 @@ export default function ProductDetail() {
               </div>
             ) : soldOut ? (
               <div className="mt-auto space-y-3">
-                <button disabled className="btn-relic w-full opacity-40 cursor-not-allowed">BRAK MIEJSC</button>
+                <button disabled className="btn-relic w-full opacity-40 cursor-not-allowed">Brak miejsc</button>
                 <button onClick={() => setWaitlist(true)} className="btn-ghost w-full">
                   DAJ ZNAĆ, GDY ZWOLNI SIĘ MIEJSCE <ArrowRight className="h-4 w-4" />
                 </button>

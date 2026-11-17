@@ -54,7 +54,7 @@ export default function ProductTile({ p }) {
           ) : p.type === "pdf" ? (
             <div className="flex flex-wrap gap-3">
               <button onClick={open} disabled={busy} className="btn-relic !px-4 !py-2.5">{busy ? <Loader2 className={`${ico} animate-spin`} /> : <Download className={ico} strokeWidth={1.25} />} POBIERZ</button>
-              <button onClick={open} disabled={busy} className="btn-ghost !px-4 !py-2.5"><BookOpen className={ico} strokeWidth={1.25} /> CZYTAJ W PRZEGLĄDARCE</button>
+              <button onClick={open} disabled={busy} className="btn-ghost !px-4 !py-2.5"><BookOpen className={ico} strokeWidth={1.25} /> Czytaj w przeglądarce</button>
             </div>
           ) : p.type === "audio" ? (
             audio ? <audio src={audio} controls autoPlay controlsList="nodownload" className="w-full" /> : (

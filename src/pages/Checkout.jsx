@@ -183,7 +183,7 @@ export default function Checkout() {
             <p className="text-foreground/60 text-lg max-w-md leading-relaxed">
               Nic nie zostało pobrane albo PayU zwróci środki. Koszyk na Ciebie czeka — możesz spróbować jeszcze raz.
             </p>
-            <a href="/kasa" className="btn-relic">WRÓĆ DO KASY <ArrowRight className="h-4 w-4" /></a>
+            <a href="/kasa" className="btn-relic">Wróć do kasy <ArrowRight className="h-4 w-4" /></a>
           </>
         ) : payState === "wait" ? (
           <>
@@ -218,16 +218,16 @@ export default function Checkout() {
               </p>
             )}
             {doneLink && (
-              <a href={`/pobierz#t=${doneLink}`} className="btn-relic">POBIERZ MATERIAŁY <Download className="h-4 w-4" /></a>
+              <a href={`/pobierz#t=${doneLink}`} className="btn-relic">Pobierz materiały <Download className="h-4 w-4" /></a>
             )}
             <ChooseTermButton />
             {user ? (
-              <Link to="/konto" className="btn-ghost">MOJE PRODUKTY</Link>
+              <Link to="/konto" className="btn-ghost">Moje produkty</Link>
             ) : doneLink ? (
               <div className="border hairline p-6 max-w-md text-left">
                 <p className="technical text-[10px] gold-text mb-3">BEZPŁATNE KONTO EXMORTIS</p>
                 <p className="text-foreground/70 leading-relaxed">Załóż je jednym kliknięciem na ten sam adres — zakup już tam czeka. Dostaniesz też ROZDROŻA, Bibliotekę i 20 zł na kolejny materiał.</p>
-                <a href={`/pobierz#t=${doneLink}&a=1`} className="btn-ghost mt-5">AKTYWUJ KONTO <ArrowRight className="h-4 w-4" /></a>
+                <a href={`/pobierz#t=${doneLink}&a=1`} className="btn-ghost mt-5">Aktywuj konto <ArrowRight className="h-4 w-4" /></a>
               </div>
             ) : null}
           </>
@@ -367,7 +367,7 @@ export default function Checkout() {
                 </p>
               )}
               <button type="submit" disabled={submitting} className="btn-relic w-full !py-5 text-base disabled:opacity-60">
-                {submitting ? "PRZYGOTOWUJĘ PŁATNOŚĆ..." : "Zamawiam z obowiązkiem zapłaty"}{" "}
+                {submitting ? "Przygotowuję płatność..." : "Zamawiam z obowiązkiem zapłaty"}{" "}
                 {!submitting && <ArrowRight className="h-4 w-4" />}
               </button>
               <p className="flex items-center justify-center gap-2 text-xs text-foreground/55 text-center">

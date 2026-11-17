@@ -44,7 +44,7 @@ export default function BookingForm({ type, slot, onDone, onTaken }) {
       <label className="flex gap-3 text-sm"><input type="checkbox" required checked={f.consent} onChange={(e) => setF({ ...f, consent: e.target.checked })} />
         <span>Akceptuję <Link to="/regulamin" className="gold-text underline">regulamin</Link> i <Link to="/polityka-prywatnosci" className="gold-text underline">politykę prywatności</Link>.</span></label>
       {err && <p className="text-sm text-[#E8C547]" role="alert">{err}</p>}
-      <button type="submit" disabled={busy} className="btn-relic w-full sm:w-auto">{busy ? "Rezerwuję…" : "REZERWUJĘ"}</button>
+      <button type="submit" disabled={busy} className="btn-relic w-full sm:w-auto">{busy ? "Rezerwuję…" : "Rezerwuję"}</button>
     </form>
   );
 }

@@ -37,7 +37,7 @@ export default function MyProducts() {
       <div className="rounded-2xl border hairline bg-[#111113] p-6 md:p-8">
         <p className="shop-heading text-2xl text-[#F5EFE1]">Nie masz jeszcze żadnych produktów.</p>
         <p className="text-base text-[#F5EFE1]/75 mt-2 max-w-[52ch]">W Skarbcu znajdziesz materiały na każdy etap drogi — także bezpłatne. To, co wybierzesz, pojawi się tutaj.</p>
-        <Link to="/skarbiec" className="btn-ghost mt-6">ZAJRZYJ DO SKARBCA</Link>
+        <Link to="/skarbiec" className="btn-ghost mt-6">Zajrzyj do Skarbca</Link>
       </div>
     );
   }

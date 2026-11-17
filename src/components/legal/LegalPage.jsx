@@ -23,7 +23,7 @@ export default function LegalPage({ doc, docKey, extra = [], children }) {
       <article className="mx-auto max-w-[70ch]">
         <h1 className="relic-heading text-3xl md:text-5xl mb-4">{content.title}</h1>
         {docKey && <LegalVersions current={current} shown={shown} versions={versions} dataOd={pola.data_od} />}
-        <button onClick={() => window.print()} className="btn-ghost !px-4 !py-2 text-[10px] mb-10 print:hidden"><Download className="h-4 w-4" /> POBIERZ PDF</button>
+        <button onClick={() => window.print()} className="btn-ghost !px-4 !py-2 text-[10px] mb-10 print:hidden"><Download className="h-4 w-4" /> Pobierz PDF</button>
         <nav aria-label="Spis treści" className="border hairline p-5 mb-12 print:hidden">
           <p className="technical text-[10px] gold-text mb-3">SPIS TREŚCI</p>
           <ol className="text-sm">

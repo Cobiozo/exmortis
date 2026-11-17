@@ -36,12 +36,12 @@ export default function SessionRow({ b, past, onReschedule, onChanged }) {
       </div>
       <p>{fullLabel(b.starts_at)}{note && <span className="text-foreground/55"> ({note})</span>}</p>
       {active && b.zoom_link && (
-        <a href={b.zoom_link} target="_blank" rel="noreferrer" className="btn-relic text-[10px]">WEJDŹ NA SPOTKANIE</a>
+        <a href={b.zoom_link} target="_blank" rel="noreferrer" className="btn-relic text-[10px]">Wejdź na spotkanie</a>
       )}
       {active && !b.zoom_link && <p className="text-xs text-foreground/55">Link do spotkania pojawi się 15 minut przed terminem.</p>}
       {active && (b.can_change || b.can_cancel ? (
         <div className="flex flex-wrap gap-3 pt-1">
-          {b.can_change && <button onClick={onReschedule} className="btn-ghost text-[10px]">PRZENIEŚ</button>}
+          {b.can_change && <button onClick={onReschedule} className="btn-ghost text-[10px]">Przenieś</button>}
           {b.can_cancel && (confirm ? (
             <span className="flex items-center gap-3">
               <span className="technical text-[10px] text-foreground/70">ANULOWAĆ TO SPOTKANIE?</span>
@@ -49,7 +49,7 @@ export default function SessionRow({ b, past, onReschedule, onChanged }) {
               <button onClick={() => setConfirm(false)} className="technical text-[10px] text-foreground/55">NIE</button>
             </span>
           ) : (
-            <button onClick={() => setConfirm(true)} className="btn-ghost text-[10px]">ANULUJ</button>
+            <button onClick={() => setConfirm(true)} className="btn-ghost text-[10px]">Anuluj</button>
           ))}
         </div>
       ) : (

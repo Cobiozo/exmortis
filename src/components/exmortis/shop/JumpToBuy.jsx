@@ -12,7 +12,7 @@ export default function JumpToBuy({ free, targetId = "kup-teraz" }) {
   };
   return (
     <button type="button" onClick={go} className="btn-relic self-center !py-3 !px-6">
-      {free ? "ODBIERZ TERAZ" : "Kup teraz"} <ArrowDown className="h-4 w-4" />
+      {free ? "Odbierz teraz" : "Kup teraz"} <ArrowDown className="h-4 w-4" />
     </button>
   );
 }

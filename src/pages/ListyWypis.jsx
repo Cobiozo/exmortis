@@ -37,7 +37,7 @@ export default function ListyWypis() {
           <h1 className="relic-heading text-3xl md:text-4xl">Link nieaktywny</h1>
           <p className="text-foreground/70">Ten link jest niepełny albo pochodzi ze starej wiadomości. Wypisać się możesz odpowiadając na dowolny list jednym słowem: STOP.</p>
         </>}
-        {state !== "loading" && <Link to="/" className="btn-ghost">STRONA GŁÓWNA</Link>}
+        {state !== "loading" && <Link to="/" className="btn-ghost">Strona główna</Link>}
       </div>
     </section>
   );

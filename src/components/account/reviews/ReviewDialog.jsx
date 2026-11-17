@@ -55,7 +55,7 @@ export default function ReviewDialog({ item, onClose, onSaved }) {
             <p className="text-foreground/70 leading-relaxed">
               Opinię mam. Zajrzę do niej i opublikuję — zobaczysz ją na stronie produktu.
             </p>
-            <button onClick={onClose} className="btn-ghost w-full">ZAMKNIJ</button>
+            <button onClick={onClose} className="btn-ghost w-full">Zamknij</button>
           </div>
         ) : (
           <div className="space-y-5 py-2">

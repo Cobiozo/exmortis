@@ -113,8 +113,8 @@ export default function PowrotPlatnosc() {
             : "PayU jeszcze nie potwierdziło płatności. Potwierdzenie otrzymasz w wiadomości e-mail, zwykle w ciągu kilku minut."}
         </p>
         {fail
-          ? <button type="button" className="btn-relic" onClick={() => { setPayState(null); window.history.replaceState(null, "", `/powrot/platnosc?t=${token}`); }}>SPRÓBUJ PONOWNIE <ArrowRight className="h-4 w-4" /></button>
-          : <button type="button" className="btn-ghost" onClick={() => setPayState("check")}>SPRAWDŹ PONOWNIE</button>}
+          ? <button type="button" className="btn-relic" onClick={() => { setPayState(null); window.history.replaceState(null, "", `/powrot/platnosc?t=${token}`); }}>Spróbuj ponownie <ArrowRight className="h-4 w-4" /></button>
+          : <button type="button" className="btn-ghost" onClick={() => setPayState("check")}>Sprawdź ponownie</button>}
         <Link to="/kontakt" className="technical text-[10px] text-foreground/55 hover:gold-text">Napisz do mnie</Link>
       </div>
     );
@@ -195,7 +195,7 @@ export default function PowrotPlatnosc() {
 
         {payError && <p className="text-sm text-[#E8C547]" role="alert">{payError}</p>}
         <button type="submit" disabled={busy} className="btn-relic w-full disabled:opacity-60">
-          {busy ? "PRZYGOTOWUJĘ PŁATNOŚĆ..." : "Zamawiam z obowiązkiem zapłaty"} {!busy && <ArrowRight className="h-4 w-4" />}
+          {busy ? "Przygotowuję płatność..." : "Zamawiam z obowiązkiem zapłaty"} {!busy && <ArrowRight className="h-4 w-4" />}
         </button>
         <p className="text-xs text-foreground/55 leading-relaxed">
           Bezpieczna płatność przez PayU: BLIK, szybki przelew lub przelew bankowy — a także płatność odroczona lub w ratach PayPo, jeśli PayPo

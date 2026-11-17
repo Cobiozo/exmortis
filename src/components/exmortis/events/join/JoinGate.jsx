@@ -25,7 +25,7 @@ export default function JoinGate({ state, error, onSubmit }) {
       </div>
       {error && <p className="text-sm text-[#E8C547]" role="alert">{error}</p>}
       <button type="submit" disabled={busy} className="btn-relic w-full disabled:opacity-60">
-        {busy ? <Loader2 className="h-4 w-4 animate-spin" /> : <>{state === "po" ? "POKAŻ NAGRANIE" : "WEJDŹ NA SPOTKANIE"} <ArrowRight className="h-4 w-4" /></>}
+        {busy ? <Loader2 className="h-4 w-4 animate-spin" /> : <>{state === "po" ? "Pokaż nagranie" : "Wejdź na spotkanie"} <ArrowRight className="h-4 w-4" /></>}
       </button>
       <p className="text-xs text-foreground/55 leading-relaxed">Szybciej: otwórz osobisty link z e-maila potwierdzającego zapis. Nie masz zapisu? Zapisy zamykają się 15 minut przed startem.</p>
     </form>
