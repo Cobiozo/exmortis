@@ -215,7 +215,7 @@ export default function IntegrationsManager() {
             disabled={payuBusy}
             className="btn-ghost !px-5 !py-2.5 disabled:opacity-60"
           >
-            <Trash2 className="h-4 w-4" /> USUŃ DANE
+            <Trash2 className="h-4 w-4" /> Usuń dane
           </button>
           <button
             type="button"

@@ -105,7 +105,7 @@ export default function ProductsManager() {
             <Star className="h-4 w-4" /> OPINIE{pending ? ` (${pending})` : ""}
           </button>
           <button onClick={() => setEditing("new")} className="btn-relic !px-5 !py-3">
-            <Plus className="h-4 w-4" /> NOWY PRODUKT
+            <Plus className="h-4 w-4" /> Nowy produkt
           </button>
         </div>
       </div>

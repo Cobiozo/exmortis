@@ -149,10 +149,10 @@ export default function EventsManager() {
         </div>
         <div className="flex flex-wrap gap-2">
           <button onClick={() => setScanners(true)} className="btn-ghost !px-4 !py-3" title="Kto może sprawdzać bilety skanerem">
-            <ScanLine className="h-4 w-4" /> SKANOWANIE BILETÓW
+            <ScanLine className="h-4 w-4" /> Skanowanie biletów
           </button>
           <button onClick={() => setEditor({})} className="btn-relic !px-5 !py-3">
-            <Plus className="h-4 w-4" /> NOWE WYDARZENIE
+            <Plus className="h-4 w-4" /> Nowe wydarzenie
           </button>
         </div>
       </div>
@@ -228,10 +228,10 @@ export default function EventsManager() {
 
               <div className="flex flex-wrap gap-2">
                 <button onClick={() => setEditor(ev)} className="btn-ghost !px-3 !py-2" title="Edytuj">
-                  <Pencil className="h-3.5 w-3.5" /> EDYTUJ
+                  <Pencil className="h-3.5 w-3.5" /> Edytuj
                 </button>
                 <button onClick={() => setParticipants(ev)} className="btn-ghost !px-3 !py-2" title="Uczestnicy">
-                  <Users className="h-3.5 w-3.5" /> UCZESTNICY
+                  <Users className="h-3.5 w-3.5" /> Uczestnicy
                 </button>
                 {(ev.tickets || ev.tickets_sold > 0) && (
                   <button onClick={() => setTickets({ event: ev, tab: "bilety" })} className="btn-ghost !px-3 !py-2" title="Bilety: lista, wzór PDF, udostępnianie, skanowanie">

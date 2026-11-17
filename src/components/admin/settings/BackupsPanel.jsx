@@ -72,7 +72,7 @@ export default function BackupsPanel() {
               </span>
               {b.status === "gotowa" && (
                 <button onClick={() => download(b.id)} className="btn-ghost px-4 py-2">
-                  <Download className="h-4 w-4" /> POBIERZ
+                  <Download className="h-4 w-4" /> Pobierz
                 </button>
               )}
             </div>

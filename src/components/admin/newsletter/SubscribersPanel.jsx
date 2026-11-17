@@ -171,7 +171,7 @@ export default function SubscribersPanel() {
           <Plus className="h-4 w-4" /> DODAJ
         </button>
         <button onClick={() => setBulk(bulk === null ? "" : null)} className="btn-ghost !px-5 !py-2.5 whitespace-nowrap">
-          WKLEJ LISTĘ
+          Wklej listę
         </button>
       </div>
       {bulk !== null && (

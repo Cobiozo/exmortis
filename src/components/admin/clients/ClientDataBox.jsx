@@ -44,7 +44,7 @@ export default function ClientDataBox({ email, onDone }) {
           {busy === "export" ? <Loader2 className="h-4 w-4 animate-spin" /> : <Download className="h-4 w-4" />} EKSPORTUJ DANE (JSON)
         </button>
         <button onClick={() => { setAsk(!ask); setMsg(""); setErr(""); }} disabled={!!busy} className="btn-ghost !py-3 text-[10px]">
-          <Trash2 className="h-4 w-4" /> USUŃ DANE KLIENTA
+          <Trash2 className="h-4 w-4" /> Usuń dane klienta
         </button>
       </div>
       {ask && (

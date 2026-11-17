@@ -70,7 +70,7 @@ export default function RozdrozaAdmin() {
         <h3 className="shop-heading text-xl text-[#F5EFE1]">Import historii z pliku JSON</h3>
         <div className="flex flex-wrap items-center gap-4">
           <label className={`btn-relic cursor-pointer ${busy ? "opacity-60 pointer-events-none" : ""}`}>
-            {busy ? <Loader2 className="h-4 w-4 animate-spin" /> : <Upload className="h-4 w-4" />} WYBIERZ PLIK .JSON
+            {busy ? <Loader2 className="h-4 w-4 animate-spin" /> : <Upload className="h-4 w-4" />} Wybierz plik .json
             <input type="file" accept="application/json,.json" className="hidden" onChange={(e) => { importFile(e.target.files?.[0]); e.target.value = ""; }} />
           </label>
           <label className="flex items-center gap-2 text-sm text-foreground/70">
