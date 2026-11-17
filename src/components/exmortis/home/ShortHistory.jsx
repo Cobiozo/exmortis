@@ -6,8 +6,9 @@ import { Image } from "@/components/ui/image";
 const PORTRAIT =
   "https://media.base44.com/images/public/6aa08bc6318b0f886cc3b9a3/74c8971f2_572398635_17869620246460401_6357932160691507676_n.jpg";
 
-// To samo zdjęcie z posługi, co w sekcji „Krótka historia" na podstronie O mnie (prawdziwe, na hostingu strony).
-const PRIEST_PHOTO = "/img/dawid-posluga.jpg";
+// Strona główna bez wątku kapłańskiego (decyzja właściciela 17.11.2026) — ta historia jest tylko w O mnie.
+// Zdjęcie z sekcji „Próg” na podstronie O mnie.
+const SIDE_PHOTO = "https://media.base44.com/images/public/6aa08bc6318b0f886cc3b9a3/f7f7a5e2f_474783848_18188957653314489_4657498483259380055_n.jpg";
 
 // Strona główna: „Krótka historia” — zajawka (styl jak O mnie, wersja z 6.11.2026) i wejście do pełnej historii.
 export default function ShortHistory({ label } = {}) {
@@ -37,7 +38,7 @@ export default function ShortHistory({ label } = {}) {
           <div className="grid md:grid-cols-5 gap-12 md:gap-16 items-start">
             <div className="md:col-span-3">
               <div className="max-w-2xl space-y-5 text-lg leading-relaxed text-foreground/70">
-                <p>Byłem księdzem katolickim. Towarzyszyłem ludziom w ich najtrudniejszych chwilach.</p>
+                <p>Przez lata towarzyszyłem ludziom w ich najtrudniejszych chwilach.</p>
                 <p>
                   Potem sam znalazłem się w miejscu, którego nie było na mojej mapie. Straciłem wiele z tego,
                   na czym opierałem swoje życie.
@@ -66,13 +67,13 @@ export default function ShortHistory({ label } = {}) {
 
             <div className="md:col-span-2 border hairline mx-auto w-full" style={{ maxWidth: "min(100%, calc(min(72svh, 720px) * 0.75))" }}>
               <Image
-                src={PRIEST_PHOTO}
-                alt="Dawid podczas posługi kapłańskiej"
+                src={SIDE_PHOTO}
+                alt="Dawid — exmortis"
                 fittingType="fill"
                 className="w-full aspect-[3/4]"
               />
               <p className="technical text-[10px] gold-text p-4 border-t hairline">
-                POSŁUGA · WCZEŚNIEJSZE ŻYCIE
+                DZIŚ · MĄŻ, OJCIEC, MENTOR
               </p>
             </div>
           </div>
