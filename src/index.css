@@ -400,3 +400,15 @@
 @media (max-width: 479px) {
   .adm .btn-relic, .adm .btn-ghost, .adm .btn-blood { padding-inline: .9rem; }
 }
+
+/* ==== STRONA GŁÓWNA — styl „jak w Moim koncie” (17.11.2026) ====
+   Tylko wewnątrz .exm-soft (nagłówek „osobisty” i „Trzy drogi”). Zaokrąglone przyciski, zwykły krój Inter. */
+.exm-soft .btn-relic, .exm-soft .btn-ghost {
+  font-family: var(--font-body); text-transform: none; letter-spacing: 0; font-size: 15px; font-weight: 500;
+  padding: 0 1.5rem; min-height: 52px; border-radius: 10px; line-height: 1.2;
+}
+.exm-soft .btn-relic { font-weight: 600; }
+.exm-soft .btn-relic:hover { letter-spacing: 0; background: #E2C27A; }
+.exm-soft .btn-ghost { border-color: rgba(255,255,255,.15); background: transparent; color: #F5EFE1; }
+.exm-soft .btn-ghost:hover { border-color: rgba(201,162,74,.6); background: rgba(201,162,74,.05); }
+.exm-soft .btn-relic:focus-visible, .exm-soft .btn-ghost:focus-visible { outline: 2px solid #C9A24A; outline-offset: 2px; }
