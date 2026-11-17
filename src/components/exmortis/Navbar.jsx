@@ -96,7 +96,7 @@ export default function Navbar() {
           </div>
         </div>
       </header>
-      <MobileMenu open={mobile && collapsed} onClose={close} top={isAdmin ? 100 : 60} />
+      <MobileMenu open={mobile && collapsed} onClose={close} top={(isAdmin ? 40 : 0) + (typeof window !== "undefined" && window.innerWidth >= 768 ? 72 : 60)} />
     </>
   );
 }
