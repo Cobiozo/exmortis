@@ -96,7 +96,7 @@ export default function ContactSection({ label } = {}) {
             </div>
 
             {/* Kanał WhatsApp — podpisany przycisk zamiast samej ikony. */}
-            <WhatsAppChannelLink miejsce="kontakt" label="KANAŁ WHATSAPP" caption="głos między poniedziałkami" framed />
+            <WhatsAppChannelLink miejsce="kontakt" label="Kanał WhatsApp" caption="głos między poniedziałkami" framed />
           </div>
         </div>
 
@@ -170,7 +170,7 @@ export default function ContactSection({ label } = {}) {
               </p>
               {error && <p role="alert" className="text-sm blood-text">{error}</p>}
               <button type="submit" disabled={sending} className="btn-relic w-full disabled:opacity-60">
-                {sending ? "WYSYŁAM..." : "WYŚLIJ WIADOMOŚĆ"}{" "}
+                {sending ? "WYSYŁAM..." : "Wyślij wiadomość"}{" "}
                 {!sending && <ArrowRight className="h-4 w-4" />}
               </button>
               <p className="technical text-[10px] text-foreground/55">

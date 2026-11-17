@@ -12,7 +12,7 @@ function Bar({ targetId, label }) {
 }
 
 // Telefon: przycisk „Zapisz się” przyklejony na dole — znika, gdy formularz zapisu jest widoczny.
-export default function StickySignup({ targetId = "zapis", label = "ZAPISZ SIĘ" }) {
+export default function StickySignup({ targetId = "zapis", label = "Zapisz się" }) {
   const [hidden, setHidden] = useState(false);
   useEffect(() => {
     const el = document.getElementById(targetId);

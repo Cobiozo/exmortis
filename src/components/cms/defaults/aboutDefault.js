@@ -50,13 +50,13 @@ export const ABOUT_BLOCKS = [
   b("cta", "tekst_zdjecie", { etykieta: "", tytul: "Nie musisz mieć\njeszcze odpowiedzi.",
     tresc: "<p>Jeśli odnajdujesz w tej historii coś bliskiego, możesz zacząć od jednego kroku: zapisać się na Listy powrotu, przyjść na otwarte spotkanie albo napisać do mnie. Nie musisz opowiadać wszystkiego. Na początek wystarczy to, z czym dziś przychodzisz.</p><p>Jeśli myślisz o pracy jeden na jeden, zobacz, jak wygląda program POWRÓT.</p>",
     strona: "lewo", kolumny: "40-60", proporcja: "4:5", mobile: "gora", przyciski: [
-      { etykieta: "ZAPISZ SIĘ NA LISTY POWROTU", link: "/#listy-powrotu", styl: "zloty", strzalka: true },
-      { etykieta: "NAPISZ DO MNIE", link: "/kontakt", styl: "obrys", strzalka: true },
+      { etykieta: "Zapisz się na Listy powrotu", link: "/#listy-powrotu", styl: "zloty", strzalka: true },
+      { etykieta: "Napisz do mnie", link: "/kontakt", styl: "obrys", strzalka: true },
     ],
     zdjecie: { url: `${IMG}76a96cdf4_686174507_17893800810460401_1310148896120990981_n.jpg`, alt: "Dawid — exmortis" } }, { tlo: "grafit", odstep: "maly" }),
   // Następny krok po historii (audyt 17.11.2026, X-38): spotkanie i mentoring obok Listów i kontaktu.
   b("kroki", "przyciski", { przyciski: [
-    { etykieta: "PRZYJDŹ NA OTWARTE SPOTKANIE", link: "/spotkania", styl: "obrys", strzalka: true },
-    { etykieta: "POZNAJ PROGRAM POWRÓT", link: "/powrot", styl: "obrys", strzalka: true },
+    { etykieta: "Przyjdź na otwarte spotkanie", link: "/spotkania", styl: "obrys", strzalka: true },
+    { etykieta: "Poznaj program POWRÓT", link: "/powrot", styl: "obrys", strzalka: true },
   ] }, { tlo: "grafit", odstep: "maly" }),
 ];

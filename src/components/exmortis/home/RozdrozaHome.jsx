@@ -85,7 +85,7 @@ export default function RozdrozaHome() {
               // Gość: etykieta mówi wprost, że potrzebne jest darmowe konto (audyt 17.11.2026, X-40).
               <Link to={REGISTER_TO} onClick={() => track("rozdroza_cta_click", { zalogowany: false })}
                 className="btn-relic min-h-[44px] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#C9A24A]">
-                ZAŁÓŻ DARMOWE KONTO I CZYTAJ <ArrowRight className="h-4 w-4" aria-hidden="true" />
+                Załóż darmowe konto i czytaj <ArrowRight className="h-4 w-4" aria-hidden="true" />
               </Link>
             )}
 

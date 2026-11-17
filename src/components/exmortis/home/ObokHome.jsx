@@ -32,9 +32,9 @@ export default function ObokHome() {
           ) : (
             <div className="flex flex-wrap gap-4 md:justify-end">
               <Link to={`/register?returnTo=${back}`} onClick={() => track("biblioteka_home_click", { zalogowany: false })} className="btn-relic min-h-[44px]">
-                ZAŁÓŻ DARMOWE KONTO
+                Załóż darmowe konto
               </Link>
-              <Link to={`/login?returnTo=${back}`} className="btn-ghost min-h-[44px]">ZALOGUJ SIĘ</Link>
+              <Link to={`/login?returnTo=${back}`} className="btn-ghost min-h-[44px]">Zaloguj się</Link>
             </div>
           )}
           {!isLoadingAuth && <p className="technical text-[10px] text-foreground/40 mt-4">Bezpłatnie · Po założeniu konta</p>}

@@ -44,7 +44,7 @@ export default function CartDrawer() {
                   Skarbiec czeka. Wybierz coś z drogi powrotu.
                 </p>
                 <Link to="/skarbiec" onClick={() => setOpen(false)} className="btn-ghost mt-2">
-                  DO SKLEPU
+                  Do Skarbca
                 </Link>
               </div>
             ) : (
@@ -113,7 +113,7 @@ export default function CartDrawer() {
                 onClick={() => setOpen(false)}
                 className="btn-relic w-full"
               >
-                PRZEJDŹ DO KASY <ArrowRight className="h-4 w-4" />
+                Przejdź do kasy <ArrowRight className="h-4 w-4" />
               </Link>
             </div>
           )}

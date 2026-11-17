@@ -164,7 +164,7 @@ export default function EventDetail() {
         {landing && !cancelled && !ended && (
           <div className="mt-16 lg:mt-0 border hairline bg-[#0D0D0E] p-5 sm:p-7">
             <p className="technical text-[10px] gold-text mb-6">ZAPIS</p>
-            <Link to={landing} className="btn-relic w-full">ZAPISZ SIĘ <ArrowRight className="h-4 w-4" /></Link>
+            <Link to={landing} className="btn-relic w-full">Zapisz się <ArrowRight className="h-4 w-4" /></Link>
           </div>
         )}
         {!landing && !cancelled && !ended && event.registration_type !== "Bez zapisu" && (

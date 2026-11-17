@@ -23,7 +23,7 @@ export default function MusicSection({ products, onWaitlist }) {
               rel="noreferrer"
               className="btn-ghost !px-5 !py-3 text-[10px]"
             >
-              <Music2 className="h-3.5 w-3.5" /> SPOTIFY
+              <Music2 className="h-3.5 w-3.5" /> Spotify
             </a>
             <a
               href="https://www.youtube.com/@e.x.m.o.r.t.i.s"
@@ -31,7 +31,7 @@ export default function MusicSection({ products, onWaitlist }) {
               rel="noreferrer"
               className="btn-ghost !px-5 !py-3 text-[10px]"
             >
-              <Youtube className="h-3.5 w-3.5" /> YOUTUBE
+              <Youtube className="h-3.5 w-3.5" /> YouTube
             </a>
           </div>
         </div>

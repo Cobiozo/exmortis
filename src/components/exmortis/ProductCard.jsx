@@ -72,7 +72,7 @@ export default function ProductCard({ product, index = 0 }) {
           to="/powrot"
           className="flex items-center justify-between px-6 py-4 border-t hairline technical text-[10px] gold-text hover:bg-[#C9A24A]/10 transition-colors"
         >
-          POZNAJ PROGRAM POWRÓT <ArrowRight className="h-3 w-3" />
+          Poznaj program POWRÓT <ArrowRight className="h-3 w-3" />
         </Link>
       )}
     </div>

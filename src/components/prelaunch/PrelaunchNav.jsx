@@ -12,7 +12,7 @@ export default function PrelaunchNav({ top }) {
           <Logo className="h-9 w-9 md:h-10 md:w-10" />
           <span className="exm-wordmark relic-heading text-xl gold-text tracking-[0.3em] hidden sm:block">EXMORTIS</span>
         </Link>
-        <Link to="/login" className="btn-relic !py-2.5 !px-4 sm:!px-5 whitespace-nowrap">ZALOGUJ SIĘ <ArrowRight className="h-4 w-4" /></Link>
+        <Link to="/login" className="btn-relic !py-2.5 !px-4 sm:!px-5 whitespace-nowrap">Zaloguj się <ArrowRight className="h-4 w-4" /></Link>
       </div>
     </header>
   );

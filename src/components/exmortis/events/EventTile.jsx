@@ -54,7 +54,7 @@ export default function EventTile({ event: ev, compact = false, past = false }) 
     if (onSite && !free && !full) {
       return (
         <Link to={`/spotkania/${ev.slug}#zapis`} onClick={stop} className={OUTLINE_GOLD}>
-          ZAPISZ SIĘ
+          Zapisz się
         </Link>
       );
     }
@@ -69,7 +69,7 @@ export default function EventTile({ event: ev, compact = false, past = false }) 
               : OUTLINE_GOLD
           }
         >
-          {full ? "LISTA REZERWOWA" : "ZAPISZ SIĘ"}
+          {full ? "Lista rezerwowa" : "Zapisz się"}
         </button>
       );
     }
@@ -85,7 +85,7 @@ export default function EventTile({ event: ev, compact = false, past = false }) 
         {ev.event_type.toUpperCase()}
       </span>
       {free ? (
-        <span className="technical text-[8px] gold-text border border-[#C9A24A]/50 px-2 py-1">BEZPŁATNE</span>
+        <span className="technical text-[8px] gold-text border border-[#C9A24A]/50 px-2 py-1">Bezpłatne</span>
       ) : (
         <span className="technical text-[8px] blood-text border border-[#BC1E22]/50 px-2 py-1">
           PŁATNE · {Number(ev.price)} ZŁ

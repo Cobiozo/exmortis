@@ -47,7 +47,7 @@ export default function RegistrationBlock({ event: ev }) {
         <div className="flex flex-wrap gap-3">
           {ev.external_url && (
             <a href={ev.external_url} target="_blank" rel="noreferrer" className="btn-relic">
-              DOŁĄCZ <ArrowRight className="h-4 w-4" />
+              Dołącz <ArrowRight className="h-4 w-4" />
             </a>
           )}
         </div>

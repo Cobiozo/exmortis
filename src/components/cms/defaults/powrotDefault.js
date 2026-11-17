@@ -11,7 +11,7 @@ const IMG = "https://media.base44.com/images/public/6aa08bc6318b0f886cc3b9a3/";
 
 export const POWROT_BLOCKS = [
   b("hero", "hero", { wariant: "standard", etykieta: "AUTORSKI PROGRAM MENTORSKI EXMORTIS", linia1: "", linia2: "POWRÓT",
-    lead: POWROT_LEAD, przyciski: [{ etykieta: "WYPEŁNIJ ZGŁOSZENIE", link: "#formularz", styl: "zloty", strzalka: true }], przyciemnienie: 60 }),
+    lead: POWROT_LEAD, przyciski: [{ etykieta: "Wypełnij zgłoszenie", link: "#formularz", styl: "zloty", strzalka: true }], przyciemnienie: 60 }),
   b("otwarcie", "tekst", { etykieta: "OTWARCIE · 01", tytul: "Są ludzie, którzy przychodzą do mnie, bo coś w nich umarło.",
     tresc: `<p class="exm-styl-lead">Nie mówią tego wprost. Mówią, że są zmęczeni, stracili sens, nie poznają siebie — mają wszystko, na co pracowali, i jednocześnie nic nie czują. Zwłaszcza szczęścia, satysfakcji, radości z życia.</p><p class="exm-styl-lead">Często dopiero po czasie nazywają to po imieniu: coś w nich umarło.</p><h2 class="exm-akcent-zloty">POWRÓT jest dla tych, którzy są gotowi to nazwać.</h2>` }),
   b("dla-kogo", "tekst", { etykieta: "DLA KOGO · 02", tytul: "To praca dla Ciebie, jeśli:",
@@ -34,7 +34,7 @@ export const POWROT_BLOCKS = [
   b("kto", "tekst_zdjecie", { etykieta: "KTO PROWADZI", tytul: "Każdą sesję prowadzę osobiście.", strona: "lewo", kolumny: "40-60", proporcja: "4:5", mobile: "gora",
     podpis: "DAWID · MENTOR EXMORTIS", zdjecie: { url: `${IMG}480c7c335_702144182_17895011880460401_728690723499574380_n.jpg`, alt: "Dawid — mentor programu POWRÓT" },
     tresc: "<p>Jestem Dawid. Kiedyś skończyło się życie, które znałem, i musiałem zbudować nowe od zera. Z tej drogi wyrósł POWRÓT — cztery etapy, przez które sam przeszedłem.</p><p>Pracuję jako mentor, nie terapeuta. Słucham, zadaję pytania i pomagam znaleźć następny krok. Decyzje podejmujesz Ty.</p>",
-    przyciski: [{ etykieta: "POZNAJ MOJĄ HISTORIĘ", link: "/o-mnie", styl: "obrys", strzalka: true }] }),
+    przyciski: [{ etykieta: "Poznaj moją historię", link: "/o-mnie", styl: "obrys", strzalka: true }] }),
   b("jak", "tekst", { etykieta: "JAK TO WYGLĄDA · 06", tytul: "Jak to wygląda",
     tresc: `${META}<p>Osiem sesji, cztery etapy. Od nazwania, gdzie jesteś i co w Tobie umarło, po plan na dalszą drogę.</p><p>Między sesjami: zadania szyte pod Ciebie, dziennik powrotu, kontakt ze mną w ustalonych granicach.</p>` }),
   b("dostajesz", "tekst", { etykieta: "CO OTRZYMUJESZ · 07", tytul: "Co otrzymujesz",
@@ -59,8 +59,8 @@ export const POWROT_BLOCKS = [
     tresc: `<p class="exm-styl-lead">Jeśli po tej lekturze coś w Tobie mówi „to o mnie”, możesz zacząć od krótkiego zgłoszenia albo najpierw przyjść na otwarte spotkanie i zobaczyć, jak pracuję. Tempo wybierasz Ty.</p>` }, { odstep: "maly" }),
   b("spotkanie", "modul", { modul: "powrot_spotkanie" }),
   b("ostatnie-przyciski", "przyciski", { przyciski: [
-    { etykieta: "WYPEŁNIJ FORMULARZ KWALIFIKACYJNY", link: "#formularz", styl: "zloty", strzalka: true },
-    { etykieta: "NAJPIERW PRZYJDŹ NA OTWARTE SPOTKANIE", link: "/spotkania", styl: "obrys", strzalka: false },
+    { etykieta: "Wypełnij formularz kwalifikacyjny", link: "#formularz", styl: "zloty", strzalka: true },
+    { etykieta: "Najpierw przyjdź na otwarte spotkanie", link: "/spotkania", styl: "obrys", strzalka: false },
   ] }, { odstep: "maly" }),
   b("podsumowanie", "modul", { modul: "powrot_podsumowanie" }),
   b("formularz", "modul", { modul: "powrot_formularz" }),

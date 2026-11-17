@@ -41,7 +41,7 @@ function ResendForm({ token, note }) {
         </div>
       )}
       <button type="submit" disabled={state === "busy"} className="btn-relic disabled:opacity-60">
-        {state === "busy" ? "WYSYŁAM..." : "WYŚLIJ MI NOWY LINK"} <ArrowRight className="h-4 w-4" />
+        {state === "busy" ? "WYSYŁAM..." : "Wyślij mi nowy link"} <ArrowRight className="h-4 w-4" />
       </button>
       {state === "error" && <p className="text-sm text-[#E8C547]" role="alert">{msg}</p>}
     </form>
@@ -189,7 +189,7 @@ export default function Pobierz() {
     ) : act?.exists || (info.account && !user) ? (
       <div className="border hairline p-6">
         <p className="text-foreground/70 leading-relaxed">Ten adres ma już konto exmortis — zakup jest w Moich produktach.</p>
-        <Link to="/login?returnTo=%2Fkonto" className="btn-ghost mt-5">ZALOGUJ SIĘ</Link>
+        <Link to="/login?returnTo=%2Fkonto" className="btn-ghost mt-5">Zaloguj się</Link>
       </div>
     ) : loggedIn ? null : info.can_activate ? (
       <div className="border hairline p-6 md:p-8">

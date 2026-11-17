@@ -57,7 +57,7 @@ export default function Zacznij() {
 
         <Group label="01 · KILKA MINUT" title="Na początek">
           <Item to="/test?src=zacznij" meta="KILKA MINUT" title="Która śmierć jest Twoja?"
-            text="Piętnaście stwierdzeń, które oceniasz tylko dla siebie. Pomagają nazwać, przez co przechodzisz, i podpowiadają pierwszy krok." cta="ZRÓB TEST" />
+            text="Piętnaście stwierdzeń, które oceniasz tylko dla siebie. Pomagają nazwać, przez co przechodzisz, i podpowiadają pierwszy krok." cta="Zrób test" />
           <Item to="/cisza?src=zacznij" meta="TYLE, ILE CHCESZ" title="Chwila ciszy"
             text="Minutnik ciszy w przeglądarce. Wybierasz czas, siadasz i po prostu jesteś. Bez rozpraszaczy." cta="WEJDŹ W CISZĘ" />
         </Group>
@@ -79,18 +79,18 @@ export default function Zacznij() {
             text="Spotkania na żywo o powrocie po kryzysie. Możesz mówić albo po prostu słuchać." cta="ZOBACZ TERMINY" />
           <div className="flex flex-col justify-between border hairline bg-[#070708] p-6 md:p-8">
             <div>
-              <p className="technical text-[10px] text-foreground/55 mb-3">WHATSAPP</p>
+              <p className="technical text-[10px] text-foreground/55 mb-3">WhatsApp</p>
               <h3 className="relic-heading text-2xl leading-[1.05] mb-3">Głos między poniedziałkami</h3>
               <p className="text-foreground/70 leading-relaxed mb-6">Krótkie wiadomości na kanale WhatsApp. Tylko czytasz, nikt nie widzi Twojego numeru.</p>
             </div>
-            <WhatsAppChannelLink miejsce="zacznij" label="DOŁĄCZ DO KANAŁU" />
+            <WhatsAppChannelLink miejsce="zacznij" label="Dołącz do kanału" />
           </div>
         </Group>
 
         <Group label="04 · Z DARMOWYM KONTEM" title="Kiedy chcesz wejść głębiej">
           <Item to={user ? ROZDROZA : `/register?returnTo=${encodeURIComponent(ROZDROZA)}`} meta="BEZPŁATNIE · PO ZAŁOŻENIU KONTA" title="Rozdroża"
             text="Interaktywne historie, w których to Ty podejmujesz decyzje i możesz zobaczyć, dokąd prowadzi inna droga. Nowa historia w każdy piątek."
-            cta={user ? "OTWÓRZ ROZDROŻA" : "ZAŁÓŻ DARMOWE KONTO"} />
+            cta={user ? "OTWÓRZ ROZDROŻA" : "Załóż darmowe konto"} />
         </Group>
 
         <section className="pt-12 md:pt-16 border-t hairline max-w-3xl">

@@ -17,11 +17,11 @@ export default function ShareBox({ ep }) {
     <div className="space-y-3">
       <p className="technical text-[10px] text-foreground/55">UDOSTĘPNIJ</p>
       <div className="flex flex-wrap gap-2">
-        <button onClick={() => copy(u("link"), "link")} className={cls}>{copied === "link" ? "SKOPIOWANO" : "KOPIUJ LINK"}</button>
-        <a className={cls} target="_blank" rel="noreferrer" href={`https://wa.me/?text=${encodeURIComponent(`${ep.tytul} ${u("whatsapp")}`)}`}>WHATSAPP</a>
-        <a className={cls} target="_blank" rel="noreferrer" href={`https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(u("fb-profil"))}`}>FACEBOOK</a>
+        <button onClick={() => copy(u("link"), "link")} className={cls}>{copied === "link" ? "SKOPIOWANO" : "Kopiuj link"}</button>
+        <a className={cls} target="_blank" rel="noreferrer" href={`https://wa.me/?text=${encodeURIComponent(`${ep.tytul} ${u("whatsapp")}`)}`}>WhatsApp</a>
+        <a className={cls} target="_blank" rel="noreferrer" href={`https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(u("fb-profil"))}`}>Facebook</a>
         {isMobile
-          ? <a className={cls} href={`fb-messenger://share/?link=${encodeURIComponent(u("messenger"))}`}>MESSENGER</a>
+          ? <a className={cls} href={`fb-messenger://share/?link=${encodeURIComponent(u("messenger"))}`}>Messenger</a>
           : <button onClick={() => copy(u("messenger"), "msgr")} className={cls}>{copied === "msgr" ? "SKOPIOWANO" : "MESSENGER"}</button>}
         {at > 0 && <button onClick={() => copy(`${base}?t=${fmtT(at)}`, "t")} className={cls}>{copied === "t" ? "SKOPIOWANO" : `OD MOMENTU ${fmtT(at)}`}</button>}
       </div>

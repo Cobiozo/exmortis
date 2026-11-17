@@ -6,7 +6,7 @@ import { base44 } from "@/api/base44Client";
 // Spotkania 1:1 pod listą spotkań: POWRÓT (mentoring, najpierw rozmowa) i „Rozmowa na progu” (płatna sesja,
 // po opłaceniu wybór terminu w kalendarzu). Dane i cena z produktu w Skarbcu; ukryty produkt → bez karty.
 const ITEMS = [
-  { slug: "powrot-mentoring", label: "MENTORING 1:1", to: "/powrot", cta: "POZNAJ POWRÓT",
+  { slug: "powrot-mentoring", label: "MENTORING 1:1", to: "/powrot", cta: "Poznaj POWRÓT",
     name: "POWRÓT — mentoring 1:1", text: "", note: "Nie przez koszyk. Najpierw rozmawiamy." },
   { slug: "rozmowa-na-progu", label: "POJEDYNCZE SPOTKANIE 1:1", cta: "ZOBACZ I UMÓW",
     name: "Rozmowa na progu", text: "", note: "Po opłaceniu wybierasz termin w kalendarzu." },

@@ -16,8 +16,8 @@ export const HOME_BLOCKS = [
     autor_zdjecie: { url: "https://media.base44.com/images/public/6aa08bc6318b0f886cc3b9a3/480c7c335_702144182_17895011880460401_728690723499574380_n.jpg", alt: "Dawid — mentor EXMORTIS" },
     autor_podpis: "Dawid · mentor powrotu",
     przyciski: [
-      { etykieta: "ZNAJDŹ SWÓJ PIERWSZY KROK", link: "/test?src=home-hero", styl: "zloty", strzalka: true },
-      { etykieta: "POZNAJ MNIE I MOJĄ HISTORIĘ", link: "/o-mnie", styl: "obrys", strzalka: false },
+      { etykieta: "Znajdź swój pierwszy krok", link: "/test?src=home-hero", styl: "zloty", strzalka: true },
+      { etykieta: "Poznaj mnie i moją historię", link: "/o-mnie", styl: "obrys", strzalka: false },
     ],
     podpis_przycisku: "Bezpłatny test autorefleksji · 15 stwierdzeń · około 3 minut",
     dopisek: "",

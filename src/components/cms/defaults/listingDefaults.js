@@ -21,6 +21,6 @@ export const SKLEP_BLOCKS = [
     przyciski: [], przyciemnienie: 60 }),
   b("sklep-test", "tekst", { etykieta: "NIE WIESZ, OD CZEGO ZACZĄĆ?", tytul: "",
     tresc: "<p class=\"exm-styl-lead\">Piętnaście stwierdzeń. Kilka minut. Zobaczysz, ile jest w Tobie dziś każdej z trzech śmierci — i od czego warto zacząć.</p>" }, { tlo: "grafit", odstep: "maly" }),
-  b("sklep-test-przycisk", "przyciski", { przyciski: [{ etykieta: "ZRÓB TEST", link: "/test", styl: "zloty", strzalka: true }] }, { tlo: "grafit", odstep: "maly" }),
+  b("sklep-test-przycisk", "przyciski", { przyciski: [{ etykieta: "Zrób test", link: "/test", styl: "zloty", strzalka: true }] }, { tlo: "grafit", odstep: "maly" }),
   b("sklep-katalog", "modul", { modul: "skarbiec_katalog" }),
 ];

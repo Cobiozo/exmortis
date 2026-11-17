@@ -111,7 +111,7 @@ export default function Test() {
               <p>Przeczytasz piętnaście zdań. Nie szukaj właściwej odpowiedzi. Nie próbuj wypaść dobrze. Sprawdź tylko, które zdania mogłyby zostać zapisane w Twojej historii.</p>
             </div>
             <div className="text-center mt-12">
-              <button onClick={() => setStep(1)} className="btn-relic">SPRAWDŹ SWOJĄ HISTORIĘ</button>
+              <button onClick={() => setStep(1)} className="btn-relic">Sprawdź swoją historię</button>
               <p className="technical text-[10px] text-[#F5EFE1]/70 mt-4">15 ZDAŃ · KILKA MINUT · BEZ REJESTRACJI</p>
             </div>
             <p className="text-sm text-[#F5EFE1]/70 leading-relaxed max-w-xl mx-auto mt-10 text-center">{LOCAL_ONLY}</p>
@@ -212,7 +212,7 @@ export default function Test() {
                 <p>Jeżeli chcesz dalej przyglądać się tym pytaniom, piszę o nich w <Link to="/#listy-powrotu" className="text-[#F5EFE1] font-semibold underline underline-offset-4 hover:text-[#C9A24A]">Listach powrotu</Link>. Nie po to, żeby mówić Ci, kim masz zostać. Po to, żeby łatwiej było usłyszeć siebie.</p>
               </div>
               <div className="mt-8 flex flex-col sm:flex-row sm:flex-wrap gap-3">
-                <Link to="/#listy-powrotu" className="btn-relic">ZAPISZ SIĘ NA LISTY POWROTU <ArrowRight className="h-4 w-4" /></Link>
+                <Link to="/#listy-powrotu" className="btn-relic">Zapisz się na Listy powrotu <ArrowRight className="h-4 w-4" /></Link>
                 <Link to="/glos" className="btn-ghost">POSŁUCHAJ — MUZYKA I PODCAST <ArrowRight className="h-4 w-4" /></Link>
                 <Link to="/skarbiec" className="btn-ghost">ZAJRZYJ DO SKARBCA <ArrowRight className="h-4 w-4" /></Link>
               </div>
@@ -228,7 +228,7 @@ export default function Test() {
                 {user ? (
                   <Link to={ROZDROZA} className="btn-ghost !px-5 !py-3 text-[11px] mt-4">OTWÓRZ ROZDROŻA <ArrowRight className="h-4 w-4" /></Link>
                 ) : (
-                  <Link to={`/register?returnTo=${encodeURIComponent(ROZDROZA)}`} className="btn-ghost !px-5 !py-3 text-[11px] mt-4">ZAŁÓŻ DARMOWE KONTO <ArrowRight className="h-4 w-4" /></Link>
+                  <Link to={`/register?returnTo=${encodeURIComponent(ROZDROZA)}`} className="btn-ghost !px-5 !py-3 text-[11px] mt-4">Załóż darmowe konto <ArrowRight className="h-4 w-4" /></Link>
                 )}
               </div>
               {next && next.free.length > 0 && (

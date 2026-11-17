@@ -115,7 +115,7 @@ export default function PowrotPlatnosc() {
         {fail
           ? <button type="button" className="btn-relic" onClick={() => { setPayState(null); window.history.replaceState(null, "", `/powrot/platnosc?t=${token}`); }}>SPRÓBUJ PONOWNIE <ArrowRight className="h-4 w-4" /></button>
           : <button type="button" className="btn-ghost" onClick={() => setPayState("check")}>SPRAWDŹ PONOWNIE</button>}
-        <Link to="/kontakt" className="technical text-[10px] text-foreground/55 hover:gold-text">NAPISZ DO MNIE</Link>
+        <Link to="/kontakt" className="technical text-[10px] text-foreground/55 hover:gold-text">Napisz do mnie</Link>
       </div>
     );
   }
@@ -125,7 +125,7 @@ export default function PowrotPlatnosc() {
       <div className="text-center space-y-6 pt-10">
         <h1 className="relic-heading text-3xl md:text-4xl">Płatność za program POWRÓT</h1>
         <p className="text-foreground/65">{loadError}</p>
-        <Link to="/kontakt" className="btn-ghost">NAPISZ DO MNIE</Link>
+        <Link to="/kontakt" className="btn-ghost">Napisz do mnie</Link>
       </div>
     );
   }
@@ -142,7 +142,7 @@ export default function PowrotPlatnosc() {
               ? "Link do płatności był ważny 7 dni. Napisz do mnie — wyślę nowy."
               : "Płatność jest chwilowo niedostępna. Napisz do mnie."}
         </p>
-        {!info.paid && <Link to="/kontakt" className="btn-ghost">NAPISZ DO MNIE</Link>}
+        {!info.paid && <Link to="/kontakt" className="btn-ghost">Napisz do mnie</Link>}
       </div>
     );
   }

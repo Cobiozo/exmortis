@@ -14,9 +14,9 @@ export default function CalendarButtons({ event, joinUrl = null, t = null, class
         <CalendarPlus className="h-3.5 w-3.5" /> DODAJ DO KALENDARZA
       </p>
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
-        <a href={googleCalendarUrl(event, joinUrl)} target="_blank" rel="noopener noreferrer" className={btn}>GOOGLE</a>
-        <a href={outlookCalendarUrl(event, joinUrl)} target="_blank" rel="noopener noreferrer" className={btn}>OUTLOOK</a>
-        <a href={icsUrl(event, t)} className={btn}>APPLE / INNY</a>
+        <a href={googleCalendarUrl(event, joinUrl)} target="_blank" rel="noopener noreferrer" className={btn}>Google</a>
+        <a href={outlookCalendarUrl(event, joinUrl)} target="_blank" rel="noopener noreferrer" className={btn}>Outlook</a>
+        <a href={icsUrl(event, t)} className={btn}>Apple / inny</a>
       </div>
     </div>
   );

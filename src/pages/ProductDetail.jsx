@@ -242,7 +242,7 @@ export default function ProductDetail() {
 
             {product.category === "mentoring" && linkUrl !== "/powrot" && (
               <Link to="/powrot" className="btn-ghost w-full mb-4">
-                POZNAJ PROGRAM POWRÓT <ArrowRight className="h-4 w-4" />
+                Poznaj program POWRÓT <ArrowRight className="h-4 w-4" />
               </Link>
             )}
 
@@ -283,7 +283,7 @@ export default function ProductDetail() {
               <GiftCardBuy product={product} />
             ) : onRequest ? (
               <div className="mt-auto">
-                <Link to="/kontakt" className="btn-relic w-full">NAPISZ DO MNIE <ArrowRight className="h-4 w-4" /></Link>
+                <Link to="/kontakt" className="btn-relic w-full">Napisz do mnie <ArrowRight className="h-4 w-4" /></Link>
               </div>
             ) : (
               <div className="mt-auto space-y-4">
@@ -305,11 +305,11 @@ export default function ProductDetail() {
                     </button>
                   </div>}
                   <button onClick={handleBuy} className="btn-relic flex-1">
-                    PRZEJDŹ DO KASY <ArrowRight className="h-4 w-4" />
+                    Przejdź do kasy <ArrowRight className="h-4 w-4" />
                   </button>
                 </div>
                 <button onClick={handleAdd} className="btn-ghost w-full">
-                  {added ? "DODANO DO KOSZYKA ✓" : "DODAJ DO KOSZYKA"}
+                  {added ? "DODANO DO KOSZYKA ✓" : "Dodaj do koszyka"}
                 </button>
                 {isDigital(product) && <p className="text-sm text-foreground/60">{accessLabel(product)}</p>}
                 {isDigital(product) && <GuaranteeInfo />}

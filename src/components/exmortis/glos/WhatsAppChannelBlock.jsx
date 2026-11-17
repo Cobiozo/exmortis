@@ -13,7 +13,7 @@ export default function WhatsAppChannelBlock() {
     <section aria-labelledby="glos-whatsapp" className="py-20 md:py-28 px-5 md:px-10 border-t hairline bg-[#070708]">
       <div className="mx-auto max-w-[1400px]">
         <div className="max-w-2xl">
-          <p className="technical text-[11px] gold-text mb-4">KANAŁ WHATSAPP</p>
+          <p className="technical text-[11px] gold-text mb-4">Kanał WhatsApp</p>
           <h2 id="glos-whatsapp" className="relic-heading text-3xl md:text-4xl text-[#F5EFE1] leading-[1.05] mb-4">
             Głos między poniedziałkami
           </h2>

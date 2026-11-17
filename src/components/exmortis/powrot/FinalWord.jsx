@@ -19,7 +19,7 @@ export default function FinalWord() {
         <EventLine />
         <div className="flex flex-col sm:flex-row gap-4 pt-4">
           <a href="#formularz" className="btn-relic">
-            WYPEŁNIJ FORMULARZ KWALIFIKACYJNY <ArrowRight className="h-4 w-4" />
+            Wypełnij formularz kwalifikacyjny <ArrowRight className="h-4 w-4" />
           </a>
           <Link to="/skarbiec" className="btn-ghost">
             ZOBACZ SKARBIEC — RÓŻNE DROGI POWROTU

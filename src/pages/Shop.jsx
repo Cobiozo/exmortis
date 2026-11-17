@@ -163,7 +163,7 @@ export default function Shop() {
       {/* ===== ZAKŁADKI ===== */}
       <div id="skarbiec-katalog" className="px-5 md:px-10 scroll-mt-24">
         <div className="mx-auto max-w-[1400px] flex flex-wrap gap-2" role="tablist" aria-label="Dostępność materiałów">
-          {[["dostepne", "DOSTĘPNE TERAZ", ready.length], ["przygotowanie", "W PRZYGOTOWANIU", visible.length - ready.length]].map(([k, label, n]) => (
+          {[["dostepne", "Dostępne teraz", ready.length], ["przygotowanie", "W przygotowaniu", visible.length - ready.length]].map(([k, label, n]) => (
             <button key={k} role="tab" aria-selected={tab === k} onClick={() => setTab(k)}
               className={`technical text-[10px] px-4 py-2.5 min-h-11 border transition-colors ${tab === k ? "border-[#C9A24A] gold-text bg-[#C9A24A]/10" : "hairline text-foreground/55 hover:text-foreground"}`}>
               {label}{loading ? "" : ` (${n})`}

@@ -13,8 +13,8 @@ const b = (id, typ, dane, uklad = {}) => ({ id, typ, widoczny: true, dane, uklad
 export const LISTOPAD_BLOCKS = [
   b("lis-hero", "hero", { wariant: "standard", etykieta: "1 LISTOPADA · 20:00 (CZASU PL) · ONLINE", linia1: "Ze śmierci —", linia2: "o powrotach, o których świat nie mówi",
     lead: "Wieczór Wszystkich Świętych. Dwie godziny o trzech śmierciach i czterech etapach powrotu — z czasem na Twoje pytania.",
-    przyciski: [{ etykieta: "ZAPISZ SIĘ", link: "#zapis", styl: "zloty", strzalka: true },
-      { etykieta: "DOWIEDZ SIĘ WIĘCEJ", link: "#o-spotkaniu", styl: "obrys" }], przyciski_pion: true,
+    przyciski: [{ etykieta: "Zapisz się", link: "#zapis", styl: "zloty", strzalka: true },
+      { etykieta: "Dowiedz się więcej", link: "#o-spotkaniu", styl: "obrys" }], przyciski_pion: true,
     zapowiedz: "ZAPISY JUŻ OTWARTE", zapowiedz_do: LISTOPAD_ZAPISY_OD, dopisek: "Bezpłatnie. Link do spotkania otrzymasz na podany adres e-mail.",
     tlo: { url: LISTOPAD_COVER }, przyciemnienie: 55 }),
   b("lis-tekst", "tekst", { etykieta: "O SPOTKANIU", tytul: "Wieczór Wszystkich Świętych",

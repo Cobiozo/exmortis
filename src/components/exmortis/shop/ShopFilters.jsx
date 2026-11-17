@@ -20,7 +20,7 @@ function Group({ label, options, value, onToggle, allowAll = false }) {
                 : "hairline text-foreground/55 hover:text-foreground/70"
             }`}
           >
-            WSZYSTKIE
+            Wszystkie
           </button>
         )}
         {options.map((o) => (
@@ -62,7 +62,7 @@ export default function ShopFilters({ filters, setFilters, available, extra = nu
             aria-expanded={open}
             className={`technical text-[10px] px-3 py-2.5 min-h-11 border flex items-center gap-2 transition-colors ${open || hasAny ? "border-[#C9A24A]/60 gold-text" : "hairline text-foreground/60 hover:text-foreground"}`}
           >
-            <SlidersHorizontal className="h-3.5 w-3.5" /> DOPASUJ MATERIAŁY{hasAny ? ` (${active.length})` : ""}
+            <SlidersHorizontal className="h-3.5 w-3.5" /> Dopasuj materiały{hasAny ? ` (${active.length})` : ""}
           </button>
           {active.map((k) => (
             <button key={k} onClick={() => setFilters((f) => ({ ...f, [k]: null }))}

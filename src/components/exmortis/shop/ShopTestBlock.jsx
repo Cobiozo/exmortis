@@ -13,7 +13,7 @@ export default function ShopTestBlock({ part, d = {} }) {
   const intro = part !== "action";
   const buttons = Array.isArray(d.przyciski) && d.przyciski.length
     ? d.przyciski
-    : [{ etykieta: "ZRÓB TEST", link: "/test" }];
+    : [{ etykieta: "Zrób test", link: "/test" }];
 
   return (
     <section className={SHELL}>
@@ -38,7 +38,7 @@ export default function ShopTestBlock({ part, d = {} }) {
                   to={b.link || "/test"}
                   className="inline-flex w-full sm:w-auto items-center justify-center gap-3 bg-[#C9A24A] text-[#0A0A0B] px-8 py-4 technical text-xs hover:bg-[#E2C170] transition-colors"
                 >
-                  {b.etykieta || "ZRÓB TEST"}
+                  {b.etykieta || "Zrób test"}
                   <ArrowRight className="h-4 w-4" />
                 </Link>
               ))}

@@ -74,7 +74,7 @@ export default function WaitlistDialog({ product, onClose }) {
         ) : (
           <form onSubmit={submit} className="space-y-5">
             <div>
-              <p className="technical text-[9px] gold-text mb-2">{soldOut ? "LISTA REZERWOWA" : "LISTA OCZEKUJĄCYCH"}</p>
+              <p className="technical text-[9px] gold-text mb-2">{soldOut ? "Lista rezerwowa" : "LISTA OCZEKUJĄCYCH"}</p>
               <h3 className="shop-heading text-2xl text-[#F5EFE1]">{product.name}</h3>
             </div>
             {fromAccount && <AccountContactLine email={acc.email} lead="Powiadomię na:" onChange={() => setManual(true)} />}

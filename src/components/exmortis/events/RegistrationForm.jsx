@@ -228,7 +228,7 @@ export default function RegistrationForm({ event: ev }) {
       {!acc.signedIn && <SignInHint />}
       {error && <p role="alert" className="text-sm text-[#E8C547] leading-relaxed">{error}</p>}
       <button type="submit" disabled={sending} aria-busy={sending} className="btn-relic disabled:opacity-60 disabled:cursor-wait">
-        {sending ? "ZAPISUJĘ…" : "ZAPISUJĘ SIĘ"}
+        {sending ? "ZAPISUJĘ…" : "Zapisuję się"}
       </button>
     </form>
   );

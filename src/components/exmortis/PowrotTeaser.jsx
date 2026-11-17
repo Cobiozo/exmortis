@@ -23,7 +23,7 @@ export default function PowrotTeaser({ label } = {}) {
           <p className="relic-heading text-2xl md:text-3xl leading-tight text-foreground/85 mb-8" dangerouslySetInnerHTML={{ __html: sanitizeHtml(quote) }} />
           <div className="rich-content text-foreground/60 leading-relaxed max-w-xl mb-10" dangerouslySetInnerHTML={{ __html: sanitizeHtml(desc) }} />
           <Link to="/powrot" className="btn-relic">
-            POZNAJ POWRÓT <ArrowRight className="h-4 w-4" />
+            Poznaj POWRÓT <ArrowRight className="h-4 w-4" />
           </Link>
         </div>
       </div>

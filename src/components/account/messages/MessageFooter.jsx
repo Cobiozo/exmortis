@@ -22,7 +22,7 @@ export default function MessageFooter({ footer, title }) {
         {footer && footer.whatsapp && (
           <a href={footer.whatsapp} target="_blank" rel="noopener noreferrer"
             className={`inline-flex items-center justify-center min-h-[44px] px-5 border hairline text-[#F5EFE1] font-mono text-xs tracking-[0.14em] uppercase hover:border-[#C9A24A] hover:text-[#C9A24A] transition-colors ${FOCUS}`}>
-            WHATSAPP
+            WhatsApp
           </a>
         )}
       </div>
