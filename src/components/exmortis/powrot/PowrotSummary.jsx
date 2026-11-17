@@ -1,6 +1,6 @@
 import React from "react";
 import Section from "./Section";
-import { POWROT } from "@/lib/powrotOffer";
+import { POWROT, ROZMOWA_WSTEPNA } from "@/lib/powrotOffer";
 
 // PODSUMOWANIE przed zgłoszeniem — tylko wartości już obecne na stronie, zebrane w jednej ramce.
 // Parametry (cena, sesje, czas, częstotliwość, forma, start) pochodzą z src/lib/powrotOffer.js.
@@ -8,16 +8,17 @@ const FOR_WHOM =
   "Wracasz z wypalenia, kryzysu, rozstania albo sukcesu, który nie smakuje — i wiesz, że tak dalej nie chcesz.";
 
 const INCLUDED = [
-  `${POWROT.sessions} sesji 1:1 ${POWROT.cadence}`,
+  `${POWROT.sessions} sesji po ${POWROT.lengthLong} ${POWROT.cadence}`,
   POWROT.months,
-  POWROT.form,
+  `online (${POWROT.form})`,
   "Mapa powrotu",
-  POWROT.toolsLine,
-  "dziennik z zadaniami",
+  "Dziennik powrotu",
+  "materiały po sesjach w Twoim koncie",
+  "kontakt między sesjami w ustalonych granicach",
 ];
 
 const QUALIFICATION =
-  "Krótkie zgłoszenie → ankieta → bezpłatna rozmowa kwalifikacyjna → wspólna decyzja — bez zobowiązań.";
+  `Krótkie zgłoszenie → odpowiedź w ciągu ${POWROT.responseHours} godzin → ankieta → rozmowa wstępna (${ROZMOWA_WSTEPNA.minutes} minut, na zaproszenie) → wspólna decyzja. Bez zobowiązań i bez automatycznego przyjęcia.`;
 
 function Row({ label, children }) {
   return (
@@ -44,8 +45,9 @@ export default function PowrotSummary() {
           <Row label="KWALIFIKACJA">{QUALIFICATION}</Row>
           <Row label="INWESTYCJA">
             <p className="text-foreground/90">{POWROT.priceFull}</p>
+            <p className="mt-1 text-sm">{POWROT.installments}</p>
           </Row>
-          <Row label="START">{POWROT.start}</Row>
+          <Row label="START">{POWROT.start} · najwyżej {POWROT.capacity} osoby jednocześnie</Row>
         </div>
       </div>
     </Section>
