@@ -239,7 +239,7 @@ export default function Test() {
                 <ArrowRight className="h-4 w-4 shrink-0 gold-text" />
               </Link>
               <Link to="/skarbiec/rozmowa-na-progu?src=test-wynik" className="flex items-center justify-between gap-4 border hairline px-5 py-5 mb-4 min-h-11 text-[#F5EFE1] hover:border-[#C9A24A]/60 transition-colors">
-                <span><span className="shop-heading text-xl block">Rozmowa na progu</span><span className="text-sm text-[#F5EFE1]/75">90 minut rozmowy jeden na jeden o Twojej historii. Online, bez zobowiązań na dalej.</span></span>
+                <span><span className="shop-heading text-xl block">Rozmowa na progu</span><span className="text-sm text-[#F5EFE1]/75">90 minut rozmowy jeden na jeden o Twojej historii. Online, jednorazowo, bez zobowiązań.</span></span>
                 <ArrowRight className="h-4 w-4 shrink-0 gold-text" />
               </Link>
               <p className="text-base text-[#F5EFE1]/80">
