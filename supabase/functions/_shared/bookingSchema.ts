@@ -39,7 +39,8 @@ BEGIN
     RETURN jsonb_build_object('error','taken');
   END IF;
   -- Zgoda o wykonaniu usługi przed upływem 14 dni — wymagana tylko, gdy termin wypada w tym oknie.
-  IF v_st < v_pk.created_at + interval '14 days'
+  -- Bezpłatne rodzaje (np. rozmowa wstępna POWRÓT) nie wymagają zgody o wykonaniu usługi przed 14 dniami.
+  IF NOT COALESCE(v_t.free_service, false) AND v_st < v_pk.created_at + interval '14 days'
      AND NOT EXISTS (SELECT 1 FROM jsonb_to_recordset(COALESCE(p->'consents','[]')) AS x(kind text) WHERE x.kind = 'odstapienie') THEN
     RETURN jsonb_build_object('error','consent');
   END IF;
@@ -443,7 +444,7 @@ days AS (
 cand AS (
   SELECT ((dy.d + h.start_local) AT TIME ZONE 'Europe/Warsaw') + (n * t.step_min) * interval '1 minute' AS st,
     ((dy.d + h.end_local) AT TIME ZONE 'Europe/Warsaw') AS win_end,
-    t.duration_min, t.buffer_before, t.buffer_after, t.horizon_days, t.monthly_limit
+    t.duration_min, t.buffer_before, t.buffer_after, t.horizon_days, t.monthly_limit, t.weekly_limit
   FROM days dy
   JOIN public.bk_hours h ON h.type_id = p_type AND h.weekday = extract(isodow FROM dy.d)::int
   CROSS JOIN t
@@ -452,7 +453,7 @@ cand AS (
 c AS (
   SELECT st, st + duration_min * interval '1 minute' AS en,
     tstzrange(st - buffer_before * interval '1 minute', st + (duration_min + buffer_after) * interval '1 minute', '[)') AS b,
-    (st AT TIME ZONE 'Europe/Warsaw')::date AS ld, monthly_limit
+    (st AT TIME ZONE 'Europe/Warsaw')::date AS ld, monthly_limit, weekly_limit
   FROM cand, s
   WHERE st + duration_min * interval '1 minute' <= win_end
     AND st >= p_from AND st < p_to
@@ -479,6 +480,10 @@ WHERE NOT EXISTS (SELECT 1 FROM public.bk_bookings k WHERE k.status = 'POTWIERDZ
   AND (c.monthly_limit IS NULL OR (SELECT count(*) FROM public.bk_bookings k WHERE k.status = 'POTWIERDZONA' AND k.type_id = p_type
     AND k.id IS DISTINCT FROM p_ignore
     AND date_trunc('month', k.starts_at AT TIME ZONE 'Europe/Warsaw') = date_trunc('month', c.st AT TIME ZONE 'Europe/Warsaw')) < c.monthly_limit)
+  -- Limit tygodniowy jednego rodzaju (np. 15 rozmów wstępnych POWRÓT), niezależny od globalnego.
+  AND (c.weekly_limit IS NULL OR (SELECT count(*) FROM public.bk_bookings k WHERE k.status = 'POTWIERDZONA' AND k.type_id = p_type
+    AND k.id IS DISTINCT FROM p_ignore
+    AND date_trunc('week', k.starts_at AT TIME ZONE 'Europe/Warsaw') = date_trunc('week', c.st AT TIME ZONE 'Europe/Warsaw')) < c.weekly_limit)
 ORDER BY c.st
 $f$;
 
