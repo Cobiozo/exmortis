@@ -338,3 +338,64 @@
 .text-foreground\/75 { color: hsl(var(--foreground) / 0.78); }
 /* Pola formularzy: podpowiedź w polu też musi być czytelna. */
 [class*="placeholder:text-foreground/"]::placeholder { color: hsl(var(--foreground) / 0.62); }
+/* ==== PANEL ADMINA v2 (17.11.2026) — wspólny wygląd wszystkich modułów zaplecza ====
+   Tylko wewnątrz .adm (AdminShell). Strona dla klientów bez zmian. Funkcje bez zmian — sam wygląd.
+   Styl exmortis: czerń, złoto #C9A24A, Cormorant (nagłówki), Inter (tekst), JetBrains Mono (etykiety). */
+.adm { --adm-card: #111113; --adm-line: rgba(255,255,255,.09); --adm-line-strong: rgba(255,255,255,.16); --adm-r: 12px; --adm-r-sm: 8px; }
+
+/* Przyciski: zaokrąglone, zwykły krój, bez rozstrzelonych liter — jak na pulpicie. */
+.adm .btn-relic, .adm .btn-ghost, .adm .btn-blood {
+  font-family: var(--font-body); text-transform: none; letter-spacing: 0; font-size: 14px; font-weight: 500;
+  padding: .55rem 1.1rem; min-height: 40px; border-radius: var(--adm-r-sm); line-height: 1.2;
+}
+.adm .btn-relic { font-weight: 600; }
+.adm .btn-relic:hover, .adm .btn-blood:hover { letter-spacing: 0; }
+.adm .btn-relic:hover { background: #E2C27A; }
+.adm .btn-ghost { border-color: var(--adm-line-strong); background: transparent; }
+.adm .btn-ghost:hover { border-color: rgba(201,162,74,.7); color: #F1EDE3; background: rgba(201,162,74,.06); }
+.adm .btn-relic:focus-visible, .adm .btn-ghost:focus-visible, .adm .btn-blood:focus-visible { outline: 2px solid #C9A24A; outline-offset: 2px; }
+.adm .btn-relic:disabled, .adm .btn-ghost:disabled, .adm .btn-blood:disabled { cursor: not-allowed; }
+
+/* Karty, ramki, okna: zaokrąglone, delikatna linia; tło karty tylko tam, gdzie moduł nie ustawił własnego. */
+:where(.adm) :where(div, section, article, form, details, fieldset, aside, ul, ol, li, label, figure, table, a).border { border-radius: var(--adm-r); }
+:where(.adm main) :where(div, section, article, form, details, fieldset).border.hairline { background-color: var(--adm-card); }
+:where(.adm) .hairline { border-color: var(--adm-line); }
+:where(.adm) .divide-\[\#3D3D3F\]\/60 > :not([hidden]) ~ :not([hidden]) { border-color: var(--adm-line); }
+:where(.adm) :where(button, a, span).border { border-radius: var(--adm-r-sm); }
+/* Okna panelu (LibModal i podobne): mocniejsza ramka i cień. */
+.adm .fixed.inset-0 > div.border.hairline, .adm [role="dialog"].border.hairline { border-color: var(--adm-line-strong); box-shadow: 0 30px 80px rgba(0,0,0,.6); background-color: #0D0D0E; }
+
+/* Pola formularzy: zaokrąglone, czytelna ramka, złote podświetlenie przy wpisywaniu. */
+.adm input:not([type="checkbox"]):not([type="radio"]):not([type="range"]):not([type="file"]):not([type="color"]),
+.adm select, .adm textarea {
+  border-radius: var(--adm-r-sm); background-color: #0D0D0E; border-color: rgba(255,255,255,.16);
+  transition: border-color .15s ease, box-shadow .15s ease;
+}
+.adm input:not([type="checkbox"]):not([type="radio"]):not([type="range"]):focus,
+.adm select:focus, .adm textarea:focus {
+  border-color: #C9A24A; box-shadow: 0 0 0 3px rgba(201,162,74,.16); outline: none;
+}
+.adm input[type="checkbox"], .adm input[type="radio"] { accent-color: #C9A24A; }
+.adm .rich-admin .ql-toolbar.ql-snow { border-radius: var(--adm-r-sm) var(--adm-r-sm) 0 0; border-color: rgba(255,255,255,.16); }
+.adm .rich-admin .ql-container.ql-snow { border-radius: 0 0 var(--adm-r-sm) var(--adm-r-sm); border-color: rgba(255,255,255,.16); background: #0D0D0E; }
+
+/* Etykiety (JetBrains Mono): zostają znakiem exmortis, ale spokojniejsze i czytelniejsze. */
+.adm main .technical { letter-spacing: .12em; }
+.adm main .technical[class*="text-[9px]"], .adm main .technical[class*="text-[10px]"] { font-size: 11px; }
+
+/* Zakładki modułów zrobione z przycisków w ramkach: lekkie „pigułki”, wybrana na złoto. */
+.adm main button.technical.border { border-radius: 999px; padding-inline: 14px; min-height: 36px; }
+
+/* Tabele: odstępy, nagłówek jak etykieta, podświetlenie wiersza. */
+.adm main table { border-collapse: separate; border-spacing: 0; width: 100%; }
+.adm main thead th { font-family: var(--font-mono); text-transform: uppercase; letter-spacing: .1em; font-size: 11px; font-weight: 500; color: rgba(226,226,226,.6); border-bottom: 1px solid var(--adm-line); }
+.adm main tbody tr { transition: background-color .12s ease; }
+.adm main tbody tr:hover { background-color: rgba(255,255,255,.025); }
+.adm main tbody td { border-top: 1px solid rgba(255,255,255,.05); }
+
+/* Linki „details/summary” i rozwijane sekcje. */
+.adm main summary { cursor: pointer; }
+
+@media (max-width: 479px) {
+  .adm .btn-relic, .adm .btn-ghost, .adm .btn-blood { padding-inline: .9rem; }
+}

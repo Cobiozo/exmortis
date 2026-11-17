@@ -99,7 +99,7 @@ export default function AdminShell({ me, tech, techKeys, libOn, badges, active, 
     : [["", "Pulpit", Home], ["zamowienia", "Zamówienia", ShoppingBag], ["spotkania", "Spotkania", CalendarDays], ["kontakty", "Kontakty", Contact]];
 
   return (
-    <div className="min-h-screen bg-[#0A0A0B] lg:flex">
+    <div className="adm min-h-screen bg-[#0A0A0B] lg:flex">
       <aside className="hidden lg:block w-64 shrink-0 sticky top-0 h-screen overflow-y-auto border-r hairline bg-[#0D0D0E] px-3 py-6">
         <NavContent {...nav} />
       </aside>
