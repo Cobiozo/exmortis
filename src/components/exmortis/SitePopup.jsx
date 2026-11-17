@@ -1,10 +1,10 @@
 import React, { useEffect, useRef, useState } from "react";
-import { Link, useLocation } from "react-router-dom";
-import { X, Copy, Check, ArrowRight } from "lucide-react";
+import { useLocation } from "react-router-dom";
 import useSiteSettings from "@/lib/useSiteSettings";
 import { useAuth } from "@/lib/AuthContext";
 import { readConsent } from "@/components/legal/cookieStore";
 import { SUPABASE_URL, ANON_KEY } from "@/api/exmSupabase";
+import PopupCard, { ownPath, boxClass } from "@/components/exmortis/popup/PopupCard";
 
 // Kampanie popup (Panel → Ogłoszenia i popupy). Zasady:
 // • najwyżej JEDEN popup w wizycie — pierwsza pasująca kampania (serwer sortuje po priorytecie);
@@ -18,11 +18,6 @@ const SKIP = ["/admin", "/kasa", "/pobierz", "/powrot/platnosc", "/powrot/ankiet
 const MEM = "exm_popup_k";
 const DAY = 86400000;
 
-const ownPath = (link) => {
-  const s = String(link || "");
-  if (s.startsWith("/")) return s;
-  try { const u = new URL(s); return u.origin === window.location.origin || /(^|\.)exmortis\.pl$/.test(u.hostname) ? u.pathname + u.search + u.hash : null; } catch { return null; }
-};
 const norm = (p) => String(p || "").split(/[?#]/)[0].replace(/\/+$/, "") || "/";
 const readMem = () => { try { return JSON.parse(localStorage.getItem(MEM) || "{}") || {}; } catch { return {}; } };
 const writeMem = (id, field) => {
@@ -48,18 +43,6 @@ const fromLegacy = (p) => p && ({
   tytul: p.tytul, tresc: p.tresc, przycisk_napis: p.przycisk_napis, akcja: p.przycisk_link ? "link" : "zamknij", href: p.przycisk_link,
   kod: p.kod, opoznienie: p.opoznienie, przewiniecie: 0, cisza_zamkniecie: 0, cisza_klik: 0,
 });
-
-const zl = (n) => `${Number(n).toFixed(2).replace(".", ",").replace(",00", "")} zł`;
-const MON = ["STY", "LUT", "MAR", "KWI", "MAJ", "CZE", "LIP", "SIE", "WRZ", "PAŹ", "LIS", "GRU"];
-const dateParts = (iso) => {
-  const d = new Date(iso);
-  const tz = { timeZone: "Europe/Warsaw" };
-  return {
-    day: d.toLocaleDateString("pl-PL", { ...tz, day: "numeric" }),
-    mon: MON[Number(d.toLocaleDateString("en-US", { ...tz, month: "numeric" })) - 1],
-    line: d.toLocaleString("pl-PL", { ...tz, weekday: "long", hour: "2-digit", minute: "2-digit" }),
-  };
-};
 
 export default function SitePopup() {
   const s = useSiteSettings();

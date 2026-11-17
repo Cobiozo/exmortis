@@ -32,14 +32,14 @@ export default function PopupCard({ k, close, clicked, copy, copied = false, clo
     if (k.akcja === "brak") return null;
     if (k.akcja === "kopiuj") return null;
     if (k.akcja === "zamknij" || !href) return <button type="button" onClick={close} className={primary}>{label}</button>;
-    if (external) return <a href={href} target="_blank" rel="noopener noreferrer" onClick={clicked} className={primary}>{label} <ArrowRight className="h-4 w-4" aria-hidden="true" /></a>;
+    if (external && !still) return <a href={href} target="_blank" rel="noopener noreferrer" onClick={clicked} className={primary}>{label} <ArrowRight className="h-4 w-4" aria-hidden="true" /></a>;
+    if (still) return <span className={primary}>{label} <ArrowRight className="h-4 w-4" aria-hidden="true" /></span>;
     return <Link to={inner || href} onClick={clicked} className={primary}>{label} <ArrowRight className="h-4 w-4" aria-hidden="true" /></Link>;
   })();
   const prod = k.produkt;
   const ev = k.spotkanie;
   const tag = k.etykieta || (k.rodzaj === "spotkanie" ? (ev?.bezplatne ? "Spotkanie · bezpłatne" : "Spotkanie") : k.rodzaj === "produkt" ? "Sklep" : k.rodzaj === "listy" ? "Listy Powrotu" : "");
 
-  const Btn = still ? "span" : Link;
   return (
     <>
         <button ref={closeRef} type="button" onClick={close} aria-label="Zamknij" className="absolute right-2 top-2 z-10 h-10 w-10 inline-flex items-center justify-center rounded-lg bg-[#0A0A0B]/60 text-foreground/60 hover:text-foreground">
