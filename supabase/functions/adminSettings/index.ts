@@ -172,7 +172,7 @@ const handler = async function (req) {
           FROM public.products p WHERE active IS NOT FALSE ORDER BY sort_order NULLS LAST, name`, true),
         runSql(base44, `SELECT id::text AS id, title, start_datetime, format, price::float8 AS price, registration_deadline
           FROM public.events WHERE status = 'Opublikowane' AND start_datetime > now() ORDER BY start_datetime LIMIT 30`, true),
-        runSql(base44, `SELECT data FROM public.exm_discountcode WHERE data->>'email' IS NULL OR data->>'email' = '' ORDER BY created_date DESC LIMIT 100`, true),
+        runSql(base44, `SELECT data FROM public.exm_discountcode WHERE COALESCE(data->>'email','') = '' AND COALESCE(data->>'opis','') NOT LIKE 'Karta podarunkowa%' ORDER BY created_date DESC LIMIT 100`, true),
       ]);
       const kody = [];
       for (const r of codes) {
