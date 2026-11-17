@@ -63,10 +63,24 @@ const viewStatus = (k, kody = []) => {
 const period = (k) => (k.od || k.do ? `${k.od ? fmtD(k.od) : "teraz"} – ${k.do ? fmtD(k.do) : "bez końca"}` : "bez końca");
 
 // Kształt jak z serwera (publiczny), żeby podgląd w panelu wyglądał tak samo jak na stronie.
-function previewOf(f, opt) {
+// Kod z ustawieniami z edytora (zanim zostaną zapisane) i jego stan „działa teraz”.
+const todayPl = () => new Date().toLocaleDateString("sv-SE", { timeZone: "Europe/Warsaw" });
+function effCode(code, ks, prod) {
+  if (!code) return null;
+  const c = ks ? { ...code, bez_promocji: !ks.od_promocji, od: ks.od || null, valid_until: ks.do || null } : code;
+  const t = todayPl();
+  const dates = (!c.od || c.od <= t) && (!c.valid_until || c.valid_until >= t);
+  const regular = c.bez_promocji && (prod ? prod.cena < prod.cena_regularna : /regularnej/.test(code.powod || ""));
+  const other = !code.ok && !/regularnej|działa od|wygasł/i.test(code.powod || "");
+  const ok = c.active !== false && dates && !regular && !other;
+  const powod = ok ? "" : other ? code.powod : !dates ? (c.od && c.od > t ? `Kod działa od ${fmtDay(c.od)}` : "Kod wygasł") : "Kod działa tylko w cenie regularnej (teraz trwa promocja)";
+  return { ...c, ok, powod };
+}
+
+function previewOf(f, opt, ks) {
   const p = opt.products.find((x) => x.id === f.produkt_id);
   const e = opt.events.find((x) => x.id === f.wydarzenie_id);
-  const c = opt.kody.find((x) => x.kod === f.kod);
+  const c = effCode(opt.kody.find((x) => x.kod === f.kod), ks, p);
   let cenaPo = null;
   if (p && c?.ok) {
     const fits = (!c.product_ids?.length || c.product_ids.map(String).includes(p.id)) && !(c.bez_promocji && p.cena < p.cena_regularna);
@@ -203,14 +217,20 @@ function CampaignEditor({ initial, opt, onBack, onSaved }) {
   const set = (k, v) => setF((x) => ({ ...x, [k]: v }));
   const setRodzaj = (r) => setF((x) => ({ ...x, rodzaj: r, akcja: AKCJE[r][0][0], ukryj_posiadaczy: r === "produkt" || r === "rabat", bez_subskrybentow: r === "listy" }));
   const prod = opt.products.find((p) => p.id === f.produkt_id);
-  const code = opt.kody.find((c) => c.kod === f.kod);
-  const pv = useMemo(() => previewOf(f, opt), [f, opt]);
+  const rawCode = opt.kody.find((c) => c.kod === f.kod);
+  // Ustawienia kodu edytowane w kampanii (zapisują się do kodu przy zapisie kampanii).
+  const [ks, setKs] = useState(null);
+  const ksFrom = (c) => (c ? { od_promocji: !c.bez_promocji, od: c.od || "", do: c.valid_until || "" } : null);
+  useEffect(() => { setKs(ksFrom(rawCode)); }, [f.kod, rawCode?.bez_promocji, rawCode?.od, rawCode?.valid_until]); // eslint-disable-line react-hooks/exhaustive-deps
+  const ksDirty = !!(ks && rawCode && JSON.stringify(ks) !== JSON.stringify(ksFrom(rawCode)));
+  const code = effCode(rawCode, ks, prod);
+  const pv = useMemo(() => previewOf(f, opt, ks), [f, opt, ks]);
   const needsProduct = f.rodzaj === "produkt" || (f.rodzaj === "rabat" && f.akcja === "produkt_kod");
 
   const save = async (status) => {
     setBusy(true); setErr(""); setMsg(""); setWarn("");
     try {
-      const r = await api("save_popup", { data: { ...f, status: status || f.status } });
+      const r = await api("save_popup", { data: { ...f, status: status || f.status }, ...(ksDirty ? { kod_ustawienia: ks } : {}) });
       setF((x) => ({ ...x, ...r.item }));
       setWarn(r.ostrzezenie || "");
       setMsg(r.item.status === "aktywna" ? "Zapisane i włączone. Na stronie w ciągu ok. 2 minut." : "Zapisane.");
@@ -298,6 +318,22 @@ function CampaignEditor({ initial, opt, onBack, onSaved }) {
                   {prod && code.ok && pv.produkt?.cena_po == null ? " · na wybrany produkt teraz nie działa (np. trwa promocja)" : ""}
                 </span>
                 {!code.ok && <span className="block mt-1 text-xs text-foreground/55">Kampania z takim kodem nie pokaże się na stronie, dopóki kod nie zacznie działać — włącza się wtedy sama.</span>}
+              </div>
+            )}
+            {code && ks && (
+              <div className="mt-3 rounded-lg border border-white/10 p-3 space-y-3">
+                <p className="text-xs text-foreground/60">Ustawienia kodu {f.kod} <span className="text-foreground/45">(zmieniają kod wszędzie — w kasie i w innych kampaniach; zapisują się razem z kampanią)</span></p>
+                <label className="flex items-start gap-2 text-sm text-foreground/85 cursor-pointer">
+                  <input type="checkbox" className="h-4 w-4 mt-0.5 accent-[#C9A24A]" checked={ks.od_promocji} onChange={(e) => setKs({ ...ks, od_promocji: e.target.checked })} />
+                  <span>Kod działa też od ceny promocyjnej <span className="text-foreground/50">(promocja na promocję — np. 69 zł − 20%)</span></span>
+                </label>
+                <div className="grid grid-cols-2 gap-3">
+                  <label><span className={LABEL}>Kod ważny od</span>
+                    <input type="date" className={INPUT} value={ks.od} onChange={(e) => setKs({ ...ks, od: e.target.value })} /></label>
+                  <label><span className={LABEL}>Kod ważny do (włącznie)</span>
+                    <input type="date" className={INPUT} value={ks.do} onChange={(e) => setKs({ ...ks, do: e.target.value })} /></label>
+                </div>
+                {ksDirty && <p className="text-xs text-[#E2C27A]">Zmiany kodu zapiszą się po kliknięciu „Zapisz”.</p>}
               </div>
             )}
             {f.rodzaj === "spotkanie" && <p className="mt-3 text-xs text-foreground/55">Tytuł i termin pobierane ze spotkania. Kampania gaśnie sama, gdy spotkanie minie albo zapisy się zamkną. Zalogowani zapisani nie zobaczą zaproszenia.</p>}
