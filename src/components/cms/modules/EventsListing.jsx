@@ -36,7 +36,7 @@ export default function EventsListing() {
           <div className="px-5 md:px-10 pb-10">
             <div className="mx-auto max-w-[1400px] flex flex-wrap gap-3">
               {TABS.map(([k, l]) => (
-                <button key={k} onClick={() => setTab(k)} className={`technical text-[10px] px-5 py-2.5 border transition-colors duration-300 ${tab === k ? "border-[#C9A24A] gold-text" : "border-[#2A2A2A] text-foreground/55 hover:text-foreground/70"}`}>{l.toUpperCase()}</button>
+                <button key={k} onClick={() => setTab(k)} className={`technical text-[10px] px-5 py-2.5 border transition-colors duration-300 ${tab === k ? "border-[#C9A24A] gold-text" : "border-[#2A2A2A] text-foreground/55 hover:text-foreground/70"}`}>{l}</button>
               ))}
             </div>
           </div>

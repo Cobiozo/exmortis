@@ -20,7 +20,7 @@ export default function WhatsAppChannelBlock() {
           <p className="text-lg text-foreground/60 leading-relaxed mb-8">
             Krótkie wiadomości głosowe — kilka minut, bez spamu. Słuchasz, kiedy chcesz.
           </p>
-          <WhatsAppChannelLink miejsce="glos" label="DOŁĄCZ" />
+          <WhatsAppChannelLink miejsce="glos" label="Dołącz" />
         </div>
       </div>
     </section>

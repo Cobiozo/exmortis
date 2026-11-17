@@ -33,7 +33,7 @@ function Group({ label, options, value, onToggle, allowAll = false }) {
                 : "hairline text-foreground/55 hover:text-foreground/70"
             }`}
           >
-            {o.toUpperCase()}
+            {o.charAt(0).toUpperCase() + o.slice(1)}
           </button>
         ))}
       </div>
@@ -68,7 +68,7 @@ export default function ShopFilters({ filters, setFilters, available, extra = nu
             <button key={k} onClick={() => setFilters((f) => ({ ...f, [k]: null }))}
               className="technical text-[9px] px-3 py-1.5 min-h-11 border border-[#C9A24A] gold-text bg-[#C9A24A]/10 flex items-center gap-1.5"
               aria-label={`Usuń filtr ${LABELS[k].toLowerCase()}: ${filters[k]}`}>
-              {LABELS[k]}: {String(filters[k]).toUpperCase()} <X className="h-3 w-3" />
+              {LABELS[k]}: {String(filters[k])} <X className="h-3 w-3" />
             </button>
           ))}
           {hasAny && (

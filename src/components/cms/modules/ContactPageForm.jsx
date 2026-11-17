@@ -51,7 +51,7 @@ export default function ContactPageForm() {
               Szczegóły i Twoje prawa: <Link to="/polityka-prywatnosci" className="gold-text underline">Polityka prywatności</Link>.
             </p>
             {state === "error" && <p role="alert" className="text-sm text-[#E8C547]">{msg}</p>}
-            <button disabled={state === "busy"} className="btn-relic w-full">{state === "busy" ? "Wysyłam…" : "WYŚLIJ"}</button>
+            <button disabled={state === "busy"} className="btn-relic w-full">{state === "busy" ? "Wysyłam…" : "Wyślij"}</button>
           </form>
         )}
         {/* Dane firmy pod formularzem (w stopce ich nie ma — decyzja 4.11.2026). */}

@@ -104,7 +104,7 @@ export default function Register() {
           <span>{TXT.newsletter}</span>
         </label>
         <button type="submit" disabled={loading} className="btn-relic w-full disabled:opacity-60">
-          {loading && <Loader2 className="h-4 w-4 animate-spin" />} ZAŁÓŻ KONTO
+          {loading && <Loader2 className="h-4 w-4 animate-spin" />} Załóż konto
         </button>
       </form>
     </AuthLayout>

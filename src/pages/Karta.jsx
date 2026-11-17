@@ -58,7 +58,7 @@ export default function Karta() {
                 <p className="technical text-[10px] text-[#C9A24A]">{c.used ? "TEN KOD ZOSTAŁ JUŻ WYKORZYSTANY" : "TERMIN WAŻNOŚCI KARTY MINĄŁ"}</p>
               )}
               <button type="button" onClick={() => window.print()} className="btn-relic inline-flex">
-                <Printer className="h-4 w-4" /> DRUKUJ ALBO ZAPISZ JAKO PDF
+                <Printer className="h-4 w-4" /> Drukuj albo zapisz jako PDF
               </button>
               <p className="text-sm text-foreground/55 leading-relaxed max-w-xl mx-auto">
                 Kod wpisuje się w kasie Skarbca na exmortis.pl, w polu „kod rabatowy”. Działa jednorazowo —

@@ -22,7 +22,7 @@ export default function ShareBox({ ep }) {
         <a className={cls} target="_blank" rel="noreferrer" href={`https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(u("fb-profil"))}`}>Facebook</a>
         {isMobile
           ? <a className={cls} href={`fb-messenger://share/?link=${encodeURIComponent(u("messenger"))}`}>Messenger</a>
-          : <button onClick={() => copy(u("messenger"), "msgr")} className={cls}>{copied === "msgr" ? "Skopiowano" : "MESSENGER"}</button>}
+          : <button onClick={() => copy(u("messenger"), "msgr")} className={cls}>{copied === "msgr" ? "Skopiowano" : "Messenger"}</button>}
         {at > 0 && <button onClick={() => copy(`${base}?t=${fmtT(at)}`, "t")} className={cls}>{copied === "t" ? "Skopiowano" : `OD MOMENTU ${fmtT(at)}`}</button>}
       </div>
     </div>
