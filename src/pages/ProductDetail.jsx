@@ -19,6 +19,7 @@ import BundleBox from "@/components/exmortis/shop/BundleBox";
 import { SeatsLine } from "@/components/exmortis/shop/cardBits";
 import InBundleLink from "@/components/exmortis/shop/InBundleLink";
 import JumpToBuy from "@/components/exmortis/shop/JumpToBuy";
+import GuaranteeInfo from "@/components/exmortis/shop/GuaranteeInfo";
 import { releaseDay, soonLabel } from "@/lib/releaseDate";
 import { cardAmounts } from "@/components/exmortis/CartContext";
 import JsonLd from "@/components/seo/JsonLd";
@@ -306,6 +307,7 @@ export default function ProductDetail() {
                   {added ? "DODANO DO KOSZYKA ✓" : "DODAJ DO KOSZYKA"}
                 </button>
                 {isDigital(product) && <p className="text-sm text-foreground/60">{accessLabel(product)}</p>}
+                {isDigital(product) && <GuaranteeInfo />}
               </div>
             )}
             </div>
