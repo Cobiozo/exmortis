@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { Loader2, Users, UsersRound, UserCheck, ShoppingBag, ChevronDown } from "lucide-react";
+import { Loader2, Users, UsersRound, UserCheck, ShoppingBag, ChevronDown, ExternalLink, RefreshCw } from "lucide-react";
 import { lib, inputCls } from "./libApi";
 import ClientPicker from "./ClientPicker";
 
@@ -40,7 +40,41 @@ export function toTarget(r, clients, allGroupId) {
   return emails.length ? { kind: "osoba", emails } : null;
 }
 
-export default function RecipientStep({ r, setR, clients, groups }) {
+// Zapis zaznaczonych osób jako nowej grupy ręcznej (żeby następnym razem wybrać ją jednym kliknięciem).
+function SaveAsGroup({ emails, onCreated }) {
+  const [name, setName] = useState(null);
+  const [busy, setBusy] = useState(false);
+  const [msg, setMsg] = useState("");
+  const [err, setErr] = useState("");
+  if (!emails.length) return null;
+  const go = async () => {
+    if (!name.trim()) { setErr("Wpisz nazwę grupy."); return; }
+    setBusy(true); setErr("");
+    try {
+      const g = await lib("group_save", { name: name.trim(), kind: "RECZNA" });
+      await lib("group_members_add", { group_id: g.id, emails });
+      setMsg(`Utworzono grupę „${name.trim()}” (${emails.length} ${emails.length === 1 ? "osoba" : "osób"}).`);
+      setName(null); onCreated?.();
+    } catch (e) { setErr(e.message); } finally { setBusy(false); }
+  };
+  return (
+    <div className="space-y-2">
+      {name === null ? (
+        <button type="button" className="btn-ghost !px-3 !py-2" onClick={() => { setName(""); setMsg(""); }}>ZAPISZ ZAZNACZONE ({emails.length}) JAKO NOWĄ GRUPĘ</button>
+      ) : (
+        <div className="flex flex-wrap gap-2 items-center">
+          <input value={name} onChange={(e) => setName(e.target.value)} placeholder="Nazwa grupy, np. Kohorta 2" aria-label="Nazwa nowej grupy" className={`${inputCls} max-w-[260px]`} />
+          <button type="button" className="btn-relic !px-3 !py-2" disabled={busy} onClick={go}>{busy ? <Loader2 className="h-4 w-4 animate-spin" /> : "UTWÓRZ GRUPĘ"}</button>
+          <button type="button" className="btn-ghost !px-3 !py-2" onClick={() => setName(null)}>ANULUJ</button>
+        </div>
+      )}
+      {msg && <p className="text-xs gold-text" role="status">{msg}</p>}
+      {err && <p className="text-xs blood-text" role="alert">{err}</p>}
+    </div>
+  );
+}
+
+export default function RecipientStep({ r, setR, clients, groups, onReloadGroups }) {
   const [holders, setHolders] = useState(null);
   const [products, setProducts] = useState(null);
   const [showEx, setShowEx] = useState((r.exceptions_add?.length || 0) + (r.exceptions_drop?.length || 0) > 0);
@@ -82,11 +116,21 @@ export default function RecipientStep({ r, setR, clients, groups }) {
             <option value="">— wybierz grupę —</option>
             {others.map((g) => <option key={g.id} value={g.id}>{g.name}{g.kind === "AUTOMATYCZNA" ? " (automatyczna)" : ""}</option>)}
           </select>
-          {!others.length && <span className="block text-xs text-foreground/50 mt-1">Nie ma jeszcze grup — utworzysz je w Panel → Grupy.</span>}
+          {!others.length && <span className="block text-xs text-foreground/50 mt-1">Nie ma jeszcze grup — utwórz ją niżej albo z „Wybranych osób”.</span>}
+          <span className="mt-2 flex flex-wrap gap-x-4 gap-y-1 text-xs">
+            <a href="/admin/grupy" target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1 gold-text min-h-[32px]"><ExternalLink className="h-3.5 w-3.5" aria-hidden="true" /> Dodaj, edytuj lub usuń grupy (nowa karta)</a>
+            {onReloadGroups && <button type="button" onClick={onReloadGroups} className="inline-flex items-center gap-1 text-foreground/70 hover:gold-text min-h-[32px]"><RefreshCw className="h-3.5 w-3.5" aria-hidden="true" /> Odśwież listę grup</button>}
+          </span>
         </label>
       )}
 
-      {r.mode === "osoby" && <ClientPicker items={clients} value={r.emails} onChange={(v) => set("emails", v)} />}
+      {r.mode === "osoby" && (
+        <>
+          <p className="text-xs text-foreground/55">Zaznacz jedną osobę albo kilka. Często piszesz do tych samych osób? Zapisz je jako grupę.</p>
+          <ClientPicker items={clients} value={r.emails} onChange={(v) => set("emails", v)} />
+          <SaveAsGroup emails={r.emails} onCreated={onReloadGroups} />
+        </>
+      )}
 
       {r.mode === "produkt" && (
         <div className="space-y-3">

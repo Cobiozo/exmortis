@@ -187,7 +187,8 @@ export default function MessageForm({ open, onClose, item, editSent, presetTarge
 
         {step === 0 && (!r || !clients ? <Loader2 className="h-5 w-5 animate-spin gold-text" aria-label="Wczytuję" /> : (
           <>
-            <RecipientStep r={r} setR={setR} clients={clients} groups={groups} />
+            <RecipientStep r={r} setR={setR} clients={clients} groups={groups}
+              onReloadGroups={() => lib("clients_list", {}).then((d) => { setClients(d.items || []); setGroups(d.grupy || []); }).catch(() => {})} />
             <div className="border hairline">
               <button type="button" onClick={() => setOpenList((v) => !v)} aria-expanded={openList} className="w-full min-h-[44px] px-3 flex items-center justify-between gap-3 text-left">
                 <span className="text-sm">{prevBusy ? "Liczę…" : `Lista odbiorców: ${count} ${osob(count)}`}</span>
