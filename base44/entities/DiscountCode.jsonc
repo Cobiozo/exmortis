@@ -89,6 +89,21 @@
       "type": "boolean",
       "default": false,
       "description": "Kod tylko na produkty w cenie regularnej"
+    },
+    "od": {
+      "type": "string",
+      "format": "date",
+      "description": "Kod działa od tego dnia (czas polski); puste = od razu"
+    },
+    "tylko_subskrybenci": {
+      "type": "boolean",
+      "default": false,
+      "description": "Tylko dla adresów z potwierdzonym zapisem na Listy Powrotu"
+    },
+    "tylko_konto": {
+      "type": "boolean",
+      "default": false,
+      "description": "Tylko dla zalogowanych — zakup na adres e-mail zalogowanego konta"
     }
   },
   "required": [
