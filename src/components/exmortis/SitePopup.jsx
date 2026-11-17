@@ -101,7 +101,7 @@ export default function SitePopup() {
     const onConsent = () => { window.removeEventListener("exm:consent", onConsent); start(); };
     if (readConsent() || preview) start(); else window.addEventListener("exm:consent", onConsent);
     return () => { clearTimeout(timer); window.removeEventListener("scroll", onScroll); window.removeEventListener("exm:consent", onConsent); };
-  }, [cand?.id, pathname, preview]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [cand?.id, pathname, preview]);  
 
   const close = () => {
     if (open && !preview) { writeMem(open.id, "z"); hit(open.id, "zamk"); }
@@ -129,7 +129,7 @@ export default function SitePopup() {
     };
     window.addEventListener("keydown", onKey);
     return () => { window.removeEventListener("keydown", onKey); if (before?.focus) before.focus(); };
-  }, [open?.id]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [open?.id]);  
 
   if (!open) return null;
   const k = open;

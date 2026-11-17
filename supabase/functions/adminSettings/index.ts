@@ -167,7 +167,7 @@ const handler = async function (req) {
         runSql(base44, `SELECT upper(discount_code) AS kod, COUNT(*)::int AS ile, COALESCE(SUM(total),0)::float8 AS suma
           FROM public.orders WHERE status = 'COMPLETED' AND COALESCE(is_test,false) = false AND discount_code IS NOT NULL
           GROUP BY 1`, true).catch(() => []),
-        runSql(base44, `SELECT id::text AS id, name, slug, product_type, status, active, price::float8 AS price,
+        runSql(base44, `SELECT id::text AS id, name, slug, product_type, status, active, image_url, price::float8 AS price,
           price_regular::float8 AS price_regular, price_start::float8 AS price_start, promo_end_date::text AS promo_end_date, price_steps
           FROM public.products p WHERE active IS NOT FALSE ORDER BY sort_order NULLS LAST, name`, true),
         runSql(base44, `SELECT id::text AS id, title, start_datetime, format, price::float8 AS price, registration_deadline
@@ -186,6 +186,7 @@ const handler = async function (req) {
       return Response.json({
         items, stats, sales,
         products: products.map((x) => ({ id: x.id, name: x.name, slug: x.slug, typ: x.product_type, status: x.status, cena: unitPrice(x),
+          obraz: /^https:\/\//.test(String(x.image_url || "")) ? x.image_url : "",
           cena_regularna: x.price_regular != null ? Number(x.price_regular) : Number(x.price) })),
         events: events.map((e) => ({ id: e.id, title: e.title, start: e.start_datetime, format: e.format, bezplatne: !(Number(e.price) > 0),
           zapisy_do: e.registration_deadline || null })),

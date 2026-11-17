@@ -235,6 +235,12 @@ export async function forViewer(base44, list: any[], me: any) {
       }
       if (sub) continue;
     }
+    // Zaproszenie na spotkanie: osoba już zapisana go nie dostaje.
+    if (k.rodzaj === "spotkanie" && k.spotkanie?.id) {
+      const [r] = await runSql(base44, `SELECT 1 AS ok FROM public.registrations WHERE event_id::text = ${escStr(k.spotkanie.id)}
+        AND lower(email) = ${escStr(email)} AND status IN ('Zapisany','Obecny') LIMIT 1`, true).catch(() => []);
+      if (r?.ok) continue;
+    }
     if (k.ukryj_posiadaczy && k.produkt?.id) {
       const acc = await accessFilter(base44, { user_email: email, product_id: String(k.produkt.id) }).catch(() => []);
       if (acc.some(isActive)) continue;
