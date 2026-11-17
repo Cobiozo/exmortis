@@ -69,7 +69,7 @@ export default function MessageForm({ open, onClose, item, editSent, presetTarge
     if (r || !groups) return;
     const t = item?.target || presetTarget;
     setR(t ? fromTarget(t, allGroupId) : { ...EMPTY_R });
-  }, [groups, allGroupId]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [groups, allGroupId]);  
 
   const target = useMemo(() => (r && clients ? toTarget(r, clients, allGroupId) : null), [r, clients, allGroupId]);
 

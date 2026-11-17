@@ -58,7 +58,7 @@ export default function RecipientStep({ r, setR, clients, groups }) {
       setHolders(list.map((e) => known.get(e) || { email: e, name: "", bez_konta: true }));
       setR((x) => ({ ...x, emails: list }));
     }).catch(() => setHolders([]));
-  }, [r.mode, r.product_id]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [r.mode, r.product_id]);  
 
   const chip = (on) => `text-left rounded-none border p-3 min-h-[64px] ${on ? "border-[#C9A24A] bg-[#C9A24A]/10" : "hairline hover:border-[#C9A24A]/50"}`;
   const others = (groups || []).filter((g) => !(g.kind === "AUTOMATYCZNA" && g.rule?.typ === "wszystkie_konta"));
