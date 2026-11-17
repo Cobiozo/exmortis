@@ -13,7 +13,7 @@ const DesktopNav = forwardRef(function DesktopNav({ className = "", ...rest }, r
         const on = isActive(pathname, n.to);
         return (
           <Link key={n.to} to={n.to} aria-current={on ? "page" : undefined}
-            className={`technical text-[11px] !tracking-[0.12em] xl:!tracking-[0.18em] whitespace-nowrap py-1 border-b transition-colors ${on ? "gold-text border-[#C9A24A]" : "text-foreground/70 hover:gold-text border-transparent"}`}>
+            className={`technical text-[12px] xl:text-[13px] !tracking-[0.08em] xl:!tracking-[0.12em] whitespace-nowrap py-1 border-b transition-colors ${on ? "gold-text border-[#C9A24A]" : "text-foreground/70 hover:gold-text border-transparent"}`}>
             {n.label}
           </Link>
         );
