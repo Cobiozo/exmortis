@@ -256,9 +256,10 @@ const handler = async function (req) {
         }
       }
     }
+    const sessionEmail = body.code ? String((await base44.auth.me().catch(() => null))?.email || "") : "";
     const disc = await applyDiscount(base44, body.code, stored.map((s) => ({
       product_id: s.product_id, unit: Number(s.unitPrice), qty: s.quantity,
-    })), buyerEmail);
+    })), buyerEmail, sessionEmail);
     if (disc) {
       totalGrosze -= disc.discount;
       // PayU wymaga zgodności sumy pozycji z kwotą — jedna pozycja zbiorcza.

@@ -25,7 +25,9 @@ const handler = async function (req) {
     const lines = items.filter((i) => price.has(String(i.id))).map((i) => ({
       product_id: String(i.id), unit: price.get(String(i.id)), qty: Math.max(1, Math.min(20, Math.floor(Number(i.qty) || 1))),
     }));
-    const r = await applyDiscount(base44, body.code, lines, typeof body.email === "string" ? body.email.slice(0, 200) : "");
+    // E-mail konta tylko z sesji (kody „tylko dla osób z kontem”).
+    const sessionEmail = String((await base44.auth.me().catch(() => null))?.email || "");
+    const r = await applyDiscount(base44, body.code, lines, typeof body.email === "string" ? body.email.slice(0, 200) : "", sessionEmail);
     // Omnibus: najniższa cena z 30 dni przed obniżką kodem — dla każdego produktu objętego rabatem.
     const today = warsawToday();
     const from = new Date(`${today}T12:00:00Z`); from.setUTCDate(from.getUTCDate() - 30);
