@@ -211,8 +211,9 @@ export default function Test() {
                 <p>Nie powiem Ci, co powinno wydarzyć się dalej. Nie znam całej Twojej historii. Ale wiem, że człowieka nie da się sprowadzić do jednego wydarzenia, jednej roli ani jednego wyniku.</p>
                 <p>Jeżeli chcesz dalej przyglądać się tym pytaniom, piszę o nich w <Link to="/#listy-powrotu" className="text-[#F5EFE1] font-semibold underline underline-offset-4 hover:text-[#C9A24A]">Listach powrotu</Link>. Nie po to, żeby mówić Ci, kim masz zostać. Po to, żeby łatwiej było usłyszeć siebie.</p>
               </div>
-              <div className="mt-8 flex flex-col sm:flex-row gap-3">
-                <Link to="/glos" className="btn-relic">POSŁUCHAJ — MUZYKA I PODCAST <ArrowRight className="h-4 w-4" /></Link>
+              <div className="mt-8 flex flex-col sm:flex-row sm:flex-wrap gap-3">
+                <Link to="/#listy-powrotu" className="btn-relic">ZAPISZ SIĘ NA LISTY POWROTU <ArrowRight className="h-4 w-4" /></Link>
+                <Link to="/glos" className="btn-ghost">POSŁUCHAJ — MUZYKA I PODCAST <ArrowRight className="h-4 w-4" /></Link>
                 <Link to="/skarbiec" className="btn-ghost">ZAJRZYJ DO SKARBCA <ArrowRight className="h-4 w-4" /></Link>
               </div>
               <p className="shop-heading italic text-lg text-[#F5EFE1]/80 mt-10">Wracam z siebie. Uczę wracać.</p>
