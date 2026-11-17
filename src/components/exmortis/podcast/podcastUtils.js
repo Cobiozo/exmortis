@@ -36,6 +36,16 @@ export async function loadPublished() {
   return p.items;
 }
 
+// Najnowszy opublikowany odcinek z własnym plikiem audio (odtwarzacz w nagłówku strony głównej).
+export async function loadLatestEpisode() {
+  const now = new Date().toISOString();
+  const p = await base44.entities.PodcastEpisode.filter(
+    { status: "opublikowany", publikacja: { $lte: now } },
+    { sort: "-publikacja", limit: 5, fields: ["numer", "tytul", "slug", "publikacja", "dlugosc_s", "okladka", "audio"] }
+  );
+  return (p.items || []).find((e) => e.audio) || null;
+}
+
 export async function loadSettings() {
   const p = await base44.entities.PodcastSettings.filter({}, { limit: 1 });
   const s = p.items[0];
