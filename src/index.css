@@ -451,3 +451,8 @@
 .exm-soft-page .exm-soft .btn-relic, .exm-soft-page .exm-soft .btn-ghost { min-height: 52px; padding: 0 1.5rem; }
 /* Przełączniki i filtry (pigułki): zwykły krój i wielkość liter, jak zakładki w Moim koncie. */
 .exm-soft-page :is(a, button).technical.border { font-family: var(--font-body); text-transform: none; letter-spacing: 0; font-size: 13px; font-weight: 500; }
+/* Telefon: zwartsze karty bloku „Karty” (np. Trzy śmierci). */
+@media (max-width: 767px) {
+  .exm-soft-page .cms-card { padding: 22px; }
+  .exm-soft-page .cms-card [data-n] { font-size: 30px; margin-bottom: 12px; }
+}

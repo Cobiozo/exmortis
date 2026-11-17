@@ -20,12 +20,12 @@ export default function ReturnPath({ label } = {}) {
             Powrót nie dzieje się w jeden dzień. Na każdym etapie potrzeba czegoś innego — dlatego tak samo zbudowany jest mentoring POWRÓT.
           </p>
         </div>
-        <ol className="grid gap-4 md:gap-5 sm:grid-cols-2 lg:grid-cols-4">
+        <ol className="grid gap-3 md:gap-5 grid-cols-2 lg:grid-cols-4">
           {STAGES.map((s, i) => (
-            <li key={s.name} className="rounded-2xl border hairline bg-[#111113] p-6 flex flex-col gap-3">
+            <li key={s.name} className="rounded-2xl border hairline bg-[#111113] p-4 md:p-6 flex flex-col gap-2 md:gap-3">
               <span className="technical text-[10px] gold-text">ETAP {String(i + 1).padStart(2, "0")}</span>
-              <h3 className="relic-heading text-[28px]">{s.name}</h3>
-              <p className="text-[15px] leading-relaxed text-[#F5EFE1]/70">{s.text}</p>
+              <h3 className="relic-heading text-[24px] md:text-[28px]">{s.name}</h3>
+              <p className="text-[14px] md:text-[15px] leading-relaxed text-[#F5EFE1]/70">{s.text}</p>
             </li>
           ))}
         </ol>
