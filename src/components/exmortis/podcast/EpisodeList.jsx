@@ -32,7 +32,7 @@ export default function EpisodeList({ episodes, playlists }) {
           {TEMATY.map(([v, l]) => <option key={v} value={v}>{l}</option>)}
         </select>
         <label className="flex-1 flex items-center gap-2 border hairline px-4"><Search className="h-4 w-4 text-foreground/55" />
-          <input value={q} onChange={(e) => setQ(e.target.value)} placeholder="Szukaj w tytułach, gościach i opisach" className="flex-1 bg-transparent py-3 text-sm focus:outline-none" />
+          <input type="search" aria-label="Szukaj odcinków podcastu" value={q} onChange={(e) => setQ(e.target.value)} placeholder="Szukaj w tytułach, gościach i opisach" className="flex-1 bg-transparent py-3 text-sm focus:outline-none" />
         </label>
       </div>
       <ul className="divide-y hairline border-y hairline">
