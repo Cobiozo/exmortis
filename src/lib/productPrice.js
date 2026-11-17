@@ -6,6 +6,12 @@ export function isPromoActive(p) {
   return !!(p && p.promo_end_date && p.price_start != null && String(p.promo_end_date).slice(0, 10) >= warsawToday());
 }
 
+// Przedsprzedaż z drabinką cen (serwer podaje next_price): cena rośnie według harmonogramu, więc NIE pokazujemy
+// przekreślonej „ceny regularnej”, która nie była jeszcze stosowana (Omnibus, audyt 17.11.2026, X-04).
+export function isPresale(p) {
+  return isPromoActive(p) && !!(p?.next_price && Number(p.next_price.cena) > 0);
+}
+
 export function regularPrice(p) {
   const v = p?.price_regular != null ? Number(p.price_regular) : Number(p?.price);
   return Number.isFinite(v) ? v : 0;
