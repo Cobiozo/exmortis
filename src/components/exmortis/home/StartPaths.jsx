@@ -25,8 +25,9 @@ const PATHS = [
     cel: "powrot",
     tytul: "Porozmawiajmy",
     opis: "Bezpłatna rozmowa kwalifikacyjna do programu POWRÓT.",
-    cta: "ZGŁOŚ SIĘ",
-    to: "/powrot#formularz",
+    // Najpierw opis programu, potem formularz (audyt 17.11.2026, X-40).
+    cta: "POZNAJ POWRÓT",
+    to: "/powrot",
   },
 ];
 
