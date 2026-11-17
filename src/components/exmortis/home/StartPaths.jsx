@@ -64,13 +64,13 @@ export default function StartPaths({ d = {}, label }) {
     },
   ];
   return (
-    <section className="py-24 md:py-32 px-5 md:px-10 border-t hairline">
+    <section className="py-16 md:py-32 px-5 md:px-10 border-t hairline">
       <div className="mx-auto max-w-[1400px]">
         <SectionHead label={label || "OD CZEGO ZACZĄĆ"} title={d.tytul || "Trzy drogi"} />
-        <div className="grid gap-6 md:grid-cols-3 items-stretch">
+        <div className="grid gap-4 md:gap-6 md:grid-cols-3 items-stretch">
           {PATHS.map((p, i) => (
-            <div key={p.cel} className="flex flex-col border hairline bg-[#070708] p-7 md:p-8">
-              <p className="technical text-[11px] gold-text mb-6">{String(i + 1).padStart(2, "0")}</p>
+            <div key={p.cel} className="flex flex-col border hairline bg-[#070708] p-6 md:p-8">
+              <p className="technical text-[11px] gold-text mb-4 md:mb-6">{String(i + 1).padStart(2, "0")}</p>
               <h3 className="relic-heading text-2xl md:text-3xl leading-[0.98] mb-4">{p.tytul}</h3>
               <p className="text-foreground/70 leading-relaxed mb-4 flex-1">{p.opis}</p>
               <p className="font-mono text-sm gold-text mb-6 min-h-[1.25rem]">{p.cena}</p>
