@@ -19,7 +19,7 @@ export const HOME_BLOCKS = [
       { etykieta: "ZNAJDŹ SWÓJ PIERWSZY KROK", link: "/test?src=home-hero", styl: "zloty", strzalka: true },
       { etykieta: "POZNAJ MNIE I MOJĄ HISTORIĘ", link: "/o-mnie", styl: "obrys", strzalka: false },
     ],
-    podpis_przycisku: "Bezpłatny test autorefleksji · 15 pytań · około 3 minut",
+    podpis_przycisku: "Bezpłatny test autorefleksji · 15 stwierdzeń · około 3 minut",
     dopisek: "",
     tlo: { url: "https://media.base44.com/images/public/6aa08bc6318b0f886cc3b9a3/b1f31269c_generated_f9afed1e.jpg", alt: "" },
     przyciemnienie: 60 } },
