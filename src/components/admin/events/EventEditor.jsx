@@ -119,7 +119,7 @@ export default function EventEditor({ event, onClose, onSaved }) {
         <div className="mx-auto max-w-[1440px] flex items-center gap-1.5 sm:gap-2">
           <button type="button" onClick={() => go(step - 1)} disabled={step === 0} className="btn-ghost !px-3 sm:!px-4 !py-3 disabled:opacity-30">Wstecz</button>
           <button type="button" onClick={() => save(keepStatus)} disabled={!!saving} className="btn-ghost !px-3 sm:!px-4 !py-3 disabled:opacity-50">
-            {saving && saving !== "Opublikowane" && <Loader2 className="h-4 w-4 animate-spin" />}{keepStatus === "Szkic" ? <>Zapisz<span className="hidden sm:inline">&nbsp;szkic</span></> : "ZAPISZ"}
+            {saving && saving !== "Opublikowane" && <Loader2 className="h-4 w-4 animate-spin" />}{keepStatus === "Szkic" ? <>Zapisz<span className="hidden sm:inline">&nbsp;szkic</span></> : "Zapisz"}
           </button>
           {step < 3 && <button type="button" onClick={() => go(3)} className="lg:hidden btn-ghost !px-3 !py-3" aria-label="Podgląd"><Eye className="h-4 w-4" /></button>}
           <span className="flex-1" />
@@ -127,7 +127,7 @@ export default function EventEditor({ event, onClose, onSaved }) {
             <button type="button" onClick={next} className="btn-relic !px-4 sm:!px-6 !py-3">Dalej</button>
           ) : (
             <button type="button" onClick={() => save("Opublikowane")} disabled={!!saving} className="btn-relic !px-4 sm:!px-6 !py-3 disabled:opacity-60">
-              {saving === "Opublikowane" && <Loader2 className="h-4 w-4 animate-spin" />}{event?.status === "Opublikowane" ? <><span className="hidden sm:inline">Zapisz i&nbsp;</span>Publikuj</> : "OPUBLIKUJ"}
+              {saving === "Opublikowane" && <Loader2 className="h-4 w-4 animate-spin" />}{event?.status === "Opublikowane" ? <><span className="hidden sm:inline">Zapisz i&nbsp;</span>publikuj</> : "Opublikuj"}
             </button>
           )}
         </div>
