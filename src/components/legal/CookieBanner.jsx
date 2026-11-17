@@ -18,7 +18,7 @@ export default function CookieBanner() {
   const btn = "btn-ghost !px-3 !py-1.5 sm:!px-4 sm:!py-2 text-[10px] flex-1 sm:flex-none";
 
   return (
-    <div role="dialog" aria-label="Ustawienia cookies" className="fixed bottom-0 inset-x-0 z-[90] bg-[#0F0F10] border-t border-[#3D3D3F] px-4 py-2 md:px-5 md:py-4">
+    <div role="dialog" aria-label="Ustawienia cookies" className="exm-soft-page fixed bottom-0 inset-x-0 z-[90] bg-[#0F0F10] border-t border-[#3D3D3F] px-4 py-2 md:px-5 md:py-4">
       <div className="mx-auto max-w-[1100px]">
         {settings ? <CookieSettings onSave={done} /> : (
           <div className="no-hyph flex flex-col md:flex-row md:items-center gap-1.5 md:gap-4">
