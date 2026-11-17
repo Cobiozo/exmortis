@@ -127,7 +127,7 @@ export default function EventEditor({ event, onClose, onSaved }) {
             <button type="button" onClick={next} className="btn-relic !px-4 sm:!px-6 !py-3">Dalej</button>
           ) : (
             <button type="button" onClick={() => save("Opublikowane")} disabled={!!saving} className="btn-relic !px-4 sm:!px-6 !py-3 disabled:opacity-60">
-              {saving === "Opublikowane" && <Loader2 className="h-4 w-4 animate-spin" />}{event?.status === "Opublikowane" ? <><span className="hidden sm:inline">Zapisz i&nbsp;</span>publikuj</> : "Opublikuj"}
+              {saving === "Opublikowane" && <Loader2 className="h-4 w-4 animate-spin" />}{event?.status === "Opublikowane" ? <><span className="hidden sm:inline">Zapisz i&nbsp;publikuj</span><span className="sm:hidden">Publikuj</span></> : "Opublikuj"}
             </button>
           )}
         </div>
