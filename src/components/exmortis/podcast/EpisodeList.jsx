@@ -24,7 +24,7 @@ export default function EpisodeList({ episodes, playlists }) {
     <div className="space-y-6">
       <div className="flex flex-wrap gap-2">
         <button onClick={() => setPl("")} className={tab(!pl)}>Wszystkie</button>
-        {playlists.map((p) => <button key={p.id} onClick={() => setPl(p.id)} className={tab(pl === p.id)}>{p.nazwa.toUpperCase()}</button>)}
+        {playlists.map((p) => <button key={p.id} onClick={() => setPl(p.id)} className={tab(pl === p.id)}>{p.nazwa}</button>)}
       </div>
       <div className="flex flex-col sm:flex-row gap-3">
         <select value={topic} onChange={(e) => setTopic(e.target.value)} className="bg-[#0A0A0B] border hairline px-4 py-3 text-sm">

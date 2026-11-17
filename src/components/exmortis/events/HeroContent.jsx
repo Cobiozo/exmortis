@@ -22,7 +22,7 @@ export default function HeroContent({ ev, small }) {
       {ev.start_datetime && <p className="mt-4 gold-text shop-heading text-lg md:text-xl">{plWhenFull(ev.start_datetime, " · ")}<WarsawNote iso={ev.start_datetime} /></p>}
       {a && (
         <a href={a.href} target={a.ext ? "_blank" : undefined} rel={a.ext ? "noreferrer" : undefined}
-          className="btn-relic mt-6 w-full sm:w-auto">{a.label.toUpperCase()}</a>
+          className="btn-relic mt-6 w-full sm:w-auto">{a.label}</a>
       )}
     </div>
   );
