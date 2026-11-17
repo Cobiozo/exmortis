@@ -51,6 +51,8 @@ export default function NewsletterSection({ label } = {}) {
             <div className="flex flex-col sm:flex-row md:flex-col lg:flex-row gap-3">
               <input
                 type="email"
+                aria-label="Twój adres e-mail do Listów powrotu"
+                autoComplete="email"
                 required
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
