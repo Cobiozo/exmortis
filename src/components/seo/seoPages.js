@@ -14,6 +14,7 @@ export const PAGES = {
   "/glos": { t: "Głos — muzyka i podcast | exmortis", d: "Muzyka i podcast exmortis: rozmowy o powrotach ze śmierci mentalnej, duchowej i życiowej. Posłuchaj odcinków albo zgłoś się jako gość." },
   "/cisza": { t: "Cisza — minutnik ciszy | exmortis", d: "Kilka minut ciszy w przeglądarce: wybierz czas, usiądź, oddychaj. Bez rozpraszaczy, we własnym tempie." },
   "/7-wieczorow": { t: "7 wieczorów ciszy — exmortis", d: "Siedem wieczornych nagrań na czas świąt, od 25 grudnia. Na wieczory, które bywają najtrudniejsze." },
+  "/zacznij": { t: "Zacznij bezpłatnie — exmortis", d: "Wszystko, co na exmortis.pl jest bezpłatne, w jednym miejscu: test, chwila ciszy, Listy powrotu, podcast, bezpłatne PDF-y, spotkania online i Rozdroża." },
   "/kontakt": { t: "Kontakt — exmortis", d: "Napisz do mnie przez formularz. Odpowiadam osobiście." },
   "/1-listopada": { t: "1 listopada, 20:00 — Ze śmierci | exmortis", d: PRE.d },
   "/regulamin": { t: "Regulamin — exmortis", d: "Zasady korzystania z serwisu exmortis.pl, zakupów, kont, wydarzeń online, reklamacji i odstąpienia od umowy." },

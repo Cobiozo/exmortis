@@ -17,7 +17,7 @@ export const TEST = { label: "Test", to: "/test?src=nav" };
 const col = (title, links) => ({ title, links: links.map(([label, to]) => ({ label, to })) });
 // Stopka (5.11.2026): Odkrywaj · EXMORTIS · Bądźmy w kontakcie. Parametry ?src=footer zostają (pomiar źródła).
 export const FOOTER = [
-  col("Odkrywaj", [["Skarbiec", "/skarbiec?src=footer"], ["Powrót — mentoring", "/powrot"], ["Spotkania", "/spotkania?src=footer"],
+  col("Odkrywaj", [["Zacznij bezpłatnie", "/zacznij?src=footer"], ["Skarbiec", "/skarbiec?src=footer"], ["Powrót — mentoring", "/powrot"], ["Spotkania", "/spotkania?src=footer"],
     ["Głos — podcast i muzyka", "/glos?src=footer"], ["Chwila ciszy", "/cisza?src=footer"], ["Test autorefleksji", "/test?src=footer"]]),
   col("EXMORTIS", [["Strona główna", "/"], ["O mnie", "/o-mnie"], ["Manifest", "/#manifest"], ["Moje konto", "/konto"], ["Napisz wiadomość", "/kontakt"]]),
   col("Bądźmy w kontakcie", [["kontakt@exmortis.pl", "mailto:kontakt@exmortis.pl"], ["Instagram", "https://www.instagram.com/e.x.m.o.r.t.i.s/"],

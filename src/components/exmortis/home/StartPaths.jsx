@@ -43,7 +43,7 @@ export default function StartPaths({ d = {}, label }) {
       cena: "Bezpłatnie",
       cta: "ZRÓB TEST",
       to: "/test?src=home-start",
-      extra: [["Listy powrotu", "/#listy-powrotu"], ["Spotkania online", "/spotkania"]],
+      extra: [["Listy powrotu", "/#listy-powrotu"], ["Spotkania online", "/spotkania"], ["Wszystko bezpłatne", "/zacznij?src=home"]],
     },
     {
       cel: "ksiazka",

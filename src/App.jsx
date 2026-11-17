@@ -49,6 +49,7 @@ const Regulamin = lazyPage(() => import('@/pages/Regulamin'));
 const PolitykaCookies = lazyPage(() => import('@/pages/PolitykaCookies'));
 const Odstapienie = lazyPage(() => import('@/pages/Odstapienie'));
 const Kontakt = lazyPage(() => import('@/pages/Kontakt'));
+const Zacznij = lazyPage(() => import('@/pages/Zacznij'));
 import CookieBanner from '@/components/legal/CookieBanner';
 import { PodcastPlayerProvider } from '@/components/exmortis/podcast/PlayerContext';
 const CmsPage = lazyPage(() => import('@/pages/CmsPage'));
@@ -156,6 +157,7 @@ const AuthenticatedApp = () => {
           <Route path="/polityka-cookies" element={<PolitykaCookies />} />
           <Route path="/odstapienie" element={<Odstapienie />} />
           <Route path="/kontakt" element={<Kontakt />} />
+          <Route path="/zacznij" element={<Zacznij />} />
           <Route path="/rezerwacja/termin" element={<RezerwacjaTermin />} />
           <Route path="/pobierz" element={<Pobierz />} />
           <Route path="/rezerwacja/zarzadzaj" element={<RezerwacjaZarzadzaj />} />

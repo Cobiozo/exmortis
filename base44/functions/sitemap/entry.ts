@@ -6,7 +6,7 @@ import { loadAppUrl } from "../../shared/settings.ts";
 // Strony stałe (bez zakończonych akcji) + dostępne produkty Skarbca (bez zapowiedzi) + opublikowane spotkania + opublikowane odcinki podcastu. Pamięć 1 h w instancji.
 const STATIC = [
   ["/", "weekly", "1.0"], ["/o-mnie", "monthly", "0.8"], ["/powrot", "monthly", "0.8"],
-  ["/skarbiec", "weekly", "0.8"], ["/spotkania", "weekly", "0.7"], ["/glos", "weekly", "0.6"], ["/test", "monthly", "0.6"],
+  ["/skarbiec", "weekly", "0.8"], ["/spotkania", "weekly", "0.7"], ["/glos", "weekly", "0.6"], ["/test", "monthly", "0.6"], ["/zacznij", "monthly", "0.7"],
   ["/cisza", "monthly", "0.5"], ["/kontakt", "yearly", "0.4"],
   ["/regulamin", "yearly", "0.2"], ["/polityka-prywatnosci", "yearly", "0.2"], ["/polityka-cookies", "yearly", "0.2"], ["/odstapienie", "yearly", "0.2"],
 ];
