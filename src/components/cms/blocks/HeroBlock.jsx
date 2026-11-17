@@ -5,6 +5,7 @@ import { CmsButton } from "../parts";
 import SafeImg from "../SafeImg";
 import { nbsp } from "@/lib/nbsp";
 import { useBefore } from "@/lib/wawDate";
+import HeroOsobisty from "./HeroOsobisty";
 
 function Bg({ d }) {
   if (!d.tlo?.url) return null;
@@ -67,6 +68,8 @@ function Zapowiedz({ d, center }) {
 
 // Nagłówek strony (H1). Wariant „znak” = pełnoekranowy hero strony głównej z logo.
 export default function HeroBlock({ d }) {
+  // Wariant „osobisty” (17.11.2026): portret, odtwarzacz i pasek skrótów — osobny plik.
+  if (d.wariant === "osobisty") return <HeroOsobisty d={d} />;
   if (d.wariant === "znak") return (
     <section className="relative min-h-screen flex items-center justify-center overflow-hidden grain" style={{ minHeight: "100svh" }}>
       <Bg d={d} />
