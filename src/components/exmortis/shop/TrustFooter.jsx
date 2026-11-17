@@ -7,17 +7,14 @@ export default function TrustFooter() {
     <section className="py-20 md:py-24 px-5 md:px-10 border-t hairline">
       <div className="mx-auto max-w-[900px] text-center space-y-6">
         <p className="text-sm text-foreground/55 leading-relaxed max-w-2xl mx-auto">
-          Gwarancja 14 dni na produkty cyfrowe — jeśli uznasz, że nic Ci nie dały, napisz, zwrócę
-          pieniądze. Materiały exmortis nie zastępują terapii ani pomocy medycznej. Jeśli jesteś w
-          kryzysie, zadzwoń pod bezpłatny numer{" "}
-          <a href="tel:116123" className="gold-text hover:underline">
-            116 123
-          </a>{" "}
-          lub{" "}
-          <a href="tel:112" className="gold-text hover:underline">
-            112
-          </a>
-          .
+          Gwarancja 14 dni na produkty cyfrowe — jeśli w ciągu 14 dni od zakupu uznasz, że produkt nie
+          spełnił Twoich oczekiwań, napisz, a zwrócę pełną cenę. Warunki gwarancji znajdziesz na stronie
+          każdego produktu cyfrowego. Materiały exmortis nie zastępują terapii ani pomocy medycznej. Jeśli
+          jesteś w kryzysie, zadzwoń:{" "}
+          <a href="tel:116123" className="gold-text hover:underline">116 123</a> lub{" "}
+          <a href="tel:800702222" className="gold-text hover:underline">800 70 2222</a> (całą dobę, bezpłatnie), w
+          zagrożeniu życia:{" "}
+          <a href="tel:112" className="gold-text hover:underline">112</a>.
         </p>
         <div className="flex items-center justify-center gap-x-3 technical text-[10px] text-foreground/55 flex-wrap">
           <Link to="/regulamin" className="inline-block py-2.5 hover:text-foreground/75 transition-colors">
