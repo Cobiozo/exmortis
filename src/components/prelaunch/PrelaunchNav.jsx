@@ -10,7 +10,7 @@ export default function PrelaunchNav({ top }) {
       <div className="mx-auto max-w-[1400px] px-5 md:px-10 flex items-center justify-between gap-4 h-[60px] md:h-[72px]">
         <Link to="/" aria-label="exmortis — strona główna" className="flex items-center gap-3">
           <Logo className="h-9 w-9 md:h-10 md:w-10" />
-          <span className="relic-heading text-xl gold-text tracking-[0.3em] hidden sm:block">EXMORTIS</span>
+          <span className="exm-wordmark relic-heading text-xl gold-text tracking-[0.3em] hidden sm:block">EXMORTIS</span>
         </Link>
         <Link to="/login" className="btn-relic !py-2.5 !px-4 sm:!px-5 whitespace-nowrap">ZALOGUJ SIĘ <ArrowRight className="h-4 w-4" /></Link>
       </div>
