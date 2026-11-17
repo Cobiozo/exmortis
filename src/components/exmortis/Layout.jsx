@@ -14,8 +14,10 @@ export default function Layout() {
   if (loading) return <SiteLoader />;
   return (
     <div className="min-h-screen flex flex-col bg-[#0A0A0B]">
+      {/* Link pomijania nawigacji — widoczny dopiero po Tab (WCAG 2.4.1, audyt 17.11.2026, X-27). */}
+      <a href="#tresc" className="sr-only focus:not-sr-only focus:fixed focus:top-3 focus:left-3 focus:z-[300] focus:bg-[#0A0A0B] focus:border focus:border-[#C9A24A] focus:px-4 focus:py-2 focus:text-[#C9A24A] text-sm">Przejdź do treści</a>
       <Navbar />
-      <main className="flex-1">
+      <main id="tresc" tabIndex={-1} className="flex-1 focus:outline-none">
         <ErrorBoundary>
           {/* Menu i stopka zostają na miejscu, gdy kolejna strona dociąga się z serwera. */}
           <Suspense fallback={<div className="min-h-[100svh] flex items-center justify-center"><div className="w-7 h-7 border-2 border-[#3D3D3F] border-t-[#C9A24A] rounded-full animate-spin" /></div>}>
