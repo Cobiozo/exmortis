@@ -166,10 +166,10 @@ export default function HeroOsobisty({ d }) {
                 </figcaption>
               </figure>
             )}
-            {d.odtwarzacz !== false && <div className={`relative ${img ? "-mt-10 mx-3 lg:mx-0 lg:-ml-9 lg:mr-9" : ""}`}><Odtwarzacz d={d} /></div>}
+            {!d.ukryj_odtwarzacz && <div className={`relative ${img ? "-mt-10 mx-3 lg:mx-0 lg:-ml-9 lg:mr-9" : ""}`}><Odtwarzacz d={d} /></div>}
           </div>
         </div>
-        {d.skroty !== false && <Skroty />}
+        {!d.ukryj_skroty && <Skroty />}
       </div>
     </section>
   );
