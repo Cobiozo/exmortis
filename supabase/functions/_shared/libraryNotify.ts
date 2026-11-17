@@ -115,9 +115,9 @@ export async function deliverMessage(base44, messageId, actor) {
     p_id: m.id, p_emails: emails, p_actor: String(actor || "system").slice(0, 200),
   }).catch(() => 0);
 
-  await sendMessageEmail(base44, m, emails).catch(() => {});
-  await libLog(base44, actor, "wiadomosc_wyslana", "message", m.id, `odbiorcy: ${emails.length}`);
-  return { ok: true, id: m.id, odbiorcy: emails.length };
+  const mail = await sendMessageEmail(base44, m, emails).catch(() => ({ sent: 0 }));
+  await libLog(base44, actor, "wiadomosc_wyslana", "message", m.id, `odbiorcy: ${emails.length} · e-maile: ${mail?.sent || 0}`);
+  return { ok: true, id: m.id, odbiorcy: emails.length, maile: mail?.sent || 0, email_mode: m.email_mode || "BRAK" };
 }
 
 // Wpis do historii zmian — nigdy z treścią wiadomości, tokenem ani pełnym adresem.
