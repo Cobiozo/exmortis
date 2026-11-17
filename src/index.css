@@ -449,3 +449,5 @@
 .exm-soft-page .cms-card:hover { background: #131315; border-color: rgba(201,162,74,.45); }
 /* Nagłówek strony głównej (.exm-soft) zachowuje swoje większe przyciski także wewnątrz .exm-soft-page. */
 .exm-soft-page .exm-soft .btn-relic, .exm-soft-page .exm-soft .btn-ghost { min-height: 52px; padding: 0 1.5rem; }
+/* Przełączniki i filtry (pigułki): zwykły krój i wielkość liter, jak zakładki w Moim koncie. */
+.exm-soft-page :is(a, button).technical.border { font-family: var(--font-body); text-transform: none; letter-spacing: 0; font-size: 13px; font-weight: 500; }
