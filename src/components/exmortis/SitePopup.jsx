@@ -14,7 +14,9 @@ import PopupCard, { ownPath, boxClass } from "@/components/exmortis/popup/PopupC
 // • liczniki (wyświetlenie / kliknięcie / zamknięcie) bez żadnych danych osobowych.
 const SKIP = ["/admin", "/kasa", "/pobierz", "/powrot/platnosc", "/powrot/ankieta", "/test", "/login", "/register", "/forgot-password",
   "/reset-password", "/regulamin", "/polityka-prywatnosci", "/polityka-cookies", "/odstapienie", "/umowa-powrot",
-  "/bilet", "/karta", "/rezerwacja", "/zmiana-adresu", "/listy/", "/cisza", "/spotkania"];
+  "/bilet", "/karta", "/rezerwacja", "/zmiana-adresu", "/listy/", "/cisza", "/spotkania",
+  // Strony, na których ludzie mówią lub słuchają o własnej historii — bez rabatów (audyt 17.11.2026, X-43).
+  "/kontakt", "/o-mnie", "/powrot", "/podcast", "/glos/"];
 const MEM = "exm_popup_k";
 const DAY = 86400000;
 
