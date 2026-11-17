@@ -164,7 +164,7 @@ export default function PlaylistManager({ onMutate }) {
         </div>
         <div className="md:col-span-2">
           <button type="submit" disabled={busy} className="btn-relic disabled:opacity-50">
-            <Plus className="h-4 w-4" /> {busy ? "DODAJĘ..." : "DODAJ UTWÓR"}
+            <Plus className="h-4 w-4" /> {busy ? "Dodaję..." : "Dodaj utwór"}
           </button>
           <p className="technical text-[9px] text-foreground/55 mt-3">
             NOWY UTWÓR TRAFIA NA KONIEC LISTY.
