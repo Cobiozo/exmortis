@@ -80,7 +80,7 @@ export default function MaterialSheet({ material, completed, onClose, onOpened }
               </a>
               {d.allow_download && (
                 <a href={d.url} download className={`${BTN} border-foreground/40 text-[#F5EFE1] hover:bg-[#C9A24A] hover:text-[#0A0A0B] hover:border-[#C9A24A]`}>
-                  <Download className="w-4 h-4" strokeWidth={1.5} /> POBIERZ
+                  <Download className="w-4 h-4" strokeWidth={1.5} /> Pobierz
                 </a>
               )}
               {!d.url && <p className="font-body text-[15px] text-[#F5EFE1]/70">Plik jest chwilowo niedostępny.</p>}
