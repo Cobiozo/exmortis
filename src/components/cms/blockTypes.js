@@ -17,6 +17,8 @@ export const TYPES = {
       { k: "linia2", label: "Nagłówek — linia 2 (złota)", typ: "text", max: 40 },
       { k: "lead", label: "Lead", typ: "textarea", max: 160 },
       { k: "podlead", label: "Tekst pod leadem", typ: "textarea", max: 200 },
+      { k: "autor_zdjecie", label: "Zdjęcie autora (małe, okrągłe; wariant ze znakiem)", typ: "image" },
+      { k: "autor_podpis", label: "Podpis przy zdjęciu autora (link do O mnie)", typ: "text", max: 60 },
       { k: "przyciski", label: "Przyciski (0–2)", typ: "buttons", maxItems: 2 },
       { k: "przyciski_pion", label: "Przyciski jeden pod drugim", typ: "toggle" },
       { k: "podpis_przycisku", label: "Podpis pod pierwszym przyciskiem", typ: "text", max: 90 },
