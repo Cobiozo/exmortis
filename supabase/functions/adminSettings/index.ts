@@ -3,7 +3,10 @@ import { requireStaff } from "../_shared/supabase.ts";
 import { getSetting, saveSetting, deleteSetting, cleanAppUrl, DEFAULT_APP_URL } from "../_shared/settings.ts";
 import { cleanFirma, cleanPremiera, PREMIERA_DEFAULT } from "../_shared/firma.ts";
 import { cleanAplikacja } from "../_shared/appOffline.ts";
-import { cleanPopup, POPUP_DEFAULT } from "../_shared/popup.ts";
+import { cleanPopup, POPUP_DEFAULT, cleanCampaign, codeInfo, campaignFromLegacy } from "../_shared/popup.ts";
+import { runSql, escStr } from "../_shared/supabase.ts";
+import { clearSnap } from "../_shared/snapshot.ts";
+import { unitPrice } from "../_shared/productPrice.ts";
 import { cleanPomiar, validatePomiar, POMIAR_DEFAULT } from "../_shared/tracking.ts";
 import { cleanFaktury, fakturyToken } from "../_shared/invoices.ts";
 import { syncDocs, publicDocs } from "../_shared/legalDocs.ts";
@@ -143,6 +146,91 @@ const handler = async function (req) {
       if (value.od && value.do && value.do <= value.od) return Response.json({ error: "Data końca musi być po dacie początku." }, { status: 400 });
       await saveSetting(base44, "popup", value);
       return Response.json({ ok: true, popup: value });
+    }
+
+    // ---- Kampanie popup (17.11.2026) ----
+    const loadCampaigns = async () => {
+      const v = await getSetting(base44, "popup_kampanie");
+      if (Array.isArray(v?.items)) return v.items;
+      const legacy = campaignFromLegacy(await getSetting(base44, "popup"));
+      return legacy ? [legacy] : [];
+    };
+    const saveCampaigns = async (items) => {
+      await saveSetting(base44, "popup_kampanie", { items: items.slice(0, 50) });
+      await clearSnap(base44, "popups").catch(() => {});
+    };
+    if (body.action === "get_popups") {
+      const items = await loadCampaigns();
+      const [stats, sales, products, events, codes] = await Promise.all([
+        runSql(base44, `SELECT kampania, SUM(wysw)::int AS wysw, SUM(klik)::int AS klik, SUM(zamk)::int AS zamk,
+          MIN(dzien)::text AS od FROM public.popup_stats GROUP BY kampania`, true).catch(() => []),
+        runSql(base44, `SELECT upper(discount_code) AS kod, COUNT(*)::int AS ile, COALESCE(SUM(total),0)::float8 AS suma
+          FROM public.orders WHERE status = 'COMPLETED' AND COALESCE(is_test,false) = false AND discount_code IS NOT NULL
+          GROUP BY 1`, true).catch(() => []),
+        runSql(base44, `SELECT id::text AS id, name, slug, product_type, status, active, price::float8 AS price,
+          price_regular::float8 AS price_regular, price_start::float8 AS price_start, promo_end_date::text AS promo_end_date, price_steps
+          FROM public.products p WHERE active IS NOT FALSE ORDER BY sort_order NULLS LAST, name`, true),
+        runSql(base44, `SELECT id::text AS id, title, start_datetime, format, price::float8 AS price, registration_deadline
+          FROM public.events WHERE status = 'Opublikowane' AND start_datetime > now() ORDER BY start_datetime LIMIT 30`, true),
+        runSql(base44, `SELECT data FROM public.exm_discountcode WHERE data->>'email' IS NULL OR data->>'email' = '' ORDER BY created_date DESC LIMIT 100`, true),
+      ]);
+      const kody = [];
+      for (const r of codes) {
+        const c = r.data || {};
+        if (!c.code) continue;
+        const ci = await codeInfo(base44, String(c.code).toUpperCase(), null);
+        kody.push({ kod: String(c.code).toUpperCase(), kind: c.kind, value: c.value, active: c.active === true, od: c.od || null,
+          valid_until: c.valid_until || null, bez_promocji: c.bez_promocji === true, tylko_subskrybenci: c.tylko_subskrybenci === true,
+          tylko_konto: c.tylko_konto === true, product_ids: c.product_ids || [], ok: !!ci?.ok, powod: ci?.ok ? "" : ci?.powod || "" });
+      }
+      return Response.json({
+        items, stats, sales,
+        products: products.map((x) => ({ id: x.id, name: x.name, slug: x.slug, typ: x.product_type, status: x.status, cena: unitPrice(x),
+          cena_regularna: x.price_regular != null ? Number(x.price_regular) : Number(x.price) })),
+        events: events.map((e) => ({ id: e.id, title: e.title, start: e.start_datetime, format: e.format, bezplatne: !(Number(e.price) > 0),
+          zapisy_do: e.registration_deadline || null })),
+        kody,
+      });
+    }
+    if (body.action === "save_popup") {
+      const items = await loadCampaigns();
+      const i = items.findIndex((k) => k.id === body.data?.id);
+      const value = cleanCampaign(body.data, i >= 0 ? items[i] : {});
+      const bad = (msg) => Response.json({ error: msg }, { status: 400 });
+      if (!value.tytul && !value.tresc) return bad("Wpisz tytuł albo treść popupu.");
+      if (value.od && value.do && value.do <= value.od) return bad("Data końca musi być po dacie początku.");
+      if (value.rodzaj === "produkt" && !value.produkt_id) return bad("Wybierz produkt.");
+      if (value.rodzaj === "spotkanie" && !value.wydarzenie_id) return bad("Wybierz spotkanie.");
+      if (value.rodzaj === "rabat" && !value.kod) return bad("Wybierz kod rabatowy.");
+      if (value.gdzie === "wybrane" && !value.sciezki.length) return bad("Dodaj co najmniej jedną stronę (np. /skarbiec).");
+      if ((value.akcja === "link") && !value.przycisk_link) return bad("Wpisz adres przycisku (strona zaczynająca się od / albo https://).");
+      let ostrzezenie = "";
+      if (value.kod) {
+        const ci = await codeInfo(base44, value.kod, null);
+        if (!ci?.ok) ostrzezenie = `Kod ${value.kod}: ${ci?.powod || "nieważny"} — kampania nie pokaże się, dopóki kod nie zacznie działać.`;
+      }
+      if (i >= 0) items[i] = value; else items.unshift(value);
+      await saveCampaigns(items);
+      return Response.json({ ok: true, item: value, ostrzezenie });
+    }
+    if (body.action === "popup_action") {
+      const items = await loadCampaigns();
+      const i = items.findIndex((k) => k.id === body.id);
+      if (i < 0) return Response.json({ error: "Nie ma takiej kampanii." }, { status: 404 });
+      const k = items[i];
+      const now = new Date().toISOString();
+      const op = String(body.op || "");
+      if (op === "duplikuj") {
+        items.unshift(cleanCampaign({ ...k, id: undefined, nazwa: `${k.nazwa} (kopia)`.slice(0, 80), status: "szkic" }, {}));
+      } else if (op === "wstrzymaj") items[i] = { ...k, status: "wstrzymana", zmieniono: now };
+      else if (op === "wznow" || op === "aktywuj") items[i] = { ...k, status: "aktywna", zmieniono: now };
+      else if (op === "zakoncz") items[i] = { ...k, status: "zakonczona", zmieniono: now };
+      else if (op === "usun") {
+        if (k.status !== "szkic") return Response.json({ error: "Usunąć można tylko szkic. Kampanię zakończ — zostanie w historii." }, { status: 400 });
+        items.splice(i, 1);
+      } else return Response.json({ error: "Nieznana operacja" }, { status: 400 });
+      await saveCampaigns(items);
+      return Response.json({ ok: true, items });
     }
 
     if (body.action === "save" && body.target === "app") {
