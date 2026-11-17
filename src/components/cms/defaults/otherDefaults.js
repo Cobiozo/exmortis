@@ -14,6 +14,13 @@ export const GLOS_BLOCKS = [
   { id: "glos-hero", typ: "hero", widoczny: true, uklad: { ...bare }, dane: { wariant: "standard", etykieta: "GŁOS", linia1: "Głos", linia2: "exmortis",
     lead: "Muzyka powrotu i podcasty o drodze tam i z powrotem. Słuchaj tam, gdzie jesteś.", przyciski: [], przyciemnienie: 60 } },
   mod("glos-muzyka", "muzyka"), mod("glos-podcast", "podcast"), mod("glos-gosc", "podcast_gosc"), mod("glos-whatsapp", "whatsapp_glos"),
+  // Przegląd lejka 17.11: strona nie kończy się ślepą uliczką, tylko następnym krokiem.
+  { id: "glos-dalej", typ: "tekst", widoczny: true, uklad: { ...bare, odstep: "maly" }, dane: { etykieta: "DALEJ", tytul: "Kiedy chcesz posłuchać na żywo",
+    tresc: "<p>Raz w miesiącu prowadzę bezpłatne otwarte spotkanie online. Możesz mówić albo po prostu słuchać. Jeśli wolisz czytać, raz w tygodniu wysyłam List powrotu.</p>" } },
+  { id: "glos-dalej-przyciski", typ: "przyciski", widoczny: true, uklad: { ...bare, odstep: "maly" }, dane: { przyciski: [
+    { etykieta: "Zobacz najbliższe spotkanie", link: "/spotkania?src=glos", styl: "zloty", strzalka: true },
+    { etykieta: "Zapisz się na Listy powrotu", link: "/#listy-powrotu", styl: "obrys", strzalka: false },
+  ] } },
 ];
 
 export const KONTAKT_BLOCKS = [
