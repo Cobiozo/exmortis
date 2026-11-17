@@ -2,7 +2,7 @@ import React from "react";
 import { Link } from "react-router-dom";
 import { ArrowRight } from "lucide-react";
 import { Image } from "@/components/ui/image";
-import { isPromoActive, priceOnRequest, regularPrice, unitPrice, lowestPrice30, zl } from "@/lib/productPrice";
+import { isPromoActive, isPresale, priceOnRequest, regularPrice, unitPrice, lowestPrice30, zl } from "@/lib/productPrice";
 import { fixText } from "@/lib/typography";
 import { soonLabel } from "@/lib/releaseDate";
 
@@ -53,7 +53,7 @@ export default function ProductCard({ product, index = 0 }) {
               {product.status === "wkrótce" ? soonLabel(product).toUpperCase()
                 : product.is_free ? "DARMOWE"
                 : priceOnRequest(product) ? "PO ROZMOWIE"
-                : isPromoActive(product)
+                : isPromoActive(product) && !isPresale(product)
                   ? <><s className="text-foreground/55 text-sm mr-2">{regularPrice(product)} zł</s>{unitPrice(product)} zł</>
                   : `${unitPrice(product)} zł`}
             </span>
@@ -61,7 +61,7 @@ export default function ProductCard({ product, index = 0 }) {
               ZOBACZ <ArrowRight className="h-3 w-3" />
             </span>
           </div>
-          {product.status !== "wkrótce" && !product.is_free && isPromoActive(product) && (
+          {product.status !== "wkrótce" && !product.is_free && isPromoActive(product) && !isPresale(product) && (
             <p className="text-[11px] text-foreground/55 -mt-2">Najniższa cena z 30 dni przed obniżką: {zl(lowestPrice30(product))}</p>
           )}
         </div>
