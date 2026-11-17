@@ -205,6 +205,19 @@ const handler = async function (req) {
       if (value.rodzaj === "rabat" && !value.kod) return bad("Wybierz kod rabatowy.");
       if (value.gdzie === "wybrane" && !value.sciezki.length) return bad("Dodaj co najmniej jedną stronę (np. /skarbiec).");
       if ((value.akcja === "link") && !value.przycisk_link) return bad("Wpisz adres przycisku (strona zaczynająca się od / albo https://).");
+      // Ustawienia kodu z edytora kampanii (tylko administrator — kody zmienia admin):
+      // „działa też od ceny promocyjnej” (= bez ograniczenia do ceny regularnej) i daty ważności kodu.
+      const ks = body.kod_ustawienia;
+      if (value.kod && ks && typeof ks === "object") {
+        if (tech) return bad("Ustawienia kodu rabatowego zmienia administrator.");
+        const day = (v) => (/^\d{4}-\d{2}-\d{2}$/.test(String(v || "")) ? String(v) : null);
+        const od = day(ks.od), doo = day(ks.do);
+        if (od && doo && doo < od) return bad("Kod: data „do” jest przed datą „od”.");
+        const patch = { bez_promocji: ks.od_promocji !== true, od, valid_until: doo };
+        const r = await runSql(base44, `UPDATE public.exm_discountcode SET data = data || ${escStr(JSON.stringify(patch))}::jsonb, updated_date = now()
+          WHERE upper(data->>'code') = ${escStr(value.kod)} AND COALESCE(data->>'email', '') = '' RETURNING id`);
+        if (!r?.length) return bad(`Nie ma kodu ${value.kod}.`);
+      }
       let ostrzezenie = "";
       if (value.kod) {
         const ci = await codeInfo(base44, value.kod, null);
