@@ -2,6 +2,7 @@ import { useEffect } from "react";
 import { useLocation } from "react-router-dom";
 import useSiteSettings from "@/lib/useSiteSettings";
 import { setTrackSettings, applyConsent, trackPageView } from "@/lib/track";
+import { countPage, countSource } from "@/lib/siteStats";
 
 // Wczytuje pomiar na stronie publicznej. W panelu, podglądzie i skanerze nie ładuje niczego.
 export default function Analytics() {
@@ -23,6 +24,10 @@ export default function Analytics() {
   }, [key, skip]);
 
   useEffect(() => { if (!skip) trackPageView(key); }, [key, skip, pomiar]);
+
+  // Własny, anonimowy licznik (sumy dzienne, bez cookies i bez zgody) — także na /test, tylko sama ścieżka.
+  // Strony z prywatnym kluczem w adresie i panel pomija sam licznik (siteStats.js).
+  useEffect(() => { countSource(); countPage(loc.pathname); }, [loc.pathname]);
 
   return null;
 }
