@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { ArrowRight } from "lucide-react";
-import { base44 } from "@/api/base44Client";
+import { listPublicEvents } from "@/lib/publicEvents";
 import EventTile from "./EventTile";
 
 // Strona główna: „Najbliższe spotkania" — do 3 opublikowanych wydarzeń.
@@ -10,11 +10,11 @@ export default function EventsTeaser({ label } = {}) {
   const [events, setEvents] = useState(null);
 
   useEffect(() => {
-    base44.functions
-      .invoke("eventsPublic", { action: "list" })
-      .then((res) =>
+    // Wspólne pobranie z nagłówkiem strony głównej (jedno zapytanie zamiast dwóch).
+    listPublicEvents()
+      .then((data) =>
         setEvents(
-          (res.data.upcoming || []).filter((e) => e.status === "Opublikowane").slice(0, 3)
+          (data.upcoming || []).filter((e) => e.status === "Opublikowane").slice(0, 3)
         )
       )
       .catch(() => setEvents([]));
