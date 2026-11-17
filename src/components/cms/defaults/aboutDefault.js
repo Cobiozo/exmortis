@@ -36,6 +36,11 @@ export const ABOUT_BLOCKS = [
     { tytul: "Inny", opis: "Nie wróciłem do tego, kim byłem. Wróciłem jako ktoś inny." },
   ] }),
   b("droga-rytm", "tekst", { tresc: "<p>Tak wyglądała moja droga. Twoja może mieć inny rytm.</p>" }, { szerokosc: "waska", odstep: "maly" }),
+  // Przegląd lejka 17.11: pierwsze wyjście ze strony w połowie, a nie dopiero po ok. 10 ekranach.
+  b("droga-przyciski", "przyciski", { przyciski: [
+    { etykieta: "Zobacz program POWRÓT", link: "/powrot?src=o-mnie-droga", styl: "zloty", strzalka: true },
+    { etykieta: "Zrób test: która śmierć jest Twoja?", link: "/test?src=o-mnie", styl: "obrys", strzalka: false },
+  ] }, { odstep: "maly" }),
   b("postawa", "karty", { etykieta: "WSPÓŁPRACA", tytul: "Jak\nprowadzę", numerowane: true, kolumny: "2", karty: [
     { tytul: "Pytania, które pomagają zobaczyć więcej", opis: "Więcej słucham, niż mówię. Pytam o to, co pomijasz, co uznajesz za oczywiste i dokąd prowadzą Twoje wybory. Decyzje podejmujesz Ty." },
     { tytul: "Jeden konkretny krok", opis: "Pod koniec spotkania ustalamy, co zrobisz dalej. Krok wynika z rozmowy i da się go zrobić w Twojej codzienności." },
@@ -56,7 +61,7 @@ export const ABOUT_BLOCKS = [
     zdjecie: { url: `${IMG}76a96cdf4_686174507_17893800810460401_1310148896120990981_n.jpg`, alt: "Dawid — exmortis" } }, { tlo: "grafit", odstep: "maly" }),
   // Następny krok po historii (audyt 17.11.2026, X-38): spotkanie i mentoring obok Listów i kontaktu.
   b("kroki", "przyciski", { przyciski: [
-    { etykieta: "Przyjdź na otwarte spotkanie", link: "/spotkania", styl: "obrys", strzalka: true },
-    { etykieta: "Poznaj program POWRÓT", link: "/powrot", styl: "obrys", strzalka: true },
+    { etykieta: "Przyjdź na otwarte spotkanie", link: "/spotkania?src=o-mnie", styl: "obrys", strzalka: true },
+    { etykieta: "Poznaj program POWRÓT", link: "/powrot?src=o-mnie", styl: "obrys", strzalka: true },
   ] }, { tlo: "grafit", odstep: "maly" }),
 ];
