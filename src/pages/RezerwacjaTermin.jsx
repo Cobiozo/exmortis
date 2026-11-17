@@ -26,25 +26,36 @@ export default function RezerwacjaTermin() {
 
   if (p === undefined) return <div className="min-h-[60svh] pt-32 flex justify-center"><div className="w-8 h-8 border-4 border-[#3D3D3F] border-t-[#C9A24A] rounded-full animate-spin" /></div>;
   if (!p) return <NotFoundContent />;
+  // Rozmowa wstępna POWRÓT: bezpłatna, z zaproszenia — bez zgody o 14 dniach i bez słowa „pakiet”.
+  const wstepna = p.slug === "rozmowa-kwalifikacyjna";
 
   return (
     <div className="pt-32 pb-24 container-exm">
       <div className="max-w-2xl">
         <p className="technical text-[10px] gold-text mb-3">WYBÓR TERMINU · {p.duration_min} MIN</p>
         <h1 className="relic-heading text-4xl mb-4">{p.type}</h1>
-        <p className="text-foreground/60 mb-10">
-          Sesji w pakiecie: {p.sessions_left} · ważny do {new Date(p.valid_until).toLocaleDateString("pl-PL")}
-        </p>
+        {wstepna ? (
+          <div className="text-foreground/65 mb-10 space-y-2 leading-relaxed">
+            <p>Bezpłatna rozmowa online, {p.duration_min} minut. Sprawdzamy, czy program POWRÓT jest dla Ciebie odpowiednią formą współpracy. To nie jest sesja mentoringowa ani terapia.</p>
+            <p className="text-sm text-foreground/55">Zaproszenie jest ważne do {new Date(p.valid_until).toLocaleDateString("pl-PL")}. Godziny podaję w czasie polskim. Termin możesz zmienić albo odwołać najpóźniej 24 godziny wcześniej, linkiem z potwierdzenia.</p>
+          </div>
+        ) : (
+          <p className="text-foreground/60 mb-10">
+            Sesji w pakiecie: {p.sessions_left} · ważny do {new Date(p.valid_until).toLocaleDateString("pl-PL")}
+          </p>
+        )}
         {done ? (
           <div className="border border-[#C9A24A] p-6 space-y-3" role="status">
             <p className="relic-heading text-2xl">Zarezerwowane</p>
             <p>{fullLabel(done.starts_at)}{plNote(done.starts_at) && <span className="text-foreground/55"> ({plNote(done.starts_at)})</span>}</p>
-            <p className="text-sm text-foreground/70">Szczegóły i link Zoom pojawią się w Moich sesjach na koncie — zaloguj się adresem, na który kupiłaś/eś pakiet.</p>
+            <p className="text-sm text-foreground/70">{wstepna
+              ? "Potwierdzenie z linkiem do spotkania i możliwością zmiany terminu wysłałem na Twój e-mail. Dzień wcześniej przyjdzie przypomnienie."
+              : "Szczegóły i link Zoom pojawią się w Moich sesjach na koncie — zaloguj się adresem, który podano przy zakupie pakietu."}</p>
           </div>
         ) : (
           <PackageBooker
             token={token}
-            purchasedAt={p.purchased_at}
+            purchasedAt={wstepna ? null : p.purchased_at}
             consent={{ version: p.consent_version, text: p.consent_text }}
             onDone={setDone}
           />
