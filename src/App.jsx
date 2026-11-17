@@ -133,6 +133,8 @@ const AuthenticatedApp = () => {
           <Route path="/" element={<HomeSwitch />} />
           <Route path="/o-mnie" element={<About />} />
           <Route path="/skarbiec" element={<ShopPage />} />
+          {/* Stary adres z błędem (do 17.11.2026) → poprawny. */}
+          <Route path="/skarbiec/kiedy-kto-bliski-ga-nie-mini" element={<Navigate to="/skarbiec/kiedy-ktos-bliski-gasnie-mini" replace />} />
           <Route path="/skarbiec/:slug" element={<CmsRoutePage slug="_produkt" />} />
           <Route path="/sklep" element={<ShopRedirect />} />
           <Route path="/sklep/:slug" element={<ShopRedirect />} />

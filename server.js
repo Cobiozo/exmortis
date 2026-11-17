@@ -28,6 +28,14 @@ app.use((req, res, next) => {
   next();
 });
 
+// Zmienione adresy stron (stary → nowy, 301 — wyszukiwarki przenoszą pozycję na nowy adres).
+const MOVED = { "/skarbiec/kiedy-kto-bliski-ga-nie-mini": "/skarbiec/kiedy-ktos-bliski-gasnie-mini" };
+app.use((req, res, next) => {
+  const to = MOVED[req.path.replace(/\/+$/, "")];
+  if (to) return res.redirect(301, to + (req.originalUrl.includes("?") ? req.originalUrl.slice(req.originalUrl.indexOf("?")) : ""));
+  next();
+});
+
 // CSP na razie TYLKO w trybie raportowania (17.11.2026, plan naprawczy 3.11): przeglądarka niczego nie blokuje,
 // a naruszenia widać w konsoli. Po przeglądzie (etap 4.1) ten sam zestaw przejdzie na Content-Security-Policy.
 const CSP_REPORT_ONLY = [

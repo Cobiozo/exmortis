@@ -5,7 +5,7 @@ export const MAIN_SLUG = "listy-powrotu";
 export const OFFER = { powrot: "powrot-mentoring", rozmowa: "rozmowa-na-progu" };
 const SKIP_FREE = new Set(["listy-powrotu", "test-ktorej-smierci"]);
 const FREE_ORDER = {
-  "Życiowa": ["kiedy-kto-bliski-ga-nie-mini", "3-pierwsze-ruchy", "minutnik-ciszy"],
+  "Życiowa": ["kiedy-ktos-bliski-gasnie-mini", "3-pierwsze-ruchy", "minutnik-ciszy"],
   Mentalna: ["3-pierwsze-ruchy", "minutnik-ciszy", "podcast-exmortis"],
   Duchowa: ["3-pierwsze-ruchy", "podcast-exmortis", "muzyka-powrotu"],
 };

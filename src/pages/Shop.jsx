@@ -24,7 +24,7 @@ const STAGE_WORDS = ["Śmierć", "Próg", "Powrót", "Inny"];
 // Dwa produkty mają w bazie ten sam sort_order, a bez daty utworzenia kolejność remisu jest
 // nieprzewidywalna — ta lista trzyma układ ustalony dla marki.
 const FREE_ORDER = [
-  "kiedy-kto-bliski-ga-nie-mini",
+  "kiedy-ktos-bliski-gasnie-mini",
   "3-pierwsze-ruchy",
   "listy-powrotu",
   "kanal-whatsapp",

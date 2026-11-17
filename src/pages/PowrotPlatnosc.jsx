@@ -97,7 +97,7 @@ export default function PowrotPlatnosc() {
         <div className="w-16 h-16 border-2 border-[#C9A24A] rounded-full flex items-center justify-center"><Check className="h-8 w-8 gold-text" /></div>
         <h1 className="relic-heading text-4xl md:text-5xl gold-text">Zaczynamy POWRÓT</h1>
         <p className="text-foreground/65 text-lg leading-relaxed max-w-md">
-          Płatność dotarła. Potwierdzenie i umowa są w drodze na Twój e-mail. Odezwę się w ciągu kilku dni, żeby ustalić termin pierwszej sesji.
+          Płatność dotarła. Potwierdzenie i umowa są w drodze na Twój e-mail. Odezwę się w ciągu 72 godzin, żeby ustalić termin pierwszej sesji.
         </p>
       </div>
     );

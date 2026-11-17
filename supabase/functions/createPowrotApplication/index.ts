@@ -115,7 +115,7 @@ const handler = async function (req) {
         await notifyUrgent(base44);
       } else {
         await sendMail(base44, { kind: "powrot", ref: appId, to: email, subject: "Twoje zgłoszenie POWRÓT",
-          html: wrap(`<p>Dziękuję za zaufanie. Każdy powrót zaczyna się od pierwszego kroku — właśnie został zrobiony. Przeczytam Twoje zgłoszenie osobiście i odezwę się w ciągu kilku dni, żeby umówić rozmowę.</p><p>Dawid, exmortis</p>`) }).catch(() => {});
+          html: wrap(`<p>Dziękuję za zaufanie. Każdy powrót zaczyna się od pierwszego kroku — właśnie został zrobiony. Przeczytam Twoje zgłoszenie osobiście i odezwę się w ciągu 72 godzin, żeby umówić rozmowę.</p><p>Dawid, exmortis</p>`) }).catch(() => {});
         if (admin) await sendMail(base44, { kind: "powrot", ref: appId, to: admin, subject: "Nowe zgłoszenie kwalifikacyjne POWRÓT",
           html: wrap(`<p>Przyszło nowe zgłoszenie kwalifikacyjne od ${escHtml(fullName)} (${escHtml(email)}).</p><p><a style="color:#C9A24A" href="${link}">Otwórz panel</a></p>`) }).catch(() => {});
       }

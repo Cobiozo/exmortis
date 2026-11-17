@@ -95,8 +95,8 @@ export default function PowrotForm() {
             Zgłoszenie<br /><span className="gold-text">do programu</span>
           </h2>
           <p className="text-foreground/60 leading-relaxed max-w-md">
-            Trzy dane i jedno pytanie. Zgłoszenia rozpatruję w kolejności napływania —
-            skontaktuję się osobiście.
+            Trzy dane i jedno pytanie. Zgłoszenia rozpatruję w kolejności napływania.
+            Odpowiadam osobiście w ciągu 72 godzin.
           </p>
           <p className="technical text-[10px] text-foreground/55 mt-8">
             ROZMOWA KWALIFIKACYJNA · BEZPŁATNA · BEZ ZOBOWIĄZAŃ
@@ -119,7 +119,7 @@ export default function PowrotForm() {
               </div>
               <p className="relic-heading text-2xl gold-text">Dziękuję</p>
               <p className="text-foreground/60 leading-relaxed">
-                Dziękuję. Odezwę się osobiście — zwykle w ciągu kilku dni. Wyślę Ci osobisty
+                Dziękuję. Odezwę się osobiście w ciągu 72 godzin. Wyślę Ci osobisty
                 link do krótkiej ankiety, a po niej umówimy bezpłatną rozmowę kwalifikacyjną.
               </p>
             </div>
