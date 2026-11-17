@@ -213,7 +213,7 @@ export default function Test() {
               </div>
               <div className="mt-8 flex flex-col sm:flex-row sm:flex-wrap gap-3">
                 <Link to="/#listy-powrotu" className="btn-relic">Zapisz się na Listy powrotu <ArrowRight className="h-4 w-4" /></Link>
-                <Link to="/glos" className="btn-ghost">POSŁUCHAJ — MUZYKA I PODCAST <ArrowRight className="h-4 w-4" /></Link>
+                <Link to="/glos?src=test-wynik" className="btn-ghost">Posłuchaj: muzyka i podcast <ArrowRight className="h-4 w-4" /></Link>
                 <Link to="/skarbiec" className="btn-ghost">Zajrzyj do Skarbca <ArrowRight className="h-4 w-4" /></Link>
               </div>
               <p className="shop-heading italic text-lg text-[#F5EFE1]/80 mt-10">Wracam z siebie. Uczę wracać.</p>
@@ -234,13 +234,17 @@ export default function Test() {
               {next && next.free.length > 0 && (
                 <div className="grid sm:grid-cols-3 gap-4 my-6">{next.free.map((p) => <ShopProductCard key={p.id || p.slug} product={p} />)}</div>
               )}
-              <Link to="/spotkania" className="flex items-center justify-between gap-4 border hairline px-5 py-5 mb-6 min-h-11 text-[#F5EFE1] hover:border-[#C9A24A]/60 transition-colors">
+              <Link to="/spotkania?src=test-wynik" className="flex items-center justify-between gap-4 border hairline px-5 py-5 mb-6 min-h-11 text-[#F5EFE1] hover:border-[#C9A24A]/60 transition-colors">
                 <span><span className="shop-heading text-xl block">Spotkania</span><span className="text-sm text-[#F5EFE1]/75">Otwarte spotkania online i na żywo.</span></span>
                 <ArrowRight className="h-4 w-4 shrink-0 gold-text" />
               </Link>
+              <Link to="/skarbiec/rozmowa-na-progu?src=test-wynik" className="flex items-center justify-between gap-4 border hairline px-5 py-5 mb-4 min-h-11 text-[#F5EFE1] hover:border-[#C9A24A]/60 transition-colors">
+                <span><span className="shop-heading text-xl block">Rozmowa na progu</span><span className="text-sm text-[#F5EFE1]/75">90 minut rozmowy jeden na jeden o Twojej historii. Online, bez zobowiązań na dalej.</span></span>
+                <ArrowRight className="h-4 w-4 shrink-0 gold-text" />
+              </Link>
               <p className="text-base text-[#F5EFE1]/80">
-                Jeśli chcesz porozmawiać o swojej historii —{" "}
-                <Link to="/skarbiec/rozmowa-na-progu" className="gold-text underline underline-offset-4">Rozmowa na progu</Link>.
+                Jeśli myślisz o dłuższej pracy, zobacz program{" "}
+                <Link to="/powrot?src=test-wynik" className="gold-text underline underline-offset-4">POWRÓT</Link>: osiem sesji przez cztery do sześciu miesięcy.
               </p>
             </section>
 
