@@ -20,7 +20,9 @@ export function CartProvider({ children }) {
   const [items, setItems] = useState(() => {
     try {
       const raw = localStorage.getItem(STORAGE_KEY);
-      return raw ? JSON.parse(raw) : [];
+      const list = raw ? JSON.parse(raw) : [];
+      // Starsze koszyki: osobisty PDF zawsze w 1 sztuce.
+      return Array.isArray(list) ? list.map((i) => (i?.product_type === "pdf" && i.qty > 1 ? { ...i, qty: 1 } : i)) : [];
     } catch {
       return [];
     }
