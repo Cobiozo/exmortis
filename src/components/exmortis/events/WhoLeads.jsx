@@ -19,7 +19,7 @@ export default function WhoLeads() {
           <p className="technical text-[10px] gold-text mb-3">KTO PROWADZI</p>
           <h2 id="kto-prowadzi" className="shop-heading text-2xl text-[#F5EFE1]">Byłem tam. I wróciłem. Inny.</h2>
           <p className="mt-4 text-foreground/70 leading-relaxed">
-            Nazywam się Dawid. Byłem księdzem. Prowadziłem ludzi, a potem sam znalazłem się w miejscu, którego nie było na mapie.
+            Nazywam się Dawid. Przez lata towarzyszyłem ludziom w trudnych chwilach, a potem sam znalazłem się w miejscu, którego nie było na mapie.
             Wracałem krok po kroku, bez skrótów. Dziś jestem szczęśliwym mężem i ojcem — i mentorem powrotu.
           </p>
           <p className="mt-3 text-foreground/70 leading-relaxed">
