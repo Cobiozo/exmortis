@@ -1,5 +1,7 @@
 import { runSql, escStr } from "./supabase.ts";
 import { unitPrice, warsawToday } from "./productPrice.ts";
+import { accessFilter } from "./mirror.ts";
+import { isActive } from "./access.ts";
 
 // Popup na stronie (Panel → Ogłoszenia → Popup): krótka informacja dla odwiedzających,
 // np. o nadchodzącym spotkaniu albo kodzie rabatowym. Ustawienie publiczne (app_settings: "popup").
@@ -214,4 +216,30 @@ export function legacyFromCampaigns(list: any[]) {
   if (!k) return null;
   return { aktywny: true, tytul: k.tytul, tresc: k.tresc, przycisk_napis: k.przycisk_napis, przycisk_link: k.href || "",
     kod: k.kod, od: k.od, do: k.do, komu: k.komu, opoznienie: Math.min(60, k.opoznienie), wersja: Date.parse(k.zmieniono) || 1 };
+}
+
+// Dopasowanie do zalogowanej osoby (serwer zna e-mail z sesji): ukrywa kampanię produktu, który ta osoba już ma,
+// i kampanie „bez subskrybentów” u osób z potwierdzonym zapisem na Listy Powrotu. Goście dostają listę bez zmian
+// (subskrypcję gościa przeglądarka rozpoznaje tylko po własnym zapisie z tej przeglądarki).
+export async function forViewer(base44, list: any[], me: any) {
+  const email = String(me?.email || "").toLowerCase();
+  if (!email || !list?.length) return list || [];
+  let sub: boolean | null = null;
+  const out = [];
+  for (const k of list) {
+    if (k.komu === "goscie") continue;
+    if (k.bez_subskrybentow) {
+      if (sub === null) {
+        const [r] = await runSql(base44, `SELECT 1 AS ok FROM public.subscribers WHERE lower(email) = ${escStr(email)} AND status = 'active' LIMIT 1`, true).catch(() => []);
+        sub = !!r?.ok;
+      }
+      if (sub) continue;
+    }
+    if (k.ukryj_posiadaczy && k.produkt?.id) {
+      const acc = await accessFilter(base44, { user_email: email, product_id: String(k.produkt.id) }).catch(() => []);
+      if (acc.some(isActive)) continue;
+    }
+    out.push(k);
+  }
+  return out;
 }
