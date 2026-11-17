@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { Loader2, ChevronDown, Mail, Pencil } from "lucide-react";
+import { Loader2, ChevronDown, Mail, MailX, Pencil } from "lucide-react";
 import { lib, plDateTime } from "./libApi";
 import LibModal from "./LibModal";
 
@@ -40,21 +40,25 @@ export default function MessageRow({ m, onChanged, onEdit }) {
 
   const unread = Math.max(0, (m.dostarczone || 0) - (m.przeczytane || 0));
 
-  // Powyżej 10 odbiorców najpierw okno potwierdzenia — ten sam próg co przy nowej wiadomości.
-  const sendNow = () => {
-    if ((m.recipient_count || 0) > 10) { setAsk("send"); return; }
-    run("send");
-  };
+  // Zawsze najpierw okno potwierdzenia z liczbą osób i sposobem dostarczenia.
+  const sendNow = () => setAsk("send");
+  const KANAL = { POWIADOMIENIE: "w koncie + e-mail", PELNA: "w koncie + e-mail z treścią", BRAK: "tylko w koncie" };
 
   return (
     <div className="border hairline">
       <div className="p-4 flex flex-wrap items-start gap-3">
         <button onClick={expand} className="min-w-0 flex-1 text-left">
-          <p className="text-sm truncate">{m.title || "(bez tytułu)"}</p>
+          <p className="text-sm truncate flex items-center gap-2">
+            {m.email_mode === "BRAK"
+              ? <MailX className="h-3.5 w-3.5 flex-none text-foreground/35" aria-label="Bez e-maila" />
+              : <Mail className="h-3.5 w-3.5 flex-none gold-text" aria-label="Z e-mailem" />}
+            <span className="truncate">{m.title || "(bez tytułu)"}</span>
+          </p>
           <p className="text-[11px] text-foreground/45 mt-1">
             {m.target_label} · {m.status === "ZAPLANOWANA" ? `zaplanowana na ${plDateTime(m.send_at)}`
               : m.sent_at ? `wysłana ${plDateTime(m.sent_at)}` : `utworzona ${plDateTime(m.created_at)}`}
-            {m.status === "WYSLANA" ? ` · przeczytane ${m.przeczytane} / ${m.dostarczone}` : ""}
+            {` · ${KANAL[m.email_mode] || "tylko w koncie"}`}
+            {m.status === "WYSLANA" ? ` · przeczytane ${m.przeczytane} z ${m.dostarczone}` : ""}
             {m.status === "WYCOFANA" ? " · wycofana" : ""}
           </p>
           {m.preview && <p className="text-xs text-foreground/35 mt-1 truncate">{m.preview}</p>}
@@ -115,9 +119,12 @@ export default function MessageRow({ m, onChanged, onEdit }) {
             )}
             {m.status === "WYSLANA" && (
               <>
+                {m.email_mode === "BRAK" && unread > 0 && (
+                  <p className="w-full text-xs text-foreground/50">Ta wiadomość poszła bez e-maila — {unread} {unread === 1 ? "osoba jej nie przeczytała" : "osób jej nie przeczytało"}. Aby przypomnieć mailem, wyślij nową wiadomość z opcją „W koncie + e-mail”.</p>
+                )}
                 {m.email_mode !== "BRAK" && unread > 0 && (
                   <button className="btn-ghost !px-3 !py-2" onClick={() => run("notify")} disabled={!!busy}>
-                    {busy === "notify" ? <Loader2 className="h-4 w-4 animate-spin" /> : <><Mail className="h-4 w-4" /> POWIADOM NIEPRZECZYTANYCH</>}
+                    {busy === "notify" ? <Loader2 className="h-4 w-4 animate-spin" /> : <><Mail className="h-4 w-4" /> PRZYPOMNIJ NIEPRZECZYTANYM ({unread})</>}
                   </button>
                 )}
                 <button className="btn-ghost !px-3 !py-2" onClick={() => onEdit(m, true)}><Pencil className="h-4 w-4" /> POPRAW LITERÓWKĘ</button>
@@ -132,13 +139,13 @@ export default function MessageRow({ m, onChanged, onEdit }) {
       )}
 
       <LibModal
-        open={ask === "send"} onClose={() => setAsk("")} title="Wysłać do ponad 10 osób?"
+        open={ask === "send"} onClose={() => setAsk("")} title="Wysłać wiadomość?"
         footer={<>
           <button className="btn-ghost" onClick={() => setAsk("")}>ANULUJ</button>
           <button className="btn-relic" onClick={() => run("send")}>WYŚLIJ</button>
         </>}
       >
-        <p className="text-sm text-foreground/70">Ta wiadomość trafi do {m.recipient_count || 0} osób i pojawi się na ich kontach.</p>
+        <p className="text-sm text-foreground/70">Ta wiadomość trafi do {m.recipient_count || 0} osób · {KANAL[m.email_mode] || "tylko w koncie"}.</p>
       </LibModal>
 
       <LibModal

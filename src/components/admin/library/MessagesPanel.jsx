@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from "react";
-import { Loader2, Plus } from "lucide-react";
+import { Loader2, Plus, Info } from "lucide-react";
+import { Link } from "react-router-dom";
 import { lib } from "./libApi";
 import MessageForm from "./MessageForm";
 import MessageRow from "./MessageRow";
@@ -51,6 +52,14 @@ export default function MessagesPanel({ presetTarget }) {
           ))}
         </div>
         <button className="btn-relic mb-2" onClick={() => setForm({ presetTarget })}><Plus className="h-4 w-4" /> NOWA WIADOMOŚĆ</button>
+      </div>
+
+      <div className="flex gap-3 border hairline bg-[#C9A24A]/[.05] p-3 text-sm text-foreground/75">
+        <Info className="h-4 w-4 flex-none mt-0.5 gold-text" aria-hidden="true" />
+        <p>
+          Wiadomości trafiają do <strong className="text-[#F1EDE3]">osób z kontem{d?.konta != null ? ` (${d.konta})` : ""}</strong> — w Moim koncie, a jeśli wybierzesz, także e-mailem.
+          {d?.subskrybenci != null && <> Subskrybentów Listów Powrotu ({d.subskrybenci}) piszesz w module <Link to="/admin/newsletter" className="gold-text underline underline-offset-2">Newsletter</Link>.</>}
+        </p>
       </div>
 
       {err && <p className="text-sm blood-text">{err}</p>}
