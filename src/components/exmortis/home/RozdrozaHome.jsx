@@ -66,8 +66,8 @@ export default function RozdrozaHome() {
             </p>
             <p>Poznajesz bohaterów, ich relacje, konflikty i trudne życiowe sytuacje. W kluczowych momentach to Ty podejmujesz decyzje, które wpływają na dalszy przebieg opowieści.</p>
             {/* Na telefonie dwa ostatnie akapity są ukryte — sedno mówią akapity wyżej (krótsza strona główna). */}
-            <p className="hidden md:block">Możesz wrócić do wcześniejszego wyboru. Sprawdzić inną możliwość. Zobaczyć odmienne zakończenie.</p>
-            <p className="hidden md:block">Nie chodzi o znalezienie jednej poprawnej odpowiedzi. Chodzi o dostrzeżenie tego, jak bardzo zmienia się nasze spojrzenie, kiedy poznajemy więcej niż jedną perspektywę.</p>
+            <p className="hidden">Możesz wrócić do wcześniejszego wyboru. Sprawdzić inną możliwość. Zobaczyć odmienne zakończenie.</p>
+            <p className="hidden">Nie chodzi o znalezienie jednej poprawnej odpowiedzi. Chodzi o dostrzeżenie tego, jak bardzo zmienia się nasze spojrzenie, kiedy poznajemy więcej niż jedną perspektywę.</p>
           </div>
 
           <p className="mt-8 border-l-2 border-[#C9A24A] pl-4 text-[15px] leading-relaxed text-foreground/75">
