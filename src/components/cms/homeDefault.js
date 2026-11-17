@@ -14,7 +14,7 @@ export const HOME_BLOCKS = [
     lead: "Kiedy coś w Tobie zgasło, możesz zacząć wracać.",
     podlead: "Jestem Dawid. Prowadzę spotkania i mentoring 1:1 dla osób po stracie, wypaleniu albo utracie sensu. To nie terapia — to rozmowa z kimś, kto sam przeszedł koniec jednego życia.",
     autor_zdjecie: { url: "https://media.base44.com/images/public/6aa08bc6318b0f886cc3b9a3/480c7c335_702144182_17895011880460401_728690723499574380_n.jpg", alt: "Dawid — mentor EXMORTIS" },
-    autor_podpis: "Dawid · mentor powrotu — poznaj moją historię",
+    autor_podpis: "Dawid · mentor powrotu",
     przyciski: [
       { etykieta: "ZNAJDŹ SWÓJ PIERWSZY KROK", link: "/test?src=home-hero", styl: "zloty", strzalka: true },
       { etykieta: "POZNAJ MNIE I MOJĄ HISTORIĘ", link: "/o-mnie", styl: "obrys", strzalka: false },
