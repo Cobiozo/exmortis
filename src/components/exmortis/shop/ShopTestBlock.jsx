@@ -19,7 +19,7 @@ export default function ShopTestBlock({ part, d = {} }) {
     <section className={SHELL}>
       <div className="mx-auto max-w-[1400px]">
         <div
-          className={`${FRAME} ${intro ? "border-x border-t pt-10 pb-6 md:pt-14 md:pb-8" : "border-x border-b pb-10 md:pb-14"} px-5 md:px-10`}
+          className={`${FRAME} ${intro ? "border-x border-t rounded-t-2xl pt-10 pb-6 md:pt-14 md:pb-8" : "border-x border-b rounded-b-2xl pb-10 md:pb-14"} px-5 md:px-10`}
         >
           {intro ? (
             <div className="max-w-3xl">
