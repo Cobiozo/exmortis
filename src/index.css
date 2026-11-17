@@ -433,7 +433,7 @@
 .exm-soft-page .btn-ghost:hover { border-color: rgba(201,162,74,.6); background: rgba(201,162,74,.05); }
 .exm-soft-page .btn-relic:focus-visible, .exm-soft-page .btn-ghost:focus-visible { outline: 2px solid #C9A24A; outline-offset: 2px; }
 /* Karty, ramki i okna z pełną ramką: zaokrąglenie jak w koncie (bez elementów, które mają już własne zaokrąglenie). */
-.exm-soft-page :where(div, section, article, aside, form, details, figure, li, a, blockquote).border:not([class*="rounded"]) { border-radius: 16px; }
+.exm-soft-page :where(div, section, article, aside, form, details, figure, li, a, blockquote).border:not([class*="rounded"]):not(.btn-relic):not(.btn-ghost):not(.btn-blood) { border-radius: 16px; }
 .exm-soft-page :where(input, textarea, select).border:not([class*="rounded"]) { border-radius: 10px; }
 .exm-soft-page iframe { border-radius: 12px; }
 /* Blok „Karty”: osobne karty zamiast siatki z liniami. */
