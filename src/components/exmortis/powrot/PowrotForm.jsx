@@ -159,7 +159,7 @@ export default function PowrotForm() {
                 Rozmowa kwalifikacyjna jest bezpłatna i nie zobowiązuje do zakupu.
               </p>
               <button type="submit" disabled={sending} className="btn-relic w-full disabled:opacity-60">
-                {sending ? "WYSYŁAM..." : "Wyślij zgłoszenie"}{" "}
+                {sending ? "Wysyłam…" : "Wyślij zgłoszenie"}{" "}
                 {!sending && <ArrowRight className="h-4 w-4" />}
               </button>
             </form>

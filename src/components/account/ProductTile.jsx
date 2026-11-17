@@ -61,7 +61,7 @@ export default function ProductTile({ p }) {
               <button onClick={async () => setAudio(await getUrl())} disabled={busy} className="btn-relic !px-4 !py-2.5">{busy ? <Loader2 className={`${ico} animate-spin`} /> : <Play className={ico} strokeWidth={1.25} />} SŁUCHAJ</button>
             )
           ) : (
-            <Link to={`/konto/kurs/${p.access_id}`} className="btn-relic !px-4 !py-2.5"><Play className={ico} strokeWidth={1.25} /> {p.lessons_done > 0 && p.lessons_done < p.lessons_total ? "KONTYNUUJ" : p.type === "kurs" ? "OTWÓRZ KURS" : "OGLĄDAJ"}</Link>
+            <Link to={`/konto/kurs/${p.access_id}`} className="btn-relic !px-4 !py-2.5"><Play className={ico} strokeWidth={1.25} /> {p.lessons_done > 0 && p.lessons_done < p.lessons_total ? "Kontynuuj" : p.type === "kurs" ? "Otwórz kurs" : "Oglądaj"}</Link>
           )}
           {err && <p className="text-xs text-[#E8C547]">{err}</p>}
         </div>

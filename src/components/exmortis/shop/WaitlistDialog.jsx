@@ -116,7 +116,7 @@ export default function WaitlistDialog({ product, onClose }) {
             </label>
             {error && <p className="text-xs blood-text">{error}</p>}
             <button type="submit" disabled={sending} className="btn-relic w-full disabled:opacity-60">
-              {sending ? "ZAPISUJĘ..." : soldOut ? "DAJ ZNAĆ, GDY ZWOLNI SIĘ MIEJSCE" : "ZAPISZ MNIE"}
+              {sending ? "Zapisuję…" : soldOut ? "DAJ ZNAĆ, GDY ZWOLNI SIĘ MIEJSCE" : "ZAPISZ MNIE"}
             </button>
           </form>
         )}

@@ -41,7 +41,7 @@ function ResendForm({ token, note }) {
         </div>
       )}
       <button type="submit" disabled={state === "busy"} className="btn-relic disabled:opacity-60">
-        {state === "busy" ? "WYSYŁAM..." : "Wyślij mi nowy link"} <ArrowRight className="h-4 w-4" />
+        {state === "busy" ? "Wysyłam…" : "Wyślij mi nowy link"} <ArrowRight className="h-4 w-4" />
       </button>
       {state === "error" && <p className="text-sm text-[#E8C547]" role="alert">{msg}</p>}
     </form>

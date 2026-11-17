@@ -52,7 +52,7 @@ export default function EventSignupBlock({ d, label }) {
             <RegistrationBlock event={ev} />
           </>}
       </div>
-      {!closed && !inEditor && ev.registration_type === "Zapis na stronie" && <StickySignup label={ev.tickets && Number(ev.price) > 0 && ev.format !== "Online" ? "KUP BILET" : "Zapisz się"} />}
+      {!closed && !inEditor && ev.registration_type === "Zapis na stronie" && <StickySignup label={ev.tickets && Number(ev.price) > 0 && ev.format !== "Online" ? "Kup bilet" : "Zapisz się"} />}
     </div>
   );
 }

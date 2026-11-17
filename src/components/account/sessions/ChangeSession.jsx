@@ -44,7 +44,7 @@ export default function ChangeSession({ b, onClose, onChanged }) {
         <p className="text-sm">Nowy termin: {fullLabel(pick.start)}{plNote(pick.start) && <span className="text-foreground/55"> ({plNote(pick.start)})</span>}</p>
       )}
       {err && <p className="text-sm text-[#E8C547]" role="alert">{err}</p>}
-      <button onClick={save} disabled={!pick || busy} className="btn-relic text-[10px] disabled:opacity-50">{busy ? "PRZENOSZĘ…" : "PRZENIEŚ"}</button>
+      <button onClick={save} disabled={!pick || busy} className="btn-relic text-[10px] disabled:opacity-50">{busy ? "Przenoszę…" : "Przenieś"}</button>
     </div>
   );
 }

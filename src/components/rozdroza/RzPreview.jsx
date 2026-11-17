@@ -52,7 +52,7 @@ export function StoryCard({ meta, going = false, backTo, backLabel, onStart, onR
         {meta.summary && <p className="mt-6 text-[17px] text-foreground/80 leading-[1.8] whitespace-pre-line">{meta.summary}</p>}
         {/* Najpierw przycisk startu, pod nim informacja o trudnych treściach. */}
         <div className="mt-8 flex flex-wrap items-center gap-4">
-          <button type="button" onClick={onStart} className="btn-relic focus-visible:ring-2 focus-visible:ring-[#C9A24A]/60">{going ? "KONTYNUUJ" : "ROZPOCZNIJ HISTORIĘ"}</button>
+          <button type="button" onClick={onStart} className="btn-relic focus-visible:ring-2 focus-visible:ring-[#C9A24A]/60">{going ? "Kontynuuj" : "Rozpocznij historię"}</button>
           {going && onRestart && (
             <button type="button" onClick={onRestart} className="technical text-[10px] text-foreground/55 hover:text-foreground underline underline-offset-4 min-h-[44px] px-2">OD POCZĄTKU</button>
           )}

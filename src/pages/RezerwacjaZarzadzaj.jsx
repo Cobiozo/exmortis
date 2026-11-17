@@ -104,7 +104,7 @@ export default function RezerwacjaZarzadzaj() {
                   <div className="border border-[#5C1A1B] p-5 space-y-3">
                     <p className="text-sm">Anulować to spotkanie? Jeśli anulujesz w czasie dozwolonym, sesja wróci do pakietu.</p>
                     <div className="flex flex-wrap gap-3">
-                      <button onClick={doCancel} disabled={busy} className="btn-blood text-[10px]">{busy ? "ANULUJĘ…" : "TAK, ANULUJ"}</button>
+                      <button onClick={doCancel} disabled={busy} className="btn-blood text-[10px]">{busy ? "Anuluję…" : "TAK, ANULUJ"}</button>
                       <button onClick={() => setConfirmCancel(false)} disabled={busy} className="btn-ghost text-[10px]">ZOSTAW</button>
                     </div>
                   </div>
@@ -124,7 +124,7 @@ export default function RezerwacjaZarzadzaj() {
               <div className="border border-[#C9A24A] p-6 space-y-5">
                 <p className="relic-heading text-xl">Nowy termin</p>
                 <SlotPicker slots={slots} value={pick} onPick={setPick} />
-                <button onClick={doChange} disabled={!pick || busy} className="btn-relic text-[10px] disabled:opacity-50">{busy ? "PRZENOSZĘ…" : "PRZENIEŚ"}</button>
+                <button onClick={doChange} disabled={!pick || busy} className="btn-relic text-[10px] disabled:opacity-50">{busy ? "Przenoszę…" : "Przenieś"}</button>
               </div>
             )}
             {err && <p className="text-sm text-[#E8C547]" role="alert">{err}</p>}

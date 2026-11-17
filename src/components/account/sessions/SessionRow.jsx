@@ -45,7 +45,7 @@ export default function SessionRow({ b, past, onReschedule, onChanged }) {
           {b.can_cancel && (confirm ? (
             <span className="flex items-center gap-3">
               <span className="technical text-[10px] text-foreground/70">ANULOWAĆ TO SPOTKANIE?</span>
-              <button onClick={cancel} disabled={busy} className="gold-text technical text-[10px]">{busy ? "ANULUJĘ…" : "TAK"}</button>
+              <button onClick={cancel} disabled={busy} className="gold-text technical text-[10px]">{busy ? "Anuluję…" : "TAK"}</button>
               <button onClick={() => setConfirm(false)} className="technical text-[10px] text-foreground/55">NIE</button>
             </span>
           ) : (

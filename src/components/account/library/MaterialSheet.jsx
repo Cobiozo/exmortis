@@ -115,7 +115,7 @@ export default function MaterialSheet({ material, completed, onClose, onOpened }
 
           <button type="button" onClick={toggleDone}
             className={`inline-flex items-center gap-2 min-h-[44px] px-5 border font-mono text-xs tracking-[0.14em] uppercase transition-colors ${done ? "border-[#C9A24A] bg-[#C9A24A] text-[#0A0A0B]" : "hairline text-foreground/60 hover:text-[#C9A24A] hover:border-[#C9A24A]"} ${FOCUS}`}>
-            <Check className="w-4 h-4" strokeWidth={1.5} /> {done ? "UKOŃCZONE" : "OZNACZ JAKO UKOŃCZONE"}
+            <Check className="w-4 h-4" strokeWidth={1.5} /> {done ? "Ukończone" : "Oznacz jako ukończone"}
           </button>
         </div>
       </div>

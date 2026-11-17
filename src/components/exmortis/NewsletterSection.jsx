@@ -60,7 +60,7 @@ export default function NewsletterSection({ label } = {}) {
                 className="flex-1 min-w-0 bg-transparent border hairline px-5 py-4 text-foreground placeholder:text-foreground/55 font-mono text-sm focus:border-[#C9A24A] focus:outline-none transition-colors"
               />
               <button type="submit" disabled={sending} className="btn-relic whitespace-nowrap disabled:opacity-60">
-                {sending ? "ZAPISUJĘ..." : "ZAPISZ"} {!sending && <ArrowRight className="h-4 w-4" />}
+                {sending ? "Zapisuję…" : "ZAPISZ"} {!sending && <ArrowRight className="h-4 w-4" />}
               </button>
             </div>
             {sent && (

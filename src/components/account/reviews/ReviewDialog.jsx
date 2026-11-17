@@ -122,7 +122,7 @@ export default function ReviewDialog({ item, onClose, onSaved }) {
             {err && <p className="text-sm blood-text">{err}</p>}
 
             <button onClick={save} disabled={!ready} className="btn-relic w-full disabled:opacity-40">
-              {busy ? "WYSYŁAM..." : "WYŚLIJ OPINIĘ"} {!busy && <Check className="h-4 w-4" />}
+              {busy ? "Wysyłam…" : "Wyślij opinię"} {!busy && <Check className="h-4 w-4" />}
             </button>
             <p className="technical text-[9px] text-foreground/55 leading-relaxed">
               OPINIA POJAWI SIĘ NA STRONIE PRODUKTU PO SPRAWDZENIU. NIE PŁACIMY ZA OPINIE I NIE USUWAMY KRYTYCZNYCH.

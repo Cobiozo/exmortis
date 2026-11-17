@@ -242,7 +242,7 @@ export default function PowrotAnkieta() {
 
         {error && <p className="text-sm blood-text">{error}</p>}
         <button type="submit" disabled={sending} className="btn-relic w-full disabled:opacity-60">
-          {sending ? "WYSYŁAM..." : "WYŚLIJ ANKIETĘ"} {!sending && <ArrowRight className="h-4 w-4" />}
+          {sending ? "Wysyłam…" : "WYŚLIJ ANKIETĘ"} {!sending && <ArrowRight className="h-4 w-4" />}
         </button>
       </form>
     </>

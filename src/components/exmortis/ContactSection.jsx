@@ -170,7 +170,7 @@ export default function ContactSection({ label } = {}) {
               </p>
               {error && <p role="alert" className="text-sm blood-text">{error}</p>}
               <button type="submit" disabled={sending} className="btn-relic w-full disabled:opacity-60">
-                {sending ? "WYSYŁAM..." : "Wyślij wiadomość"}{" "}
+                {sending ? "Wysyłam…" : "Wyślij wiadomość"}{" "}
                 {!sending && <ArrowRight className="h-4 w-4" />}
               </button>
               <p className="technical text-[10px] text-foreground/55">
