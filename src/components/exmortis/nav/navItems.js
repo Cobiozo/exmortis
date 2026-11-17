@@ -3,16 +3,19 @@ import { WHATSAPP_CHANNEL } from "@/lib/whatsappChannel";
 
 const WA = String(WHATSAPP_CHANNEL || "").trim();
 
+// Belka od 17.11.2026 (decyzja właściciela): O mnie · Mentoring (POWRÓT) · Skarbiec · Spotkania · Głos · Kontakt.
+// desktop: false = pozycja tylko w menu na telefonie (grupa „Bezpłatnie”). sub = drobny dopisek w menu telefonu.
 export const NAV = [
   { label: "O mnie", to: "/o-mnie" },
-  { label: "Powrót", to: "/powrot" },
-  { label: "Sklep", to: "/skarbiec" }, // nazwa w menu od 17.11.2026; adres strony bez zmian
+  { label: "Mentoring", to: "/powrot", sub: "POWRÓT" },
+  { label: "Skarbiec", to: "/skarbiec" },
   { label: "Spotkania", to: "/spotkania?src=nav" },
-  { label: "Cisza", to: "/cisza" },
-  { label: "Głos", to: "/glos" },
+  { label: "Głos", to: "/glos", sub: "podcast i muzyka" },
   { label: "Kontakt", to: "/kontakt" },
+  { label: "Zacznij bezpłatnie", to: "/zacznij?src=nav", desktop: false },
+  { label: "Cisza", to: "/cisza", sub: "minutnik", desktop: false },
 ];
-export const TEST = { label: "Test", to: "/test?src=nav" };
+export const TEST = { label: "Zrób test", to: "/test?src=nav" };
 
 const col = (title, links) => ({ title, links: links.map(([label, to]) => ({ label, to })) });
 // Stopka (5.11.2026): Odkrywaj · EXMORTIS · Bądźmy w kontakcie. Parametry ?src=footer zostają (pomiar źródła).
