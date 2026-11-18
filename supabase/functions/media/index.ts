@@ -67,7 +67,25 @@ const handler = async function (req) {
     if (!pick) return deny(404);
 
     const base44 = createClientFromRequest(req);
-    const { signed_url } = await base44.asServiceRole.integrations.Core.CreateFileSignedUrl({ file_uri: a.m.warianty[pick], expires_in: 60 });
+    const uri = String(a.m.warianty[pick]);
+    // Pliki z hostingu (cf/…) leżą na tym samym serwerze, który przekazuje to żądanie do funkcji.
+    // Pobieranie ich stąd było zagnieżdżonym wywołaniem tego serwera: przy kilku obrazach naraz żądania
+    // czekały na siebie i kończyły się błędem (obrazek zastępczy). Dlatego po sprawdzeniu pochodzenia
+    // odsyłamy przeglądarkę wprost pod podpisany adres pliku na tej samej domenie (18.11.2026).
+    if (/^cf\//.test(uri)) {
+      const { signed_url } = await base44.asServiceRole.integrations.Core.CreateFileSignedUrl({ file_uri: uri, expires_in: 3600 });
+      const loc = new URL(signed_url);
+      return new Response(null, {
+        status: 302,
+        headers: {
+          'Location': `${loc.pathname}${loc.search}`,
+          'Cache-Control': 'private, max-age=1800',
+          'X-Robots-Tag': 'noimageindex, noindex',
+          'Vary': 'Referer, Sec-Fetch-Site',
+        },
+      });
+    }
+    const { signed_url } = await base44.asServiceRole.integrations.Core.CreateFileSignedUrl({ file_uri: uri, expires_in: 60 });
     const r = await fetch(signed_url, { signal: AbortSignal.timeout(15000) });
     if (!r.ok) return deny(502);
     return new Response(r.body, {
