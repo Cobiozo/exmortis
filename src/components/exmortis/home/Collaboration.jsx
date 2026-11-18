@@ -24,8 +24,8 @@ export default function Collaboration({ d = {}, label }) {
   const rozmowa = bySlug(SLUG_ROZMOWA);
   const powrot = bySlug(SLUG_POWROT);
 
+  // Kotwica #wspolpraca jest na opakowaniu bloku (uklad.kotwica) — bez zdublowanego id.
   return (
-    {/* Kotwica #wspolpraca jest na opakowaniu bloku (uklad.kotwica) — bez zdublowanego id. */}
     <Section>
       <Container>
         <SectionHeader
