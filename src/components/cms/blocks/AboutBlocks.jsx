@@ -75,6 +75,15 @@ export function AboutHistoria({ d, label }) {
           <div key={i} className={i ? "mt-12" : ""}>
             {r.tytul && <h2 className="exm-h3 text-[clamp(1.25rem,2.4vw,1.6rem)]">{r.tytul}</h2>}
             <Rich html={r.tresc} className="mt-3 text-[17px] leading-relaxed text-exm-muted" />
+            {/* Opcjonalne zdjęcie rozdziału (np. czas posługi) — małe, pod tekstem, z podpisem. */}
+            {r.zdjecie?.url && (
+              <figure className="mt-6 w-full max-w-[320px]">
+                <div className="aspect-[4/5] overflow-hidden rounded-[var(--exm-r-card)] bg-exm-surface-2">
+                  <SafeImg img={r.zdjecie} className="h-full w-full" />
+                </div>
+                {r.podpis && <figcaption className="technical mt-3 text-[11px] text-exm-muted">{r.podpis}</figcaption>}
+              </figure>
+            )}
             {po === i + 1 && d.piosenka_url && <div className="mt-8">{piosenka}</div>}
           </div>
         ))}

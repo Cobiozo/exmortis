@@ -21,7 +21,7 @@ export const ABOUT_BLOCKS = [
     linia1: "Byłem tam.",
     linia2: "I wróciłem. Inny.",
     imie: "Dawid Kowalczyk · mentor powrotu",
-    lead: "Pracuję z ludźmi, którzy na zewnątrz dają radę. Chodzą do pracy, płacą rachunki, uśmiechają się, a w środku czują, że coś się skończyło. Znam ten stan z własnego życia, dlatego nie przychodzę z gotowymi odpowiedziami: najpierw słucham, potem pytam.",
+    lead: "Jestem Dawid Kowalczyk. Dziś jestem mężem, ojcem i mentorem powrotu. Pracuję z ludźmi, którzy na zewnątrz dają radę. Chodzą do pracy, płacą rachunki, uśmiechają się, a w środku czują, że coś się skończyło. Znam ten stan z własnego życia, dlatego nie przychodzę z gotowymi odpowiedziami: najpierw słucham, potem pytam.",
     portret: FOTO.portret,
   }),
 
@@ -29,7 +29,8 @@ export const ABOUT_BLOCKS = [
   b("historia", "about_historia", {
     etykieta: "HISTORIA PRZEŁOMU",
     rozdzialy: [
-      { tytul: "Trzy lata", tresc: `<p>Przez trzy lata byłem księdzem. Towarzyszyłem ludziom w ważnych i trudnych chwilach ich życia. Potem sam znalazłem się w miejscu, którego nie było na mojej mapie.</p>` },
+      { tytul: "Trzy lata", tresc: `<p>Przez trzy lata byłem księdzem. Towarzyszyłem ludziom w ważnych i trudnych chwilach ich życia. Potem sam znalazłem się w miejscu, którego nie było na mojej mapie.</p>`,
+        zdjecie: { url: "/img/dawid-posluga.jpg", alt: "Dawid podczas posługi kapłańskiej" }, podpis: "WCZEŚNIEJSZE ŻYCIE" },
       { tytul: "Depresja", tresc: `<p>Najpierw przyszła depresja. Długa i cicha, z tych, których z zewnątrz nie widać. W końcu przyszedł moment, w którym wiedziałem, że dłużej tak nie mogę. Wtedy w moim życiu pojawiła się kobieta, która dziś jest moją żoną.</p>` },
       { tytul: "Odejście", tresc: `<p>Odszedłem z kapłaństwa. Straciłem pozycję, pracę i wielu znajomych. Dla części ludzi, z którymi byłem blisko, stałem się kimś w rodzaju trędowatego.</p><p>Chciałem wyjechać. Zmienić nazwisko. Zacząć od zera tam, gdzie nikt mnie nie zna.</p><p>W piosence „exmortis” zapisałem zdanie, które długo w sobie nosiłem:</p><blockquote>„Byłem pewien, że grzebią mnie żywcem… a Ty, w tej ciemności, po prostu mnie zasadziłeś.”</blockquote><p><span class="exm-akcent-zloty">Dziś w tych słowach rozpoznaję własną drogę.</span></p>` },
       { tytul: "Zostałem", tresc: `<p>Zostałem. Dzięki niej. Razem zaczęliśmy porządkować nasze życie. Powoli, bez skrótów.</p>` },
@@ -44,7 +45,7 @@ export const ABOUT_BLOCKS = [
   b("dzis", "about_zdjecie", {
     etykieta: "DZIŚ",
     tytul: "Mąż i ojciec",
-    tresc: `<p>Ważną częścią tej drogi była dla mnie wiara. Nie musisz podzielać moich przekonań, żeby znaleźć tu miejsce dla siebie.</p><p>To, co dostałem, chcę przekazywać dalej.</p>`,
+    tresc: `<p>Dziś jestem mężem i ojcem.</p><p>Ważną częścią tej drogi była dla mnie wiara. Nie musisz podzielać moich przekonań, żeby znaleźć tu miejsce dla siebie.</p><p>To, co dostałem, chcę przekazywać dalej.</p>`,
     zdjecie: FOTO.zona, strona: "lewo", proporcja: "4:5",
     piosenka_wstep: "O miłości, dzięki której zostałem, opowiadam w piosence „Ocalenie”.",
     piosenka_url: "https://youtu.be/92kTN9ZBipc",
