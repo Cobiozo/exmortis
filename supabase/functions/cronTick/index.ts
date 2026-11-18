@@ -155,7 +155,7 @@ const handler = async function (req) {
     // Każde przypomnienie jest oznaczane przed wysyłką, więc nie pójdzie dwa razy. W tle — błąd nie wywraca przebiegu.
     if (minute < 5 && warsawHour() >= 8 && warsawHour() < 20) {
       waitUntil(powrotReminders(base44)
-        .then((r) => { if (r.ankiety || r.prowadzacy) console.log("POWRÓT przypomnienia", JSON.stringify(r)); })
+        .then((r) => { if (r.ankiety || r.prowadzacy || r.podsumowania) console.log("POWRÓT przypomnienia", JSON.stringify(r)); })
         .catch((e) => console.error("POWRÓT przypomnienia", String(e?.message || e).slice(0, 200))));
     }
 
