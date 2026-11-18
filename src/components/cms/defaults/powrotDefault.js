@@ -18,7 +18,7 @@ export const POWROT_BLOCKS = [
     lead: "Nie musisz wracać do życia, które przestało być Twoje.",
     podlead: POWROT_LEAD, fakty: true,
     przyciski: [ZGLOS, { etykieta: "Najpierw chcę poznać Twój sposób pracy", link: "/spotkania?src=powrot-hero", styl: "obrys", strzalka: false }],
-    tlo: HERO, tlo_mobile: HERO_M, przyciemnienie: 74 }),
+    tlo: HERO, tlo_mobile: HERO_M, przyciemnienie: 62 }),
 
   // 2. Otwarcie — wąska kolumna.
   b("otwarcie", "tekst", { etykieta: "OTWARCIE", tytul: "Są ludzie, którzy przychodzą do mnie, bo coś w nich umarło.",
