@@ -198,8 +198,8 @@ export default function PowrotPlatnosc() {
           {busy ? "Przygotowuję płatność..." : "Zamawiam z obowiązkiem zapłaty"} {!busy && <ArrowRight className="h-4 w-4" />}
         </button>
         <p className="text-xs text-foreground/55 leading-relaxed">
-          Bezpieczna płatność przez PayU: BLIK, szybki przelew lub przelew bankowy — a także płatność odroczona lub w ratach PayPo, jeśli PayPo
-          udostępni ją dla Twojej płatności (umowę o raty zawierasz z PayPo). Zasady przetwarzania danych:{" "}
+          Bezpieczna płatność przez PayU: BLIK, szybki przelew lub przelew bankowy. Możliwa jest też płatność w ratach przez PayU.
+          O przyznaniu i warunkach rat decyduje instytucja finansująca, z którą zawierasz umowę o raty. Zasady przetwarzania danych:{" "}
           <Link to="/polityka-prywatnosci" className="underline">Polityka prywatności</Link>.
         </p>
       </form>
