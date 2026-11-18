@@ -1,9 +1,10 @@
 import React from "react";
 import SafeImg from "./SafeImg";
 
-const BG = { czern: "bg-[#0A0A0B]", grafit: "bg-[#070708] border-y hairline", bordo: "bg-[#2A0D0E]", zdjecie: "bg-[#0A0A0B]" };
-const PAD = { maly: "py-12 md:py-16", sredni: "py-16 md:py-24", duzy: "py-32", xl: "py-24 md:py-40" };
-const W = { waska: "max-w-4xl", standard: "max-w-[1400px]", pelna: "max-w-none" };
+const BG = { czern: "bg-[#0A0A0B]", grafit: "bg-[#070708] border-y hairline", surface: "bg-exm-surface border-y hairline", bordo: "bg-[#2A0D0E]", zdjecie: "bg-[#0A0A0B]" };
+// „token” = odstęp z tokenu marki (--exm-section-y), wspólny dla całej strony.
+const PAD = { maly: "py-12 md:py-16", sredni: "py-16 md:py-24", duzy: "py-32", xl: "py-24 md:py-40", token: "py-[var(--exm-section-y)]" };
+const W = { waska: "max-w-4xl", czytanie: "max-w-[var(--exm-container-narrow)]", standard: "max-w-[1400px]", pelna: "max-w-none" };
 
 // Wspólna oprawa sekcji: tło, odstępy, szerokość, wyrównanie.
 export default function Section({ u = {}, spine, children }) {

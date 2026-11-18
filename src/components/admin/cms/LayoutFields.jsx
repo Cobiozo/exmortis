@@ -2,12 +2,12 @@ import React from "react";
 import FieldInput from "./FieldInput";
 
 const ALL = [
-  { k: "szerokosc", label: "Szerokość", typ: "select", opcje: [["standard", "Standard"], ["waska", "Wąska (do czytania)"], ["pelna", "Pełna szerokość"]] },
+  { k: "szerokosc", label: "Szerokość", typ: "select", opcje: [["standard", "Standard"], ["waska", "Wąska (do czytania)"], ["czytanie", "Kolumna do czytania (720 px)"], ["pelna", "Pełna szerokość"]] },
   { k: "wyrownanie", label: "Wyrównanie tekstu", typ: "select", opcje: [["lewo", "Do lewej"], ["srodek", "Do środka"]] },
-  { k: "tlo", label: "Tło sekcji", typ: "select", opcje: [["czern", "Czerń"], ["grafit", "Ciemny grafit"], ["bordo", "Bordo"], ["zdjecie", "Zdjęcie"]] },
+  { k: "tlo", label: "Tło sekcji", typ: "select", opcje: [["czern", "Czerń"], ["grafit", "Ciemny grafit"], ["surface", "Powierzchnia"], ["bordo", "Bordo"], ["zdjecie", "Zdjęcie"]] },
   { k: "tlo_zdjecie", label: "Zdjęcie tła", typ: "image", noAlt: true, when: (u) => u.tlo === "zdjecie" },
   { k: "przyciemnienie", label: "Przyciemnienie (%)", typ: "number", min: 0, max: 95, when: (u) => u.tlo === "zdjecie" },
-  { k: "odstep", label: "Odstęp nad i pod", typ: "select", opcje: [["maly", "Mały"], ["sredni", "Średni"], ["duzy", "Duży"], ["xl", "Bardzo duży"]] },
+  { k: "odstep", label: "Odstęp nad i pod", typ: "select", opcje: [["token", "Standard strony"], ["maly", "Mały"], ["sredni", "Średni"], ["duzy", "Duży"], ["xl", "Bardzo duży"]] },
   { k: "numer", label: "Numer sekcji", typ: "select", opcje: [["auto", "Automatyczny"], ["wlasny", "Własny"], ["brak", "Brak"]] },
   { k: "numer_wlasny", label: "Własny numer (np. 08)", typ: "text", when: (u) => u.numer === "wlasny" },
 ];

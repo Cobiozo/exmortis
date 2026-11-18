@@ -2,8 +2,8 @@ import React, { useState } from "react";
 import { ChevronDown } from "lucide-react";
 
 // Jedno pytanie FAQ: przycisk z aria-expanded i odpowiedź.
-export default function FaqItem({ q, i }) {
-  const [open, setOpen] = useState(false);
+export default function FaqItem({ q, i, defaultOpen = false }) {
+  const [open, setOpen] = useState(defaultOpen);
   const id = `faq-${i}-${String(q.pytanie || "").length}`;
   return (
     <div className="py-5">

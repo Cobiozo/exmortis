@@ -9,6 +9,7 @@ import { GalleryBlock, VideoBlock } from "./blocks/MediaBlocks";
 import EventSignupBlock from "./blocks/EventSignupBlock";
 import SafetyBox from "./blocks/SafetyBox";
 import CtaBlock from "./blocks/CtaBlock";
+import { PowrotColumns, PowrotProcess, PowrotInvestment, PowrotRules, PowrotClosing } from "./blocks/PowrotBlocks";
 import ShopTestBlock from "@/components/exmortis/shop/ShopTestBlock";
 import { isDraft, DRAFT } from "./draft";
 
@@ -16,7 +17,8 @@ import { isDraft, DRAFT } from "./draft";
 const SHOP_TEST = { "sklep-test": "intro", "sklep-test-przycisk": "action" };
 
 const VIEW = { hero: HeroBlock, tekst: TextBlock, tekst_zdjecie: TextImageBlock, zdjecie: ImageBlock, przyciski: ButtonsBlock,
-  cytat: QuoteBlock, linie: LinesBlock, etapy: StepsBlock, karty: CardsBlock, faq: FaqBlock, separator: SeparatorBlock, galeria: GalleryBlock, wideo: VideoBlock, zapis_spotkanie: EventSignupBlock, ramka: SafetyBox, cta: CtaBlock };
+  cytat: QuoteBlock, linie: LinesBlock, etapy: StepsBlock, karty: CardsBlock, faq: FaqBlock, separator: SeparatorBlock, galeria: GalleryBlock, wideo: VideoBlock, zapis_spotkanie: EventSignupBlock, ramka: SafetyBox, cta: CtaBlock,
+  powrot_kolumny: PowrotColumns, powrot_proces: PowrotProcess, powrot_inwestycja: PowrotInvestment, powrot_zasady: PowrotRules, powrot_koniec: PowrotClosing };
 const DEVICE = { telefon: "md:hidden", komputer: "hidden md:block" };
 
 // Rysuje stronę z bloków. editable — podgląd w panelu (klik wybiera blok, linki nie nawigują).

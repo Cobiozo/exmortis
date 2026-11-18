@@ -1,20 +1,38 @@
 import React from "react";
 import { Link } from "react-router-dom";
-import Logo from "@/components/exmortis/Logo";
 import { CmsButton } from "../parts";
 import SafeImg from "../SafeImg";
 import { nbsp } from "@/lib/nbsp";
 import { useBefore } from "@/lib/wawDate";
 import HeroOsobisty from "./HeroOsobisty";
 import HeroZnak from "./HeroZnak";
+import { POWROT } from "@/lib/powrotOffer";
 
+// Tło nagłówka: osobny kadr na komputer i na telefon (kadr pionowy), mocno przyciemnione.
 function Bg({ d }) {
-  if (!d.tlo?.url) return null;
+  if (!d.tlo?.url && !d.tlo_mobile?.url) return null;
+  const op = 1 - (d.przyciemnienie ?? 60) / 100;
   return (
     <div className="absolute inset-0">
-      <SafeImg img={{ ...d.tlo, alt: "" }} eager className="w-full h-full" style={{ opacity: 1 - (d.przyciemnienie ?? 60) / 100 }} />
+      {d.tlo?.url && <SafeImg img={{ ...d.tlo, alt: "" }} eager className="hidden w-full h-full md:block" style={{ opacity: op }} />}
+      {d.tlo_mobile?.url && <SafeImg img={{ ...d.tlo_mobile, alt: "" }} eager className="w-full h-full md:hidden" style={{ opacity: op }} />}
       <div className="absolute inset-0 bg-gradient-to-b from-[#0A0A0B] via-[#0A0A0B]/60 to-[#0A0A0B]" />
     </div>
+  );
+}
+
+// Pas faktów programu: cztery parametry ze stałych (telefon: siatka 2×2, komputer: jedna linia).
+function Fakty() {
+  const items = [POWROT.months, `${POWROT.sessions} sesji po ${POWROT.lengthLong}`, "indywidualnie, online", POWROT.priceText];
+  return (
+    <ul className="mt-6 grid max-w-2xl grid-cols-2 gap-x-6 gap-y-2 sm:flex sm:flex-wrap sm:items-center">
+      {items.map((t, i) => (
+        <li key={t} className="flex min-w-0 items-center gap-2.5">
+          {i > 0 && <span aria-hidden="true" className="hidden h-1 w-1 shrink-0 rounded-full bg-exm-gold sm:inline-block" />}
+          <span className="technical text-[11px] text-foreground/80">{t}</span>
+        </li>
+      ))}
+    </ul>
   );
 }
 
@@ -92,8 +110,9 @@ export default function HeroBlock({ d }) {
         </h1>
         {d.lead && <p className={`no-hyph ${k ? "mt-5 text-base md:text-lg" : "mt-8 text-lg md:text-xl"} text-foreground/70 max-w-2xl leading-relaxed`}>{nbsp(d.lead)}</p>}
         {d.podlead && <p className="no-hyph mt-3 text-foreground/55 max-w-2xl">{d.podlead}</p>}
+        {d.fakty && <Fakty />}
         <Zapowiedz d={d} />
-        <HeroButtons d={d} className="mt-10" />
+        <HeroButtons d={d} className={d.fakty ? "mt-8" : "mt-10"} />
         <Dopisek t={d.dopisek} />
       </div>
     </section>

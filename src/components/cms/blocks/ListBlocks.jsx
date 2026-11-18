@@ -37,10 +37,11 @@ export function CardsBlock({ d, label, center }) {
 
 export function StepsBlock({ d, label, center }) {
   const row = d.uklad !== "pionowy";
+  const cols = (d.elementy || []).length === 5 ? "lg:grid-cols-5" : "lg:grid-cols-4";
   return (
     <>
       <SectionHead label={label} title={d.tytul} center={center} />
-      <ol className={row ? "grid sm:grid-cols-2 lg:grid-cols-4 gap-8 text-left" : "space-y-8 max-w-3xl text-left"}>
+      <ol className={row ? `grid sm:grid-cols-2 ${cols} gap-8 text-left` : "space-y-8 max-w-3xl text-left"}>
         {(d.elementy || []).map((e, i) => (
           <li key={i} className="border-t border-[#C9A24A]/40 pt-6">
             <p className="technical text-[10px] gold-text mb-3">{String(i + 1).padStart(2, "0")}</p>
@@ -49,6 +50,7 @@ export function StepsBlock({ d, label, center }) {
           </li>
         ))}
       </ol>
+      {d.nota && <p className="mt-10 max-w-2xl text-[15px] leading-relaxed text-foreground/70">{d.nota}</p>}
     </>
   );
 }
@@ -59,7 +61,7 @@ export function FaqBlock({ d, label, center, editable: editableFaq, zoom }) {
     <>
       <SectionHead label={label} title={d.tytul} center={center} />
       <div className="max-w-3xl text-left divide-y divide-[#3D3D3F]/60 border-y hairline">
-        {list.map((q, i) => <FaqItem key={i} q={q} i={i} />)}
+        {list.map((q, i) => <FaqItem key={i} q={q} i={i} defaultOpen={!!d.pierwsze_otwarte && i === 0} />)}
         {zoom && <ZoomFaqItems start={list.length} />}
       </div>
     </>

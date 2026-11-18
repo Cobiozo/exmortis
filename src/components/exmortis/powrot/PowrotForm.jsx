@@ -140,7 +140,7 @@ export default function PowrotForm() {
               </p>
             </div>
           ) : (
-            <form onSubmit={submit} className="space-y-8">
+            <form onSubmit={submit} className="space-y-8 rounded-[var(--exm-r-card)] border hairline bg-[#0F0F10] p-6 md:p-8">
               <div className="space-y-6">
                 <TextInput label="Imię i nazwisko" required {...field("full_name")} />
                 {fromAccount && !errors.email
