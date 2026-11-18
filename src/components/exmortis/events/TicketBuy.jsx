@@ -8,9 +8,10 @@ const zl = (n) => `${Number(n || 0).toFixed(2).replace(".", ",").replace(",00", 
 const inp = "w-full bg-transparent border hairline px-4 py-3 text-base text-foreground placeholder:text-foreground/55 focus:border-[#C9A24A] focus:outline-none";
 
 // Osoby na biletach — w koszyku i w kasie.
-export function TicketLine({ holders }) {
+export function TicketLine({ holders, tone = "dark" }) {
   if (!Array.isArray(holders) || !holders.length) return null;
-  return <p className="text-xs text-foreground/55 mt-1 break-words">Na bilecie: {holders.join(", ")}</p>;
+  const cls = tone === "paper" ? "text-[12px] text-exm-bg/70 mt-1 break-words" : "text-xs text-exm-muted mt-1 break-words";
+  return <p className={cls}>Na bilecie: {holders.join(", ")}</p>;
 }
 
 // Zakup biletów na stronie wydarzenia: liczba osób, imię i nazwisko każdej, przejście do kasy (PayU).

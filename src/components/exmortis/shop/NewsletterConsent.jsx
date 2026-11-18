@@ -5,14 +5,14 @@ import { TXT } from "@/content/legal/seller";
 // Checkbox zgody na newsletter „Listy powrotu” — opcjonalny, domyślnie odznaczony.
 export default function NewsletterConsent({ checked, onChange }) {
   return (
-    <label className="flex items-start gap-3 cursor-pointer">
+    <label className="flex cursor-pointer items-start gap-3">
       <input
         type="checkbox"
         checked={checked}
         onChange={(e) => onChange(e.target.checked)}
-        className="accent-[#C9A24A] w-5 h-5 shrink-0 mt-0.5"
+        className="mt-0.5 h-5 w-5 shrink-0 accent-[#C9A24A]"
       />
-      <span className="text-xs text-foreground/55 leading-relaxed">
+      <span className="text-[13px] leading-relaxed text-exm-muted">
         {TXT.newsletter} Szczegóły w{" "}
         <Link to="/polityka-prywatnosci" className="gold-text hover:underline">
           Polityce prywatności

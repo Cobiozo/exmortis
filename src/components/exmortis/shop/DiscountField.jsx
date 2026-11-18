@@ -2,7 +2,13 @@ import React, { useState } from "react";
 import { Loader2 } from "lucide-react";
 import { base44 } from "@/api/base44Client";
 
-// Pole kodu rabatowego w podsumowaniu kasy. applied: { code, discount } | null
+// Pole kodu rabatowego w podsumowaniu kasy (na jasnej karcie). applied: { code, discount } | null
+// Walidacja i wywołanie checkDiscount bez zmian — tylko wygląd.
+const inp =
+  "min-h-[44px] min-w-0 flex-1 rounded-[var(--exm-r-field)] border border-exm-bg/25 bg-white/70 px-3 py-2.5 text-[14px] text-exm-bg placeholder:text-exm-bg/50 focus:border-exm-bg focus:outline-none";
+const btn =
+  "inline-flex min-h-[44px] items-center justify-center rounded-[var(--exm-r-field)] border border-exm-bg/30 px-4 text-[14px] font-medium text-exm-bg transition-colors hover:bg-exm-bg/5 disabled:opacity-60";
+
 export default function DiscountField({ items, applied, onApply, email = "" }) {
   // Kod z popupu (kampania „Rabat”) czeka w tej karcie przeglądarki — wpisuje się sam, użycie zatwierdza klient.
   const [code, setCode] = useState(() => { try { return sessionStorage.getItem("exm_kod") || ""; } catch { return ""; } });
@@ -24,12 +30,18 @@ export default function DiscountField({ items, applied, onApply, email = "" }) {
   if (applied) {
     return (
       <div className="space-y-1.5">
-        <div className="flex justify-between items-center text-sm">
-          <span className="gold-text">Kod {applied.code}: −{applied.discount.toFixed(2)} zł</span>
-          <button type="button" onClick={() => { onApply(null); setCode(""); }} className="technical text-[10px] text-foreground/55 hover:gold-text">USUŃ</button>
+        <div className="flex items-center justify-between gap-3 text-[13px]">
+          <span className="font-medium text-exm-bg">Kod {applied.code}: −{applied.discount.toFixed(2)} zł</span>
+          <button
+            type="button"
+            onClick={() => { onApply(null); setCode(""); }}
+            className="text-[12px] text-exm-bg/70 underline underline-offset-4 hover:text-exm-bg"
+          >
+            Usuń
+          </button>
         </div>
         {(applied.lowest || []).map((l) => (
-          <p key={l.name} className="text-[11px] text-foreground/50">Najniższa cena z 30 dni przed obniżką ({l.name}): {Number(l.price).toFixed(2).replace(".", ",")} zł</p>
+          <p key={l.name} className="text-[11px] leading-relaxed text-exm-bg/60">Najniższa cena z 30 dni przed obniżką ({l.name}): {Number(l.price).toFixed(2).replace(".", ",")} zł</p>
         ))}
       </div>
     );
@@ -37,10 +49,19 @@ export default function DiscountField({ items, applied, onApply, email = "" }) {
   return (
     <div>
       <div className="flex gap-2">
-        <input aria-label="Kod rabatowy" autoComplete="off" value={code} onChange={(e) => setCode(e.target.value.toUpperCase())} placeholder="Kod rabatowy" className="flex-1 min-w-0 bg-transparent border hairline px-3 py-2 text-sm focus:border-[#C9A24A] focus:outline-none" />
-        <button type="button" onClick={check} disabled={busy} className="btn-ghost !px-4 !py-2">{busy ? <Loader2 className="h-4 w-4 animate-spin" /> : "Użyj"}</button>
+        <input
+          aria-label="Kod rabatowy"
+          autoComplete="off"
+          value={code}
+          onChange={(e) => setCode(e.target.value.toUpperCase())}
+          placeholder="Kod rabatowy"
+          className={inp}
+        />
+        <button type="button" onClick={check} disabled={busy} className={btn}>
+          {busy ? <Loader2 className="h-4 w-4 animate-spin" /> : "Użyj"}
+        </button>
       </div>
-      {err && <p className="text-xs text-[#E8C547] mt-2">{err}</p>}
+      {err && <p className="mt-2 text-[12px] font-medium text-[#8A3B12]">{err}</p>}
     </div>
   );
 }

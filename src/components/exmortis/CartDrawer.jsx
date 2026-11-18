@@ -1,124 +1,92 @@
 import React, { useRef } from "react";
 import useDialogA11y from "@/lib/useDialogA11y";
-import { X, Plus, Minus, Trash2, ArrowRight } from "lucide-react";
-import { Link } from "react-router-dom";
+import { X } from "lucide-react";
 import { useCart, lineKey } from "./CartContext";
-import { GiftLine } from "./shop/GiftCard";
-import { TicketLine } from "./events/TicketBuy";
+import BrandButton from "@/components/exmortis/ui/BrandButton";
+import CartLine from "./cart/CartLine";
+import CartEmpty from "./cart/CartEmpty";
+import { zl } from "@/lib/productPrice";
+
+// Liczba pozycji po polsku: 1 pozycja, 2 pozycje, 5 pozycji.
+const positions = (n) => {
+  if (n === 1) return "1 pozycja";
+  const d = n % 10;
+  const dd = n % 100;
+  return d >= 2 && d <= 4 && (dd < 12 || dd > 14) ? `${n} pozycje` : `${n} pozycji`;
+};
 
 export default function CartDrawer() {
-  const { items, open, setOpen, removeItem, updateQty, total } = useCart();
+  const { items, open, setOpen, removeItem, updateQty, count, total } = useCart();
   // Esc zamyka koszyk, fokus wchodzi do panelu i wraca do ikony koszyka po zamknięciu.
   const panelRef = useRef(null);
   useDialogA11y(open, panelRef, () => setOpen(false));
+  const close = () => setOpen(false);
 
   return (
-    <>
+    <div className={`fixed inset-0 z-[60] ${open ? "visible" : "invisible"}`}>
       <div
-        className={`fixed inset-0 z-[60] transition-opacity duration-300 ${
-          open ? "opacity-100 visible" : "opacity-0 invisible"
+        className={`absolute inset-0 bg-black/70 backdrop-blur-sm transition-opacity duration-300 motion-reduce:transition-none ${open ? "opacity-100" : "opacity-0"}`}
+        onClick={close}
+      />
+      <aside
+        ref={panelRef}
+        role="dialog"
+        aria-modal="true"
+        aria-label="Koszyk"
+        className={`absolute right-0 top-0 flex h-full w-full max-w-md flex-col border-l border-exm-line bg-exm-bg transition-transform duration-300 motion-reduce:transition-none ${
+          open ? "translate-x-0" : "translate-x-full"
         }`}
       >
-        <div className="absolute inset-0 bg-black/70 backdrop-blur-sm" onClick={() => setOpen(false)} />
-        <aside
-          ref={panelRef}
-          role="dialog"
-          aria-modal="true"
-          aria-label="Koszyk"
-          className={`absolute right-0 top-0 h-full w-full max-w-md bg-[#0A0A0B] border-l hairline flex flex-col transition-transform duration-400 ${
-            open ? "translate-x-0" : "translate-x-full"
-          }`}
-        >
-          <div className="flex items-center justify-between p-6 border-b hairline">
-            <p className="technical text-[11px] gold-text">SKARBIEC · TWÓJ KOSZYK</p>
-            <button onClick={() => setOpen(false)} aria-label="Zamknij koszyk" className="-m-3 p-3 min-h-11 min-w-11 inline-flex items-center justify-center text-foreground/60 hover:text-foreground">
-              <X className="h-5 w-5" />
-            </button>
+        <header className="flex items-start justify-between gap-4 border-b border-exm-line px-6 py-5">
+          <div className="min-w-0">
+            <h2 className="exm-h3">Koszyk</h2>
+            <p className="mt-1 text-[13px] text-exm-muted">{items.length ? positions(count) : "Brak pozycji"}</p>
           </div>
+          <button
+            type="button"
+            onClick={close}
+            aria-label="Zamknij koszyk"
+            className="-mr-2 grid h-11 w-11 shrink-0 place-items-center rounded-[var(--exm-r-field)] text-exm-muted hover:bg-exm-surface-2 hover:text-exm-ivory"
+          >
+            <X className="h-5 w-5" />
+          </button>
+        </header>
 
-          <div className="flex-1 overflow-y-auto">
-            {items.length === 0 ? (
-              <div className="h-full flex flex-col items-center justify-center px-6 text-center gap-4">
-                <p className="relic-heading text-2xl text-foreground/55">Pusto</p>
-                <p className="text-sm text-foreground/55">
-                  Skarbiec czeka. Wybierz coś z drogi powrotu.
-                </p>
-                <Link to="/skarbiec" onClick={() => setOpen(false)} className="btn-ghost mt-2">
-                  Do Skarbca
-                </Link>
-              </div>
-            ) : (
-              <ul className="divide-y hairline">
-                {items.map((item) => (
-                  <li key={lineKey(item)} className="p-6 flex gap-4">
-                    <div className="w-20 h-20 bg-card border hairline overflow-hidden flex-shrink-0">
-                      {item.image_url && (
-                        <img src={item.image_url} alt={item.name} className="w-full h-full object-cover" />
-                      )}
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <Link
-                        to={item.kind === "bilet" ? `/spotkania/${item.slug}` : `/skarbiec/${item.slug}`}
-                        onClick={() => setOpen(false)}
-                        className="relic-heading text-sm gold-text block truncate"
-                      >
-                        {item.name}
-                      </Link>
-                      <p className="font-mono text-sm text-foreground/70 mt-1">{item.price} zł</p>
-                      {item.gift && <GiftLine gift={item.gift} />}
-                      {item.kind === "bilet" && <TicketLine holders={item.holders} />}
-                      <div className="flex items-center gap-3 mt-3">
-                        {item.kind === "bilet" || item.product_type === "pdf" ? <span className="font-mono text-xs text-foreground/60">× {item.kind === "bilet" ? item.qty : 1}</span> : (
-                        <div className="flex items-center border hairline">
-                          <button
-                            onClick={() => updateQty(lineKey(item), item.qty - 1)}
-                            aria-label="Mniej"
-                            className="p-2.5 text-foreground/60 hover:gold-text"
-                          >
-                            <Minus className="h-3 w-3" />
-                          </button>
-                          <span className="px-3 font-mono text-xs" aria-live="polite">{item.qty}</span>
-                          <button
-                            onClick={() => updateQty(lineKey(item), item.qty + 1)}
-                            aria-label="Więcej"
-                            className="p-2.5 text-foreground/60 hover:gold-text"
-                          >
-                            <Plus className="h-3 w-3" />
-                          </button>
-                        </div>
-                        )}
-                        <button
-                          onClick={() => removeItem(lineKey(item))}
-                          aria-label={`Usuń z koszyka: ${item.name}`}
-                          className="p-2.5 -m-1 text-foreground/55 hover:blood-text"
-                        >
-                          <Trash2 className="h-4 w-4" />
-                        </button>
-                      </div>
-                    </div>
-                  </li>
-                ))}
-              </ul>
-            )}
-          </div>
-
-          {items.length > 0 && (
-            <div className="p-6 border-t hairline space-y-4">
-              <div className="flex justify-between items-center">
-                <span className="technical text-[11px] text-foreground/60">RAZEM</span>
-                <span className="font-mono text-2xl gold-text">{total} zł</span>
-              </div>
-              <Link
-                to="/kasa"
-                onClick={() => setOpen(false)}
-                className="btn-relic w-full"
-              >
-                Przejdź do kasy <ArrowRight className="h-4 w-4" />
-              </Link>
+        <div className="flex-1 overflow-y-auto px-6">
+          {items.length === 0 ? (
+            <div className="py-10">
+              <CartEmpty onNavigate={close} />
             </div>
+          ) : (
+            <ul className="divide-y divide-exm-line">
+              {items.map((item) => (
+                <CartLine
+                  key={lineKey(item)}
+                  item={item}
+                  onNavigate={close}
+                  onRemove={() => removeItem(lineKey(item))}
+                  onQty={(qty) => updateQty(lineKey(item), qty)}
+                />
+              ))}
+            </ul>
           )}
-        </aside>
-      </div>
-    </>
+        </div>
+
+        {items.length > 0 && (
+          <footer className="border-t border-exm-line px-6 pb-[calc(20px+env(safe-area-inset-bottom))] pt-5">
+            <div className="flex items-baseline justify-between gap-4">
+              <span className="text-[13px] text-exm-muted">Razem</span>
+              <span className="font-exm-serif text-2xl text-exm-gold">{zl(total)}</span>
+            </div>
+            <BrandButton to="/kasa" onClick={close} className="mt-4 w-full">
+              Przejdź do kasy
+            </BrandButton>
+            <button type="button" onClick={close} className="btn-link mt-1 w-full justify-center">
+              Kontynuuj zakupy
+            </button>
+          </footer>
+        )}
+      </aside>
+    </div>
   );
 }

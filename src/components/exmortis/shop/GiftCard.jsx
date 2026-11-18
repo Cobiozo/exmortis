@@ -7,10 +7,12 @@ const zl = (n) => `${Number(n || 0).toFixed(2).replace(".", ",").replace(",00", 
 const plDate = (ymd) => (ymd ? new Date(`${String(ymd).slice(0, 10)}T12:00:00`).toLocaleDateString("pl-PL", { day: "numeric", month: "long", year: "numeric" }) : "");
 
 // Krótka informacja o karcie w koszyku i w kasie.
-export function GiftLine({ gift }) {
-  if (!gift?.to_name && !gift?.message) return <p className="text-xs text-foreground/55 mt-1">Karta na {zl(gift?.amount)}</p>;
+export function GiftLine({ gift, tone = "dark" }) {
+  // tone="paper": wiersz na jasnej karcie podsumowania; domyślnie na ciemnym tle.
+  const cls = tone === "paper" ? "text-[12px] text-exm-bg/70 mt-1 break-words" : "text-xs text-exm-muted mt-1 break-words";
+  if (!gift?.to_name && !gift?.message) return <p className={cls}>Karta na {zl(gift?.amount)}</p>;
   return (
-    <p className="text-xs text-foreground/55 mt-1 break-words">
+    <p className={cls}>
       {gift.to_name ? `Dla: ${gift.to_name}` : "Karta podarunkowa"}
       {gift.message ? ` · „${gift.message.length > 60 ? gift.message.slice(0, 60) + "…" : gift.message}”` : ""}
     </p>

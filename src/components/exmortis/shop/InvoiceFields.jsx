@@ -9,8 +9,9 @@ export function validNip(raw) {
   return sum !== 10 && sum === Number(d[9]);
 }
 
-const inp = "w-full bg-transparent border hairline px-5 py-4 focus:border-[#C9A24A] focus:outline-none transition-colors";
-const lab = "technical text-[10px] text-foreground/55 block mb-3";
+const inp =
+  "w-full min-h-[48px] rounded-[var(--exm-r-field)] border border-exm-line bg-exm-surface px-4 py-3 text-[15px] text-exm-text placeholder:text-exm-muted transition-colors focus:border-exm-gold focus:outline-none";
+const lab = "mb-2 block text-[13px] font-medium text-exm-text";
 
 // Opcjonalne dane do faktury na firmę.
 export default function InvoiceFields({ value, onChange }) {
@@ -18,28 +19,37 @@ export default function InvoiceFields({ value, onChange }) {
   const nipBad = value.want && value.nip && !validNip(value.nip);
   return (
     <div className="space-y-5">
-      <label className="flex items-start gap-3 cursor-pointer text-sm text-foreground/75 min-h-[40px]">
+      <label className="flex min-h-[44px] cursor-pointer items-start gap-3 text-[14px] leading-relaxed text-exm-text">
         <input type="checkbox" checked={!!value.want} onChange={(e) => set("want", e.target.checked)} className="mt-0.5 h-5 w-5 shrink-0 accent-[#C9A24A]" />
         <span>Potrzebuję faktury na firmę (NIP)</span>
       </label>
       {value.want && (
-        <div className="space-y-5 border-l-2 border-[#C9A24A]/40 pl-4 sm:pl-5">
+        <div className="space-y-5 border-l-2 border-exm-gold/40 pl-4 sm:pl-5">
           <div>
-            <label htmlFor="inv-company" className={lab}>NAZWA FIRMY</label>
+            <label htmlFor="inv-company" className={lab}>Nazwa firmy</label>
             <input id="inv-company" required autoComplete="organization" value={value.company || ""} onChange={(e) => set("company", e.target.value)} className={inp} />
           </div>
           <div>
             <label htmlFor="inv-nip" className={lab}>NIP</label>
-            <input id="inv-nip" required inputMode="numeric" autoComplete="off" placeholder="np. 123-456-32-18" value={value.nip || ""}
-              onChange={(e) => set("nip", e.target.value)} aria-invalid={nipBad || undefined} aria-describedby={nipBad ? "inv-nip-err" : undefined}
-              className={`${inp} ${nipBad ? "!border-[#E8C547]" : ""}`} />
-            {nipBad && <p id="inv-nip-err" className="text-xs text-[#E8C547] mt-2">Ten NIP się nie zgadza — sprawdź 10 cyfr.</p>}
+            <input
+              id="inv-nip"
+              required
+              inputMode="numeric"
+              autoComplete="off"
+              placeholder="np. 123-456-32-18"
+              value={value.nip || ""}
+              onChange={(e) => set("nip", e.target.value)}
+              aria-invalid={nipBad || undefined}
+              aria-describedby={nipBad ? "inv-nip-err" : undefined}
+              className={`${inp} ${nipBad ? "!border-[#E8C547]" : ""}`}
+            />
+            {nipBad && <p id="inv-nip-err" className="mt-2 text-[13px] text-[#E8C547]">Ten NIP się nie zgadza — sprawdź 10 cyfr.</p>}
           </div>
           <div>
-            <label htmlFor="inv-address" className={lab}>ADRES FIRMY</label>
+            <label htmlFor="inv-address" className={lab}>Adres firmy</label>
             <input id="inv-address" required autoComplete="street-address" placeholder="ulica i numer, kod, miasto" value={value.address || ""} onChange={(e) => set("address", e.target.value)} className={inp} />
           </div>
-          <p className="text-xs text-foreground/55">Fakturę wyślę na podany wyżej e-mail.</p>
+          <p className="text-[12px] leading-relaxed text-exm-muted">Fakturę wyślę na podany wyżej e-mail.</p>
         </div>
       )}
     </div>
