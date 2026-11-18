@@ -8,7 +8,7 @@ import { sendMail, adminTo } from "./smtp.ts";
 import { loadAppUrl } from "./settings.ts";
 import { emailButton } from "./emailLayout.ts";
 import { surveyLink, firstName, wrap, escHtml } from "./powrotSurvey.ts";
-import { progSummaryReminder } from "./prog.ts";
+import { progSummaryReminder, progRetention } from "./prog.ts";
 
 const SURVEY_REMIND_DAYS = 5;
 const ADMIN_REMIND_HOURS = 48;
@@ -98,5 +98,6 @@ export async function powrotReminders(base44) {
   const prowadzacy = await adminWaitingReminder(base44).catch((e) => { console.error("POWRÓT 48 h:", String(e?.message || e).slice(0, 200)); return 0; });
   // Rozmowa na progu (osobna usługa): podsumowanie nieudostępnione 24 h po spotkaniu.
   const podsumowania = await progSummaryReminder(base44).catch((e) => { console.error("Rozmowa na progu, podsumowania:", String(e?.message || e).slice(0, 200)); return 0; });
-  return { ankiety, prowadzacy, podsumowania };
+  const usuniete = await progRetention(base44).catch(() => 0);
+  return { ankiety, prowadzacy, podsumowania, usuniete };
 }

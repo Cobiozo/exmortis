@@ -165,3 +165,13 @@ export function mailPodsumowanie(name: string, email: string, url: string) {
 export async function sendProg(base44, kind: string, ref: string, to: string, m: { subject: string; html: string }) {
   return await sendMail(base44, { kind, ref, to, subject: m.subject, html: m.html });
 }
+
+// Retencja (polityka prywatności, pkt 10a): zgłoszenie bez zakupu — 6 miesięcy; po spotkaniu — 12 miesięcy.
+// Zamówienia zostają (rozliczenia); usuwane jest zgłoszenie z ankietą, historią i podsumowaniem.
+export async function progRetention(base44) {
+  const cond = `((status IN ('do_platnosci','zamkniete') AND order_id IS NULL AND created_date < now() - interval '6 months')
+      OR (status IN ('odbyta','nieobecnosc','anulowana','zamkniete') AND status_at < now() - interval '12 months'))`;
+  await runSql(base44, `UPDATE public.orders o SET prog_app_id = NULL FROM public.prog_applications a WHERE o.prog_app_id = a.id AND ${cond.replace(/\b(status|order_id|created_date|status_at)\b/g, "a.$1")}`).catch(() => {});
+  const r = await runSql(base44, `DELETE FROM public.prog_applications WHERE ${cond} RETURNING 1`).catch(() => []);
+  return r.length;
+}
