@@ -10,6 +10,7 @@ import EventSignupBlock from "./blocks/EventSignupBlock";
 import SafetyBox from "./blocks/SafetyBox";
 import CtaBlock from "./blocks/CtaBlock";
 import { PowrotColumns, PowrotProcess, PowrotInvestment, PowrotRules, PowrotClosing } from "./blocks/PowrotBlocks";
+import { AboutHero, AboutHistoria, AboutZdjecie, AboutDroga, AboutPraca, AboutPas, AboutKoniec } from "./blocks/AboutBlocks";
 import ShopTestBlock from "@/components/exmortis/shop/ShopTestBlock";
 import { isDraft, DRAFT } from "./draft";
 
@@ -18,7 +19,8 @@ const SHOP_TEST = { "sklep-test": "intro", "sklep-test-przycisk": "action" };
 
 const VIEW = { hero: HeroBlock, tekst: TextBlock, tekst_zdjecie: TextImageBlock, zdjecie: ImageBlock, przyciski: ButtonsBlock,
   cytat: QuoteBlock, linie: LinesBlock, etapy: StepsBlock, karty: CardsBlock, faq: FaqBlock, separator: SeparatorBlock, galeria: GalleryBlock, wideo: VideoBlock, zapis_spotkanie: EventSignupBlock, ramka: SafetyBox, cta: CtaBlock,
-  powrot_kolumny: PowrotColumns, powrot_proces: PowrotProcess, powrot_inwestycja: PowrotInvestment, powrot_zasady: PowrotRules, powrot_koniec: PowrotClosing };
+  powrot_kolumny: PowrotColumns, powrot_proces: PowrotProcess, powrot_inwestycja: PowrotInvestment, powrot_zasady: PowrotRules, powrot_koniec: PowrotClosing,
+  about_hero: AboutHero, about_historia: AboutHistoria, about_zdjecie: AboutZdjecie, about_droga: AboutDroga, about_praca: AboutPraca, about_pas: AboutPas, about_koniec: AboutKoniec };
 const DEVICE = { telefon: "md:hidden", komputer: "hidden md:block" };
 
 // Rysuje stronę z bloków. editable — podgląd w panelu (klik wybiera blok, linki nie nawigują).

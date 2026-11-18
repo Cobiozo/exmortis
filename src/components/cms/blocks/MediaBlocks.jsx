@@ -6,7 +6,7 @@ import ExternalEmbed from "@/components/common/ExternalEmbed";
 const RATIO = { "16:9": "aspect-video", "4:3": "aspect-[4/3]", "1:1": "aspect-square", "9:16": "aspect-[9/16] max-w-sm mx-auto" };
 const COLS = { "2": "sm:grid-cols-2", "3": "sm:grid-cols-2 lg:grid-cols-3", "4": "grid-cols-2 lg:grid-cols-4" };
 
-function embed(url = "") {
+export function embed(url = "") {
   const yt = url.match(/(?:youtu\.be\/|v=|embed\/|shorts\/)([\w-]{11})/);
   if (yt) return { src: `https://www.youtube-nocookie.com/embed/${yt[1]}?rel=0` };
   const vm = url.match(/vimeo\.com\/(\d+)/);
