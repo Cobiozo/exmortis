@@ -3,6 +3,9 @@
 // Sumy 0–15 na obszar służą tylko uporządkowaniu, z którą historią ktoś najbardziej się utożsamia —
 // to umowne progi redakcyjne, nie granice psychologiczne ani skala nasilenia. Na ekranie nie ma punktów.
 
+// Do ekranu startu: czas potrzebny na przejście testu (dane testu, nie wpisywany w komponencie).
+export const TEST_META = { time: "kilka minut" };
+
 export const DIMS = ["mentalna", "duchowa", "zyciowa"];
 export const DIM_LABEL = { mentalna: "Śmierć mentalna", duchowa: "Śmierć duchowa", zyciowa: "Śmierć życiowa" };
 
