@@ -3,7 +3,7 @@ import SafeImg from "./SafeImg";
 
 const BG = { czern: "bg-[#0A0A0B]", grafit: "bg-[#070708] border-y hairline", surface: "bg-exm-surface border-y hairline", bordo: "bg-[#2A0D0E]", zdjecie: "bg-[#0A0A0B]" };
 // „token” = odstęp z tokenu marki (--exm-section-y), wspólny dla całej strony.
-// Wszystkie odstępy wynikają z tokenu (88 px komputer / 56 px telefon) — „duży” = token (wcześniej stałe 128 px,
+// Wszystkie odstępy bloków wynikają z tokenu (88 px komputer / 56 px telefon) — „duży” = token (wcześniej stałe 128 px,
 // co między dwoma blokami dawało ponad 250 px pustego pasa). Proporcje: mały 0,5 · średni 0,75 · duży 1 · XL 1,25.
 const PAD = {
   maly: "py-[calc(var(--exm-section-y)*0.5)]",
