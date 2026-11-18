@@ -15,6 +15,7 @@ import MyMessages from "@/components/account/messages/MyMessages";
 import AccountUnreadMessage from "@/components/account/messages/AccountUnreadMessage";
 import AccountShell from "@/components/account/shell/AccountShell";
 import MyPowrot from "@/components/account/powrot/MyPowrot";
+import MyProg from "@/components/account/prog/MyProg";
 import { useAccountState, visibleSections, labelOf } from "@/components/account/shell/accountNav";
 
 // Nagłówki sekcji: nazwa jak w menu; opis tylko tam, gdzie ustalony (Biblioteka — 5.11.2026).
@@ -74,6 +75,7 @@ export default function Account() {
       )}
       {active === "start" && <StartPanel state={state} go={go} />}
       {active === "powrot" && <MyPowrot data={state.powrot} onChange={state.setPowrot} go={go} />}
+      {active === "rozmowa" && <MyProg data={state.prog} go={go} />}
       {active === "produkty" && <MyProducts />}
       {active === "spotkania" && <MyEvents />}
       {active === "sesje" && <MySessions />}

@@ -30,7 +30,7 @@ function Item({ it, go, onRead }) {
       )}
       {it.status === "oplacone" && (
         <>
-          <p className="text-foreground/70">Płatność przyjęta. Wybierz termin spotkania — link otrzymałeś w wiadomości e-mail, a termin możesz też umówić tutaj.</p>
+          <p className="text-foreground/70">Płatność przyjęta. Wybierz termin spotkania. Link do kalendarza znajdziesz w wiadomości e-mail, a termin możesz też umówić tutaj.</p>
           <button onClick={() => go("sesje")} className="btn-relic !min-h-[44px] !py-2 !px-5 text-sm mt-4">Wybierz termin</button>
         </>
       )}

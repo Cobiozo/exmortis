@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { Home, Package, Library, Compass, CalendarDays, CalendarPlus, Mail, Receipt, Settings, Sunrise } from "lucide-react";
+import { Home, Package, Library, Compass, CalendarDays, CalendarPlus, Mail, Receipt, Settings, Sunrise, DoorOpen } from "lucide-react";
 import { base44 } from "@/api/base44Client";
 import { listStories, cachedList } from "@/components/rozdroza/api";
 import { libBundle } from "@/components/account/library/libApi";
@@ -11,6 +11,8 @@ export const SECTIONS = [
   { key: "start", label: "Start", icon: Home, group: "tresci" },
   // Uczestnicy programu (18.11.2026): sekcja widoczna tylko dla osób przyjętych do POWRÓT-u.
   { key: "powrot", label: "Mój POWRÓT", icon: Sunrise, group: "tresci", when: (s) => !!s.powrot?.participant },
+  // Rozmowa na progu (18.11.2026): widoczna, gdy jest zgłoszenie na adres e-mail konta.
+  { key: "rozmowa", label: "Rozmowa na progu", icon: DoorOpen, group: "tresci", when: (s) => !!s.prog?.has },
   { key: "produkty", label: "Moje produkty", icon: Package, group: "tresci" },
   { key: "biblioteka", label: "Moja biblioteka", icon: Library, group: "tresci", when: (s) => !!s.cfg?.library },
   { key: "rozdroza", label: "Rozdroża", icon: Compass, group: "tresci", to: "/konto/rozdroza", when: (s) => s.rz || s.me?.role === "admin" },
@@ -37,12 +39,14 @@ export function useAccountState() {
   const [cfg, setCfg] = useState(null);
   const [rz, setRz] = useState(() => !!cachedList()?.length);
   const [powrot, setPowrot] = useState(null);
+  const [prog, setProg] = useState(null);
   useEffect(() => {
     base44.auth.me().then(setMe).catch(() => {});
     libBundle().then(setCfg).catch(() => setCfg({ library: false, messages: false }));
     base44.functions.invoke("powrotUczestnik", { action: "me" }).then((r) => setPowrot(r.data)).catch(() => setPowrot({ participant: false }));
+    base44.functions.invoke("progUczestnik", { action: "me" }).then((r) => setProg(r.data)).catch(() => setProg({ has: false }));
     const t = setTimeout(() => listStories().then((l) => l.length && setRz(true)).catch(() => {}), 600);
     return () => clearTimeout(t);
   }, []);
-  return { me, cfg, rz, powrot, setPowrot };
+  return { me, cfg, rz, powrot, setPowrot, prog };
 }
