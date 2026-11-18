@@ -87,7 +87,7 @@ export const REGULAMIN = {
       "7. Sprzedawca może odmówić sesji albo zaproponować jej przerwanie, jeśli uzna, że Klient potrzebuje najpierw pomocy specjalisty. Klient otrzymuje wtedy zwrot za niewykonaną część usługi.",
     ]},
     { id: "p11", title: "§11. Program POWRÓT", body: [
-      "1. Udział poprzedza zgłoszenie i bezpłatna rozmowa kwalifikacyjna. Ani zgłoszenie, ani rozmowa nie zobowiązują do zakupu.",
+      "1. Udział poprzedza zgłoszenie, ankieta i bezpłatna rozmowa wstępna na zaproszenie Sprzedawcy. Ani zgłoszenie, ani ankieta, ani rozmowa nie zobowiązują do zakupu.",
       "2. Zakres, liczba i częstotliwość spotkań, czas trwania, cena i harmonogram są określone w umowie POWRÓT, przekazywanej Klientowi przed zapłatą. W sprawach nieuregulowanych umową stosuje się Regulamin.",
       "3. Do przekładania spotkań i nieobecności stosuje się §10 ust. 3–5, chyba że umowa POWRÓT jest dla Klienta korzystniejsza.",
       "4. Po upływie terminu na odstąpienie od umowy Klient może zakończyć udział w programie z ważnej przyczyny, która trwale albo na dłużej niż 8 tygodni uniemożliwia lub istotnie utrudnia udział w spotkaniach (np. stan zdrowia, nagła zmiana sytuacji życiowej, rodzinnej lub zawodowej, zdarzenie losowe). Sprzedawca zwraca wtedy cenę spotkań, które się nie odbyły, liczoną proporcjonalnie do ceny całkowitej. W pozostałych przypadkach Sprzedawca proponuje wstrzymanie programu albo dokończenie spotkań w terminie określonym w umowie POWRÓT. Szczegóły, w tym rozliczenie płatności w ratach przez PayU, określa umowa POWRÓT. Postanowienie to nie ogranicza uprawnień Klienta wynikających z bezwzględnie obowiązujących przepisów, a prawo odstąpienia od umowy (§14) obowiązuje niezależnie.",
