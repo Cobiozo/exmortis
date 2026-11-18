@@ -1,71 +1,67 @@
 import React from "react";
-import { Link } from "react-router-dom";
-import { ArrowRight } from "lucide-react";
 import { Image } from "@/components/ui/image";
+import Section from "@/components/exmortis/ui/Section";
+import Container from "@/components/exmortis/ui/Container";
+import SectionHeader from "@/components/exmortis/ui/SectionHeader";
+import BrandButton from "@/components/exmortis/ui/BrandButton";
 
+// „Za exmortis stoi człowiek” (etap 2, 18.11.2026): portret 4:5 obok krótkiej historii.
+// Zdjęcie i kadrowanie z panelu (pole „zdjecie”); bez zdjęcia zostaje sam tekst.
+const PORTRET = "https://media.base44.com/images/public/6aa08bc6318b0f886cc3b9a3/480c7c335_702144182_17895011880460401_728690723499574380_n.jpg";
 
-// Strona główna bez wątku kapłańskiego (decyzja właściciela 17.11.2026) — ta historia jest tylko w O mnie.
-// Zdjęcie z sekcji „Próg” na podstronie O mnie.
-const SIDE_PHOTO = "https://media.base44.com/images/public/6aa08bc6318b0f886cc3b9a3/f7f7a5e2f_474783848_18188957653314489_4657498483259380055_n.jpg";
+export default function ShortHistory({ d = {}, label }) {
+  const foto = d.zdjecie?.url ? d.zdjecie : { url: PORTRET, alt: "Dawid — exmortis" };
 
-// Strona główna: „Krótka historia” — zajawka (styl jak O mnie, wersja z 6.11.2026) i wejście do pełnej historii.
-export default function ShortHistory({ label } = {}) {
   return (
-    <section id="historia" className="border-t hairline bg-[#070708]">
-      {/* Duży baner ze zdjęciem usunięty 17.11.2026 — portret jest już w nagłówku strony (krótsza strona, lepszy rytm). */}
-      <div className="py-16 md:py-24 px-4 sm:px-5 md:px-10">
-        <div className="mx-auto max-w-[1400px]">
-          <p className="technical text-[11px] gold-text mb-4">{label || "KRÓTKA HISTORIA"}</p>
-          <h2 className="relic-heading text-4xl md:text-6xl leading-[0.95] mb-8 md:mb-12">
-            Byłem tam.<br />
-            <span className="gold-text">I wróciłem. Inny.</span>
-          </h2>
+    <Section id="historia" tone="surface">
+      <Container>
+        <div className="grid items-start gap-10 md:grid-cols-12 md:gap-12">
+          <div className="md:col-span-7">
+            <SectionHeader
+              eyebrow={d.etykieta || label || "ZA EXMORTIS STOI CZŁOWIEK"}
+              title={<span>Byłem tam. <span className="text-exm-gold">I wróciłem inny.</span></span>}
+            />
 
-          <div className="grid md:grid-cols-5 gap-12 md:gap-16 items-start">
-            <div className="md:col-span-3">
-              <div className="max-w-2xl space-y-5 text-lg leading-relaxed text-foreground/70">
-                <p>Przez lata towarzyszyłem ludziom w ich najtrudniejszych chwilach.</p>
-                <p>
-                  Potem sam znalazłem się w miejscu, którego nie było na mojej mapie. Straciłem wiele z tego,
-                  na czym opierałem swoje życie.
-                </p>
-                <p className="text-foreground/60">
-                  W piosence „exmortis” zapisałem zdanie, które długo w sobie nosiłem:
-                </p>
-              </div>
-
-              <blockquote className="border-l border-[#C9A24A] pl-6 md:pl-10 my-8 md:my-12 max-w-3xl">
-                <p className="shop-heading text-2xl md:text-4xl gold-text leading-snug">
-                  „Byłem pewien, że grzebią mnie żywcem… a Ty, w tej ciemności, po prostu mnie
-                  zasadziłeś.”
-                </p>
-              </blockquote>
-
-              <div className="max-w-2xl space-y-5 text-lg leading-relaxed text-foreground/70">
-                <p>Dziś jestem mężem i ojcem.</p>
-                <p>O tym, co wydarzyło się pomiędzy, opowiadam w pełnej historii.</p>
-              </div>
-
-              <Link to="/o-mnie?src=home-historia" className="btn-ghost mt-8 md:mt-12">
-                Przeczytaj całą historię <ArrowRight className="h-4 w-4" />
-              </Link>
+            <div className="mt-6 space-y-4 text-[17px] leading-relaxed text-exm-muted md:mt-8">
+              <p>Przez lata towarzyszyłem ludziom w ich najtrudniejszych chwilach.</p>
+              <p>Potem sam znalazłem się w miejscu, którego nie było na mojej mapie. Straciłem wiele z tego, na czym opierałem swoje życie.</p>
             </div>
 
-            {/* Na telefonie bez drugiego zdjęcia — portret jest wyżej (krótsza strona główna, audyt X-37). */}
-            <div className="hidden md:block md:col-span-2 border hairline mx-auto w-full" style={{ maxWidth: "min(100%, 400px)" }}>
-              <Image
-                src={SIDE_PHOTO}
-                alt="Dawid — exmortis"
-                fittingType="fill"
-                className="w-full aspect-[3/4]"
-              />
-              <p className="technical text-[10px] gold-text p-4 border-t hairline">
-                DZIŚ · MĄŻ, OJCIEC, MENTOR
+            <blockquote className="my-7 border-l border-exm-gold/60 pl-5 md:my-9 md:pl-7">
+              <p className="font-exm-serif text-xl leading-snug text-exm-gold md:text-2xl">
+                „Byłem pewien, że grzebią mnie żywcem… a Ty, w tej ciemności, po prostu mnie zasadziłeś.”
+              </p>
+            </blockquote>
+
+            <div className="space-y-4 text-[17px] leading-relaxed text-exm-muted">
+              <p>Dziś jestem mężem i ojcem. O tym, co wydarzyło się pomiędzy, opowiadam w pełnej historii.</p>
+              <p className="text-exm-text">
+                Prowadzę mentoring powrotu, nie terapię: nie stawiam diagnoz i nie zastępuję leczenia.
               </p>
             </div>
+
+            <div className="mt-7 md:mt-9">
+              <BrandButton to="/o-mnie?src=home-historia" variant="secondary">Poznaj moją historię</BrandButton>
+            </div>
+          </div>
+
+          <div className="md:col-span-5">
+            <figure className="overflow-hidden rounded-[var(--exm-r-card)] border border-exm-line bg-exm-surface-2">
+              <Image
+                src={foto.url}
+                alt={foto.alt || "Dawid — exmortis"}
+                fittingType="fill"
+                focalPointX={Number(foto.fx ?? 50) / 100}
+                focalPointY={Number(foto.fy ?? 50) / 100}
+                className="aspect-[4/5] w-full"
+              />
+              <figcaption className="technical border-t border-exm-line px-4 py-3 text-[10px] text-exm-muted">
+                DZIŚ · MĄŻ, OJCIEC, MENTOR
+              </figcaption>
+            </figure>
           </div>
         </div>
-      </div>
-    </section>
+      </Container>
+    </Section>
   );
 }

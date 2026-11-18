@@ -2,6 +2,8 @@ import ForWhom from "@/components/exmortis/ForWhom";
 import StartPaths from "@/components/exmortis/home/StartPaths";
 import ShortHistory from "@/components/exmortis/home/ShortHistory";
 import ReturnPath from "@/components/exmortis/home/ReturnPath";
+import Collaboration from "@/components/exmortis/home/Collaboration";
+import StayLonger from "@/components/exmortis/home/StayLonger";
 import RozdrozaHome from "@/components/exmortis/home/RozdrozaHome";
 import ObokHome from "@/components/exmortis/home/ObokHome";
 import WhatsAppChannelBlock from "@/components/exmortis/glos/WhatsAppChannelBlock";
@@ -34,6 +36,8 @@ export const MODULES = {
   od_czego_zaczac: ["Od czego zacząć (trzy pierwsze kroki)", StartPaths],
   krotka_historia: ["Krótka historia", ShortHistory],
   droga_powrotu: ["Droga powrotu", ReturnPath],
+  wspolpraca: ["Współpraca indywidualna (Rozmowa na progu i POWRÓT)", Collaboration],
+  zostan_dluzej: ["Zostań na dłużej (podcast, Biblioteka, cisza)", StayLonger],
   rozdroza: ["ROZDROŻA — interaktywne historie", RozdrozaHome],
   obok: ["Biblioteka — zapowiedź (materiały dla osób z kontem)", ObokHome],
   zajawka_powrot: ["Zajawka POWRÓT", PowrotTeaser],

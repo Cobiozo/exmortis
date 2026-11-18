@@ -29,9 +29,11 @@ export const HOME_OBOK_BLOCK = {
   uklad: { szerokosc: "standard", wyrownanie: "lewo", tlo: "czern", odstep: "duzy", numer: "brak", urzadzenia: "wszedzie" },
 };
 const isObok = (b) => b.id === "home-obok" || (b.typ === "modul" && b.dane?.modul === "obok");
+// Od 18.11.2026 Bibliotekę zapowiada moduł „zostan_dluzej” — wtedy dawnej zapowiedzi nie wstrzykujemy.
+const isStay = (b) => b.typ === "modul" && b.dane?.modul === "zostan_dluzej";
 
 function addObok(blocks) {
-  if (!Array.isArray(blocks) || blocks.some(isObok)) return blocks;
+  if (!Array.isArray(blocks) || blocks.some(isObok) || blocks.some(isStay)) return blocks;
   const after = blocks.findIndex(isRozdroza);
   if (after < 0) return blocks;
   return [...blocks.slice(0, after + 1), HOME_OBOK_BLOCK, ...blocks.slice(after + 1)];

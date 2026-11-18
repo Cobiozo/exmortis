@@ -6,6 +6,7 @@ import SafeImg from "../SafeImg";
 import { nbsp } from "@/lib/nbsp";
 import { useBefore } from "@/lib/wawDate";
 import HeroOsobisty from "./HeroOsobisty";
+import HeroZnak from "./HeroZnak";
 
 function Bg({ d }) {
   if (!d.tlo?.url) return null;
@@ -70,26 +71,8 @@ function Zapowiedz({ d, center }) {
 export default function HeroBlock({ d }) {
   // Wariant „osobisty” (17.11.2026): portret, odtwarzacz i pasek skrótów — osobny plik.
   if (d.wariant === "osobisty") return <HeroOsobisty d={d} />;
-  if (d.wariant === "znak") return (
-    <section className="relative min-h-screen flex items-center justify-center overflow-hidden grain" style={{ minHeight: "100svh" }}>
-      <Bg d={d} />
-      <div className="relative z-10 flex flex-col items-center text-center px-5 md:px-6 pb-16 md:pb-32 max-w-4xl">
-        <div className="flicker mt-8 md:mt-20"><Logo className="h-[5.5rem] w-[5.5rem] sm:h-[7rem] sm:w-[7rem] md:h-[12.5rem] md:w-[12.5rem] mb-6 md:mb-8" /></div>
-        {d.etykieta && <p className="technical text-[11px] gold-text mb-4">{d.etykieta}</p>}
-        <h1 className="font-heading text-5xl sm:text-6xl md:text-8xl lg:text-9xl leading-[0.95]">
-          <span className="block tracking-[0.06em]">{nbsp(d.linia1)}</span>
-          {d.linia2 && <span className="block gold-text mt-3 text-2xl sm:text-3xl md:text-4xl lg:text-[4rem]">{nbsp(d.linia2)}</span>}
-        </h1>
-        {/* Główny komunikat (wyraźny) i opis zwykłym tekstem — bez wersalików, czytelny na telefonie. */}
-        {d.lead && <p className="no-hyph mt-6 md:mt-10 text-[1.375rem] sm:text-2xl md:text-[2rem] leading-snug text-[#F5EFE1] font-light max-w-2xl">{nbsp(d.lead)}</p>}
-        {d.podlead && <p className="no-hyph mt-4 md:mt-5 text-base md:text-lg leading-relaxed text-foreground/75 font-light max-w-xl">{nbsp(d.podlead)}</p>}
-        <Autor d={d} />
-        <Zapowiedz d={d} center />
-        <HeroButtons d={d} className="mt-7 md:mt-12" center />
-        <Dopisek t={d.dopisek} />
-      </div>
-    </section>
-  );
+  // Wariant „znak” przebudowany 18.11.2026 (etap 2): własny plik HeroZnak.
+  if (d.wariant === "znak") return <HeroZnak d={d} />;
 
   // Od 17.11.2026 wszystkie nagłówki stron (wariant standard) są kompaktowe: niższa sekcja i mniejszy tytuł,
   // treść strony szybciej widoczna. Dawny duży nagłówek: rozmiar „duzy” w danych bloku.

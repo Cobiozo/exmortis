@@ -1,18 +1,19 @@
 import React, { useEffect, useState } from "react";
 import { ArrowUpRight, Play } from "lucide-react";
 import { base44 } from "@/api/base44Client";
+import Section from "@/components/exmortis/ui/Section";
+import Container from "@/components/exmortis/ui/Container";
 
-// Strona główna (na samym dole): 6 najnowszych postów i rolek z Instagrama — pasek zdjęć bez ramek.
+// Instagram na końcu strony głównej (etap 2, 18.11.2026): 6 miniatur w jednym rozdziale z kontaktem.
 // Miniatury przychodzą z exmortis.pl (funkcja instagramFeed), więc nie wymagają zgody na treści zewnętrzne.
 // Sekcja znika całkowicie, gdy feed nie jest dostępny.
-export default function InstagramFeed() {
+export default function InstagramFeed({ d = {} } = {}) {
   const [feed, setFeed] = useState(null);
 
   useEffect(() => {
     base44.functions
       .invoke("instagramFeed", {})
       .then((res) => {
-        // Tylko miniatury podawane przez exmortis.pl — bez bezpośredniego łączenia z Instagramem bez zgody.
         const posts = (res.data?.posts || []).filter((p) => String(p.image || "").startsWith("/functions/instagramFeed"));
         if (posts.length) setFeed({ ...res.data, posts });
       })
@@ -22,16 +23,16 @@ export default function InstagramFeed() {
   if (!feed) return null;
 
   return (
-    <section className="py-16 md:py-24 px-4 sm:px-5 md:px-10 border-t hairline">
-      <div className="mx-auto max-w-[1400px]">
-        <div className="flex items-end justify-between mb-10">
+    <Section tone="surface">
+      <Container>
+        <div className="mb-8 flex flex-wrap items-end justify-between gap-4 md:mb-10">
           <div>
-            <p className="technical text-[11px] gold-text mb-3">OBSERWUJ · INSTAGRAM</p>
+            <p className="exm-eyebrow mb-3">{d.etykieta || "OBSERWUJ · INSTAGRAM"}</p>
             <a
               href={`https://instagram.com/${feed.username}`}
               target="_blank"
               rel="noreferrer"
-              className="relic-heading text-2xl md:text-3xl text-foreground/85 hover:gold-text transition-colors"
+              className="exm-h3 inline-flex items-center gap-2 text-exm-ivory transition-colors hover:text-exm-gold"
             >
               @{feed.username}
             </a>
@@ -40,13 +41,13 @@ export default function InstagramFeed() {
             href={`https://instagram.com/${feed.username}`}
             target="_blank"
             rel="noreferrer"
-            className="inline-flex items-center gap-1.5 py-3 -my-3 technical text-[10px] text-foreground/55 hover:gold-text transition-colors"
+            className="inline-flex min-h-11 items-center gap-1.5 text-sm text-exm-muted transition-colors hover:text-exm-gold"
           >
-            Obserwuj <ArrowUpRight className="h-3.5 w-3.5" />
+            Obserwuj <ArrowUpRight className="h-4 w-4" aria-hidden="true" />
           </a>
         </div>
 
-        <div className="grid grid-cols-3 md:grid-cols-6 gap-1.5 md:gap-2">
+        <div className="grid grid-cols-3 gap-1.5 md:grid-cols-6 md:gap-2">
           {feed.posts.map((p) => (
             <a
               key={p.id}
@@ -54,21 +55,24 @@ export default function InstagramFeed() {
               target="_blank"
               rel="noreferrer"
               aria-label={`${p.reel || /\/reel\//.test(p.permalink || "") ? "Rolka" : "Post"} na Instagramie — otwiera się w nowej karcie`}
-              className="group relative aspect-square block overflow-hidden"
+              className="group relative block aspect-square overflow-hidden rounded-[var(--exm-r-field)] bg-exm-surface-2"
             >
               <img
                 src={p.image}
                 alt=""
                 loading="lazy"
-                className="absolute inset-0 w-full h-full object-cover opacity-90 group-hover:opacity-100 group-hover:scale-[1.03] transition-all duration-500"
+                decoding="async"
+                width="320"
+                height="320"
+                className="absolute inset-0 h-full w-full object-cover opacity-90 transition-all duration-500 group-hover:opacity-100"
               />
               {(p.reel || /\/reel\//.test(p.permalink || "")) && (
-                <Play className="absolute top-2 right-2 h-4 w-4 text-white drop-shadow" fill="currentColor" aria-hidden="true" />
+                <Play className="absolute right-2 top-2 h-4 w-4 text-white drop-shadow" fill="currentColor" aria-hidden="true" />
               )}
             </a>
           ))}
         </div>
-      </div>
-    </section>
+      </Container>
+    </Section>
   );
 }

@@ -53,11 +53,11 @@ export default function ContactSection({ label } = {}) {
   };
 
   return (
-    <section id="kontakt" className="py-16 md:py-24 px-4 sm:px-5 md:px-10 border-t hairline bg-[#070708]">
-      <div className="mx-auto max-w-[1400px] grid md:grid-cols-2 gap-12 md:gap-20">
+    <section id="kontakt" className="border-t border-exm-line bg-exm-surface py-[var(--exm-section-y)] px-[var(--exm-pad)]">
+      <div className="mx-auto grid max-w-[var(--exm-container)] gap-10 md:grid-cols-2 md:gap-16">
         {/* Lewa kolumna — kanały kontaktu */}
         <div>
-          <p className="technical text-[11px] gold-text mb-4">{label || "KONTAKT · 10"}</p>
+          <p className="exm-eyebrow mb-3">{label || "BĄDŹMY W KONTAKCIE"}</p>
           <h2 className="relic-heading text-4xl lg:text-5xl xl:text-6xl mb-6 leading-[0.95] [overflow-wrap:break-word]" dangerouslySetInnerHTML={{ __html: sanitizeHtml(heading) }} />
           <div className="rich-content text-foreground/60 text-lg leading-relaxed max-w-md mb-8 md:mb-12" dangerouslySetInnerHTML={{ __html: sanitizeHtml(intro) }} />
 
@@ -97,6 +97,9 @@ export default function ContactSection({ label } = {}) {
 
             {/* Kanał WhatsApp — podpisany przycisk zamiast samej ikony. */}
             <WhatsAppChannelLink miejsce="kontakt" label="Kanał WhatsApp" caption="głos między poniedziałkami" framed />
+
+            {/* Osobne wezwanie do strony kontaktu (formularz niżej zostaje bez zmian). */}
+            <Link to="/kontakt" className="btn-ghost mt-2">Napisz do mnie <ArrowRight className="h-4 w-4" /></Link>
           </div>
         </div>
 
