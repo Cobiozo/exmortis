@@ -16,7 +16,8 @@ export const POWROT_BLOCKS = [
   // 1. Pierwszy ekran — etykieta, H1, zdanie, lead, pas faktów, dwa wezwania. Tło: próg z ciepłym światłem.
   b("hero", "hero", { wariant: "standard", etykieta: "INDYWIDUALNY PROGRAM MENTORINGOWY", linia1: "", linia2: "POWRÓT",
     lead: "Nie musisz wracać do życia, które przestało być Twoje.",
-    podlead: POWROT_LEAD, fakty: true,
+    // Parametry programu pokazuje siatka faktów (fakty: true) — bez powtórzenia ich w zdaniu pod nagłówkiem.
+    fakty: true,
     przyciski: [ZGLOS, { etykieta: "Najpierw chcę poznać Twój sposób pracy", link: "/spotkania?src=powrot-hero", styl: "obrys", strzalka: false }],
     tlo: HERO, tlo_mobile: HERO_M, przyciemnienie: 62 }),
 
