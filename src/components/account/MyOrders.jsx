@@ -1,5 +1,8 @@
 import React, { useEffect, useState } from "react";
+import { Receipt } from "lucide-react";
 import { base44 } from "@/api/base44Client";
+import EmptyState from "@/components/exmortis/ui/EmptyState";
+import SkeletonBlock from "@/components/exmortis/ui/SkeletonBlock";
 import { plDate, STATUS_LABEL } from "./accountUtils";
 import ReviewButton from "./reviews/ReviewButton";
 
@@ -32,8 +35,18 @@ export default function MyOrders() {
       <button onClick={load} className="btn-ghost !py-2 !px-4">Ponów</button>
     </div>
   );
-  if (!list) return <p className="text-foreground/55">Ładowanie…</p>;
-  if (!list.length) return <p className="text-foreground/55 py-10">Nie masz jeszcze zamówień.</p>;
+  if (!list) return (
+    <div className="space-y-3" role="status" aria-label="Wczytuję zamówienia">
+      {[0, 1, 2].map((i) => (
+        <div key={i} className="flex flex-wrap gap-4 rounded-[var(--exm-r-card)] border border-exm-line bg-exm-surface p-5">
+          <SkeletonBlock className="h-4 w-24" />
+          <SkeletonBlock className="h-4 flex-1" />
+          <SkeletonBlock className="h-4 w-20" />
+        </div>
+      ))}
+    </div>
+  );
+  if (!list.length) return <EmptyState icon={<Receipt />} title="Nie masz jeszcze zamówień." />;
   return (
     <div className="space-y-10">
     {cards.length > 0 && (

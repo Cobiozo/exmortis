@@ -4,7 +4,8 @@ import SessionRow from "./SessionRow";
 import ChangeSession from "./ChangeSession";
 import PackageBooker from "@/components/booking/PackageBooker";
 import { Link } from "react-router-dom";
-import { ArrowRight } from "lucide-react";
+import { ArrowRight, CalendarDays } from "lucide-react";
+import EmptyState from "@/components/exmortis/ui/EmptyState";
 
 const call = (p) => base44.functions.invoke("bookingPublic", p).then((r) => r.data);
 const day = (v) => new Date(v).toLocaleDateString("pl-PL", { day: "numeric", month: "long", year: "numeric" });
@@ -130,7 +131,7 @@ export default function MySessions() {
       <section>
         <p className="technical text-[10px] gold-text mb-6">NAJBLIŻSZE</p>
         {upcoming.length === 0 ? (
-          <p className="text-sm text-foreground/55">Brak zaplanowanych spotkań.</p>
+          <EmptyState icon={<CalendarDays />} title="Brak zaplanowanych spotkań." />
         ) : (
           <div className="space-y-4">
             {upcoming.map((b) => (
@@ -143,7 +144,7 @@ export default function MySessions() {
       <section>
         <p className="technical text-[10px] gold-text mb-6">HISTORIA</p>
         {history.length === 0 ? (
-          <p className="text-sm text-foreground/55">Jeszcze pusto.</p>
+          <p className="text-sm text-exm-muted">Jeszcze pusto.</p>
         ) : (
           <div className="space-y-2">
             {history.map((b) => <SessionRow key={b.id} b={b} past />)}

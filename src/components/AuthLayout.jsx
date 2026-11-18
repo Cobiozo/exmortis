@@ -1,41 +1,31 @@
 import React from "react";
-import { Link, useLocation } from "react-router-dom";
+import { Link } from "react-router-dom";
 import Logo from "@/components/exmortis/Logo";
-import useLoginText from "@/content/useLoginText";
 
-// Wspólny układ stron logowania — styl exmortis, zakładki Zaloguj / Załóż konto.
-export default function AuthLayout({ title, subtitle, footer, children, tabs = false }) {
-  const { pathname, search } = useLocation();
-  const t = useLoginText();
-  const tab = (to, label) => (
-    <Link
-      to={to + search}
-      className={`flex-1 text-center py-3 technical text-[10px] border-b ${
-        pathname === to ? "border-[#C9A24A] text-[#C9A24A]" : "border-[#3D3D3F] text-foreground/55 hover:text-[#F5EFE1]"
-      }`}
-    >
-      {label}
-    </Link>
-  );
+// Wspólny układ stron logowania, rejestracji i haseł (etap 12).
+// Sygnet EXMORTIS nad kartą, jedna karta (maks. 440 px) z tytułem H1 i jednym zdaniem opisu.
+// Pod kartą korzyść z konta i informacja o zakupie bez konta; przejścia między widokami jako btn-link.
+export default function AuthLayout({ title, subtitle, footer, children }) {
   return (
-    <div className="exm-soft-page min-h-screen flex items-center justify-center bg-[#0A0A0B] px-5 py-20">
-      <div className="w-full max-w-md">
-        <div className="text-center mb-10">
-          <Link to="/" className="inline-block mb-6"><Logo className="h-14 w-14" glow={false} /></Link>
-          <h1 className="shop-heading text-3xl md:text-4xl text-[#F5EFE1]">{title || t("tytul")}</h1>
-          <p className="text-foreground/55 mt-4 leading-relaxed">
-            {subtitle || t("podtytul")}
-          </p>
+    <main className="min-h-[100svh] bg-exm-bg px-[var(--exm-pad)] py-12 sm:py-16">
+      <div className="mx-auto flex w-full max-w-[440px] flex-col items-center">
+        <Link to="/" className="inline-flex min-h-12 items-center" aria-label="exmortis, strona główna">
+          <Logo className="h-10 w-10" glow={false} />
+        </Link>
+        <p aria-hidden="true" className="exm-wordmark mt-3 text-[13px] text-exm-ivory">exmortis</p>
+
+        <div className="mt-7 w-full rounded-[var(--exm-r-card)] border border-exm-line bg-exm-surface p-6 sm:p-8">
+          <h1 className="relic-heading text-[26px] leading-[1.15] sm:text-[30px]">{title}</h1>
+          {subtitle && <p className="mt-3 text-[15px] leading-relaxed text-exm-muted">{subtitle}</p>}
+          <div className="mt-7">{children}</div>
         </div>
-        {tabs && (
-          <div className="flex mb-8">
-            {tab("/login", t("zakladka.login"))}
-            {tab("/register", t("zakladka.rejestracja"))}
-          </div>
-        )}
-        <div className="border hairline p-6 md:p-8">{children}</div>
-        {footer && <p className="text-center text-sm text-foreground/55 mt-6">{footer}</p>}
+
+        <p className="mt-6 max-w-[42ch] text-center text-[13px] leading-relaxed text-exm-muted">
+          Konto prowadzi Cię przez zakupy, Bibliotekę, ROZDROŻA oraz sekcje POWRÓT i Rozmowa na progu. Zakup bez konta pozostaje możliwy.
+        </p>
+
+        {footer && <div className="mt-2 text-center">{footer}</div>}
       </div>
-    </div>
+    </main>
   );
 }

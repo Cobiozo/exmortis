@@ -1,11 +1,9 @@
 import React, { useState } from "react";
 import { Link } from "react-router-dom";
+import { Loader2 } from "lucide-react";
 import { base44 } from "@/api/base44Client";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Mail, ArrowLeft, Loader2 } from "lucide-react";
 import AuthLayout from "@/components/AuthLayout";
+import AuthField from "@/components/auth/AuthField";
 import useLoginText from "@/content/useLoginText";
 
 export default function ForgotPassword() {
@@ -29,48 +27,24 @@ export default function ForgotPassword() {
 
   return (
     <AuthLayout
-      icon={Mail}
       title={t("reset.tytul")}
       subtitle={t("reset.podtytul")}
-      footer={
-        <Link to="/login" className="text-primary font-medium hover:underline">
-          <ArrowLeft className="w-3 h-3 inline mr-1" />{t("reset.powrot")}
-        </Link>
-      }
+      footer={<Link to="/login" className="btn-link">{t("reset.powrot")}</Link>}
     >
       {sent ? (
-        <p className="text-sm text-foreground text-center">
+        <p role="status" className="rounded-[var(--exm-r-field)] border border-exm-line bg-exm-surface-2 px-4 py-3 text-[13px] leading-relaxed text-exm-text">
           {t("reset.wyslano")}
         </p>
       ) : (
-        <form onSubmit={handleSubmit} className="space-y-4">
-          <div className="space-y-2">
-            <Label htmlFor="email">Adres e-mail</Label>
-            <div className="relative">
-              <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" aria-hidden="true" />
-              <Input
-                id="email"
-                type="email"
-                autoComplete="email"
-                autoFocus
-                placeholder="twoj@adres.pl"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                className="pl-10 h-12"
-                required
-              />
-            </div>
-          </div>
-          <Button type="submit" className="w-full h-12 font-medium" disabled={loading}>
-            {loading ? (
-              <>
-                <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                Wysyłam…
-              </>
-            ) : (
-              t("reset.przycisk")
-            )}
-          </Button>
+        <form onSubmit={handleSubmit} className="space-y-5">
+          <AuthField
+            id="email" label="Adres e-mail" type="email" autoComplete="email" autoFocus
+            value={email} onChange={(e) => setEmail(e.target.value)} required
+          />
+          <button type="submit" disabled={loading} aria-busy={loading || undefined} className="btn-relic w-full">
+            {loading && <Loader2 className="h-4 w-4 animate-spin" aria-hidden="true" />}
+            {t("reset.przycisk")}
+          </button>
         </form>
       )}
     </AuthLayout>

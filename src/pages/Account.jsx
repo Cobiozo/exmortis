@@ -40,7 +40,7 @@ export default function Account() {
 
   if (me?.role === "zablokowane") {
     return (
-      <div className="bg-[#0A0A0B] pt-28 pb-24 min-h-screen px-5 text-center space-y-6">
+      <div className="bg-exm-bg pt-28 pb-24 min-h-screen px-5 text-center space-y-6">
         <p className="relic-heading text-3xl">Konto nieaktywne</p>
         <button onClick={() => base44.auth.logout("/")} className="btn-ghost">Wyloguj</button>
       </div>
@@ -69,8 +69,8 @@ export default function Account() {
     <AccountShell state={state} active={active} aside={aside} band={band}>
       {intro && (
         <div className="mb-4 lg:mb-6">
-          <h2 className="shop-heading text-[26px] leading-tight md:text-3xl text-[#F5EFE1] focus:outline-none">{intro.title}</h2>
-          {intro.text && <p className="text-base text-[#F5EFE1]/75 mt-1">{intro.text}</p>}
+          <h2 className="relic-heading text-[26px] leading-tight md:text-3xl focus:outline-none">{intro.title}</h2>
+          {intro.text && <p className="mt-1 text-base text-exm-muted">{intro.text}</p>}
         </div>
       )}
       {active === "start" && <StartPanel state={state} go={go} />}

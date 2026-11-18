@@ -1,12 +1,10 @@
 import React, { useState } from "react";
 import { Link, useSearchParams } from "react-router-dom";
+import { Loader2 } from "lucide-react";
 import { base44 } from "@/api/base44Client";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Lock, Loader2, AlertTriangle } from "lucide-react";
-import useLoginText from "@/content/useLoginText";
 import AuthLayout from "@/components/AuthLayout";
+import AuthField from "@/components/auth/AuthField";
+import useLoginText from "@/content/useLoginText";
 
 export default function ResetPassword() {
   const [searchParams] = useSearchParams();
@@ -42,77 +40,37 @@ export default function ResetPassword() {
   if (!resetToken && !hasSupaSession) {
     return (
       <AuthLayout
-        icon={AlertTriangle}
         title={t("nowe.tytul")}
         subtitle={t("nowe.zly_link")}
-        footer={
-          <Link to="/forgot-password" className="text-primary font-medium hover:underline">
-            Request a new link
-          </Link>
-        }
+        footer={<Link to="/forgot-password" className="btn-link">Poproś o nowy link</Link>}
       >
-        <p className="text-sm text-foreground text-center">
-          The link you used appears to be incomplete. Please request a new password reset email.
+        <p className="text-[15px] leading-relaxed text-exm-muted">
+          Poproś o nowy link. Wyślemy go na adres e-mail przypisany do konta.
         </p>
       </AuthLayout>
     );
   }
 
   return (
-    <AuthLayout
-      icon={Lock}
-      title={t("nowe.tytul")}
-      subtitle={t("nowe.podtytul")}
-    >
-      {error && (
-        <div className="mb-4 p-3 rounded-lg bg-destructive/10 text-destructive text-sm">
-          {error}
-        </div>
-      )}
-      <form onSubmit={handleSubmit} className="space-y-4">
-        <div className="space-y-2">
-          <Label htmlFor="password">Nowe hasło</Label>
-          <div className="relative">
-            <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" aria-hidden="true" />
-            <Input
-              id="password"
-              type="password"
-              autoComplete="new-password"
-              autoFocus
-              placeholder="••••••••"
-              value={newPassword}
-              onChange={(e) => setNewPassword(e.target.value)}
-              className="pl-10 h-12"
-              required
-            />
-          </div>
-        </div>
-        <div className="space-y-2">
-          <Label htmlFor="confirm">Powtórz hasło</Label>
-          <div className="relative">
-            <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" aria-hidden="true" />
-            <Input
-              id="confirm"
-              type="password"
-              autoComplete="new-password"
-              placeholder="••••••••"
-              value={confirmPassword}
-              onChange={(e) => setConfirmPassword(e.target.value)}
-              className="pl-10 h-12"
-              required
-            />
-          </div>
-        </div>
-        <Button type="submit" className="w-full h-12 font-medium" disabled={loading}>
-          {loading ? (
-            <>
-              <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-              Zapisuję…
-            </>
-          ) : (
-            "Ustaw nowe hasło"
-          )}
-        </Button>
+    <AuthLayout title={t("nowe.tytul")} subtitle={t("nowe.podtytul")}>
+      <form onSubmit={handleSubmit} className="space-y-5">
+        <AuthField
+          id="password" label="Nowe hasło" type="password" autoComplete="new-password" autoFocus
+          value={newPassword} onChange={(e) => setNewPassword(e.target.value)} required
+        />
+        <AuthField
+          id="confirm" label="Powtórz hasło" type="password" autoComplete="new-password"
+          value={confirmPassword} onChange={(e) => setConfirmPassword(e.target.value)} required
+          error={newPassword !== confirmPassword ? t("nowe.niezgodne") : ""}
+        />
+        {error && error !== t("nowe.niezgodne") && (
+          <p role="alert" className="rounded-[var(--exm-r-field)] border border-exm-error px-4 py-3 text-[13px] leading-relaxed text-exm-error">
+            {error}
+          </p>
+        )}
+        <button type="submit" disabled={loading} aria-busy={loading || undefined} className="btn-relic w-full">
+          {loading && <Loader2 className="h-4 w-4 animate-spin" aria-hidden="true" />} Ustaw nowe hasło
+        </button>
       </form>
     </AuthLayout>
   );

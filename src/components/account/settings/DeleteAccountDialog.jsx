@@ -3,6 +3,7 @@ import { Loader2 } from "lucide-react";
 import { base44 } from "@/api/base44Client";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { BTN_SECONDARY, FOCUS } from "./SettingsCard";
+import { fieldCls } from "@/components/exmortis/shop/checkout/CheckoutField";
 
 export default function DeleteAccountDialog({ me, open, onOpenChange }) {
   const [confirm, setConfirm] = useState("");
@@ -28,7 +29,7 @@ export default function DeleteAccountDialog({ me, open, onOpenChange }) {
         </DialogHeader>
         <label htmlFor="del-confirm" className="text-sm">Wpisz swój adres e-mail, aby potwierdzić:</label>
         <input id="del-confirm" value={confirm} onChange={(e) => setConfirm(e.target.value)} autoComplete="off"
-          className={`min-h-[44px] bg-transparent border border-[#3D3D3F] px-4 ${FOCUS}`} />
+          className={`${fieldCls} ${FOCUS}`} />
         {err && <p role="alert" className="text-sm text-[#FF6B6B]">{err}</p>}
         <button type="button" onClick={del} disabled={!ok || busy}
           className={`${BTN_SECONDARY} !border-[#FF6B6B] !text-[#FF6B6B] hover:!bg-[#FF6B6B]/10`}>

@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { Link } from "react-router-dom";
+import { Link, useLocation } from "react-router-dom";
 import { Loader2 } from "lucide-react";
 import { base44 } from "@/api/base44Client";
 import AuthLayout from "@/components/AuthLayout";
@@ -7,10 +7,11 @@ import AuthField from "@/components/auth/AuthField";
 import GoogleButton from "@/components/auth/GoogleButton";
 import PasswordStrength from "@/components/auth/PasswordStrength";
 import { afterLoginTarget, providerReturnTo } from "@/lib/afterLogin";
+import useLoginText from "@/content/useLoginText";
 import { track } from "@/lib/track";
 import { TXT } from "@/content/legal/seller";
 
-const check = "mt-0.5 h-5 w-5 shrink-0 accent-[#C9A24A]";
+const check = "mt-0.5 h-5 w-5 shrink-0 accent-exm-gold";
 
 export default function Register() {
   const [name, setName] = useState("");
@@ -19,14 +20,18 @@ export default function Register() {
   const [terms, setTerms] = useState(false);
   const [letters, setLetters] = useState(false);
   const [error, setError] = useState("");
+  const [pwError, setPwError] = useState("");
   const [info, setInfo] = useState("");
   const [loading, setLoading] = useState(false);
   const [showOtp, setShowOtp] = useState(false);
+  const { search } = useLocation();
+  const t = useLoginText();
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError("");
-    if (password.length < 10) return setError("Hasło musi mieć co najmniej 10 znaków.");
+    setPwError("");
+    if (password.length < 10) return setPwError("Hasło musi mieć co najmniej 10 znaków.");
     if (!terms) return setError("Zaakceptuj regulamin i politykę prywatności.");
     setLoading(true);
     try {
@@ -72,39 +77,62 @@ export default function Register() {
 
   if (showOtp) {
     return (
-      <AuthLayout title="Potwierdź adres e-mail" subtitle={`Wysłałem link potwierdzenia na ${email}.`}>
-        {error && <p className="mb-5 text-sm text-[#E8C547]">{error}</p>}
-        {info && <p className="mb-5 text-sm gold-text">{info}</p>}
-        <p className="mb-5 text-sm text-foreground/70 leading-relaxed">
+      <AuthLayout
+        title="Potwierdź adres e-mail"
+        subtitle={`Wysłałem link potwierdzenia na ${email}.`}
+        footer={<Link to={`/login${search}`} className="btn-link">Wróć do logowania</Link>}
+      >
+        <p className="mb-5 text-[15px] leading-relaxed text-exm-muted">
           Otwórz wiadomość i kliknij zawarty w niej link — rejestracja zakończy się automatycznie, a strona na chwilę wróci w to miejsce.
         </p>
-        <button onClick={handleResend} disabled={loading} className="btn-ghost w-full disabled:opacity-60">
-          {loading && <Loader2 className="h-4 w-4 animate-spin" />} WYŚLIJ PONOWNIE
+        {error && (
+          <p role="alert" className="mb-5 rounded-[var(--exm-r-field)] border border-exm-error px-4 py-3 text-[13px] leading-relaxed text-exm-error">
+            {error}
+          </p>
+        )}
+        {info && (
+          <p role="status" className="mb-5 rounded-[var(--exm-r-field)] border border-exm-line bg-exm-surface-2 px-4 py-3 text-[13px] leading-relaxed text-exm-text">
+            {info}
+          </p>
+        )}
+        <button onClick={handleResend} disabled={loading} aria-busy={loading || undefined} className="btn-ghost w-full">
+          {loading && <Loader2 className="h-4 w-4 animate-spin" aria-hidden="true" />} Wyślij ponownie
         </button>
-        <p className="text-center text-sm text-foreground/45 mt-5">Nie widzisz wiadomości? Sprawdź folder spam.</p>
+        <p className="mt-5 text-center text-[13px] text-exm-muted">Nie widzisz wiadomości? Sprawdź folder spam.</p>
       </AuthLayout>
     );
   }
 
   return (
-    <AuthLayout tabs>
+    <AuthLayout
+      title="Załóż konto"
+      subtitle="Potrzebujemy imienia, adresu e-mail i hasła."
+      footer={<Link to={`/login${search}`} className="btn-link">{t("zakladka.login")}</Link>}
+    >
       <GoogleButton onClick={() => base44.auth.loginWithProvider("google", providerReturnTo())} />
-      {error && <p className="mb-5 text-sm text-[#E8C547]">{error}</p>}
       <form onSubmit={handleSubmit} className="space-y-5">
-        <AuthField id="name" label="IMIĘ" autoComplete="given-name" value={name} onChange={(e) => setName(e.target.value)} required />
-        <AuthField id="email" label="E-MAIL" type="email" autoComplete="email" value={email} onChange={(e) => setEmail(e.target.value)} required />
-        <AuthField id="password" label="HASŁO" type="password" autoComplete="new-password" value={password} onChange={(e) => setPassword(e.target.value)} required />
+        <AuthField id="name" label="Imię" autoComplete="given-name" value={name} onChange={(e) => setName(e.target.value)} required />
+        <AuthField id="email" label="Adres e-mail" type="email" autoComplete="email" value={email} onChange={(e) => setEmail(e.target.value)} required />
+        <AuthField
+          id="password" label="Hasło" type="password" autoComplete="new-password" error={pwError}
+          value={password} onChange={(e) => { setPassword(e.target.value); setPwError(""); }} required
+        />
         <PasswordStrength value={password} />
-        <label className="flex gap-3 text-sm text-foreground/65 leading-relaxed">
+        <label className="flex gap-3 text-[13px] leading-relaxed text-exm-muted">
           <input type="checkbox" className={check} checked={terms} onChange={(e) => setTerms(e.target.checked)} required />
-          <span>Akceptuję <Link to="/regulamin" className="gold-text underline">Regulamin</Link>. Zasady przetwarzania danych: <Link to="/polityka-prywatnosci" className="gold-text underline">Polityka prywatności</Link>.</span>
+          <span>Akceptuję <Link to="/regulamin" className="text-exm-gold underline">Regulamin</Link>. Zasady przetwarzania danych: <Link to="/polityka-prywatnosci" className="text-exm-gold underline">Polityka prywatności</Link>.</span>
         </label>
-        <label className="flex gap-3 text-sm text-foreground/65 leading-relaxed">
+        <label className="flex gap-3 text-[13px] leading-relaxed text-exm-muted">
           <input type="checkbox" className={check} checked={letters} onChange={(e) => setLetters(e.target.checked)} />
           <span>{TXT.newsletter}</span>
         </label>
-        <button type="submit" disabled={loading} className="btn-relic w-full disabled:opacity-60">
-          {loading && <Loader2 className="h-4 w-4 animate-spin" />} Załóż konto
+        {error && (
+          <p role="alert" className="rounded-[var(--exm-r-field)] border border-exm-error px-4 py-3 text-[13px] leading-relaxed text-exm-error">
+            {error}
+          </p>
+        )}
+        <button type="submit" disabled={loading} aria-busy={loading || undefined} className="btn-relic w-full">
+          {loading && <Loader2 className="h-4 w-4 animate-spin" aria-hidden="true" />} Załóż konto
         </button>
       </form>
     </AuthLayout>

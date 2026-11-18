@@ -12,16 +12,16 @@ export function strength(p) {
 }
 
 export default function PasswordStrength({ value }) {
-  if (!value) return <p className="text-xs text-foreground/55">Co najmniej 10 znaków.</p>;
+  if (!value) return <p className="text-[12px] text-exm-muted">Co najmniej 10 znaków.</p>;
   const s = strength(value);
   return (
-    <div className="space-y-2">
-      <div className="flex gap-1">
+    <div className="space-y-2" role="status" aria-live="polite">
+      <div className="flex gap-1" aria-hidden="true">
         {[1, 2, 3, 4].map((i) => (
-          <span key={i} className={`h-[2px] flex-1 ${i <= s ? "bg-[#C9A24A]" : "bg-[#3D3D3F]"}`} />
+          <span key={i} className={`h-[2px] flex-1 ${i <= s ? "bg-exm-gold" : "bg-exm-line-strong"}`} />
         ))}
       </div>
-      <p className="text-xs text-foreground/55">{LABELS[s]}{s === 0 && " — co najmniej 10 znaków"}</p>
+      <p className="text-[12px] text-exm-muted">{LABELS[s]}{s === 0 && " — co najmniej 10 znaków"}</p>
     </div>
   );
 }

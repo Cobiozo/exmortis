@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useLocation } from "react-router-dom";
 import { Loader2 } from "lucide-react";
 import { base44 } from "@/api/base44Client";
 import AuthLayout from "@/components/AuthLayout";
@@ -16,6 +16,7 @@ export default function Login() {
   // Sesja już jest (powrót z Google albo wejście zalogowanego) — bez formularza, od razu dalej.
   const [checking, setChecking] = useState(true);
   const t = useLoginText();
+  const { search } = useLocation();
 
   useEffect(() => {
     let alive = true;
@@ -47,25 +48,34 @@ export default function Login() {
 
   if (checking) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-[#0A0A0B]" role="status" aria-label="Logowanie">
-        <Loader2 className="h-7 w-7 animate-spin text-[#C9A24A]" />
+      <div className="grid min-h-[100svh] place-items-center bg-exm-bg" role="status" aria-label="Logowanie">
+        <Loader2 className="h-7 w-7 animate-spin text-exm-gold" aria-hidden="true" />
       </div>
     );
   }
 
   return (
-    <AuthLayout tabs>
+    <AuthLayout
+      title={t("tytul")}
+      subtitle={t("podtytul")}
+      footer={<Link to={`/register${search}`} className="btn-link">{t("zakladka.rejestracja")}</Link>}
+    >
       <GoogleButton onClick={() => { localStorage.setItem("exm_login_via", "google"); base44.auth.loginWithProvider("google", providerReturnTo()); }} />
-      {error && <p className="mb-5 text-sm text-[#E8C547]">{error}</p>}
       <form onSubmit={handleSubmit} className="space-y-5">
         <AuthField id="email" label={t("pole.email")} type="email" autoComplete="email" value={email} onChange={(e) => setEmail(e.target.value)} required />
         <AuthField
           id="password" label={t("pole.haslo")} type="password" autoComplete="current-password"
           value={password} onChange={(e) => setPassword(e.target.value)} required
-          aside={<Link to="/forgot-password" className="inline-block py-2 -my-2 text-xs text-foreground/55 hover:text-[#C9A24A]">{t("nie_pamietam")}</Link>}
+          aside={<Link to={`/forgot-password${search}`} className="btn-link text-[13px]">{t("nie_pamietam")}</Link>}
         />
-        <button type="submit" disabled={loading} className="btn-relic w-full disabled:opacity-60">
-          {loading && <Loader2 className="h-4 w-4 animate-spin" />} {t("przycisk")}
+        {error && (
+          <p role="alert" className="rounded-[var(--exm-r-field)] border border-exm-error px-4 py-3 text-[13px] leading-relaxed text-exm-error">
+            {error}
+          </p>
+        )}
+        <button type="submit" disabled={loading} aria-busy={loading || undefined} className="btn-relic w-full">
+          {loading && <Loader2 className="h-4 w-4 animate-spin" aria-hidden="true" />}
+          {t("przycisk")}
         </button>
       </form>
     </AuthLayout>
