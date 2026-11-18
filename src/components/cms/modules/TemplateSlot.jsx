@@ -10,7 +10,7 @@ function slot(Component, text) {
     const { slug } = useParams();
     if (slug) return <Component />;
     return (
-      <div className="px-5 md:px-10 py-24 bg-[#0A0A0B]">
+      <div className="px-5 md:px-10 py-[var(--exm-section-y)] bg-[#0A0A0B]">
         <div className="mx-auto max-w-[1200px] border border-dashed border-[#C9A24A]/50 p-10 text-center">
           <p className="technical text-[10px] gold-text mb-3">MIEJSCE NA TREŚĆ</p>
           <p className="text-foreground/60">{text}</p>

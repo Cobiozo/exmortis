@@ -3,7 +3,15 @@ import SafeImg from "./SafeImg";
 
 const BG = { czern: "bg-[#0A0A0B]", grafit: "bg-[#070708] border-y hairline", surface: "bg-exm-surface border-y hairline", bordo: "bg-[#2A0D0E]", zdjecie: "bg-[#0A0A0B]" };
 // „token” = odstęp z tokenu marki (--exm-section-y), wspólny dla całej strony.
-const PAD = { maly: "py-12 md:py-16", sredni: "py-16 md:py-24", duzy: "py-32", xl: "py-24 md:py-40", token: "py-[var(--exm-section-y)]" };
+// Wszystkie odstępy wynikają z tokenu (88 px komputer / 56 px telefon) — „duży” = token (wcześniej stałe 128 px,
+// co między dwoma blokami dawało ponad 250 px pustego pasa). Proporcje: mały 0,5 · średni 0,75 · duży 1 · XL 1,25.
+const PAD = {
+  maly: "py-[calc(var(--exm-section-y)*0.5)]",
+  sredni: "py-[calc(var(--exm-section-y)*0.75)]",
+  duzy: "py-[var(--exm-section-y)]",
+  xl: "py-[calc(var(--exm-section-y)*1.25)]",
+  token: "py-[var(--exm-section-y)]",
+};
 const W = { waska: "max-w-4xl", czytanie: "max-w-[var(--exm-container-narrow)]", standard: "max-w-[1400px]", pelna: "max-w-none" };
 
 // Wspólna oprawa sekcji: tło, odstępy, szerokość, wyrównanie.
