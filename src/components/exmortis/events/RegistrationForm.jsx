@@ -78,14 +78,14 @@ export default function RegistrationForm({ event: ev }) {
   if (result) {
     if (result.already) {
       return (
-        <p className="text-foreground/70 leading-relaxed border border-[#C9A24A]/30 p-6">
+        <p className="rounded-[var(--exm-r-card)] border border-exm-gold-line bg-exm-surface p-6 leading-relaxed text-exm-muted">
           Ten adres jest już zapisany — link do spotkania otrzymasz w wiadomości e-mail.
         </p>
       );
     }
     if (result.status === "Lista rezerwowa") {
       return (
-        <p className="text-foreground/70 leading-relaxed border border-[#5C1A1B] bg-[#0D0D0E] p-6">
+        <p className="rounded-[var(--exm-r-card)] border border-exm-bordo bg-exm-surface p-6 leading-relaxed text-exm-muted">
           Wszystkie miejsca są zajęte. Zapisałem Cię na listę rezerwową — dam znać, jeśli ktoś zrezygnuje.
         </p>
       );
@@ -94,8 +94,8 @@ export default function RegistrationForm({ event: ev }) {
     const items = String(ev.what_registered || "").split(/\s*[;\n]\s*/).map((x) => x.trim()).filter(Boolean);
     const joinT = (String(result.join_url || "").match(/[?&]t=([0-9a-f]+)/i) || [])[1] || null;
     return (
-      <div className="border border-[#C9A24A]/40 bg-[#0D0D0E] p-6 sm:p-8 no-hyph">
-        <p className="shop-heading text-xl text-[#F5EFE1]">
+      <div className="rounded-[var(--exm-r-card)] border border-exm-gold-line bg-exm-bg p-6 sm:p-8 no-hyph">
+        <p className="exm-h3">
           {t("dz.spotkanie", { imie: result.first_name || nameOut })}
         </p>
         <p className="text-foreground/70 mt-4 leading-relaxed">
@@ -125,8 +125,14 @@ export default function RegistrationForm({ event: ev }) {
           <CalendarButtons event={ev} joinUrl={result.join_url || null} t={joinT} className="mt-6" />
         )}
         {result.checkout_url && (
-          <p className="technical text-[10px] gold-text mt-5">ZA CHWILĘ PROWADZĘ CIĘ DO PŁATNOŚCI…</p>
+          <p className="technical mt-5 text-[10px] text-exm-gold">Za chwilę prowadzę Cię do płatności…</p>
         )}
+        <p className="mt-6 text-[13px] leading-relaxed text-exm-muted">
+          Gdy zechcesz kolejnego kroku:{" "}
+          <Link to="/#listy-powrotu" className="text-exm-gold underline underline-offset-4">Listy powrotu</Link>{" "}
+          albo{" "}
+          <Link to="/skarbiec/wracam-inny" className="text-exm-gold underline underline-offset-4">Wracam inny</Link>.
+        </p>
       </div>
     );
   }
@@ -139,11 +145,11 @@ export default function RegistrationForm({ event: ev }) {
       : null;
   if (deadline && new Date() > deadline) {
     return (
-      <div className="border hairline p-8 text-center">
-        <p className="shop-heading text-xl text-[#F5EFE1]">Zapisy zamknięte.</p>
+      <div className="rounded-[var(--exm-r-card)] border border-exm-line bg-exm-surface p-6 text-center sm:p-8">
+        <p className="exm-h3">Zapisy zamknięte.</p>
         {ev.external_url && (
           <a href={ev.external_url} target="_blank" rel="noreferrer" className="btn-relic mt-6">
-            DOŁĄCZ DO TRANSMISJI
+            Dołącz do transmisji
           </a>
         )}
       </div>
@@ -156,7 +162,7 @@ export default function RegistrationForm({ event: ev }) {
       {(!fromAccount || !acc.firstName) && (
       <div className={`grid gap-5 ${fromAccount ? "" : "sm:grid-cols-2"}`}>
         <label htmlFor="reg-name" className="block">
-          <span className="block technical text-[10px] text-foreground/60 mb-2">IMIĘ</span>
+          <span className="mb-2 block technical text-[10px] text-exm-muted">IMIĘ</span>
           <input
             id="reg-name"
             type="text"
@@ -165,11 +171,11 @@ export default function RegistrationForm({ event: ev }) {
             value={firstName}
             onChange={(e) => setFirstName(e.target.value)}
             placeholder="Imię"
-            className="bg-transparent border hairline px-5 py-4 text-foreground placeholder:text-foreground/55 font-mono text-base min-h-[48px] w-full focus:border-[#C9A24A] focus:outline-none transition-colors"
+            className="min-h-[48px] w-full rounded-exm-field border border-exm-line bg-exm-bg px-4 py-3 text-[16px] text-exm-text placeholder:text-exm-muted focus:border-exm-gold focus:outline-none"
           />
         </label>
         {!fromAccount && <label htmlFor="reg-email" className="block">
-          <span className="block technical text-[10px] text-foreground/60 mb-2">E-MAIL</span>
+          <span className="mb-2 block technical text-[10px] text-exm-muted">E-MAIL</span>
           <input
             id="reg-email"
             type="email"
@@ -178,7 +184,7 @@ export default function RegistrationForm({ event: ev }) {
             value={email}
             onChange={(e) => setEmail(e.target.value)}
             placeholder="E-mail"
-            className="bg-transparent border hairline px-5 py-4 text-foreground placeholder:text-foreground/55 font-mono text-base min-h-[48px] w-full focus:border-[#C9A24A] focus:outline-none transition-colors"
+            className="min-h-[48px] w-full rounded-exm-field border border-exm-line bg-exm-bg px-4 py-3 text-[16px] text-exm-text placeholder:text-exm-muted focus:border-exm-gold focus:outline-none"
           />
         </label>}
       </div>
@@ -187,14 +193,14 @@ export default function RegistrationForm({ event: ev }) {
         <label htmlFor="reg-web">Strona www</label>
         <input id="reg-web" tabIndex={-1} autoComplete="off" value={website} onChange={(e) => setWebsite(e.target.value)} />
       </div>
-      <label htmlFor="reg-q" className="block technical text-[10px] text-foreground/60 -mb-3">PYTANIE (NIEOBOWIĄZKOWO)</label>
+      <label htmlFor="reg-q" className="-mb-3 block technical text-[10px] text-exm-muted">PYTANIE (NIEOBOWIĄZKOWO)</label>
       <textarea
         id="reg-q"
         value={question}
         onChange={(e) => setQuestion(e.target.value)}
         rows={3}
         placeholder="Czy jest pytanie, które chcesz mi zadać? (opcjonalnie)"
-        className="w-full bg-transparent border hairline px-5 py-4 text-foreground placeholder:text-foreground/55 font-mono text-base min-h-[48px] w-full focus:border-[#C9A24A] focus:outline-none transition-colors resize-none"
+        className="min-h-[96px] w-full resize-none rounded-exm-field border border-exm-line bg-exm-bg px-4 py-3 text-[16px] text-exm-text placeholder:text-exm-muted focus:border-exm-gold focus:outline-none"
       />
       <label className="flex items-start gap-3 cursor-pointer group py-2 min-h-[44px]">
         <input
@@ -204,30 +210,30 @@ export default function RegistrationForm({ event: ev }) {
           aria-required="true"
           aria-invalid={consentErr}
           aria-describedby={consentErr ? "reg-consent-err" : undefined}
-          className="mt-0.5 h-5 w-5 shrink-0 accent-[#C9A24A]"
+          className="mt-0.5 h-5 w-5 shrink-0 accent-exm-gold"
         />
-        <span className="text-sm text-foreground/80 leading-relaxed group-hover:text-foreground transition-colors">
+        <span className="text-sm leading-relaxed text-exm-text transition-colors group-hover:text-exm-ivory">
           Akceptuję <Link to="/regulamin" className="gold-text underline">Regulamin</Link>.
         </span>
       </label>
-      {consentErr && <p id="reg-consent-err" role="alert" className="-mt-3 text-sm text-[#E8C547]">Zaznacz, żeby się zapisać.</p>}
+      {consentErr && <p id="reg-consent-err" role="alert" className="-mt-3 text-sm text-exm-error">Zaznacz, żeby się zapisać.</p>}
       <label className="flex items-start gap-3 cursor-pointer group py-2 min-h-[44px]">
         <input
           type="checkbox"
           checked={listy}
           onChange={(e) => setListy(e.target.checked)}
-          className="mt-0.5 h-5 w-5 shrink-0 accent-[#C9A24A]"
+          className="mt-0.5 h-5 w-5 shrink-0 accent-exm-gold"
         />
-        <span className="text-sm text-foreground/80 leading-relaxed group-hover:text-foreground transition-colors">
+        <span className="text-sm leading-relaxed text-exm-text transition-colors group-hover:text-exm-ivory">
           {TXT.newsletter}
         </span>
       </label>
-      <p className="text-xs text-[#F5EFE1]/70 leading-relaxed">
+      <p className="text-xs leading-relaxed text-exm-muted">
         Dane służą do zapisu i przypomnień o spotkaniu. Szczegóły: <Link to="/polityka-prywatnosci" className="gold-text underline">Polityka prywatności</Link>.
       </p>
       {!acc.signedIn && <SignInHint />}
-      {error && <p role="alert" className="text-sm text-[#E8C547] leading-relaxed">{error}</p>}
-      <button type="submit" disabled={sending} aria-busy={sending} className="btn-relic disabled:opacity-60 disabled:cursor-wait">
+      {error && <p role="alert" className="text-sm leading-relaxed text-exm-error">{error}</p>}
+      <button type="submit" disabled={sending} aria-busy={sending} className="btn-relic w-full disabled:cursor-wait disabled:opacity-60">
         {sending ? "Zapisuję…" : "Zapisuję się"}
       </button>
     </form>

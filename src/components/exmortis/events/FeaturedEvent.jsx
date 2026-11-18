@@ -2,10 +2,11 @@ import React from "react";
 import { Link } from "react-router-dom";
 import { ArrowRight } from "lucide-react";
 import { coverOf, CoverTile } from "./cover";
-import { dateParts, timeText, whenText, durationText, formatText, warsawNote } from "./time";
+import { dateParts, timeText, durationText, formatText, warsawNote } from "./time";
+import { spotsText } from "./spots";
 import ImageFallback from "@/components/exmortis/ui/ImageFallback";
 
-// Najbliższe spotkanie jako szeroka karta pozioma (etap 2, 18.11.2026): obraz 16:9 obok treści.
+// Najbliższe spotkanie jako szeroka karta pozioma: obraz 16:9 obok treści (telefon: obraz nad treścią).
 // Bez okładki zostaje zastępcza grafika marki. Zapis prowadzi na stronę spotkania (ten sam formularz).
 const CTA = "btn-relic w-full sm:w-auto";
 
@@ -15,9 +16,17 @@ function Cta({ ev }) {
   }
   const external = ev.registration_type === "Link zewnętrzny" && ev.external_url;
   if (external) {
-    return <a href={ev.external_url} target="_blank" rel="noreferrer" className={CTA}>Dołącz do transmisji <ArrowRight className="h-4 w-4" aria-hidden="true" /></a>;
+    return (
+      <a href={ev.external_url} target="_blank" rel="noreferrer" className={CTA}>
+        Dołącz do transmisji <ArrowRight className="h-4 w-4" aria-hidden="true" />
+      </a>
+    );
   }
-  return <Link to={`/spotkania/${ev.slug}#zapis`} className={CTA}>Zapisz się <ArrowRight className="h-4 w-4" aria-hidden="true" /></Link>;
+  return (
+    <Link to={`/spotkania/${ev.slug}#zapis`} className={CTA}>
+      Zapisz się <ArrowRight className="h-4 w-4" aria-hidden="true" />
+    </Link>
+  );
 }
 
 export default function FeaturedEvent({ ev }) {
@@ -26,6 +35,7 @@ export default function FeaturedEvent({ ev }) {
   const d = tbd ? null : dateParts(ev.start_datetime);
   const cover = coverOf(ev);
   const note = tbd ? null : warsawNote(ev.start_datetime);
+  const spots = spotsText(ev);
 
   return (
     <article className="overflow-hidden rounded-[var(--exm-r-card)] border border-exm-line bg-exm-surface md:flex">
@@ -36,23 +46,31 @@ export default function FeaturedEvent({ ev }) {
       </div>
 
       <div className="flex flex-1 flex-col gap-3 p-5 md:p-7">
-        <p className="exm-eyebrow">Najbliższe spotkanie</p>
+        <div className="flex flex-wrap items-center gap-2">
+          <p className="exm-eyebrow">Najbliższe spotkanie</p>
+          {ev.format && (
+            <span className="technical rounded-exm-pill border border-exm-line px-2.5 py-1 text-[10px] text-exm-muted">
+              {formatText(ev.format)}
+            </span>
+          )}
+        </div>
         <h3 className="exm-h3 text-balance">{ev.title}</h3>
         {ev.subtitle && <p className="text-[15px] leading-relaxed text-exm-muted">{ev.subtitle}</p>}
 
         <dl className="mt-1 space-y-1.5 text-[14px] leading-relaxed text-exm-muted">
-          <div className="flex flex-wrap gap-x-2">
+          <div>
             <dt className="sr-only">Termin</dt>
-            <dd>{tbd ? "Termin do ustalenia" : whenText(ev.start_datetime)}</dd>
-            {d && <dd className="text-exm-muted/80">({d.weekday})</dd>}
+            <dd className="text-exm-text">
+              {tbd ? "Termin do ustalenia" : `${d.weekday}, ${d.day} ${d.month}`}
+            </dd>
           </div>
           <div className="flex flex-wrap gap-x-3 gap-y-1">
             {!tbd && <dd>{timeText(ev.start_datetime)}</dd>}
             <dd>{durationText(ev.duration_minutes)}</dd>
-            <dd>{formatText(ev.format)}</dd>
             <dd className={free ? "text-exm-gold" : "text-exm-text"}>{free ? "Bezpłatne" : `${Number(ev.price)} zł`}</dd>
           </div>
           {note && <dd>{note}</dd>}
+          {spots && <dd className="text-exm-gold">{spots}</dd>}
         </dl>
 
         <div className="mt-auto pt-2"><Cta ev={ev} /></div>

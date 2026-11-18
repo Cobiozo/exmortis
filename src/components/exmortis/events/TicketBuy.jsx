@@ -5,7 +5,7 @@ import { base44 } from "@/api/base44Client";
 import { useCart } from "@/components/exmortis/CartContext";
 
 const zl = (n) => `${Number(n || 0).toFixed(2).replace(".", ",").replace(",00", "")} zł`;
-const inp = "w-full bg-transparent border hairline px-4 py-3 text-base text-foreground placeholder:text-foreground/55 focus:border-[#C9A24A] focus:outline-none";
+const inp = "min-h-[48px] w-full rounded-exm-field border border-exm-line bg-exm-bg px-4 py-3 text-[16px] text-exm-text placeholder:text-exm-muted focus:border-exm-gold focus:outline-none";
 
 // Osoby na biletach — w koszyku i w kasie.
 export function TicketLine({ holders, tone = "dark" }) {
@@ -47,8 +47,8 @@ export default function TicketBuy({ event: ev }) {
 
   if (av && !av.on_sale) {
     return (
-      <div className="border hairline p-6 text-center">
-        <p className="shop-heading text-xl text-[#F5EFE1]">{av.reason || "Sprzedaż biletów jest zamknięta."}</p>
+      <div className="rounded-[var(--exm-r-card)] border border-exm-line bg-exm-surface p-6 text-center">
+        <p className="exm-h3">{av.reason || "Sprzedaż biletów jest zamknięta."}</p>
       </div>
     );
   }
@@ -63,7 +63,7 @@ export default function TicketBuy({ event: ev }) {
         </div>
         <div>
           <p className="technical text-[10px] text-foreground/55 mb-2" id="tk-count-l">LICZBA BILETÓW</p>
-          <div className="flex items-center border hairline" role="group" aria-labelledby="tk-count-l">
+          <div className="flex items-center rounded-exm-field border border-exm-line" role="group" aria-labelledby="tk-count-l">
             <button type="button" onClick={() => setCount(names.length - 1)} disabled={names.length <= 1} aria-label="Mniej biletów" className="p-3 min-w-[44px] min-h-[44px] flex items-center justify-center text-foreground/70 disabled:opacity-30"><Minus className="h-4 w-4" /></button>
             <span className="px-4 font-mono" aria-live="polite">{names.length}</span>
             <button type="button" onClick={() => setCount(names.length + 1)} disabled={names.length >= max} aria-label="Więcej biletów" className="p-3 min-w-[44px] min-h-[44px] flex items-center justify-center text-foreground/70 disabled:opacity-30"><Plus className="h-4 w-4" /></button>
@@ -81,9 +81,9 @@ export default function TicketBuy({ event: ev }) {
         ))}
       </div>
 
-      {err && <p role="alert" className="text-sm text-[#E8C547]">{err}</p>}
+      {err && <p role="alert" className="text-sm text-exm-error">{err}</p>}
       <button type="submit" className="btn-relic w-full">
-        <Ticket className="h-4 w-4" /> KUPUJĘ — {zl(price * names.length)} <ArrowRight className="h-4 w-4" />
+        <Ticket className="h-4 w-4" aria-hidden="true" /> Kupuję — {zl(price * names.length)} <ArrowRight className="h-4 w-4" aria-hidden="true" />
       </button>
       <p className="text-xs text-foreground/55 leading-relaxed">
         Płatność przez PayU. Po opłaceniu otrzymasz w wiadomości e-mail bilety w PDF — każdy z imieniem i nazwiskiem, numerem i kodem QR do pokazania przy wejściu.

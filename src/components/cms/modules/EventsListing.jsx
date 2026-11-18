@@ -1,53 +1,107 @@
 import React, { useEffect, useMemo, useState } from "react";
 import { base44 } from "@/api/base44Client";
-import EventTile from "@/components/exmortis/events/EventTile";
+import Container from "@/components/exmortis/ui/Container";
+import SkeletonBlock from "@/components/exmortis/ui/SkeletonBlock";
+import FeaturedEvent from "@/components/exmortis/events/FeaturedEvent";
+import EventCard from "@/components/exmortis/events/EventCard";
+import HowToJoin from "@/components/exmortis/events/HowToJoin";
 import PastEvents from "@/components/exmortis/events/PastEvents";
 import NoEvents from "@/components/exmortis/events/NoEvents";
 import OneOnOne from "@/components/exmortis/events/OneOnOne";
 
-const TABS = [["all", "Wszystkie"], ["free", "Bezpłatne"], ["online", "Online"], ["onsite", "Stacjonarnie"]];
+// Filtry mają sens tylko wtedy, gdy naprawdę rozróżniają spotkania (nie pokazujemy filtra, który nic nie zmienia).
+const FILTERS = [
+  ["free", "Bezpłatne", (ev) => !(Number(ev.price) > 0)],
+  ["online", "Online", (ev) => ev.format === "Online"],
+  ["onsite", "Na żywo", (ev) => ev.format !== "Online"],
+];
 
-// Moduł: nadchodzące spotkania z filtrami i minione z nagraniami (dane z modułu Spotkania).
+const PILL = "technical min-h-[40px] rounded-exm-pill border px-4 text-[11px] transition-colors";
+
+// Moduł: najbliższe spotkanie jako szeroka karta, kolejne jako siatka, archiwum zwinięte.
 export default function EventsListing() {
   const [data, setData] = useState(null);
   const [tab, setTab] = useState("all");
+
   useEffect(() => {
-    base44.functions.invoke("eventsPublic", { action: "list" }).then((res) => setData(res.data)).catch(() => setData({ upcoming: [], past: [] }));
+    base44.functions
+      .invoke("eventsPublic", { action: "list" })
+      .then((res) => setData(res.data))
+      .catch(() => setData({ upcoming: [], past: [] }));
   }, []);
-  const upcoming = data?.upcoming || [];
-  const publishedCount = upcoming.filter((e) => e.status === "Opublikowane").length;
-  const filtered = useMemo(() => upcoming.filter((ev) => {
-    if (tab === "free") return Number(ev.price) === 0;
-    if (tab === "online") return ev.format === "Online";
-    if (tab === "onsite") return ev.format === "Stacjonarnie";
-    return true;
-  }), [upcoming, tab]);
+
+  const upcoming = useMemo(() => data?.upcoming || [], [data]);
+  const published = useMemo(() => upcoming.filter((e) => e.status === "Opublikowane"), [upcoming]);
+  const filters = useMemo(
+    () => FILTERS.filter(([, , match]) => published.some(match) && !published.every(match)),
+    [published]
+  );
+  const filtered = useMemo(() => {
+    const match = FILTERS.find(([key]) => key === tab)?.[2];
+    return match ? upcoming.filter(match) : upcoming;
+  }, [upcoming, tab]);
+
+  const featured = tab === "all" ? filtered[0] : null;
+  const rest = featured ? filtered.slice(1) : filtered;
+
+  if (!data) {
+    return (
+      <div className="pt-10 md:pt-14">
+        <Container>
+          <SkeletonBlock className="h-[300px] w-full" rounded="var(--exm-r-card)" />
+          <div className="mt-6 grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
+            {[0, 1, 2].map((i) => <SkeletonBlock key={i} className="h-[360px] w-full" rounded="var(--exm-r-card)" />)}
+          </div>
+        </Container>
+      </div>
+    );
+  }
 
   return (
-    <div className="bg-[#0A0A0B]">
-      {!data ? (
-        <div className="px-5 md:px-10 pb-24 space-y-4 max-w-[900px]">
-          {[0, 1].map((i) => <div key={i} className="h-40 border border-[#2A2A2A] bg-[#121212] animate-pulse" />)}
-        </div>
-      ) : publishedCount === 0 ? (
-        <div className="px-5 md:px-10 pb-32 md:pb-40 max-w-[900px]"><NoEvents /></div>
-      ) : (
-        <>
-          <div className="px-5 md:px-10 pb-10">
-            <div className="mx-auto max-w-[1400px] flex flex-wrap gap-3">
-              {TABS.map(([k, l]) => (
-                <button key={k} onClick={() => setTab(k)} className={`technical text-[10px] px-5 py-2.5 border transition-colors duration-300 ${tab === k ? "border-[#C9A24A] gold-text" : "border-[#2A2A2A] text-foreground/55 hover:text-foreground/70"}`}>{l}</button>
-              ))}
-            </div>
-          </div>
-          <div className="px-5 md:px-10 pb-20 md:pb-24 mx-auto max-w-[1400px] grid gap-5 min-[520px]:grid-cols-2 min-[1101px]:grid-cols-3 items-stretch">
-            {filtered.map((ev) => <EventTile key={ev.id} event={ev} />)}
-            {filtered.length === 0 && <p className="text-foreground/55 py-16 col-span-full">W tym filtrze nie ma teraz żadnych spotkań.</p>}
-          </div>
-        </>
-      )}
-      {data && <OneOnOne />}
-      <PastEvents events={data?.past || []} />
-    </div>
+    <>
+      <div className="pt-10 md:pt-14">
+        <Container>
+          {published.length === 0 ? (
+            <NoEvents />
+          ) : (
+            <>
+              {featured && <FeaturedEvent ev={featured} />}
+
+              {filters.length > 0 && (
+                <div className="mt-10 flex flex-wrap gap-2" role="group" aria-label="Filtry spotkań">
+                  {[["all", "Wszystkie"], ...filters.map(([key, label]) => [key, label])].map(([key, label]) => (
+                    <button
+                      key={key}
+                      type="button"
+                      onClick={() => setTab(key)}
+                      aria-pressed={tab === key}
+                      className={`${PILL} ${tab === key ? "border-exm-gold text-exm-gold" : "border-exm-line text-exm-muted hover:border-exm-line-strong hover:text-exm-text"}`}
+                    >
+                      {label}
+                    </button>
+                  ))}
+                </div>
+              )}
+
+              {rest.length > 0 ? (
+                <div className="mt-8 grid items-stretch gap-5 sm:grid-cols-2 lg:grid-cols-3">
+                  {rest.map((ev) => <EventCard key={ev.id} ev={ev} />)}
+                </div>
+              ) : (
+                featured && (
+                  <p className="mt-8 max-w-[60ch] text-[15px] leading-relaxed text-exm-muted">
+                    To jedyne zaplanowane spotkanie. Kolejne terminy ogłaszam najpierw w Listach powrotu.
+                  </p>
+                )
+              )}
+            </>
+          )}
+        </Container>
+      </div>
+
+      <PastEvents events={data.past || []} />
+      <HowToJoin />
+      <OneOnOne />
+    </>
   );
 }

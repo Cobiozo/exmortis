@@ -1,19 +1,44 @@
-import React from "react";
-import EventTile from "./EventTile";
+import React, { useState } from "react";
+import Section from "@/components/exmortis/ui/Section";
+import Container from "@/components/exmortis/ui/Container";
+import SectionHeader from "@/components/exmortis/ui/SectionHeader";
+import BrandButton from "@/components/exmortis/ui/BrandButton";
+import EventCard from "./EventCard";
 
-// Minione spotkania z nagraniami — te same kafelki, wersja przygaszona.
+// Minione spotkania: zwinięte pod przyciskiem, żeby nie przesłaniały najbliższych terminów.
+// Nagrania są w kontach osób zapisanych na dane spotkanie — karta prowadzi do konta.
 export default function PastEvents({ events }) {
+  const [open, setOpen] = useState(false);
   if (!events || events.length === 0) return null;
+
   return (
-    <section className="px-5 md:px-10 pt-4 pb-24 md:pb-32">
-      <div className="max-w-[900px]">
-        <h2 className="shop-heading text-2xl md:text-4xl text-[#F5EFE1] mb-10">Minione spotkania</h2>
-        <div className="space-y-4">
-          {events.map((ev) => (
-            <EventTile key={ev.id} event={ev} past />
-          ))}
+    <Section aria-labelledby="minione-spotkania">
+      <Container>
+        <div className="flex flex-col gap-5 md:flex-row md:items-end md:justify-between md:gap-8">
+          <SectionHeader
+            eyebrow="Archiwum"
+            title="Minione spotkania"
+            id="minione-spotkania"
+            lead="Nagrania są dostępne w kontach osób zapisanych na dane spotkanie."
+          />
+          <div className="shrink-0">
+            <BrandButton
+              variant="secondary"
+              onClick={() => setOpen((v) => !v)}
+              aria-expanded={open}
+              aria-controls="minione-lista"
+            >
+              {open ? "Ukryj minione spotkania" : "Pokaż minione spotkania"}
+            </BrandButton>
+          </div>
         </div>
-      </div>
-    </section>
+
+        {open && (
+          <div id="minione-lista" className="mt-8 grid items-stretch gap-5 sm:grid-cols-2 lg:grid-cols-3">
+            {events.map((ev) => <EventCard key={ev.id} ev={ev} archive />)}
+          </div>
+        )}
+      </Container>
+    </Section>
   );
 }

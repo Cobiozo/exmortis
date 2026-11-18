@@ -1,28 +1,28 @@
 import { rememberJoinEvent } from "@/content/joinFallback";
 import React, { useEffect, useState } from "react";
-import WarsawNote from "@/components/exmortis/events/WarsawNote";
-import { sanitizeHtml } from "@/lib/sanitizeHtml";
 import { Link, useParams } from "react-router-dom";
-import { ArrowLeft, ArrowRight, Clock, MapPin } from "lucide-react";
+import { ArrowLeft } from "lucide-react";
+import { sanitizeHtml } from "@/lib/sanitizeHtml";
 import { usePageMeta } from "@/lib/usePageMeta";
 import { useDocMeta } from "@/lib/useDocMeta";
 import { LISTOPAD_EVENT } from "@/components/cms/defaults/listopadDefault";
-
-// Spotkania z własną stroną zapisu: karta zostaje, zapis i adres kanoniczny prowadzą tam.
-const LANDINGS = { [LISTOPAD_EVENT]: "/1-listopada", "1-listopada": "/1-listopada" };
 import { base44 } from "@/api/base44Client";
-import { CoverHero, coverOf } from "@/components/exmortis/events/cover";
-import HeroContent from "@/components/exmortis/events/HeroContent";
+import Container from "@/components/exmortis/ui/Container";
+import BrandButton from "@/components/exmortis/ui/BrandButton";
+import EventHero from "@/components/exmortis/events/EventHero";
 import StickySignup from "@/components/exmortis/events/StickySignup";
 import CalendarButtons from "@/components/exmortis/events/CalendarButtons";
 import ZoomFaq from "@/components/exmortis/events/ZoomFaq";
 import WhoLeads from "@/components/exmortis/events/WhoLeads";
 import RegistrationBlock from "@/components/exmortis/events/RegistrationBlock";
-import { whenText, durationText, priceText } from "@/components/exmortis/events/time";
 import JsonLd from "@/components/seo/JsonLd";
 import { eventJsonLd } from "@/lib/structuredData";
 
-// Strona wydarzenia /spotkania/:slug — szczegóły i zapis.
+// Spotkania z własną stroną zapisu: karta zostaje, zapis i adres kanoniczny prowadzą tam.
+const LANDINGS = { [LISTOPAD_EVENT]: "/1-listopada", "1-listopada": "/1-listopada" };
+
+// Strona wydarzenia /spotkania/:slug — pierwszy ekran z faktami, opis z danych, zapis i kalendarz.
+// Telefon: formularz zaraz po faktach (kolejność w DOM), komputer: przyklejona kolumna zapisu po prawej.
 export default function EventDetail() {
   const { slug } = useParams();
   const [event, setEvent] = useState(undefined);
@@ -45,144 +45,106 @@ export default function EventDetail() {
 
   if (event === undefined) {
     return (
-      <div className="bg-[#0A0A0B] pt-20 min-h-screen flex items-center justify-center">
-        <div className="w-8 h-8 border-4 border-[#3D3D3F] border-t-[#C9A24A] rounded-full animate-spin" />
+      <div className="flex min-h-[70svh] items-center justify-center pt-20">
+        <div className="h-8 w-8 animate-spin rounded-full border-4 border-exm-line border-t-exm-gold" role="status" aria-label="Wczytuję spotkanie" />
       </div>
     );
   }
 
   if (event === null) {
     return (
-      <div className="bg-[#0A0A0B] pt-20 min-h-screen flex flex-col items-center justify-center gap-6 px-5 text-center">
-        <p className="shop-heading text-3xl text-[#F5EFE1]/70">{error || "Nie znaleziono spotkania."}</p>
-        <Link to="/spotkania" className="btn-ghost">
-          <ArrowLeft className="h-4 w-4" /> WRÓĆ DO SPOTKAŃ
-        </Link>
+      <div className="flex min-h-[70svh] flex-col items-center justify-center gap-6 px-5 pt-20 text-center">
+        <p className="exm-h3 text-exm-muted">{error || "Nie znaleziono spotkania."}</p>
+        <BrandButton to="/spotkania" variant="secondary">Wróć do spotkań</BrandButton>
       </div>
     );
   }
 
   const cancelled = event.status === "Odwołane";
-  const cover = coverOf(event);
   const ended =
     event.start_datetime &&
     new Date(new Date(event.start_datetime).getTime() + (Number(event.duration_minutes) || 60) * 60000) < new Date();
+  // Blok zapisu tylko dla spotkań, na które można się jeszcze zapisać.
+  const withForm = !cancelled && !ended && event.registration_type !== "Bez zapisu";
 
   return (
-    <div className="bg-[#0A0A0B] pt-20 overflow-x-hidden">
+    <div className="pt-20">
       <JsonLd data={eventJsonLd(event)} />
-      {cover && (
-        <CoverHero ev={event}>
-          <HeroContent ev={event} />
-        </CoverHero>
-      )}
-      <div className="mx-auto max-w-[1200px] px-5 md:px-10 pt-10 md:pt-14 pb-24 lg:grid lg:grid-cols-[minmax(0,1fr)_380px] lg:gap-14">
-       <div className="min-w-0">
-        <Link to="/spotkania" className="inline-block py-3 -my-3 technical text-[10px] text-foreground/55 hover:gold-text transition-colors">
-          <ArrowLeft className="h-3.5 w-3.5 inline mr-2 -mt-0.5" /> SPOTKANIA
+
+      <Container className="pt-4 md:pt-6">
+        <Link to="/spotkania" className="btn-link">
+          <ArrowLeft className="h-4 w-4" aria-hidden="true" /> Spotkania
         </Link>
+      </Container>
 
-        <div className="mt-8 flex flex-wrap items-center gap-3">
-          <span className="technical text-[9px] text-[#C9A24A] border border-[#C9A24A]/40 px-2 py-1">
-            {event.event_type.toUpperCase()}
-          </span>
-          <span className="technical text-[9px] text-foreground/55 border hairline px-2 py-1">
-            {event.stage === "Wszystkie" ? "DROGA: WSZYSTKIE ETAPY" : `ETAP: ${event.stage.toUpperCase()}`}
-          </span>
-          {cancelled && (
-            <span className="technical text-[9px] blood-text border border-[#BC1E22]/40 px-2 py-1">ODWOŁANE</span>
+      <Container className="pt-6 pb-[var(--exm-section-y)]">
+        <div className={withForm ? "grid gap-10 lg:grid-cols-[minmax(0,1fr)_380px] lg:gap-x-14 lg:gap-y-0" : "max-w-[820px]"}>
+          <div className={withForm ? "min-w-0 lg:col-start-1 lg:row-start-1" : "min-w-0"}>
+            <EventHero ev={event} landing={landing} ended={ended} />
+          </div>
+
+          {withForm && (
+            <aside
+              id="zapis"
+              className="min-w-0 lg:sticky lg:top-28 lg:col-start-2 lg:row-span-2 lg:row-start-1 lg:self-start"
+            >
+              <div className="rounded-[var(--exm-r-card)] border border-exm-line bg-exm-surface p-5 sm:p-7">
+                <p className="exm-eyebrow mb-5">
+                  {event.registration_type === "Zapis na stronie" ? "Zapis" : "Dołącz"}
+                </p>
+                {landing
+                  ? <BrandButton to={landing} className="w-full">Zapisz się</BrandButton>
+                  : <RegistrationBlock event={event} />}
+              </div>
+            </aside>
           )}
-        </div>
 
-        {!cover && (
-          <h1 className="shop-heading text-[#F5EFE1] leading-tight mt-6 break-words [text-wrap:balance]" style={{ fontSize: "clamp(2rem, 6vw, 3.5rem)" }}>{event.title}</h1>
-        )}
-        {event.subtitle && <p className="italic text-foreground/60 text-lg mt-5">{event.subtitle}</p>}
-
-        <div className="mt-10 grid sm:grid-cols-3 gap-6 border-y hairline py-8">
-          <div>
-            <p className="technical text-[9px] text-foreground/55 mb-2">KIEDY</p>
-            <p className="text-[#F5EFE1]">{whenText(event.start_datetime)}<WarsawNote iso={event.start_datetime} /></p>
-            <p className="text-foreground/55 text-sm mt-1">
-              <Clock className="h-3.5 w-3.5 inline mr-1 -mt-0.5" /> {durationText(event.duration_minutes)}
-            </p>
-          </div>
-          <div>
-            <p className="technical text-[9px] text-foreground/55 mb-2">GDZIE</p>
-            <p className="text-[#F5EFE1]">{event.format}</p>
-            <p className="text-foreground/55 text-sm mt-1">
-              <MapPin className="h-3.5 w-3.5 inline mr-1 -mt-0.5" />{" "}
-              {event.format === "Stacjonarnie" ? "Adres otrzymasz po zapisaniu" : event.location || "Online"}
-            </p>
-          </div>
-          <div>
-            <p className="technical text-[9px] text-foreground/55 mb-2">CENA</p>
-            <p className="text-[#F5EFE1]">{priceText(event.price)}</p>
-          </div>
-        </div>
-
-        {event.for_whom && (
-          <p className="mt-8 text-foreground/70 border-l-2 border-[#5C1A1B] pl-5 leading-relaxed">{event.for_whom}</p>
-        )}
-
-        {event.description && (
-          <div
-            className="rich-content mt-8 text-foreground/70"
-            dangerouslySetInnerHTML={{ __html: sanitizeHtml(event.description) }}
-          />
-        )}
-
-        {cancelled && (
-          <div className="mt-10 border border-[#BC1E22]/40 p-8 text-center">
-            <p className="shop-heading text-2xl blood-text">To spotkanie zostało odwołane.</p>
-            {event.cancel_reason && (
-              <p className="text-foreground/60 mt-3 leading-relaxed">{event.cancel_reason}</p>
+          <div className={withForm ? "min-w-0 lg:col-start-1 lg:row-start-2" : "min-w-0"}>
+            {event.for_whom && (
+              <p className="border-l-2 border-exm-gold pl-5 text-[16px] leading-relaxed text-exm-muted">
+                {event.for_whom}
+              </p>
             )}
-          </div>
-        )}
 
-        {(() => {
-          if (!event.start_datetime || cancelled) return null;
-          const end = new Date(new Date(event.start_datetime).getTime() + (Number(event.duration_minutes) || 60) * 60000);
-          if (end >= new Date()) return null;
-          return (
-            <div className="mt-10 border hairline p-8 text-center">
-              <p className="shop-heading text-2xl text-[#F5EFE1]/80">To spotkanie już się odbyło.</p>
-              <Link to="/spotkania" className="btn-ghost mt-6">
-                ZOBACZ KOLEJNE TERMINY
-              </Link>
-            </div>
-          );
-        })()}
+            {event.description && (
+              <div className="prose-measure mt-10">
+                <p className="exm-eyebrow mb-3">O spotkaniu</p>
+                <div
+                  className="rich-content text-exm-text"
+                  dangerouslySetInnerHTML={{ __html: sanitizeHtml(event.description) }}
+                />
+              </div>
+            )}
 
-        <CalendarButtons event={event} className="mt-12" />
-        {event.kto_prowadzi !== false && <WhoLeads />}
-        <ZoomFaq event={event} />
-       </div>
+            {cancelled && (
+              <div className="mt-10 rounded-[var(--exm-r-card)] border border-exm-bordo bg-exm-surface p-6 sm:p-8">
+                <p className="exm-h3">To spotkanie zostało odwołane.</p>
+                {event.cancel_reason && (
+                  <p className="mt-3 leading-relaxed text-exm-muted">{event.cancel_reason}</p>
+                )}
+              </div>
+            )}
 
-       <aside className="min-w-0 lg:sticky lg:top-28 lg:self-start">
-        {landing && !cancelled && !ended && (
-          <div className="mt-16 lg:mt-0 border hairline bg-[#0D0D0E] p-5 sm:p-7">
-            <p className="technical text-[10px] gold-text mb-6">ZAPIS</p>
-            <Link to={landing} className="btn-relic w-full">Zapisz się <ArrowRight className="h-4 w-4" /></Link>
+            {ended && !cancelled && (
+              <div className="mt-10 rounded-[var(--exm-r-card)] border border-exm-line bg-exm-surface p-6 sm:p-8">
+                <p className="exm-h3">To spotkanie już się odbyło.</p>
+                <p className="mt-3 leading-relaxed text-exm-muted">Kolejne terminy znajdziesz na liście spotkań.</p>
+                <BrandButton to="/spotkania" variant="secondary" className="mt-5">Zobacz kolejne terminy</BrandButton>
+              </div>
+            )}
+
+            <CalendarButtons event={event} className="mt-10" />
+            {event.kto_prowadzi !== false && <WhoLeads />}
+            <ZoomFaq event={event} />
           </div>
-        )}
-        {!landing && !cancelled && !ended && event.registration_type !== "Bez zapisu" && (
-          <div id="zapis" className="mt-16 lg:mt-0 border hairline bg-[#0D0D0E] p-5 sm:p-7 scroll-mt-28">
-            <p className="technical text-[10px] gold-text mb-6">
-              {event.registration_type === "Zapis na stronie" ? "ZAPIS" : "DOŁĄCZ"}
-            </p>
-            <RegistrationBlock event={event} />
-          </div>
-        )}
-        {!cancelled && !ended && event.registration_type === "Bez zapisu" && (
-          <div className="mt-16 lg:mt-0">
-            <RegistrationBlock event={event} />
-          </div>
-        )}
-       </aside>
-      </div>
-      {!landing && !cancelled && !ended && event.registration_type === "Zapis na stronie" && <StickySignup />}
+        </div>
+        {/* Koniec treści — pasek zapisu na telefonie chowa się tutaj, żeby nie zasłaniał ostatnich sekcji. */}
+        <div id="spotkanie-koniec" aria-hidden="true" className="h-px" />
+      </Container>
+
+      {withForm && !landing && event.registration_type === "Zapis na stronie" && (
+        <StickySignup event={event} endId="spotkanie-koniec" />
+      )}
     </div>
   );
 }
