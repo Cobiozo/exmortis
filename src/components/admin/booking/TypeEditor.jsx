@@ -28,6 +28,7 @@ export default function TypeEditor({ type, onSaved }) {
         <label className="text-sm">Dostęp<select className={inputCls} value={t.access} onChange={(e) => set("access", e.target.value)}>
           <option value="PUBLICZNY">Publiczny</option><option value="PO_ZAKUPIE">Po zakupie</option><option value="PAKIET">Pakiet</option></select></label>
         <label className="text-sm sm:col-span-2">Opis<textarea rows={2} className={inputCls} value={t.description || ""} onChange={(e) => set("description", e.target.value)} /></label>
+        <label className="text-sm sm:col-span-2">Przygotowanie do spotkania (opcjonalnie)<textarea rows={3} className={inputCls} value={t.prep_text || ""} onChange={(e) => set("prep_text", e.target.value)} placeholder="Wstawiane w potwierdzeniu rezerwacji i przypomnieniu dzień przed spotkaniem ({{przygotowanie}})." /></label>
         <div className="text-sm sm:col-span-2 space-y-2 min-w-0">
           <p>Link Zoom (widzi tylko admin i właściciel potwierdzonej rezerwacji, od 15 minut przed sesją)</p>
           <ZoomChoice link={t.zoom_link} onSet={({ link }) => set("zoom_link", link)}>

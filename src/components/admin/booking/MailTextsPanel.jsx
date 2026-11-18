@@ -6,7 +6,7 @@ const NAMES = {
   potwierdzenie: "Potwierdzenie", przypomnienie24: "Przypomnienie 24 h", przypomnienie1: "Przypomnienie 1 h",
   przeniesienie: "Przeniesienie", anulowanie: "Anulowanie",
 };
-const VARS = ["{{imie}}", "{{rodzaj}}", "{{termin}}", "{{termin_lokalny}}", "{{zoom}}", "{{przenies}}", "{{anuluj}}"];
+const VARS = ["{{imie}}", "{{rodzaj}}", "{{termin}}", "{{termin_lokalny}}", "{{zoom}}", "{{przygotowanie}}", "{{przenies}}", "{{anuluj}}"];
 
 export default function MailTextsPanel() {
   const [texts, setTexts] = useState(null);

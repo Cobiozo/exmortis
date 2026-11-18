@@ -41,6 +41,7 @@ export const DEFAULT_TEXTS = {
 <p style="margin:0 0 4px;">{{termin}}</p>
 <p style="color:#8A8A8C;font-size:13px;margin:0 0 18px;">{{termin_lokalny}}</p>
 <p style="margin:0 0 18px;">{{zoom}}</p>
+{{przygotowanie}}
 <p style="margin:0 0 18px;">{{przenies}} &nbsp;·&nbsp; {{anuluj}}</p>
 <p style="color:#8A8A8C;font-size:13px;margin:0;">W załączniku jest plik do Twojego kalendarza. Link do spotkania działa od 15 minut przed terminem.</p>`,
   },
@@ -51,6 +52,7 @@ export const DEFAULT_TEXTS = {
 <p style="margin:0 0 4px;">{{termin}}</p>
 <p style="color:#8A8A8C;font-size:13px;margin:0 0 18px;">{{termin_lokalny}}</p>
 <p style="margin:0 0 18px;">{{zoom}}</p>
+{{przygotowanie}}
 <p style="margin:0;">{{przenies}} &nbsp;·&nbsp; {{anuluj}}</p>`,
   },
   przypomnienie1: {
@@ -137,7 +139,7 @@ export function icsAttach(b, method) {
 
 export async function loadBooking(base44, id) {
   const r = await runSql(base44, `SELECT k.id, k.email, k.first_name, k.starts_at, k.ends_at, k.status, k.client_tz,
-      k.ics_uid, k.ics_sequence, t.name AS type, t.zoom_link, t.slug
+      k.ics_uid, k.ics_sequence, t.name AS type, t.zoom_link, t.slug, t.prep_text
     FROM public.bk_bookings k JOIN public.bk_types t ON t.id = k.type_id WHERE k.id = ${escStr(id)}::uuid`, true).catch(() => []);
   const b = r?.[0];
   if (b) b.organizer = await adminTo(base44).catch(() => null);
@@ -155,6 +157,8 @@ export async function mailVars(base44, b, token) {
     zoom: b.zoom_link ? `<a href="${h(b.zoom_link)}" style="color:#C9A24A;">Wejdź na spotkanie</a>` : "Link do spotkania pojawi się przed terminem.",
     przenies: manage ? `<a href="${h(manage)}" style="color:#C9A24A;">Przenieś termin</a>` : "",
     anuluj: manage ? `<a href="${h(manage)}&a=anuluj" style="color:#C9A24A;">Anuluj spotkanie</a>` : "",
+    // Instrukcja przygotowania z ustawień rodzaju spotkania (18.11.2026); pusta — nic nie wstawia.
+    przygotowanie: b.prep_text ? `<p style="line-height:1.7;margin:0 0 18px;">${h(b.prep_text).replace(/\n/g, "<br>")}</p>` : "",
   };
 }
 
@@ -264,7 +268,7 @@ export async function runReminders(base44) {
   // Zapytanie zwraca już wszystkie pola potrzebne treści i plikowi .ics — dzięki temu nie ma
   // osobnego odczytu na każdą wiadomość (wcześniej do 40 rund do bazy na jedno uruchomienie).
   const due = await runSql(base44, `SELECT n.id AS nid, n.kind, n.send_at, k.id AS id, k.starts_at, k.ends_at,
-      k.status, k.ics_uid, k.ics_sequence, k.first_name, k.email, k.client_tz, t.name AS type, t.zoom_link, t.slug
+      k.status, k.ics_uid, k.ics_sequence, k.first_name, k.email, k.client_tz, t.name AS type, t.zoom_link, t.slug, t.prep_text
     FROM public.bk_notifications n JOIN public.bk_bookings k ON k.id = n.booking_id JOIN public.bk_types t ON t.id = k.type_id
     WHERE n.status = 'zaplanowane' AND n.kind IN ('przypomnienie24','przypomnienie1') AND n.send_at <= now() + interval '1 minute'
     ORDER BY n.send_at LIMIT 40`, true).catch(() => []);

@@ -216,6 +216,7 @@ ALTER TABLE public.bk_types ADD COLUMN IF NOT EXISTS free_service boolean NOT NU
 -- 18.11.2026: limit dzienny jednego rodzaju i wyłączenie rodzaju ze wspólnego limitu (np. rozmowy wstępne POWRÓT).
 ALTER TABLE public.bk_types ADD COLUMN IF NOT EXISTS daily_limit int CHECK (daily_limit IS NULL OR daily_limit BETWEEN 1 AND 20);
 ALTER TABLE public.bk_types ADD COLUMN IF NOT EXISTS in_global_limit boolean NOT NULL DEFAULT true;
+ALTER TABLE public.bk_types ADD COLUMN IF NOT EXISTS prep_text text;
 
 CREATE TABLE IF NOT EXISTS public.bk_hours (
   id uuid PRIMARY KEY DEFAULT gen_random_uuid(),

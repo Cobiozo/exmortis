@@ -54,7 +54,7 @@ const handler = async function (req) {
       await ensureTypes(base44);
       const [s, types, hours, blocks, hol] = await Promise.all([
         runSql(base44, `SELECT mode, min_notice_h, daily_limit, weekly_limit, late_cancel_policy, threshold_product_id, threshold_type_id, threshold_sessions, threshold_valid_days, service_consent_version, service_consent_text FROM public.bk_settings WHERE id = 1`, true),
-        runSql(base44, `SELECT id, slug, name, description, duration_min, buffer_before, buffer_after, step_min, horizon_days, access, zoom_link, questions, change_window_h, monthly_limit, weekly_limit, daily_limit, in_global_limit, active FROM public.bk_types ORDER BY sort, name`, true),
+        runSql(base44, `SELECT id, slug, name, description, duration_min, buffer_before, buffer_after, step_min, horizon_days, access, zoom_link, questions, change_window_h, monthly_limit, weekly_limit, daily_limit, in_global_limit, prep_text, active FROM public.bk_types ORDER BY sort, name`, true),
         runSql(base44, `SELECT id, type_id, weekday, to_char(start_local,'HH24:MI') AS "from", to_char(end_local,'HH24:MI') AS "to" FROM public.bk_hours ORDER BY weekday, start_local`, true),
         runSql(base44, `SELECT id, kind, starts_at, ends_at, rep_weekday, to_char(rep_from,'HH24:MI') AS rep_from, to_char(rep_to,'HH24:MI') AS rep_to, note FROM public.bk_blocks WHERE NOT disabled AND ends_at > now() ORDER BY starts_at LIMIT 200`, true),
         runSql(base44, `SELECT d, name, blocked FROM public.bk_holidays WHERE d >= date_trunc('year', now())::date ORDER BY d`, true),
@@ -96,6 +96,7 @@ const handler = async function (req) {
         questions: `${escStr(JSON.stringify(qs))}::jsonb`, change_window_h: int(t.change_window_h, 0, 720, 24),
         monthly_limit: esc(int(t.monthly_limit, 1, 100, null)), weekly_limit: esc(int(t.weekly_limit, 1, 100, null)),
         daily_limit: esc(int(t.daily_limit, 1, 20, null)), in_global_limit: t.in_global_limit === false ? "FALSE" : "TRUE",
+        prep_text: esc(String(t.prep_text || "").trim().slice(0, 2000) || null),
         active: t.active === true ? "TRUE" : "FALSE",
       };
       let id = t.id;
