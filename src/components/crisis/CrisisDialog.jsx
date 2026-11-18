@@ -1,11 +1,13 @@
 import React from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 
-const NUMBERS = [
+export const CRISIS_NUMBERS = [
   { tel: "116123", label: "116 123", desc: "telefon zaufania dla dorosłych w kryzysie emocjonalnym, całą dobę" },
   { tel: "800702222", label: "800 70 2222", desc: "Centrum Wsparcia, całą dobę" },
   { tel: "112", label: "112", desc: "zagrożenie życia" },
 ];
+
+export const CRISIS_REMINDER = "exmortis to mentoring, nie terapia ani pomoc kryzysowa — w nagłej sytuacji zadzwoń pod jeden z tych numerów.";
 
 // Spokojne okno z numerami pomocowymi. Otwierane przyciskiem albo po pilnym zgłoszeniu.
 // Bez zapisu, bez pomiaru. Fokus i Esc obsługuje Radix Dialog.
@@ -24,7 +26,7 @@ export default function CrisisDialog({ open, onOpenChange }) {
             w samotności. Zadzwoń. Te numery są bezpłatne i działają całą dobę.
           </p>
           <div className="space-y-3">
-            {NUMBERS.map((n) => (
+            {CRISIS_NUMBERS.map((n) => (
               <a
                 key={n.tel}
                 href={`tel:${n.tel}`}
@@ -35,10 +37,7 @@ export default function CrisisDialog({ open, onOpenChange }) {
               </a>
             ))}
           </div>
-          <p className="text-sm text-foreground/55 leading-relaxed">
-            exmortis to mentoring, nie terapia ani pomoc kryzysowa — w nagłej sytuacji zadzwoń pod
-            jeden z tych numerów.
-          </p>
+          <p className="text-sm text-foreground/55 leading-relaxed">{CRISIS_REMINDER}</p>
         </div>
       </DialogContent>
     </Dialog>

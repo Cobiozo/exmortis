@@ -24,8 +24,8 @@ export const GLOS_BLOCKS = [
 ];
 
 export const KONTAKT_BLOCKS = [
-  { id: "kontakt-hero", typ: "hero", widoczny: true, uklad: { ...bare }, dane: { wariant: "standard", etykieta: "NAPISZ", linia1: "Kontakt", linia2: "",
-    lead: "Napisz. Odpowiadam osobiście.", przyciski: [], przyciemnienie: 60 } },
+  { id: "kontakt-hero", typ: "hero", widoczny: true, uklad: { ...bare }, dane: { wariant: "standard", etykieta: "KONTAKT", linia1: "Napisz.", linia2: "Odpowiadam osobiście.",
+    lead: "Nie ma botów i asystentów. Jeśli jesteś na progu — napisz pierwszy ruch, choćby jednym zdaniem.", przyciski: [], przyciemnienie: 60 } },
   mod("kontakt-formularz", "kontakt_strona"),
 ];
 
