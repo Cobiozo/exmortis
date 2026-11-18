@@ -18,6 +18,7 @@ import { regulaminVersion } from "../_shared/legalDocs.ts";
 import { unitPrice } from "../_shared/productPrice.ts";
 import { cleanInvoice, invoiceText } from "../_shared/invoice.ts";
 import { appByPayToken, isPaid, isExpired, PROGRAM_NAME, CONTRACT_CONSENT, EARLY_CONSENT } from "../_shared/powrotPay.ts";
+import { appByToken as progAppByToken, progLog } from "../_shared/prog.ts";
 import { docLatest } from "../_shared/legalDocs.ts";
 import { giftLine } from "../_shared/giftCard.ts";
 import { ticketLines } from "../_shared/tickets.ts";
@@ -63,6 +64,13 @@ function payuTitle(lines) {
     t += ` + ${rest} ${word}`;
   }
   return t;
+}
+
+// Rozmowa na progu: zamówienie ↔ zgłoszenie (status „opłacone” ustawia synchronizacja po płatności).
+async function linkProg(base44, orderId: string, appId: string) {
+  await runSql(base44, `UPDATE public.orders SET prog_app_id = ${escStr(appId)}::uuid WHERE id = ${escStr(orderId)}`).catch((e) => console.error("prog link:", String(e?.message || e).slice(0, 200)));
+  await runSql(base44, `UPDATE public.prog_applications SET order_id = ${escStr(orderId)}, updated_date = now() WHERE id = ${escStr(appId)}::uuid`).catch(() => {});
+  await progLog(base44, appId, "platnosc", "Rozpoczęto płatność (zamówienie utworzone)", "uczestnik");
 }
 
 const handler = async function (req) {
@@ -256,6 +264,7 @@ const handler = async function (req) {
         }
       }
     }
+    let progAppId = "";
     // Rozmowa na progu: jednorazowe spotkanie, kolejne najwcześniej po miesiącu (decyzja właściciela 17.11.2026).
     const progu = await runSql(base44, `SELECT id::text AS id FROM public.products WHERE slug = 'rozmowa-na-progu' LIMIT 1`, true).catch(() => []);
     const proguId = progu && progu[0] ? String(progu[0].id) : "";
@@ -266,6 +275,12 @@ const handler = async function (req) {
            AND o.created_date > now() - interval '30 days'
            AND o.items @> ${escStr(JSON.stringify([{ product_id: proguId }]))}::jsonb LIMIT 1`, true).catch(() => []);
       if (recent && recent.length) throw new Error("Kolejną Rozmowę na progu możesz zamówić najwcześniej miesiąc po poprzedniej. Jeśli to pilne, napisz do mnie.");
+      // 18.11.2026: płatność tylko po zgłoszeniu z krótką ankietą (osobisty link ze zgłoszenia, ważny 7 dni).
+      const progApp = await progAppByToken(base44, String(body.prog_token || ""));
+      if (!progApp) throw new Error("Rozmowę na progu zamawiasz po krótkim zgłoszeniu. Wypełnij je na stronie exmortis.pl/rozmowa-na-progu/zgloszenie.");
+      if (progApp.status !== "do_platnosci") throw new Error("To zgłoszenie zostało już opłacone albo zamknięte. W razie pytań napisz do mnie przez stronę Kontakt.");
+      if (!progApp.valid) throw new Error("Link do płatności wygasł. Wypełnij zgłoszenie ponownie, a otrzymasz nowy link.");
+      progAppId = String(progApp.id);
     }
     const sessionEmail = body.code ? String((await base44.auth.me().catch(() => null))?.email || "") : "";
     const disc = await applyDiscount(base44, body.code, stored.map((s) => ({
@@ -296,6 +311,7 @@ const handler = async function (req) {
         discountCode: disc ? disc.code : null,
       });
       await saveConsents(base44, req, id, buyerEmail, hasDigital, newsletterConsent, hasService, createAccount);
+      if (progAppId) await linkProg(base44, id, progAppId);
       if (newsletterConsent) await addSubscriber(base44, { email: buyerEmail, name: buyerName, consentGiven: true });
       // Bez bramki: zamówienie od razu opłacone; realizacja z fulfilled_at po sukcesie, a błąd ponawia zadanie cykliczne.
       await markPaid(base44, freeId);
@@ -349,6 +365,7 @@ const handler = async function (req) {
 
     // 5. Identyfikator PayU i adres płatności przy zamówieniu; status PENDING.
     await attachPayuOrder(base44, extOrderId, created.payuOrderId, created.redirectUri);
+    if (progAppId) await linkProg(base44, extOrderId, progAppId);
 
     await saveConsents(base44, req, extOrderId, buyerEmail, hasDigital, newsletterConsent, hasService, createAccount);
 
