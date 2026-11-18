@@ -100,7 +100,8 @@ export default function Shop() {
 
   return (
     <div className="bg-exm-bg">
-      <Section>
+      {/* Katalog stoi tuż pod nagłówkiem strony (blok CMS) — bez drugiego pełnego odstępu sekcji nad wskazówką. */}
+      <Section className="!pt-2 md:!pt-4">
         <Container>
           <p className="text-[15px] leading-relaxed text-exm-muted">
             Nie wiesz, od czego zacząć?{" "}
