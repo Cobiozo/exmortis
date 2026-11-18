@@ -10,8 +10,8 @@ export default function CiszaFrame({ onLogo, onHome, logoExtra, bottom, children
       <div className="cisza-top relative flex justify-center">
         {onHome && (
           <button type="button" onClick={onHome} aria-label="Wróć na stronę główną"
-            className="absolute left-3 sm:left-5 top-[calc(10px+env(safe-area-inset-top))] min-h-11 min-w-11 px-2 inline-flex items-center gap-2 technical text-[11px] text-foreground/70 hover:gold-text transition-colors">
-            <Home className="h-4 w-4" aria-hidden="true" /><span className="hidden sm:inline">STRONA GŁÓWNA</span>
+            className="absolute left-3 sm:left-5 top-[calc(10px+env(safe-area-inset-top))] min-h-11 min-w-11 px-2 inline-flex items-center gap-2 text-[13px] font-medium text-exm-muted hover:text-exm-gold transition-colors">
+            <Home className="h-4 w-4" aria-hidden="true" /><span className="hidden sm:inline">Strona główna</span>
           </button>
         )}
         <CiszaLogo onClick={onLogo} />
