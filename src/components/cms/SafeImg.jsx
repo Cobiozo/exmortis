@@ -14,6 +14,7 @@ export default function SafeImg({ img, className = "", imgClass = "", style, eag
   return (
     <div className={`relative overflow-hidden select-none [-webkit-touch-callout:none] ${className}`} onContextMenu={block}>
       <img src={src} srcSet={srcSet} sizes={srcSet ? sizes : undefined} alt={img?.alt || ""} draggable={false}
+        onError={img?.fallback ? (e) => { if (e.currentTarget.src !== img.fallback) { e.currentTarget.srcset = ""; e.currentTarget.src = img.fallback; } } : undefined}
         loading={eager ? "eager" : "lazy"} fetchPriority={eager ? "high" : undefined} decoding="async"
         className={`w-full h-full object-cover pointer-events-none ${imgClass}`}
         style={{ objectPosition: `${img?.fx ?? 50}% ${img?.fy ?? 50}%`, ...style }} />

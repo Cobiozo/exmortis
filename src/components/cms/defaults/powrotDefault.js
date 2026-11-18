@@ -63,7 +63,7 @@ export const POWROT_BLOCKS = [
   // 6. Kto prowadzi — portret 4:5 i tekst bez zmian.
   b("kto", "tekst_zdjecie", { etykieta: "KTO PROWADZI", tytul: "Każdą sesję prowadzę osobiście.", strona: "lewo", kolumny: "40-60", proporcja: "4:5", mobile: "gora",
     podpis: "DAWID · MENTOR EXMORTIS",
-    zdjecie: { url: "/functions/media?id=90dd70c466958b33535f54cd2c7f8510", alt: "Dawid — mentor programu POWRÓT" },
+    zdjecie: { url: "/functions/media?id=90dd70c466958b33535f54cd2c7f8510", fallback: `${IMG}480c7c335_702144182_17895011880460401_728690723499574380_n.jpg`, alt: "Dawid — mentor programu POWRÓT" },
     tresc: `<p>Jestem Dawid. Kiedyś skończyło się życie, które znałem, i musiałem zbudować nowe od zera. Z tej drogi wyrósł POWRÓT — cztery etapy, przez które sam przeszedłem.</p><p>Pracuję jako mentor, nie terapeuta. Słucham, zadaję pytania i pomagam znaleźć następny krok. Decyzje podejmujesz Ty.</p><p>Prowadzę jednocześnie najwyżej ${POWROT.capacity} osoby, żeby każda miała moją pełną uwagę.</p>`,
     przyciski: [{ etykieta: "Poznaj moją historię", link: "/o-mnie?src=powrot", styl: "obrys", strzalka: true }] }),
 
