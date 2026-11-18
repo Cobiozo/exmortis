@@ -7,6 +7,7 @@ import StayLonger from "@/components/exmortis/home/StayLonger";
 import RozdrozaHome from "@/components/exmortis/home/RozdrozaHome";
 import ObokHome from "@/components/exmortis/home/ObokHome";
 import WhatsAppChannelBlock from "@/components/exmortis/glos/WhatsAppChannelBlock";
+import GlosLibrary from "@/components/exmortis/glos/GlosLibrary";
 import PowrotTeaser from "@/components/exmortis/PowrotTeaser";
 import EventsTeaser from "@/components/exmortis/events/EventsTeaser";
 import NewsletterSection from "@/components/exmortis/NewsletterSection";
@@ -44,6 +45,7 @@ export const MODULES = {
   swiadectwa: ["Świadectwa", Testimonials],
   instagram: ["Instagram", InstagramFeed],
   kontakt_strona: ["Kontakt: dane i formularz", ContactPageForm],
+  glos_zakladki: ["Głos: zakładki Podcast i Muzyka", GlosLibrary],
   muzyka: ["Muzyka (utwory)", MusicSection],
   podcast: ["Podcast (odcinki)", PodcastSection],
   podcast_gosc: ["Zostań gościem podcastu", PodcastGuest],

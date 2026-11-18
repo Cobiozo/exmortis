@@ -10,16 +10,19 @@ import { ZAPOWIEDZ_BLOCKS } from "./zapowiedzDefault";
 const bare = { ...L, numer: "brak" };
 const mod = (id, modul) => ({ id, typ: "modul", widoczny: true, dane: { modul }, uklad: { ...bare } });
 
+// Etap 10 (18.11.2026): jedna sekcja z zakładkami Podcast / Muzyka zamiast dwóch długich modułów,
+// dyskretny pas „Wolisz czytać?” z kanałem WhatsApp, karta gościa i zwarte „dalej” z jednym przyciskiem.
 export const GLOS_BLOCKS = [
-  { id: "glos-hero", typ: "hero", widoczny: true, uklad: { ...bare }, dane: { wariant: "standard", etykieta: "GŁOS", linia1: "Głos", linia2: "exmortis",
+  { id: "glos-hero", typ: "hero", widoczny: true, uklad: { ...bare }, dane: { wariant: "standard", etykieta: "GŁOS", linia1: "Głos", linia2: "EXMORTIS",
     lead: "Muzyka powrotu i podcasty o drodze tam i z powrotem. Słuchaj tam, gdzie jesteś.", przyciski: [], przyciemnienie: 60 } },
-  mod("glos-muzyka", "muzyka"), mod("glos-podcast", "podcast"), mod("glos-gosc", "podcast_gosc"), mod("glos-whatsapp", "whatsapp_glos"),
+  mod("glos-zakladki", "glos_zakladki"),
+  mod("glos-whatsapp", "whatsapp_glos"),
+  mod("glos-gosc", "podcast_gosc"),
   // Przegląd lejka 17.11: strona nie kończy się ślepą uliczką, tylko następnym krokiem.
   { id: "glos-dalej", typ: "tekst", widoczny: true, uklad: { ...bare, odstep: "maly" }, dane: { etykieta: "DALEJ", tytul: "Kiedy chcesz posłuchać na żywo",
-    tresc: "<p>Prowadzę bezpłatne otwarte spotkania online. Możesz mówić albo po prostu słuchać. Jeśli wolisz czytać, raz w tygodniu wysyłam List powrotu.</p>" } },
+    tresc: "<p>Prowadzę bezpłatne otwarte spotkania online. Możesz mówić albo po prostu słuchać.</p>" } },
   { id: "glos-dalej-przyciski", typ: "przyciski", widoczny: true, uklad: { ...bare, odstep: "maly" }, dane: { przyciski: [
     { etykieta: "Zobacz najbliższe spotkanie", link: "/spotkania?src=glos", styl: "zloty", strzalka: true },
-    { etykieta: "Zapisz się na Listy powrotu", link: "/#listy-powrotu", styl: "obrys", strzalka: false },
   ] } },
 ];
 
