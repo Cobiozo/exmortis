@@ -270,6 +270,15 @@ export default function ProductDetail() {
                   <a href={linkUrl} target="_blank" rel="noreferrer" className="btn-relic w-full">{product.button_label || (onRequest ? "Umów rozmowę" : "Zobacz")} <ArrowRight className="h-4 w-4" /></a>
                 )}
               </div>
+            ) : linkUrl.startsWith("/") && product.product_type === "usluga" && !product.is_free ? (
+              // Usługa z własną ścieżką (np. Rozmowa na progu: zgłoszenie z ankietą → płatność → termin).
+              <div className="mt-auto space-y-4">
+                <Link to={linkUrl} className="btn-relic w-full">{product.button_label || "Umów rozmowę"} <ArrowRight className="h-4 w-4" /></Link>
+                <p className="text-sm text-foreground/60 leading-relaxed">
+                  Najpierw krótkie zgłoszenie z kilkoma pytaniami przygotowującymi do spotkania, potem płatność, a po niej wybór terminu w kalendarzu.
+                  Termin możesz bezpłatnie przełożyć najpóźniej 24 godziny przed spotkaniem.
+                </p>
+              </div>
             ) : product.is_free ? (
               <div className="mt-auto">
                 <FreeOrderForm product={product} />

@@ -103,6 +103,7 @@ export default function Checkout() {
         .then((r) => r.data?.status).catch(() => null);
       if (stop) return;
       if (st === "COMPLETED") {
+        try { localStorage.removeItem("exm_prog_token"); } catch { /* */ }
         let value = 0;
         try { value = Number(sessionStorage.getItem(ORDER_VALUE_KEY)) || 0; sessionStorage.removeItem(ORDER_VALUE_KEY); } catch { /* */ }
         trackPurchase(orderId, value);
@@ -144,6 +145,8 @@ export default function Checkout() {
           : it.gift ? { id: it.id, qty: it.qty, amount: it.gift.amount, to_name: it.gift.to_name, message: it.gift.message } : { id: it.id, qty: it.qty })),
         code: discount?.code || "",
         invoice: invoice.want ? { want: true, company: invoice.company, nip: invoice.nip, address: invoice.address } : null,
+        // Rozmowa na progu: osobisty link ze zgłoszenia (serwer sprawdza go tylko dla tej usługi).
+        prog_token: (() => { try { return localStorage.getItem("exm_prog_token") || ""; } catch { return ""; } })(),
       });
       // Koszyk czyszczę dopiero po potwierdzeniu płatności — przerwana płatność go nie traci.
       try {
