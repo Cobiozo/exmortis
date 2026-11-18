@@ -25,7 +25,8 @@ export default function Collaboration({ d = {}, label }) {
   const powrot = bySlug(SLUG_POWROT);
 
   return (
-    <Section id="wspolpraca">
+    {/* Kotwica #wspolpraca jest na opakowaniu bloku (uklad.kotwica) — bez zdublowanego id. */}
+    <Section>
       <Container>
         <SectionHeader
           eyebrow={d.etykieta || label || "WSPÓŁPRACA INDYWIDUALNA"}
