@@ -54,6 +54,7 @@ export default function ModeSettings({ settings, types = [], onSaved }) {
         <label className="text-sm">Wspólny limit spotkań dziennie<input type="number" min="1" max="20" className={inputCls} value={f.daily_limit} onChange={(e) => setF({ ...f, daily_limit: e.target.value })} /></label>
         <label className="text-sm">Wspólny limit tygodniowo (opcj.)<input type="number" min="1" className={inputCls} value={f.weekly_limit} onChange={(e) => setF({ ...f, weekly_limit: e.target.value })} /></label>
       </div>
+      <p className="text-xs text-foreground/60 -mt-2">Wspólny limit obejmuje rodzaje spotkań z zaznaczoną opcją „Wliczaj do wspólnego limitu”. Rozmowy wstępne POWRÓT mają własne limity: dzienny i tygodniowy ustawisz w edycji tego rodzaju.</p>
 
       <div className="space-y-3">
         <p className="technical text-[10px] gold-text">PÓŹNE ODWOŁANIE</p>
