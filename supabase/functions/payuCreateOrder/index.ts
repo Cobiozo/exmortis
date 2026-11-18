@@ -66,6 +66,9 @@ function payuTitle(lines) {
   return t;
 }
 
+// Komunikat dla klienta (400) — errorResponse przepuszcza tylko błędy oznaczone jako walidacja.
+const userErr = (msg: string) => Object.assign(new Error(msg), { isValidation: true });
+
 // Rozmowa na progu: zamówienie ↔ zgłoszenie (status „opłacone” ustawia synchronizacja po płatności).
 async function linkProg(base44, orderId: string, appId: string) {
   await runSql(base44, `UPDATE public.orders SET prog_app_id = ${escStr(appId)}::uuid WHERE id = ${escStr(orderId)}`).catch((e) => console.error("prog link:", String(e?.message || e).slice(0, 200)));
@@ -269,17 +272,17 @@ const handler = async function (req) {
     const progu = await runSql(base44, `SELECT id::text AS id FROM public.products WHERE slug = 'rozmowa-na-progu' LIMIT 1`, true).catch(() => []);
     const proguId = progu && progu[0] ? String(progu[0].id) : "";
     if (proguId && need.has(proguId)) {
-      if ((need.get(proguId) || 0) > 1) throw new Error("Rozmowę na progu można zamówić jedną naraz");
+      if ((need.get(proguId) || 0) > 1) throw userErr("Rozmowę na progu można zamówić jedną naraz");
       const recent = await runSql(base44, `SELECT 1 FROM public.orders o
          WHERE lower(o.buyer_email) = lower(${escStr(buyerEmail)}) AND o.status = 'COMPLETED'
            AND o.created_date > now() - interval '30 days'
            AND o.items @> ${escStr(JSON.stringify([{ product_id: proguId }]))}::jsonb LIMIT 1`, true).catch(() => []);
-      if (recent && recent.length) throw new Error("Kolejną Rozmowę na progu możesz zamówić najwcześniej miesiąc po poprzedniej. Jeśli to pilne, napisz do mnie.");
+      if (recent && recent.length) throw userErr("Kolejną Rozmowę na progu możesz zamówić najwcześniej miesiąc po poprzedniej. Jeśli to pilne, napisz do mnie.");
       // 18.11.2026: płatność tylko po zgłoszeniu z krótką ankietą (osobisty link ze zgłoszenia, ważny 7 dni).
       const progApp = await progAppByToken(base44, String(body.prog_token || ""));
-      if (!progApp) throw new Error("Rozmowę na progu zamawiasz po krótkim zgłoszeniu. Wypełnij je na stronie exmortis.pl/rozmowa-na-progu/zgloszenie.");
-      if (progApp.status !== "do_platnosci") throw new Error("To zgłoszenie zostało już opłacone albo zamknięte. W razie pytań napisz do mnie przez stronę Kontakt.");
-      if (!progApp.valid) throw new Error("Link do płatności wygasł. Wypełnij zgłoszenie ponownie, a otrzymasz nowy link.");
+      if (!progApp) throw userErr("Rozmowę na progu zamawiasz po krótkim zgłoszeniu. Wypełnij je na stronie exmortis.pl/rozmowa-na-progu/zgloszenie.");
+      if (progApp.status !== "do_platnosci") throw userErr("To zgłoszenie zostało już opłacone albo zamknięte. W razie pytań napisz do mnie przez stronę Kontakt.");
+      if (!progApp.valid) throw userErr("Link do płatności wygasł. Wypełnij zgłoszenie ponownie, a otrzymasz nowy link.");
       progAppId = String(progApp.id);
     }
     const sessionEmail = body.code ? String((await base44.auth.me().catch(() => null))?.email || "") : "";
