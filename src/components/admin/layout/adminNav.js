@@ -17,6 +17,7 @@ export const NAV_GROUPS = [
     { key: "grupy", label: "Grupy", icon: UsersRound, lib: true },
     { key: "ogloszenia", label: "Ogłoszenia", icon: Megaphone },
     { key: "powrot", label: "Zgłoszenia POWRÓT", icon: FileText },
+    { key: "rozmowa", label: "Rozmowa na progu", icon: FileText },
   ]],
   ["Sklep i treści", [
     { key: "zamowienia", label: "Zamówienia", icon: ShoppingBag },
