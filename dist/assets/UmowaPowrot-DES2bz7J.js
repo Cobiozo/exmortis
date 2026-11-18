@@ -1,0 +1,1 @@
+import"./rolldown-runtime-XKyaHtl9.js";import{nr as e}from"./icons-B100a0E8.js";import{t}from"./jsx-runtime-DBwmm0I4.js";import{r as n}from"./legalRender-K3i735Jj.js";import{t as r}from"./LegalPage-D96Os_j3.js";e();var i=t();function a(){return(0,i.jsx)(r,{doc:n,docKey:`umowa_powrot`})}export{a as default};
