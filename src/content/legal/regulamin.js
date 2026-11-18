@@ -85,6 +85,9 @@ export const REGULAMIN = {
       "5. Sprzedawca może przełożyć sesję z ważnej przyczyny, proponując nowy termin. Jeśli Klient go nie przyjmie, otrzymuje zwrot ceny tej sesji.",
       "6. Sesje nie są nagrywane. Treść rozmów jest poufna, z wyjątkiem sytuacji bezpośredniego zagrożenia życia lub zdrowia oraz obowiązków wynikających z przepisów prawa.",
       "7. Sprzedawca może odmówić sesji albo zaproponować jej przerwanie, jeśli uzna, że Klient potrzebuje najpierw pomocy specjalisty. Klient otrzymuje wtedy zwrot za niewykonaną część usługi.",
+      "8. Rozmowa na progu: zamówienie poprzedza krótkie zgłoszenie z pytaniami przygotowującymi do spotkania. Zgłoszenie nie zobowiązuje do zakupu. Po zgłoszeniu Klient otrzymuje osobisty link do płatności, ważny 7 dni. Kolejną Rozmowę na progu można zamówić najwcześniej 30 dni po poprzedniej.",
+      "9. Częścią Rozmowy na progu jest — na życzenie Klienta wyrażone w zgłoszeniu — pisemne podsumowanie spotkania, przygotowane w ciągu 48 godzin po spotkaniu i udostępnione w Koncie. Do jego odczytania potrzebne jest Konto założone na adres e-mail podany w zgłoszeniu.",
+      "10. Rozmowa na progu jest spotkaniem mentoringowym. Nie jest psychoterapią, diagnozą ani pomocą w kryzysie. Sprzedawca może przed spotkaniem zamknąć zgłoszenie albo odwołać spotkanie, jeśli uzna, że usługa nie odpowiada potrzebom Klienta; Klient otrzymuje wtedy pełny zwrot ceny.",
     ]},
     { id: "p11", title: "§11. Program POWRÓT", body: [
       "1. Udział poprzedza zgłoszenie, ankieta i bezpłatna rozmowa wstępna na zaproszenie Sprzedawcy. Ani zgłoszenie, ani ankieta, ani rozmowa nie zobowiązują do zakupu.",
