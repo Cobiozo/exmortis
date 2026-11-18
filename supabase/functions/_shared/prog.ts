@@ -76,7 +76,8 @@ export async function progSync(base44) {
   await runSql(base44, `UPDATE public.prog_applications a SET package_id = pk.id FROM public.bk_packages pk
     WHERE a.package_id IS NULL AND a.order_id IS NOT NULL AND pk.order_id = a.order_id`).catch(() => {});
   // Najnowsza rezerwacja z pakietu wyznacza stan spotkania.
-  const latest = `(SELECT k.id, k.status FROM public.bk_bookings k WHERE k.package_id = a.package_id ORDER BY k.created_at DESC LIMIT 1)`;
+  const latest = `(SELECT DISTINCT ON (k.package_id) k.package_id, k.id, k.status FROM public.bk_bookings k
+    WHERE k.package_id IS NOT NULL ORDER BY k.package_id, k.created_at DESC)`;
   const map: Array<[string, string, string]> = [
     ["POTWIERDZONA", "termin_wybrany", "('oplacone','anulowana')"],
     ["ODBYLA_SIE", "odbyta", "('oplacone','termin_wybrany')"],
@@ -84,11 +85,11 @@ export async function progSync(base44) {
   ];
   for (const [bk, to, fromSet] of map) {
     await run(`UPDATE public.prog_applications a SET status = ${escStr(to)}, status_at = now(), updated_date = now(), booking_id = l.id
-      FROM LATERAL ${latest} l WHERE a.package_id IS NOT NULL AND a.status IN ${fromSet} AND l.status = ${escStr(bk)} RETURNING a.id`, "", to);
+      FROM ${latest} l WHERE l.package_id = a.package_id AND a.status IN ${fromSet} AND l.status = ${escStr(bk)} RETURNING a.id`, "", to);
   }
   // Odwołanie (przez klienta albo administratora), gdy nie ma innej aktywnej rezerwacji.
   await run(`UPDATE public.prog_applications a SET status = 'anulowana', status_at = now(), updated_date = now()
-    FROM LATERAL ${latest} l WHERE a.package_id IS NOT NULL AND a.status = 'termin_wybrany'
+    FROM ${latest} l WHERE l.package_id = a.package_id AND a.status = 'termin_wybrany'
       AND l.status IN ('ANULOWANA_KLIENT','ANULOWANA_ADMIN') RETURNING a.id`, "termin_wybrany", "anulowana");
   // Po spotkaniu: podsumowanie czeka (gdy uczestnik go chce).
   await runSql(base44, `INSERT INTO public.prog_summaries (application_id)
