@@ -1,1 +1,0 @@
-import"./rolldown-runtime-XKyaHtl9.js";import{nr as e}from"./icons-B100a0E8.js";import{t}from"./jsx-runtime-DBwmm0I4.js";import{t as n}from"./index-CoywsUIP.js";e();var r=t();function i(){return(0,r.jsx)(n,{slug:`kontakt`})}export{i as default};
