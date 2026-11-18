@@ -9,6 +9,7 @@ import BundleItemsPicker from "./BundleItemsPicker";
 import LessonsManager from "./course/LessonsManager";
 import PriceSteps from "./PriceSteps";
 import CoverAiButton from "./CoverAiButton";
+import { HIGHLIGHT_OPTIONS, HIGHLIGHT_HINT } from "@/lib/productHighlight";
 
 const CATEGORIES = ["ebook", "warsztat", "mentoring", "mastermind", "retreat", "darmowe"];
 const LEVELS = [
@@ -55,6 +56,7 @@ export default function ProductEditor({ product, onSaved, onCancel }) {
     next_step: product?.next_step || "",
     is_featured: !!product?.is_featured,
     show_home: !!product?.show_home,
+    wyroznienie: product?.wyroznienie || "auto",
     sort_order: product?.sort_order != null ? String(product.sort_order) : "",
     cover_image: product?.cover_image || "",
     file_url: product?.file_url || "",
@@ -320,6 +322,21 @@ export default function ProductEditor({ product, onSaved, onCancel }) {
             onChange={(e) => set("sort_order", e.target.value)}
             className={`${inputCls} font-mono`}
           />
+        </div>
+        <div>
+          <label className={labelCls}>WYRÓŻNIENIE NA KARCIE</label>
+          <select
+            value={form.wyroznienie}
+            onChange={(e) => set("wyroznienie", e.target.value)}
+            className={selectCls}
+          >
+            {HIGHLIGHT_OPTIONS.map((o) => (
+              <option key={o.value} value={o.value}>
+                {o.label}
+              </option>
+            ))}
+          </select>
+          <p className="text-[11px] text-foreground/50 mt-2 leading-relaxed">{HIGHLIGHT_HINT}</p>
         </div>
       </div>
       <div className="flex flex-col sm:flex-row gap-6 mb-10">

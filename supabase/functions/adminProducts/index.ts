@@ -94,6 +94,12 @@ function pickVal(v, allowed) {
   return allowed.includes(v) ? escStr(v) : "NULL";
 }
 
+// Wyróżnienie na karcie: ręczne ustawienie właściciela; każda inna wartość = „auto”.
+const HIGHLIGHTS = ["auto", "brak", "nowosc", "promocja", "rabat"];
+function highlightVal(v) {
+  return HIGHLIGHTS.includes(v) ? escStr(v) : "'auto'";
+}
+
 // Limit miejsc: 1–1000 dla typów z miejscami; pusty albo inny typ → NULL (bez limitu).
 function capacityVal(p) {
   if (!SEAT_TYPES.includes(p.product_type)) return "NULL";
@@ -149,6 +155,7 @@ function buildValues(p, name, slug, price, oldPrice, category) {
     private_file_name: textVal(p.private_file_name, 300),
     price_steps: stepsVal(p.price_steps),
     capacity: capacityVal(p),
+    wyroznienie: highlightVal(p.wyroznienie),
   };
 }
 
@@ -157,7 +164,7 @@ const SHOP_COLUMNS = `name, slug, subtitle, description, long_description, price
   level, stage, form, audience_tags, promise, for_whom, format_details,
   price_start, price_regular, is_free, status, promo_end_date,
   button_label, checkout_url, next_step, is_featured, sort_order, cover_image, file_url,
-  product_type, access_months, private_file_uri, private_file_name, price_steps, bundle_items, capacity`;
+  product_type, access_months, private_file_uri, private_file_name, price_steps, bundle_items, capacity, wyroznienie`;
 
 const SHOP_SELECT = `id, name, slug, subtitle, description, long_description,
   price::float8 AS price, old_price::float8 AS old_price, category, image_url, gallery,
@@ -188,6 +195,7 @@ const handler = async function (req) {
                 p.product_type, p.access_months, p.private_file_uri, p.private_file_name, to_jsonb(p)->>'capacity' AS capacity,
                 to_jsonb(p)->'price_steps' AS price_steps, to_jsonb(p)->'price_options' AS price_options,
                 to_jsonb(p)->'bundle_items' AS bundle_items, COALESCE((to_jsonb(p)->>'show_home')::boolean, FALSE) AS show_home,
+                COALESCE(NULLIF(to_jsonb(p)->>'wyroznienie', ''), 'auto') AS wyroznienie,
                 -- data premiery: bez niej edytor otwierał się z pustym polem i zapis kasował premierę
                 to_jsonb(p)->>'release_at' AS release_at, to_jsonb(p)->>'release_note' AS release_note,
                 p.created_date, p.updated_date,
@@ -259,6 +267,7 @@ const handler = async function (req) {
              price_steps = ${v.price_steps},
              bundle_items = ${v.bundle_items},
              capacity = ${v.capacity},
+             wyroznienie = ${v.wyroznienie},
              -- chwila premiery („wkrótce”/ukryty → „dostępny”) — dla powiadomień klientów o nowościach
              available_at = CASE WHEN ${v.status} = 'dostępny' AND COALESCE(status, 'dostępny') <> 'dostępny' THEN now() ELSE available_at END,
              updated_date = now()
@@ -276,7 +285,7 @@ const handler = async function (req) {
                    ${v.price_start}, ${v.price_regular}, ${v.is_free}, ${v.status}, ${v.promo_end_date},
                    ${v.button_label}, ${v.checkout_url}, ${v.next_step}, ${v.is_featured}, ${v.sort_order}, ${v.cover_image},
                    ${v.file_url}, ${v.product_type}, ${v.access_months}, ${v.private_file_uri}, ${v.private_file_name},
-                   ${v.price_steps}, ${v.bundle_items}, ${v.capacity}, ${escStr(user.id)})`
+                   ${v.price_steps}, ${v.bundle_items}, ${v.capacity}, ${v.wyroznienie}, ${escStr(user.id)})`
         );
         await runSql(
           base44,

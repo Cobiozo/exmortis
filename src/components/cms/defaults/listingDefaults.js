@@ -14,13 +14,11 @@ export const SPOTKANIE_TPL = [b("tpl-spotkanie", "modul", { modul: "spotkanie_tr
 export const ODCINEK_TPL = [b("tpl-odcinek", "modul", { modul: "odcinek_tresc" })];
 export const PRODUKT_TPL = [b("tpl-produkt", "modul", { modul: "produkt_tresc" })];
 
+// Skarbiec (etap 4): krótki nagłówek i jeden katalog z zakładkami grup. Wskazówka o teście
+// siedzi w module katalogu (mały link, nie baner) — tak jak ustalono w przebudowie.
 export const SKLEP_BLOCKS = [
-  b("sklep-hero", "hero", { wariant: "standard", etykieta: "SKARBIEC", linia1: "Skarbiec —", linia2: "droga powrotu",
-    lead: "Powrót ma cztery etapy: Śmierć · Próg · Powrót · Inny.",
-    podlead: "Na każdym z nich potrzeba innych narzędzi. Znajdziesz tu to, co pasuje do miejsca, w którym stoisz dzisiaj — od pierwszego, darmowego kroku po pracę jeden na jeden.",
+  b("sklep-hero", "hero", { wariant: "standard", etykieta: "SKARBIEC", linia1: "Wybierz swój pierwszy krok", linia2: "",
+    lead: "Od bezpłatnych materiałów po pracę jeden na jeden — wybierz to, co pasuje do miejsca, w którym jesteś.",
     przyciski: [], przyciemnienie: 60 }),
-  b("sklep-test", "tekst", { etykieta: "NIE WIESZ, OD CZEGO ZACZĄĆ?", tytul: "",
-    tresc: "<p class=\"exm-styl-lead\">Piętnaście stwierdzeń. Kilka minut. Zobaczysz, ile jest w Tobie dziś każdej z trzech śmierci — i od czego warto zacząć.</p>" }, { tlo: "grafit", odstep: "maly" }),
-  b("sklep-test-przycisk", "przyciski", { przyciski: [{ etykieta: "Zrób test", link: "/test", styl: "zloty", strzalka: true }] }, { tlo: "grafit", odstep: "maly" }),
   b("sklep-katalog", "modul", { modul: "skarbiec_katalog" }),
 ];

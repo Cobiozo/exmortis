@@ -10,6 +10,7 @@ import ImageFallback from "@/components/exmortis/ui/ImageFallback";
 import useCatalog from "@/lib/useCatalog";
 import { track } from "@/lib/track";
 import { isPromoActive, unitPrice, regularPrice, lowestPrice30, zl, priceOnRequest } from "@/lib/productPrice";
+import { productHighlight } from "@/lib/productHighlight";
 import { POWROT, ROZMOWA_NA_PROGU } from "@/lib/powrotOffer";
 
 // „Wybierz swój pierwszy krok” (etap 2, 18.11.2026): trzy równe karty, przycisk na dole każdej.
@@ -27,6 +28,7 @@ export default function StartPaths({ d = {}, label }) {
   const talk = bySlug(TALK);
   const powrot = bySlug(POWROT_PRODUCT);
   const promo = isPromoActive(book);
+  const highlight = productHighlight(book);
   const okladka = book?.image_url || book?.cover_image || "";
 
   return (
@@ -78,7 +80,7 @@ export default function StartPaths({ d = {}, label }) {
                   : <ImageFallback label="Okładka książki Wracam inny" className="aspect-[3/4] w-full" />}
               </div>
               <div className="min-w-0">
-                {promo && <ProductHighlight kind="promocja" className="mb-2" />}
+                {highlight && <ProductHighlight kind={highlight} className="mb-2" />}
                 <p className="technical text-[10px] leading-relaxed text-exm-muted">{opisFormatu(book)}</p>
                 {book && (
                   promo ? (
