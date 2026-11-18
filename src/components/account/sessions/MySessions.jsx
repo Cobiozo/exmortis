@@ -23,11 +23,20 @@ function NoAccess({ closed }) {
         </>
       ) : (
         <>
-          <p className="relic-heading text-xl md:text-2xl text-[#F5EFE1] break-words">Indywidualne spotkania są dla uczestników programu POWRÓT lub ROZMOWY NA PROGU.</p>
-          <p className="text-sm text-foreground/70 leading-relaxed">
-            Na tym koncie nie ma dostępu do umawiania spotkań — nie jesteś uczestnikiem programu POWRÓT albo dostęp nie został jeszcze włączony.
-            Jeśli jesteś w programie, napisz do exmortis z adresu, na który założone jest to konto. Możesz też dołączyć do spotkań ogólnych.
-          </p>
+          {booked ? (
+            <>
+              <p className="relic-heading text-xl md:text-2xl text-[#F5EFE1] break-words">Wszystkie spotkania z Twojego pakietu są już umówione.</p>
+              <p className="text-sm text-foreground/70 leading-relaxed">Zaplanowany termin znajdziesz poniżej, w części „Najbliższe”. Możesz go przenieść albo anulować najpóźniej 24 godziny przed spotkaniem.</p>
+            </>
+          ) : (
+            <>
+              <p className="relic-heading text-xl md:text-2xl text-[#F5EFE1] break-words">Nie masz teraz spotkań do umówienia.</p>
+              <p className="text-sm text-foreground/70 leading-relaxed">
+                Dostęp do kalendarza pojawia się po zakupie Rozmowy na progu albo po przyjęciu do programu POWRÓT.
+                Jeśli masz już dostęp, a go tu nie widzisz, napisz do exmortis z adresu, na który założone jest to konto. Możesz też dołączyć do spotkań ogólnych.
+              </p>
+            </>
+          )}
         </>
       )}
       <div className="flex flex-wrap gap-3">
@@ -56,8 +65,7 @@ export default function MySessions() {
   const head = (
     <div className="mb-10">
       <p className="technical text-[10px] gold-text mb-3">UMÓW INDYWIDUALNE SPOTKANIE</p>
-      <p className="text-sm text-foreground/60 max-w-[640px]">Spotkanie 1:1 z exmortis w ramach programu POWRÓT — termin wybierasz z dostępnych godzin.</p>
-      <p className="text-sm text-foreground/60 max-w-[640px] mt-2">Nie jesteś w programie POWRÓT? Możesz umówić pojedyncze spotkanie 1:1 — <Link to="/skarbiec/rozmowa-na-progu" className="gold-text underline underline-offset-4">Rozmowa na progu</Link>.</p>
+      <p className="text-sm text-foreground/60 max-w-[640px]">Tu umawiasz indywidualne spotkania 1:1: sesje programu POWRÓT albo <Link to="/skarbiec/rozmowa-na-progu" className="gold-text underline underline-offset-4">Rozmowę na progu</Link> — osobną, jednorazową usługę. Termin wybierasz z dostępnych godzin.</p>
     </div>
   );
 
@@ -76,7 +84,7 @@ export default function MySessions() {
     <div className="space-y-14">
       {head}
       {!hasAccess ? (
-        <NoAccess />
+        <NoAccess booked={upcoming.length > 0} />
       ) : (
         <section>
           <div className="grid gap-4 md:grid-cols-2">
