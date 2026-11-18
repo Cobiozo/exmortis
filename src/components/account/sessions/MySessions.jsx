@@ -10,7 +10,7 @@ const call = (p) => base44.functions.invoke("bookingPublic", p).then((r) => r.da
 const day = (v) => new Date(v).toLocaleDateString("pl-PL", { day: "numeric", month: "long", year: "numeric" });
 
 // Widzi każdy zalogowany. Bez przyznanego dostępu — jasna informacja i drogi dalej, bez kalendarza.
-function NoAccess({ closed }) {
+function NoAccess({ closed, booked = false }) {
   return (
     <div className="border hairline p-6 md:p-8 space-y-5 max-w-[720px]">
       {closed ? (

@@ -165,7 +165,7 @@ export default function ProductDetail() {
                   {kwota(product.old_price)} zł
                 </span>
               )}
-              {!soon && !soldOut && !onRequest && !(linkUrl && product.is_free) && (
+              {!soon && !soldOut && !onRequest && !(linkUrl && product.is_free) && !(linkUrl.startsWith("/") && product.product_type === "usluga") && (
                 <span className="sm:ml-auto"><JumpToBuy free={product.is_free} /></span>
               )}
             </div>
