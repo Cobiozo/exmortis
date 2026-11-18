@@ -82,7 +82,7 @@ export default function NotificationBell() {
         className="w-[min(92vw,400px)] p-0 rounded-none border border-[#3D3D3F] bg-[#0D0D0E] text-foreground">
         <div className="flex items-center justify-between gap-3 px-4 py-3 border-b hairline">
           <p className="technical text-[10px] gold-text">POWIADOMIENIA{unread ? ` · ${unread} NOWE` : ""}</p>
-          {unread > 0 && <button type="button" onClick={readAll} className="technical text-[9px] text-foreground/60 hover:text-foreground underline underline-offset-4 min-h-[32px]">OZNACZ WSZYSTKIE</button>}
+          {unread > 0 && <button type="button" onClick={readAll} className="technical text-[9px] text-foreground/60 hover:text-foreground underline underline-offset-4 min-h-[32px] normal-case tracking-normal">Oznacz wszystkie jako przeczytane</button>}
         </div>
         <div className="max-h-[min(70vh,520px)] overflow-y-auto overscroll-contain">
           {!data ? (

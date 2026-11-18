@@ -65,7 +65,7 @@ export default function Karta() {
                 niewykorzystana część kwoty przepada. Żeby zapisać PDF, wybierz w oknie drukowania „Zapisz jako PDF”.
               </p>
               <p className="text-xs text-foreground/55">Kto ma ten link, widzi kod. Przekaż go tylko osobie obdarowanej.</p>
-              <Link to="/skarbiec" className="technical text-[10px] gold-text inline-block">PRZEJDŹ DO SKARBCA</Link>
+              <Link to="/skarbiec" className="btn-link">Przejdź do sklepu</Link>
             </div>
           </>
         )}

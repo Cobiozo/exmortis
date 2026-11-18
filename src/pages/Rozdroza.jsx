@@ -100,7 +100,7 @@ export default function Rozdroza() {
       <div className="bg-[#0A0A0B] pt-24 md:pt-28 pb-24 min-h-[100svh]">
         <div className="mx-auto max-w-[1200px] px-4 sm:px-5 md:px-10">
           <nav aria-label="Ścieżka" className="technical text-[10px] text-[#F5EFE1]/70 mb-8 flex items-center gap-2">
-            <Link to="/konto" className="hover:text-[#F5EFE1] min-h-[32px] inline-flex items-center">MOJE KONTO</Link>
+            <Link to="/konto" className="hover:text-[#F5EFE1] min-h-[32px] inline-flex items-center">Moje konto</Link>
             <span aria-hidden="true">/</span>
             <Link to="/konto/rozdroza" className="hover:text-[#F5EFE1] min-h-[32px] inline-flex items-center">ROZDROŻA</Link>
           </nav>
