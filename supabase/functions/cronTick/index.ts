@@ -9,6 +9,7 @@ import { onboardingTick } from "../_shared/onboarding.ts";
 import { dailySummary } from "../_shared/dailySummary.ts";
 import { importPodcastRss } from "../_shared/podcastRss.ts";
 import { refreshInstagramToken } from "../_shared/instagram.ts";
+import { powrotReminders } from "../_shared/powrotReminders.ts";
 
 // ============ Jedno zadanie cykliczne zamiast sześciu workflow ============
 // Workflow „Zadania cykliczne" woła tę funkcję co 5 minut (czas polski). Tutaj, równolegle,
@@ -150,6 +151,14 @@ const handler = async function (req) {
 
     // Raz na godzinę (minuta polska < 5): odcinki podcastu z kanału RSS. W tle i w try/catch —
     // błąd kanału lub sieci nie wywraca przebiegu zadań cyklicznych.
+    // Raz na godzinę, 8:00–19:59 czasu polskiego: przypomnienia POWRÓT (ankieta po 5 dniach, zgłoszenia czekające 48 h).
+    // Każde przypomnienie jest oznaczane przed wysyłką, więc nie pójdzie dwa razy. W tle — błąd nie wywraca przebiegu.
+    if (minute < 5 && warsawHour() >= 8 && warsawHour() < 20) {
+      waitUntil(powrotReminders(base44)
+        .then((r) => { if (r.ankiety || r.prowadzacy) console.log("POWRÓT przypomnienia", JSON.stringify(r)); })
+        .catch((e) => console.error("POWRÓT przypomnienia", String(e?.message || e).slice(0, 200))));
+    }
+
     if (minute < 5) {
       try {
         waitUntil(importPodcastRss(base44, { onlyNew: true }).catch((e) => console.error("podcast RSS", String(e?.message || e).slice(0, 200))));
