@@ -26,7 +26,8 @@ export default function KontaktAside() {
       <SafeImg
         img={ZDJECIE}
         sizes="(min-width: 1024px) 420px, 92vw"
-        className="aspect-[4/5] w-full rounded-[var(--exm-r-card)] border border-exm-line bg-exm-surface"
+        // Telefon: bez zdjęcia — formularz ma być blisko początku strony; zdjęcie od 1024 px.
+        className="hidden aspect-[4/5] w-full rounded-[var(--exm-r-card)] border border-exm-line bg-exm-surface lg:block"
       />
 
       <Rich html={intro} className="text-[15px] leading-relaxed text-exm-muted" />
