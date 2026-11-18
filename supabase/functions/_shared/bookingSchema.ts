@@ -213,6 +213,9 @@ CREATE TABLE IF NOT EXISTS public.bk_types (
 -- POWRÓT v2 (18.11.2026): limit tygodniowy jednego rodzaju i rodzaje bezpłatne (bez zgody o 14 dniach).
 ALTER TABLE public.bk_types ADD COLUMN IF NOT EXISTS weekly_limit int CHECK (weekly_limit IS NULL OR weekly_limit BETWEEN 1 AND 100);
 ALTER TABLE public.bk_types ADD COLUMN IF NOT EXISTS free_service boolean NOT NULL DEFAULT false;
+-- 18.11.2026: limit dzienny jednego rodzaju i wyłączenie rodzaju ze wspólnego limitu (np. rozmowy wstępne POWRÓT).
+ALTER TABLE public.bk_types ADD COLUMN IF NOT EXISTS daily_limit int CHECK (daily_limit IS NULL OR daily_limit BETWEEN 1 AND 20);
+ALTER TABLE public.bk_types ADD COLUMN IF NOT EXISTS in_global_limit boolean NOT NULL DEFAULT true;
 
 CREATE TABLE IF NOT EXISTS public.bk_hours (
   id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
@@ -444,10 +447,16 @@ days AS (
   SELECT g::date AS d FROM generate_series((p_from AT TIME ZONE 'Europe/Warsaw')::date,
     (p_to AT TIME ZONE 'Europe/Warsaw')::date, interval '1 day') g
 ),
+-- Rezerwacje wliczane do wspólnych limitów (rodzaje z in_global_limit = true).
+gb AS (
+  SELECT k.starts_at FROM public.bk_bookings k JOIN public.bk_types kt ON kt.id = k.type_id
+  WHERE k.status = 'POTWIERDZONA' AND k.id IS DISTINCT FROM p_ignore AND kt.in_global_limit
+),
 cand AS (
   SELECT ((dy.d + h.start_local) AT TIME ZONE 'Europe/Warsaw') + (n * t.step_min) * interval '1 minute' AS st,
     ((dy.d + h.end_local) AT TIME ZONE 'Europe/Warsaw') AS win_end,
-    t.duration_min, t.buffer_before, t.buffer_after, t.horizon_days, t.monthly_limit, t.weekly_limit AS type_week_limit
+    t.duration_min, t.buffer_before, t.buffer_after, t.horizon_days, t.monthly_limit,
+    t.weekly_limit AS type_week_limit, t.daily_limit AS type_day_limit, t.in_global_limit AS in_global
   FROM days dy
   JOIN public.bk_hours h ON h.type_id = p_type AND h.weekday = extract(isodow FROM dy.d)::int
   CROSS JOIN t
@@ -456,7 +465,7 @@ cand AS (
 c AS (
   SELECT st, st + duration_min * interval '1 minute' AS en,
     tstzrange(st - buffer_before * interval '1 minute', st + (duration_min + buffer_after) * interval '1 minute', '[)') AS b,
-    (st AT TIME ZONE 'Europe/Warsaw')::date AS ld, monthly_limit, type_week_limit
+    (st AT TIME ZONE 'Europe/Warsaw')::date AS ld, monthly_limit, type_week_limit, type_day_limit, in_global
   FROM cand, s
   WHERE st + duration_min * interval '1 minute' <= win_end
     AND st >= p_from AND st < p_to
@@ -476,17 +485,19 @@ WHERE NOT EXISTS (SELECT 1 FROM public.bk_bookings k WHERE k.status = 'POTWIERDZ
     AND tstzrange(hd.d::timestamp AT TIME ZONE 'Europe/Warsaw', (hd.d + 1)::timestamp AT TIME ZONE 'Europe/Warsaw', '[)') && c.b)
   AND NOT EXISTS (SELECT 1 FROM public.events e WHERE e.status = 'Opublikowane' AND e.start_datetime IS NOT NULL
     AND tstzrange(e.start_datetime, e.start_datetime + COALESCE(e.duration_minutes, 60) * interval '1 minute', '[)') && c.b)
-  AND (SELECT count(*) FROM public.bk_bookings k WHERE k.status = 'POTWIERDZONA' AND k.id IS DISTINCT FROM p_ignore
-    AND (k.starts_at AT TIME ZONE 'Europe/Warsaw')::date = c.ld) < s.daily_limit
-  AND (s.weekly_limit IS NULL OR (SELECT count(*) FROM public.bk_bookings k WHERE k.status = 'POTWIERDZONA' AND k.id IS DISTINCT FROM p_ignore
-    AND date_trunc('week', k.starts_at AT TIME ZONE 'Europe/Warsaw') = date_trunc('week', c.st AT TIME ZONE 'Europe/Warsaw')) < s.weekly_limit)
-  AND (c.monthly_limit IS NULL OR (SELECT count(*) FROM public.bk_bookings k WHERE k.status = 'POTWIERDZONA' AND k.type_id = p_type
-    AND k.id IS DISTINCT FROM p_ignore
-    AND date_trunc('month', k.starts_at AT TIME ZONE 'Europe/Warsaw') = date_trunc('month', c.st AT TIME ZONE 'Europe/Warsaw')) < c.monthly_limit)
-  -- Limit tygodniowy jednego rodzaju (np. 15 rozmów wstępnych POWRÓT), niezależny od globalnego.
+  -- Wspólny limit dzienny i tygodniowy: tylko dla rodzajów wliczanych do wspólnego limitu.
+  AND (NOT c.in_global OR (SELECT count(*) FROM gb WHERE (gb.starts_at AT TIME ZONE 'Europe/Warsaw')::date = c.ld) < s.daily_limit)
+  AND (NOT c.in_global OR s.weekly_limit IS NULL OR (SELECT count(*) FROM gb
+    WHERE date_trunc('week', gb.starts_at AT TIME ZONE 'Europe/Warsaw') = date_trunc('week', c.st AT TIME ZONE 'Europe/Warsaw')) < s.weekly_limit)
+  -- Limity jednego rodzaju: dzienny, tygodniowy, miesięczny.
+  AND (c.type_day_limit IS NULL OR (SELECT count(*) FROM public.bk_bookings k WHERE k.status = 'POTWIERDZONA' AND k.type_id = p_type
+    AND k.id IS DISTINCT FROM p_ignore AND (k.starts_at AT TIME ZONE 'Europe/Warsaw')::date = c.ld) < c.type_day_limit)
   AND (c.type_week_limit IS NULL OR (SELECT count(*) FROM public.bk_bookings k WHERE k.status = 'POTWIERDZONA' AND k.type_id = p_type
     AND k.id IS DISTINCT FROM p_ignore
     AND date_trunc('week', k.starts_at AT TIME ZONE 'Europe/Warsaw') = date_trunc('week', c.st AT TIME ZONE 'Europe/Warsaw')) < c.type_week_limit)
+  AND (c.monthly_limit IS NULL OR (SELECT count(*) FROM public.bk_bookings k WHERE k.status = 'POTWIERDZONA' AND k.type_id = p_type
+    AND k.id IS DISTINCT FROM p_ignore
+    AND date_trunc('month', k.starts_at AT TIME ZONE 'Europe/Warsaw') = date_trunc('month', c.st AT TIME ZONE 'Europe/Warsaw')) < c.monthly_limit)
 ORDER BY c.st
 $f$;
 
