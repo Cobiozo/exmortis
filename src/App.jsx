@@ -31,6 +31,7 @@ const ResetPassword = lazyPage(() => import('@/pages/ResetPassword'));
 import { Suspense, lazy } from 'react';
 import lazyPage from '@/lib/lazyPage';
 const Admin = lazyPage(() => import('@/pages/admin/Admin'));
+const AdminStyle = lazyPage(() => import('@/pages/AdminStyle'));
 const CmsPreview = lazyPage(() => import('@/pages/CmsPreview'));
 const CoursePlayer = lazyPage(() => import('@/pages/CoursePlayer'));
 const Cisza = lazyPage(() => import('@/pages/Cisza'));
@@ -119,6 +120,7 @@ const AuthenticatedApp = () => {
         <Route path="/reset-password" element={<ResetPassword />} />
         <Route element={<ProtectedRoute unauthenticatedElement={<LoginRedirect />} />}>
           <Route path="/admin/podglad-strony" element={<CmsPreview />} />
+          <Route path="/admin/styl" element={<AdminStyle />} />
           <Route path="/skaner" element={<Skaner />} />
           <Route path="/admin" element={<Admin />} />
           <Route path="/admin/:section" element={<Admin />} />

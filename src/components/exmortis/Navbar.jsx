@@ -30,6 +30,17 @@ export default function Navbar() {
     return () => window.removeEventListener("scroll", onScroll);
   }, []);
 
+  // Rzeczywista wysokość belki (z paskiem admina) dla kotwic: --exm-header-h.
+  useEffect(() => {
+    const setHeaderVar = () => {
+      const h = (window.innerWidth >= 768 ? 72 : 60) + (isAdmin ? 40 : 0);
+      document.documentElement.style.setProperty("--exm-header-h", `${h}px`);
+    };
+    setHeaderVar();
+    window.addEventListener("resize", setHeaderVar);
+    return () => window.removeEventListener("resize", setHeaderVar);
+  }, [isAdmin]);
+
   // Belka (17.11.2026): pokazuje tyle pozycji, ile się mieści; reszta trafia do „Więcej” obok.
   // Poniżej 768 px albo gdy mieszczą się mniej niż 3 pozycje — całe menu pod przyciskiem ☰ (rozwija się tuż pod nim).
   useLayoutEffect(() => {

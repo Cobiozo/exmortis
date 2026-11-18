@@ -8,7 +8,10 @@ module.exports = {
   		borderRadius: {
   			lg: 'var(--radius)',
   			md: 'calc(var(--radius) - 2px)',
-  			sm: 'calc(var(--radius) - 4px)'
+  			sm: 'calc(var(--radius) - 4px)',
+  			'exm-card': 'var(--exm-r-card)',
+  			'exm-field': 'var(--exm-r-field)',
+  			'exm-pill': 'var(--exm-r-pill)'
   		},
   		colors: {
   			background: 'hsl(var(--background))',
@@ -51,6 +54,22 @@ module.exports = {
   				'4': 'hsl(var(--chart-4))',
   				'5': 'hsl(var(--chart-5))'
   			},
+  			/* Tokeny marki (etap 1 systemu wizualnego) — wartości w src/index.css (:root, --exm-*). */
+  			exm: {
+  				bg: 'var(--exm-bg)',
+  				surface: 'var(--exm-surface)',
+  				'surface-2': 'var(--exm-surface-2)',
+  				line: 'var(--exm-line)',
+  				'line-strong': 'var(--exm-line-strong)',
+  				gold: 'var(--exm-gold)',
+  				'gold-hover': 'var(--exm-gold-hover)',
+  				'gold-line': 'var(--exm-gold-line)',
+  				bordo: 'var(--exm-bordo)',
+  				ivory: 'var(--exm-ivory)',
+  				text: 'var(--exm-text)',
+  				muted: 'var(--exm-text-muted)',
+  				error: 'var(--exm-error)'
+  			},
   			sidebar: {
   				DEFAULT: 'hsl(var(--sidebar-background))',
   				foreground: 'hsl(var(--sidebar-foreground))',
@@ -66,7 +85,11 @@ module.exports = {
   			heading: ['var(--font-heading)'],
   			body: ['var(--font-body)'],
   			display: ['var(--font-display)'],
-  			mono: ['var(--font-mono)']
+  			mono: ['var(--font-mono)'],
+  			'exm-serif': ['var(--exm-font-serif)'],
+  			'exm-sans': ['var(--exm-font-sans)'],
+  			'exm-label': ['var(--exm-font-label)'],
+  			'exm-wordmark': ['var(--exm-font-wordmark)']
   		},
   		keyframes: {
   			'accordion-down': {

@@ -8,7 +8,11 @@ import { useSiteNav } from "./useSiteNav";
 // aktywna pozycja na złotym tle. Pozycje z desktop: false są tylko w menu telefonu.
 // count = ile pozycji mieści się w belce; reszta trafia do rozwijanego „Więcej” tuż pod przyciskiem.
 const ITEM = "inline-flex items-center min-h-10 px-2.5 xl:px-3 rounded-lg text-[14px] whitespace-nowrap transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-[#C9A24A]";
-const itemCls = (on) => `${ITEM} ${on ? "bg-[#C9A24A]/[0.12] text-[#F5EFE1]" : "text-[#F5EFE1]/75 hover:text-[#F5EFE1] hover:bg-white/[0.04]"}`;
+// Aktywna pozycja: złote podświetlenie i złota linia pod etykietą (system wizualny, etap 1).
+const itemCls = (on) =>
+  `${ITEM} relative ${on
+    ? "bg-[#C9A24A]/[0.12] text-[#F5EFE1] after:absolute after:inset-x-2.5 after:bottom-0 after:h-[2px] after:bg-[#C9A24A] after:content-['']"
+    : "text-[#F5EFE1]/75 hover:text-[#F5EFE1] hover:bg-white/[0.04]"}`;
 
 export const desktopItems = (menu) => menu.filter((n) => n.desktop !== false);
 

@@ -30,12 +30,12 @@ export default function Footer() {
   const opis = rich("footer", "opis", "Słowa, historie i spotkania na Twoją drogę powrotu.");
 
   return (
-    <footer className="relative bg-[#0A0A0B] border-t hairline pb-16">
+    <footer className="relative bg-exm-bg border-t border-exm-line pb-10">
       <div className="absolute top-0 left-0 right-0 h-px spine" aria-hidden="true" />
 
-      <div className="mx-auto max-w-[1400px] px-5 md:px-10 pt-12 md:pt-14 pb-8">
+      <div className="mx-auto max-w-[1400px] px-5 md:px-10 pt-10 md:pt-12 pb-6">
         {/* 1. Marka + grupy linków */}
-        <div className="grid gap-10 lg:grid-cols-[minmax(0,1fr)_minmax(0,3fr)] lg:gap-16 pb-10 md:pb-12">
+        <div className="grid gap-8 lg:grid-cols-[minmax(0,1fr)_minmax(0,3fr)] lg:gap-12 pb-8 md:pb-10">
           <div className="min-w-0">
             <Link to="/" className="inline-flex items-center gap-3 mb-6 min-h-[44px] focus-visible:outline focus-visible:outline-2 focus-visible:outline-[#C9A24A]" aria-label="EXMORTIS — strona główna">
               <Logo className="h-11 w-11" glow={false} />
@@ -48,7 +48,7 @@ export default function Footer() {
         </div>
 
         {/* 2. Pas pomocy — zawsze widoczny, bez konta i bez zgód cookies */}
-        <section aria-label="Pomoc" className="border-t hairline py-6 flex flex-col md:flex-row md:items-center md:justify-between gap-5">
+        <section aria-label="Pomoc" className="border-t border-exm-line py-5 flex flex-col md:flex-row md:items-center md:justify-between gap-5">
           <div className="flex gap-3 min-w-0">
             <HeartHandshake className="h-5 w-5 shrink-0 mt-0.5 gold-text" aria-hidden="true" />
             <div className="text-sm leading-relaxed text-[#F5EFE1]/80">
@@ -67,7 +67,7 @@ export default function Footer() {
         </section>
 
         {/* 3. Dokumenty i prywatność */}
-        <nav aria-label="Dokumenty i prywatność" className="border-t hairline py-3 flex flex-wrap gap-x-6 gap-y-0">
+        <nav aria-label="Dokumenty i prywatność" className="border-t border-exm-line py-2 flex flex-wrap gap-x-6 gap-y-0">
           {LEGAL.map(([to, t]) => <Link key={to} to={to} className={LEGAL_CLS}>{t}</Link>)}
           <button type="button" onClick={openCookieSettings} className={`${LEGAL_CLS} gap-2 text-left`}>
             <SlidersHorizontal className="h-4 w-4" aria-hidden="true" />
@@ -76,7 +76,7 @@ export default function Footer() {
         </nav>
 
         {/* 4. Dolna linia */}
-        <div className="border-t hairline pt-5 flex flex-col sm:flex-row sm:justify-between gap-2 text-sm text-[#F5EFE1]/70">
+        <div className="border-t border-exm-line pt-4 flex flex-col sm:flex-row sm:justify-between gap-2 text-sm text-[#F5EFE1]/70">
           <p>© {new Date().getFullYear()} Dawid Kowalczyk · EXMORTIS</p>
           <p>Wszelkie prawa zastrzeżone.</p>
         </div>

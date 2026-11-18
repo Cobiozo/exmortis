@@ -29,6 +29,54 @@
     --font-body: "Inter", ui-sans-serif, system-ui, sans-serif;
     --font-display: "Cinzel", ui-serif, Georgia, serif;
     --font-mono: "Space Mono", ui-monospace, monospace;
+
+    /* ==== SYSTEM WIZUALNY EXMORTIS (etap 1) — jedno źródło prawdy ====
+       Tokeny marki z prefiksem --exm-. Wartości zmienia się tutaj, nie w komponentach. */
+    --exm-bg: #0A0A0B;
+    --exm-surface: #111113;
+    --exm-surface-2: #161618;
+    --exm-line: rgba(255, 255, 255, 0.10);
+    --exm-line-strong: rgba(255, 255, 255, 0.16);
+    --exm-gold: #C9A24A;
+    --exm-gold-hover: #E2C27A;
+    --exm-gold-line: rgba(201, 162, 74, 0.35);
+    --exm-bordo: #5C1A1B;
+    --exm-ivory: #F5EFE1;
+    --exm-text: #E2E2E2;
+    --exm-text-muted: rgba(226, 226, 226, 0.72); /* 8:1 na #111113 — powyżej progu WCAG AA */
+    --exm-error: #E24449;
+
+    /* Typografia: szeryf do nagłówków, Inter do tekstu, Space Mono do etykiet, Cinzel tylko na napis EXMORTIS. */
+    --exm-font-serif: "EB Garamond", ui-serif, Georgia, serif;
+    --exm-font-sans: "Inter", ui-sans-serif, system-ui, sans-serif;
+    --exm-font-label: "Space Mono", ui-monospace, monospace;
+    --exm-font-wordmark: "Cinzel", ui-serif, Georgia, serif;
+    --exm-h1: clamp(2.5rem, 6vw, 4.5rem);
+    --exm-h1-lh: 1.05;
+    --exm-h2: clamp(1.75rem, 3.5vw, 2.75rem);
+    --exm-h2-lh: 1.15;
+    --exm-h3: clamp(1.25rem, 2vw, 1.5rem);
+    --exm-body: 17px;
+    --exm-body-lh: 1.65;
+    --exm-label: 11px;
+    --exm-label-tracking: 0.2em;
+
+    /* Odstępy i kontener. */
+    --exm-section-y: 88px;
+    --exm-stack: 32px;
+    --exm-gap: 24px;
+    --exm-container: 1200px;
+    --exm-container-narrow: 720px;
+    --exm-pad: 20px;
+
+    /* Kształty. */
+    --exm-r-card: 16px;
+    --exm-r-field: 10px;
+    --exm-r-pill: 999px;
+
+    /* Wysokość stałego nagłówka (Navbar ustawia rzeczywistą wartość, z paskiem admina włącznie). */
+    --exm-header-h: 60px;
+
     --sidebar-background: 0 0% 4%;
     --sidebar-foreground: 0 0% 89%;
     --sidebar-primary: 41 60% 48%;
@@ -37,6 +85,17 @@
     --sidebar-accent-foreground: 0 0% 89%;
     --sidebar-border: 0 0% 24%;
     --sidebar-ring: 41 60% 48%;
+  }
+
+  /* Telefon: ciaśniejsze odstępy; komputer: szersze marginesy boczne i wyższy nagłówek. */
+  @media (max-width: 767px) {
+    :root { --exm-section-y: 56px; --exm-gap: 16px; --exm-body: 16px; }
+  }
+  @media (min-width: 768px) {
+    :root { --exm-pad: 32px; --exm-header-h: 72px; }
+  }
+  @media (min-width: 1280px) {
+    :root { --exm-pad: 48px; }
   }
 }
 
@@ -50,6 +109,10 @@
   body {
     @apply bg-background text-foreground font-body antialiased;
     background-color: #0A0A0B;
+  }
+  /* Kotwice (np. /#manifest) nie chowają się pod stałym nagłówkiem. */
+  [id] {
+    scroll-margin-top: calc(var(--exm-header-h) + 16px);
   }
   ::selection {
     background: #C9A24A;
@@ -69,12 +132,37 @@
 
   .shop-heading { font-family: "EB Garamond", ui-serif, Georgia, serif; }
 
+  /* Nagłówki części publicznej: EB Garamond, bez wersalików, kolor kości słoniowej.
+     Napis EXMORTIS ma osobny krój (.exm-wordmark). Panel .adm zachowuje własny wygląd. */
   .relic-heading {
-    font-family: var(--font-heading);
-    text-transform: uppercase;
-    letter-spacing: 0.04em;
-    line-height: 0.95;
+    font-family: var(--exm-font-serif);
+    font-weight: 400;
+    text-transform: none;
+    letter-spacing: -0.005em;
+    line-height: 1.1;
+    color: var(--exm-ivory);
   }
+
+  .exm-wordmark {
+    font-family: var(--exm-font-wordmark);
+    text-transform: uppercase;
+    letter-spacing: 0.3em;
+    line-height: 1;
+  }
+
+  /* Etykieta nad nagłówkiem sekcji. */
+  .exm-eyebrow {
+    font-family: var(--exm-font-label);
+    font-size: var(--exm-label);
+    letter-spacing: var(--exm-label-tracking);
+    text-transform: uppercase;
+    color: var(--exm-gold);
+  }
+
+  .exm-h1 { font-family: var(--exm-font-serif); font-weight: 400; font-size: var(--exm-h1); line-height: var(--exm-h1-lh); color: var(--exm-ivory); }
+  .exm-h2 { font-family: var(--exm-font-serif); font-weight: 400; font-size: var(--exm-h2); line-height: var(--exm-h2-lh); color: var(--exm-ivory); }
+  .exm-h3 { font-family: var(--exm-font-serif); font-weight: 400; font-size: var(--exm-h3); line-height: 1.2; color: var(--exm-ivory); }
+  .exm-lead { font-size: clamp(1.0625rem, 1.6vw, 1.25rem); line-height: 1.6; color: var(--exm-text-muted); }
 
   .technical {
     font-family: var(--font-mono);
@@ -116,37 +204,60 @@
     background: linear-gradient(180deg, transparent, #BC1E22 20%, #BC1E22 80%, transparent);
   }
 
-  .btn-relic {
-    @apply inline-flex items-center justify-center gap-2 px-8 py-4 technical text-xs;
-    background: #C9A24A;
-    color: #0A0A0B;
-    transition: all 0.25s ease;
+  /* ==== PRZYCISKI (część publiczna) — jeden wygląd dla całego serwisu ====
+     Inter, zdaniowo, promień 10 px, wysokość 48 px. Warianty: złoty, obramowany, bordowy, link.
+     Panel .adm ma własne reguły niżej w arkuszu (wygląd zaplecza bez zmian). */
+  .btn-relic, .btn-ghost, .btn-blood {
+    @apply inline-flex items-center justify-center gap-2;
+    font-family: var(--exm-font-sans);
+    font-size: 15px;
+    font-weight: 600;
+    line-height: 1.2;
+    letter-spacing: 0;
+    text-transform: none;
+    text-align: center;
+    min-height: 48px;
+    padding: 0 1.4rem;
+    border-radius: var(--exm-r-field);
+    transition: background-color 0.2s ease, border-color 0.2s ease, color 0.2s ease, opacity 0.2s ease;
   }
-  .btn-relic:hover {
-    background: #E2C170;
-    letter-spacing: 0.24em;
-  }
+  .btn-relic { background: var(--exm-gold); color: var(--exm-bg); }
+  .btn-relic:hover { background: var(--exm-gold-hover); }
 
-  .btn-ghost {
-    @apply inline-flex items-center justify-center gap-2 px-8 py-4 technical text-xs border hairline;
-    color: #E2E2E2;
-    transition: all 0.25s ease;
-  }
-  .btn-ghost:hover {
-    border-color: #C9A24A;
-    color: #C9A24A;
-  }
+  .btn-ghost { background: transparent; border: 1px solid var(--exm-line-strong); color: var(--exm-ivory); font-weight: 500; }
+  .btn-ghost:hover { border-color: var(--exm-gold-line); background: rgba(201, 162, 74, 0.06); }
 
-  .btn-blood {
-    @apply inline-flex items-center justify-center gap-2 px-8 py-4 technical text-xs;
-    background: #BC1E22;
-    color: #E2E2E2;
-    transition: all 0.25s ease;
+  .btn-blood { background: #BC1E22; color: var(--exm-ivory); }
+  .btn-blood:hover { background: #d6262b; }
+
+  .btn-relic:focus-visible, .btn-ghost:focus-visible, .btn-blood:focus-visible {
+    outline: 2px solid var(--exm-gold);
+    outline-offset: 2px;
   }
-  .btn-blood:hover {
-    background: #d6262b;
-    letter-spacing: 0.24em;
+  .btn-relic:disabled, .btn-ghost:disabled, .btn-blood:disabled,
+  .btn-relic[aria-disabled="true"], .btn-ghost[aria-disabled="true"], .btn-blood[aria-disabled="true"] {
+    opacity: 0.55;
+    cursor: not-allowed;
   }
+  .btn-relic[aria-busy="true"], .btn-ghost[aria-busy="true"], .btn-blood[aria-busy="true"] { cursor: progress; }
+
+  /* Link tekstowy w złocie marki — trzeci wariant przycisku. */
+  .btn-link {
+    @apply inline-flex items-center gap-2;
+    font-family: var(--exm-font-sans);
+    font-size: 15px;
+    font-weight: 500;
+    min-height: 44px;
+    color: var(--exm-gold);
+    text-decoration: underline;
+    text-decoration-thickness: 1px;
+    text-underline-offset: 4px;
+    text-decoration-color: var(--exm-gold-line);
+    transition: color 0.2s ease, text-decoration-color 0.2s ease;
+  }
+  .btn-link:hover { color: var(--exm-gold-hover); text-decoration-color: currentColor; }
+  .btn-link:focus-visible { outline: 2px solid var(--exm-gold); outline-offset: 2px; }
+  .btn-link:disabled, .btn-link[aria-disabled="true"] { opacity: 0.55; cursor: not-allowed; }
 }
 
 @keyframes flicker {
@@ -285,7 +396,7 @@
   input, select, textarea { font-size: max(16px, 1em); max-width: 100%; }
 }
 @layer components {
-  .container-exm { width: 100%; max-width: 1200px; margin-inline: auto; padding-inline: 16px; }
+  .container-exm { width: 100%; max-width: var(--exm-container); margin-inline: auto; padding-inline: var(--exm-pad); }
   .prose-measure { max-width: 70ch; }
   .table-scroll { overflow-x: auto; -webkit-overflow-scrolling: touch;
     background: linear-gradient(to right, #0A0A0B 30%, transparent), linear-gradient(to left, #0A0A0B 30%, transparent) 100% 0,
@@ -294,8 +405,7 @@
   .safe-bottom { padding-bottom: env(safe-area-inset-bottom); }
   .rich-content table { display: block; overflow-x: auto; }
 }
-@media (min-width: 768px) { .container-exm { padding-inline: 24px; } }
-@media (min-width: 1024px) { .container-exm { padding-inline: 32px; } }
+/* Marginesy kontenera wynikają z tokenu --exm-pad (20 / 32 / 48 px). */
 /* Rozstrzelone kapitaliki: węziej na małych ekranach (główna przyczyna wychodzenia poza ekran) */
 @media (max-width: 767px) {
   .technical { letter-spacing: 0.12em; }
@@ -306,7 +416,6 @@
   .technical { letter-spacing: 0.1em; }
   .relic-heading { letter-spacing: 0.01em; }
   .btn-relic, .btn-ghost, .btn-blood { padding-inline: 1.25rem; }
-  .btn-relic:hover, .btn-blood:hover { letter-spacing: 0.1em; }
 }
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { animation-duration: 1ms !important; animation-iteration-count: 1 !important; transition-duration: 1ms !important; scroll-behavior: auto !important; }
@@ -342,6 +451,27 @@
    Tylko wewnątrz .adm (AdminShell). Strona dla klientów bez zmian. Funkcje bez zmian — sam wygląd.
    Styl exmortis: czerń, złoto #C9A24A, Cormorant (nagłówki), Inter (tekst), JetBrains Mono (etykiety). */
 .adm { --adm-card: #111113; --adm-line: rgba(255,255,255,.09); --adm-line-strong: rgba(255,255,255,.16); --adm-r: 12px; --adm-r-sm: 8px; }
+
+/* Nagłówki zaplecza zostają dokładnie takie, jakie były przed systemem wizualnym (Cinzel wersalikami). */
+.adm .relic-heading {
+  font-family: var(--font-heading);
+  font-weight: 400;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  line-height: 0.95;
+  color: inherit;
+}
+.adm .exm-h1, .adm .exm-h2, .adm .exm-h3 { font-family: var(--font-heading); text-transform: uppercase; letter-spacing: 0.04em; }
+
+/* Okna panelu otwierane w portalu (poza .adm): tytuły zachowują wygląd zaplecza. */
+body:has(.adm) :is([role="dialog"], [role="alertdialog"]) .relic-heading {
+  font-family: var(--font-heading);
+  font-weight: 400;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  line-height: 0.95;
+  color: inherit;
+}
 
 /* Przyciski: zaokrąglone, zwykły krój, bez rozstrzelonych liter — jak na pulpicie. */
 .adm .btn-relic, .adm .btn-ghost, .adm .btn-blood {

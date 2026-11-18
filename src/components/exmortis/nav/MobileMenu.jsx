@@ -35,6 +35,14 @@ export default function MobileMenu({ open, onClose, top, preview }) {
   // Bez pułapki Tab: przycisk „Zamknij menu” jest w nagłówku, poza tą warstwą.
   useDialogA11y(open && !preview, ref, onClose, { trap: false });
 
+  // Blokada przewijania tła, gdy menu jest otwarte.
+  useEffect(() => {
+    if (!open || preview) return undefined;
+    const prev = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    return () => { document.body.style.overflow = prev; };
+  }, [open, preview]);
+
   if (!open) return null;
   const groups = [["Poznaj", NAV.filter((n) => n.desktop !== false)], ["Bezpłatnie", NAV.filter((n) => n.desktop === false)]].filter(([, l]) => l.length);
   const item = (on) => `flex items-center gap-3 min-h-[44px] px-3 rounded-lg text-[15px] transition-colors ${on ? "bg-[#C9A24A]/[0.12] text-[#F5EFE1]" : "text-[#F5EFE1]/80 hover:text-[#F5EFE1] hover:bg-white/[0.04]"}`;
