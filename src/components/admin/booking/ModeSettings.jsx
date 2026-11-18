@@ -51,8 +51,8 @@ export default function ModeSettings({ settings, types = [], onSaved }) {
 
       <div className="grid sm:grid-cols-3 gap-4">
         <label className="text-sm">Minimalne wyprzedzenie<input className={inputCls} value="24 h" disabled /></label>
-        <label className="text-sm">Limit sesji dziennie<input type="number" min="1" max="20" className={inputCls} value={f.daily_limit} onChange={(e) => setF({ ...f, daily_limit: e.target.value })} /></label>
-        <label className="text-sm">Limit tygodniowy (opcj.)<input type="number" min="1" className={inputCls} value={f.weekly_limit} onChange={(e) => setF({ ...f, weekly_limit: e.target.value })} /></label>
+        <label className="text-sm">Wspólny limit spotkań dziennie<input type="number" min="1" max="20" className={inputCls} value={f.daily_limit} onChange={(e) => setF({ ...f, daily_limit: e.target.value })} /></label>
+        <label className="text-sm">Wspólny limit tygodniowo (opcj.)<input type="number" min="1" className={inputCls} value={f.weekly_limit} onChange={(e) => setF({ ...f, weekly_limit: e.target.value })} /></label>
       </div>
 
       <div className="space-y-3">

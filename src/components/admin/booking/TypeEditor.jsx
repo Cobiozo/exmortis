@@ -5,7 +5,8 @@ import QuestionsEditor from "./QuestionsEditor";
 import ZoomChoice from "@/components/admin/zoom/ZoomChoice";
 
 const NUM = [["duration_min", "Długość (min)"], ["buffer_before", "Bufor przed"], ["buffer_after", "Bufor po"], ["step_min", "Krok slotów"],
-  ["horizon_days", "Horyzont (dni)"], ["change_window_h", "Zmiana/anulowanie do (h przed)"], ["monthly_limit", "Limit w miesiącu"]];
+  ["horizon_days", "Horyzont (dni)"], ["change_window_h", "Zmiana/anulowanie do (h przed)"]];
+const LIMITS = [["daily_limit", "Limit dziennie", 20], ["weekly_limit", "Limit tygodniowo", 100], ["monthly_limit", "Limit w miesiącu", 100]];
 
 export default function TypeEditor({ type, onSaved }) {
   const [t, setT] = useState(type);
@@ -36,6 +37,17 @@ export default function TypeEditor({ type, onSaved }) {
       </div>
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
         {NUM.map(([k, l]) => <label key={k} className="text-sm">{l}<input type="number" className={inputCls} value={t[k] ?? ""} onChange={(e) => set(k, e.target.value)} /></label>)}
+      </div>
+      <div className="space-y-3">
+        <p className="technical text-[10px] gold-text">LIMITY TEGO RODZAJU</p>
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+          {LIMITS.map(([k, l, max]) => <label key={k} className="text-sm">{l}<input type="number" min="1" max={max} placeholder="bez limitu" className={inputCls} value={t[k] ?? ""} onChange={(e) => set(k, e.target.value)} /></label>)}
+        </div>
+        <label className="flex items-start gap-2 text-sm">
+          <input type="checkbox" className="mt-1" checked={t.in_global_limit !== false} onChange={(e) => set("in_global_limit", e.target.checked)} />
+          <span>Wliczaj do wspólnego limitu spotkań (Ustawienia rezerwacji: limit dziennie i tygodniowo)</span>
+        </label>
+        <p className="text-xs text-foreground/60">Puste pole oznacza brak limitu. Rodzaj niewliczany do wspólnego limitu nie zajmuje miejsca innym spotkaniom i ma tylko własne limity. Terminy nadal nie mogą na siebie nachodzić.</p>
       </div>
       <QuestionsEditor value={t.questions || []} onChange={(q) => set("questions", q)} />
       <div className="flex items-center gap-4">

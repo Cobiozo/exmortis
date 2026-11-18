@@ -54,7 +54,7 @@ const handler = async function (req) {
       await ensureTypes(base44);
       const [s, types, hours, blocks, hol] = await Promise.all([
         runSql(base44, `SELECT mode, min_notice_h, daily_limit, weekly_limit, late_cancel_policy, threshold_product_id, threshold_type_id, threshold_sessions, threshold_valid_days, service_consent_version, service_consent_text FROM public.bk_settings WHERE id = 1`, true),
-        runSql(base44, `SELECT id, slug, name, description, duration_min, buffer_before, buffer_after, step_min, horizon_days, access, zoom_link, questions, change_window_h, monthly_limit, active FROM public.bk_types ORDER BY sort, name`, true),
+        runSql(base44, `SELECT id, slug, name, description, duration_min, buffer_before, buffer_after, step_min, horizon_days, access, zoom_link, questions, change_window_h, monthly_limit, weekly_limit, daily_limit, in_global_limit, active FROM public.bk_types ORDER BY sort, name`, true),
         runSql(base44, `SELECT id, type_id, weekday, to_char(start_local,'HH24:MI') AS "from", to_char(end_local,'HH24:MI') AS "to" FROM public.bk_hours ORDER BY weekday, start_local`, true),
         runSql(base44, `SELECT id, kind, starts_at, ends_at, rep_weekday, to_char(rep_from,'HH24:MI') AS rep_from, to_char(rep_to,'HH24:MI') AS rep_to, note FROM public.bk_blocks WHERE NOT disabled AND ends_at > now() ORDER BY starts_at LIMIT 200`, true),
         runSql(base44, `SELECT d, name, blocked FROM public.bk_holidays WHERE d >= date_trunc('year', now())::date ORDER BY d`, true),
@@ -94,7 +94,9 @@ const handler = async function (req) {
         duration_min: int(t.duration_min, 10, 480, 60), buffer_before: int(t.buffer_before, 0, 240, 0), buffer_after: int(t.buffer_after, 0, 240, 0),
         step_min: int(t.step_min, 5, 240, 30), horizon_days: int(t.horizon_days, 1, 365, 60), access: escStr(access), zoom_link: esc(zoom),
         questions: `${escStr(JSON.stringify(qs))}::jsonb`, change_window_h: int(t.change_window_h, 0, 720, 24),
-        monthly_limit: esc(int(t.monthly_limit, 1, 100, null)), active: t.active === true ? "TRUE" : "FALSE",
+        monthly_limit: esc(int(t.monthly_limit, 1, 100, null)), weekly_limit: esc(int(t.weekly_limit, 1, 100, null)),
+        daily_limit: esc(int(t.daily_limit, 1, 20, null)), in_global_limit: t.in_global_limit === false ? "FALSE" : "TRUE",
+        active: t.active === true ? "TRUE" : "FALSE",
       };
       let id = t.id;
       if (id) {
@@ -104,7 +106,7 @@ const handler = async function (req) {
         if (!/^[a-z0-9-]{2,60}$/.test(slug)) throw new Error("Adres: małe litery, cyfry i myślniki");
         id = (await runSql(base44, `INSERT INTO public.bk_types (slug, ${Object.keys(cols).join(", ")}) VALUES (${escStr(slug)}, ${Object.values(cols).join(", ")}) RETURNING id`))[0].id;
       }
-      await log(base44, me.email, "rodzaj", "type", id, `${name} aktywny=${t.active === true}`);
+      await log(base44, me.email, "rodzaj", "type", id, `${name} aktywny=${t.active === true} limity d/t/m=${t.daily_limit || "-"}/${t.weekly_limit || "-"}/${t.monthly_limit || "-"} wspolny=${t.in_global_limit !== false}`);
       return Response.json({ ok: true, id });
     }
 
