@@ -8,6 +8,7 @@ import { cn } from "@/lib/utils";
 
 // Okładka na karcie produktu: książka i materiał cyfrowy na papierze (3:4), usługa w kadrze 4:3.
 // Znaczek wyróżnienia w lewym górnym rogu; bez grafiki — sygnet exmortis.
+// self-start: karta ma wysokość okładki, a nie całej kolumny z opisem zakupu (bez pustego pola pod okładką, 19.11.2026).
 const BOOK_TYPES = ["pdf", "audio", "kurs", "wideo", "pakiet"];
 
 export default function ProductCover({ product }) {
@@ -33,8 +34,8 @@ export default function ProductCover({ product }) {
   );
 
   return book ? (
-    <PaperCard className="mx-auto w-full max-w-[420px] p-3 md:p-4">{frame}</PaperCard>
+    <PaperCard className="mx-auto h-fit w-full max-w-[420px] self-start p-3 md:p-4">{frame}</PaperCard>
   ) : (
-    <div className="mx-auto w-full max-w-[520px]">{frame}</div>
+    <div className="mx-auto h-fit w-full max-w-[520px] self-start">{frame}</div>
   );
 }

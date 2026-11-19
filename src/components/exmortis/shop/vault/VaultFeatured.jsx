@@ -16,7 +16,7 @@ export default function VaultFeatured({ product: p }) {
 
   return (
     <article className="grid gap-6 rounded-[var(--exm-r-card)] border border-exm-line bg-exm-surface p-5 md:grid-cols-[minmax(0,240px)_minmax(0,1fr)] md:gap-10 md:p-8">
-      <PaperCard className="p-3 md:p-4">
+      <PaperCard className="h-fit self-start p-3 md:p-4">
         <div className="relative aspect-[3/4] overflow-hidden rounded-[var(--exm-r-field)] bg-exm-surface-2">
           <ShopMedia product={p} />
           {hl && (
