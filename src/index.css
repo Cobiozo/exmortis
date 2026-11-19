@@ -395,6 +395,19 @@
   /* iPhone nie przybliża pól z czcionką ≥16 px */
   input, select, textarea { font-size: max(16px, 1em); max-width: 100%; }
 }
+
+/* iPhone (19.11.2026): pole z czcionką < 16 px przybliża stronę przy dotknięciu i nie oddala jej sama —
+   trzeba było „wyrównywać ekran palcami”. Klasy text-sm / text-[15px] itd. wygrywały z regułą bazową,
+   więc na ekranach dotykowych i wąskich pola tekstowe mają zawsze 16 px. Wygląd na komputerze bez zmian. */
+@media (pointer: coarse), (max-width: 1023px) {
+  :is(input:not([type="checkbox"]):not([type="radio"]):not([type="range"]):not([type="color"]):not([type="file"]), select, textarea):is(.text-xs, .text-sm, [class*="text-[1"], [class*="text-[9px]"], [class*="text-[8px]"], [class*="text-[0."]) {
+    font-size: 16px !important;
+  }
+}
+/* Starszy iOS (< 16) nie zna overflow-x: clip — tam ucinamy przez hidden na body (przenosi się na okno, sticky działa). */
+@supports not (overflow-x: clip) {
+  body { overflow-x: hidden; }
+}
 @layer components {
   .container-exm { width: 100%; max-width: var(--exm-container); margin-inline: auto; padding-inline: var(--exm-pad); }
   .prose-measure { max-width: 70ch; }
