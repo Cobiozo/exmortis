@@ -64,16 +64,19 @@ if (IS_LIS) {
 
 // Po premierze: główne zdjęcie strony głównej ładuje się razem z aplikacją, a nie dopiero po odpowiedzi serwera.
 // Adres z kopii poprzedniej wizyty (aktualna treść z edytora) albo z treści wbudowanej.
-if (path === "/" && !IS_LIS) {
+// 19.11.2026: nagłówek „znak” (HeroZnak) pokazuje zdjęcie „tlo” w oryginale (bez wersji WebP) i tylko od 640 px —
+// na telefonie jest pionowe /img/hero-mobile.webp (preload w index.html). Dawny preload wersji WebP pobierał
+// plik, którego strona w ogóle nie używała.
+if (path === "/" && !IS_LIS && window.innerWidth >= 640) {
   try {
     const blocks = readCache("page_home")?.bloki || HOME_BLOCKS;
     const hero = (Array.isArray(blocks) ? blocks : []).find((b) => b?.typ === "hero" && b.widoczny !== false);
-    const s = mediaSrcSet(hero?.dane?.tlo?.url);
-    if (s) {
+    const url = hero?.dane?.tlo?.url;
+    const s = hero?.dane?.wariant === "znak" ? null : mediaSrcSet(url); // inne warianty: wersje WebP jak w SafeImg
+    if (url) {
       const l = document.createElement("link");
-      Object.assign(l, { rel: "preload", as: "image", href: s.src });
-      l.setAttribute("imagesrcset", s.srcSet);
-      l.setAttribute("imagesizes", "100vw");
+      Object.assign(l, { rel: "preload", as: "image", href: s?.src || url });
+      if (s) { l.setAttribute("imagesrcset", s.srcSet); l.setAttribute("imagesizes", "100vw"); }
       l.setAttribute("fetchpriority", "high");
       document.head.appendChild(l);
     }

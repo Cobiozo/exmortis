@@ -16,7 +16,9 @@ const HEIGHT = {
   podcast: 620, muzyka: 520, swiadectwa: 520, kontakt: 560, kontakt_strona: 620, newsletter: 340,
   dla_kogo: 480, krotka_historia: 620, droga_powrotu: 620, rozdroza: 620, obok: 320, zajawka_powrot: 560, powrot_formularz: 620, powrot_podsumowanie: 640, whatsapp_glos: 360,
   powrot_spotkanie: 400, test: 620, podcast_gosc: 520,
-  produkt_tresc: 700, odcinek_tresc: 700, spotkanie_tresc: 700,
+  // Moduły całej strony (karta produktu, odcinek, spotkanie): co najmniej wysokość ekranu — stopka nie wskakuje
+  // na ekran w trakcie ładowania i nie przesuwa się potem (CLS, 19.11.2026).
+  produkt_tresc: "100svh", odcinek_tresc: "100svh", spotkanie_tresc: "100svh",
 };
 
 const placeholder = (modul) => (

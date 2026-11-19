@@ -22,6 +22,20 @@
     <script>(function(){try{var p=location.pathname.replace(/\/+$/,"")||"/",w=window.innerWidth,u=null;
       if(p==="/"&&w<640)u="/img/hero-mobile.webp";else if(p==="/powrot"&&w<768)u="/img/powrot-hero-mobile.webp";else if(p==="/o-mnie")u="/img/dawid-portret.webp";
       if(u){var l=document.createElement("link");l.rel="preload";l.as="image";l.href=u;l.setAttribute("fetchpriority","high");document.head.appendChild(l);}}catch(e){}})();</script>
+    <!-- 19.11.2026 (szybkość): Skarbiec i karta produktu — gość od razu pobiera katalog (shopProducts), a po odpowiedzi
+         okładkę (wersje 480/800 px), zanim wczyta się aplikacja. Aplikacja odbiera gotową odpowiedź: src/lib/earlyFetch.js.
+         Rozmiary (imagesizes) jak w ProductCover.jsx i VaultFeatured.jsx — inaczej przeglądarka pobrałaby okładkę drugi raz. -->
+    <script>(function(){try{var p=location.pathname.replace(/\/+$/,""),b=null,m;
+      if(p==="/skarbiec")b={};else if((m=/^\/skarbiec\/([a-z0-9-]{1,120})$/.exec(p)))b={slug:m[1]};
+      if(!b||localStorage.getItem("exm_supa_session"))return;
+      var body=JSON.stringify(b),K="%VITE_SUPABASE_ANON_KEY%";
+      var pr=fetch("%VITE_SUPABASE_URL%/functions/v1/shopProducts",{method:"POST",headers:{apikey:K,Authorization:"Bearer "+K,"Content-Type":"application/json"},body:body}).then(function(r){return r.ok?r.json():null}).catch(function(){return null});
+      window.__exmEarly={name:"shopProducts",body:body,p:pr};
+      pr.then(function(d){var l=(d&&d.products)||[],x=null,u="",k,mm;
+        if(b.slug){x=l[0];u=x&&(x.image_url||x.cover_image)}else{for(var i=0;i<l.length;i++)if(l[i].slug==="wracam-inny")x=l[i];u=x&&(x.cover_image||x.image_url)}
+        if(!u)return;k=document.createElement("link");k.rel="preload";k.as="image";k.href=u;mm=/^(.*\/img\/produkty\/[0-9a-f]{16})\.webp$/.exec(u);
+        if(mm){k.setAttribute("imagesrcset",mm[1]+"-480.webp 480w, "+mm[1]+"-800.webp 800w, "+u+" 1200w");k.setAttribute("imagesizes",b.slug?"(min-width: 1024px) 420px, 90vw":"(min-width: 768px) 240px, 85vw")}
+        k.setAttribute("fetchpriority","high");document.head.appendChild(k)})}catch(e){}})();</script>
     <link rel="stylesheet" href="/fonts/fonts.css" />
   </head>
   <body>

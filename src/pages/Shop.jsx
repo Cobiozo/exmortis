@@ -1,3 +1,4 @@
+import { invokeEarly } from "@/lib/earlyFetch";
 import React, { useCallback, useEffect, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
 import { PackageX } from "lucide-react";
@@ -57,8 +58,7 @@ export default function Shop() {
   const load = useCallback(() => {
     setError(false);
     setProducts(null);
-    base44.functions
-      .invoke("shopProducts", {})
+    invokeEarly("shopProducts", {})
       .then((res) => setProducts(res?.data?.products || []))
       .catch(() => setError(true));
   }, []);

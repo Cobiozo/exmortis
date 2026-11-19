@@ -1,3 +1,4 @@
+import { invokeEarly } from "@/lib/earlyFetch";
 import React, { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { ArrowLeft } from "lucide-react";
@@ -39,8 +40,7 @@ export default function ProductDetail() {
   useEffect(() => {
     if (OLD_SLUGS[slug]) { navigate(`/skarbiec/${OLD_SLUGS[slug]}`, { replace: true }); return; }
     setLoading(true);
-    base44.functions
-      .invoke("shopProducts", { slug })
+    invokeEarly("shopProducts", { slug })
       .then((res) => {
         const p = res.data.products[0] || null;
         setProduct(p);
