@@ -1,0 +1,1 @@
+import{i as e}from"./track-CvZ-9H6h.js";var t=e=>String(e||``).toLowerCase().normalize(`NFD`).replace(/[̀-ͯ]/g,``).replace(/ł/g,`l`).replace(/[^a-z0-9]+/g,`_`).replace(/^_+|_+$/g,``).slice(0,34)||`bez_nazwy`,n=(n,r)=>e(n,{content_name:t(r)});export{t as n,n as t};
