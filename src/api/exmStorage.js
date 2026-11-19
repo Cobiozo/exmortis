@@ -40,8 +40,31 @@ async function send(file, scope) {
   return j;
 }
 
+// Zdjęcia publiczne (okładki, galerie, tła) przed wysłaniem: najdłuższy bok najwyżej 1600 px i format WebP
+// (19.11.2026 — okładki PNG po 2 MB spowalniały stronę na telefonie). GIF/SVG/WebP/AVIF i małe pliki bez zmian;
+// gdy konwersja nie pomaga albo przeglądarka jej nie umie — wysyłamy oryginał.
+const OPT = { maxSide: 1600, quality: 0.82, minBytes: 300 * 1024 };
+async function optimizeImage(file) {
+  try {
+    if (!file || !/^image\/(png|jpeg)$/i.test(file.type || "") || file.size < OPT.minBytes) return file;
+    if (typeof createImageBitmap !== "function") return file;
+    const bmp = await createImageBitmap(file);
+    const k = Math.min(1, OPT.maxSide / Math.max(bmp.width, bmp.height));
+    const w = Math.max(1, Math.round(bmp.width * k)), h = Math.max(1, Math.round(bmp.height * k));
+    const c = document.createElement("canvas"); c.width = w; c.height = h;
+    const ctx = c.getContext("2d"); ctx.imageSmoothingQuality = "high"; ctx.drawImage(bmp, 0, 0, w, h);
+    bmp.close?.();
+    const blob = await new Promise((res) => c.toBlob(res, "image/webp", OPT.quality));
+    if (!blob || blob.type !== "image/webp" || blob.size >= file.size) return file;
+    const name = String(file.name || "obraz").replace(/\.(png|jpe?g)$/i, "") + ".webp";
+    return new File([blob], name, { type: "image/webp" });
+  } catch {
+    return file;
+  }
+}
+
 export async function UploadPublicFile({ file }) {
-  const j = await send(file, "public");
+  const j = await send(await optimizeImage(file), "public");
   return { file_url: `${SITE_URL}/media/public/${encodeURIComponent(j.name)}` };
 }
 
