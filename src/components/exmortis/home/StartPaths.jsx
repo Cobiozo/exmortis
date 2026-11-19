@@ -9,7 +9,8 @@ import ProductHighlight from "@/components/exmortis/ui/ProductHighlight";
 import ImageFallback from "@/components/exmortis/ui/ImageFallback";
 import useCatalog from "@/lib/useCatalog";
 import { track } from "@/lib/track";
-import { isPromoActive, unitPrice, regularPrice, lowestPrice30, zl, priceOnRequest } from "@/lib/productPrice";
+import { unitPrice, zl, priceOnRequest } from "@/lib/productPrice";
+import ShopPrice from "@/components/exmortis/shop/vault/ShopPrice";
 import { productHighlight } from "@/lib/productHighlight";
 import { POWROT, ROZMOWA_NA_PROGU } from "@/lib/powrotOffer";
 
@@ -27,7 +28,6 @@ export default function StartPaths({ d = {}, label }) {
   const book = bySlug(BOOK);
   const talk = bySlug(TALK);
   const powrot = bySlug(POWROT_PRODUCT);
-  const promo = isPromoActive(book);
   const highlight = productHighlight(book);
   const okladka = book?.image_url || book?.cover_image || "";
 
@@ -82,19 +82,7 @@ export default function StartPaths({ d = {}, label }) {
               <div className="min-w-0">
                 {highlight && <ProductHighlight kind={highlight} className="mb-2" />}
                 <p className="technical text-[10px] leading-relaxed text-exm-muted">{opisFormatu(book)}</p>
-                {book && (
-                  promo ? (
-                    <div className="mt-2">
-                      <p className="flex flex-wrap items-baseline gap-2">
-                        <span className="text-sm text-exm-muted line-through">{zl(regularPrice(book))}</span>
-                        <span className="font-exm-serif text-2xl text-exm-gold">{zl(unitPrice(book))}</span>
-                      </p>
-                      <p className="mt-1 text-[12px] leading-relaxed text-exm-muted">Najniższa cena z 30 dni: {zl(lowestPrice30(book))}</p>
-                    </div>
-                  ) : (
-                    <p className="mt-2 font-exm-serif text-2xl text-exm-gold">{zl(unitPrice(book))}</p>
-                  )
-                )}
+                {book && <ShopPrice p={book} size="large" showEnd className="mt-2" />}
               </div>
             </div>
           </BrandCard>
