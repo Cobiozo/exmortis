@@ -1,1 +1,0 @@
-import"./rolldown-runtime-XKyaHtl9.js";import{ar as e}from"./icons-BTOHaDLf.js";import{t}from"./jsx-runtime-DDmSNrXw.js";import{i as n}from"./legalRender-ClBUVjj9.js";import{t as r}from"./LegalPage-p6JtArZG.js";e();var i=t();function a(){return(0,i.jsx)(r,{doc:n,docKey:`prywatnosc`})}export{a as default};
