@@ -61,7 +61,7 @@ export default function EventsTeaser({ d = {}, label }) {
             <h3 className="exm-h3">Zacznij bezpłatnie</h3>
             <p className="mt-2 max-w-[56ch] text-[15px] leading-relaxed text-exm-muted">Test autorefleksji, bezpłatne materiały i podcast — możesz zacząć od razu, bez czekania na spotkanie.</p>
           </div>
-          <BrandButton to="/zacznij?src=home-spotkania" variant="secondary" className="w-full shrink-0 sm:w-auto" onClick={() => track("home_start_click", { cel: "bezplatnie" })}>
+          <BrandButton to="/zacznij?src=home-spotkania" variant="secondary" className="w-full shrink-0 sm:w-auto" onClick={() => track("home_bezplatne_click")}>
             Zobacz bezpłatne materiały
           </BrandButton>
         </div>

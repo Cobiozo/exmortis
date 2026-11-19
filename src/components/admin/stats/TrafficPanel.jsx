@@ -16,7 +16,7 @@ const EVENT_LABEL = {
   Lead_lista_oczekujacych: "Lista oczekujących", CompleteRegistration_spotkanie: "Zapis na spotkanie",
   home_start_click: "Kliknięcie w „Trzy drogi”", whatsapp_click: "Kliknięcie w WhatsApp", rozdroza_view: "Rozdroża — widok na stronie głównej",
   rozdroza_cta_click: "Rozdroża — kliknięcie", biblioteka_home_click: "Biblioteka — kliknięcie",
-  home_start_click_bezplatnie: "Strona główna — „Zacznij bezpłatnie”", home_ksiazka_click: "Strona główna — „Poznaj książkę”",
+  home_bezplatne_click: "Strona główna — „Zobacz bezpłatne materiały”", home_ksiazka_click: "Strona główna — „Poznaj książkę”",
   cta_rozpoznanie: "Strona główna — „Poznaj drogę powrotu”", cta_o_mnie: "Strona główna — „Poznaj moją historię”",
   cta_test_src_home: "Strona główna — „Sprawdź, która śmierć jest Twoja”", test_start: "Test — start", test_complete: "Test — ukończony",
   Purchase: "Zakup opłacony",
