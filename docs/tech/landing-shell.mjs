@@ -31,7 +31,7 @@ const base = () => {
 // 1. Strona główna: tylko pierwszy blok (nagłówek ze zdjęciem).
 await p.goto(BASE + "/", { waitUntil: "load" });
 await ready();
-const home = await p.evaluate(`(${base})() && (() => {
+const home = await p.evaluate(`(() => {
   const t = (${base})();
   const host = t.querySelector("main [data-block]")?.parentElement;
   if (!host) throw new Error("Brak bloków strony");
