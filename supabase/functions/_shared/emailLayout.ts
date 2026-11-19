@@ -89,6 +89,8 @@ export function normalizeBody(html) {
     .replace(/background(?:-color)?:\s*#C9A24A;?/gi, `background:${BTN_BG};border:2px solid ${BRAND.gold};`)
     .replace(/(^|;)\s*color:\s*#0A0A0B/gi, `$1color:${BRAND.gold}`)}"`);
   s = s.replace(/bgcolor="#C9A24A"/gi, `bgcolor="${BTN_BG}"`);
+  // Czarny tekst w treści maila występował tylko na złotych przyciskach (np. link w komórce tabeli) → złoty.
+  s = s.replace(/(^|[;"\s])color:\s*#0A0A0B/gi, `$1color:${BRAND.gold}`);
   // Akapit zawierający wyłącznie jeden link http(s) → przycisk.
   s = s.replace(/<p[^>]*>\s*<a\s+href="(https?:[^"]+)"[^>]*>\s*([^<]{2,60}?)\s*<\/a>\s*<\/p>/g,
     (_, href, label) => emailButton(label.replace(/&amp;/g, "&").replace(/&quot;/g, '"'), href.replace(/&amp;/g, "&")));
