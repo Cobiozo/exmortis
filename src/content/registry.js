@@ -285,7 +285,7 @@ export const CONTENT_PAGES = [
         label: "Newsletter — opis",
         type: "richtext",
         default:
-          "Jeden list tygodniowo. Jeden temat powrotu. Jedno narzędzie. Bezpośrednio na Twoją skrzynkę e-mail — z prezentem powitalnym: mini-PDF „3 pierwsze ruchy powrotu”.",
+          "Piszę o tym, co pomaga wracać: historie, myśli i pytania, które warto sobie zadać. Na początek wyślę Ci prezent powitalny: mini-PDF „3 pierwsze ruchy powrotu”.",
       },
       {
         key: "opis",

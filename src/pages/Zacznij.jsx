@@ -64,7 +64,7 @@ export default function Zacznij() {
 
         <Group label="02 · DO CZYTANIA I SŁUCHANIA" title="Na kolejne dni">
           <Item to="/#listy-powrotu" meta="RAZ W TYGODNIU · E-MAIL" title="Listy powrotu"
-            text="Jeden list w tygodniu: historia, myśl i pytanie na kolejne dni. Wypisujesz się jednym kliknięciem." cta="Chcę dostawać Listy" />
+            text="Listy o drodze powrotu: historie, myśli i pytania na kolejne dni. Wypisujesz się jednym kliknięciem." cta="Chcę dostawać Listy" />
           <Item to="/glos?src=zacznij" meta="PODCAST I MUZYKA" title="Głos"
             text="Rozmowy o kryzysach, które często pozostają niewidoczne, i muzyka EXMORTIS. Możesz słuchać od razu na stronie." cta="Posłuchaj" />
           {pdfs.map((p) => (

@@ -14,8 +14,8 @@ import Container from "@/components/exmortis/ui/Container";
 // Logika zapisu, potwierdzenie i kanał WhatsApp bez zmian.
 export default function NewsletterSection({ label } = {}) {
   const { rich } = useSiteContent();
-  const title = rich("footer", "newsletterTitle", 'Jeden list.<br /><span class="gold-text">Raz w tygodniu.</span>');
-  const desc = rich("footer", "newsletterDesc", "Jeden temat powrotu, jedno narzędzie i jeden mały krok — z prezentem powitalnym: mini-PDF „3 pierwsze ruchy powrotu”.");
+  const title = rich("footer", "newsletterTitle", 'Słowo na drogę.<br /><span class="gold-text">Prosto do skrzynki.</span>');
+  const desc = rich("footer", "newsletterDesc", "Piszę o tym, co pomaga wracać: historie, myśli i pytania, które warto sobie zadać. Na początek wyślę Ci prezent powitalny: mini-PDF „3 pierwsze ruchy powrotu”.");
   const [email, setEmail] = useState("");
   const [sent, setSent] = useState(false);
   const t = useSystemText();

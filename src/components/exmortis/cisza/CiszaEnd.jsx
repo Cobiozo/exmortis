@@ -17,7 +17,7 @@ export default function CiszaEnd({ text, onAgain, onLogo, reduced, view, minutes
           <TimerView clock={clock} view={view} reduced />
         </div>
         <h1 className="exm-h1 max-w-[20ch]">{text}</h1>
-        <p className="max-w-[38ch] text-[15px] leading-relaxed text-exm-muted">Jeśli chcesz, raz w tygodniu napiszę do Ciebie list.</p>
+        <p className="max-w-[38ch] text-[15px] leading-relaxed text-exm-muted">Jeśli chcesz, będę pisać do Ciebie listy o drodze powrotu.</p>
         <div className="flex flex-wrap items-center justify-center gap-3">
           <BrandButton onClick={onAgain} className="min-w-[9rem]">Jeszcze raz</BrandButton>
           <BrandButton variant="secondary" onClick={onLogo} className="min-w-[7rem]">Wróć</BrandButton>

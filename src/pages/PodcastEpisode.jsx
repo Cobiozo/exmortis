@@ -85,7 +85,7 @@ export default function PodcastEpisode() {
             {more.map((e) => <Link key={e.id} to={`/glos/${e.slug}`} className="block border hairline p-4 hover:border-[#C9A24A]"><span className="font-mono text-xs gold-text mr-3">#{e.numer}</span><span className="shop-heading text-lg text-[#F5EFE1]">{e.tytul}</span></Link>)}
           </div>
         )}
-        <div className="border-t hairline pt-10"><QuietSignup lead="Jeden list w każdy poniedziałek — o drodze z powrotem." button="Zapisz się" source={`podcast-${ep.slug}`} /></div>
+        <div className="border-t hairline pt-10"><QuietSignup lead="Listy powrotu — o drodze z powrotem, prosto do skrzynki." button="Zapisz się" source={`podcast-${ep.slug}`} /></div>
       </div>
     </article>
   );

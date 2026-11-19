@@ -3,7 +3,7 @@ import { Loader2 } from "lucide-react";
 import { base44 } from "@/api/base44Client";
 import SettingsCard, { FOCUS, LINK } from "./SettingsCard";
 
-const LABEL = { on: "Włączone — list w każdy poniedziałek", off: "Wyłączone", pending: "Czeka na potwierdzenie — sprawdź skrzynkę" };
+const LABEL = { on: "Włączone", off: "Wyłączone", pending: "Czeka na potwierdzenie — sprawdź skrzynkę" };
 
 export default function ListyCard() {
   const [state, setState] = useState(null);
@@ -44,7 +44,7 @@ export default function ListyCard() {
         </button>
       )}
       {state === "pending" && <button type="button" onClick={resend} disabled={busy} className={`${LINK} text-sm`}>Wyślij ponownie</button>}
-      <p className="text-sm text-[#E2E2E2]/70 mt-2">Jeden list w każdy poniedziałek. Możesz wyłączyć w każdej chwili.</p>
+      <p className="text-sm text-[#E2E2E2]/70 mt-2">Listy o drodze powrotu. Możesz je wyłączyć w każdej chwili.</p>
       {msg && <p role="status" className="text-sm text-[#C9A24A] mt-3">{msg}</p>}
     </SettingsCard>
   );
