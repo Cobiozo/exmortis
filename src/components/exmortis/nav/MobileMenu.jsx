@@ -1,17 +1,18 @@
 import React, { useEffect, useRef } from "react";
 import { Link, useLocation } from "react-router-dom";
-import { ArrowRight, CalendarDays, Gem, Headphones, Mail, MessageSquare, Timer, UserRound, Circle } from "lucide-react";
+import { BookOpen, CalendarDays, Gem, Headphones, Mail, Sunrise, Timer, UserRound, Circle } from "lucide-react";
 import { useViewer } from "@/lib/useViewer";
 import { base44 } from "@/api/base44Client";
-import { isActive } from "./navItems";
+import { isActive, subFor } from "./navItems";
 import { useSiteNav } from "./useSiteNav";
 import useDialogA11y from "@/lib/useDialogA11y";
 
 // Menu rozwijane spod przycisku ☰ (telefon, tablet, wąskie okno). Od 17.11.2026 wygląd jak menu Mojego konta: karta z grupami
 // („Poznaj” i „Bezpłatnie”), ikony, aktywna pozycja na złotym tle; na dole „Zrób test” i konto.
 // Esc zamyka, blokada przewijania, fokus na pierwszej pozycji.
-const ICONS = [["/o-mnie", UserRound], ["/powrot", MessageSquare], ["/skarbiec", Gem], ["/spotkania", CalendarDays],
-  ["/glos", Headphones], ["/kontakt", Mail], ["/zacznij", ArrowRight], ["/cisza", Timer]];
+// 19.11.2026: ikony w równych polach 36 px, nazwa i krótki opis pod nią (zamiast dopisków po prawej).
+const ICONS = [["/o-mnie", UserRound], ["/powrot", Sunrise], ["/skarbiec", Gem], ["/spotkania", CalendarDays],
+  ["/glos", Headphones], ["/kontakt", Mail], ["/zacznij", BookOpen], ["/cisza", Timer]];
 // Prawa krawędź menu = prawa krawędź belki (kontener 1400 px, margines 20 / 40 px).
 const edge = () => {
   const w = typeof window === "undefined" ? 1400 : window.innerWidth;
@@ -45,7 +46,8 @@ export default function MobileMenu({ open, onClose, top, preview }) {
 
   if (!open) return null;
   const groups = [["Poznaj", NAV.filter((n) => n.desktop !== false)], ["Bezpłatnie", NAV.filter((n) => n.desktop === false)]].filter(([, l]) => l.length);
-  const item = (on) => `flex items-center gap-3 min-h-[44px] px-3 rounded-lg text-[15px] transition-colors ${on ? "bg-[#C9A24A]/[0.12] text-[#F5EFE1]" : "text-[#F5EFE1]/80 hover:text-[#F5EFE1] hover:bg-white/[0.04]"}`;
+  const item = (on) => `group flex items-center gap-3 min-h-[56px] px-2.5 py-2 rounded-xl transition-colors ${on ? "bg-[#C9A24A]/[0.10]" : "hover:bg-white/[0.04]"}`;
+  const box = (on) => `flex h-9 w-9 shrink-0 items-center justify-center rounded-[10px] border transition-colors ${on ? "border-[#C9A24A]/45 bg-[#C9A24A]/[0.12] text-[#C9A24A]" : "border-white/[0.08] bg-white/[0.03] text-[#F5EFE1]/60 group-hover:text-[#C9A24A] group-hover:border-[#C9A24A]/30"}`;
   const btn = "flex items-center justify-center min-h-[46px] rounded-[10px] text-[14px]";
   const small = "text-sm text-[#F5EFE1]/65 hover:text-[#C9A24A] min-h-11 inline-flex items-center";
 
@@ -56,17 +58,20 @@ export default function MobileMenu({ open, onClose, top, preview }) {
         <nav aria-label="Menu główne">
           {groups.map(([name, list], g) => (
             <div key={name} className={g ? "mt-3 pt-3 border-t hairline" : ""}>
-              <p className="technical text-[10px] text-[#F5EFE1]/60 px-3 pt-1.5 mb-1.5">{name.toUpperCase()}</p>
-              <ul className="space-y-0.5">
+              <p className="technical text-[10px] text-[#F5EFE1]/55 px-3 pt-1.5 mb-1">{name.toUpperCase()}</p>
+              <ul>
                 {list.map((n) => {
                   const on = isActive(pathname, n.to);
                   const Icon = iconFor(n.to);
+                  const sub = subFor(n);
                   return (
                     <li key={n.to}>
                       <Link to={n.to} onClick={onClose} aria-current={on ? "page" : undefined} className={item(on)}>
-                        <Icon className={`h-4 w-4 shrink-0 ${on ? "text-[#C9A24A]" : "text-[#F5EFE1]/50"}`} aria-hidden="true" />
-                        <span className="flex-1">{n.label}</span>
-                        {n.sub && <span className="text-xs text-[#F5EFE1]/50">{n.sub}</span>}
+                        <span className={box(on)} aria-hidden="true"><Icon className="h-[18px] w-[18px]" strokeWidth={1.6} /></span>
+                        <span className="flex min-w-0 flex-1 flex-col">
+                          <span className={`text-[15px] leading-tight ${on ? "text-[#F5EFE1]" : "text-[#F5EFE1]/90 group-hover:text-[#F5EFE1]"}`}>{n.label}</span>
+                          {sub && <span className="mt-0.5 text-[12px] leading-snug text-[#F5EFE1]/50">{sub}</span>}
+                        </span>
                       </Link>
                     </li>
                   );
