@@ -25,6 +25,10 @@ export default function GlosPodcastPanel() {
   const [topic, setTopic] = useState("");
   const [q, setQ] = useState("");
   const [selId, setSelId] = useState(null);
+  // Kolejność listy (19.11.2026): od najnowszych (domyślnie) albo od najstarszych — zapamiętana w tej przeglądarce.
+  // Po końcu odcinka odtwarzacz bierze następny w wybranej kolejności (kolejka = widoczna lista).
+  const [sort, setSort] = useState(() => { try { return localStorage.getItem("exm_podcast_sort") === "stare" ? "stare" : "nowe"; } catch { return "nowe"; } });
+  const pickSort = (v) => { setSort(v); try { localStorage.setItem("exm_podcast_sort", v); } catch { /* bez pamięci */ } };
 
   useEffect(() => {
     loadSettings().then(setSettings);
@@ -43,8 +47,11 @@ export default function GlosPodcastPanel() {
     if (topic) list = list.filter((e) => e.tematy?.includes(topic));
     const s = q.trim().toLowerCase();
     if (s) list = list.filter((e) => [e.tytul, e.gosc_nazwa, e.opis_krotki].some((x) => x?.toLowerCase().includes(s)));
-    return list;
-  }, [eps, playlists, pl, topic, q]);
+    const at = (e) => Date.parse(e.publikacja || 0) || 0;
+    const nr = (e) => (Number.isFinite(Number(e.numer)) ? Number(e.numer) : -1);
+    const dir = sort === "stare" ? 1 : -1;
+    return [...list].sort((a, b) => dir * (at(a) - at(b) || nr(a) - nr(b)));
+  }, [eps, playlists, pl, topic, q, sort]);
 
   // Wybrany odcinek: grający w odtwarzaczu (jeśli z tej listy), kliknięty albo najnowszy.
   const all = eps || [];
@@ -129,6 +136,16 @@ export default function GlosPodcastPanel() {
             <div className="flex items-baseline justify-between gap-3 border-b border-exm-line px-5 py-4">
               <h2 className="exm-h3">Odcinki</h2>
               <span className="text-[13px] text-exm-muted">{count} {word}</span>
+            </div>
+            <div className="px-5 pt-4">
+              <div role="radiogroup" aria-label="Kolejność odcinków" className="grid grid-cols-2 gap-1 rounded-[var(--exm-r-field)] border border-exm-line p-1">
+                {[["nowe", "Od najnowszych"], ["stare", "Od najstarszych"]].map(([v, l]) => (
+                  <button key={v} type="button" role="radio" aria-checked={sort === v} onClick={() => pickSort(v)}
+                    className={`min-h-10 rounded-[calc(var(--exm-r-field)-4px)] px-3 text-[13px] font-medium transition-colors ${sort === v ? "bg-[#C9A24A]/15 text-exm-ivory" : "text-exm-muted hover:text-exm-ivory"}`}>
+                    {l}
+                  </button>
+                ))}
+              </div>
             </div>
             <div className="space-y-3 px-5 pt-4">
               <GlosSearch id="glos-szukaj-odcinkow" label="Szukaj odcinków" value={q} onChange={setQ} placeholder="Tytuł, gość albo opis" />
