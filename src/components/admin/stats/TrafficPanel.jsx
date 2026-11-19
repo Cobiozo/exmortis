@@ -57,7 +57,7 @@ export default function TrafficPanel({ range }) {
     const pages = group("strona");
     const days = new Set(inR.filter((r) => r.kind === "strona").map((r) => String(r.day))).size;
     const total = pages.reduce((s, r) => s + r.n, 0);
-    return { pages, sources: group("zrodlo"), events: group("zdarzenie"), total, days };
+    return { pages, sources: group("zrodlo"), events: group("zdarzenie").filter((r) => !/^(pod|muz)_/.test(r.name)), total, days };
   }, [rows, range]);
 
   if (rows === false) return <p className="text-sm text-foreground/55 mb-10">Nie udało się wczytać statystyk ruchu.</p>;
