@@ -8,7 +8,7 @@ const WA = String(WHATSAPP_CHANNEL || "").trim();
 // (19.11.2026: każda pozycja ma opis, żeby lista była równa; bez „1:1” — „praca/mentoring indywidualny”).
 export const NAV = [
   { label: "O mnie", to: "/o-mnie", sub: "Moja historia i droga" },
-  { label: "Powrót", to: "/powrot", sub: "Program mentoringu indywidualnego" },
+  { label: "Powrót", to: "/powrot", sub: "Mentoring indywidualny" },
   { label: "Sklep", to: "/skarbiec", sub: "Książki, materiały i sesje" },
   { label: "Spotkania", to: "/spotkania?src=nav", sub: "Wieczory online na żywo" },
   { label: "Cisza", to: "/cisza", sub: "Minutnik chwili ciszy" },
