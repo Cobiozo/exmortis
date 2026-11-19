@@ -89,14 +89,7 @@ export const POWROT_BLOCKS = [
     link_etykieta: "Przeczytaj Umowę POWRÓT", link: "/umowa-powrot" }),
 
   // 9. Jak dołączyć — pięć kroków jako pozioma oś, nota pod nią.
-  b("kwalifikacja", "etapy", { etykieta: "JAK DOŁĄCZYĆ", tytul: "Pięć spokojnych\nkroków", uklad: "poziomy", elementy: [
-    { tytul: "Zgłoszenie", opis: "Wypełniasz krótkie zgłoszenie. Zajmie około 2 minut." },
-    { tytul: "Odpowiedź", opis: `Czytam każde zgłoszenie osobiście i odpowiadam w ciągu ${POWROT.responseHours} godzin. Jeśli widzę sens dalszej rozmowy, wysyłam Ci szczegółową ankietę.` },
-    { tytul: "Ankieta", opis: "Kilka pytań, które porządkują Twoją sytuację i oczekiwania. Pytania o zdrowie są nieobowiązkowe i wymagają Twojej osobnej zgody." },
-    { tytul: "Rozmowa wstępna", opis: `Jeśli dostaniesz zaproszenie, wybierasz termin w kalendarzu. ${ROZMOWA_WSTEPNA.minutes} minut online, bezpłatnie. Sprawdzamy wzajemne dopasowanie — to nie jest sesja ani terapia.` },
-    { tytul: "Decyzja i start", opis: "Jeśli oboje zdecydujemy się na współpracę, dostajesz umowę, link do płatności i termin startu." },
-  ], nota: "Zgłoszenie jest bezpłatne, nie zobowiązuje do zakupu i nie oznacza automatycznego przyjęcia do programu." },
-    { tlo: "surface" }),
+  // „Pięć spokojnych kroków” (19.11.2026) połączone z podsumowaniem przy formularzu — jedna lista „Po zgłoszeniu”.
 
   // 10. Podsumowanie i formularz — moduły bez zmian logiki, w spokojnej ramce (kotwica „formularz” w module).
   b("podsumowanie", "modul", { modul: "powrot_podsumowanie" }),

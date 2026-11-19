@@ -55,7 +55,7 @@ export const POWROT_HOW_ROWS = [
 ];
 
 export const POWROT_INCLUDES = [
-  `${POWROT.sessionsTitle} indywidualnych sesji po ${POWROT.lengthLong}, rozłożonych na ${POWROT.months}`,
+  `${POWROT.sessionsTitle.split(" ")[0]} indywidualnych sesji po ${POWROT.lengthLong}, rozłożonych na ${POWROT.months}`,
   "Mapa powrotu: Twój indywidualny plan pracy, który powstaje na pierwszej sesji",
   "Dziennik powrotu: osobisty zeszyt pracy w wersji cyfrowej, z ćwiczeniami i zadaniami między sesjami",
   "Materiały i narzędzia pracy po kolejnych sesjach, w Twoim koncie",

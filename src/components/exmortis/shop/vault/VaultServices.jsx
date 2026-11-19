@@ -7,7 +7,7 @@ import { POWROT, ROZMOWA_NA_PROGU } from "@/lib/powrotOffer";
 import ShopMedia from "./ShopMedia";
 import ShopPrice from "./ShopPrice";
 
-// Praca 1:1 — dwie osobne karty usług. Ceny z katalogu, parametry z jednego źródła oferty.
+// Praca indywidualna — dwie osobne karty usług. Ceny z katalogu, parametry z jednego źródła oferty.
 // Rozmowa na progu zawsze prowadzi do zgłoszenia; POWRÓT do strony programu (nigdy do koszyka).
 const COPY = {
   [ROZMOWA_NA_PROGU.slug]: {

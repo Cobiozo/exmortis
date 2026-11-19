@@ -15,7 +15,7 @@ const TYPES = {
   audio: "Nagranie",
   kurs: "Kurs",
   wideo: "Wideo",
-  usluga: "Usługa 1:1",
+  usluga: "Usługa indywidualna",
   karta: "Karta podarunkowa",
   pakiet: "Pakiet",
 };

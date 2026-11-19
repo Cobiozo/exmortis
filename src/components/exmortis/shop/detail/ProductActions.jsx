@@ -5,7 +5,7 @@ import FreeOrderForm from "@/components/exmortis/shop/FreeOrderForm";
 import { GiftCardBuy } from "@/components/exmortis/shop/GiftCard";
 import GuaranteeInfo from "@/components/exmortis/shop/GuaranteeInfo";
 import { accessLabel, isDigital } from "@/components/account/accountUtils";
-import { priceOnRequest } from "@/lib/productPrice";
+import { priceOnRequest, unitPrice, zl } from "@/lib/productPrice";
 
 // Przycisk główny karty produktu — zgodny z następnym ekranem. Kolejność i zachowanie bez zmian:
 // zapowiedź → lista oczekujących; brak miejsc → lista; własny adres (bezpłatne / po rozmowie) → link;
@@ -57,11 +57,21 @@ export default function ProductActions({ product, qty, setQty, onBuy, onAdd, add
   if (linkUrl.startsWith("/") && product.product_type === "usluga" && !product.is_free) {
     return (
       <div className="space-y-4">
-        <Link to={linkUrl} className="btn-relic w-full">{product.button_label || "Umów rozmowę"} <ArrowRight className="h-4 w-4" /></Link>
-        <p className="text-sm leading-relaxed text-exm-muted">
-          Najpierw krótkie zgłoszenie z kilkoma pytaniami przygotowującymi do spotkania, potem płatność, a po niej wybór terminu w kalendarzu.
-          Termin możesz bezpłatnie przełożyć najpóźniej 24 godziny przed spotkaniem.
-        </p>
+        {/* Lejek 19.11.2026: przycisk mówi, co stanie się po kliknięciu; pod nim rzeczywista kolejność kroków. */}
+        <Link to={linkUrl} className="btn-relic w-full">Przejdź do zgłoszenia <ArrowRight className="h-4 w-4" /></Link>
+        <ol className="space-y-2 text-sm leading-relaxed text-exm-muted">
+          {[
+            "Krótkie zgłoszenie z kilkoma pytaniami przygotowującymi do spotkania",
+            `Płatność${unitPrice(product) > 0 ? ` ${zl(unitPrice(product))}` : ""}`,
+            "Wybór terminu w kalendarzu",
+          ].map((t, i) => (
+            <li key={i} className="flex gap-3">
+              <span aria-hidden="true" className="technical w-5 shrink-0 pt-[3px] text-[10px] text-exm-gold">{String(i + 1).padStart(2, "0")}</span>
+              <span>{t}</span>
+            </li>
+          ))}
+        </ol>
+        <p className="text-sm leading-relaxed text-exm-muted">Termin możesz bezpłatnie przełożyć najpóźniej 24 godziny przed spotkaniem.</p>
         {product.slug === "rozmowa-na-progu" && (
           <p className="text-[13px] leading-relaxed text-exm-muted">Osobna usługa, niezależna od programu POWRÓT.</p>
         )}

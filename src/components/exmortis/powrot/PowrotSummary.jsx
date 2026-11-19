@@ -17,8 +17,13 @@ const INCLUDED = [
   "kontakt między sesjami w ustalonych granicach",
 ];
 
-const QUALIFICATION =
-  `Krótkie zgłoszenie → odpowiedź w ciągu ${POWROT.responseHours} godzin → ankieta → rozmowa wstępna (${ROZMOWA_WSTEPNA.minutes} minut, na zaproszenie) → wspólna decyzja. Bez zobowiązań i bez automatycznego przyjęcia.`;
+// Co stanie się po zgłoszeniu — dawny blok „Pięć spokojnych kroków”, teraz tuż nad formularzem (19.11.2026).
+const STEPS = [
+  ["Odpowiedź", `Czytam każde zgłoszenie osobiście i odpowiadam w ciągu ${POWROT.responseHours} godzin. Jeśli widzę sens dalszej rozmowy, wysyłam Ci ankietę.`],
+  ["Ankieta", "Kilka pytań, które porządkują Twoją sytuację i oczekiwania. Pytania o zdrowie są nieobowiązkowe i wymagają Twojej osobnej zgody."],
+  ["Rozmowa wstępna", `Na zaproszenie: ${ROZMOWA_WSTEPNA.minutes} minut online, bezpłatnie. Sprawdzamy wzajemne dopasowanie — to nie jest sesja ani terapia.`],
+  ["Decyzja i start", "Jeśli oboje zdecydujemy się na współpracę, dostajesz umowę, link do płatności i termin startu."],
+];
 
 function Row({ label, children }) {
   return (
@@ -42,7 +47,18 @@ export default function PowrotSummary() {
             <p>{INCLUDED.slice(0, 3).join(" · ")}</p>
             <p className="mt-1">{INCLUDED.slice(3).join(", ")}.</p>
           </Row>
-          <Row label="KWALIFIKACJA">{QUALIFICATION}</Row>
+          <Row label="PO ZGŁOSZENIU">
+            <p>Samo zgłoszenie zajmie około 2 minut. Potem:</p>
+            <ol className="mt-3 space-y-3">
+              {STEPS.map(([t, o], i) => (
+                <li key={t} className="flex gap-3">
+                  <span aria-hidden="true" className="technical w-5 shrink-0 pt-[3px] text-[10px] gold-text">{String(i + 1).padStart(2, "0")}</span>
+                  <span><span className="text-foreground/90">{t}.</span> {o}</span>
+                </li>
+              ))}
+            </ol>
+            <p className="mt-3 text-sm">Zgłoszenie jest bezpłatne, nie zobowiązuje do zakupu i nie oznacza automatycznego przyjęcia do programu.</p>
+          </Row>
           <Row label="INWESTYCJA">
             <p className="text-foreground/90">{POWROT.priceFull}</p>
             <p className="mt-1 text-sm">{POWROT.installments}</p>

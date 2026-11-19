@@ -41,7 +41,7 @@ const buildGroups = (list) =>
   [
     { key: "bezplatnie", label: "Bezpłatnie", items: list.filter((p) => p.is_free && !isSoon(p)).sort((a, b) => freeRank(a) - freeRank(b)) },
     { key: "ksiazki", label: "Książki", items: list.filter((p) => !p.is_free && !isSoon(p) && p.product_type !== "usluga" && p.product_type !== "karta") },
-    { key: "praca", label: "Praca 1:1", items: list.filter((p) => !p.is_free && !isSoon(p) && p.product_type === "usluga") },
+    { key: "praca", label: "Praca indywidualna", items: list.filter((p) => !p.is_free && !isSoon(p) && p.product_type === "usluga") },
     { key: "prezent", label: "Prezent", items: list.filter((p) => p.product_type === "karta") },
     { key: "zapowiedzi", label: "Zapowiedzi", items: list.filter(isSoon) },
   ].filter((g) => g.items.length > 0);
@@ -78,19 +78,6 @@ export default function Shop() {
     if (!current) return null;
     if (current.key === "praca") return <VaultServices products={current.items} />;
     if (current.key === "zapowiedzi") return <VaultSoon products={current.items} onWaitlist={setWaitlistProduct} />;
-    if (current.key === "ksiazki") {
-      const rest = current.items.filter((p) => p.slug !== BOOK);
-      return (
-        <div className="space-y-6 md:space-y-8">
-          {featured && <VaultFeatured product={featured} />}
-          {rest.length > 0 && (
-            <div className={GRID}>
-              {rest.map((p) => <VaultCard key={p.id || p.slug} product={p} />)}
-            </div>
-          )}
-        </div>
-      );
-    }
     return (
       <div className={GRID}>
         {current.items.map((p) => <VaultCard key={p.id || p.slug} product={p} />)}
@@ -150,20 +137,21 @@ export default function Shop() {
 
           {groups.length > 0 && (
             <>
-              <div className="mt-8 md:mt-10">
+              {/* Lejek 19.11.2026: wyróżniona książka stoi nad zakładkami — płatna oferta nie wisi pod aktywną zakładką „Bezpłatnie”. */}
+              {featured && (
+                <div className="mt-8 md:mt-10">
+                  <h2 className="sr-only">Wyróżniona książka</h2>
+                  <VaultFeatured product={featured} />
+                </div>
+              )}
+
+              <div className="mt-10 md:mt-14">
                 <VaultTabs
                   tabs={groups.map((g) => ({ key: g.key, label: g.label, count: g.items.length }))}
                   value={active}
                   onChange={setTab}
                 />
               </div>
-
-              {featured && active !== "ksiazki" && (
-                <div className="mt-8 md:mt-10">
-                  <h2 className="sr-only">Wyróżniona książka</h2>
-                  <VaultFeatured product={featured} />
-                </div>
-              )}
 
               <div
                 role="tabpanel"
