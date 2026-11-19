@@ -15,7 +15,8 @@ export const NAV = [
   { label: "Kontakt", to: "/kontakt" },
   { label: "Zacznij bezpłatnie", to: "/zacznij?src=nav", desktop: false },
 ];
-export const TEST = { label: "Zrób test", to: "/test?src=nav" };
+// 19.11.2026: w belce krótko „Test” (jak pozostałe pozycje).
+export const TEST = { label: "Test", to: "/test?src=nav" };
 
 const col = (title, links) => ({ title, links: links.map(([label, to]) => ({ label, to })) });
 // Stopka (5.11.2026): Odkrywaj · EXMORTIS · Bądźmy w kontakcie. Parametry ?src=footer zostają (pomiar źródła).
