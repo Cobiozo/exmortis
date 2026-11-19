@@ -3,6 +3,7 @@ import { Link, useLocation } from "react-router-dom";
 import { Loader2 } from "lucide-react";
 import { base44 } from "@/api/base44Client";
 import AuthLayout from "@/components/AuthLayout";
+import AuthSwitch from "@/components/auth/AuthSwitch";
 import AuthField from "@/components/auth/AuthField";
 import GoogleButton from "@/components/auth/GoogleButton";
 import PasswordStrength from "@/components/auth/PasswordStrength";
@@ -159,7 +160,6 @@ export default function Register() {
     <AuthLayout
       title="Załóż konto"
       subtitle="Potrzebujemy imienia, adresu e-mail i hasła."
-      footer={<Link to={`/login${search}`} className="btn-link">{t("zakladka.login")}</Link>}
     >
       <GoogleButton onClick={() => base44.auth.loginWithProvider("google", providerReturnTo())} />
       <form onSubmit={handleSubmit} className="space-y-5">
@@ -187,6 +187,7 @@ export default function Register() {
           {loading && <Loader2 className="h-4 w-4 animate-spin" aria-hidden="true" />} Załóż konto
         </button>
       </form>
+      <AuthSwitch question="Masz już konto?" label={t("zakladka.login")} to={`/login${search}`} />
     </AuthLayout>
   );
 }

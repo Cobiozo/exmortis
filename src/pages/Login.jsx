@@ -3,6 +3,7 @@ import { Link, useLocation } from "react-router-dom";
 import { Loader2 } from "lucide-react";
 import { base44 } from "@/api/base44Client";
 import AuthLayout from "@/components/AuthLayout";
+import AuthSwitch from "@/components/auth/AuthSwitch";
 import AuthField from "@/components/auth/AuthField";
 import GoogleButton from "@/components/auth/GoogleButton";
 import { afterLoginTarget, providerReturnTo, loggedInTarget } from "@/lib/afterLogin";
@@ -58,7 +59,6 @@ export default function Login() {
     <AuthLayout
       title={t("tytul")}
       subtitle={t("podtytul")}
-      footer={<Link to={`/register${search}`} className="btn-link">{t("zakladka.rejestracja")}</Link>}
     >
       <GoogleButton onClick={() => { localStorage.setItem("exm_login_via", "google"); base44.auth.loginWithProvider("google", providerReturnTo()); }} />
       <form onSubmit={handleSubmit} className="space-y-5">
@@ -78,6 +78,7 @@ export default function Login() {
           {t("przycisk")}
         </button>
       </form>
+      <AuthSwitch question="Nie masz konta?" label={t("zakladka.rejestracja")} to={`/register${search}`} />
     </AuthLayout>
   );
 }
