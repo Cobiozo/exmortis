@@ -77,7 +77,8 @@ export default function Navbar() {
         <div className="mx-auto max-w-[1400px] px-5 md:px-10">
           <div ref={rowRef} className="relative flex items-center justify-between gap-6 h-[60px] md:h-[72px]">
             {/* niewidoczna kopia menu do pomiaru szerokości */}
-            <div aria-hidden="true" className="absolute invisible pointer-events-none -z-10 left-0 top-0"><DesktopNav ref={measureRef} measure /></div>
+            {/* Ramka 0×0 z ucięciem: kopia ma pełną szerokość (w-max), ale nie poszerza strony na telefonie. */}
+            <div aria-hidden="true" className="absolute invisible pointer-events-none -z-10 left-0 top-0 h-0 w-0 overflow-hidden"><DesktopNav ref={measureRef} measure className="w-max" /></div>
 
             <Link ref={logoRef} to="/" aria-label="exmortis — strona główna" className="flex items-center gap-3 shrink-0 whitespace-nowrap min-h-11">
               <Logo className="h-9 w-9 md:h-10 md:w-10" />
