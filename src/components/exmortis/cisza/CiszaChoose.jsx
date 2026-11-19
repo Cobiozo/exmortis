@@ -29,7 +29,7 @@ export default function CiszaChoose({ minutes, setMinutes, onStart, onLogo, view
   };
 
   return (
-    <CiszaFrame onLogo={onLogo} onHome={onLogo}>
+    <CiszaFrame onLogo={onLogo} onHome={onLogo} scroll>
       <div className="flex w-full max-w-xl flex-col items-center gap-3 text-center fade-up sm:gap-5 [@media(max-height:600px)]:gap-2">
         <h1 className="exm-h1">Chwila ciszy</h1>
         <p className="exm-lead max-w-[34ch]">{text || "Bez muzyki. Bez powiadomień. Tylko Ty i czas."}</p>

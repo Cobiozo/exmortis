@@ -4,7 +4,9 @@ import CiszaLogo from "./CiszaLogo";
 
 // Siatka 100dvh: GÓRA logo · ŚRODEK treść · DÓŁ zarezerwowana strefa.
 // onHome — wyraźny przycisk powrotu na stronę główną (ekran wyboru i zakończenia; w trakcie sesji go nie ma).
-export default function CiszaFrame({ onLogo, onHome, logoExtra, bottom, children, className = "" }) {
+// scroll — ekran wyboru: gdy treść (np. rozwinięte Ustawienia z tłami) jest wyższa niż ekran, środek przewija się
+// zamiast wychodzić pod logo i spychać „Zacznij” poza ekran (19.11.2026).
+export default function CiszaFrame({ onLogo, onHome, logoExtra, bottom, children, className = "", scroll = false }) {
   return (
     <section className={`cisza-root fixed inset-0 z-10 grid overflow-hidden ${className}`} style={{ gridTemplateRows: "auto minmax(0,1fr) auto", height: "100dvh" }}>
       <div className="cisza-top relative flex justify-center">
@@ -17,7 +19,13 @@ export default function CiszaFrame({ onLogo, onHome, logoExtra, bottom, children
         <CiszaLogo onClick={onLogo} />
         {logoExtra}
       </div>
-      <div className="relative min-h-0 flex flex-col items-center justify-center px-4">{children}</div>
+      {scroll ? (
+        <div className="relative min-h-0 overflow-y-auto overscroll-contain px-4 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+          <div className="flex min-h-full flex-col items-center justify-center py-4">{children}</div>
+        </div>
+      ) : (
+        <div className="relative min-h-0 flex flex-col items-center justify-center px-4">{children}</div>
+      )}
       <div className="cisza-bottom relative">{bottom}</div>
     </section>
   );
