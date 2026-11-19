@@ -2,7 +2,6 @@ import React from "react";
 import { Link } from "react-router-dom";
 import { ArrowRight } from "lucide-react";
 import Logo from "@/components/exmortis/Logo";
-import { mediaSrcSet } from "@/lib/imgSrcSet";
 
 // Pierwszy ekran strony głównej — wariant „znak” (etap 2, 18.11.2026).
 // Sygnet → EXMORTIS → ZE ŚMIERCI → zdanie → złota linia → Dawid, mentor powrotu → opis → dwa przyciski.
@@ -26,16 +25,12 @@ function Tlo({ d }) {
   const tall = d.tlo_mobile?.url;
   if (!wide && !tall) return null;
   const jasnosc = 1 - Math.min(95, Math.max(0, d.przyciemnienie ?? 70)) / 100;
-  // 19.11.2026 (szybkość): zdjęcie z biblioteki w wersjach WebP 480–2000 px zamiast oryginalnego PNG.
-  const set = wide ? mediaSrcSet(wide) : null;
   return (
     <div className="absolute inset-0" aria-hidden="true">
       <picture>
         {tall && <source media="(max-width: 639px)" srcSet={tall} />}
         <img
-          src={set?.src || wide || tall}
-          srcSet={set?.srcSet}
-          sizes={set ? "100vw" : undefined}
+          src={wide || tall}
           alt=""
           fetchPriority="high"
           loading="eager"
