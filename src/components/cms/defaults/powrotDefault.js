@@ -8,7 +8,8 @@ const b = (id, typ, dane, uklad = {}) => ({ id: `powrot-${id}`, typ, widoczny: t
 const ul = (items) => `<ul>${items.map((i) => `<li>${i}</li>`).join("")}</ul>`;
 const IMG = "https://media.base44.com/images/public/6aa08bc6318b0f886cc3b9a3/";
 const HERO = { url: `${IMG}cbb4ee4b8_generated_image.png`, alt: "" };
-const HERO_M = { url: `${IMG}7e58ab787_generated_image.png`, alt: "" };
+// Kadr pionowy (19.11.2026): wygenerowany obraz miał jasne pasy po bokach — przycięty do samego zdjęcia, w repozytorium.
+const HERO_M = { url: "/img/powrot-hero-mobile.webp", alt: "" };
 const ZGLOS = { etykieta: "Zgłoś się do programu", link: "#formularz", styl: "zloty", strzalka: true };
 const SPOTKANIE = { etykieta: "Weź udział w otwartym spotkaniu", link: "/spotkania?src=powrot", styl: "obrys", strzalka: false };
 
