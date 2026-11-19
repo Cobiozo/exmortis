@@ -77,7 +77,7 @@ export function TestLink({ small }) {
   const { test: TEST } = useSiteNav();
   const on = isActive(pathname, TEST.to);
   return (
-    <Link to={TEST.to} aria-current={on ? "page" : undefined} className={`${itemCls(on)} ${small ? "text-[13px]" : ""}`}>
+    <Link to={TEST.to} aria-current={on ? "page" : undefined} className={small ? itemCls(on).replace("text-[14px]", "text-[13px]") : itemCls(on)}>
       {TEST.label}
     </Link>
   );
