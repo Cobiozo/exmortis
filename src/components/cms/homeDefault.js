@@ -14,7 +14,8 @@ const mod = (id, modul, extra = {}, numer = "brak") => ({ id, typ: "modul", wido
 const PORTRET = "https://media.base44.com/images/public/6aa08bc6318b0f886cc3b9a3/480c7c335_702144182_17895011880460401_728690723499574380_n.jpg";
 // Tło pierwszego ekranu (wygenerowane 18.11.2026): ciemny górski krajobraz o świcie, jeden złoty prześwit.
 const TLO_SZEROKIE = "https://media.base44.com/images/public/6aa08bc6318b0f886cc3b9a3/0a6c73404_generated_image.png";
-const TLO_PIONOWE = "https://media.base44.com/images/public/6aa08bc6318b0f886cc3b9a3/5a109cbe4_generated_image.png";
+// Kadr pionowy na telefon (19.11.2026): wygenerowany obraz miał białą ramkę — przycięty do samego zdjęcia, w repozytorium.
+const TLO_PIONOWE = "/img/hero-mobile.webp";
 
 export const HOME_BLOCKS = [
   { id: "home-hero", typ: "hero", widoczny: true, uklad: { ...bare }, dane: {
