@@ -10,15 +10,15 @@ import { track } from "@/lib/track";
 // Aktualizacja: podmienić adresy i podpisy na okładki nowszych opublikowanych historii.
 const COVERS = [
   {
-    src: "https://base44.app/api/apps/6aa08bc6318b0f886cc3b9a3/files/mp/public/6aa08bc6318b0f886cc3b9a3/ef0beaa83_rozdroza-1792018375708.png",
+    src: "https://media.base44.com/images/public/6aa08bc6318b0f886cc3b9a3/ef0beaa83_rozdroza-1792018375708.png",
     alt: "Okładka interaktywnej historii „DWA ZNICZE”",
   },
   {
-    src: "https://base44.app/api/apps/6aa08bc6318b0f886cc3b9a3/files/mp/public/6aa08bc6318b0f886cc3b9a3/a43549c3a_rozdroza-1791817987523.png",
+    src: "https://media.base44.com/images/public/6aa08bc6318b0f886cc3b9a3/a43549c3a_rozdroza-1791817987523.png",
     alt: "Okładka interaktywnej historii „Zastępstwo”",
   },
   {
-    src: "https://base44.app/api/apps/6aa08bc6318b0f886cc3b9a3/files/mp/public/6aa08bc6318b0f886cc3b9a3/0eb2758b2_rozdroza-1791817497017.png",
+    src: "https://media.base44.com/images/public/6aa08bc6318b0f886cc3b9a3/0eb2758b2_rozdroza-1791817497017.png",
     alt: "Okładka interaktywnej historii „Człowiek od odpowiedzi”",
   },
 ];
