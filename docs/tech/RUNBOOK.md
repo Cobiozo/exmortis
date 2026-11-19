@@ -53,3 +53,7 @@ base44 deploy              # publikacja: strona + funkcje + encje + workflow
 | Zoom | spotkania online | Ustawienia strony → Mój stały link |
 | Google Cloud / Calendar | rezerwacje 1:1 | łącznik Base44 |
 | Serwer wideo Dawida | filmy kursów, nagrania | Ustawienia strony → Ochrona filmów |
+
+## Kontrola funkcji po wdrożeniu (od 19.11.2026)
+
+Po każdym wdrożeniu funkcji Edge: `node docs/tech/sprawdz-funkcje.mjs` (wszystkie) albo z nazwami wdrożonych funkcji. Skrypt wysyła puste zapytanie i sprawdza, czy funkcja startuje — błąd walidacji jest w porządku, BOOT_ERROR / 5xx to alarm. Szczegóły metody wdrażania: AGENTS.md, sekcja „Wdrażanie funkcji Supabase Edge”.

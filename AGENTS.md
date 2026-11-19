@@ -32,3 +32,10 @@ npx skills add base44/skills
 - Prefer the existing Base44 CLI workflow over adding new npm scripts for Base44-specific tasks.
 - Reuse the existing SDK client and Vite plugin patterns before adding new Base44 integration paths.
 - Run the relevant checks from `package.json` before finishing code changes.
+
+## Wdrażanie funkcji Supabase Edge (obowiązkowe — od 19.11.2026)
+
+- Funkcje wdrażaj wyłącznie metodą standardową: Management API `POST /v1/projects/<ref>/functions/deploy?slug=<nazwa>` (multipart), pliki ze ścieżkami `supabase/functions/<nazwa>/index.ts` i `supabase/functions/_shared/*.ts`, `entrypoint_path` = `supabase/functions/<nazwa>/index.ts`, `verify_jwt` bez zmian (payuNotification: false).
+- NIE pakuj funkcji ręcznie do eszip i nie używaj entrypointu `functions/<nazwa>/index.ts` — 19.11.2026 tak spakowane funkcje nie startowały (BOOT_ERROR „relative URL without a base”), kasa nie działała ~40 min.
+- Zaraz po każdym wdrożeniu uruchom `node docs/tech/sprawdz-funkcje.mjs <nazwy wdrożonych funkcji>` (bez argumentów sprawdza wszystkie). Wynik „BŁĄD” = natychmiast wdrożyć ponownie metodą standardową.
+- Nie buduj i nie commituj `dist/` — robi to wyłącznie GitHub Actions.
