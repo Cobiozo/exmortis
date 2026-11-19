@@ -5,7 +5,7 @@ import { HOME_ROZDROZA_BLOCK } from "./homeRozdroza";
 // Lejek (19.11.2026): jedna sekcja = jeden etap decyzji i jedno główne wezwanie.
 // hero → rozpoznanie (manifest + trzy śmierci + test pod kartami) → droga powrotu → historia Dawida
 // → bezpłatne spotkanie → książka → współpraca indywidualna → Listy powrotu → ROZDROŻA
-// → zostań na dłużej → skrót „Wybierz swój pierwszy krok” → kontakt → Instagram.
+// → zostań na dłużej → kontakt → Instagram. Karta „Zacznij bezpłatnie” jest w sekcji spotkań.
 // Moduły „dla_kogo”, „zajawka_powrot” i „skarbiec” zostają zarejestrowane (używają ich inne strony),
 // ale nie występują już na stronie głównej — ich treść przejmują sekcje „pierwszy krok” i „współpraca”.
 const bare = { ...LAYOUT_DEFAULT, numer: "brak" };
@@ -45,12 +45,9 @@ export const HOME_BLOCKS = [
     etykieta: "TRZY ŚMIERCI", tytul: "Trzy\nśmierci", numerowane: true, kolumny: "3",
     intro: "To, co trudno nazwać, łatwiej zrozumieć, kiedy ma imię. Zobacz, co z tego brzmi znajomo.",
     karty: [
-      { tytul: "Śmierć mentalna", opis: "Gdy życie toczy się na autopilocie, a dni zlewają się w jedno. W środku cisza, której trudno nadać nazwę.",
-        obraz: { url: "/img/smierci/mentalna.webp", alt: "Pusty, ciemny korytarz z jednym światłem na końcu" } },
-      { tytul: "Śmierć duchowa", opis: "Gdy z zewnątrz wszystko działa, a w środku brakuje sensu i odpowiedzi na pytanie „po co?”.",
-        obraz: { url: "/img/smierci/duchowa.webp", alt: "Zgaszona świeca i smuga dymu w ciemności" } },
-      { tytul: "Śmierć życiowa", opis: "Gdy rozstanie, żałoba, utrata pracy albo choroba zabierają grunt pod nogami.",
-        obraz: { url: "/img/smierci/zyciowa.webp", alt: "Samotna postać na pustej drodze we mgle o zmierzchu" } },
+      { tytul: "Śmierć mentalna", opis: "Gdy życie toczy się na autopilocie, a dni zlewają się w jedno. W środku cisza, której trudno nadać nazwę." },
+      { tytul: "Śmierć duchowa", opis: "Gdy z zewnątrz wszystko działa, a w środku brakuje sensu i odpowiedzi na pytanie „po co?”." },
+      { tytul: "Śmierć życiowa", opis: "Gdy rozstanie, żałoba, utrata pracy albo choroba zabierają grunt pod nogami." },
     ],
     nota: "Trzy śmierci to nie diagnozy. To nazwy, które pomagają zacząć rozmowę ze sobą.",
     przyciski: [{ etykieta: "Sprawdź, która śmierć jest Twoja", link: "/test?src=home", styl: "obrys", strzalka: true }] } },
@@ -67,8 +64,6 @@ export const HOME_BLOCKS = [
   mod("home-newsletter", "newsletter", { etykieta: "LISTY POWROTU" }),
   HOME_ROZDROZA_BLOCK,
   mod("home-stay", "zostan_dluzej", { etykieta: "ZOSTAŃ NA DŁUŻEJ", tytul: "Między jednym krokiem a następnym" }),
-  mod("home-start", "od_czego_zaczac", { etykieta: "OD CZEGO ZACZĄĆ", tytul: "Wybierz swój pierwszy krok",
-    tekst: "Jeśli wciąż się zastanawiasz, zacznij od jednego z trzech kroków. Każdy prowadzi w to samo miejsce — do siebie." }),
   mod("home-contact", "kontakt", { etykieta: "BĄDŹMY W KONTAKCIE" }),
   mod("home-instagram", "instagram", { etykieta: "OBSERWUJ · INSTAGRAM" }),
 ];

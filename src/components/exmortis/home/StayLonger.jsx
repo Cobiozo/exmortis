@@ -50,7 +50,8 @@ export default function StayLonger({ d = {}, label }) {
               </span>
               <h3 className="exm-h3">{tytul}</h3>
               <p className="text-[15px] leading-relaxed text-exm-muted">{opis}</p>
-              <span className="mt-auto inline-flex items-center gap-2 pt-2 text-sm text-exm-gold group-hover:text-exm-gold-hover">
+              {/* Cały kafel jest linkiem; na dole wygląda jak przycisk marki (19.11.2026). */}
+              <span className="btn-ghost mt-auto self-start group-hover:border-exm-gold">
                 {link} <ArrowRight className="h-4 w-4" aria-hidden="true" />
               </span>
             </Link>

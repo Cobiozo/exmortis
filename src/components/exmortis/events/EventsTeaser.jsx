@@ -1,5 +1,4 @@
 import React, { useEffect, useState } from "react";
-import { Link } from "react-router-dom";
 import { ArrowRight } from "lucide-react";
 import { listPublicEvents } from "@/lib/publicEvents";
 import EventTile from "./EventTile";
@@ -8,6 +7,7 @@ import Section from "@/components/exmortis/ui/Section";
 import Container from "@/components/exmortis/ui/Container";
 import SectionHeader from "@/components/exmortis/ui/SectionHeader";
 import BrandButton from "@/components/exmortis/ui/BrandButton";
+import { track } from "@/lib/track";
 
 // „Spotkajmy się” (etap 2, 18.11.2026): najbliższe spotkanie jako szeroka karta, kolejne jako kafle.
 // Bez spotkań zostaje zwarta informacja i odnośnik do Listów powrotu — sekcja nigdy nie jest pustym blokiem.
@@ -54,10 +54,17 @@ export default function EventsTeaser({ d = {}, label }) {
           )}
         </div>
 
-        <p className="mt-8 flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:gap-x-8 md:mt-10">
-          <Link to="/glos" className="btn-link">Posłuchaj, jak mówię o powrocie <ArrowRight className="h-4 w-4" aria-hidden="true" /></Link>
-          <Link to="/zacznij?src=home-spotkania" className="btn-link">Zobacz bezpłatne materiały <ArrowRight className="h-4 w-4" aria-hidden="true" /></Link>
-        </p>
+        {/* Bezpłatny start (19.11.2026): karta z dawnego bloku „Wybierz swój pierwszy krok” — dla osób, które nie czekają na spotkanie. */}
+        <div className="mt-5 flex flex-col gap-5 rounded-[var(--exm-r-card)] border border-exm-line bg-exm-bg p-6 md:mt-6 md:flex-row md:items-center md:justify-between md:gap-8 md:p-8">
+          <div className="min-w-0">
+            <p className="exm-eyebrow mb-2">BEZPŁATNIE</p>
+            <h3 className="exm-h3">Zacznij bezpłatnie</h3>
+            <p className="mt-2 max-w-[56ch] text-[15px] leading-relaxed text-exm-muted">Test autorefleksji, bezpłatne materiały i podcast — możesz zacząć od razu, bez czekania na spotkanie.</p>
+          </div>
+          <BrandButton to="/zacznij?src=home-spotkania" variant="secondary" className="w-full shrink-0 sm:w-auto" onClick={() => track("home_start_click", { cel: "bezplatnie" })}>
+            Zobacz bezpłatne materiały
+          </BrandButton>
+        </div>
       </Container>
     </Section>
   );
