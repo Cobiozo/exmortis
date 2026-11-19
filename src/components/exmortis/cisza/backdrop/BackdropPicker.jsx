@@ -9,7 +9,7 @@ export default function BackdropPicker({ items, value, onChange, match, onMatch 
         {items.map((b) => {
           const sel = b.id === value;
           return (
-            <button key={b.id} role="radio" aria-checked={sel} onClick={() => onChange(b.id)} className="flex flex-col items-center gap-2 w-16">
+            <button key={b.id} role="radio" aria-checked={sel} title={b.nazwa} onClick={() => onChange(b.id)} className="flex flex-col items-center gap-2 w-16">
               <span className={`relative h-14 w-14 rounded-full overflow-hidden border transition-colors ${sel ? "border-[#C9A24A]" : "border-[#3D3D3F] hover:border-[#C9A24A]/60"}`}>
                 <BackdropThumb bg={b} />
               </span>
