@@ -2,6 +2,7 @@ import React, { useEffect, useState } from "react";
 import { base44 } from "@/api/base44Client";
 import FunnelRows from "./FunnelRows";
 import TrafficPanel from "./TrafficPanel";
+import PlaysPanel from "./PlaysPanel";
 import { testCounts, sumDays } from "@/lib/testCount";
 
 const RANGES = [7, 30, 90];
@@ -91,6 +92,8 @@ export default function FunnelPanel() {
       </div>
 
       <TrafficPanel range={range} />
+
+      <PlaysPanel range={range} />
 
       <FunnelRows rows={rows} />
 
