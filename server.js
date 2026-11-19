@@ -36,9 +36,11 @@ app.use((req, res, next) => {
   next();
 });
 
-// CSP na razie TYLKO w trybie raportowania (17.11.2026, plan naprawczy 3.11): przeglądarka niczego nie blokuje,
-// a naruszenia widać w konsoli. Po przeglądzie (etap 4.1) ten sam zestaw przejdzie na Content-Security-Policy.
-const CSP_REPORT_ONLY = [
+// CSP w trybie wymuszania od 19.11.2026 (audyt techniczny 18.11, A-02). Wcześniej od 17.11 ten sam zestaw działał
+// tylko w trybie raportowania; przegląd 19.11 (ok. 40 wczytań stron publicznych, bez zgody i z pełną zgodą na cookies,
+// razem z GA/Meta, YouTube i Spotify) nie wykazał żadnego naruszenia. Nowa usługa zewnętrzna (skrypt, ramka, połączenie)
+// wymaga dopisania jej adresu tutaj — inaczej przeglądarka ją zablokuje (komunikat „Content Security Policy” w konsoli).
+const CSP = [
   "default-src 'self'",
   "script-src 'self' 'unsafe-inline' https://www.googletagmanager.com https://connect.facebook.net",
   "style-src 'self' 'unsafe-inline'",
@@ -61,7 +63,7 @@ app.use((_req, res, next) => {
   res.setHeader("X-Content-Type-Options", "nosniff");
   res.setHeader("Referrer-Policy", "strict-origin-when-cross-origin");
   res.setHeader("Permissions-Policy", "camera=(), microphone=(), geolocation=(), payment=()");
-  res.setHeader("Content-Security-Policy-Report-Only", CSP_REPORT_ONLY);
+  res.setHeader("Content-Security-Policy", CSP);
   next();
 });
 
@@ -262,7 +264,7 @@ app.post("/api/media/upload", requireUser, requireStaff, async (req, res) => {
 });
 
 // Link do pliku prywatnego (podpis + termin) — tworzony na żądanie zalogowanego konta.
-app.post("/api/media/sign", express.json({ limit: "16kb" }), requireUser, (req, res) => {
+app.post("/api/media/sign", express.json({ limit: "16kb", inflate: false }), requireUser, (req, res) => {
   if (!MEDIA_SECRET) return res.status(503).json({ error: "Magazyn plików: brak MEDIA_SECRET w konfiguracji serwera." });
   const name = mediaName(req.body?.file_uri);
   if (!name) return res.status(400).json({ error: "Nieznany plik." });
@@ -316,7 +318,9 @@ app.get("/media/private/:name", (req, res) => {
 // Musi stać PRZED plikami statycznymi i fallbackiem SPA, inaczej każdy taki adres dostaje index.html.
 app.all(
   /^\/functions\/[A-Za-z0-9_-]+\/?$/,
-  express.raw({ type: () => true, limit: "25mb" }),
+  // inflate: false — skompresowane ciało żądania (Content-Encoding) dostaje 415 zamiast rozpakowania
+  // (podatność body-parser GHSA-27r3-jxmh-p828; przeglądarki, PayU i panel nigdy nie kompresują wysyłanych danych).
+  express.raw({ type: () => true, limit: "25mb", inflate: false }),
   async (req, res) => {
     if (!SUPABASE_URL) {
       res.status(502).json({ error: "Brak SUPABASE_URL (VITE_SUPABASE_URL)" });
@@ -389,25 +393,27 @@ app.use(express.static(dist, {
 // widzą opis tej strony, nie ogólny. Brak pliku albo błąd → zwykły index.html (jak dotychczas).
 const SEO_PRIVATE = new Set(["/konto", "/kasa", "/login", "/register", "/forgot-password", "/reset-password", "/listy/potwierdz", "/zmiana-adresu"]);
 const escAttr = (s) => String(s).replace(/&/g, "&amp;").replace(/"/g, "&quot;").replace(/</g, "&lt;");
-const seoCache = { mtime: 0, html: "", pages: {} };
+const seoCache = { mtime: 0, html: "", pages: {}, routes: null };
 function seoLoad() {
   const idx = path.join(dist, "index.html");
   const m = fs.statSync(idx).mtimeMs;
   if (m !== seoCache.mtime) {
     seoCache.html = fs.readFileSync(idx, "utf8");
     try { seoCache.pages = JSON.parse(fs.readFileSync(path.join(dist, "seo-pages.json"), "utf8")); } catch { seoCache.pages = {}; }
+    seoCache.routes = routesLoad();
     seoCache.mtime = m;
   }
   return seoCache;
 }
-function seoHtml(req) {
+function seoHtml(req, dyn) {
   const { html, pages } = seoLoad();
   const p = (req.path.replace(/\/+$/, "") || "/");
-  const meta = pages[p];
+  const meta = dyn || pages[p];
   if (!meta || !meta.t) return null;
   const t = escAttr(meta.t), d = escAttr(meta.d || "");
   const host = String(req.headers["x-forwarded-host"] || req.headers.host || "").split(",")[0].trim();
   const url = host ? `https://${host}${p === "/" ? "/" : p}` : "";
+  const canon = host && dyn?.canon ? `https://${host}${dyn.canon}` : url;
   let out = html
     .replace(/<title>[^<]*<\/title>/, `<title>${t}</title>`)
     .replace(/(<meta name="description" content=")[^"]*(")/, `$1${d}$2`)
@@ -419,11 +425,115 @@ function seoHtml(req) {
       .replace(/(<meta property="og:title" content=")[^"]*(")/, `$1${t}$2`)
       .replace(/(<meta name="twitter:title" content=")[^"]*(")/, `$1${t}$2`);
   }
+  // Okładka produktu, spotkania albo odcinka zamiast grafiki marki. Wymiary nieznane, więc bez og:image:width/height.
+  const img = dyn?.img && host ? (dyn.img.startsWith("/") ? `https://${host}${dyn.img}` : dyn.img) : "";
+  if (/^https:\/\/[^\s"<>]+$/.test(img)) {
+    out = out
+      .replace(/(<meta property="og:image" content=")[^"]*(")/, `$1${escAttr(img)}$2`)
+      .replace(/(<meta name="twitter:image" content=")[^"]*(")/, `$1${escAttr(img)}$2`)
+      .replace(/(<meta property="og:image:alt" content=")[^"]*(")/, `$1${t}$2`)
+      .replace(/(<meta name="twitter:image:alt" content=")[^"]*(")/, `$1${t}$2`)
+      .replace(/\s*<meta property="og:image:(?:width|height)" content="[^"]*" \/>/g, "");
+  }
   if (url) {
-    const extra = (SEO_PRIVATE.has(p) ? "" : `<link rel="canonical" id="exm-canonical" href="${escAttr(url)}" />`) + `<meta property="og:url" content="${escAttr(url)}" />`;
+    const extra = (SEO_PRIVATE.has(p) ? "" : `<link rel="canonical" id="exm-canonical" href="${escAttr(canon)}" />`) + `<meta property="og:url" content="${escAttr(canon)}" />`;
     out = out.replace("</head>", `${extra}</head>`);
   }
   return out;
+}
+
+// ---- TRASY APLIKACJI (kod 404) -------------------------------------------------
+// dist/routes.json powstaje przy budowie z src/App.jsx (vite.config.js, exm-seo-json). Adres spoza listy tras dostaje
+// kod 404 — treść ta sama (aplikacja pokazuje „Nie ma takiej strony”), ale roboty nie indeksują pustych adresów.
+// Brak pliku albo błąd → każdy adres jak dotąd 200 (bezpieczny powrót do poprzedniego zachowania).
+function routesLoad() {
+  try {
+    const list = JSON.parse(fs.readFileSync(path.join(dist, "routes.json"), "utf8"))?.routes;
+    if (!Array.isArray(list) || list.length < 10) return null;
+    return list.map((r) => new RegExp("^" + String(r).replace(/\/+$/, "").split("/").map((seg) => (
+      seg === "*" ? "\u0000" : seg.startsWith(":") ? "[^/]+" : seg.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")
+    )).join("/").replace("/\u0000", "(?:/.*)?") + "/?$", "i"));
+  } catch { return null; }
+}
+function knownRoute(p) {
+  const routes = seoLoad().routes;
+  return !routes || routes.some((re) => re.test(p));
+}
+
+// ---- PODGLĄDY LINKÓW: PRODUKTY, SPOTKANIA, ODCINKI -------------------------------
+// Tytuł, opis i okładka z tych samych publicznych źródeł, z których korzysta strona (shopProducts, eventsPublic,
+// odcinki podcastu przez REST z kluczem anon). Pamięć: 10 min (potem odświeżenie w tle, najdłużej 24 h starej wartości),
+// brak rekordu — 2 min. Błąd lub przekroczony czas (2,5 s) → zwykła strona z kodem 200, nigdy 404 z powodu awarii.
+const DYN = [
+  { re: /^\/skarbiec\/([A-Za-z0-9-]{1,100})$/, kind: "produkt" },
+  { re: /^\/spotkania\/([A-Za-z0-9-]{1,100})$/, kind: "spotkanie" },
+  { re: /^\/glos\/([A-Za-z0-9-]{1,100})$/, kind: "odcinek" },
+];
+// Spotkania z własną stroną zapisu — adres kanoniczny jak w src/pages/EventDetail.jsx (LANDINGS).
+const DYN_LANDINGS = { "ze-smierci-o-powrotach-o-ktorych-swiat-nie-mowi": "/1-listopada", "1-listopada": "/1-listopada" };
+const dynCache = new Map();
+const dynPending = new Map();
+const DYN_FRESH = 10 * 60000, DYN_STALE = 24 * 3600000, DYN_MISS = 2 * 60000, DYN_MAX = 500, DYN_PARALLEL = 8;
+const plainText = (s) => String(s || "").replace(/<[^>]*>/g, " ").replace(/&nbsp;/g, " ").replace(/&quot;/g, '"').replace(/&#39;/g, "'")
+  .replace(/&lt;/g, "<").replace(/&gt;/g, ">").replace(/&amp;/g, "&").replace(/\s+/g, " ").trim();
+function clip(s, n = 200) {
+  const t = plainText(s);
+  if (t.length <= n) return t;
+  const c = t.slice(0, n);
+  return c.slice(0, Math.max(c.lastIndexOf(" "), n - 40)).replace(/[\s,.;:—–-]+$/, "") + "…";
+}
+async function dynFetch(kind, slug) {
+  const headers = { apikey: ANON_KEY, authorization: `Bearer ${ANON_KEY}`, "content-type": "application/json" };
+  const signal = AbortSignal.timeout(2500);
+  if (kind === "odcinek") {
+    const r = await fetch(`${SUPABASE_URL}/rest/v1/exm_podcastepisode?select=data&data->>slug=eq.${encodeURIComponent(slug)}&limit=1`, { headers, signal });
+    if (!r.ok) throw new Error(`odcinek ${r.status}`);
+    const ep = (await r.json())?.[0]?.data;
+    if (!ep || !["opublikowany", "zaplanowany"].includes(ep.status) || !(Date.parse(ep.publikacja) <= Date.now())) return null;
+    return { t: `${ep.tytul} — Podcast exmortis${ep.numer != null ? ` #${ep.numer}` : ""}`, d: clip(ep.opis_krotki || ep.notatki || ep.tytul), img: ep.okladka || "", canon: `/glos/${slug}` };
+  }
+  const fn = kind === "produkt" ? "shopProducts" : "eventsPublic";
+  const body = kind === "produkt" ? { slug } : { action: "get", slug };
+  const r = await fetch(`${SUPABASE_URL}/functions/v1/${fn}`, { method: "POST", headers, body: JSON.stringify(body), signal });
+  if (kind === "spotkanie" && r.status === 404) return null;
+  if (!r.ok) throw new Error(`${fn} ${r.status}`);
+  const data = await r.json();
+  if (kind === "produkt") {
+    if (!Array.isArray(data?.products)) throw new Error("shopProducts: brak listy");
+    const pr = data.products.find((x) => x.slug === slug) || data.products[0];
+    if (!pr?.name) return null;
+    return { t: `${pr.name} — Skarbiec | exmortis`, d: clip(pr.subtitle || pr.promise || pr.description), img: pr.cover_image || pr.image_url || "", canon: `/skarbiec/${pr.slug || slug}` };
+  }
+  const ev = data?.event;
+  if (!ev?.title) throw new Error("eventsPublic: brak spotkania");
+  return { t: `${ev.title} — Spotkania | exmortis`, d: clip(ev.subtitle || ev.description), img: ev.cover_image || "", canon: DYN_LANDINGS[slug] || `/spotkania/${slug}` };
+}
+// Zwraca { val } (val === null → rekordu nie ma) albo null (trasa nie jest dynamiczna lub dane niedostępne).
+async function dynMeta(p) {
+  const hitRoute = DYN.map((d) => [d, p.match(d.re)]).find(([, m]) => m);
+  if (!hitRoute || !SUPABASE_URL || !ANON_KEY) return null;
+  const [{ kind }, m] = hitRoute;
+  const key = `${kind}:${m[1]}`;
+  const hit = dynCache.get(key);
+  const age = hit ? Date.now() - hit.at : Infinity;
+  const load = () => {
+    if (dynPending.has(key)) return dynPending.get(key);
+    if (dynPending.size >= DYN_PARALLEL) return Promise.resolve(null);
+    const job = dynFetch(kind, m[1])
+      .then((val) => {
+        dynCache.delete(key);
+        dynCache.set(key, { at: Date.now(), val });
+        if (dynCache.size > DYN_MAX) dynCache.delete(dynCache.keys().next().value);
+        return { val };
+      })
+      .catch((e) => { console.error("podgląd:", key, String(e?.message || e).slice(0, 120)); return null; })
+      .finally(() => dynPending.delete(key));
+    dynPending.set(key, job);
+    return job;
+  };
+  if (hit && age < (hit.val ? DYN_FRESH : DYN_MISS)) return { val: hit.val };
+  if (hit?.val && age < DYN_STALE) { load(); return { val: hit.val }; }
+  return load();
 }
 // Przerwa techniczna (Ustawienia → Przerwa techniczna, zapis „premiera”): dokumenty HTML zamkniętych adresów
 // dostają kod 503 z Retry-After — roboty wyszukiwarek wiedzą, że to chwilowe, i nie usuwają stron z wyników.
@@ -460,19 +570,37 @@ function pauseRetryAfter(req) {
 }
 pauseRefresh();
 
-app.get(/^(?!.*\.).*/, (req, res) => {
+// Kod odpowiedzi: 503 (przerwa techniczna) > 404 (nieznany adres albo brak produktu/spotkania/odcinka) > 200.
+app.get(/^(?!.*\.).*/, async (req, res) => {
   const retry = pauseRetryAfter(req);
+  let status = retry ? 503 : 200, out = null;
   try {
-    const out = seoHtml(req);
-    if (out || retry) {
-      res.setHeader("Cache-Control", "no-cache");
-      if (retry) res.status(503).setHeader("Retry-After", String(retry));
-      return res.type("html").send(out || seoLoad().html);
+    const p = req.path.replace(/\/+$/, "") || "/";
+    const dyn = await dynMeta(p);
+    if (dyn?.val) out = seoHtml(req, dyn.val);
+    else if (dyn) { if (!retry) status = 404; }
+    else {
+      out = seoHtml(req);
+      if (!out && !retry && !DYN.some((d) => d.re.test(p)) && !knownRoute(p)) status = 404;
     }
   } catch (e) {
     console.error("seo:", String(e?.message || e).slice(0, 200));
   }
-  res.sendFile(path.join(dist, "index.html"));
+  if (res.headersSent) return;
+  if (retry) res.setHeader("Retry-After", String(retry));
+  if (status === 404) res.setHeader("X-Robots-Tag", "noindex");
+  if (out || status !== 200) {
+    res.setHeader("Cache-Control", "no-cache");
+    try { return res.status(status).type("html").send(out || seoLoad().html); } catch { /* niżej zwykły plik */ }
+  }
+  res.status(status).sendFile(path.join(dist, "index.html"));
+});
+
+// Błędy odczytu treści żądania (body-parser: skompresowane ciało, za duże, zły JSON) — krótka odpowiedź JSON
+// zamiast domyślnej strony błędu Express. Pozostałe błędy idą dalej, jak dotąd.
+app.use((err, _req, res, next) => {
+  if (!err?.type || res.headersSent || !["encoding.unsupported", "entity.too.large", "entity.parse.failed", "charset.unsupported"].includes(err.type)) return next(err);
+  res.status(err.status || 400).json({ error: err.type === "entity.too.large" ? "Za duża treść żądania" : "Nieprawidłowa treść żądania" });
 });
 
 app.listen(port, () => {
