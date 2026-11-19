@@ -114,29 +114,32 @@ function exmFastStart() {
       const fonts = read("public/fonts/fonts.css");
       if (fonts) out = out.replace('<link rel="stylesheet" href="/fonts/fonts.css" />', `<style>${fonts.replace(/\/\*[^*]*\*\//g, "").replace(/\s+/g, " ")}</style>`);
       out = out.replace('<link rel="preload" href="/fonts/cinzel-1.woff2"', '<link rel="preconnect" href="https://media.base44.com" />\n    <link rel="preload" href="/fonts/cinzel-1.woff2"');
-      const shell = read("src/content/landingShell.html").trim();
-      // 19.11.2026: powłoka wraca na stałe — strona główna na telefonie (< 768 px), gość bez sesji.
-      // Główne zdjęcie powłoki: <img fetchpriority="high"> (w <picture> z wersją pionową dla telefonu).
-      // Wcześniejsze pobieranie zdjęcia na telefonie robi skrypt w index.html (preload /img/hero-mobile.webp).
-      if (!shell || !/<img [^>]*fetchpriority="high"/.test(shell)) return out;
-      const hero = (shell.match(/<img [^>]*fetchpriority="high"[^>]*>/) || [])[0] || "";
-      const attr = (n) => (hero.match(new RegExp(` ${n}="([^"]+)"`)) || [])[1] || "";
-      const cond = `location.pathname==="/"&&window.innerWidth<768&&!localStorage.getItem("base44_access_token")&&!localStorage.getItem("token")&&!/[?&]access_token=/.test(location.search)`;
-      const head = "";
+      // Powłoki (gotowy HTML pierwszego ekranu) — telefon (< 768 px), gość bez sesji:
+      //  „/”                     → src/content/landingShell.html (19.11.2026),
+      //  „/skarbiec/wracam-inny” → src/content/productShell.html (19.11.2026; bez ceny i przycisków — są niżej, poza pierwszym ekranem).
+      // Główne zdjęcie powłoki: <img fetchpriority="high">. Po zmianie nagłówka strony głównej albo treści/okładki
+      // książki odśwież pliki: docs/tech/landing-shell.mjs.
+      const SHELLS = [
+        { file: "src/content/landingShell.html", id: "exm-shell", path: "/" },
+        { file: "src/content/productShell.html", id: "exm-shell-p", path: "/skarbiec/wracam-inny" },
+      ].map((x) => ({ ...x, html: read(x.file).trim() })).filter((x) => x.html && /<img [^>]*fetchpriority="high"/.test(x.html));
+      if (!SHELLS.length) return out;
+      // Klucz pliku zdjęcia (np. „0a6c73404_generated_image”, „7e5cc394789e8cd4”) — po nim warstwa rozpoznaje to samo zdjęcie w aplikacji.
+      const list = SHELLS.map((x) => {
+        const hero = (x.html.match(/<img [^>]*fetchpriority="high"[^>]*>/) || [])[0] || "";
+        const src = (hero.match(/ src="([^"]+)"/) || [])[1] || "";
+        return { p: x.path, t: x.id, k: (src.match(/\/([^/?]+)\.(?:png|jpe?g|webp)(?:\?|$)/i) || [])[1] || "" };
+      });
+      const cond = `window.innerWidth<768&&!localStorage.getItem("exm_supa_session")&&!localStorage.getItem("base44_access_token")&&!localStorage.getItem("token")&&!/[?&]access_token=/.test(location.search)`;
       // Powłoka leży NAD aplikacją (warstwa fixed poza #root), bo React przy starcie czyści #root i przez chwilę pokazuje
       // pusty ekran ładowania — wtedy główne zdjęcie znikało i malowało się drugi raz po ~2 s (LCP). Warstwa znika, gdy
       // aplikacja narysuje to samo zdjęcie (albo najpóźniej po 5 s); przewinięcie przechodzi na stronę pod spodem.
       // Warstwa znika dopiero, gdy jej własne zdjęcie jest już zdekodowane i namalowane (decode + 2 klatki) — inaczej
       // przy szybkim łączu aplikacja malowała zdjęcie pierwsza i to ono liczyło się jako LCP.
-      // Klucz pliku zdjęcia (np. „0a6c73404_generated_image”) — po nim warstwa rozpoznaje to samo zdjęcie w aplikacji.
-      const heroKey = (attr("src").match(/\/([0-9a-f]{6,}_[^/?.]+)\.(?:png|jpe?g|webp)/i) || [])[1] || "";
       const release = `function(){var o=document.getElementById("exm-shell-root");if(!o)return;var y=o.scrollTop;o.remove();document.documentElement.style.overflow="";if(y)window.scrollTo(0,y)}`;
-      const body = `<template id="exm-shell">${shell}</template>\n    <script>try{if(${cond}){var o=document.createElement("div");o.id="exm-shell-root";o.style.cssText="position:fixed;inset:0;z-index:45;overflow-y:auto;background:#0A0A0B;-webkit-overflow-scrolling:touch";o.appendChild(document.getElementById("exm-shell").content.cloneNode(true));o.querySelectorAll("[data-shell-until]").forEach(function(e){var t=e.getAttribute("data-shell-until");if(Date.now()>=Date.parse(/[zZ+]|-\\d\\d:\\d\\d$/.test(t)?t:t+"+02:00"))e.remove()});document.body.appendChild(o);document.documentElement.style.overflow="hidden";var rel=${release},src=${JSON.stringify(attr("src"))},done=false,key=${JSON.stringify(heroKey)};var chk=function(){if(done)return;var i=null,im=document.querySelectorAll("#root img");for(var k=0;k<im.length;k++){var a=im[k].getAttribute("src")||"";if(key&&a.indexOf(key)>-1){i=im[k];break}}if(i&&i.complete&&i.naturalWidth){done=true;mo.disconnect();var go2=function(){requestAnimationFrame(function(){requestAnimationFrame(rel)})},si=o.querySelector("img[fetchpriority=high]");if(si&&si.decode)si.decode().then(go2,go2);else go2()}};var mo=new MutationObserver(chk);mo.observe(document.getElementById("root"),{childList:true,subtree:true,attributes:true,attributeFilter:["src"]});document.addEventListener("load",chk,true);setTimeout(function(){done=true;mo.disconnect();rel()},5000)}}catch(e){}</script>`;
-      // Skrypt podający preload zdjęcia hero — jak najwcześniej w head (przed skryptami i dużym CSS),
-      // żeby na wolnym łączeniu obraz startował zanim przeglądarka dojdzie do reszty nagłówka.
-      const LOGO_LINK = '<link rel="preload" href="/exmortis-logo-144.webp" as="image" type="image/webp" />';
-      const withHead = !head ? out : out.includes(LOGO_LINK) ? out.replace(LOGO_LINK, `${LOGO_LINK}\n    ${head}`) : out.replace("</head>", `  ${head}\n  </head>`);
-      return withHead.replace('<div id="root"></div>', `<div id="root"></div>\n    ${body}`);
+      const templates = SHELLS.map((x) => `<template id="${x.id}">${x.html}</template>`).join("\n    ");
+      const body = `${templates}\n    <script>try{var S=${JSON.stringify(list)},P=location.pathname.replace(/\\/+$/,"")||"/",s=null;for(var q=0;q<S.length;q++)if(S[q].p===P)s=S[q];if(s&&${cond}){var o=document.createElement("div");o.id="exm-shell-root";o.style.cssText="position:fixed;inset:0;z-index:45;overflow-y:auto;background:#0A0A0B;-webkit-overflow-scrolling:touch";o.appendChild(document.getElementById(s.t).content.cloneNode(true));document.body.appendChild(o);document.documentElement.style.overflow="hidden";var rel=${release},done=false,key=s.k;var chk=function(){if(done)return;var i=null,im=document.querySelectorAll("#root img");for(var k=0;k<im.length;k++){var a=im[k].getAttribute("src")||"";if(key&&a.indexOf(key)>-1){i=im[k];break}}if(i&&i.complete&&i.naturalWidth){done=true;mo.disconnect();var go2=function(){requestAnimationFrame(function(){requestAnimationFrame(rel)})},si=o.querySelector("img[fetchpriority=high]");if(si&&si.decode)si.decode().then(go2,go2);else go2()}};var mo=new MutationObserver(chk);mo.observe(document.getElementById("root"),{childList:true,subtree:true,attributes:true,attributeFilter:["src"]});document.addEventListener("load",chk,true);setTimeout(function(){done=true;mo.disconnect();rel()},5000)}}catch(e){}</script>`;
+      return out.replace('<div id="root"></div>', `<div id="root"></div>\n    ${body}`);
     },
   };
 }
@@ -161,8 +164,9 @@ function exmInlineCss() {
         // przeglądarka musiała przeliczyć przed pierwszym obrazem. Pełny arkusz: preload w nagłówku, dołączany przez
         // skrypt startowy niżej — aplikacja rusza dopiero, gdy jest wczytany (bez mignięcia niestylowanej strony).
         // Bez powłoki (po premierze) — jak dawniej: cały arkusz w HTML.
-        const shellSrc = (() => { try { return fs.readFileSync(path.resolve(process.cwd(), "src/content/landingShell.html"), "utf8"); } catch { return ""; } })();
-        const hasShell = html.includes('id="exm-shell"') && !!shellSrc;
+        const shellSrc = ["src/content/landingShell.html", "src/content/productShell.html"]
+          .map((f) => { try { return fs.readFileSync(path.resolve(process.cwd(), f), "utf8"); } catch { return ""; } }).join("\n");
+        const hasShell = html.includes('<template id="exm-shell') && !!shellSrc.trim();
         let lateCss = null;
         html = html.replace(/<link rel="stylesheet"(?: crossorigin)? href="\/(assets\/[^"]+\.css)">/g, (tag, file) => {
           const asset = ctx.bundle[file];
