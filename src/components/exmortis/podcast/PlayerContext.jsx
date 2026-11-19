@@ -1,4 +1,5 @@
 import React, { createContext, useContext, useEffect, useRef, useState } from "react";
+import { countPlay } from "@/lib/playStats";
 import { useLocation } from "react-router-dom";
 import { base44 } from "@/api/base44Client";
 import MiniPlayer from "./MiniPlayer";
@@ -54,6 +55,8 @@ export function PodcastPlayerProvider({ children }) {
       el.src = episode.audio; el.dataset.id = episode.id; setEp(episode); setT(0); setDur(episode.dlugosc_s || 0);
       // Licznik odtworzeń — tylko start nowego odcinka (wznowienie nie liczy się drugi raz).
       if (episode.audio) { try { base44.functions.invoke("podcastPlay", { id: episode.id }).catch(() => {}); } catch { /* bez licznika */ } }
+      // Statystyka w panelu (sumy dzienne): pod_<slug odcinka>.
+      if (episode.audio) countPlay("pod", episode.slug || episode.tytul);
     }
     if (from != null) el.currentTime = from;
     el.playbackRate = rate;

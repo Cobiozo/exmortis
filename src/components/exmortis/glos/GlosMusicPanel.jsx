@@ -1,4 +1,5 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
+import { countPlay } from "@/lib/playStats";
 import { ExternalLink, Music, Play, SkipBack, SkipForward, Volume2 } from "lucide-react";
 import { base44 } from "@/api/base44Client";
 import useMarketingConsent from "@/lib/useMarketingConsent";
@@ -40,6 +41,13 @@ export default function GlosMusicPanel() {
   const n = list.length;
   const cur = n ? Math.min(idx, n - 1) : 0;
   const current = n ? list[cur] : null;
+  // Statystyka w panelu: start każdego utworu (kliknięcie albo przejście do następnego) = muz_<tytuł>, raz na utwór.
+  const counted = useRef(null);
+  useEffect(() => {
+    if (!started || !current || counted.current === current.id) return;
+    counted.current = current.id;
+    countPlay("muz", current.tytul);
+  }, [started, current]);
   const s = q.trim().toLowerCase();
   const shown = s ? list.filter((x) => [x.tytul, x.opis].some((v) => v?.toLowerCase().includes(s))) : list;
 
