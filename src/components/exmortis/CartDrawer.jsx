@@ -23,7 +23,7 @@ export default function CartDrawer() {
   const close = () => setOpen(false);
 
   return (
-    <div className={`fixed inset-0 z-[60] ${open ? "visible" : "invisible"}`}>
+    <div className={`fixed inset-0 z-[60] overflow-hidden ${open ? "visible" : "invisible"}`}>
       <div
         className={`absolute inset-0 bg-black/70 backdrop-blur-sm transition-opacity duration-300 motion-reduce:transition-none ${open ? "opacity-100" : "opacity-0"}`}
         onClick={close}
