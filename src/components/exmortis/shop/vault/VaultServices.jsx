@@ -16,7 +16,7 @@ const COPY = {
     note: "Osobna usługa, niezależna od programu POWRÓT.",
   },
   "powrot-mentoring": {
-    line: `${POWROT.sessions} sesji po ${POWROT.lengthLong}, ${POWROT.cadence}. ${POWROT.months} pracy jeden na jeden.`,
+    line: `${POWROT.sessions} sesji po ${POWROT.lengthLong}, ${POWROT.cadence}. ${POWROT.months} pracy indywidualnej.`,
     cta: "Poznaj program POWRÓT",
     note: null,
   },

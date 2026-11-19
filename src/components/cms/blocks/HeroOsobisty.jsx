@@ -112,7 +112,7 @@ function Skroty() {
   const items = [
     { cel: "czytaj", Icon: BookOpen, t: "Czytaj", s: "Materiały ze Skarbca", to: "/skarbiec?src=home-skrot" },
     { cel: "posluchaj", Icon: Headphones, t: "Posłuchaj", s: "Podcast i muzyka", to: "/glos?src=home-skrot" },
-    { cel: "spotkanie", Icon: CalendarDays, t: "Przyjdź na spotkanie", s: when, to: ev ? `/spotkania/${ev.slug}` : "/spotkania?src=home-skrot" },
+    { cel: "spotkanie", Icon: CalendarDays, t: "Weź udział w spotkaniu", s: when, to: ev ? `/spotkania/${ev.slug}` : "/spotkania?src=home-skrot" },
   ];
   return (
     <nav aria-label="Na skróty" className="mt-12 lg:mt-14 grid md:grid-cols-3 border-y hairline">

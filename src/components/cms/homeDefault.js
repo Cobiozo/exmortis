@@ -58,7 +58,7 @@ export const HOME_BLOCKS = [
   mod("home-events", "spotkania", { etykieta: "SPOTKAJMY SIĘ", tytul: "Spotkajmy się" }),
   { ...mod("home-wspolpraca", "wspolpraca", {
     etykieta: "WSPÓŁPRACA INDYWIDUALNA",
-    tytul: "Dwie formy pracy jeden na jeden",
+    tytul: "Dwie formy indywidualnego wsparcia",
     tekst: "Krótka rozmowa o jednej ważnej sprawie albo dłuższa praca nad całym powrotem. Wybierz to, co jest teraz w Twoim zasięgu.",
   }), uklad: { ...LAYOUT_DEFAULT, numer: "brak", kotwica: "wspolpraca" } },
   mod("home-newsletter", "newsletter", { etykieta: "LISTY POWROTU" }),

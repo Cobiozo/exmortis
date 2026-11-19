@@ -10,7 +10,7 @@ const IMG = "https://media.base44.com/images/public/6aa08bc6318b0f886cc3b9a3/";
 const HERO = { url: `${IMG}cbb4ee4b8_generated_image.png`, alt: "" };
 const HERO_M = { url: `${IMG}7e58ab787_generated_image.png`, alt: "" };
 const ZGLOS = { etykieta: "Zgłoś się do programu", link: "#formularz", styl: "zloty", strzalka: true };
-const SPOTKANIE = { etykieta: "Przyjdź najpierw na otwarte spotkanie", link: "/spotkania?src=powrot", styl: "obrys", strzalka: false };
+const SPOTKANIE = { etykieta: "Weź udział w otwartym spotkaniu", link: "/spotkania?src=powrot", styl: "obrys", strzalka: false };
 
 export const POWROT_BLOCKS = [
   // 1. Pierwszy ekran — etykieta, H1, zdanie, lead, pas faktów, dwa wezwania. Tło: próg z ciepłym światłem.
@@ -124,7 +124,7 @@ export const POWROT_BLOCKS = [
   // 12. Zakończenie — spokojna alternatywa obok karty Rozmowy na progu, na końcu cytat.
   b("koniec", "powrot_koniec", {
     lewa_tytul: "Nie musisz decydować się dziś.",
-    lewa_tresc: `<p class="exm-styl-lead">Jeśli coś w Tobie mówi „to o mnie”, ale potrzebujesz więcej czasu, przyjdź najpierw na bezpłatne otwarte spotkanie i zobacz, jak pracuję. Tempo wybierasz Ty.</p>`,
+    lewa_tresc: `<p class="exm-styl-lead">Jeśli coś w Tobie mówi „to o mnie”, ale potrzebujesz więcej czasu, weź najpierw udział w bezpłatnym otwartym spotkaniu i zobacz, jak pracuję. Tempo wybierasz Ty.</p>`,
     lewa_przyciski: [{ etykieta: "Zobacz najbliższe otwarte spotkanie", link: "/spotkania?src=powrot-koniec", styl: "zloty", strzalka: true }],
     prawa_etykieta: "OSOBNA USŁUGA",
     prawa_tytul: "Jedna rozmowa, bez programu",

@@ -62,9 +62,10 @@ export const ABOUT_BLOCKS = [
   }),
 
   // 5. Droga — cztery etapy jako pozioma mapa i zdanie o własnym rytmie.
+  // Bez tytułu ze strzałkami (19.11.2026): etapy są niżej, tytuł je tylko powtarzał.
   b("droga", "about_droga", {
     etykieta: "DROGA",
-    tytul: "Śmierć → Próg →\nPowrót → Inny",
+    tytul: "",
     elementy: [
       { tytul: "Śmierć", opis: "Chodziłem do pracy, rozmawiałem z ludźmi, uśmiechałem się. W środku była cisza, której nie umiałem nazwać." },
       { tytul: "Próg", opis: "Przyszedł moment, w którym zobaczyłem, że to, co brałem za koniec, jest progiem. Trzeba było przez niego przejść." },
@@ -82,7 +83,7 @@ export const ABOUT_BLOCKS = [
     a_karty: [
       { tytul: "Pytania, które pomagają zobaczyć więcej", opis: "Więcej słucham, niż mówię. Pytam o to, co pomijasz, co uznajesz za oczywiste i dokąd prowadzą Twoje wybory. Decyzje podejmujesz Ty." },
       { tytul: "Jeden konkretny krok", opis: "Pod koniec spotkania ustalamy, co zrobisz dalej. Krok wynika z rozmowy i da się go zrobić w Twojej codzienności." },
-      { tytul: "Praca jeden na jeden", opis: "POWRÓT trwa od czterech do sześciu miesięcy. Spotykamy się na Zoomie co dwa, trzy tygodnie, na 90 minut." },
+      { tytul: "Praca indywidualna", opis: "POWRÓT trwa od czterech do sześciu miesięcy. Spotykamy się na Zoomie co dwa, trzy tygodnie, na 90 minut." },
       { tytul: "Najpierw rozmowa", opis: "Na początku jest krótkie zgłoszenie, ankieta i bezpłatna rozmowa. O tym, czy zaczynamy, decydujemy razem." },
     ],
     a_zamkniecie_etykieta: "CZEGO UCZĘ",
@@ -106,13 +107,14 @@ export const ABOUT_BLOCKS = [
   // 8. Zakończenie — jeden przycisk główny, jeden drugorzędny, link tekstowy i mały odnośnik do książki.
   b("koniec", "about_koniec", {
     tytul: "Nie musisz mieć\njeszcze odpowiedzi.",
-    tresc: "<p>Jeśli odnajdujesz w tej historii coś bliskiego, możesz zacząć od jednego kroku: zapisać się na Listy powrotu, przyjść na otwarte spotkanie albo napisać do mnie. Nie musisz opowiadać wszystkiego. Na początek wystarczy to, z czym dziś przychodzisz.</p><p>Jeśli myślisz o pracy jeden na jeden, zobacz, jak wygląda program POWRÓT.</p>",
+    tresc: "<p>Jeśli odnajdujesz w tej historii coś bliskiego, możesz zacząć od jednego kroku: zapisać się na Listy powrotu, wziąć udział w otwartym spotkaniu albo napisać do mnie. Nie musisz opowiadać wszystkiego. Na początek wystarczy to, z czym dziś przychodzisz.</p><p>Jeśli myślisz o pracy indywidualnej, zobacz, jak wygląda program POWRÓT, albo umów jednorazową Rozmowę na progu.</p>",
     przyciski: [
       { etykieta: "Poznaj program POWRÓT", link: "/powrot?src=o-mnie", styl: "zloty", strzalka: true },
-      { etykieta: "Przyjdź na otwarte spotkanie", link: "/spotkania?src=o-mnie", styl: "obrys", strzalka: false },
+      { etykieta: "Weź udział w spotkaniu", link: "/spotkania?src=o-mnie", styl: "obrys", strzalka: false },
+      { etykieta: "Umów Rozmowę na progu", link: "/skarbiec/rozmowa-na-progu?src=o-mnie", styl: "obrys", strzalka: false },
     ],
-    link_etykieta: "Albo umów Rozmowę na progu (osobna usługa)",
-    link: "/skarbiec/rozmowa-na-progu?src=o-mnie",
+    link_etykieta: "",
+    link: "",
     ksiazka_zdjecie: FOTO.ksiazka,
     ksiazka_tytul: "Wracam inny",
     ksiazka_opis: "Zobacz książkę",

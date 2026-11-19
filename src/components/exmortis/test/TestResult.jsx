@@ -126,7 +126,7 @@ export default function TestResult({ r, result, st, next, user, copied, onRestar
           >
             <span className="min-w-0">
               <span className="exm-h3 block">Rozmowa na progu</span>
-              <span className="mt-1 block text-[15px] leading-relaxed text-exm-muted">90 minut rozmowy jeden na jeden o Twojej historii. Online, jednorazowo, bez zobowiązań.</span>
+              <span className="mt-1 block text-[15px] leading-relaxed text-exm-muted">90 minut indywidualnej rozmowy o Twojej historii. Online, jednorazowo, bez zobowiązań.</span>
             </span>
             <ArrowRight className="h-4 w-4 shrink-0 text-exm-gold" aria-hidden="true" />
           </Link>

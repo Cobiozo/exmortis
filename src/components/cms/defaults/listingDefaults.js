@@ -18,7 +18,7 @@ export const PRODUKT_TPL = [b("tpl-produkt", "modul", { modul: "produkt_tresc" }
 // siedzi w module katalogu (mały link, nie baner) — tak jak ustalono w przebudowie.
 export const SKLEP_BLOCKS = [
   b("sklep-hero", "hero", { wariant: "standard", etykieta: "SKARBIEC", linia1: "Wybierz swój pierwszy krok", linia2: "",
-    lead: "Od bezpłatnych materiałów po pracę jeden na jeden — wybierz to, co pasuje do miejsca, w którym jesteś.",
+    lead: "Od bezpłatnych materiałów po pracę indywidualną — wybierz to, co pasuje do miejsca, w którym jesteś.",
     przyciski: [], przyciemnienie: 60 }),
   b("sklep-katalog", "modul", { modul: "skarbiec_katalog" }),
 ];

@@ -45,7 +45,7 @@ export const SESJA_KONTROLNA = { price: 399, priceText: "399 zł", minutes: 60, 
 
 export const POWROT_LEAD = `${POWROT.months} · ${POWROT.sessions} sesji po ${POWROT.lengthLong} · indywidualnie, online`;
 
-export const POWROT_TEASER = `Autorski program mentorski exmortis — dla tych, którzy wychodzą ze śmierci mentalnej, duchowej albo życiowej. ${POWROT.months}, cztery etapy, ${POWROT.sessionsWord} jeden na jeden.`;
+export const POWROT_TEASER = `Autorski program mentorski exmortis — dla tych, którzy wychodzą ze śmierci mentalnej, duchowej albo życiowej. ${POWROT.months}, cztery etapy, ${POWROT.sessionsWord} indywidualnych.`;
 
 export const POWROT_HOW_ROWS = [
   { label: "Czas pracy", value: POWROT.months },

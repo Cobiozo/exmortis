@@ -30,7 +30,7 @@ export default function Collaboration({ d = {}, label }) {
       <Container>
         <SectionHeader
           eyebrow={d.etykieta || label || "WSPÓŁPRACA INDYWIDUALNA"}
-          title={d.tytul || "Dwie formy pracy jeden na jeden"}
+          title={d.tytul || "Dwie formy indywidualnego wsparcia"}
           lead={d.tekst || "Krótka rozmowa o jednej ważnej sprawie albo dłuższa praca nad całym powrotem. Wybierz to, co jest teraz w Twoim zasięgu."}
         />
 

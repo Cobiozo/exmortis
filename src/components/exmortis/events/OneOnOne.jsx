@@ -33,7 +33,7 @@ export default function OneOnOne() {
       <Container>
         {/* Wąski pas: dwie karty-linki, żeby nie przesłaniały otwartych spotkań. */}
         <div className="mx-auto max-w-[900px]">
-          <p className="exm-eyebrow mb-3">Jeden na jeden</p>
+          <p className="exm-eyebrow mb-3">Praca indywidualna</p>
           <h2 id="one-on-one-h" className="exm-h2">Spotkania indywidualne</h2>
 
           <div className="mt-8 grid gap-5 md:grid-cols-2">
