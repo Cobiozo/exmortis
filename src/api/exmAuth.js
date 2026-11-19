@@ -164,17 +164,47 @@ export const supaMfa = {
   },
 };
 
+// Maile konta (potwierdzenie, ponowny link, nowe hasło, powitanie) wysyła funkcja authMail w oprawie exmortis —
+// nie domyślna poczta Supabase (po angielsku, z adresu supabase.io i tylko do członków zespołu projektu). 19.11.2026.
+async function authMail(payload, token) {
+  const res = await fetch(`${SUPABASE_URL}/functions/v1/authMail`, {
+    method: "POST",
+    headers: { apikey: ANON_KEY, Authorization: `Bearer ${token || ANON_KEY}`, "Content-Type": "application/json" },
+    body: JSON.stringify(payload),
+  });
+  const d = await res.json().catch(() => ({}));
+  if (!res.ok) {
+    const e = new Error(d.error || "Nie udało się wysłać wiadomości. Spróbuj za chwilę.");
+    e.status = res.status;
+    throw e;
+  }
+  return d;
+}
+
 export const supaAuth = {
-  // Rejestracja nie loguje — konto czeka na kliknięcie linku z maila; link wraca na /register.
+  // Rejestracja nie loguje — konto czeka na kliknięcie linku z maila (/register?potwierdz=…).
   async register({ email, password, name, letters }) {
     try {
       sessionStorage.setItem("exm_pending_reg", JSON.stringify({ email, name, letters: !!letters, ts: Date.now() }));
     } catch { /* brak pamięci */ }
-    const redirect = window.location.origin + "/register";
-    await api(`/signup?redirect_to=${encodeURIComponent(redirect)}`, {
-      method: "POST", headers: headers(), body: JSON.stringify({ email, password }),
-    });
+    await authMail({ action: "register", email, password, name, letters: !!letters, terms: true });
     return { email };
+  },
+
+  // Link z maila „Potwierdź adres” → sesja; dane z rejestracji (imię, zgoda na Listy) wracają z konta,
+  // więc link działa także na innym urządzeniu niż to, na którym zakładano konto.
+  async confirmSignup(tokenHash) {
+    const d = await api("/verify", { method: "POST", headers: headers(), body: JSON.stringify({ type: "signup", token_hash: tokenHash }) });
+    if (!d.access_token) throw new Error("Link wygasł albo został już użyty");
+    store(keep(d));
+    return { meta: d.user?.user_metadata || {}, email: d.user?.email || "" };
+  },
+
+  // Po potwierdzeniu: kod powitalny i mail z podziękowaniem od razu (zapasowo robi to też zadanie co 5 min).
+  async welcome() {
+    const s = await session();
+    if (!s) return null;
+    return await authMail({ action: "welcome" }, s.access_token).catch(() => null);
   },
 
   async verifyOtp({ email, otpCode }) {
@@ -192,7 +222,7 @@ export const supaAuth = {
   },
 
   async resendOtp(email) {
-    await api("/resend", { method: "POST", headers: headers(), body: JSON.stringify({ type: "signup", email }) });
+    await authMail({ action: "resend", email });
   },
 
   async setToken(accessToken) {
@@ -216,15 +246,19 @@ export const supaAuth = {
   },
 
   async resetPasswordRequest(email) {
-    await api("/recover", {
-      method: "POST", headers: headers(),
-      body: JSON.stringify({ email, redirect_to: window.location.origin + "/reset-password" }),
-    });
+    await authMail({ action: "recover", email });
   },
 
-  // Nowe hasło: sesja z linku resetującego (#hash) albo token recovery z zapytania.
-  async resetPassword({ resetToken, newPassword }) {
-    let s = await session();
+  // Nowe hasło: link z maila exmortis (?odzysk= — token_hash), sesja z dawnego linku Supabase (#hash)
+  // albo token recovery z zapytania.
+  async resetPassword({ resetToken, tokenHash, newPassword }) {
+    let s = null;
+    if (tokenHash) {
+      const d = await api("/verify", { method: "POST", headers: headers(), body: JSON.stringify({ type: "recovery", token_hash: tokenHash }) });
+      if (!d.access_token) throw new Error("Link wygasł — zamów nowy");
+      s = keep(d); store(s);
+    }
+    if (!s) s = await session();
     if (!s && resetToken) {
       const d = await api("/verify", { method: "POST", headers: headers(), body: JSON.stringify({ type: "recovery", token: resetToken }) });
       if (!d.access_token) throw new Error("Link wygasł — zamów nowy");
