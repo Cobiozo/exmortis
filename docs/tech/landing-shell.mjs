@@ -1,28 +1,34 @@
-// Odświeżenie gotowego HTML strony 1 listopada (src/content/landingShell.html) — wydajność „/” do premiery.
-// Kiedy: po zmianie nagłówka (hero), zdjęcia w tle albo nawigacji strony spotkania 1 listopada.
-// Jak (lokalnie, wymaga Playwright):
-//   1) VITE_BASE44_APP_ID=6aa08bc6318b0f886cc3b9a3 npx vite build --outDir /tmp/exm && npx vite preview --outDir /tmp/exm --port 4174
-//   2) node docs/tech/landing-shell.mjs   (w drugim oknie)  → zapisze src/content/landingShell.html
-//   3) opublikuj. Plik jest wstawiany do index.html przez wtyczkę exmFastStart (vite.config.js),
-//      pokazywany wyłącznie gościom na „/” i „/1-listopada” do daty PRE_END i podmieniany przez Reacta tą samą treścią.
-// Po premierze (1.11, 21:30) mechanizm wyłącza się sam — plik można wtedy usunąć.
+// Odświeżenie gotowego HTML pierwszego ekranu strony głównej (src/content/landingShell.html) — szybkość „/” na telefonie.
+// Kiedy: po zmianie bloku „hero” strony głównej (napisy, zdjęcie tła, przyciski) albo menu w nagłówku.
+// Plik trafia do index.html przez wtyczkę exmFastStart (vite.config.js) i jest pokazywany gościom na „/” przy szerokości
+// < 768 px, zanim wczyta się aplikacja; React podmienia go identyczną treścią.
+// Jak (wymaga Playwright):
+//   1) zbuduj stronę do katalogu tymczasowego (np. npx vite build --outDir /tmp/exm) i uruchom ją (np. przez server.js
+//      z dist → /tmp/exm albo npx vite preview --outDir /tmp/exm --port 4174),
+//   2) BASE=http://localhost:4174 node docs/tech/landing-shell.mjs  → zapisze src/content/landingShell.html
+//   3) zbuduj ponownie i porównaj zrzut 390 px: powłoka (bez JS) i aplikacja muszą wyglądać tak samo.
 import { chromium } from "playwright";
 import fs from "fs";
 
 const BASE = process.env.BASE || "http://localhost:4174";
 const b = await chromium.launch();
-const ctx = await b.newContext({ viewport: { width: 412, height: 823 } });
-const p = await ctx.newPage();
+const p = await b.newPage({ viewport: { width: 412, height: 823 } });
 await p.goto(BASE + "/", { waitUntil: "networkidle" });
+await p.waitForTimeout(1500);
 const html = await p.evaluate(() => {
-  const top = document.getElementById("root").firstElementChild.cloneNode(true);
-  top.querySelector("footer")?.remove();
-  const wrap = top.querySelector("main")?.firstElementChild;
-  if (!wrap) throw new Error("Brak <main> — czy to strona spotkania (tryb przedpremierowy, gość)?");
-  [...wrap.children].slice(1).forEach((c) => c.remove()); // tylko pierwsza sekcja (nagłówek ze zdjęciem)
-  return top.outerHTML;
+  const top = [...document.getElementById("root").children].find((c) => c.querySelector("main"));
+  if (!top) throw new Error("Brak <main> w aplikacji");
+  const t = top.cloneNode(true);
+  t.querySelector("footer")?.remove();
+  [...t.children].forEach((c) => { if (!c.matches("header, main")) c.remove(); }); // bez koszyka, linku „przejdź do treści” itp.
+  const host = t.querySelector("main [data-block]")?.parentElement;
+  if (!host) throw new Error("Brak bloków strony");
+  let first = true; // tylko pierwszy blok (nagłówek ze zdjęciem)
+  [...host.children].forEach((c) => { if (first && c.matches("[data-block]")) { first = false; return; } c.remove(); });
+  t.querySelectorAll('[aria-hidden="true"].invisible').forEach((e) => e.remove()); // niewidoczna kopia menu do pomiaru
+  return t.outerHTML;
 });
-if (!/<h1/.test(html) || !/srcset=/.test(html)) throw new Error("Nie znaleziono nagłówka albo zdjęcia — plik nie został zmieniony.");
+if (!/<h1/.test(html) || !/<img [^>]*fetchpriority="high"/.test(html)) throw new Error("Nie znaleziono nagłówka albo zdjęcia — plik nie został zmieniony.");
 fs.writeFileSync(new URL("../../src/content/landingShell.html", import.meta.url), html);
 console.log(`Zapisano src/content/landingShell.html (${html.length} znaków).`);
 await b.close();

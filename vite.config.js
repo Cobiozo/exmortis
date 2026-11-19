@@ -102,10 +102,9 @@ function exmJoinFallback() {
 // Szybki start strony (wydajność — PageSpeed):
 // 1) czcionki (@font-face) w środku HTML zamiast osobnego pliku blokującego wyświetlanie,
 // 2) wcześniejsze połączenie z serwerem zdjęć,
-// 3) do premiery: na „/” i „/1-listopada” gość od razu widzi nagłówek strony i główne zdjęcie (gotowy HTML
+// 3) od 19.11.2026: na „/” na telefonie (< 768 px) gość od razu widzi nagłówek strony i główne zdjęcie (gotowy HTML
 //    z src/content/landingShell.html), zanim załaduje się aplikacja — React podmienia go identyczną treścią.
-//    Po dacie premiery (PRE_END z src/lib/usePrelaunch.js) mechanizm wyłącza się sam.
-//    Po zmianie nagłówka strony 1 listopada: odśwież plik poleceniem z docs/tech/landing-shell.mjs.
+//    Po zmianie pierwszego ekranu strony głównej (blok „hero”, menu): odśwież plik poleceniem z docs/tech/landing-shell.mjs.
 function exmFastStart() {
   const read = (f) => { try { return fs.readFileSync(path.resolve(__dirname, f), "utf8"); } catch { return ""; } };
   return {
@@ -116,25 +115,27 @@ function exmFastStart() {
       if (fonts) out = out.replace('<link rel="stylesheet" href="/fonts/fonts.css" />', `<style>${fonts.replace(/\/\*[^*]*\*\//g, "").replace(/\s+/g, " ")}</style>`);
       out = out.replace('<link rel="preload" href="/fonts/cinzel-1.woff2"', '<link rel="preconnect" href="https://media.base44.com" />\n    <link rel="preload" href="/fonts/cinzel-1.woff2"');
       const shell = read("src/content/landingShell.html").trim();
-      const end = (read("src/lib/usePrelaunch.js").match(/PRE_END = new Date\("([^"]+)"\)/) || [])[1];
-      if (!shell || !end || !/<img [^>]*srcset=/.test(shell)) return out;
-      const hero = (shell.match(/<img [^>]*srcset="[^"]+"[^>]*>/) || [])[0] || ""; // główne zdjęcie (z wersjami), nie logo
+      // 19.11.2026: powłoka wraca na stałe — strona główna na telefonie (< 768 px), gość bez sesji.
+      // Główne zdjęcie powłoki: <img fetchpriority="high"> (w <picture> z wersją pionową dla telefonu).
+      // Wcześniejsze pobieranie zdjęcia na telefonie robi skrypt w index.html (preload /img/hero-mobile.webp).
+      if (!shell || !/<img [^>]*fetchpriority="high"/.test(shell)) return out;
+      const hero = (shell.match(/<img [^>]*fetchpriority="high"[^>]*>/) || [])[0] || "";
       const attr = (n) => (hero.match(new RegExp(` ${n}="([^"]+)"`)) || [])[1] || "";
-      const cond = `(location.pathname==="/"||location.pathname==="/1-listopada")&&Date.now()<${Date.parse(end)}&&!localStorage.getItem("base44_access_token")&&!localStorage.getItem("token")&&!/[?&]access_token=/.test(location.search)`;
-      const head = `<script>try{if(${cond}){var l=document.createElement("link");l.rel="preload";l.as="image";l.href=${JSON.stringify(attr("src"))};l.setAttribute("imagesrcset",${JSON.stringify(attr("srcset"))});l.setAttribute("imagesizes",${JSON.stringify(attr("sizes") || "100vw")});l.setAttribute("fetchpriority","high");document.head.appendChild(l)}}catch(e){}</script>`;
+      const cond = `location.pathname==="/"&&window.innerWidth<768&&!localStorage.getItem("base44_access_token")&&!localStorage.getItem("token")&&!/[?&]access_token=/.test(location.search)`;
+      const head = "";
       // Powłoka leży NAD aplikacją (warstwa fixed poza #root), bo React przy starcie czyści #root i przez chwilę pokazuje
       // pusty ekran ładowania — wtedy główne zdjęcie znikało i malowało się drugi raz po ~2 s (LCP). Warstwa znika, gdy
       // aplikacja narysuje to samo zdjęcie (albo najpóźniej po 5 s); przewinięcie przechodzi na stronę pod spodem.
       // Warstwa znika dopiero, gdy jej własne zdjęcie jest już zdekodowane i namalowane (decode + 2 klatki) — inaczej
       // przy szybkim łączu aplikacja malowała zdjęcie pierwsza i to ono liczyło się jako LCP.
-      // Klucz pliku zdjęcia (np. „6af0c5c2f_generated_image”) — po nim warstwa rozpoznaje to samo zdjęcie w aplikacji.
+      // Klucz pliku zdjęcia (np. „0a6c73404_generated_image”) — po nim warstwa rozpoznaje to samo zdjęcie w aplikacji.
       const heroKey = (attr("src").match(/\/([0-9a-f]{6,}_[^/?.]+)\.(?:png|jpe?g|webp)/i) || [])[1] || "";
       const release = `function(){var o=document.getElementById("exm-shell-root");if(!o)return;var y=o.scrollTop;o.remove();document.documentElement.style.overflow="";if(y)window.scrollTo(0,y)}`;
-      const body = `<template id="exm-shell">${shell}</template>\n    <script>try{if(${cond}){var o=document.createElement("div");o.id="exm-shell-root";o.style.cssText="position:fixed;inset:0;z-index:45;overflow-y:auto;background:#0A0A0B;-webkit-overflow-scrolling:touch";o.appendChild(document.getElementById("exm-shell").content.cloneNode(true));o.querySelectorAll("[data-shell-until]").forEach(function(e){var t=e.getAttribute("data-shell-until");if(Date.now()>=Date.parse(/[zZ+]|-\\d\\d:\\d\\d$/.test(t)?t:t+"+02:00"))e.remove()});document.body.appendChild(o);document.documentElement.style.overflow="hidden";var rel=${release},src=${JSON.stringify(attr("src"))},done=false,key=${JSON.stringify(heroKey)};var chk=function(){if(done)return;var i=null,im=document.querySelectorAll("#root img");for(var k=0;k<im.length;k++){var a=im[k].getAttribute("src")||"";if(key&&a.indexOf(key)>-1){i=im[k];break}}if(i&&i.complete&&i.naturalWidth){done=true;mo.disconnect();var go2=function(){requestAnimationFrame(function(){requestAnimationFrame(rel)})},si=o.querySelector("img[srcset]");if(si&&si.decode)si.decode().then(go2,go2);else go2()}};var mo=new MutationObserver(chk);mo.observe(document.getElementById("root"),{childList:true,subtree:true,attributes:true,attributeFilter:["src"]});document.addEventListener("load",chk,true);setTimeout(function(){done=true;mo.disconnect();rel()},5000)}}catch(e){}</script>`;
+      const body = `<template id="exm-shell">${shell}</template>\n    <script>try{if(${cond}){var o=document.createElement("div");o.id="exm-shell-root";o.style.cssText="position:fixed;inset:0;z-index:45;overflow-y:auto;background:#0A0A0B;-webkit-overflow-scrolling:touch";o.appendChild(document.getElementById("exm-shell").content.cloneNode(true));o.querySelectorAll("[data-shell-until]").forEach(function(e){var t=e.getAttribute("data-shell-until");if(Date.now()>=Date.parse(/[zZ+]|-\\d\\d:\\d\\d$/.test(t)?t:t+"+02:00"))e.remove()});document.body.appendChild(o);document.documentElement.style.overflow="hidden";var rel=${release},src=${JSON.stringify(attr("src"))},done=false,key=${JSON.stringify(heroKey)};var chk=function(){if(done)return;var i=null,im=document.querySelectorAll("#root img");for(var k=0;k<im.length;k++){var a=im[k].getAttribute("src")||"";if(key&&a.indexOf(key)>-1){i=im[k];break}}if(i&&i.complete&&i.naturalWidth){done=true;mo.disconnect();var go2=function(){requestAnimationFrame(function(){requestAnimationFrame(rel)})},si=o.querySelector("img[fetchpriority=high]");if(si&&si.decode)si.decode().then(go2,go2);else go2()}};var mo=new MutationObserver(chk);mo.observe(document.getElementById("root"),{childList:true,subtree:true,attributes:true,attributeFilter:["src"]});document.addEventListener("load",chk,true);setTimeout(function(){done=true;mo.disconnect();rel()},5000)}}catch(e){}</script>`;
       // Skrypt podający preload zdjęcia hero — jak najwcześniej w head (przed skryptami i dużym CSS),
       // żeby na wolnym łączeniu obraz startował zanim przeglądarka dojdzie do reszty nagłówka.
       const LOGO_LINK = '<link rel="preload" href="/exmortis-logo-144.webp" as="image" type="image/webp" />';
-      const withHead = out.includes(LOGO_LINK) ? out.replace(LOGO_LINK, `${LOGO_LINK}\n    ${head}`) : out.replace("</head>", `  ${head}\n  </head>`);
+      const withHead = !head ? out : out.includes(LOGO_LINK) ? out.replace(LOGO_LINK, `${LOGO_LINK}\n    ${head}`) : out.replace("</head>", `  ${head}\n  </head>`);
       return withHead.replace('<div id="root"></div>', `<div id="root"></div>\n    ${body}`);
     },
   };
@@ -190,7 +191,7 @@ function exmInlineCss() {
           // w nagłówku startowały przed pierwszym malowaniem i symulacja PageSpeed (4G) doliczała ich pobieranie do FCP.
           const mp = [src];
           html = html.replace(/\s*<link rel="modulepreload" crossorigin href="([^"]+)">/g, (t, h) => { if (!mp.includes(h)) mp.push(h); return ""; });
-          const boot = `<script>(function(){var mp=${JSON.stringify(hasShell && lateCss ? mp : [])},pre=function(){if(pre.d)return;pre.d=1;for(var k=0;k<mp.length;k++){var l=document.createElement("link");l.rel="modulepreload";l.crossOrigin="";l.href=mp[k];document.head.appendChild(l)}};var css=${JSON.stringify(lateCss)},cssOn=false,cssOk=!css,wait=[];var done=function(){if(cssOk)return;cssOk=true;for(var k=0;k<wait.length;k++)wait[k]()};var loadCss=function(){if(cssOn||!css)return;cssOn=true;var l=document.createElement("link");l.rel="stylesheet";l.href=css;l.onload=done;l.onerror=done;document.head.appendChild(l);setTimeout(done,4000)};var run=function(){var s=document.createElement("script");s.type="module";s.crossOrigin="";s.src=${JSON.stringify(src)};document.head.appendChild(s)};var go=function(){if(go.d)return;go.d=1;if(cssOk)run();else wait.push(run)};pre();loadCss();try{var o=document.getElementById("exm-shell-root");if(!o){go();return}var im=o.querySelector("img[srcset]");var paint=function(){requestAnimationFrame(function(){setTimeout(go,0)})};var ready=function(){if(im.decode)im.decode().then(paint,paint);else paint()};if(!im||im.complete){im?ready():paint()}else{im.addEventListener("load",ready);im.addEventListener("error",paint)}setTimeout(go,1500)}catch(e){go()}})()</script>`;
+          const boot = `<script>(function(){var mp=${JSON.stringify(hasShell && lateCss ? mp : [])},pre=function(){if(pre.d)return;pre.d=1;for(var k=0;k<mp.length;k++){var l=document.createElement("link");l.rel="modulepreload";l.crossOrigin="";l.href=mp[k];document.head.appendChild(l)}};var css=${JSON.stringify(lateCss)},cssOn=false,cssOk=!css,wait=[];var done=function(){if(cssOk)return;cssOk=true;for(var k=0;k<wait.length;k++)wait[k]()};var loadCss=function(){if(cssOn||!css)return;cssOn=true;var l=document.createElement("link");l.rel="stylesheet";l.href=css;l.onload=done;l.onerror=done;document.head.appendChild(l);setTimeout(done,4000)};var run=function(){var s=document.createElement("script");s.type="module";s.crossOrigin="";s.src=${JSON.stringify(src)};document.head.appendChild(s)};var go=function(){if(go.d)return;go.d=1;if(cssOk)run();else wait.push(run)};pre();loadCss();try{var o=document.getElementById("exm-shell-root");if(!o){go();return}var im=o.querySelector("img[fetchpriority=high]");var paint=function(){requestAnimationFrame(function(){setTimeout(go,0)})};var ready=function(){if(im.decode)im.decode().then(paint,paint);else paint()};if(!im||im.complete){im?ready():paint()}else{im.addEventListener("load",ready);im.addEventListener("error",paint)}setTimeout(go,1500)}catch(e){go()}})()</script>`;
           html = html.replace(tag, hasShell && lateCss ? "" : mp.map((h) => `<link rel="modulepreload" crossorigin href="${h}">`).join("\n    ")).replace("</body>", `  ${boot}\n  </body>`);
         }
         return html;
