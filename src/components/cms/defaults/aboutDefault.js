@@ -7,7 +7,8 @@ const b = (id, typ, dane, uklad = {}) => ({ id: `about-${id}`, typ, widoczny: tr
 const IMG = (id) => `/functions/media?id=${id}`;
 
 const FOTO = {
-  portret: { url: IMG("15f971557d5b4b68e8360cdfebf5de75"), alt: "Dawid Kowalczyk — mentor powrotu", fx: 50, fy: 35 },
+  // Portret pierwszego ekranu jako plik strony (19.11.2026): bez pośrednictwa funkcji media ładuje się od razu.
+  portret: { url: "/img/dawid-portret.webp", alt: "Dawid Kowalczyk — mentor powrotu", fx: 50, fy: 35 },
   zona: { url: IMG("9aa156b7c1615682c44a00ea3fb43c05"), alt: "Dawid z żoną", fx: 50, fy: 40 },
   praca: { url: IMG("5d6b5925ff83d0e867dce577ce67efd4"), alt: "Dawid przy pracy nad EXMORTIS", fx: 50, fy: 45 },
   jezioro: { url: IMG("e55ce62f8144ead1bfe7aa810f4abc96"), alt: "Dawid na jeziorze", fx: 50, fy: 55 },
