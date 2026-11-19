@@ -15,7 +15,7 @@ const BASE = process.env.BASE || "http://localhost:4174";
 const b = await chromium.launch();
 const p = await b.newPage({ viewport: { width: 412, height: 823 } });
 const ready = async () => {
-  for (let i = 0; i < 40 && !(await p.evaluate(() => !!document.querySelector('main img[fetchpriority="high"]')?.complete))); i++) await p.waitForTimeout(500);
+  for (let i = 0; i < 40 && !(await p.evaluate(() => !!document.querySelector('main img[fetchpriority="high"]')?.complete)); i++) await p.waitForTimeout(500);
   await p.waitForTimeout(1000);
 };
 const base = () => {
