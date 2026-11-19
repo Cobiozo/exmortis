@@ -1,4 +1,5 @@
 // Regulamin — wersja z 9.11.2026 (zgodność z art. 12 upk i wymaganiami PayU 08.2026).
+// 19.11.2026: §5 ust. 2 — kod 10 zł za potwierdzenie zapisu na Listy powrotu (od 49 zł, 30 dni, raz na adres).
 // Dane firmy w nawiasach kwadratowych wstawia src/lib/firma.js z Ustawień → Dane firmy.
 // Numer wersji nadaje archiwum w panelu (Ustawienia → Dokumenty prawne → Zapisz).
 export const REGULAMIN = {
@@ -38,7 +39,7 @@ export const REGULAMIN = {
     ]},
     { id: "p5", title: "§5. Usługi bezpłatne", body: [
       "1. Umowa o Usługę bezpłatną zostaje zawarta z chwilą rozpoczęcia korzystania z niej (np. wysłania formularza, otwarcia testu), na czas nieoznaczony, a przy usługach jednorazowych — na czas ich wykonania.",
-      "2. Newsletter „Listy powrotu” jest wysyłany po potwierdzeniu zapisu linkiem z e-maila. Wypisać się można w każdej chwili, bez kosztów, linkiem w każdej wiadomości.",
+      "2. Newsletter „Listy powrotu” jest wysyłany po potwierdzeniu zapisu linkiem z e-maila. Wypisać się można w każdej chwili, bez kosztów, linkiem w każdej wiadomości. Osoba, która po raz pierwszy potwierdzi zapis, otrzymuje e-mailem jednorazowy kod rabatowy o wartości 10 zł, ważny 30 dni od wydania i przypisany do adresu e-mail zapisu. Kod obejmuje e-booki, audio, kursy i pakiety, gdy ich wartość w Zamówieniu wynosi co najmniej 49 zł; nie obejmuje sesji, programu POWRÓT, biletów ani Kart podarunkowych. Każdy adres e-mail otrzymuje ten kod tylko raz, także po ponownym zapisie. W jednym Zamówieniu można użyć jednego kodu rabatowego.",
       "3. Test „Która śmierć jest Twoja?” służy autorefleksji, działa w przeglądarce i nie wymaga podania danych.",
       "4. Klient może w każdej chwili bez kosztów zrezygnować z Usługi bezpłatnej (np. wypisać się, usunąć Konto).",
       "5. Sprzedawca może zakończyć świadczenie Usługi bezpłatnej z ważnej przyczyny (trwałe zakończenie usługi, rażące naruszenie Regulaminu) z 14-dniowym wypowiedzeniem przesłanym e-mailem. Nie wpływa to na dostęp do opłaconych Treści cyfrowych.",
@@ -160,7 +161,7 @@ export const REGULAMIN = {
     { id: "p23", title: "§23. Postanowienia końcowe", body: [
       "1. Regulamin podlega prawu polskiemu. Wybór prawa nie pozbawia Konsumenta ochrony przysługującej mu na podstawie bezwzględnie obowiązujących przepisów państwa jego zwykłego pobytu.",
       "2. Postanowienia Regulaminu nie wyłączają ani nie ograniczają praw Konsumentów i PNPK wynikających z bezwzględnie obowiązujących przepisów.",
-      "3. Regulamin w tym brzmieniu obowiązuje od 18 listopada 2026 r. dla umów zawieranych od tego dnia. Wobec osób, które przed 10 listopada 2026 r. założyły Konto lub zapisały się na newsletter, w zakresie Usług bezpłatnych obowiązuje od 24 listopada 2026 r. (po 14-dniowym powiadomieniu); do tego czasu stosuje się wobec nich wersję wcześniejszą, dostępną w części „Poprzednie wersje”.",
+      "3. Regulamin w tym brzmieniu obowiązuje od 19 listopada 2026 r. dla umów zawieranych od tego dnia. Wobec osób, które przed 10 listopada 2026 r. założyły Konto lub zapisały się na newsletter, w zakresie Usług bezpłatnych obowiązuje od 24 listopada 2026 r. (po 14-dniowym powiadomieniu); do tego czasu stosuje się wobec nich wersję wcześniejszą, dostępną w części „Poprzednie wersje”.",
     ]},
   ],
 };
