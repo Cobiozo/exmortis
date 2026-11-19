@@ -1,5 +1,5 @@
 import { listAuthUsers } from "./supabase.ts";
-import { getSetting, APP_URL } from "./settings.ts";
+import { getSetting, APP_URL, loadAppUrl } from "./settings.ts";
 import { sendMail } from "./smtp.ts";
 import { emailButton } from "./emailLayout.ts";
 import { hasPaidOrder, issueBuyerCode } from "./orderLinks.ts";
@@ -50,6 +50,7 @@ export async function issueWelcomeFor(base44, u: { email?: string; created_at?: 
     email, powitalny: true, typy: WELCOME.typy, bez_promocji: true, w_powiadomieniach: false,
     opis: WELCOME_TEXT,
   });
+  await loadAppUrl(base44).catch(() => {}); // adres przycisku — bez tego APP_URL bywa pusty
   // Treść bez własnej ramki — wspólną oprawę (logo, stopka, kolory) nakłada emailLayout w smtpSend, jak w pozostałych mailach.
   const html = `<h1>Dziękuję za założenie konta</h1>
       <p>Twoje konto exmortis jest aktywne. Zakupy, Biblioteka i ROZDROŻA czekają w jednym miejscu.</p>
