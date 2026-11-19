@@ -40,11 +40,15 @@ const MARKETING = new Set(["listy", "newsletter", "kampania"]);
 const esc = (v) => String(v ?? "").replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
 
 // Przycisk do użycia w treściach maili.
+// 19.11.2026: złoty obrys na ciemnym tle zamiast złotego wypełnienia. Gmail w trybie ciemnym (iOS, Android)
+// odwraca jasne tła — złoty przycisk robił się niebieski. Ciemne tło i złote linie zostają bez zmian w każdym trybie.
+export const BTN_BG = "#1A160D";
 export function emailButton(label, url, { secondary = false } = {}) {
-  const bg = secondary ? "transparent" : BRAND.gold;
-  const fg = secondary ? BRAND.gold : BRAND.bg;
+  const bg = secondary ? "transparent" : BTN_BG;
+  const fg = secondary ? BRAND.text : BRAND.gold;
+  const line = secondary ? BRAND.line : BRAND.gold;
   return `<table role="presentation" cellspacing="0" cellpadding="0" border="0" style="margin:28px 0;"><tr>
-<td style="border-radius:2px;background:${bg};border:1px solid ${BRAND.gold};">
+<td bgcolor="${secondary ? "" : BTN_BG}" style="border-radius:2px;background:${bg};border:${secondary ? 1 : 2}px solid ${line};">
 <a href="${esc(url)}" target="_blank" style="display:inline-block;padding:15px 30px;font-family:${BRAND.sans};font-size:13px;font-weight:600;letter-spacing:2px;text-transform:uppercase;color:${fg};text-decoration:none;">${esc(label)}</a>
 </td></tr></table>`;
 }
@@ -79,6 +83,12 @@ export function normalizeBody(html) {
   // Kolory tekstu z dawnych szablonów → czytelniejsze na nowej karcie (kontrast WCAG AA).
   s = s.replace(/color:#8A8A8C/g, `color:${BRAND.muted}`).replace(/color:#5C5C5E/g, `color:${BRAND.faint}`)
     .replace(/color:#3D3D3F/g, `color:${BRAND.faint}`);
+  // Starsze przyciski z złotym wypełnieniem wpisane w treści (oczekiwanie na płatność, lista oczekujących, Listy,
+  // spotkania, zmiana adresu, darmowe zamówienie) → ten sam złoty obrys co emailButton (tryb ciemny Gmaila).
+  s = s.replace(/style="([^"]*background(?:-color)?:\s*#C9A24A[^"]*)"/gi, (_, st) => `style="${st
+    .replace(/background(?:-color)?:\s*#C9A24A;?/gi, `background:${BTN_BG};border:2px solid ${BRAND.gold};`)
+    .replace(/(^|;)\s*color:\s*#0A0A0B/gi, `$1color:${BRAND.gold}`)}"`);
+  s = s.replace(/bgcolor="#C9A24A"/gi, `bgcolor="${BTN_BG}"`);
   // Akapit zawierający wyłącznie jeden link http(s) → przycisk.
   s = s.replace(/<p[^>]*>\s*<a\s+href="(https?:[^"]+)"[^>]*>\s*([^<]{2,60}?)\s*<\/a>\s*<\/p>/g,
     (_, href, label) => emailButton(label.replace(/&amp;/g, "&").replace(/&quot;/g, '"'), href.replace(/&amp;/g, "&")));
