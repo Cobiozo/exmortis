@@ -1,11 +1,13 @@
 import React, { useRef } from "react";
+import { Mic, Music } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 // Przełącznik Podcast / Muzyka — dwie zakładki zamiast dwóch długich modułów jeden pod drugim.
 // Klawiatura: strzałki w lewo/prawo, Home i End; aktywna zakładka ma złotą linię.
+// 19.11.2026: dwa duże przyciski z ikoną i podpisem zamiast cienkich zakładek — od razu widać, że jest też muzyka.
 const TABS = [
-  ["podcast", "Podcast"],
-  ["muzyka", "Muzyka"],
+  ["podcast", "Podcast", "Rozmowy o drodze powrotu", Mic],
+  ["muzyka", "Muzyka", "Utwory exmortis", Music],
 ];
 
 export default function GlosTabs({ value, onChange }) {
@@ -25,8 +27,8 @@ export default function GlosTabs({ value, onChange }) {
   };
 
   return (
-    <div role="tablist" aria-label="Głos: podcast i muzyka" onKeyDown={onKeyDown} className="flex gap-6 border-b border-exm-line">
-      {TABS.map(([key, label]) => {
+    <div role="tablist" aria-label="Głos: podcast i muzyka" onKeyDown={onKeyDown} className="grid grid-cols-2 gap-3">
+      {TABS.map(([key, label, sub, Icon]) => {
         const on = value === key;
         return (
           <button
@@ -40,11 +42,17 @@ export default function GlosTabs({ value, onChange }) {
             tabIndex={on ? 0 : -1}
             onClick={() => onChange(key)}
             className={cn(
-              "-mb-px border-b-2 px-1 pb-3 pt-1 font-exm-sans text-[15px] font-medium transition-colors",
-              on ? "border-exm-gold text-exm-ivory" : "border-transparent text-exm-muted hover:text-exm-ivory"
+              "flex min-h-[64px] items-center gap-3 rounded-[var(--exm-r-card)] border px-4 py-3 text-left transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-exm-gold sm:px-5",
+              on ? "border-exm-gold bg-[#C9A24A]/10" : "border-exm-line bg-exm-surface hover:border-exm-gold-line"
             )}
           >
-            {label}
+            <span className={cn("grid h-10 w-10 shrink-0 place-items-center rounded-full border", on ? "border-exm-gold bg-exm-gold text-exm-bg" : "border-exm-line text-exm-gold")} aria-hidden="true">
+              <Icon className="h-5 w-5" strokeWidth={1.75} />
+            </span>
+            <span className="min-w-0">
+              <span className={cn("block font-exm-sans text-[16px] font-semibold", on ? "text-exm-ivory" : "text-exm-ivory/85")}>{label}</span>
+              <span className="hidden text-[13px] text-exm-muted sm:block">{sub}</span>
+            </span>
           </button>
         );
       })}
