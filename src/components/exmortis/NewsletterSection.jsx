@@ -86,7 +86,7 @@ export default function NewsletterSection({ label } = {}) {
                 <div className="space-y-3 rounded-[var(--exm-r-field)] border border-exm-gold/40 p-4">
                   <p className="technical text-[10px] text-exm-gold">✓ {t("dz.listy")}</p>
                   <p className="text-sm leading-relaxed text-exm-text/85">
-                    Potwierdź zapis w wiadomości, którą dostaniesz na skrzynkę.
+                    Potwierdź zapis w wiadomości, którą dostaniesz na skrzynkę. Zaraz po potwierdzeniu wyślę Ci kod −10 zł.
                   </p>
                   <p className="text-sm leading-relaxed text-exm-text/75">
                     Między listami nagrywam krótkie wiadomości głosowe. Jeśli chcesz słyszeć mnie częściej — dołącz do kanału WhatsApp.
