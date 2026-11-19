@@ -25,6 +25,10 @@ export default function Register() {
   const [loading, setLoading] = useState(false);
   const [showOtp, setShowOtp] = useState(false);
   const { search } = useLocation();
+  // Link z maila exmortis: /register?potwierdz=<token_hash>
+  const confirmHash = new URLSearchParams(search).get("potwierdz") || "";
+  const [confirming, setConfirming] = useState(!!confirmHash);
+  const [confirmError, setConfirmError] = useState("");
   const t = useLoginText();
 
   const handleSubmit = async (e) => {
@@ -44,36 +48,84 @@ export default function Register() {
     }
   };
 
-  // Link z maila wraca tutaj z sesją w adresie — dokańczamy rejestrację (zgody, newsletter).
+  // Dokończenie rejestracji po potwierdzeniu adresu: imię, akceptacja regulaminu, zapis na Listy (gdy zaznaczony),
+  // kod powitalny i mail z podziękowaniem od razu, potem przejście dalej.
+  const finish = async (pending) => {
+    await base44.auth.updateMe({ imie: pending.name, terms_accepted_at: pending.terms_at || new Date().toISOString() }).catch(() => {});
+    if (pending.letters) {
+      await base44.functions.invoke("subscribeNewsletter", { email: pending.email, name: pending.name })
+        .then(() => track("Lead", { content_name: "newsletter" })).catch(() => {});
+    }
+    if (base44.auth.welcome) await base44.auth.welcome();
+    window.location.href = await afterLoginTarget();
+  };
+
   useEffect(() => {
     let alive = true;
     (async () => {
       try {
+        if (confirmHash) {
+          // Link z maila exmortis → sesja, potem dane z konta (działa też na innym urządzeniu).
+          const { meta, email: mail } = await base44.auth.confirmSignup(confirmHash);
+          let pending = null;
+          try { pending = JSON.parse(sessionStorage.getItem("exm_pending_reg") || "null"); sessionStorage.removeItem("exm_pending_reg"); } catch { /* brak pamięci */ }
+          if (!alive) return;
+          await finish({
+            email: mail || pending?.email || "",
+            name: meta.imie || meta.full_name || pending?.name || "",
+            letters: meta.letters === true || !!pending?.letters,
+            terms_at: meta.terms_accepted_at,
+          });
+          return;
+        }
+        // Dawny link Supabase wracał tutaj z sesją w adresie.
         if (!(await base44.auth.isAuthenticated())) return;
         const pending = JSON.parse(sessionStorage.getItem("exm_pending_reg") || "null");
         if (!pending) return;
         sessionStorage.removeItem("exm_pending_reg");
         if (!alive) return;
-        await base44.auth.updateMe({ imie: pending.name, terms_accepted_at: new Date().toISOString() }).catch(() => {});
-        if (pending.letters) {
-          await base44.functions.invoke("subscribeNewsletter", { email: pending.email, name: pending.name })
-            .then(() => track("Lead", { content_name: "newsletter" })).catch(() => {});
+        await finish(pending);
+      } catch {
+        if (alive && confirmHash) {
+          setConfirming(false);
+          setConfirmError("Ten link wygasł albo został już użyty. Jeśli konto jest już potwierdzone — zaloguj się. Jeśli nie, załóż je jeszcze raz tym samym adresem, a wyślę nowy link.");
         }
-        window.location.href = await afterLoginTarget();
-      } catch { /* zostaje na stronie rejestracji */ }
+      }
     })();
     return () => { alive = false; };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const handleResend = async () => {
     setError("");
     try {
       await base44.auth.resendOtp(email);
-      setInfo("Wysłałem nowy kod.");
+      setInfo("Wysłałem nowy link. Sprawdź skrzynkę (także folder spam).");
     } catch (err) {
       setError(err.message || "Nie udało się wysłać kodu.");
     }
   };
+
+  if (confirming || confirmError) {
+    return (
+      <AuthLayout
+        title={confirmError ? "Nie udało się potwierdzić adresu" : "Potwierdzam adres e-mail"}
+        subtitle={confirmError ? "" : "Chwilę — kończę zakładanie konta."}
+        footer={<Link to="/login" className="btn-link">Przejdź do logowania</Link>}
+      >
+        {confirmError ? (
+          <p role="alert" className="rounded-[var(--exm-r-field)] border border-exm-error px-4 py-3 text-[14px] leading-relaxed text-exm-text">
+            {confirmError}
+          </p>
+        ) : (
+          <div className="flex justify-center py-6">
+            <Loader2 className="h-8 w-8 animate-spin text-exm-gold" aria-hidden="true" />
+            <span className="sr-only">Potwierdzam adres e-mail</span>
+          </div>
+        )}
+      </AuthLayout>
+    );
+  }
 
   if (showOtp) {
     return (
