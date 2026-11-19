@@ -4,7 +4,6 @@ import { ipAllowed, TOO_MANY } from "../_shared/rateLimit.ts";
 import { sendMail } from "../_shared/smtp.ts";
 import { emailButton } from "../_shared/emailLayout.ts";
 import { APP_URL, loadAppUrl } from "../_shared/settings.ts";
-import { sha256hex } from "../_shared/booking.ts";
 import { issueWelcomeFor, welcomeEnabled } from "../_shared/welcomeCode.ts";
 
 // Maile konta w oprawie exmortis zamiast domyślnych maili Supabase (19.11.2026).
@@ -30,6 +29,7 @@ async function authAdmin(path: string, init: RequestInit = {}) {
   const d = await res.json().catch(() => ({}));
   return { ok: res.ok, status: res.status, d };
 }
+const sha256hex = async (t: string) => [...new Uint8Array(await crypto.subtle.digest("SHA-256", new TextEncoder().encode(t)))].map((b) => b.toString(16).padStart(2, "0")).join("");
 const tokenOf = (d: any) => String(d?.hashed_token || d?.properties?.hashed_token || "");
 const userOf = (d: any) => (d?.user && d.user.id ? d.user : d?.id ? d : null);
 
