@@ -42,7 +42,8 @@ app.use((req, res, next) => {
 // wymaga dopisania jej adresu tutaj — inaczej przeglądarka ją zablokuje (komunikat „Content Security Policy” w konsoli).
 const CSP = [
   "default-src 'self'",
-  "script-src 'self' 'unsafe-inline' https://www.googletagmanager.com https://connect.facebook.net",
+  // www.youtube.com: IFrame API odtwarzacza muzyki w Głosie (kolejny utwór po zakończeniu poprzedniego).
+  "script-src 'self' 'unsafe-inline' https://www.googletagmanager.com https://connect.facebook.net https://www.youtube.com",
   "style-src 'self' 'unsafe-inline'",
   "img-src 'self' data: blob: https:",
   "media-src 'self' blob: https:",
