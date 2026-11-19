@@ -5,11 +5,12 @@ import { base44 } from "@/api/base44Client";
 // Strona z linku „Potwierdź zapis na Listy powrotu”.
 export default function ListyPotwierdz() {
   const [state, setState] = useState("loading");
+  const [kod, setKod] = useState(false);
 
   useEffect(() => {
     const token = new URLSearchParams(window.location.search).get("t") || "";
     base44.functions.invoke("subscribeNewsletter", { action: "confirm", token })
-      .then((r) => setState(r.data.ok ? (r.data.already ? "already" : "ok") : "bad"))
+      .then((r) => { setKod(!!r.data.kod); setState(r.data.ok ? (r.data.already ? "already" : "ok") : "bad"); })
       .catch(() => setState("bad"));
   }, []);
 
@@ -20,7 +21,8 @@ export default function ListyPotwierdz() {
         {state === "loading" && <div className="mx-auto w-8 h-8 border-4 border-[#3D3D3F] border-t-[#C9A24A] rounded-full animate-spin" />}
         {state === "ok" && <>
           <h1 className="relic-heading text-3xl md:text-4xl">Zapis potwierdzony</h1>
-          <p className="text-foreground/70">Pierwszy list otrzymasz w najbliższy poniedziałek. Wypisać się możesz jednym kliknięciem w każdym liście.</p>
+          <p className="text-foreground/70">Dziękuję. Wypisać się możesz jednym kliknięciem w każdym liście.</p>
+          {kod && <p className="text-foreground/70">Na Twój adres e-mail wysłałem też jednorazowy kod <span className="gold-text">−10 zł</span> na materiał ze Skarbca.</p>}
         </>}
         {state === "already" && <>
           <h1 className="relic-heading text-3xl md:text-4xl">Już potwierdzone</h1>
@@ -30,7 +32,12 @@ export default function ListyPotwierdz() {
           <h1 className="relic-heading text-3xl md:text-4xl">Link nieaktywny</h1>
           <p className="text-foreground/70">Ten link wygasł (ważny 7 dni) albo adres został wcześniej wypisany. Możesz zapisać się ponownie — otrzymasz nowy link potwierdzający.</p>
         </>}
-        {state !== "loading" && <Link to="/" className="btn-ghost">Strona główna</Link>}
+        {state !== "loading" && (
+          <div className="flex flex-col items-center justify-center gap-3 sm:flex-row">
+            {state === "ok" && kod && <Link to="/skarbiec?src=listy-kod" className="btn-relic">Zobacz Skarbiec</Link>}
+            <Link to="/" className="btn-ghost">Strona główna</Link>
+          </div>
+        )}
       </div>
     </section>
   );

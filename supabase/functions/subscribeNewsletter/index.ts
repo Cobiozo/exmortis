@@ -5,6 +5,7 @@ import { addSubscriber, confirmSubscriber, unsubscribeByToken } from "../_shared
 import { LISTY_TEXT } from "../_shared/registrations.ts";
 import { ipAllowed, TOO_MANY } from "../_shared/rateLimit.ts";
 import { onboardingStop } from "../_shared/onboarding.ts";
+import { issueListyCode } from "../_shared/listyCode.ts";
 
 // Publiczne zapisy do newslettera „Listy powrotu" + potwierdzenie z linku (double opt-in).
 const handler = async function (req) {
@@ -22,7 +23,9 @@ const handler = async function (req) {
         source: "listy:potwierdzenie", given_at: new Date(row.confirmed_at).toISOString(), ip, status: "udzielona", doc_version: "1.1",
       });
       await mirrorRecord(base44, "Consent", made?.id);
-      return Response.json({ ok: true });
+      // Kod 10 zł za zapis (19.11.2026) — błąd wydania kodu nie cofa potwierdzenia zapisu.
+      const kod = await issueListyCode(base44, row.email).catch((e) => { console.error("kod Listów:", e?.message); return null; });
+      return Response.json({ ok: true, kod: !!kod });
     }
     // Wypis z listy (link w mailu kampanii) — bez logowania, po samym kluczu.
     if (body.action === "unsub") {

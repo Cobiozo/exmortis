@@ -50,6 +50,13 @@ export default function NewsletterSection({ label } = {}) {
             <p className="exm-eyebrow mb-3">{label || "LISTY POWROTU"}</p>
             <h2 className="exm-h2" dangerouslySetInnerHTML={{ __html: sanitizeHtml(title) }} />
             <div className="rich-content mt-4 max-w-md text-[17px] leading-relaxed text-exm-text/85" dangerouslySetInnerHTML={{ __html: sanitizeHtml(desc) }} />
+            {/* Kod za zapis (19.11.2026) — wydaje go subscribeNewsletter po potwierdzeniu adresu (_shared/listyCode.ts). */}
+            <div className="mt-6 max-w-md rounded-[var(--exm-r-field)] border border-exm-gold/40 bg-exm-bg/30 px-4 py-3">
+              <p className="text-[15px] leading-relaxed text-exm-ivory">
+                <span className="text-exm-gold">−10 zł na start.</span> Po potwierdzeniu zapisu dostajesz jednorazowy kod na e-booki i inne materiały ze Skarbca.
+              </p>
+              <p className="mt-1 text-[13px] leading-relaxed text-exm-muted">Kod jest ważny 30 dni. Nie dotyczy programu POWRÓT ani Rozmowy na progu.</p>
+            </div>
           </div>
 
           <div>

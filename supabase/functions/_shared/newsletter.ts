@@ -46,7 +46,7 @@ export async function sendConfirmMail(base44, { email, name, token }) {
       <div style="max-width:560px;margin:0 auto;">
         <p style="letter-spacing:3px;color:#C9A24A;font-size:12px;">EXMORTIS · LISTY POWROTU</p>
         <h1 style="font-size:24px;">Potwierdź zapis</h1>
-        <p style="font-family:Arial,sans-serif;line-height:1.7;">${name ? esc(name) + ", " : ""}ktoś (mam nadzieję, że Ty) zapisał ten adres na Listy powrotu, jeden list w każdy poniedziałek. Żeby zacząć je dostawać, kliknij poniżej.</p>
+        <p style="font-family:Arial,sans-serif;line-height:1.7;">${name ? esc(name) + ", " : ""}ktoś (mam nadzieję, że Ty) zapisał ten adres na Listy powrotu — listy o tym, co pomaga wracać. Żeby zacząć je dostawać, kliknij poniżej. Po potwierdzeniu wyślę Ci jednorazowy kod −10 zł na materiał ze Skarbca.</p>
         <p style="margin:32px 0;"><a href="${url}" style="background:#C9A24A;color:#0A0A0B;padding:14px 28px;text-decoration:none;font-family:Arial,sans-serif;font-weight:bold;letter-spacing:2px;">POTWIERDZAM ZAPIS</a></p>
         <p style="font-family:Arial,sans-serif;color:#8A8A8C;font-size:13px;line-height:1.6;">Jeśli to nie Ty, zignoruj tę wiadomość. Bez potwierdzenia adres zostanie usunięty po 7 dniach.</p>
         ${waBlock}
