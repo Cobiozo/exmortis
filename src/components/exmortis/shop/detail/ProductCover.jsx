@@ -19,7 +19,7 @@ export default function ProductCover({ product }) {
   const frame = (
     <div className={cn("relative overflow-hidden rounded-[var(--exm-r-field)] bg-exm-surface-2", book ? "aspect-[3/4]" : "aspect-[4/3]")}>
       {src ? (
-        <ShopMedia product={{ ...product, cover_image: src }} />
+        <ShopMedia product={{ ...product, cover_image: src }} priority sizes="(min-width: 1024px) 420px, 90vw" />
       ) : (
         <span className="absolute inset-0 flex items-center justify-center" aria-hidden="true">
           <Logo className="h-20 w-20 opacity-40" glow={false} />
