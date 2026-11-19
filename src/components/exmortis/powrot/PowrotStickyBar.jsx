@@ -21,14 +21,15 @@ function Bar() {
       className="fixed inset-x-0 bottom-0 z-40 border-t border-exm-line bg-exm-bg/95 px-5 pt-3 pb-[max(12px,env(safe-area-inset-bottom))] backdrop-blur md:px-10">
       <div className="mx-auto flex w-full max-w-[var(--exm-container)] items-center gap-3 md:gap-6">
         <div className="min-w-0 flex-1">
-          <p className="font-exm-serif text-[18px] leading-tight text-exm-ivory md:text-[20px]"><span className="hidden min-[360px]:inline">Program </span>POWRÓT</p>
+          <p className="font-exm-serif text-[18px] leading-tight text-exm-ivory md:text-[20px]"><span className="hidden min-[440px]:inline">Program </span>POWRÓT</p>
           <p className="mt-0.5 truncate text-[13px] text-exm-gold">
             {POWROT.priceText}<span className="hidden text-exm-muted sm:inline"> · {POWROT.months} · {POWROT.sessions} sesji po {POWROT.lengthLong}</span>
           </p>
         </div>
-        <BrandButton onClick={go} className="shrink-0">
+        {/* Napis zawsze w jednej linii: na telefonie mniejszy tekst i węższy margines, strzałka od 440 px. */}
+        <BrandButton onClick={go} className="shrink-0 whitespace-nowrap !px-4 !text-[14px] min-[440px]:!px-6 min-[440px]:!text-[15px]">
           Zgłoś się do programu
-          <ArrowRight className="h-4 w-4" aria-hidden="true" />
+          <ArrowRight className="hidden h-4 w-4 min-[440px]:inline" aria-hidden="true" />
         </BrandButton>
       </div>
     </div>

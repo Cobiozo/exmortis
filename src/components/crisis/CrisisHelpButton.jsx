@@ -5,11 +5,12 @@ import { useCrisis } from "./CrisisContext";
 
 // Dyskretna etykieta przy dolnej krawędzi. Widoczna na stronach publicznych i w koncie;
 // ukryta w panelu admina, na /skaner, w kasie (na telefonie zasłaniała zgody; numery pomocowe są w stopce)
-// i w koncie klienta (16.11.2026, decyzja właściciela: zasłaniała przyciski kart; numery pomocowe w stopce).
+// i w koncie klienta (16.11.2026, decyzja właściciela: zasłaniała przyciski kart; numery pomocowe w stopce)
+// oraz na /powrot (19.11.2026, decyzja właściciela: nachodziła na pasek zgłoszenia; numery są w ramce bezpieczeństwa i w stopce).
 export default function CrisisHelpButton() {
   const { open, isOpen } = useCrisis();
   const { pathname } = useLocation();
-  if (pathname.startsWith("/admin") || pathname.startsWith("/skaner") || pathname.startsWith("/kasa") || pathname.startsWith("/konto")) return null;
+  if (pathname.startsWith("/admin") || pathname.startsWith("/skaner") || pathname.startsWith("/kasa") || pathname.startsWith("/konto") || pathname.startsWith("/powrot")) return null;
   return (
     <button
       type="button"
