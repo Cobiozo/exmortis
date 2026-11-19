@@ -278,7 +278,7 @@ export const CONTENT_PAGES = [
         key: "newsletterTitle",
         label: "Newsletter — nagłówek",
         type: "richtext",
-        default: 'Zapisz się.<br /><span class="blood-text">Wracaj</span> co tydzień.',
+        default: 'Słowo na drogę.<br /><span class="gold-text">Prosto do skrzynki.</span>',
       },
       {
         key: "newsletterDesc",
