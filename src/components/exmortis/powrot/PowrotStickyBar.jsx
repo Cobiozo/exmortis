@@ -27,7 +27,7 @@ function Bar() {
           </p>
         </div>
         <BrandButton onClick={go} className="shrink-0">
-          <span className="sm:hidden">Zgłoś się</span><span className="hidden sm:inline">Zgłoś się do programu</span>
+          Zgłoś się do programu
           <ArrowRight className="h-4 w-4" aria-hidden="true" />
         </BrandButton>
       </div>
