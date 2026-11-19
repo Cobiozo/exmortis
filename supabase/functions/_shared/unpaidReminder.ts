@@ -47,16 +47,16 @@ export function unpaidMail(o, url, back) {
 }
 
 export async function unpaidReminders(base44, limit = 20) {
-  const notFree = `COALESCE(%s.payu_order_id, '') NOT LIKE 'FREE-%%'`;
+  const notFree = (t) => `COALESCE(${t}.payu_order_id, '') NOT LIKE 'FREE-%'`;
   const rows = await runSql(base44, `SELECT o.id, o.buyer_name, o.buyer_email, o.items, o.created_date FROM public.orders o
     WHERE o.status IN ('NEW','PENDING','CANCELED') AND o.reminded_at IS NULL AND o.buyer_email IS NOT NULL
       AND o.prog_app_id IS NULL AND COALESCE(o.is_test, false) = false
-      AND ${notFree.replace("%s", "o").replace("%%", "%")}
+      AND ${notFree("o")}
       AND COALESCE(o.payu_status, '') NOT IN ('WAITING_FOR_CONFIRMATION', 'CAPTURE_REQUESTED', 'MISMATCH', 'COMPLETED')
       AND COALESCE(o.refunded_total, 0) = 0
       AND o.created_date < now() - interval '24 hours' AND o.created_date > now() - interval '72 hours'
       AND NOT EXISTS (SELECT 1 FROM public.orders x WHERE lower(x.buyer_email) = lower(o.buyer_email)
-        AND x.id <> o.id AND x.created_date > o.created_date AND ${notFree.replace("%s", "x").replace("%%", "%")})
+        AND x.id <> o.id AND x.created_date > o.created_date AND ${notFree("x")})
       AND NOT EXISTS (SELECT 1 FROM public.orders x WHERE lower(x.buyer_email) = lower(o.buyer_email)
         AND x.status = 'COMPLETED' AND x.created_date >= o.created_date)
       AND NOT EXISTS (SELECT 1 FROM public.orders x WHERE lower(x.buyer_email) = lower(o.buyer_email)
