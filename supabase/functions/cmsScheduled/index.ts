@@ -144,7 +144,7 @@ const handler = async function(req) {
     const pruned = czas() > 85000 ? 0 : await pruneSnapshots(base44).catch((e) => { console.error("kopie:", e.message); return 0; });
     const ready = await requireMail(base44).then(() => true).catch(() => false);
     const reminded = ready && czas() < 85000 ? await unpaidReminders(base44).catch((e) => { console.error("przypomnienia:", e.message); return 0; }) : 0;
-    // Kody powitalne dla nowych, potwierdzonych kont (−20%, 7 dni od założenia konta).
+    // Kody powitalne dla nowych, potwierdzonych kont (20 zł od 49 zł, 7 dni od założenia konta).
     const welcome = ready && czas() < 90000 ? await issueWelcomeCodes(base44).catch((e) => { console.error("kody powitalne:", e?.message); return 0; }) : 0;
     // Przypomnienie o materiałach z zakupu bez konta (raz, po 3 dniach).
     const accessRemind = ready && czas() < 95000 ? await accessReminders(base44).catch((e) => { console.error("przypomnienia o materiałach:", e?.message); return 0; }) : 0;

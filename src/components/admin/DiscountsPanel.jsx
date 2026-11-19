@@ -5,7 +5,7 @@ import DiscountForm from "./DiscountForm";
 
 const E = base44.entities.DiscountCode;
 
-// Kody powitalne (−20%, 7 dni od założenia konta) — tworzone automatycznie; tu tylko włącznik i podsumowanie.
+// Kody powitalne (20 zł od 49 zł, 7 dni od założenia konta) — tworzone automatycznie; tu tylko włącznik i podsumowanie.
 function WelcomeBox({ codes }) {
   const [on, setOn] = useState(null);
   const [busy, setBusy] = useState(false);
@@ -25,8 +25,8 @@ function WelcomeBox({ codes }) {
         )}
       </div>
       <p className="text-xs text-foreground/55">
-        {on === false ? "Wyłączony. " : "Włączony. "}Każde nowe, potwierdzone konto dostaje mailem jednorazowy kod −20%, ważny 7 dni od założenia konta,
-        tylko dla adresu tego konta. Obejmuje ebooki, audio, wideo i kursy w cenie regularnej (bez POWRÓT, kart, biletów i przedsprzedaży).
+        {on === false ? "Wyłączony. " : "Włączony. "}Każde nowe, potwierdzone konto dostaje mailem jednorazowy kod 20 zł (zamówienie od 49 zł), ważny 7 dni od założenia konta,
+        tylko dla adresu tego konta. Obejmuje e-booki, audio, wideo, kursy i pakiety (bez POWRÓT, usług, kart i biletów).
       </p>
       <p className="text-xs text-foreground/55">Wydane: {codes.length} · wykorzystane: {used}</p>
     </div>

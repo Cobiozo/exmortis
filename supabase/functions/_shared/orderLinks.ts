@@ -133,7 +133,7 @@ export async function hasPaidOrder(base44, email: string) {
   return !!r;
 }
 
-// Jeden kod na osobę (wspólny znacznik „powitalny” z kodem −20% — kody się nie sumują i nie dublują).
+// Jeden kod na osobę (wspólny znacznik „powitalny” z kodem dla nowego konta — kody się nie sumują i nie dublują).
 export async function issueBuyerCode(base44, email: string, notify = true) {
   const mail = String(email).toLowerCase();
   const E = base44.asServiceRole.entities.DiscountCode;
