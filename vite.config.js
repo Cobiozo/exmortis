@@ -18,6 +18,14 @@ function exmSeoJson() {
     apply: "build",
     generateBundle() {
       this.emitFile({ type: "asset", fileName: "seo-pages.json", source: JSON.stringify(SEO_PAGES) });
+      // Lista tras z src/App.jsx dla server.js: adres spoza listy dostaje kod 404 (treść bez zmian — strona „Nie ma takiej strony”).
+      // Za mało tras (zmiana zapisu w App.jsx) → plik nie powstaje, a serwer zwraca 200 jak dawniej.
+      try {
+        const app = fs.readFileSync(path.resolve(__dirname, "src/App.jsx"), "utf8");
+        const routes = [...new Set([...app.matchAll(/<Route\b[^>]*?\bpath="([^"]+)"/g)].map((m) => m[1]).filter((p) => p.startsWith("/")))];
+        if (routes.length >= 10) this.emitFile({ type: "asset", fileName: "routes.json", source: JSON.stringify({ routes }) });
+        else this.warn(`routes.json: za mało tras (${routes.length}) — pominięty`);
+      } catch (e) { this.warn(`routes.json: ${e.message}`); }
     },
   };
 }
