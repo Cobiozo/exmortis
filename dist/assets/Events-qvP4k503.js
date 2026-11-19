@@ -1,1 +1,0 @@
-import"./rolldown-runtime-XKyaHtl9.js";import{ar as e}from"./icons-BTOHaDLf.js";import{t}from"./jsx-runtime-DDmSNrXw.js";import{t as n}from"./index-CS70-bXh.js";e();var r=t();function i(){return(0,r.jsx)(n,{slug:`spotkania`})}export{i as default};
