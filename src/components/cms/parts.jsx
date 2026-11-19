@@ -1,4 +1,5 @@
 import React from "react";
+import { track } from "@/lib/track";
 import { Link } from "react-router-dom";
 import { ArrowRight } from "lucide-react";
 import { sanitizeHtml } from "@/lib/sanitizeHtml";
@@ -6,13 +7,17 @@ import { nbsp } from "@/lib/nbsp";
 
 const STY = { zloty: "btn-relic", obrys: "btn-ghost", tekst: "inline-flex items-center gap-2 technical text-xs gold-text hover:text-[#E2C170]" };
 
+// Kliknięcie przycisku z edytora stron liczy się w statystyce panelu jako „cta_<adres>” (np. cta_rozpoznanie,
+// cta_test_src_home) — sam adres przycisku, bez danych osoby (lejek 19.11.2026).
+const ctaName = (link) => String(link || "").replace(/^https?:\/\/[^/]+/i, "").replace(/[^a-z0-9]+/gi, "_").replace(/^_+|_+$/g, "").toLowerCase().slice(0, 34) || "start";
 export function CmsButton({ b }) {
   const cls = STY[b.styl] || STY.zloty;
+  const onClick = () => track("cta", { content_name: ctaName(b.link) });
   const inner = <>{b.etykieta}{b.strzalka && <ArrowRight className="h-4 w-4" />}</>;
   const link = b.link || "/";
   const tab = b.nowa_karta ? { target: "_blank", rel: "noopener noreferrer" } : {};
-  if (/^(https:|mailto:|tel:|#)/i.test(link)) return <a href={link} className={cls} {...tab}>{inner}</a>;
-  return <Link to={link} className={cls} {...tab}>{inner}</Link>;
+  if (/^(https:|mailto:|tel:|#)/i.test(link)) return <a href={link} className={cls} onClick={onClick} {...tab}>{inner}</a>;
+  return <Link to={link} className={cls} onClick={onClick} {...tab}>{inner}</Link>;
 }
 
 // pion = przyciski jeden pod drugim (na komputerze o równej szerokości, na telefonie na całą szerokość).
