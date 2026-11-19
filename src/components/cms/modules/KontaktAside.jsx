@@ -2,11 +2,9 @@ import React from "react";
 import { Link } from "react-router-dom";
 import { Instagram, Facebook, Youtube } from "lucide-react";
 import SafeImg from "@/components/cms/SafeImg";
-import { Rich } from "@/components/cms/parts";
-import { useSiteContent } from "@/components/exmortis/SiteContentProvider";
 
-// Lewa kolumna strony Kontakt (etap 8, 18.11.2026): zdjęcie 4:5, w jakich sprawach można pisać,
-// adres e-mail i kanały społecznościowe (te same, co w menu i w stopce).
+// Lewa kolumna strony Kontakt (etap 8, 18.11.2026): zdjęcie 4:5, adres e-mail i kanały społecznościowe.
+// 19.11.2026: bez akapitu o botach; „W jakich sprawach” (nowy link, odstąpienie) — pod formularzem (KontaktSprawy).
 const ZDJECIE = { url: "/functions/media?id=1ddd087e40805dd910df4bdc28a2b802", alt: "Dawid — kontakt", fx: 50, fy: 38 };
 
 const SOCIAL = [
@@ -18,9 +16,6 @@ const SOCIAL = [
 const LINK = "text-exm-gold underline decoration-exm-gold-line underline-offset-4 hover:text-exm-gold-hover";
 
 export default function KontaktAside() {
-  const { rich } = useSiteContent();
-  const intro = rich("contact", "intro", "Nie ma botów i asystentów. Jeśli jesteś na progu — napisz pierwszy ruch, choćby jednym zdaniem.");
-
   return (
     <aside className="min-w-0 space-y-8">
       <SafeImg
@@ -29,22 +24,6 @@ export default function KontaktAside() {
         // Telefon: bez zdjęcia — formularz ma być blisko początku strony; zdjęcie od 1024 px.
         className="hidden aspect-[4/5] w-full rounded-[var(--exm-r-card)] border border-exm-line bg-exm-surface lg:block"
       />
-
-      <Rich html={intro} className="text-[15px] leading-relaxed text-exm-muted" />
-
-      <div className="border-t border-exm-line pt-6">
-        <p className="exm-eyebrow">W jakich sprawach</p>
-        <ul className="mt-3 space-y-3 text-[15px] leading-relaxed text-exm-muted">
-          <li>
-            <span className="text-exm-ivory">Nie masz linku do kupionych materiałów?</span>{" "}
-            <Link to="/pobierz" className={LINK}>Wyślij sobie nowy link</Link> — otrzymasz go na adres e-mail podany w zamówieniu.
-          </li>
-          <li>
-            <span className="text-exm-ivory">Chcesz odstąpić od umowy?</span>{" "}
-            <Link to="/odstapienie" className={LINK}>Odstąp od umowy tutaj</Link>
-          </li>
-        </ul>
-      </div>
 
       <div className="border-t border-exm-line pt-6">
         <p className="exm-eyebrow">E-mail</p>
@@ -75,5 +54,24 @@ export default function KontaktAside() {
         </ul>
       </div>
     </aside>
+  );
+}
+
+// Sprawy praktyczne pod formularzem: nowy link do materiałów i odstąpienie od umowy.
+export function KontaktSprawy() {
+  return (
+    <div className="mt-8 border-t border-exm-line pt-6">
+      <p className="exm-eyebrow">W jakich sprawach</p>
+      <ul className="mt-3 space-y-3 text-[15px] leading-relaxed text-exm-muted">
+        <li>
+          <span className="text-exm-ivory">Nie masz linku do kupionych materiałów?</span>{" "}
+          <Link to="/pobierz" className={LINK}>Wyślij sobie nowy link</Link> — otrzymasz go na adres e-mail podany w zamówieniu.
+        </li>
+        <li>
+          <span className="text-exm-ivory">Chcesz odstąpić od umowy?</span>{" "}
+          <Link to="/odstapienie" className={LINK}>Odstąp od umowy tutaj</Link>
+        </li>
+      </ul>
+    </div>
   );
 }

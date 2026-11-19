@@ -6,7 +6,7 @@ import { sendForm } from "@/lib/outbox";
 import useSystemText from "@/content/useSystemText";
 import CompanyLines from "@/components/legal/CompanyLines";
 import ContactField from "./ContactField";
-import KontaktAside from "./KontaktAside";
+import KontaktAside, { KontaktSprawy } from "./KontaktAside";
 import KontaktCrisis from "./KontaktCrisis";
 import { track } from "@/lib/track";
 
@@ -42,7 +42,8 @@ export default function ContactPageForm() {
       <div className="mx-auto grid w-full max-w-[var(--exm-container)] items-start gap-10 lg:grid-cols-[minmax(0,420px)_minmax(0,1fr)] lg:gap-14">
         <KontaktAside />
 
-        <div className="min-w-0 rounded-[var(--exm-r-card)] border border-exm-line bg-exm-surface p-6 md:p-8">
+        <div className="min-w-0">
+        <div className="rounded-[var(--exm-r-card)] border border-exm-line bg-exm-surface p-6 md:p-8">
           {state === "done" ? (
             <div className="flex flex-col items-start gap-4 py-2">
               <span className="grid h-12 w-12 place-items-center rounded-full border border-exm-gold-line" aria-hidden="true">
@@ -82,6 +83,8 @@ export default function ContactPageForm() {
               </button>
             </form>
           )}
+        </div>
+        <KontaktSprawy />
         </div>
       </div>
 
