@@ -77,15 +77,16 @@ export default function MobileMenu({ open, onClose, top, preview }) {
         </nav>
 
         <div className="mt-2 pt-3 border-t hairline grid grid-cols-2 gap-2 px-1 pb-1">
-          <Link to={TEST.to} onClick={onClose} className={`${btn} bg-[#C9A24A] text-[#0A0A0B] font-semibold hover:bg-[#E2C27A]`}>{TEST.label}</Link>
+          {/* 19.11.2026: wyróżnione konto (jak w belce), „Zrób test” jako zwykły przycisk. */}
+          <Link to={TEST.to} onClick={onClose} className={`${btn} border border-white/15 text-[#F5EFE1] hover:border-[#C9A24A]/60`}>{TEST.label}</Link>
           {user
-            ? <Link to="/konto" onClick={onClose} className={`${btn} border border-white/15 text-[#F5EFE1] hover:border-[#C9A24A]/60`}>Moje konto</Link>
-            : <Link to="/login" onClick={onClose} className={`${btn} border border-white/15 text-[#F5EFE1] hover:border-[#C9A24A]/60`}>Zaloguj</Link>}
+            ? <Link to="/konto" onClick={onClose} className={`${btn} bg-[#C9A24A] text-[#0A0A0B] font-semibold hover:bg-[#E2C27A]`}>Moje konto</Link>
+            : <Link to="/login" onClick={onClose} className={`${btn} bg-[#C9A24A] text-[#0A0A0B] font-semibold hover:bg-[#E2C27A]`}>Zaloguj się</Link>}
         </div>
         {user && (
           <div className="flex justify-center gap-6 mt-2">
             {user.role === "admin" && <Link to="/admin" onClick={onClose} className={small}>Panel</Link>}
-            <button type="button" onClick={() => base44.auth.logout("/")} className={small}>Wyloguj</button>
+            <button type="button" onClick={() => base44.auth.logout("/")} className={small}>Wyloguj się</button>
           </div>
         )}
       </div>
