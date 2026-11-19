@@ -76,8 +76,9 @@ export default function ProductDetail() {
   };
 
   if (loading) {
+    // min-h: stopka nie pojawia się na ekranie w trakcie ładowania (bez przesunięcia układu — CLS, 19.11.2026).
     return (
-      <div className="bg-exm-bg pt-20">
+      <div className="min-h-[100svh] bg-exm-bg pt-20">
         <Section as="div" className="pt-10">
           <Container>
             <div className="grid gap-10 md:grid-cols-2 md:gap-16">
