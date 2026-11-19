@@ -55,18 +55,23 @@ const DesktopNav = forwardRef(function DesktopNav({ className = "", count, measu
   const all = desktopItems(menu);
   const shown = measure || count == null ? all : all.slice(0, count);
   const hidden = measure || count == null ? [] : all.slice(count);
+  // 19.11.2026 (decyzja właściciela): „Test” przed „Kontaktem”, „Kontakt” na samym końcu belki.
+  // Kolejność chowania do „Więcej” bez zmian — Kontakt (ostatni na liście) chowa się pierwszy.
+  const isKontakt = (n) => String(n.to).split("?")[0] === "/kontakt";
+  const link = (n) => {
+    const on = isActive(pathname, n.to);
+    return (
+      <Link key={n.to} to={n.to} data-nav-item="" tabIndex={measure ? -1 : undefined} aria-current={on ? "page" : undefined} className={itemCls(on)}>
+        {n.label}
+      </Link>
+    );
+  };
   return (
     <nav ref={ref} aria-label={measure ? undefined : "Menu główne"} className={`flex items-center gap-0.5 whitespace-nowrap ${className}`} {...rest}>
-      {shown.map((n) => {
-        const on = isActive(pathname, n.to);
-        return (
-          <Link key={n.to} to={n.to} data-nav-item="" tabIndex={measure ? -1 : undefined} aria-current={on ? "page" : undefined} className={itemCls(on)}>
-            {n.label}
-          </Link>
-        );
-      })}
-      {hidden.length > 0 && <More items={hidden} />}
+      {shown.filter((n) => !isKontakt(n)).map(link)}
       <span data-nav-test=""><TestLink /></span>
+      {shown.filter(isKontakt).map(link)}
+      {hidden.length > 0 && <More items={hidden} />}
     </nav>
   );
 });
