@@ -66,19 +66,18 @@ const DesktopNav = forwardRef(function DesktopNav({ className = "", count, measu
         );
       })}
       {hidden.length > 0 && <More items={hidden} />}
-      <span className="w-2 xl:w-3" aria-hidden="true" />
       <span data-nav-test=""><TestLink /></span>
     </nav>
   );
 });
 
+// „Zrób test” (19.11.2026): zwykła pozycja menu, jak Sklep czy Spotkania. Wyróżnione jest „Moje konto” / „Zaloguj się”.
 export function TestLink({ small }) {
   const { pathname } = useLocation();
   const { test: TEST } = useSiteNav();
   const on = isActive(pathname, TEST.to);
   return (
-    <Link to={TEST.to} aria-current={on ? "page" : undefined}
-      className={`relative inline-flex items-center rounded-lg gold-text border border-[#C9A24A]/55 hover:border-[#C9A24A] hover:text-[#E2C170] hover:bg-[#C9A24A]/[0.06] whitespace-nowrap font-medium transition-colors ${small ? "text-[13px] px-3 min-h-9 after:absolute after:-inset-1 after:content-['']" : "text-[14px] px-4 min-h-10"} ${on ? "bg-[#C9A24A]/10" : ""}`}>
+    <Link to={TEST.to} aria-current={on ? "page" : undefined} className={`${itemCls(on)} ${small ? "text-[13px]" : ""}`}>
       {TEST.label}
     </Link>
   );
