@@ -16,6 +16,9 @@ export function PodcastPlayerProvider({ children }) {
   const [dur, setDur] = useState(0);
   const [rate, setRateS] = useState(1);
   const { pathname } = useLocation();
+  // Kolejka (19.11.2026): lista odcinków z playlisty Głosu — po końcu odcinka startuje następny z kolejki.
+  const queueRef = useRef([]);
+  const playRef = useRef(null);
 
   if (!a.current && typeof Audio !== "undefined") a.current = new Audio();
   useEffect(() => {
@@ -30,7 +33,13 @@ export function PodcastPlayerProvider({ children }) {
       if (sec % 5 === 0 && el.dataset.id) { try { localStorage.setItem(`pod_pos_${el.dataset.id}`, String(sec)); } catch { /* brak pamięci */ } }
     };
     const on = () => setPlaying(true), off = () => setPlaying(false), md = () => setDur(el.duration || 0);
-    const end = () => { localStorage.removeItem(`pod_pos_${el.dataset.id}`); setPlaying(false); };
+    const end = () => {
+      localStorage.removeItem(`pod_pos_${el.dataset.id}`); setPlaying(false);
+      const q = queueRef.current || [];
+      const i = q.findIndex((x) => String(x.id) === String(el.dataset.id));
+      const next = i >= 0 ? q.slice(i + 1).find((x) => x.audio) : null;
+      if (next && playRef.current) playRef.current(next, 0);
+    };
     el.addEventListener("timeupdate", tick); el.addEventListener("play", on); el.addEventListener("pause", off);
     el.addEventListener("loadedmetadata", md); el.addEventListener("ended", end);
     return () => { el.pause(); };
@@ -50,8 +59,10 @@ export function PodcastPlayerProvider({ children }) {
     el.playbackRate = rate;
     el.play().catch(() => {});
   };
+  playRef.current = play;
   const api = {
     ep, playing, t, dur, rate, play,
+    setQueue: (list) => { queueRef.current = Array.isArray(list) ? list : []; },
     toggle: () => (a.current.paused ? a.current.play().catch(() => {}) : a.current.pause()),
     seek: (s) => { a.current.currentTime = Math.max(0, s); setT(a.current.currentTime); },
     skip: (d) => { a.current.currentTime = Math.max(0, a.current.currentTime + d); },
