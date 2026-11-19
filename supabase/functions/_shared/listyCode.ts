@@ -3,12 +3,12 @@ import { sendMail } from "./smtp.ts";
 import { emailButton } from "./emailLayout.ts";
 
 // Kod za zapis na Listy powrotu (decyzja właściciela 19.11.2026): każdy nowo potwierdzony adres dostaje
-// jednorazowy kod 10 zł na materiały cyfrowe ze Skarbca (e-booki, audio, wideo, kursy, pakiety) — bez programu POWRÓT,
+// jednorazowy kod 10 zł przy zamówieniu od 49 zł na materiały cyfrowe ze Skarbca (e-booki, audio, wideo, kursy, pakiety) — bez programu POWRÓT,
 // Rozmowy na progu i innych usług, kart podarunkowych i biletów. Kod przypisany do adresu e-mail, ważny 30 dni.
 // Jeden kod na adres na zawsze (znacznik „listy”) — ponowny zapis po wypisie nie daje drugiego kodu.
 // Wyłącznik: app_settings „listy_kod” { wlaczony: false }.
-export const LISTY_CODE = { value: 10, days: 30, typy: ["pdf", "audio", "wideo", "kurs", "pakiet"] };
-export const LISTY_CODE_TEXT = "Za zapis na Listy powrotu: 10 zł na materiał ze Skarbca";
+export const LISTY_CODE = { value: 10, min: 49, days: 30, typy: ["pdf", "audio", "wideo", "kurs", "pakiet"] };
+export const LISTY_CODE_TEXT = "Za zapis na Listy powrotu: 10 zł na materiał ze Skarbca (zamówienie od 49 zł)";
 
 const warsawDate = (ms: number) => new Intl.DateTimeFormat("sv-SE", { timeZone: "Europe/Warsaw" }).format(new Date(ms));
 const plDate = (ymd: string) => new Date(`${ymd}T12:00:00Z`).toLocaleDateString("pl-PL", { day: "numeric", month: "long", year: "numeric", timeZone: "Europe/Warsaw" });
@@ -36,7 +36,7 @@ export async function issueListyCode(base44, rawEmail: string) {
   const until = warsawDate(Date.now() + LISTY_CODE.days * 86400000);
   const code = newCode();
   await E.create({
-    code, kind: "kwota", value: LISTY_CODE.value, valid_until: until, max_uses: 1, uses: 0, active: true,
+    code, kind: "kwota", value: LISTY_CODE.value, min_zl: LISTY_CODE.min, valid_until: until, max_uses: 1, uses: 0, active: true,
     email, listy: true, typy: LISTY_CODE.typy, w_powiadomieniach: false, opis: LISTY_CODE_TEXT,
   });
   await loadAppUrl(base44).catch(() => {}); // adres przycisku — bez tego APP_URL bywa pusty
@@ -45,7 +45,7 @@ export async function issueListyCode(base44, rawEmail: string) {
       <p>Zapis jest potwierdzony. Będę pisać o tym, co pomaga wracać: historie, myśli i pytania, które warto sobie zadać.</p>
       <p>Na powitanie masz ode mnie 10 zł rabatu na materiał ze Skarbca:</p>
       <p style="font-family:monospace;font-size:22px;letter-spacing:3px;color:#C9A24A;border:1px dashed #C9A24A;padding:12px 16px;display:inline-block">${code}</p>
-      <p style="color:#A3A3A6;font-size:14px;">Kod jest jednorazowy, ważny do ${plDate(until)} włącznie i działa z tym adresem e-mail. Obejmuje e-booki, audio, kursy i pakiety — nie dotyczy programu POWRÓT, Rozmowy na progu ani innych usług, kart podarunkowych i biletów. Wpisz go w kasie w polu „Kod rabatowy”.</p>
+      <p style="color:#A3A3A6;font-size:14px;">Kod jest jednorazowy, ważny do ${plDate(until)} włącznie i działa z tym adresem e-mail przy zamówieniu od ${LISTY_CODE.min} zł. Obejmuje e-booki, audio, kursy i pakiety — nie dotyczy programu POWRÓT, Rozmowy na progu ani innych usług, kart podarunkowych i biletów. Wpisz go w kasie w polu „Kod rabatowy”.</p>
       ${emailButton("ZOBACZ SKARBIEC", `${APP_URL}/skarbiec`)}
       <p>Dawid</p>`;
   await sendMail(base44, { kind: "listy_kod", ref: code, to: email, subject: "EXMORTIS · Dziękuję za zapis — 10 zł na początek", html, preheader: "Zapis potwierdzony. Na materiał ze Skarbca masz ode mnie 10 zł rabatu." })

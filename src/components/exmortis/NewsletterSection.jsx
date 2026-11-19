@@ -55,7 +55,7 @@ export default function NewsletterSection({ label } = {}) {
               <p className="text-[15px] leading-relaxed text-exm-ivory">
                 <span className="text-exm-gold">−10 zł na start.</span> Po potwierdzeniu zapisu dostajesz jednorazowy kod na e-booki i inne materiały ze Skarbca.
               </p>
-              <p className="mt-1 text-[13px] leading-relaxed text-exm-muted">Kod jest ważny 30 dni. Nie dotyczy programu POWRÓT ani Rozmowy na progu.</p>
+              <p className="mt-1 text-[13px] leading-relaxed text-exm-muted">Zamówienie od 49 zł, kod ważny 30 dni. Nie dotyczy programu POWRÓT ani Rozmowy na progu.</p>
             </div>
           </div>
 
