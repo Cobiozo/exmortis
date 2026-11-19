@@ -1,6 +1,6 @@
 import React, { useEffect, useRef } from "react";
 import { Link, useLocation } from "react-router-dom";
-import { BookOpen, CalendarDays, Gem, Headphones, Mail, Sunrise, Timer, UserRound, Circle } from "lucide-react";
+import { BookOpen, CalendarDays, Headphones, Mail, ShoppingCart, Sunrise, Timer, UserRound, Circle } from "lucide-react";
 import { useViewer } from "@/lib/useViewer";
 import { base44 } from "@/api/base44Client";
 import { isActive, subFor } from "./navItems";
@@ -11,7 +11,7 @@ import useDialogA11y from "@/lib/useDialogA11y";
 // („Poznaj” i „Bezpłatnie”), ikony, aktywna pozycja na złotym tle; na dole „Zrób test” i konto.
 // Esc zamyka, blokada przewijania, fokus na pierwszej pozycji.
 // 19.11.2026: ikony w równych polach 36 px, nazwa i krótki opis pod nią (zamiast dopisków po prawej).
-const ICONS = [["/o-mnie", UserRound], ["/powrot", Sunrise], ["/skarbiec", Gem], ["/spotkania", CalendarDays],
+const ICONS = [["/o-mnie", UserRound], ["/powrot", Sunrise], ["/skarbiec", ShoppingCart], ["/spotkania", CalendarDays],
   ["/glos", Headphones], ["/kontakt", Mail], ["/zacznij", BookOpen], ["/cisza", Timer]];
 // Prawa krawędź menu = prawa krawędź belki (kontener 1400 px, margines 20 / 40 px).
 const edge = () => {
