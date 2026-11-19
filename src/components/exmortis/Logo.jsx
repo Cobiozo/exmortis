@@ -1,6 +1,7 @@
 import React from "react";
 
-const LOGO_URL = "/exmortis-logo-500.png";
+// 19.11.2026: duże użycia — WebP zamiast PNG (ten sam rozmiar 500 px, kilka razy lżej).
+const LOGO_URL = "/exmortis-logo-500.webp";
 // Małe użycia (nagłówek, stopka — do 64 px) dostają lekką wersję 144 px WebP: ~5 KB zamiast ~38 KB.
 const LOGO_SMALL = "/exmortis-logo-144.webp";
 const SMALL = /(^|\s)h-(9|10|12|14|16)(\s|$)/;
