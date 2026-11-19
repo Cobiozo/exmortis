@@ -1,5 +1,6 @@
 import React from "react";
 import { Image } from "@/components/ui/image";
+import { productSrcSet } from "@/lib/imgSrcSet";
 import Section from "@/components/exmortis/ui/Section";
 import Container from "@/components/exmortis/ui/Container";
 import SectionHeader from "@/components/exmortis/ui/SectionHeader";
@@ -33,7 +34,8 @@ export default function HomeBook({ d = {}, label }) {
           <div className="md:col-span-5 lg:col-span-4">
             <div className="mx-auto w-full max-w-[220px] sm:max-w-[280px] overflow-hidden rounded-[var(--exm-r-field)] border border-exm-line shadow-[0_30px_80px_-30px_rgba(0,0,0,0.9)] md:max-w-[340px]">
               {okladka
-                ? <Image src={okladka} alt={`Okładka książki ${book?.name || "Wracam inny"}`} fittingType="fill" className="aspect-[3/4] w-full" />
+                ? <Image src={okladka} alt={`Okładka książki ${book?.name || "Wracam inny"}`} fittingType="fill" className="aspect-[3/4] w-full"
+                    loading="lazy" decoding="async" {...(productSrcSet(okladka) ? { srcSet: productSrcSet(okladka), sizes: "(min-width: 768px) 340px, (min-width: 640px) 280px, 220px" } : {})} />
                 : <ImageFallback label="Okładka książki" className="aspect-[3/4] w-full" />}
             </div>
           </div>
