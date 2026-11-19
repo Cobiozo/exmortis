@@ -1,0 +1,1 @@
+import"./rolldown-runtime-XKyaHtl9.js";import{sr as e}from"./icons-CVwq6vEg.js";import{t}from"./jsx-runtime-BpUEHSZf.js";import{t as n}from"./utils-BtJdSxzs.js";e();var r=t();function i({className:e=``,rounded:t=`var(--exm-r-field)`}){return(0,r.jsx)(`div`,{"aria-hidden":`true`,style:{borderRadius:t},className:n(`animate-pulse bg-exm-surface-2`,e)})}export{i as t};
