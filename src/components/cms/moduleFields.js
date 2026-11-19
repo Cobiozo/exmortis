@@ -18,6 +18,7 @@ export const MODULE_FIELDS = {
     { k: "tlo", label: "Zdjęcie tła sekcji (mocno przyciemnione; puste = brak zdjęcia)", typ: "image", noAlt: true },
   ],
   od_czego_zaczac: [ETYKIETA, TYTUL, LEAD],
+  ksiazka: [ETYKIETA, TYTUL, LEAD, { k: "produkt", label: "Produkt (slug, domyślnie wracam-inny)", typ: "text", max: 60 }, { k: "przycisk", label: "Napis na przycisku", typ: "text", max: 40 }],
   spotkania: [ETYKIETA, TYTUL],
   wspolpraca: [ETYKIETA, TYTUL, LEAD],
   zostan_dluzej: [ETYKIETA, TYTUL],

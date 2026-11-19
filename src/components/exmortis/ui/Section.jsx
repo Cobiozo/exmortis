@@ -1,7 +1,7 @@
 import React from "react";
 import { cn } from "@/lib/utils";
 
-// Section — pas treści z odstępem pionowym z tokenu (--exm-section-y: 88 px / 56 px).
+// Section — pas treści z odstępem pionowym z tokenu (--exm-section-y: 56 px / 40 px).
 // tone: "default" (tło strony) · "surface" (#111113) · "bordo" (bordowe tło marki).
 // id służy do kotwic (np. /#manifest) — nagłówek nie zasłania początku sekcji.
 // Użycie: <Section id="kontakt" tone="surface">…</Section>

@@ -2,10 +2,10 @@ import { LAYOUT_DEFAULT } from "./blockTypes";
 import { HOME_ROZDROZA_BLOCK } from "./homeRozdroza";
 
 // Strona główna — stan wyjściowy migracji i zapas, gdy strona nie jest jeszcze opublikowana.
-// Etap 2 przebudowy (18.11.2026): dziesięć rozdziałów, jedna sekcja = jedno główne wezwanie.
-// hero → za exmortis stoi człowiek → rozpoznanie (manifest + trzy śmierci + przejście) → droga
-// → pierwszy krok → spotkania → współpraca indywidualna → Listy powrotu → zostań na dłużej
-// (ROZDROŻA + podcast/Biblioteka/cisza) → kontakt i Instagram.
+// Lejek (19.11.2026): jedna sekcja = jeden etap decyzji i jedno główne wezwanie.
+// hero → rozpoznanie (manifest + trzy śmierci + test pod kartami) → droga powrotu → historia Dawida
+// → bezpłatne spotkanie → książka → współpraca indywidualna → Listy powrotu → ROZDROŻA
+// → zostań na dłużej → skrót „Wybierz swój pierwszy krok” → kontakt → Instagram.
 // Moduły „dla_kogo”, „zajawka_powrot” i „skarbiec” zostają zarejestrowane (używają ich inne strony),
 // ale nie występują już na stronie głównej — ich treść przejmują sekcje „pierwszy krok” i „współpraca”.
 const bare = { ...LAYOUT_DEFAULT, numer: "brak" };
@@ -32,8 +32,6 @@ export const HOME_BLOCKS = [
     tlo: { url: TLO_SZEROKIE, alt: "" },
     tlo_mobile: { url: TLO_PIONOWE, alt: "" },
     przyciemnienie: 72 } },
-  mod("home-history", "krotka_historia", { etykieta: "ZA EXMORTIS STOI CZŁOWIEK",
-    zdjecie: { url: PORTRET, alt: "Dawid — mentor powrotu", fx: 50, fy: 40 } }),
   { id: "home-manifest", typ: "linie", widoczny: true, uklad: { ...LAYOUT_DEFAULT, szerokosc: "waska", odstep: "xl", kotwica: "rozpoznanie" }, dane: {
     etykieta: "ROZPOZNANIE", akcent: 5, linie: [
       "Może znasz takie dni: wszystko toczy się dalej, a w Tobie coś zgasło.",
@@ -47,16 +45,20 @@ export const HOME_BLOCKS = [
     etykieta: "TRZY ŚMIERCI", tytul: "Trzy\nśmierci", numerowane: true, kolumny: "3",
     intro: "To, co trudno nazwać, łatwiej zrozumieć, kiedy ma imię. Zobacz, co z tego brzmi znajomo.",
     karty: [
-      { tytul: "Śmierć mentalna", opis: "Gdy życie toczy się na autopilocie, a dni zlewają się w jedno. W środku cisza, której trudno nadać nazwę." },
-      { tytul: "Śmierć duchowa", opis: "Gdy z zewnątrz wszystko działa, a w środku brakuje sensu i odpowiedzi na pytanie „po co?”." },
-      { tytul: "Śmierć życiowa", opis: "Gdy rozstanie, żałoba, utrata pracy albo choroba zabierają grunt pod nogami." },
-    ] } },
-  { id: "home-rozpoznanie-przejscie", typ: "cta", widoczny: true, uklad: { ...LAYOUT_DEFAULT, tlo: "czern", odstep: "sredni", szerokosc: "standard" }, dane: {
-    tytul: "", tekst: "Trzy śmierci to nie diagnozy. To nazwy, które pomagają zacząć rozmowę ze sobą.",
+      { tytul: "Śmierć mentalna", opis: "Gdy życie toczy się na autopilocie, a dni zlewają się w jedno. W środku cisza, której trudno nadać nazwę.",
+        obraz: { url: "/img/smierci/mentalna.webp", alt: "Pusty, ciemny korytarz z jednym światłem na końcu" } },
+      { tytul: "Śmierć duchowa", opis: "Gdy z zewnątrz wszystko działa, a w środku brakuje sensu i odpowiedzi na pytanie „po co?”.",
+        obraz: { url: "/img/smierci/duchowa.webp", alt: "Zgaszona świeca i smuga dymu w ciemności" } },
+      { tytul: "Śmierć życiowa", opis: "Gdy rozstanie, żałoba, utrata pracy albo choroba zabierają grunt pod nogami.",
+        obraz: { url: "/img/smierci/zyciowa.webp", alt: "Samotna postać na pustej drodze we mgle o zmierzchu" } },
+    ],
+    nota: "Trzy śmierci to nie diagnozy. To nazwy, które pomagają zacząć rozmowę ze sobą.",
     przyciski: [{ etykieta: "Sprawdź, która śmierć jest Twoja", link: "/test?src=home", styl: "obrys", strzalka: true }] } },
   mod("home-return", "droga_powrotu", { etykieta: "DROGA POWROTU", tytul: "Droga powrotu ma cztery etapy" }),
-  mod("home-start", "od_czego_zaczac", { etykieta: "WYBIERZ SWÓJ PIERWSZY KROK", tytul: "Wybierz swój pierwszy krok" }),
+  mod("home-history", "krotka_historia", { etykieta: "ZA EXMORTIS STOI CZŁOWIEK",
+    zdjecie: { url: PORTRET, alt: "Dawid — mentor powrotu", fx: 50, fy: 40 } }),
   mod("home-events", "spotkania", { etykieta: "SPOTKAJMY SIĘ", tytul: "Spotkajmy się" }),
+  mod("home-ksiazka", "ksiazka", { etykieta: "KSIĄŻKA" }),
   { ...mod("home-wspolpraca", "wspolpraca", {
     etykieta: "WSPÓŁPRACA INDYWIDUALNA",
     tytul: "Dwie formy indywidualnego wsparcia",
@@ -65,6 +67,8 @@ export const HOME_BLOCKS = [
   mod("home-newsletter", "newsletter", { etykieta: "LISTY POWROTU" }),
   HOME_ROZDROZA_BLOCK,
   mod("home-stay", "zostan_dluzej", { etykieta: "ZOSTAŃ NA DŁUŻEJ", tytul: "Między jednym krokiem a następnym" }),
+  mod("home-start", "od_czego_zaczac", { etykieta: "OD CZEGO ZACZĄĆ", tytul: "Wybierz swój pierwszy krok",
+    tekst: "Jeśli wciąż się zastanawiasz, zacznij od jednego z trzech kroków. Każdy prowadzi w to samo miejsce — do siebie." }),
   mod("home-contact", "kontakt", { etykieta: "BĄDŹMY W KONTAKCIE" }),
   mod("home-instagram", "instagram", { etykieta: "OBSERWUJ · INSTAGRAM" }),
 ];

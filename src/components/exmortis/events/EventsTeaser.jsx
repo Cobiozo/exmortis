@@ -54,8 +54,9 @@ export default function EventsTeaser({ d = {}, label }) {
           )}
         </div>
 
-        <p className="mt-8 md:mt-10">
+        <p className="mt-8 flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:gap-x-8 md:mt-10">
           <Link to="/glos" className="btn-link">Posłuchaj, jak mówię o powrocie <ArrowRight className="h-4 w-4" aria-hidden="true" /></Link>
+          <Link to="/zacznij?src=home-spotkania" className="btn-link">Zobacz bezpłatne materiały <ArrowRight className="h-4 w-4" aria-hidden="true" /></Link>
         </p>
       </Container>
     </Section>

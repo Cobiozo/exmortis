@@ -53,7 +53,7 @@ export default function Collaboration({ d = {}, label }) {
 
           <BrandCard
             variant="usługa"
-            label="POWRÓT · MENTORING 1:1"
+            label="POWRÓT · MENTORING INDYWIDUALNY"
             title={`${POWROT.months} · ${POWROT.sessions} sesji po ${POWROT.lengthLong} · indywidualnie, online`}
             action={<BrandButton to="/powrot" className="w-full sm:w-auto">Poznaj program POWRÓT</BrandButton>}
           >

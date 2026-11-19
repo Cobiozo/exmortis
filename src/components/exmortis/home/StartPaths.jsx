@@ -15,6 +15,7 @@ import { productHighlight } from "@/lib/productHighlight";
 import { POWROT, ROZMOWA_NA_PROGU } from "@/lib/powrotOffer";
 
 // „Wybierz swój pierwszy krok” (etap 2, 18.11.2026): trzy równe karty, przycisk na dole każdej.
+// Od 19.11.2026 stoi pod koniec strony głównej jako skrót decyzji (przed kontaktem).
 // Ceny, format i okładka książki pochodzą z katalogu (shopProducts) — nigdy z tekstu w kodzie.
 const BOOK = "wracam-inny";
 const TALK = "rozmowa-na-progu";
@@ -89,7 +90,7 @@ export default function StartPaths({ d = {}, label }) {
 
           <BrandCard
             variant="usługa"
-            label="OSOBIŚCIE, 1:1"
+            label="PRACA INDYWIDUALNA"
             title="Współpraca indywidualna"
             action={
               <BrandButton href="#wspolpraca" variant="secondary" className="w-full sm:w-auto">

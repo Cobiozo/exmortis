@@ -1,5 +1,6 @@
 import ForWhom from "@/components/exmortis/ForWhom";
 import StartPaths from "@/components/exmortis/home/StartPaths";
+import HomeBook from "@/components/exmortis/home/HomeBook";
 import ShortHistory from "@/components/exmortis/home/ShortHistory";
 import ReturnPath from "@/components/exmortis/home/ReturnPath";
 import Collaboration from "@/components/exmortis/home/Collaboration";
@@ -35,6 +36,7 @@ export const MODULES = {
   kontakt: ["Kontakt z formularzem", ContactSection],
   dla_kogo: ["Dla kogo", ForWhom],
   od_czego_zaczac: ["Od czego zacząć (trzy pierwsze kroki)", StartPaths],
+  ksiazka: ["Książka — wyróżnienie (Wracam inny)", HomeBook],
   krotka_historia: ["Krótka historia", ShortHistory],
   droga_powrotu: ["Droga powrotu", ReturnPath],
   wspolpraca: ["Współpraca indywidualna (Rozmowa na progu i POWRÓT)", Collaboration],

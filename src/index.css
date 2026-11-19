@@ -62,7 +62,7 @@
     --exm-label-tracking: 0.2em;
 
     /* Odstępy i kontener. */
-    --exm-section-y: 88px;
+    --exm-section-y: 56px;
     --exm-stack: 32px;
     --exm-gap: 24px;
     --exm-container: 1200px;
@@ -89,7 +89,7 @@
 
   /* Telefon: ciaśniejsze odstępy; komputer: szersze marginesy boczne i wyższy nagłówek. */
   @media (max-width: 767px) {
-    :root { --exm-section-y: 56px; --exm-gap: 16px; --exm-body: 16px; }
+    :root { --exm-section-y: 40px; --exm-gap: 16px; --exm-body: 16px; }
   }
   @media (min-width: 768px) {
     :root { --exm-pad: 32px; --exm-header-h: 72px; }

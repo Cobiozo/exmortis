@@ -22,15 +22,23 @@ export function CardsBlock({ d, label, center }) {
       <SectionHead label={label} title={d.tytul} intro={d.intro} center={center} />
       <div className={`cms-cards grid ${GRID[cols]} gap-px bg-[#3D3D3F]/40 text-left`}>
         {cards.map((c, i) => (
-          <div key={i} className={`cms-card bg-[#0A0A0B] p-8 sm:p-10 md:p-8 lg:p-12 min-w-0 group hover:bg-[#070708] transition-colors duration-500 flex flex-col ${span && i === cards.length - 1 ? SPAN[span] : ""}`}>
-            {c.obraz?.url && <Img img={c.obraz} ratio="3:2" className="mb-8" />}
-            {d.numerowane && <p aria-hidden="true" data-n={String(i + 1).padStart(2, "0")} className="font-mono text-5xl leading-none text-foreground/15 mb-8 before:content-[attr(data-n)]" />}
+          <div key={i} className={`cms-card bg-[#0A0A0B] ${c.obraz?.url ? "p-6" : "p-8"} sm:p-10 md:p-8 lg:p-12 min-w-0 group hover:bg-[#070708] transition-colors duration-500 flex flex-col ${span && i === cards.length - 1 ? SPAN[span] : ""}`}>
+            {c.obraz?.url && <Img img={c.obraz} ratio="3:2" className="mb-6 md:mb-8" />}
+            {/* Karta ze zdjęciem: numer jako mała etykieta (duża cyfra pod zdjęciem tylko wydłużała kartę). */}
+            {d.numerowane && c.obraz?.url && <p aria-hidden="true" className="technical text-[11px] text-foreground/40 mb-3">{String(i + 1).padStart(2, "0")}</p>}
+            {d.numerowane && !c.obraz?.url && <p aria-hidden="true" data-n={String(i + 1).padStart(2, "0")} className="font-mono text-5xl leading-none text-foreground/15 mb-8 before:content-[attr(data-n)]" />}
             <h3 className="relic-heading text-2xl md:text-xl lg:text-2xl gold-text mb-5 [overflow-wrap:break-word]">{c.tytul}</h3>
             <p className="text-foreground/60 leading-relaxed">{c.opis}</p>
             <Buttons list={c.przycisk} className="mt-8" />
           </div>
         ))}
       </div>
+      {(d.nota || d.przyciski?.length > 0) && (
+        <div className={`mt-10 md:mt-12 flex flex-col gap-6 sm:flex-row sm:items-center ${d.nota ? "sm:justify-between" : "sm:justify-center"} text-left`}>
+          {d.nota && <p className="max-w-2xl text-[15px] md:text-base leading-relaxed text-foreground/70">{d.nota}</p>}
+          <Buttons list={d.przyciski} className="shrink-0" />
+        </div>
+      )}
     </>
   );
 }
