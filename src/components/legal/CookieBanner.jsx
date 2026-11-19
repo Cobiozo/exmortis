@@ -27,10 +27,10 @@ export default function CookieBanner() {
               <span className="hidden md:inline">{BANNER_TEXT} </span>
               <Link to="/polityka-cookies" className="underline">Szczegóły</Link>
             </p>
-            <div className="flex gap-2 items-center">
+            <div className="flex gap-1.5 sm:gap-2 items-center min-w-0">
               <button onClick={() => done(true, true, true)} className={btn}>Akceptuję</button>
               <button onClick={() => done(false, false, false)} className={btn}>Odrzucam</button>
-              <button onClick={() => setSettings(true)} className="technical text-[10px] underline text-foreground/70 px-2 py-2 shrink-0">Ustawienia</button>
+              <button onClick={() => setSettings(true)} className="technical text-[10px] underline text-foreground/70 px-1.5 sm:px-2 py-2 shrink-0">Ustawienia</button>
             </div>
           </div>
         )}
