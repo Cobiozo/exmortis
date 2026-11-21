@@ -37,7 +37,7 @@ export const ABOUT_BLOCKS = [
       { tytul: "Zostałem", tresc: `<p>Zostałem. Dzięki niej. Razem zaczęliśmy porządkować nasze życie. Powoli, bez skrótów.</p>` },
     ],
     piosenka_po: 3,
-    piosenka_url: "https://youtu.be/SRBc9PiYhfo",
+    piosenka_url: "https://youtu.be/8Dzaqu0IL-U",
     piosenka_tytul: "exmortis",
     piosenka_podpis: "Tę historię opowiedziałem w piosence.",
   }),
@@ -52,6 +52,9 @@ export const ABOUT_BLOCKS = [
     piosenka_url: "https://youtu.be/92kTN9ZBipc",
     piosenka_tytul: "Ocalenie",
     piosenka_podpis: "Ocalenie — nasza historia",
+    piosenka2_url: "https://youtu.be/3v6LAKA4XI8",
+    piosenka2_tytul: "Obok",
+    piosenka2_podpis: "Obok",
   }, { tlo: "surface" }),
 
   // 4. Jak powstało EXMORTIS — nazwa, znaczenie, własna historia jako źródło ostrożności.

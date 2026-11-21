@@ -117,6 +117,7 @@ export function AboutZdjecie({ d, label }) {
         <div className="mt-10 max-w-[var(--exm-container-narrow)]">
           {d.piosenka_wstep && <p className="text-[15px] leading-relaxed text-exm-muted">{nbsp(d.piosenka_wstep)}</p>}
           <div className="mt-4"><Song url={d.piosenka_url} tytul={d.piosenka_tytul} podpis={d.piosenka_podpis} /></div>
+          {d.piosenka2_url && <div className="mt-10"><Song url={d.piosenka2_url} tytul={d.piosenka2_tytul} podpis={d.piosenka2_podpis} /></div>}
         </div>
       )}
     </div>
