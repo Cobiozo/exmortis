@@ -35,6 +35,23 @@ export const resetMailConfig = () => { CFG_AT = 0; MCFG_AT = 0; };
 // Simply.com zabrania wysyłki newsletterów przez zwykłą skrzynkę — a reputacja skrzynki transakcyjnej
 // (zamówienia, linki do spotkań) jest ważniejsza niż newsletter.
 const MARKETING_KINDS = new Set(["listy", "ogloszenie"]);
+// Seria „Listy prowadzące” (prowadzenie_1/3/7/14) to też korespondencja marketingowa.
+const isMarketing = (kind) => MARKETING_KINDS.has(kind) || String(kind || "").startsWith("prowadzenie_");
+
+// Adresy trwale odrzucone przez serwer odbiorcy (kod 55x przy RCPT TO) — seria prowadząca je pomija.
+export function hardBounce(e) {
+  const c = Number(e?.responseCode) || 0;
+  return c >= 550 && c < 560 && (e?.code === "EENVELOPE" || /RCPT/i.test(String(e?.command || "")));
+}
+export async function noteUndeliverable(base44, to, e) {
+  if (!hardBounce(e)) return;
+  const list = Array.isArray(e?.rejected) && e.rejected.length ? e.rejected : [to];
+  await runSql(base44, `CREATE TABLE IF NOT EXISTS public.mail_undeliverable (email text PRIMARY KEY, reason text, created_at timestamptz NOT NULL DEFAULT now())`).catch(() => {});
+  for (const a of list) {
+    await runSql(base44, `INSERT INTO public.mail_undeliverable (email, reason) VALUES (${escStr(String(a).toLowerCase())}, ${escStr(String(e?.message || e).slice(0, 300))})
+      ON CONFLICT (email) DO UPDATE SET reason = EXCLUDED.reason, created_at = now()`).catch(() => {});
+  }
+}
 
 // Akcje wyłącznie mailowe (ogłoszenia, ręczne przypomnienia) — bez działającej wysyłki odmawiamy jawnie.
 export async function requireMail(base44) {
@@ -133,7 +150,7 @@ export async function sendMail(base44, { to, subject, html, attachments, kind = 
   const base = { to_email: String(to || ""), subject, kind, ...(ref ? { ref: String(ref) } : {}), ...(waznyDo ? { wazny_do: new Date(waznyDo).toISOString() } : {}) };
   let smtp = await mailConfig(base44);
   let viaMarketing = false;
-  if (MARKETING_KINDS.has(kind)) {
+  if (isMarketing(kind)) {
     const m = await mailConfigMarketing(base44);
     // Ten sam serwer co skrzynka główna (np. oba na Simply) to nie jest osobny kanał — obowiązuje limit skrzynki.
     if (mailReady(m) && String(m.host || "").toLowerCase() !== String(smtp?.host || "").toLowerCase()) { smtp = m; viaMarketing = true; }
@@ -151,6 +168,7 @@ export async function sendMail(base44, { to, subject, html, attachments, kind = 
     if (!viaMarketing) SENT.n++;
   } catch (e) {
     await Q.create({ ...base, html, attachments: attachments || [], status: "blad", blad: String(e?.message || e).slice(0, 500) });
+    await noteUndeliverable(base44, to, e);
     throw e;
   }
   // Wysłane kanałem marketingowym nie liczą się do limitu skrzynki Simply (status „wyslany” + znacznik).
@@ -186,6 +204,7 @@ export async function flushMailQueue(base44, { auto = false } = {}) {
       sent++;
     } catch (e) {
       await Q.update(m.id, { status: "blad", blad: String(e?.message || e).slice(0, 500) });
+      await noteUndeliverable(base44, m.to_email, e);
       failed++;
     }
   }

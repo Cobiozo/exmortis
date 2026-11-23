@@ -31,7 +31,27 @@ async function ensure(base44) {
       PRIMARY KEY (order_id, step));
     CREATE INDEX IF NOT EXISTS onboarding_mails_email ON public.onboarding_mails (lower(email), sent_at DESC);
     CREATE TABLE IF NOT EXISTS public.onboarding_optout (email text PRIMARY KEY, created_at timestamptz NOT NULL DEFAULT now());
-    CREATE TABLE IF NOT EXISTS public.onboarding_tokens (token text PRIMARY KEY, email text NOT NULL, created_at timestamptz NOT NULL DEFAULT now());`);
+    CREATE TABLE IF NOT EXISTS public.onboarding_tokens (token text PRIMARY KEY, email text NOT NULL, created_at timestamptz NOT NULL DEFAULT now());
+    ALTER TABLE public.onboarding_mails ADD COLUMN IF NOT EXISTS status text NOT NULL DEFAULT 'wyslany';
+    CREATE TABLE IF NOT EXISTS public.mail_undeliverable (email text PRIMARY KEY, reason text, created_at timestamptz NOT NULL DEFAULT now());`);
+}
+
+// Krok w kolejce (limit skrzynki, brak konfiguracji) nie jest wykonany, dopóki mail faktycznie nie wyjdzie.
+// Wysłany z kolejki → „wyslany”; pominięty (termin minął) albo błąd → krok zwolniony do ponownej próby w oknie 48 h.
+async function reconcileQueued(base44) {
+  const rows = await runSql(base44, `SELECT order_id, step FROM public.onboarding_mails WHERE status = 'kolejka' LIMIT 100`, true).catch(() => []);
+  const Q = base44.asServiceRole.entities.MailQueue;
+  for (const r of rows || []) {
+    const found = await Q.filter({ kind: `prowadzenie_${r.step}`, ref: String(r.order_id) }, "-created_date", 1).catch(() => null);
+    if (!Array.isArray(found)) continue; // błąd odczytu kolejki — nic nie zmieniamy, spróbujemy przy kolejnym przebiegu
+    const m = found[0];
+    const where = `order_id = ${escStr(r.order_id)} AND step = ${Number(r.step)}`;
+    if (m?.status === "wyslany") {
+      await runSql(base44, `UPDATE public.onboarding_mails SET status = 'wyslany', sent_at = ${escStr(m.sent_at || new Date().toISOString())}::timestamptz WHERE ${where}`).catch(() => {});
+    } else if (!m || m.status === "pominiety" || m.status === "blad") {
+      await runSql(base44, `DELETE FROM public.onboarding_mails WHERE ${where}`).catch(() => {});
+    }
+  }
 }
 
 // Słownik zależny od rodzaju materiału.
@@ -147,8 +167,9 @@ export async function onboardingStop(base44, token) {
 export async function onboardingTick(base44, { limit = 25 } = {}) {
   if (!(await onboardingOn(base44))) return { off: true };
   const h = warsawHour();
-  if (h < 8 || h >= 20) return { cisza: true };
   await ensure(base44);
+  await reconcileQueued(base44);
+  if (h < 8 || h >= 20) return { cisza: true };
   const orders = await runSql(base44, `
     SELECT o.id::text AS id, lower(o.buyer_email) AS email, o.buyer_name, o.items,
            COALESCE(o.updated_date, o.created_date)::timestamptz AS paid
@@ -157,6 +178,7 @@ export async function onboardingTick(base44, { limit = 25 } = {}) {
        AND COALESCE(o.updated_date, o.created_date)::timestamptz > now() - interval '17 days'
        AND COALESCE(o.buyer_email, '') <> ''
        AND NOT EXISTS (SELECT 1 FROM public.onboarding_optout x WHERE x.email = lower(o.buyer_email))
+       AND NOT EXISTS (SELECT 1 FROM public.mail_undeliverable u WHERE u.email = lower(o.buyer_email))
        AND NOT EXISTS (SELECT 1 FROM public.order_refunds r WHERE r.order_id::text = o.id::text)
      ORDER BY paid ASC LIMIT 300`, true).catch(async () => runSql(base44, `
     SELECT o.id::text AS id, lower(o.buyer_email) AS email, o.buyer_name, o.items,
@@ -166,6 +188,7 @@ export async function onboardingTick(base44, { limit = 25 } = {}) {
        AND COALESCE(o.updated_date, o.created_date)::timestamptz > now() - interval '17 days'
        AND COALESCE(o.buyer_email, '') <> ''
        AND NOT EXISTS (SELECT 1 FROM public.onboarding_optout x WHERE x.email = lower(o.buyer_email))
+       AND NOT EXISTS (SELECT 1 FROM public.mail_undeliverable u WHERE u.email = lower(o.buyer_email))
      ORDER BY paid ASC LIMIT 300`, true).catch(() => []));
   if (!orders?.length) return { sent: 0 };
 
@@ -195,15 +218,16 @@ export async function onboardingTick(base44, { limit = 25 } = {}) {
 
   const site = String(await loadAppUrl(base44)).replace(/\/+$/, "");
   const siteUrl = site;
-  let n = 0;
+  let n = 0, queued = 0;
   for (const { o, step } of due) {
-    if (n >= limit) break;
+    if (n + queued >= limit) break;
     if (done.has(`${o.id}:${step}`) || busy.has(o.email)) continue;
     const items = (Array.isArray(o.items) ? o.items : []).filter((i) => !i?.gift && P_[String(i.product_id)] && TYPES.includes(P_[String(i.product_id)].product_type));
     if (!items.length) continue;
     const main = items.map((i) => P_[String(i.product_id)]).sort((a, b) => (b.price || 0) - (a.price || 0))[0];
     // Zapis przed wysyłką (blokada podwójnej wysyłki przy równoległych przebiegach).
-    const claim = await runSql(base44, `INSERT INTO public.onboarding_mails (order_id, step, email) VALUES (${escStr(o.id)}, ${step}, ${escStr(o.email)})
+    // Status „wysylka” do chwili, gdy wiadomo, czy mail wyszedł, czy czeka w kolejce.
+    const claim = await runSql(base44, `INSERT INTO public.onboarding_mails (order_id, step, email, status) VALUES (${escStr(o.id)}, ${step}, ${escStr(o.email)}, 'wysylka')
       ON CONFLICT DO NOTHING RETURNING order_id`).catch(() => []);
     if (!claim?.length) continue;
     try {
@@ -213,15 +237,18 @@ export async function onboardingTick(base44, { limit = 25 } = {}) {
         name: firstName(o.buyer_name), product: main.name, type: main.product_type, site: siteUrl, next,
         optoutUrl: `${siteUrl}/listy/wypis?d=${token}`,
       });
-      await sendMail(base44, { kind: `prowadzenie_${step}`, ref: o.id, to: o.email, subject: m.subject, html: m.html,
+      const st = await sendMail(base44, { kind: `prowadzenie_${step}`, ref: o.id, to: o.email, subject: m.subject, html: m.html,
         waznyDo: new Date(new Date(o.paid).getTime() + (step + 3) * DAY) });
+      const done_ = st === "wyslany";
+      await runSql(base44, `UPDATE public.onboarding_mails SET status = ${done_ ? "'wyslany'" : "'kolejka'"}, sent_at = now()
+        WHERE order_id = ${escStr(o.id)} AND step = ${step}`).catch(() => {});
       busy.add(o.email);
-      n++;
+      if (done_) n++; else queued++;
     } catch (e) {
       // Nieudana wysyłka: zwalniamy krok, żeby spróbować w kolejnym przebiegu (w oknie 48 h).
       await runSql(base44, `DELETE FROM public.onboarding_mails WHERE order_id = ${escStr(o.id)} AND step = ${step}`).catch(() => {});
       console.error("prowadzenie:", e?.message);
     }
   }
-  return { sent: n };
+  return { sent: n, queued };
 }
