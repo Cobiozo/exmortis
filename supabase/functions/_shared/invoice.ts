@@ -15,11 +15,16 @@ export function cleanInvoice(b: any) {
   if (!b || b.want !== true) return null;
   const company = String(b.company ?? "").trim().slice(0, 200);
   const nip = validNip(b.nip);
-  const address = String(b.address ?? "").trim().slice(0, 300);
+  const street = String(b.address ?? "").trim().slice(0, 200);
+  const post_code = String(b.post_code ?? "").trim().replace(/^(\d{2})(\d{3})$/, "$1-$2");
+  const city = String(b.city ?? "").trim().slice(0, 100);
   if (!company) throw new Error("Podaj nazwę firmy do faktury");
   if (!nip) throw new Error("Niepoprawny NIP — sprawdź 10 cyfr");
-  if (address.length < 5) throw new Error("Podaj adres firmy do faktury");
-  return { company, nip, address };
+  if (street.length < 3) throw new Error("Podaj ulicę i numer do faktury");
+  if (!/^\d{2}-\d{3}$/.test(post_code)) throw new Error("Podaj kod pocztowy w formacie 00-000");
+  if (city.length < 2) throw new Error("Podaj miejscowość do faktury");
+  // address — pełna linia (ulica, kod, miasto) dla maili i rozkładu w Fakturowni.
+  return { company, nip, street, post_code, city, address: `${street}, ${post_code} ${city}` };
 }
 
 export const nipPretty = (nip: string) => String(nip || "").replace(/^(\d{3})(\d{3})(\d{2})(\d{2})$/, "$1-$2-$3-$4");

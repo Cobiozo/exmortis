@@ -21,7 +21,7 @@ export default function ProductTile({ p }) {
     setErr("");
     try {
       const r = await base44.functions.invoke("myAccount", { action: "file", access_id: p.access_id });
-      return r.data.url;
+      return r.data;
     } catch {
       setErr("Plik nie chce się wczytać. Spróbuj jeszcze raz za chwilę.");
       return null;
@@ -29,7 +29,15 @@ export default function ProductTile({ p }) {
       setBusy(false);
     }
   };
-  const open = async () => { const u = await getUrl(); if (u) window.open(u, "_blank", "noopener,noreferrer"); };
+  // Pobierz — plik zapisuje się na urządzeniu; Czytaj — otwiera się w nowej karcie.
+  const download = async () => {
+    const d = await getUrl();
+    if (!d) return;
+    const a = document.createElement("a");
+    a.href = d.download_url || d.url; a.download = d.name || "plik"; a.rel = "noopener";
+    document.body.appendChild(a); a.click(); a.remove();
+  };
+  const open = async () => { const d = await getUrl(); if (d?.url) window.open(d.url, "_blank", "noopener,noreferrer"); };
 
   return (
     <div className={`rounded-2xl border hairline bg-[#111113] overflow-hidden flex flex-col hover:border-[#C9A24A]/45 transition-colors ${p.active ? "" : "opacity-50"}`}>
@@ -53,12 +61,12 @@ export default function ProductTile({ p }) {
             <p className="text-xs text-foreground/55">Materiał jest w przygotowaniu. Poinformuję Cię e-mailem, gdy będzie dostępny.</p>
           ) : p.type === "pdf" ? (
             <div className="flex flex-wrap gap-3">
-              <button onClick={open} disabled={busy} className="btn-relic !px-4 !py-2.5">{busy ? <Loader2 className={`${ico} animate-spin`} /> : <Download className={ico} strokeWidth={1.25} />} Pobierz</button>
+              <button onClick={download} disabled={busy} className="btn-relic !px-4 !py-2.5">{busy ? <Loader2 className={`${ico} animate-spin`} /> : <Download className={ico} strokeWidth={1.25} />} Pobierz</button>
               <button onClick={open} disabled={busy} className="btn-ghost !px-4 !py-2.5"><BookOpen className={ico} strokeWidth={1.25} /> Czytaj w przeglądarce</button>
             </div>
           ) : p.type === "audio" ? (
             audio ? <audio src={audio} controls autoPlay controlsList="nodownload" className="w-full" /> : (
-              <button onClick={async () => setAudio(await getUrl())} disabled={busy} className="btn-relic !px-4 !py-2.5">{busy ? <Loader2 className={`${ico} animate-spin`} /> : <Play className={ico} strokeWidth={1.25} />} SŁUCHAJ</button>
+              <button onClick={async () => setAudio((await getUrl())?.url)} disabled={busy} className="btn-relic !px-4 !py-2.5">{busy ? <Loader2 className={`${ico} animate-spin`} /> : <Play className={ico} strokeWidth={1.25} />} SŁUCHAJ</button>
             )
           ) : (
             <Link to={`/konto/kurs/${p.access_id}`} className="btn-relic !px-4 !py-2.5"><Play className={ico} strokeWidth={1.25} /> {p.lessons_done > 0 && p.lessons_done < p.lessons_total ? "Kontynuuj" : p.type === "kurs" ? "Otwórz kurs" : "Oglądaj"}</Link>

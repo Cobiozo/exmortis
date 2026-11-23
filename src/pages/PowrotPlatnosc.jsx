@@ -22,7 +22,7 @@ export default function PowrotPlatnosc() {
   const [loadError, setLoadError] = useState("");
   const [contract, setContract] = useState(false);
   const [early, setEarly] = useState(false);
-  const [invoice, setInvoice] = useState({ want: false, company: "", nip: "", address: "" });
+  const [invoice, setInvoice] = useState({ want: false, company: "", nip: "", address: "", post_code: "", city: "" });
   const [busy, setBusy] = useState(false);
   const [payError, setPayError] = useState("");
   const [payState, setPayState] = useState(back ? (payuError ? "fail" : "check") : null); // check | ok | wait | fail

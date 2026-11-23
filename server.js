@@ -315,6 +315,31 @@ app.get("/media/private/:name", (req, res) => {
   sendMedia(res, MEDIA_PRIVATE, name, "private, no-store");
 });
 
+// /pliki/<kosz>/<ścieżka>?token=… → podpisany plik z magazynu Supabase, pod adresem exmortis.pl.
+// Tylko odczyt podpisanych obiektów (bez tokenu Supabase zwraca 400). ?download=nazwa → zapis na dysk.
+app.get(/^\/pliki\/(.+)$/, async (req, res) => {
+  if (!SUPABASE_URL) return res.status(502).end();
+  const rest = req.path.slice("/pliki/".length);
+  if (!/^[A-Za-z0-9._\-/%]+$/.test(rest) || rest.includes("..") || !req.query.token) return res.status(404).end();
+  const qi = req.originalUrl.indexOf("?");
+  try {
+    const up = await fetch(`${SUPABASE_URL}/storage/v1/object/sign/${rest}${req.originalUrl.slice(qi)}`, {
+      headers: req.headers.range ? { range: req.headers.range } : {}, signal: AbortSignal.timeout(120000),
+    });
+    res.status(up.status);
+    for (const h of ["content-type", "content-length", "content-range", "accept-ranges", "content-disposition", "etag", "last-modified"]) {
+      const v = up.headers.get(h);
+      if (v) res.setHeader(h, v);
+    }
+    res.setHeader("cache-control", "private, no-store");
+    if (!up.body) return res.end();
+    const { Readable } = await import("stream");
+    Readable.fromWeb(up.body).on("error", () => res.end()).pipe(res);
+  } catch {
+    if (!res.headersSent) res.status(502).end(); else res.end();
+  }
+});
+
 // /functions/<nazwa> → Supabase Edge Functions (obrazy, PayU, bilety PDF, ics, mapa strony…).
 // Musi stać PRZED plikami statycznymi i fallbackiem SPA, inaczej każdy taki adres dostaje index.html.
 app.all(

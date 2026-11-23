@@ -91,7 +91,7 @@ export default function Pobierz() {
     try {
       const r = await call({ action: "file", t: token, product_id: m.id });
       const a = document.createElement("a");
-      a.href = r.url; a.download = r.name || "plik"; a.rel = "noopener";
+      a.href = r.download_url || r.url; a.download = r.name || "plik"; a.rel = "noopener";
       document.body.appendChild(a); a.click(); a.remove();
       setFileMsg("Pobieranie rozpoczęte. Plik jest Twoją osobistą kopią.");
     } catch (e) {

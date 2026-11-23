@@ -57,7 +57,7 @@ export default function Checkout() {
   const [termsConsent, setTermsConsent] = useState(false);
   const [payError, setPayError] = useState("");
   const [discount, setDiscount] = useState(null);
-  const [invoice, setInvoice] = useState({ want: false, company: "", nip: "", address: "" });
+  const [invoice, setInvoice] = useState({ want: false, company: "", nip: "", address: "", post_code: "", city: "" });
   const [showNote, setShowNote] = useState(false);
   const emailTip = suggestEmail(form.email);
   const { user } = useAuth();
@@ -142,7 +142,7 @@ export default function Checkout() {
         items: items.map((it) => (it.kind === "bilet" ? { id: it.id, kind: "bilet", holders: it.holders }
           : it.gift ? { id: it.id, qty: it.qty, amount: it.gift.amount, to_name: it.gift.to_name, message: it.gift.message } : { id: it.id, qty: it.qty })),
         code: discount?.code || "",
-        invoice: invoice.want ? { want: true, company: invoice.company, nip: invoice.nip, address: invoice.address } : null,
+        invoice: invoice.want ? { want: true, company: invoice.company, nip: invoice.nip, address: invoice.address, post_code: invoice.post_code, city: invoice.city } : null,
         // Rozmowa na progu: osobisty link ze zgłoszenia (serwer sprawdza go tylko dla tej usługi).
         prog_token: (() => { try { return localStorage.getItem("exm_prog_token") || ""; } catch { return ""; } })(),
       });

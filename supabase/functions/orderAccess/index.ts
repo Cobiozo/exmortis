@@ -4,6 +4,7 @@ import { ipAllowed, TOO_MANY } from "../_shared/rateLimit.ts";
 import { accessFilter } from "../_shared/mirror.ts";
 import { isActive } from "../_shared/access.ts";
 import { accessFileResponse } from "../_shared/accessFile.ts";
+import { loadAppUrl } from "../_shared/settings.ts";
 import { linkByToken, orderMaterials, hasAccount, activateAccount, issueBuyerCode, resendLinks, hasPaidOrder } from "../_shared/orderLinks.ts";
 
 // Materiały z zamówienia bez konta (/pobierz#t=…): podgląd, pobranie pliku, „Aktywuj konto”, nowy link mailem.
@@ -15,6 +16,7 @@ const LINK_GONE = "Ten link jest nieprawidłowy. Poproś o nowy — przyjdzie na
 const handler = async function (req) {
   try {
     const base44 = createClientFromRequest(req);
+    await loadAppUrl(base44); // linki w mailach (nowy link do materiałów) z adresu strony, nie z ustawień domyślnych
     const body = await req.json().catch(() => ({}));
     const ip = clientIp(req);
     const action = String(body.action || "");

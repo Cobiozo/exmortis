@@ -36,9 +36,12 @@ export async function getSetting(base44, key) {
 
 // Adres aplikacji (APP_URL) — ustawiany w panelu admina, używany we wszystkich linkach w e-mailach i przekierowaniach.
 // Uczestnicy nigdy nie dostają adresu podglądu: pusty albo „preview--” → adres opublikowany.
-export const DEFAULT_APP_URL = (globalThis as any).Deno?.env?.get?.("APP_URL") || "";
+// Adres lokalny (localhost, 127.0.0.1) nigdy nie trafia do maili — wtedy obowiązuje adres strony.
+const BAD_URL = /preview--|localhost|127\.0\.0\.1|^http:\/\//i;
+const ENV_URL = String((globalThis as any).Deno?.env?.get?.("APP_URL") || "").replace(/\/+$/, "");
+export const DEFAULT_APP_URL = ENV_URL && !BAD_URL.test(ENV_URL) ? ENV_URL : "https://exmortis.pl";
 export let APP_URL = DEFAULT_APP_URL;
-export const safeAppUrl = (u) => (!u || /preview--/i.test(String(u)) ? DEFAULT_APP_URL : String(u).replace(/\/+$/, ""));
+export const safeAppUrl = (u) => (!u || BAD_URL.test(String(u)) ? DEFAULT_APP_URL : String(u).replace(/\/+$/, ""));
 
 export function cleanAppUrl(v) {
   const s = String(v || "").trim().replace(/\/+$/, "");

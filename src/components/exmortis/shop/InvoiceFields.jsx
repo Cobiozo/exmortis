@@ -46,8 +46,19 @@ export default function InvoiceFields({ value, onChange }) {
             {nipBad && <p id="inv-nip-err" className="mt-2 text-[13px] text-[#E8C547]">Ten NIP się nie zgadza — sprawdź 10 cyfr.</p>}
           </div>
           <div>
-            <label htmlFor="inv-address" className={lab}>Adres firmy</label>
-            <input id="inv-address" required autoComplete="street-address" placeholder="ulica i numer, kod, miasto" value={value.address || ""} onChange={(e) => set("address", e.target.value)} className={inp} />
+            <label htmlFor="inv-address" className={lab}>Ulica i numer</label>
+            <input id="inv-address" required autoComplete="address-line1" placeholder="np. ul. Długa 5/2" value={value.address || ""} onChange={(e) => set("address", e.target.value)} className={inp} />
+          </div>
+          <div className="grid gap-5 sm:grid-cols-[140px_minmax(0,1fr)]">
+            <div>
+              <label htmlFor="inv-post" className={lab}>Kod pocztowy</label>
+              <input id="inv-post" required inputMode="numeric" autoComplete="postal-code" placeholder="00-000" pattern="\d{2}-?\d{3}" maxLength={6}
+                value={value.post_code || ""} onChange={(e) => set("post_code", e.target.value)} className={inp} />
+            </div>
+            <div>
+              <label htmlFor="inv-city" className={lab}>Miejscowość</label>
+              <input id="inv-city" required autoComplete="address-level2" value={value.city || ""} onChange={(e) => set("city", e.target.value)} className={inp} />
+            </div>
           </div>
           <p className="text-[12px] leading-relaxed text-exm-muted">Fakturę wyślę na podany wyżej e-mail.</p>
         </div>

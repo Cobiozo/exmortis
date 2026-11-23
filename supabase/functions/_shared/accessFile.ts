@@ -2,6 +2,18 @@
 // Wspólne dla konta (myAccount) i linku z zamówienia bez konta (orderAccess). Zwraca odpowiedź { url, name } albo błąd.
 import { runSql, escStr } from "./supabase.ts";
 import { personalizePdf, newLicenseId, WM_VERSION } from "./pdfLicense.ts";
+import { loadAppUrl } from "./settings.ts";
+
+// Link z magazynu Supabase → adres strony (exmortis.pl/pliki/…, server.js przekazuje dalej).
+// url — do odtwarzania/czytania; download_url — ten sam plik z nagłówkiem „pobierz” pod podaną nazwą.
+async function siteLinks(base44, signed: string, name: string) {
+  const app = await loadAppUrl(base44);
+  const m = String(signed).match(/^https:\/\/[^/]+\.supabase\.co\/storage\/v1\/object\/sign\/(.+)$/);
+  const url = m && app ? `${app}/pliki/${m[1]}` : signed;
+  const sep = url.includes("?") ? "&" : "?";
+  const download_url = m ? `${url}${sep}download=${encodeURIComponent(name)}` : url;
+  return { url, download_url, name };
+}
 
 export async function accessFileResponse(base44, a, ip: string, email: string) {
   const rows = await runSql(
@@ -36,15 +48,15 @@ export async function accessFileResponse(base44, a, ip: string, email: string) {
     await sr.entities.SecurityLog.create({ type: "pdf", user_email: email, ip: ip, details: `${p.name} · ${lic.license_id}` });
     const { signed_url } = await sr.integrations.Core.CreateFileSignedUrl({ file_uri: lic.file_uri, expires_in: 600 });
     const safe = String(p.name).normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/ł/g, "l").replace(/[^A-Za-z0-9]+/g, "_").replace(/^_|_$/g, "");
-    return Response.json({ url: signed_url, name: `${safe}_exmortis_${orderNo}.pdf` });
+    return Response.json(await siteLinks(base44, signed_url, `${safe}_exmortis_${orderNo}.pdf`));
   }
   if (p?.private_file_uri) {
     const { signed_url } = await base44.asServiceRole.integrations.Core.CreateFileSignedUrl({
       file_uri: p.private_file_uri,
       expires_in: 600,
     });
-    return Response.json({ url: signed_url, name: p.private_file_name || "plik" });
+    return Response.json(await siteLinks(base44, signed_url, p.private_file_name || "plik"));
   }
-  if (p?.file_url) return Response.json({ url: p.file_url, name: "plik" });
+  if (p?.file_url) return Response.json({ url: p.file_url, download_url: p.file_url, name: "plik" });
   return Response.json({ error: "Plik nie jest jeszcze gotowy" }, { status: 404 });
 }

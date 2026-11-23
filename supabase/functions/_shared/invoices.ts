@@ -152,6 +152,9 @@ function buyerFields(order, company) {
     const out = { buyer_name: clean(inv.company || order.buyer_name, 150) || "Klient", buyer_email: email };
     const nip = String(inv.nip || "").replace(/[^0-9A-Za-z]/g, "").slice(0, 20);
     if (nip) out.buyer_tax_no = nip;
+    if (inv.post_code && inv.city) {
+      return { ...out, buyer_street: clean(inv.street, 150), buyer_post_code: clean(inv.post_code, 10), buyer_city: clean(inv.city, 100), buyer_country: "PL" };
+    }
     return { ...out, ...splitAddress(inv.address) };
   }
   const name = clean(order.buyer_name, 100);
