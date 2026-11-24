@@ -109,6 +109,8 @@
   body {
     @apply bg-background text-foreground font-body antialiased;
     background-color: #0A0A0B;
+    /* Miejsce na globalną belkę odtwarzacza Głosu — nie zasłania stopki, formularzy ani przycisków. */
+    padding-bottom: var(--exm-player-h, 0px);
   }
   /* Kotwice (np. /#manifest) nie chowają się pod stałym nagłówkiem. */
   [id] {

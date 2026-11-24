@@ -10,6 +10,7 @@ import useWakeLock from "./useWakeLock";
 import useScreenReaderMinutes from "./useScreenReaderMinutes";
 import { CISZA_LOGO } from "./CiszaLogo";
 import { toPlay, offsetFor, dbGain } from "./library";
+import { usePodcastPlayer } from "@/components/exmortis/podcast/PlayerContext";
 
 // Przebieg: sygnał wstępu → odliczanie w ciszy → sygnał zakończenia. Jedno źródło czasu z Date.now().
 export default function CiszaSession({
@@ -20,6 +21,14 @@ export default function CiszaSession({
   const [stage, setStage] = useState("intro");
   const [paused, setPaused] = useState(false);
   const [visible, setVisible] = useState(true);
+  // Muzyka i podcast grają na /cisza do chwili startu sesji — wtedy pauza, a belka odtwarzacza znika do końca sesji.
+  const pod = usePodcastPlayer();
+  useEffect(() => {
+    pod?.pause();
+    pod?.hold(true);
+    return () => pod?.hold(false);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
   const [full, setFull] = useState(false);
   const [ask, setAsk] = useState(false);
   const navigate = useNavigate();

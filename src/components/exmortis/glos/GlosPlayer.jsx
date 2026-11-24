@@ -2,6 +2,7 @@ import React, { useEffect, useRef } from "react";
 import { Play } from "lucide-react";
 import { thumbUrl } from "./youtube";
 import useMarketingConsent from "@/lib/useMarketingConsent";
+import { usePodcastPlayer } from "@/components/exmortis/podcast/PlayerContext";
 
 // Ładuje YouTube IFrame API raz na stronę.
 function loadYT(cb) {
@@ -35,6 +36,16 @@ export default function GlosPlayer({ videoId, started, onStart, onEnded }) {
   videoIdRef.current = videoId;
   const endedRef = useRef(onEnded);
   endedRef.current = onEnded;
+  const audio = usePodcastPlayer();
+  const pauseAudioRef = useRef(null);
+  pauseAudioRef.current = audio?.pause;
+
+  // …i odwrotnie: start własnego audio zatrzymuje osadzony film.
+  useEffect(() => {
+    const stop = () => { try { playerRef.current?.pauseVideo?.(); } catch { /* */ } };
+    window.addEventListener("exm:audio-play", stop);
+    return () => window.removeEventListener("exm:audio-play", stop);
+  }, []);
 
   useEffect(() => {
     if (!started) return;
@@ -48,6 +59,8 @@ export default function GlosPlayer({ videoId, started, onStart, onEnded }) {
         events: {
           onStateChange: (e) => {
             if (e.data === window.YT.PlayerState.ENDED) endedRef.current();
+            // Jedno źródło naraz: film YouTube wstrzymuje własne audio Głosu.
+            if (e.data === window.YT.PlayerState.PLAYING) pauseAudioRef.current?.();
           },
         },
       });
