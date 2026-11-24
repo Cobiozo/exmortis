@@ -29,6 +29,14 @@ export default function GlosMusicPanel() {
   const [started, setStarted] = useState(false);
   const [q, setQ] = useState("");
   const [cat, setCat] = useState("");
+  const [pls, setPls] = useState([]);
+  const [pl, setPl] = useState("");
+
+  useEffect(() => {
+    base44.entities.PodcastPlaylist.filter({ widoczna: true }, { sort: "kolejnosc", limit: 50 })
+      .then((r) => setPls((r.items || []).filter((x) => x.typ === "muzyka" && x.utwory?.length)))
+      .catch(() => setPls([]));
+  }, []);
 
   useEffect(() => {
     base44.entities.Utwor
@@ -57,7 +65,10 @@ export default function GlosMusicPanel() {
 
   const cats = useMemo(() => [...new Set(list.map((s) => s.kategoria).filter(Boolean))], [songs]);
   const s = q.trim().toLowerCase();
-  const shown = list.filter((x) => (!cat || x.kategoria === cat) && (!s || [x.tytul, x.opis, x.autor].some((v) => v?.toLowerCase().includes(s))));
+  // Wybrana playlista: tylko jej utwory, w jej kolejności (opublikowane — reszta odpada sama).
+  const plSel = pls.find((x) => x.id === pl);
+  const base = plSel ? plSel.utwory.map((id) => list.find((y) => y.id === id)).filter(Boolean) : list;
+  const shown = base.filter((x) => (!cat || x.kategoria === cat) && (!s || [x.tytul, x.opis, x.autor].some((v) => v?.toLowerCase().includes(s))));
 
   const scrollToPlayer = () => {
     if (window.matchMedia?.("(min-width: 1024px)").matches) return;
@@ -117,6 +128,13 @@ export default function GlosMusicPanel() {
               <span className="text-[13px] text-exm-muted">{n} {n === 1 ? "utwór" : n % 10 >= 2 && n % 10 <= 4 && (n % 100 < 12 || n % 100 > 14) ? "utwory" : "utworów"}</span>
             </div>
             <div className="space-y-3 px-5 pt-4">
+              {pls.length > 0 && (
+                <div className="flex flex-wrap gap-2" role="group" aria-label="Playlisty">
+                  <button type="button" onClick={() => setPl("")} aria-pressed={!pl} className={chip(!pl)}>Wszystkie utwory</button>
+                  {pls.map((x) => <button key={x.id} type="button" onClick={() => setPl(x.id)} aria-pressed={pl === x.id} className={chip(pl === x.id)}>{x.nazwa}</button>)}
+                </div>
+              )}
+              {plSel?.opis && <p className="text-[14px] leading-relaxed text-exm-muted">{plSel.opis}</p>}
               <GlosSearch id="glos-szukaj-utworow" label="Szukaj utworów" value={q} onChange={setQ} placeholder="Tytuł, autor albo opis" />
               {cats.length > 1 && (
                 <div className="flex flex-wrap gap-2">

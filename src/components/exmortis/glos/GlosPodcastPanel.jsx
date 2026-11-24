@@ -35,7 +35,7 @@ export default function GlosPodcastPanel() {
     loadPublished().then(setEps);
     // Nowy odcinek w Spotify → pojawia się tu bez ręcznego importu.
     syncPodcast().then((k) => { if (k > 0) loadPublished().then(setEps); });
-    base44.entities.PodcastPlaylist.filter({ widoczna: true }, { sort: "kolejnosc", limit: 50 }).then((r) => setPlaylists(r.items));
+    base44.entities.PodcastPlaylist.filter({ widoczna: true }, { sort: "kolejnosc", limit: 50 }).then((r) => setPlaylists((r.items || []).filter((x) => x.typ !== "muzyka")));
   }, []);
 
   const latest = eps?.[0] || null;

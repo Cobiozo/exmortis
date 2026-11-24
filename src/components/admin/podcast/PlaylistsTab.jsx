@@ -10,7 +10,7 @@ export default function PlaylistsTab() {
   const [eps, setEps] = useState([]);
   const [name, setName] = useState("");
   const [typ, setTyp] = useState("sezon");
-  const load = () => PL.filter({}, { sort: "kolejnosc", limit: 100 }).then((p) => setPls(p.items));
+  const load = () => PL.filter({}, { sort: "kolejnosc", limit: 100 }).then((p) => setPls(p.items.filter((x) => x.typ !== "muzyka")));
   useEffect(() => { load(); EP.filter({}, { sort: "-numer", limit: 200, fields: ["numer", "tytul"] }).then((p) => setEps(p.items)); }, []);
 
   const save = async (p, patch) => { setPls((l) => l.map((x) => (x.id === p.id ? { ...x, ...patch } : x))); await PL.update(p.id, patch); };

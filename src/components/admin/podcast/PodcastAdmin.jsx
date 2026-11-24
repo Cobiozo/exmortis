@@ -3,9 +3,10 @@ import EpisodesTab from "./EpisodesTab";
 import PlaylistsTab from "./PlaylistsTab";
 import GuestsTab from "./GuestsTab";
 import SongsTab from "./SongsTab";
+import MusicPlaylistsTab from "./MusicPlaylistsTab";
 import SettingsTab from "./SettingsTab";
 
-const TABS = [["odcinki", "Odcinki", EpisodesTab], ["playlisty", "Playlisty", PlaylistsTab], ["utwory", "Utwory (muzyka)", SongsTab], ["goscie", "Goście", GuestsTab], ["ustawienia", "Ustawienia", SettingsTab]];
+const TABS = [["odcinki", "Odcinki", EpisodesTab], ["playlisty", "Playlisty", PlaylistsTab], ["utwory", "Utwory (muzyka)", SongsTab], ["playlisty-muzyka", "Playlisty muzyczne", MusicPlaylistsTab], ["goscie", "Goście", GuestsTab], ["ustawienia", "Ustawienia", SettingsTab]];
 
 export default function PodcastAdmin() {
   const [tab, setTab] = useState("odcinki");

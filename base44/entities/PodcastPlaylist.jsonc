@@ -16,15 +16,24 @@
       "enum": [
         "sezon",
         "seria",
-        "wybor"
+        "wybor",
+        "muzyka"
       ],
-      "default": "sezon"
+      "default": "sezon",
+      "description": "muzyka = playlista utwor\u00f3w na /glos (zak\u0142adka Muzyka); pozosta\u0142e to playlisty podcastu"
     },
     "odcinki": {
       "type": "array",
       "items": {
         "type": "string"
       }
+    },
+    "utwory": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "Identyfikatory utwor\u00f3w (tylko dla typu muzyka), w kolejno\u015bci odtwarzania"
     },
     "widoczna": {
       "type": "boolean",
