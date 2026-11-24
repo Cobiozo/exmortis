@@ -2,14 +2,14 @@
 // Wspólne dla konta (myAccount) i linku z zamówienia bez konta (orderAccess). Zwraca odpowiedź { url, name } albo błąd.
 import { runSql, escStr } from "./supabase.ts";
 import { personalizePdf, newLicenseId, WM_VERSION } from "./pdfLicense.ts";
-import { loadAppUrl } from "./settings.ts";
 
 // Link z magazynu Supabase → adres strony (exmortis.pl/pliki/…, server.js przekazuje dalej).
 // url — do odtwarzania/czytania; download_url — ten sam plik z nagłówkiem „pobierz” pod podaną nazwą.
-async function siteLinks(base44, signed: string, name: string) {
-  const app = await loadAppUrl(base44);
+// 24.11.2026: serwer na exmortis.pl nie ma jeszcze trasy /pliki („Cannot GET”), więc link idzie wprost do magazynu
+// (podpisany, krótko ważny). Pobieranie: parametr download magazynu ustawia nagłówek „zapisz jako”.
+async function siteLinks(_base44, signed: string, name: string) {
   const m = String(signed).match(/^https:\/\/[^/]+\.supabase\.co\/storage\/v1\/object\/sign\/(.+)$/);
-  const url = m && app ? `${app}/pliki/${m[1]}` : signed;
+  const url = signed;
   const sep = url.includes("?") ? "&" : "?";
   const download_url = m ? `${url}${sep}download=${encodeURIComponent(name)}` : url;
   return { url, download_url, name };
