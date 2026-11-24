@@ -50,7 +50,7 @@ async function saveConsents(base44, req, orderId, email, hasDigital, newsletterC
 }
 
 // Tytuł transakcji w PayU (widoczny u klienta i w banku): „Exmortis - {produkt} ({typ})”.
-const TYPE_LABEL = { pdf: "ebook", audio: "audio", wideo: "wideo", kurs: "kurs", pakiet: "pakiet", usluga: "usługa", karta: "karta podarunkowa", bilet: "bilet" };
+const TYPE_LABEL = { pdf: "ebook", audio: "audio", wideo: "wideo", kurs: "kurs", zestaw: "ebook z nagraniami", pakiet: "pakiet", usluga: "usługa", karta: "karta podarunkowa", bilet: "bilet" };
 function payuTitle(lines) {
   const first = lines[0];
   if (!first) return "Exmortis";

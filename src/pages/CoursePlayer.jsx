@@ -4,6 +4,7 @@ import { ArrowLeft, Loader2 } from "lucide-react";
 import { base44 } from "@/api/base44Client";
 import LessonList from "@/components/account/course/LessonList";
 import LessonPlayer from "@/components/account/course/LessonPlayer";
+import AudioLessonPlayer from "@/components/account/course/AudioLessonPlayer";
 import LicenseConsent from "@/components/account/course/LicenseConsent";
 import { useAuth } from "@/lib/AuthContext";
 import { useNoIndex } from "@/lib/useNoIndex";
@@ -69,7 +70,9 @@ export default function CoursePlayer() {
         <p className="mt-10 text-foreground/55">Lekcje są w przygotowaniu. Poinformuję Cię e-mailem, gdy będą dostępne.</p>
       ) : (
         <div className="mt-10 grid grid-cols-1 lg:grid-cols-[minmax(0,1fr)_340px] gap-10">
-          {lesson && (consented ? <LessonPlayer key={lesson.id} accessId={accessId} lesson={lesson} onDone={markDone} onNext={next ? () => pick(next.id) : null} nextTitle={next?.title} /> : <LicenseConsent onAccept={() => setConsented(true)} />)}
+          {lesson && (!consented ? <LicenseConsent onAccept={() => setConsented(true)} /> : lesson.kind === "audio"
+            ? <AudioLessonPlayer key={lesson.id} accessId={accessId} courseName={data.name} lesson={lesson} onDone={markDone} onNext={next ? () => pick(next.id) : null} nextTitle={next?.title} />
+            : <LessonPlayer key={lesson.id} accessId={accessId} lesson={lesson} onDone={markDone} onNext={next ? () => pick(next.id) : null} nextTitle={next?.title} />)}
           <LessonList lessons={data.lessons} current={current} onPick={pick} />
         </div>
       )}

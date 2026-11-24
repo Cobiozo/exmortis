@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { PlayCircle } from "lucide-react";
+import { PlayCircle, Headphones } from "lucide-react";
 import { base44 } from "@/api/base44Client";
 
 // Program kursu na stronie produktu (lekcje widoczne dla klientów).
@@ -25,7 +25,9 @@ export default function Curriculum({ productId }) {
             <li key={i}>
               {head && <p className="technical text-[9px] text-foreground/55 px-4 pt-4 pb-1">{l.module}</p>}
               <div className="px-4 py-3 flex items-start gap-3 text-sm">
-                <PlayCircle className="h-4 w-4 mt-0.5 shrink-0 text-foreground/55" strokeWidth={1.25} aria-hidden="true" />
+                {l.kind === "audio"
+                  ? <Headphones className="h-4 w-4 mt-0.5 shrink-0 text-foreground/55" strokeWidth={1.25} aria-hidden="true" />
+                  : <PlayCircle className="h-4 w-4 mt-0.5 shrink-0 text-foreground/55" strokeWidth={1.25} aria-hidden="true" />}
                 <span className="flex-1 text-foreground/80">{l.title}</span>
                 {l.duration_min && <span className="text-xs text-foreground/55 shrink-0">{l.duration_min} min</span>}
               </div>

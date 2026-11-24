@@ -7,6 +7,7 @@ const TYPES = [
   ["audio", "Audio"],
   ["wideo", "Wideo"],
   ["kurs", "Kurs wideo"],
+  ["zestaw", "Ebook + nagrania audio/wideo (tylko na koncie)"],
   ["usluga", "Usługa / spotkanie"],
   ["karta", "Karta podarunkowa (kod na cenę, 6 mies.)"],
   ["pakiet", "Pakiet produktów (kilka w jednej cenie)"],
@@ -80,12 +81,18 @@ export default function ProductAccessFields({ form, set }) {
           </label>
         )}
       </div>
-      {(form.product_type === "pdf" || form.product_type === "audio") && (
+      {(form.product_type === "pdf" || form.product_type === "audio" || form.product_type === "zestaw") && (
         <div className="space-y-3">
+          {form.product_type === "zestaw" && (
+            <p className="text-xs text-foreground/60 leading-relaxed max-w-xl">
+              Wgraj tu ebook (PDF), a nagrania audio i wideo dodaj niżej. Klient odbiera wszystko wyłącznie na koncie:
+              PDF pobiera, nagrania tylko odtwarza (bez pobierania). Link z maila prowadzi do aktywacji konta.
+            </p>
+          )}
           <label className="btn-ghost cursor-pointer !px-4 !py-2 text-[10px]">
             {busy ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Upload className="h-3.5 w-3.5" strokeWidth={1.25} />}
             {form.private_file_uri ? "Zamień plik prywatny" : "Wgraj plik prywatny"}
-            <input type="file" className="hidden" accept={form.product_type === "pdf" ? ".pdf" : ".mp3,.m4a"} onChange={upload} />
+            <input type="file" className="hidden" accept={form.product_type === "audio" ? ".mp3,.m4a" : ".pdf"} onChange={upload} />
           </label>
           {form.private_file_uri && (
             <p className="flex items-center gap-2 text-xs text-foreground/60">

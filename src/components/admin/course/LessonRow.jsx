@@ -33,14 +33,17 @@ export default function LessonRow({ lesson, onChange, domains, onAddDomain }) {
   })();
   const hostMissing = serverHost && Array.isArray(domains) && !domains.includes(serverHost);
 
+  const audio = f.media_kind === "audio";
+
   const save = async (extra = {}) => {
-    const src = videoSource(f.video_url);
+    const src = audio ? null : videoSource(f.video_url);
     if (src && !src.ok && !extra.video_uri) { setMsg(src.label); return; }
     setBusy("save");
     await base44.entities.CourseLesson.update(lesson.id, {
       module: f.module || "", title: f.title, order: Number(f.order) || 0, description: f.description || "",
       duration_min: f.duration_min ? Number(f.duration_min) : null, published: !!f.published,
-      video_url: String(f.video_url || "").trim(), ...extra,
+      media_kind: audio ? "audio" : "wideo",
+      video_url: audio ? "" : String(f.video_url || "").trim(), ...extra,
     });
     setBusy(""); setMsg("Zapisano"); onChange();
   };
@@ -51,12 +54,12 @@ export default function LessonRow({ lesson, onChange, domains, onAddDomain }) {
     if (!file) return;
     setBusy("up"); setMsg("");
     try {
-      if (file.size > 500 * 1024 * 1024) { setBusy(""); setMsg("Plik ma ponad 500 MB. Wgraj go na swój serwer albo Vimeo i wklej adres powyżej."); return; }
+      if (file.size > 500 * 1024 * 1024) { setBusy(""); setMsg(audio ? "Plik ma ponad 500 MB. Zapisz nagranie w MP3 o niższej jakości." : "Plik ma ponad 500 MB. Wgraj go na swój serwer albo Vimeo i wklej adres powyżej."); return; }
       const { file_uri } = await base44.integrations.Core.UploadPrivateFile({ file });
       set("video_name", file.name);
       await save({ video_uri: file_uri, video_name: file.name });
     } catch {
-      setBusy(""); setMsg("Nie udało się wgrać wideo. Spróbuj mniejszego pliku (MP4).");
+      setBusy(""); setMsg(audio ? "Nie udało się wgrać nagrania. Spróbuj pliku MP3 lub M4A." : "Nie udało się wgrać wideo. Spróbuj mniejszego pliku (MP4).");
     }
   };
 
@@ -68,8 +71,15 @@ export default function LessonRow({ lesson, onChange, domains, onAddDomain }) {
         <input className={inp} value={f.title} onChange={(e) => set("title", e.target.value)} placeholder="Tytuł lekcji" />
         <input className={inp} type="number" value={f.duration_min || ""} onChange={(e) => set("duration_min", e.target.value)} placeholder="min" />
       </div>
-      <textarea className={inp} rows={2} value={f.description || ""} onChange={(e) => set("description", e.target.value)} placeholder="Opis / notatki pod wideo" />
-      <div className="space-y-1">
+      <div className="flex flex-wrap items-center gap-2" role="radiogroup" aria-label="Rodzaj nagrania">
+        {[["wideo", "Wideo"], ["audio", "Audio"]].map(([k, l]) => (
+          <button key={k} type="button" role="radio" aria-checked={(f.media_kind || "wideo") === k} onClick={() => set("media_kind", k)}
+            className={`technical text-[10px] border px-3 py-1.5 ${(f.media_kind || "wideo") === k ? "border-[#C9A24A] gold-text" : "hairline text-foreground/55"}`}>{l}</button>
+        ))}
+        {audio && <span className="text-xs text-foreground/50">Audio: wgraj plik MP3 lub M4A. Klient tylko słucha na koncie, bez pobierania.</span>}
+      </div>
+      <textarea className={inp} rows={2} value={f.description || ""} onChange={(e) => set("description", e.target.value)} placeholder={audio ? "Opis / notatki pod nagraniem" : "Opis / notatki pod wideo"} />
+      {!audio && <div className="space-y-1">
         <input className={inp} value={f.video_url || ""} onChange={(e) => set("video_url", e.target.value)}
           placeholder="Adres filmu z Twojego serwera, np. https://wideo.exmortis.pl/kurs/lekcja-1.mp4" aria-label="Adres wideo" />
         {(() => { const v = videoSource(f.video_url); return v && !serverHost ? <p className={`text-xs ${v.ok ? "text-foreground/50" : "text-[#E8C547]"}`}>{v.label}</p> : null; })()}
@@ -106,13 +116,13 @@ export default function LessonRow({ lesson, onChange, domains, onAddDomain }) {
             {testInfo && <p className={`text-xs ${test === "err" ? "text-[#E8C547]" : "text-[#9FD3A0]"}`}>{testInfo}</p>}
           </div>
         )}
-      </div>
+      </div>}
       <div className="flex flex-wrap items-center gap-3">
         <label className="btn-ghost cursor-pointer !px-3 !py-2 text-[10px]">
-          {busy === "up" ? <Loader2 className="h-4 w-4 animate-spin" /> : <Upload className="h-4 w-4" />} {f.video_uri ? "Zmień wideo" : "Wgraj wideo"}
-          <input type="file" accept="video/*" className="hidden" onChange={upload} disabled={!!busy} />
+          {busy === "up" ? <Loader2 className="h-4 w-4 animate-spin" /> : <Upload className="h-4 w-4" />} {audio ? (f.video_uri ? "Zmień nagranie" : "Wgraj audio") : (f.video_uri ? "Zmień wideo" : "Wgraj wideo")}
+          <input type="file" accept={audio ? ".mp3,.m4a,audio/mpeg,audio/mp4" : "video/*"} className="hidden" onChange={upload} disabled={!!busy} />
         </label>
-        <span className="text-xs text-foreground/50">{f.video_name || (f.video_url ? "wideo z adresu" : "brak wideo")}</span>
+        <span className="text-xs text-foreground/50">{f.video_name || (audio ? "brak nagrania" : f.video_url ? "wideo z adresu" : "brak wideo")}</span>
         {f.video_uri && (
           <button type="button" onClick={() => { set("video_uri", ""); set("video_name", ""); save({ video_uri: "", video_name: "" }); }} disabled={!!busy}
             className="text-xs text-foreground/50 underline hover:text-[#E8C547]">usuń plik</button>

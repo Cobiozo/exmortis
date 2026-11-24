@@ -6,7 +6,7 @@ export const todayWarsaw = () => new Date().toLocaleDateString("sv-SE", { timeZo
 export const daysLeft = (ymd) =>
   Math.round((new Date(`${ymd}T12:00:00Z`) - new Date(`${todayWarsaw()}T12:00:00Z`)) / 86400000);
 
-export const TYPE_LABEL = { pdf: "PDF", audio: "Audio", wideo: "Wideo", kurs: "Kurs wideo", usluga: "Usługa" };
+export const TYPE_LABEL = { pdf: "PDF", audio: "Audio", wideo: "Wideo", kurs: "Kurs wideo", zestaw: "Ebook + nagrania", usluga: "Usługa" };
 
 export const STATUS_LABEL = {
   COMPLETED: "Opłacone",
@@ -25,4 +25,4 @@ export const accessLabel = (p) =>
   p.access_months ? `Dostęp: ${p.access_months} ${p.access_months === 1 ? "miesiąc" : p.access_months < 5 ? "miesiące" : "miesięcy"} od zakupu` : "Dostęp: bezterminowy";
 
 // Pakiet składa się wyłącznie z treści cyfrowych — przy zakupie ta sama zgoda i informacja o dostępie.
-export const isDigital = (p) => ["pdf", "audio", "wideo", "kurs", "pakiet"].includes(p?.product_type);
+export const isDigital = (p) => ["pdf", "audio", "wideo", "kurs", "zestaw", "pakiet"].includes(p?.product_type);

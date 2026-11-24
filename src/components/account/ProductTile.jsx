@@ -6,7 +6,7 @@ import CoverStage from "@/components/exmortis/shop/CoverStage";
 import AccessLine from "./AccessLine";
 import { TYPE_LABEL } from "./accountUtils";
 
-const ICONS = { pdf: FileText, audio: Headphones, wideo: Film, kurs: Layers };
+const ICONS = { pdf: FileText, audio: Headphones, wideo: Film, kurs: Layers, zestaw: Layers };
 const ico = "h-4 w-4";
 
 // Kafelek w „Moich produktach”.
@@ -59,6 +59,13 @@ export default function ProductTile({ p }) {
         <div className="mt-auto pt-3 space-y-3">
           {!p.active ? null : !p.has_file && (p.type === "pdf" || p.type === "audio") ? (
             <p className="text-xs text-foreground/55">Materiał jest w przygotowaniu. Poinformuję Cię e-mailem, gdy będzie dostępny.</p>
+          ) : p.type === "zestaw" ? (
+            // Ebook do pobrania + nagrania tylko do odtwarzania w odtwarzaczu konta.
+            <div className="flex flex-wrap gap-3">
+              <Link to={`/konto/kurs/${p.access_id}`} className="btn-relic !px-4 !py-2.5"><Play className={ico} strokeWidth={1.25} /> {p.lessons_done > 0 && p.lessons_done < p.lessons_total ? "Kontynuuj nagrania" : "Słuchaj i oglądaj"}</Link>
+              {p.has_file && <button onClick={download} disabled={busy} className="btn-ghost !px-4 !py-2.5">{busy ? <Loader2 className={`${ico} animate-spin`} /> : <Download className={ico} strokeWidth={1.25} />} Pobierz ebook</button>}
+              {p.has_file && <button onClick={open} disabled={busy} className="btn-link">Czytaj w przeglądarce</button>}
+            </div>
           ) : p.type === "pdf" ? (
             <div className="flex flex-wrap gap-3">
               <button onClick={download} disabled={busy} className="btn-relic !px-4 !py-2.5">{busy ? <Loader2 className={`${ico} animate-spin`} /> : <Download className={ico} strokeWidth={1.25} />} Pobierz</button>

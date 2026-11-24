@@ -9,7 +9,7 @@ import { cn } from "@/lib/utils";
 // Okładka na karcie produktu: książka i materiał cyfrowy na papierze (3:4), usługa w kadrze 4:3.
 // Znaczek wyróżnienia w lewym górnym rogu; bez grafiki — sygnet exmortis.
 // self-start: karta ma wysokość okładki, a nie całej kolumny z opisem zakupu (bez pustego pola pod okładką, 19.11.2026).
-const BOOK_TYPES = ["pdf", "audio", "kurs", "wideo", "pakiet"];
+const BOOK_TYPES = ["pdf", "audio", "kurs", "wideo", "zestaw", "pakiet"];
 
 export default function ProductCover({ product }) {
   const hl = productHighlight(product);

@@ -61,7 +61,7 @@ export default function ProductDetails({ product }) {
             </ul>
           )}
 
-          {(product.product_type === "kurs" || product.product_type === "wideo") && <Curriculum productId={product.id} />}
+          {["kurs", "wideo", "zestaw"].includes(product.product_type) && <Curriculum productId={product.id} />}
 
           <BundleBox product={product} />
 

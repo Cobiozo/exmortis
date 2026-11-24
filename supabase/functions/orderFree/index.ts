@@ -78,7 +78,7 @@ const handler = async function (req) {
         for (const it of await expandBundles(base44, [product])) {
           await grantAccess(base44, { email, product: it, source: "darmowy" });
         }
-      } else if (["pdf", "audio", "wideo", "kurs"].includes(product.product_type)) {
+      } else if (["pdf", "audio", "wideo", "kurs", "zestaw"].includes(product.product_type)) {
         await grantAccess(base44, {
           email,
           product: { id: product.id, name: product.name, product_type: product.product_type || "pdf", access_months: null },

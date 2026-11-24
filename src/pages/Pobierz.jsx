@@ -169,12 +169,16 @@ export default function Pobierz() {
 
     {courses.length > 0 && (
       <div className="border hairline p-6 mb-10">
-        <p className="technical text-[10px] gold-text mb-4">{courses.length > 1 ? "KURSY" : "KURS"} NA TWOIM KONCIE</p>
+        <p className="technical text-[10px] gold-text mb-4">MATERIAŁY NA TWOIM KONCIE</p>
         {courses.map((m) => <p key={m.id} className="relic-heading text-lg mb-2">{m.name}</p>)}
         {loggedIn || info.account ? (
-          <Link to="/konto" className="btn-relic mt-4">Otwórz kurs <PlayCircle className="h-4 w-4" /></Link>
+          <Link to="/konto" className="btn-relic mt-4">Otwórz w Moim koncie <PlayCircle className="h-4 w-4" /></Link>
         ) : (
-          <p className="text-foreground/60 leading-relaxed mt-2">Kurs oglądasz na bezpłatnym koncie — aktywujesz je przyciskiem poniżej, bez hasła.</p>
+          <p className="text-foreground/60 leading-relaxed mt-2">
+            {courses.some((m) => m.type === "zestaw")
+              ? "E-book i nagrania odbierasz wyłącznie na bezpłatnym koncie: e-book pobierasz, nagrań słuchasz i oglądasz w odtwarzaczu. Konto aktywujesz przyciskiem poniżej, bez hasła."
+              : "Kurs oglądasz na bezpłatnym koncie — aktywujesz je przyciskiem poniżej, bez hasła."}
+          </p>
         )}
       </div>
     )}

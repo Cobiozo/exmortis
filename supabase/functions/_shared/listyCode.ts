@@ -7,7 +7,7 @@ import { emailButton } from "./emailLayout.ts";
 // Rozmowy na progu i innych usług, kart podarunkowych i biletów. Kod przypisany do adresu e-mail, ważny 30 dni.
 // Jeden kod na adres na zawsze (znacznik „listy”) — ponowny zapis po wypisie nie daje drugiego kodu.
 // Wyłącznik: app_settings „listy_kod” { wlaczony: false }.
-export const LISTY_CODE = { value: 10, min: 49, days: 30, typy: ["pdf", "audio", "wideo", "kurs", "pakiet"] };
+export const LISTY_CODE = { value: 10, min: 49, days: 30, typy: ["pdf", "audio", "wideo", "kurs", "zestaw", "pakiet"] };
 export const LISTY_CODE_TEXT = "Za zapis na Listy powrotu: 10 zł na materiał ze Skarbca (zamówienie od 49 zł)";
 
 const warsawDate = (ms: number) => new Intl.DateTimeFormat("sv-SE", { timeZone: "Europe/Warsaw" }).format(new Date(ms));

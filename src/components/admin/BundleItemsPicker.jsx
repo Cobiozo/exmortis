@@ -3,8 +3,8 @@ import { base44 } from "@/api/base44Client";
 import { Check, Loader2, Search, X } from "lucide-react";
 import { unitPrice, zl } from "@/lib/productPrice";
 
-const DIGITAL = ["pdf", "audio", "wideo", "kurs"];
-const TYPE_LABEL = { pdf: "PDF", audio: "Audio", wideo: "Wideo", kurs: "Kurs wideo" };
+const DIGITAL = ["pdf", "audio", "wideo", "kurs", "zestaw"];
+const TYPE_LABEL = { pdf: "PDF", audio: "Audio", wideo: "Wideo", kurs: "Kurs wideo", zestaw: "Ebook + nagrania" };
 const inp = "w-full bg-[#0A0A0B] border hairline px-3 py-2 text-sm focus:border-[#C9A24A] focus:outline-none";
 
 // Składniki pakietu: wybór z produktów cyfrowych + podgląd wartości i oszczędności.

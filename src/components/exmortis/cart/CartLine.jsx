@@ -15,6 +15,7 @@ const FORMAT = {
   audio: "Nagranie audio",
   kurs: "Kurs",
   wideo: "Wideo",
+  zestaw: "E-book z nagraniami",
   usluga: "Usługa 1:1",
   karta: "Karta podarunkowa",
   pakiet: "Pakiet",

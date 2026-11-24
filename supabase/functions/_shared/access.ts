@@ -1,7 +1,7 @@
 // Dostępy klientów do produktów cyfrowych (encja Access w Base44 + lustro w Supabase).
 import { mirrorRecord, accessFilter } from "./mirror.ts";
 
-export const DIGITAL = ["pdf", "audio", "wideo", "kurs"];
+export const DIGITAL = ["pdf", "audio", "wideo", "kurs", "zestaw"]; // zestaw = ebook + nagrania (tylko na koncie)
 
 export const warsawToday = () => new Date().toLocaleDateString("sv-SE", { timeZone: "Europe/Warsaw" });
 

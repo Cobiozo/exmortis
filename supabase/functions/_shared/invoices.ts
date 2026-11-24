@@ -11,7 +11,7 @@ import { getSettingsFast } from "./settings.ts";
 import { secrets } from "./shim.ts";
 
 // Produkty cyfrowe (e-book, audio, wideo, kurs) mogą mieć własną stawkę VAT.
-const CYFROWE = ["pdf", "audio", "wideo", "kurs"];
+const CYFROWE = ["pdf", "audio", "wideo", "kurs", "zestaw"];
 const STAWKI = ["23", "22", "8", "7", "5", "4", "3", "0", "zw"];
 
 export const FAKTURY_DEFAULT = {

@@ -42,7 +42,7 @@ const handler = async function (req) {
         };
       });
       // Postęp kursów: ukończone / widoczne lekcje (bez wpływu na resztę listy przy błędzie).
-      await Promise.all(products.filter((p) => (p.type === "kurs" || p.type === "wideo") && p.active).map(async (p) => {
+      await Promise.all(products.filter((p) => ["kurs", "wideo", "zestaw"].includes(p.type) && p.active).map(async (p) => {
         try {
           const a = list.find((x) => x.id === p.access_id);
           const [lessons, prog] = await Promise.all([

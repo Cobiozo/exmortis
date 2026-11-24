@@ -23,7 +23,8 @@ export async function accessFileResponse(base44, a, ip: string, email: string) {
   );
   const p = rows[0];
   // Każdy PDF (kupiony i darmowy) dostaje osobistą kopię ze znakiem wodnym (e-mail konta).
-  const pdfSrc = p?.product_type === "pdf" ? (p.private_file_uri || (/\.pdf(\?|$)/i.test(String(p.file_url || "")) ? p.file_url : null)) : null;
+  // Zestaw (ebook + nagrania): plik produktu to zawsze ebook PDF — z tym samym znakiem wodnym.
+  const pdfSrc = p?.product_type === "pdf" || p?.product_type === "zestaw" ? (p.private_file_uri || (/\.pdf(\?|$)/i.test(String(p.file_url || "")) ? p.file_url : null)) : null;
   if (pdfSrc) {
     const sr = base44.asServiceRole;
     const orderNo = a.order_id ? String(a.order_id).slice(0, 8).toUpperCase() : "R-" + a.id.slice(-6).toUpperCase();

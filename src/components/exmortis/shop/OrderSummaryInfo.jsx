@@ -25,7 +25,7 @@ export default function OrderSummaryInfo({ items, total, tone = "paper", classNa
       ))}
       <p>Cena łączna brutto: <span className={t.accent}>{total} zł</span></p>
       {digital ? (
-        <p>Dostarczenie: zaraz po zaksięgowaniu płatności — link do pobrania na Twój e-mail (ważny 7 dni, nowy wyślesz sobie w każdej chwili){items.some((i) => i.product_type === "kurs" || i.product_type === "wideo") ? "; kursy i wideo na bezpłatnym koncie exmortis, które aktywujesz jednym kliknięciem" : ""}. Z kontem zakup jest też w Moich produktach.</p>
+        <p>Dostarczenie: zaraz po zaksięgowaniu płatności — link do pobrania na Twój e-mail (ważny 7 dni, nowy wyślesz sobie w każdej chwili){items.some((i) => ["kurs", "wideo", "zestaw"].includes(i.product_type)) ? "; kursy, wideo i e-booki z nagraniami wyłącznie na bezpłatnym koncie exmortis, które aktywujesz jednym kliknięciem" : ""}. Z kontem zakup jest też w Moich produktach.</p>
       ) : (
         <p>Dostarczenie: szczegóły i dalsze kroki na Twój e-mail zaraz po zaksięgowaniu płatności.</p>
       )}

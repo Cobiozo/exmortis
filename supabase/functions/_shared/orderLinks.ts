@@ -15,8 +15,8 @@ import { sendMail } from "./smtp.ts";
 export const LINK_DAYS = 7;
 export const ACTIVATE_DAYS = 30; // „Aktywuj konto” działa dłużej niż link do pobrania
 export const FILE_TYPES = ["pdf", "audio"]; // do pobrania bez konta
-export const ACCOUNT_TYPES = ["kurs", "wideo"]; // tylko na koncie
-export const BUYER_CODE = { value: 20, days: 30, min: 49, typy: ["pdf", "audio", "wideo", "kurs", "pakiet"] };
+export const ACCOUNT_TYPES = ["kurs", "wideo", "zestaw"]; // tylko na koncie (zestaw: ebook i nagrania bez linku do pobrania)
+export const BUYER_CODE = { value: 20, days: 30, min: 49, typy: ["pdf", "audio", "wideo", "kurs", "zestaw", "pakiet"] };
 
 // Adres projektu czytany przy wywołaniu (nie przy imporcie modułu).
 const SUPA = () => ((globalThis as any).Deno?.env?.get("SUPABASE_URL") || "https://fqhvxhnbeyvwubpnuzxe.supabase.co").replace(/\/+$/, "");

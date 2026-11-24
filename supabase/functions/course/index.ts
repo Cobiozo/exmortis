@@ -18,7 +18,7 @@ const handler = async function (req) {
     const sr = base44.asServiceRole.entities;
 
     const a = await sr.Access.get(String(body.access_id || "")).catch(() => null);
-    if (!a || a.user_email !== email || !isActive(a) || !["wideo", "kurs"].includes(a.product_type)) {
+    if (!a || a.user_email !== email || !isActive(a) || !["wideo", "kurs", "zestaw"].includes(a.product_type)) {
       return Response.json({ error: "Brak dostępu" }, { status: 403 });
     }
     const pid = a.product_id;
@@ -33,6 +33,7 @@ const handler = async function (req) {
         lessons: lessons.map((l) => ({
           id: l.id, module: l.module || "", title: l.title, description: l.description || "",
           duration_min: l.duration_min || null, has_video: !!(l.video_uri || l.video_url),
+          kind: l.media_kind === "audio" ? "audio" : "wideo", // nagranie audio: tylko odtwarzanie na koncie, bez pobierania
           position_s: byL.get(l.id)?.position_s || 0, completed: !!byL.get(l.id)?.completed,
         })),
       });
@@ -44,7 +45,9 @@ const handler = async function (req) {
     }
 
     if (body.action === "play") {
-      if (!lesson.video_uri && !lesson.video_url) return Response.json({ error: "Wideo jest przygotowywane" }, { status: 404 });
+      if (!lesson.video_uri && !lesson.video_url) return Response.json({ error: "Nagranie jest przygotowywane" }, { status: 404 });
+      // Audio tylko z wgranego pliku prywatnego (adres zewnętrzny dotyczy wideo).
+      if (lesson.media_kind === "audio" && !lesson.video_uri) return Response.json({ error: "Nagranie jest przygotowywane" }, { status: 404 });
       // Adres zewnętrzny sprawdzany przy każdym odtworzeniu (zmiana listy domen działa od razu).
       let external = null;
       if (!lesson.video_uri) {

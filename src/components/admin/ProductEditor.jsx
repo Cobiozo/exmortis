@@ -457,9 +457,11 @@ export default function ProductEditor({ product, onSaved, onCancel }) {
 
       <ProductAccessFields form={form} set={set} />
       {form.product_type === "pakiet" && <BundleItemsPicker form={form} set={set} />}
-      {(form.product_type === "wideo" || form.product_type === "kurs") && (
+      {["wideo", "kurs", "zestaw"].includes(form.product_type) && (
         product?.id ? <LessonsManager productId={product.id} /> : (
-          <p className="mb-10 text-sm text-foreground/50">Zapisz produkt, a potem dodasz lekcje i wideo.</p>
+          <p className="mb-10 text-sm text-foreground/50">
+            {form.product_type === "zestaw" ? "Zapisz produkt, a potem dodasz nagrania audio i wideo." : "Zapisz produkt, a potem dodasz lekcje i wideo."}
+          </p>
         )
       )}
 

@@ -163,7 +163,7 @@ async function buildFeed(base44, me) {
     }
   }
   // Nowe lekcje w moich kursach (dodane po zakupie, 14 dni) — jedno powiadomienie na kurs.
-  const courses = access.filter((x) => !x.revoked && ["kurs", "wideo"].includes(x.product_type) && (!x.valid_until || x.valid_until >= today));
+  const courses = access.filter((x) => !x.revoked && ["kurs", "wideo", "zestaw"].includes(x.product_type) && (!x.valid_until || x.valid_until >= today));
   if (courses.length) {
     const lessons = await sr.CourseLesson.filter({ product_id: { $in: courses.map((c) => String(c.product_id)) }, published: true }, "-created_date", 100).catch(() => []);
     for (const c of courses) {

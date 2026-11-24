@@ -18,6 +18,19 @@
     "description": {
       "type": "string"
     },
+    "media_kind": {
+      "type": "string",
+      "enum": [
+        "wideo",
+        "audio"
+      ],
+      "enumColors": [
+        "blue",
+        "purple"
+      ],
+      "default": "wideo",
+      "description": "Rodzaj nagrania: wideo albo audio (audio z wgranego pliku, tylko odtwarzanie na koncie)"
+    },
     "video_uri": {
       "type": "string"
     },
@@ -26,7 +39,7 @@
     },
     "video_url": {
       "type": "string",
-      "description": "Adres wideo spoza aplikacji: własny serwer (https, plik mp4/webm, domena z listy w ustawieniach biblioteki), Vimeo, YouTube albo Bunny Stream"
+      "description": "Adres wideo spoza aplikacji: w\u0142asny serwer (https, plik mp4/webm, domena z listy w ustawieniach biblioteki), Vimeo, YouTube albo Bunny Stream"
     },
     "duration_min": {
       "type": "number"

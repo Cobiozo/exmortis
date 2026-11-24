@@ -12,7 +12,7 @@ import { emailButton } from "./emailLayout.ts";
 
 export const STEPS = [1, 3, 7, 14];
 const DAY = 864e5;
-const TYPES = ["pdf", "audio", "wideo", "kurs", "pakiet"];
+const TYPES = ["pdf", "audio", "wideo", "kurs", "zestaw", "pakiet"];
 
 const esc = (v) => String(v ?? "").replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
 const firstName = (n) => String(n || "").trim().split(/\s+/)[0] || "";
@@ -58,6 +58,7 @@ async function reconcileQueued(base44) {
 function vocab(type) {
   if (type === "audio") return { verb: "słuchać", noun: "słuchanie", unit: "jeden fragment dziennie", back: "WRÓĆ DO NAGRANIA", open: "OTWÓRZ NAGRANIE" };
   if (type === "kurs" || type === "wideo") return { verb: "przechodzić", noun: "lekcje", unit: "jedna lekcja dziennie", back: "WRÓĆ DO KURSU", open: "OTWÓRZ KURS" };
+  if (type === "zestaw") return { verb: "korzystać", noun: "lektura i nagrania", unit: "jeden rozdział albo jedno nagranie dziennie", back: "WRÓĆ DO MATERIAŁÓW", open: "OTWÓRZ W MOIM KONCIE" };
   if (type === "pakiet") return { verb: "korzystać", noun: "materiały", unit: "jeden materiał naraz, jeden fragment dziennie", back: "WRÓĆ DO MATERIAŁÓW", open: "OTWÓRZ MATERIAŁY" };
   return { verb: "czytać", noun: "lektura", unit: "jeden rozdział dziennie", back: "WRÓĆ DO LEKTURY", open: "OTWÓRZ E-BOOKA" };
 }

@@ -1,5 +1,5 @@
 import React from "react";
-import { CheckCircle2, Circle, PlayCircle, Clock } from "lucide-react";
+import { CheckCircle2, Circle, PlayCircle, Clock, Headphones } from "lucide-react";
 
 export default function LessonList({ lessons, current, onPick }) {
   let lastModule = null;
@@ -8,7 +8,7 @@ export default function LessonList({ lessons, current, onPick }) {
       {lessons.map((l) => {
         const head = l.module && l.module !== lastModule;
         lastModule = l.module;
-        const Icon = l.id === current ? PlayCircle : l.completed ? CheckCircle2 : Circle;
+        const Icon = l.id === current ? (l.kind === "audio" ? Headphones : PlayCircle) : l.completed ? CheckCircle2 : Circle;
         return (
           <div key={l.id}>
             {head && <p className="technical text-[9px] gold-text px-4 pt-4 pb-2">{l.module}</p>}

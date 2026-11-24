@@ -9,7 +9,7 @@ export const ACCOUNT_TEXT =
   "Załóż mi bezpłatne konto exmortis na podany adres: zakup zawsze pod ręką, ROZDROŻA, Biblioteka i 20 zł na kolejny materiał. Link do ustawienia hasła przyjdzie po zakupie.";
 
 export default function AccountOption({ items, checked, onChange }) {
-  const course = items.some((i) => i.product_type === "kurs" || i.product_type === "wideo");
+  const course = items.some((i) => ["kurs", "wideo", "zestaw"].includes(i.product_type));
   return (
     <div className="space-y-2">
       <label className="flex items-start gap-3 cursor-pointer">
@@ -18,7 +18,7 @@ export default function AccountOption({ items, checked, onChange }) {
       </label>
       <p className="text-xs text-foreground/50 leading-relaxed pl-8">
         {course
-          ? "Kurs jest dostępny na bezpłatnym koncie. Jeśli nie zaznaczysz tej opcji, konto aktywujesz po zakupie jednym kliknięciem — link otrzymasz w wiadomości e-mail."
+          ? "Kursy, nagrania i e-booki z nagraniami są dostępne wyłącznie na bezpłatnym koncie. Jeśli nie zaznaczysz tej opcji, konto aktywujesz po zakupie jednym kliknięciem — link otrzymasz w wiadomości e-mail."
           : "Bez konta również otrzymasz pełny dostęp — link do pobrania materiałów otrzymasz w wiadomości e-mail."}{" "}
         Masz konto? <Link to="/login?returnTo=%2Fkasa" className="gold-text hover:underline">Zaloguj się</Link>.
       </p>

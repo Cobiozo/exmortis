@@ -15,6 +15,7 @@ const TYPES = {
   audio: "Nagranie",
   kurs: "Kurs",
   wideo: "Wideo",
+  zestaw: "E-book z nagraniami",
   usluga: "Usługa indywidualna",
   karta: "Karta podarunkowa",
   pakiet: "Pakiet",

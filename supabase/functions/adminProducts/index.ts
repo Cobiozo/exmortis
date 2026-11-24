@@ -12,7 +12,7 @@ const CATEGORIES = ["ebook", "warsztat", "mentoring", "mastermind", "retreat", "
 const STAGES = ["Śmierć", "Próg", "Powrót", "Inny", "Wszystkie"];
 const FORMS = ["Czytam", "Słucham", "Oglądam", "Uczestniczę", "Idę głęboko"];
 const STATUSES = ["dostępny", "wkrótce", "ukryty"];
-const TYPES = ["pdf", "audio", "wideo", "kurs", "usluga", "karta", "pakiet"];
+const TYPES = ["pdf", "audio", "wideo", "kurs", "zestaw", "usluga", "karta", "pakiet"];
 // Limit miejsc ma sens tylko dla typów, które mają „miejsca” (kohorta, kurs na żywo, warsztat).
 const SEAT_TYPES = ["kurs", "wideo", "usluga"];
 const AUDIENCES = ["Mężczyzna", "Kobieta", "Ojciec", "Matka", "Mąż", "Żona", "Lider"];

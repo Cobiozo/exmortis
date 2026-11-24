@@ -12,7 +12,7 @@ import { hasPaidOrder, issueBuyerCode } from "./orderLinks.ts";
 // Wyłącznik: app_settings „powitalny” { wlaczony: false }.
 // Od 16.11.2026: konto założone po zakupie (opłacone zamówienie na ten adres) dostaje zamiast −20% kod 20 zł
 // (orderLinks.issueBuyerCode); oba kody mają znacznik „powitalny”, więc osoba dostaje tylko jeden.
-export const WELCOME = { value: 20, min: 49, days: 7, typy: ["pdf", "audio", "wideo", "kurs", "pakiet"] };
+export const WELCOME = { value: 20, min: 49, days: 7, typy: ["pdf", "audio", "wideo", "kurs", "zestaw", "pakiet"] };
 export const WELCOME_FROM = "2026-11-14T00:00:00Z"; // konta założone wcześniej nie dostają kodu
 export const WELCOME_TEXT = "Na początek drogi: 20 zł na pierwszy materiał ze Skarbca (zamówienie od 49 zł)";
 

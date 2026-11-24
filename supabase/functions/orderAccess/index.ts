@@ -41,7 +41,7 @@ const handler = async function (req) {
       const pid = String(body.product_id || "");
       const m = (await orderMaterials(base44, link.items)).find((x) => x.id === pid);
       if (!m) return Response.json({ error: "Tego materiału nie ma w zamówieniu" }, { status: 404 });
-      if (m.account_only) return Response.json({ error: "Kurs jest dostępny na koncie — użyj przycisku „Aktywuj dostęp”." }, { status: 400 });
+      if (m.account_only) return Response.json({ error: "Ten materiał jest dostępny tylko na koncie — użyj przycisku „Aktywuj dostęp”." }, { status: 400 });
       const a = (await accessFilter(base44, { user_email: String(link.email).toLowerCase(), product_id: pid }))[0];
       if (!a || !isActive(a)) return Response.json({ error: "Dostęp do tego materiału wygasł lub został cofnięty. Napisz do mnie — wyjaśnię." }, { status: 403 });
       await runSql(base44, `UPDATE public.order_links SET downloads = downloads + 1, last_download_at = now() WHERE token_hash = ${escStr(link.token_hash)}`).catch(() => {});
