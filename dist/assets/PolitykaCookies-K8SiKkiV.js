@@ -1,0 +1,1 @@
+import"./rolldown-runtime-XKyaHtl9.js";import{cr as e}from"./icons-fBot7eBO.js";import{t}from"./jsx-runtime-BckAlYEs.js";import{T as n}from"./index-DBDPEKsn.js";import{t as r}from"./LegalPage-CIRoIfWG.js";e();var i=t();function a(){return(0,i.jsx)(r,{doc:n,docKey:`cookies`})}export{a as default};
