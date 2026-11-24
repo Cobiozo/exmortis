@@ -70,21 +70,23 @@ export function AboutHistoria({ d, label }) {
   return (
     <>
       {(d.etykieta || label) && <p className="exm-eyebrow">{d.etykieta || label}</p>}
-      <div className="mt-8 max-w-[var(--exm-container-narrow)]">
+      <div className="mt-8 max-w-[960px]">
         {rozdzialy.map((r, i) => (
-          <div key={i} className={i ? "mt-12" : ""}>
-            {r.tytul && <h2 className="exm-h3 text-[clamp(1.25rem,2.4vw,1.6rem)]">{r.tytul}</h2>}
-            <Rich html={r.tresc} className="mt-3 text-[17px] leading-relaxed text-exm-muted" />
-            {/* Opcjonalne zdjęcie rozdziału (np. czas posługi) — małe, pod tekstem, z podpisem. */}
+          <div key={i} className={`${i ? "mt-12" : ""} ${r.zdjecie?.url ? "md:grid md:grid-cols-[minmax(0,1fr)_240px] md:items-start md:gap-12" : ""}`}>
+            <div className="min-w-0 max-w-[var(--exm-container-narrow)]">
+              {r.tytul && <h2 className="exm-h3 text-[clamp(1.25rem,2.4vw,1.6rem)]">{r.tytul}</h2>}
+              <Rich html={r.tresc} className="mt-3 text-[17px] leading-relaxed text-exm-muted" />
+              {po === i + 1 && d.piosenka_url && <div className="mt-8 max-w-[560px]">{piosenka}</div>}
+            </div>
+            {/* Opcjonalne zdjęcie rozdziału (np. czas posługi) — na komputerze obok tekstu, na telefonie pod nim. */}
             {r.zdjecie?.url && (
-              <figure className="mt-6 w-full max-w-[320px]">
+              <figure className="mt-6 w-full max-w-[280px] md:mt-1 md:max-w-none">
                 <div className="aspect-[4/5] overflow-hidden rounded-[var(--exm-r-card)] bg-exm-surface-2">
                   <SafeImg img={r.zdjecie} className="h-full w-full" />
                 </div>
                 {r.podpis && <figcaption className="technical mt-3 text-[11px] text-exm-muted">{r.podpis}</figcaption>}
               </figure>
             )}
-            {po === i + 1 && d.piosenka_url && <div className="mt-8">{piosenka}</div>}
           </div>
         ))}
       </div>
@@ -114,10 +116,13 @@ export function AboutZdjecie({ d, label }) {
         </div>
       </div>
       {(d.piosenka_wstep || d.piosenka_url) && (
-        <div className="mt-10 max-w-[var(--exm-container-narrow)]">
-          {d.piosenka_wstep && <p className="text-[15px] leading-relaxed text-exm-muted">{nbsp(d.piosenka_wstep)}</p>}
-          <div className="mt-4"><Song url={d.piosenka_url} tytul={d.piosenka_tytul} podpis={d.piosenka_podpis} /></div>
-          {d.piosenka2_url && <div className="mt-10"><Song url={d.piosenka2_url} tytul={d.piosenka2_tytul} podpis={d.piosenka2_podpis} /></div>}
+        <div className="mt-10">
+          {d.piosenka_wstep && <p className="max-w-[var(--exm-container-narrow)] text-[15px] leading-relaxed text-exm-muted">{nbsp(d.piosenka_wstep)}</p>}
+          {/* Komputer: dwie piosenki obok siebie; jedna — w połowie szerokości. Telefon: jedna pod drugą. */}
+          <div className="mt-5 grid gap-6 md:grid-cols-2 md:gap-8">
+            <Song url={d.piosenka_url} tytul={d.piosenka_tytul} podpis={d.piosenka_podpis} />
+            {d.piosenka2_url && <Song url={d.piosenka2_url} tytul={d.piosenka2_tytul} podpis={d.piosenka2_podpis} />}
+          </div>
         </div>
       )}
     </div>
