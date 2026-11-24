@@ -1,4 +1,5 @@
 import React from "react";
+import { Link } from "react-router-dom";
 import BrandCard from "@/components/exmortis/ui/BrandCard";
 import BrandButton from "@/components/exmortis/ui/BrandButton";
 import ProductHighlight from "@/components/exmortis/ui/ProductHighlight";
@@ -20,7 +21,7 @@ export default function VaultCard({ product: p }) {
   return (
     <BrandCard
       variant="produkt"
-      media={<ShopMedia product={p} />}
+      media={<Link to={href} aria-label={p.name} tabIndex={-1} className="absolute inset-0 block"><ShopMedia product={p} /></Link>}
       highlight={hl ? <ProductHighlight kind={hl} /> : null}
       label={free ? "Bezpłatnie" : p.form || null}
       title={p.name}

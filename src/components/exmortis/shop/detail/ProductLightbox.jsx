@@ -20,9 +20,9 @@ export default function ProductLightbox({ images, index, onIndex, onClose, name 
     return () => { window.removeEventListener("keydown", onKey); document.body.style.overflow = prev; };
   });
 
-  const btn = "absolute z-10 flex h-12 w-12 items-center justify-center rounded-full bg-exm-surface/80 text-exm-ivory hover:text-exm-gold";
+  const btn = "absolute z-10 flex h-12 w-12 items-center justify-center rounded-full border border-exm-line-strong bg-exm-surface text-exm-ivory hover:text-exm-gold";
   return createPortal(
-    <div role="dialog" aria-modal="true" aria-label={`Zdjęcie: ${name}`} className="fixed inset-0 z-[100] flex items-center justify-center bg-exm-bg/95 p-4" onClick={onClose}>
+    <div role="dialog" aria-modal="true" aria-label={`Zdjęcie: ${name}`} className="fixed inset-0 z-[200] flex items-center justify-center bg-exm-bg p-4" onClick={onClose}>
       <button type="button" onClick={onClose} aria-label="Zamknij" className={`${btn} right-4 top-[calc(1rem+env(safe-area-inset-top))]`}>
         <X className="h-5 w-5" />
       </button>
