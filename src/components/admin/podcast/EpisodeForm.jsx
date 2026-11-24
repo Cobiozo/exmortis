@@ -58,6 +58,10 @@ export default function EpisodeForm({ ep, guests, nextNum, onDone, onCancel }) {
       </div>
       <label className={lbl}>Okładka odcinka (opcjonalnie) {busy === "img" && <Loader2 className="inline h-3 w-3 animate-spin" />}{f.okladka && <img src={f.okladka} alt="" className="h-12 w-12 inline ml-2" />}
         <input type="file" accept="image/*" className="text-xs" onChange={(e) => e.target.files[0] && up("img", e.target.files[0], async (x) => ({ okladka: await uploadImage(x) }))} /></label>
+      <label className="flex items-center gap-2 text-xs text-foreground/70">
+        <input type="checkbox" checked={!!f.wyrozniony} onChange={(e) => set({ wyrozniony: e.target.checked })} />
+        Wyróżniony: pokazuj ten odcinek jako pierwszy na /glos (w zakładce Podcast)
+      </label>
       <Chips label="Goście" items={guests.map((g) => [g.id, g.nazwa])} value={f.goscie} onToggle={(v) => tog("goscie", v)} />
       <Chips label="Tematy" items={TEMATY} value={f.tematy} onToggle={(v) => tog("tematy", v)} />
       <Chips label="Ostrzeżenie o treści" items={TRUDNE.map((t) => [t, t])} value={f.ostrzezenia} onToggle={(v) => tog("ostrzezenia", v)} />

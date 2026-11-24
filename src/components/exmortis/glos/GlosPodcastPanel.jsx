@@ -39,6 +39,8 @@ export default function GlosPodcastPanel() {
   }, []);
 
   const latest = eps?.[0] || null;
+  // Wyróżniony w panelu odcinek jest wybrany na start; bez wyróżnienia — najnowszy.
+  const featured = eps?.find((e) => e.wyrozniony) || latest;
   const hasTopics = !!eps?.some((e) => e.tematy?.length);
 
   const shown = useMemo(() => {
@@ -55,7 +57,7 @@ export default function GlosPodcastPanel() {
 
   // Wybrany odcinek: grający w odtwarzaczu (jeśli z tej listy), kliknięty albo najnowszy.
   const all = eps || [];
-  const current = all.find((e) => e.id === (p?.ep?.id && all.some((x) => x.id === p.ep.id) ? p.ep.id : selId)) || latest;
+  const current = all.find((e) => e.id === (p?.ep?.id && all.some((x) => x.id === p.ep.id) ? p.ep.id : selId)) || featured;
   const queue = shown.length ? shown : all;
   const ci = current ? queue.findIndex((e) => e.id === current.id) : -1;
 
@@ -110,7 +112,7 @@ export default function GlosPodcastPanel() {
             <div className="flex gap-4 p-5 md:gap-5 md:p-6">
               <Image src={current.okladka || settings?.okladka} alt={current.tytul} className="aspect-square w-24 shrink-0 rounded-[var(--exm-r-field)] bg-exm-surface-2 md:w-32" />
               <div className="min-w-0">
-                <p className="exm-eyebrow">{p?.ep?.id === current.id && p.playing ? "Teraz gra" : current.id === latest?.id ? "Najnowszy odcinek" : "Odcinek"} · #{current.numer ?? "—"}</p>
+                <p className="exm-eyebrow">{p?.ep?.id === current.id && p.playing ? "Teraz gra" : current.wyrozniony ? "Wyróżniony odcinek" : current.id === latest?.id ? "Najnowszy odcinek" : "Odcinek"} · #{current.numer ?? "—"}</p>
                 <h3 className="mt-2 font-exm-serif text-[clamp(1.25rem,2.4vw,1.7rem)] leading-[1.15] text-exm-ivory">{current.tytul}</h3>
                 {meta(current) && <p className="mt-1.5 text-[13px] text-exm-muted">{meta(current)}</p>}
               </div>

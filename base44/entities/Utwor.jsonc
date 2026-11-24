@@ -5,14 +5,54 @@
     "tytul": {
       "type": "string"
     },
+    "autor": {
+      "type": "string",
+      "description": "Autor albo wykonawca (domy\u015blnie EXMORTIS)"
+    },
     "youtube_url": {
+      "type": "string",
+      "description": "Opcjonalny oficjalny link YouTube"
+    },
+    "audio_url": {
+      "type": "string",
+      "description": "W\u0142asne audio: wgrany MP3/M4A albo bezpo\u015bredni adres HTTPS do pliku"
+    },
+    "dlugosc_s": {
+      "type": "number"
+    },
+    "okladka": {
       "type": "string"
     },
     "opis": {
       "type": "string"
     },
+    "tekst": {
+      "type": "string",
+      "description": "Tekst utworu (rozwijany na stronie, tylko gdy uzupe\u0142niony)"
+    },
+    "kategoria": {
+      "type": "string"
+    },
     "kolejnosc": {
       "type": "number"
+    },
+    "wyrozniony": {
+      "type": "boolean",
+      "default": false
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "szkic",
+        "opublikowany",
+        "ukryty"
+      ],
+      "enumColors": [
+        "gray",
+        "green",
+        "yellow"
+      ],
+      "description": "Publicznie widoczne tylko opublikowane (pole widoczny ustawiane razem ze statusem)"
     },
     "widoczny": {
       "type": "boolean",
@@ -24,8 +64,7 @@
     }
   },
   "required": [
-    "tytul",
-    "youtube_url"
+    "tytul"
   ],
   "rls": {
     "create": {

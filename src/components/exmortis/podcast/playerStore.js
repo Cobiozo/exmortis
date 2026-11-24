@@ -43,7 +43,8 @@ export async function verifyItem(item) {
     }
     const r = await base44.entities.Utwor.filter({ widoczny: true }, { limit: 200 });
     const u = (r.items || []).find((x) => x.id === item.id);
-    return u?.audio_url ? { ...item, tytul: u.tytul, audio: u.audio_url } : null;
+    const live = u && (!u.status || u.status === "opublikowany");
+    return live && u.audio_url ? { ...item, tytul: u.tytul, audio: u.audio_url } : null;
   } catch {
     return null;
   }

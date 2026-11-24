@@ -46,6 +46,11 @@
     "okladka": {
       "type": "string"
     },
+    "wyrozniony": {
+      "type": "boolean",
+      "default": false,
+      "description": "Wyr\u00f3\u017cniony odcinek \u2014 pokazywany jako pierwszy na /glos"
+    },
     "goscie": {
       "type": "array",
       "items": {

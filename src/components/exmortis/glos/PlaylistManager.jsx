@@ -85,6 +85,7 @@ export default function PlaylistManager({ onMutate }) {
         opis: opis.trim(),
         kolejnosc: maxK + 1,
         widoczny: true,
+        status: "opublikowany",
         data_dodania: new Date().toISOString(),
       });
       setUrl("");
@@ -224,7 +225,7 @@ export default function PlaylistManager({ onMutate }) {
                   <ArrowDown className="h-4 w-4" />
                 </button>
                 <button
-                  onClick={() => saveRow(r, { widoczny: !r.widoczny })}
+                  onClick={() => saveRow(r, { widoczny: !r.widoczny, status: r.widoczny ? "ukryty" : "opublikowany" })}
                   className={`p-2 border hairline transition-colors ${
                     r.widoczny
                       ? "gold-text border-[#C9A24A]/40"
