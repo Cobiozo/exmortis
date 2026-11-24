@@ -72,7 +72,11 @@ export default function Shop() {
   const groups = useMemo(() => buildGroups(visible), [visible]);
   const active = tab && groups.some((g) => g.key === tab) ? tab : groups[0]?.key;
   const current = groups.find((g) => g.key === active);
-  const featured = useMemo(() => visible.find((p) => p.slug === BOOK && !isSoon(p)) || null, [visible]);
+  // Wyróżnione nad zakładkami: wszystkie dostępne płatne książki, „Wracam inny” pierwsza.
+  const featured = useMemo(() => {
+    const books = groups.find((g) => g.key === "ksiazki")?.items || [];
+    return [...books].sort((a, b) => (b.slug === BOOK) - (a.slug === BOOK));
+  }, [groups]);
 
   const panel = () => {
     if (!current) return null;
@@ -138,10 +142,10 @@ export default function Shop() {
           {groups.length > 0 && (
             <>
               {/* Lejek 19.11.2026: wyróżniona książka stoi nad zakładkami — płatna oferta nie wisi pod aktywną zakładką „Bezpłatnie”. */}
-              {featured && (
-                <div className="mt-8 md:mt-10">
-                  <h2 className="sr-only">Wyróżniona książka</h2>
-                  <VaultFeatured product={featured} />
+              {featured.length > 0 && (
+                <div className="mt-8 space-y-6 md:mt-10">
+                  <h2 className="sr-only">Wyróżnione książki</h2>
+                  {featured.map((p) => <VaultFeatured key={p.id || p.slug} product={p} />)}
                 </div>
               )}
 
