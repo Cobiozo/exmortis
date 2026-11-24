@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import ProductThumbs from "./ProductThumbs";
+import ProductLightbox from "./ProductLightbox";
 import Logo from "@/components/exmortis/Logo";
 import PaperCard from "@/components/exmortis/ui/PaperCard";
 import ProductHighlight from "@/components/exmortis/ui/ProductHighlight";
@@ -20,6 +21,7 @@ export default function ProductCover({ product }) {
   // Zdjęcie główne + galeria z panelu (bez powtórzeń i pustych adresów).
   const images = [...new Set([cover, ...(Array.isArray(product.gallery) ? product.gallery : [])].filter(Boolean))];
   const [active, setActive] = useState(0);
+  const [zoom, setZoom] = useState(false);
   useEffect(() => setActive(0), [product.id]);
   const src = images[active] || "";
   const go = (d) => setActive((i) => (i + d + images.length) % images.length);
@@ -37,7 +39,9 @@ export default function ProductCover({ product }) {
         </>
       )}
       {src ? (
-        <ShopMedia product={{ ...product, cover_image: src }} priority={active === 0} sizes="(min-width: 1024px) 420px, 90vw" />
+        <button type="button" onClick={() => setZoom(true)} aria-label="Powiększ zdjęcie" className="absolute inset-0 cursor-zoom-in">
+          <ShopMedia product={{ ...product, cover_image: src }} priority={active === 0} sizes="(min-width: 1024px) 420px, 90vw" />
+        </button>
       ) : (
         <span className="absolute inset-0 flex items-center justify-center" aria-hidden="true">
           <Logo className="h-20 w-20 opacity-40" glow={false} />
@@ -51,7 +55,12 @@ export default function ProductCover({ product }) {
     </div>
   );
 
-  const thumbs = images.length > 1 && <ProductThumbs images={images} active={active} onPick={setActive} name={product.name} />;
+  const thumbs = (
+    <>
+      {images.length > 1 && <ProductThumbs images={images} active={active} onPick={setActive} name={product.name} />}
+      {zoom && <ProductLightbox images={images} index={active} onIndex={setActive} onClose={() => setZoom(false)} name={product.name} />}
+    </>
+  );
 
   return book ? (
     <div className="mx-auto h-fit w-full max-w-[420px] self-start">

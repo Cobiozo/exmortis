@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from "react";
-import { ArrowDown, ArrowUp, Pencil, Star, Trash2 } from "lucide-react";
+import { ArrowDown, ArrowUp, Headphones, Pencil, Star, Trash2 } from "lucide-react";
+import useSongPlays from "./useSongPlays";
 import { base44 } from "@/api/base44Client";
 import { sourceOf, statusOf } from "@/components/exmortis/glos/musicUtils";
 import SongForm from "./SongForm";
@@ -13,6 +14,7 @@ const ST = { szkic: "Szkic", opublikowany: "Opublikowany", ukryty: "Ukryty" };
 export default function SongsTab() {
   const [rows, setRows] = useState(null);
   const [edit, setEdit] = useState(null); // null | "new" | rekord
+  const plays = useSongPlays();
   const load = () => U.filter({}, { sort: "kolejnosc", limit: 200 }).then((r) => setRows(r.items || []));
   useEffect(() => { load(); }, []);
 
@@ -49,6 +51,12 @@ export default function SongsTab() {
               <p className="text-sm truncate">{r.wyrozniony && <Star className="inline h-3.5 w-3.5 gold-text mr-1" aria-label="Wyróżniony" />}{r.tytul}</p>
               <p className="text-xs text-foreground/50">{[r.autor || "EXMORTIS", r.kategoria, ST[statusOf(r)]].filter(Boolean).join(" · ")}</p>
             </div>
+            {plays(r.tytul) && (
+              <span className="text-xs text-foreground/60 shrink-0" title="Odsłuchania na stronie Głos: ostatnie 90 dni · ostatnie 7 dni">
+                <Headphones className="inline h-3.5 w-3.5 mr-1 gold-text" aria-hidden="true" />
+                <span className="font-mono gold-text">{plays(r.tytul).n}</span> · 7 dni: {plays(r.tytul).n7}
+              </span>
+            )}
             <SourceBadge src={sourceOf(r)} />
             <button onClick={() => setEdit(r)} aria-label="Edytuj" className="text-foreground/60 hover:text-[#C9A24A]"><Pencil className="h-4 w-4" /></button>
             <button onClick={() => del(r)} aria-label="Usuń" className="text-foreground/40 hover:text-[#BC1E22]"><Trash2 className="h-4 w-4" /></button>
