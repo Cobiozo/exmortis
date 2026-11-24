@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import { Upload, Loader2, Trash2, Save } from "lucide-react";
 import { base44 } from "@/api/base44Client";
+import LessonCover from "./LessonCover";
 
 const inp = "w-full bg-[#0A0A0B] border hairline px-3 py-2 text-sm focus:border-[#C9A24A] focus:outline-none";
 
@@ -78,6 +79,7 @@ export default function LessonRow({ lesson, onChange, domains, onAddDomain }) {
         ))}
         {audio && <span className="text-xs text-foreground/50">Audio: wgraj plik MP3 lub M4A. Klient tylko słucha na koncie, bez pobierania.</span>}
       </div>
+      {audio && <LessonCover value={f.cover || ""} onChange={(url) => { set("cover", url); save({ cover: url }); }} />}
       <textarea className={inp} rows={2} value={f.description || ""} onChange={(e) => set("description", e.target.value)} placeholder={audio ? "Opis / notatki pod nagraniem" : "Opis / notatki pod wideo"} />
       {!audio && <div className="space-y-1">
         <input className={inp} value={f.video_url || ""} onChange={(e) => set("video_url", e.target.value)}

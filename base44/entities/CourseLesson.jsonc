@@ -41,6 +41,10 @@
       "type": "string",
       "description": "Adres wideo spoza aplikacji: w\u0142asny serwer (https, plik mp4/webm, domena z listy w ustawieniach biblioteki), Vimeo, YouTube albo Bunny Stream"
     },
+    "cover": {
+      "type": "string",
+      "description": "Ok\u0142adka nagrania audio (adres obrazu) \u2014 widoczna w odtwarzaczu na koncie i na ekranie blokady"
+    },
     "duration_min": {
       "type": "number"
     },

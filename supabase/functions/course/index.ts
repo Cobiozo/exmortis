@@ -33,6 +33,7 @@ const handler = async function (req) {
         lessons: lessons.map((l) => ({
           id: l.id, module: l.module || "", title: l.title, description: l.description || "",
           duration_min: l.duration_min || null, has_video: !!(l.video_uri || l.video_url),
+          cover: l.media_kind === "audio" ? (l.cover || "") : "",
           kind: l.media_kind === "audio" ? "audio" : "wideo", // nagranie audio: tylko odtwarzanie na koncie, bez pobierania
           position_s: byL.get(l.id)?.position_s || 0, completed: !!byL.get(l.id)?.completed,
         })),

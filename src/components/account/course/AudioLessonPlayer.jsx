@@ -47,7 +47,7 @@ export default function AudioLessonPlayer({ accessId, courseName, lesson, onDone
   useEffect(() => {
     const ms = navigator.mediaSession;
     if (!ms || !src) return undefined;
-    ms.metadata = new window.MediaMetadata({ title: lesson.title, artist: "EXMORTIS", album: courseName || "" });
+    ms.metadata = new window.MediaMetadata({ title: lesson.title, artist: "EXMORTIS", album: courseName || "", ...(lesson.cover ? { artwork: [{ src: lesson.cover, sizes: "512x512" }] } : {}) });
     const h = { play: () => ref.current?.play(), pause: () => ref.current?.pause(), seekbackward: () => skip(-15), seekforward: () => skip(30), seekto: (e) => seek(e.seekTime) };
     Object.entries(h).forEach(([k, fn]) => { try { ms.setActionHandler(k, fn); } catch { /* nieobsługiwane */ } });
     return () => Object.keys(h).forEach((k) => { try { ms.setActionHandler(k, null); } catch { /* */ } });
@@ -67,7 +67,9 @@ export default function AudioLessonPlayer({ accessId, courseName, lesson, onDone
     <div className="min-w-0">
       <div className="rounded-[var(--exm-r-card)] border border-exm-line bg-exm-surface p-6 md:p-8" onContextMenu={(e) => e.preventDefault()}>
         <div className="mb-6 flex items-center gap-4">
-          <span className="grid h-14 w-14 shrink-0 place-items-center rounded-xl border border-exm-gold-line text-exm-gold"><Headphones className="h-6 w-6" strokeWidth={1.25} /></span>
+          {lesson.cover
+            ? <img src={lesson.cover} alt="" className="h-20 w-20 shrink-0 rounded-xl border border-exm-line object-cover md:h-24 md:w-24" />
+            : <span className="grid h-14 w-14 shrink-0 place-items-center rounded-xl border border-exm-gold-line text-exm-gold"><Headphones className="h-6 w-6" strokeWidth={1.25} /></span>}
           <div className="min-w-0">
             <p className="exm-eyebrow">Nagranie audio</p>
             <p className="mt-1 truncate text-[15px] text-exm-muted">{courseName}</p>
