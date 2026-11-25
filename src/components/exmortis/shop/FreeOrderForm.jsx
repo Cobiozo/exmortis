@@ -6,6 +6,7 @@ import useSystemText from "@/content/useSystemText";
 import { track } from "@/lib/track";
 import { FUNNEL } from "@/lib/funnelEvents";
 import { useAccountContact, AccountContactLine, SignInHint } from "@/components/common/AccountContact";
+import ConfirmEmailField, { sameEmail } from "@/components/common/ConfirmEmailField";
 
 const inputCls =
   "w-full bg-transparent border hairline px-5 py-4 focus:border-[#C9A24A] focus:outline-none transition-colors";
@@ -23,6 +24,7 @@ export default function FreeOrderForm({ product }) {
   const [done, setDone] = useState("");
   const t = useSystemText();
   const [error, setError] = useState("");
+  const [email2, setEmail2] = useState("");
   // Zalogowana osoba: imię i e-mail z konta (bez wpisywania); „zmień” pokazuje pola.
   const acc = useAccountContact();
   const [manual, setManual] = useState(false);
@@ -33,6 +35,12 @@ export default function FreeOrderForm({ product }) {
   const submit = async (e) => {
     e.preventDefault();
     if (sending) return;
+    // Adres wpisany ręcznie (bez konta) — drugi raz, bez wklejania (25.11.2026).
+    if (!fromAccount && !sameEmail(form.email, email2)) {
+      setError("Adres e-mail i powtórzony adres się różnią. Popraw je — na ten adres wyślę materiał.");
+      document.getElementById("free-email2")?.focus();
+      return;
+    }
     setSending(true);
     setError("");
     try {
@@ -97,6 +105,10 @@ export default function FreeOrderForm({ product }) {
               onChange={(e) => setForm({ ...form, email: e.target.value })}
               className={inputCls}
             />
+            <div className="mt-5">
+              <ConfirmEmailField id="free-email2" email={form.email} value={email2} onChange={setEmail2} className={inputCls}
+                labelClassName={labelCls} label="POWTÓRZ E-MAIL *" />
+            </div>
           </>
         )}
         <div className="mt-3">

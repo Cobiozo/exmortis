@@ -18,6 +18,7 @@ import EmptyCheckout from "@/components/exmortis/shop/checkout/EmptyCheckout";
 import { track, trackPurchase } from "@/lib/track";
 import { TXT } from "@/content/legal/seller";
 import { suggestEmail } from "@/lib/emailTypo";
+import ConfirmEmailField, { sameEmail } from "@/components/common/ConfirmEmailField";
 
 const ORDER_KEY = "exm_payu_order";
 const ORDER_VALUE_KEY = "exm_payu_value";
@@ -60,6 +61,9 @@ export default function Checkout() {
   const [invoice, setInvoice] = useState({ want: false, company: "", nip: "", address: "", post_code: "", city: "" });
   const [showNote, setShowNote] = useState(false);
   const emailTip = suggestEmail(form.email);
+  // Drugi raz wpisany adres (25.11.2026): wymagany, gdy adres nie pochodzi z konta zalogowanej osoby.
+  const [email2, setEmail2] = useState("");
+  const needConfirm = !(user && sameEmail(user.email, form.email));
   const { user } = useAuth();
   useEffect(() => {
     if (user) setForm((f) => ({ ...f, name: f.name || user.imie || user.full_name || "", email: f.email || user.email }));
@@ -127,6 +131,11 @@ export default function Checkout() {
     e.preventDefault();
     if (submitting) return;
     if (invoice.want && !validNip(invoice.nip)) { setPayError("Sprawdź NIP do faktury — powinien mieć 10 cyfr."); return; }
+    if (needConfirm && !sameEmail(form.email, email2)) {
+      setPayError("Adres e-mail i powtórzony adres się różnią. Popraw je — na ten adres wyślę dostęp do materiałów.");
+      document.getElementById("co-email2")?.focus();
+      return;
+    }
     setPayError("");
     setSubmitting(true);
     try {
@@ -265,6 +274,9 @@ export default function Checkout() {
                       <p id="co-email-hint" className="mt-2 text-[12px] leading-relaxed text-exm-muted">Na ten adres wyślę potwierdzenie i link do materiałów.</p>
                     )}
                   </div>
+                  {needConfirm && (
+                    <ConfirmEmailField id="co-email2" email={form.email} value={email2} onChange={setEmail2} className={fieldCls} />
+                  )}
                 </div>
               </CheckoutSection>
 
