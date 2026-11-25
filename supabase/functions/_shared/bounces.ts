@@ -49,7 +49,12 @@ const imapDate = (d: Date) => `${d.getUTCDate()}-${MON[d.getUTCMonth()]}-${d.get
 export function bounceRecipients(text: string, own: string[] = []) {
   const found = new Set<string>();
   for (const m of text.matchAll(/Final-Recipient:\s*rfc822;\s*<?([^\s<>;]+@[^\s<>;]+)>?/gi)) found.add(m[1].toLowerCase());
-  const part = text.split(/address\(es\) failed:|could not be delivered to|Delivery to the following recipient/i)[1];
+  // Fragment tuż za zapowiedzią listy adresów (pierwsza pasująca zapowiedź, w kolejności pewności).
+  let part = "";
+  for (const re of [/address\(es\) failed:/i, /Delivery to the following recipients? failed/i, /could not be delivered to the following/i]) {
+    const m = re.exec(text);
+    if (m) { part = text.slice(m.index + m[0].length); break; }
+  }
   if (part) for (const m of part.slice(0, 600).matchAll(/<?([A-Za-z0-9._%+'-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,})>?/g)) found.add(m[1].toLowerCase());
   for (const o of own) found.delete(o.toLowerCase());
   return [...found].filter((a) => !/^(mailer-daemon|postmaster)@/.test(a));
