@@ -64,6 +64,7 @@
     "moment": "^2.31.0",
     "multer": "^2.5.0",
     "next-themes": "^0.4.4",
+    "pdfjs-dist": "4.10.38",
     "postcss-selector-parser": "^6.1.4",
     "qrcode": "^1.5.4",
     "react": "^18.2.0",
