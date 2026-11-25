@@ -63,10 +63,14 @@ export async function personalizePdf(bytes: Uint8Array, o: { email: string; orde
     const color = i === 0 ? rgb(0.96, 0.94, 0.88) : rgb(0.45, 0.45, 0.45);
     // Uwzględnia przycięcie strony (CropBox) — napis zawsze tuż przy widocznej krawędzi, nie poza nią.
     const box = page.getCropBox ? page.getCropBox() : { x: 0, y: 0, width, height };
-    // Napis mieści się w szerokości widocznej strony (mniejsza czcionka na wąskich stronach).
-    const fit = (max) => Math.max(4, Math.min(max, (box.width - 16) / Math.max(1, font.widthOfTextAtSize(label, 1))));
-    page.drawText(label, { x: box.x + 8, y: box.y + box.height - 10, size: fit(7), font, color, opacity: 0.7 });
-    page.drawText(label, { x: box.x + 8, y: box.y + 8, size: fit(6), font, color, opacity: 0.45 });
+    // Napis wyśrodkowany i nie szerszy niż 80% widocznej strony — z zapasem po obu stronach,
+    // więc nie ucina się przy krawędzi (26.11.2026: wcześniej stał 4 pt od lewej i bywał ucięty).
+    const unit = Math.max(1, font.widthOfTextAtSize(label, 1));
+    const fit = (max) => Math.max(4, Math.min(max, (box.width * 0.8) / unit));
+    const cx = (size) => box.x + (box.width - unit * size) / 2;
+    const top = fit(7), bottom = fit(6);
+    page.drawText(label, { x: cx(top), y: box.y + box.height - 12, size: top, font, color, opacity: 0.7 });
+    page.drawText(label, { x: cx(bottom), y: box.y + 9, size: bottom, font, color, opacity: 0.45 });
     // Znak wodny po przekątnej przez środek strony — adres zamawiającego, trudny do wycięcia.
     const size = Math.max(14, Math.min(28, (Math.hypot(width, height) * 0.7) / Math.max(1, diag.length) * 1.9));
     const tw = font.widthOfTextAtSize(diag, size);
