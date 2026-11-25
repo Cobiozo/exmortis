@@ -8,6 +8,7 @@ import FakturaBlock from "./FakturaBlock";
 import RefundDialog from "./RefundDialog";
 import FreeDownloadsPanel from "./FreeDownloadsPanel";
 import FixEmailBox from "./FixEmailBox";
+import BouncesBox from "./BouncesBox";
 
 const zl = (n) => `${Number(n || 0).toFixed(2).replace(".", ",")} zł`;
 const when = (iso) => (iso ? new Date(iso).toLocaleString("pl-PL", { timeZone: "Europe/Warsaw", day: "numeric", month: "short", year: "numeric", hour: "2-digit", minute: "2-digit" }) : "");
@@ -142,6 +143,8 @@ function SalesPanel() {
       </div>
 
       <SalesStats />
+
+      <BouncesBox onPick={(email) => { setStatus(""); setTodo(false); setQ(email); }} />
 
       <div className="flex flex-wrap items-center gap-3">
         <div className="grid grid-cols-2 sm:flex border hairline w-full sm:w-auto" role="tablist" aria-label="Status">
