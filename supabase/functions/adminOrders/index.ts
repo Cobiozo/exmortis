@@ -4,6 +4,9 @@ import { ensureInvoiceColumn } from "../_shared/orders.ts";
 import { resumeFulfillment } from "../_shared/payuQueue.ts";
 import { createRefund, listRefunds, hasRefundsTable } from "../_shared/refunds.ts";
 import { issueInvoice } from "../_shared/invoices.ts";
+import { requireMailDomain } from "../_shared/emailCheck.ts";
+import { resendLinks } from "../_shared/orderLinks.ts";
+import { accessFilter, mirrorRecord } from "../_shared/mirror.ts";
 
 // Panel admina: zamówienia ze Skarbca (lista, podsumowanie, oznaczanie wystawionych faktur).
 // Kolumna invoice czytana przez to_jsonb(o) — działa także, zanim powstała.
@@ -189,6 +192,37 @@ const handler = async function (req) {
         const m = String(e?.message || e);
         return Response.json({ error: e?.isValidation ? m : "Nie udało się wznowić realizacji." }, { status: e?.isValidation ? 400 : 500 });
       }
+    }
+
+    // 25.11.2026: literówka w adresie kupującego — poprawka adresu w zamówieniu, dostępach i linkach,
+    // potem nowy link do materiałów na poprawny adres (opłacone zamówienie).
+    if (body.action === "fix_email") {
+      const id = String(body.id || "");
+      if (!/^[0-9a-f-]{36}$/i.test(id)) return Response.json({ error: "Brak zamówienia" }, { status: 400 });
+      const email = String(body.email || "").trim().toLowerCase();
+      if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email) || email.length > 320) return Response.json({ error: "Niepoprawny adres e-mail" }, { status: 400 });
+      try { await requireMailDomain(email); } catch (e) { return Response.json({ error: String(e?.message || e) }, { status: 400 }); }
+      const rows = await runSql(base44, `SELECT id::text AS id, buyer_email, status FROM public.orders WHERE id::text = ${escStr(id)}`, true);
+      if (!rows.length) return Response.json({ error: "Nie ma takiego zamówienia" }, { status: 404 });
+      const old = String(rows[0].buyer_email || "").toLowerCase();
+      if (old === email) return Response.json({ error: "To ten sam adres" }, { status: 400 });
+      await runSql(base44, `UPDATE public.orders SET buyer_email = ${escStr(email)} WHERE id::text = ${escStr(id)}`);
+      await runSql(base44, `UPDATE public.order_links SET email = ${escStr(email)} WHERE order_id = ${escStr(id)}`).catch(() => {});
+      // Dostępy z tego zamówienia (kursy, zestawy, e-booki w koncie) przechodzą na poprawny adres.
+      let moved = 0;
+      if (old) {
+        const E = base44.asServiceRole.entities.Access;
+        const list = await accessFilter(base44, { user_email: old }, "-created_date", 200).catch(() => []);
+        for (const a of list) {
+          const fromOrder = a.order_id === id || (a.history || []).some((h) => h && h.order_id === id);
+          if (!fromOrder) continue;
+          await E.update(a.id, { user_email: email });
+          await mirrorRecord(base44, "Access", a.id).catch(() => {});
+          moved++;
+        }
+      }
+      const sent = rows[0].status === "COMPLETED" ? await resendLinks(base44, { orderId: id }).catch((e) => { console.error("fix_email resend:", e?.message); return 0; }) : 0;
+      return Response.json({ ok: true, old, email, moved, sent });
     }
 
     if (body.action === "invoice_issued") {
