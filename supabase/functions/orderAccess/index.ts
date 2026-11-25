@@ -55,7 +55,10 @@ const handler = async function (req) {
       if (link.too_old) return Response.json({ error: "Link do aktywacji wygasł. Załóż konto na stronie rejestracji tym samym adresem — zakupy pojawią się same.", expired: true }, { status: 410 });
       // Istniejące konto: bez logowania z linku (link z maila nie zastępuje hasła do konta, które już było).
       if (await hasAccount(base44, link.email)) return Response.json({ exists: true });
-      const r = await activateAccount(base44, link.email, String(link.buyer_name || ""));
+      // Hasło z formularza „Ustaw hasło i otwórz materiały” (25.11.2026): 8–72 znaki; bez hasła — stare linki.
+      const password = typeof body.password === "string" ? body.password : "";
+      if (password && (password.length < 8 || password.length > 72)) return Response.json({ error: "Hasło musi mieć od 8 do 72 znaków." }, { status: 400 });
+      const r = await activateAccount(base44, link.email, String(link.buyer_name || ""), password);
       let code = null;
       if (r.created && (await hasPaidOrder(base44, link.email))) code = await issueBuyerCode(base44, link.email).catch(() => null);
       return Response.json({ token_hash: r.token_hash, created: r.created, code: code ? { value: 20, until: code.until } : null });

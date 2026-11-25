@@ -94,13 +94,15 @@ export async function hasAccount(base44, email: string) {
   return !!r;
 }
 
-// Konto jednym kliknięciem: potwierdzony adres (link przyszedł na ten adres), profil i jednorazowy link logowania.
+// Konto z linku z zamówienia: potwierdzony adres (link przyszedł na ten adres), profil i jednorazowy link logowania.
+// 25.11.2026: z hasłem ustawionym przez kupującego na stronie /pobierz („Ustaw hasło i otwórz materiały”) —
+// bez obejścia przez „Nie pamiętam hasła”. Bez hasła (stare linki) — jak dawniej, samo logowanie.
 // Zwraca { created, token_hash } — token_hash wymienia przeglądarka na sesję (/auth/v1/verify, type magiclink).
-export async function activateAccount(base44, email: string, name = "") {
+export async function activateAccount(base44, email: string, name = "", password = "") {
   const mail = String(email).toLowerCase();
   let created = false;
   if (!(await hasAccount(base44, mail))) {
-    const r = await authAdmin(base44, "/admin/users", { method: "POST", body: JSON.stringify({ email: mail, email_confirm: true, user_metadata: name ? { full_name: name } : {} }) });
+    const r = await authAdmin(base44, "/admin/users", { method: "POST", body: JSON.stringify({ email: mail, email_confirm: true, ...(password ? { password } : {}), user_metadata: name ? { full_name: name } : {} }) });
     // 422 = konto w Auth już jest (np. bez profilu) — wtedy tylko logowanie.
     if (!r.ok && r.status !== 422) throw new Error(`Konto: ${r.status}`);
     created = r.ok;
@@ -113,6 +115,11 @@ export async function activateAccount(base44, email: string, name = "") {
   const g = await authAdmin(base44, "/admin/generate_link", { method: "POST", body: JSON.stringify({ type: "magiclink", email: mail }) });
   const tokenHash = g.d?.hashed_token || g.d?.properties?.hashed_token || "";
   if (!g.ok || !tokenHash) throw new Error(`Logowanie: ${g.status}`);
+  // Konto w Auth było już wcześniej (bez profilu, 422) — hasło ustawiamy osobno.
+  const uid = g.d?.id || g.d?.user?.id || "";
+  if (password && !created && uid) {
+    await authAdmin(base44, `/admin/users/${uid}`, { method: "PUT", body: JSON.stringify({ password }) }).catch((e) => console.error("hasło:", e?.message));
+  }
   return { created, token_hash: tokenHash };
 }
 
