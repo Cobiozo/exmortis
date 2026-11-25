@@ -55,6 +55,7 @@ export function bounceRecipients(text: string, own: string[] = []) {
     const m = re.exec(text);
     if (m) { part = text.slice(m.index + m[0].length); break; }
   }
+  part = part.split(/\n-{3,}|This is a copy of the message|Original message/i)[0]; // bez kopii wysłanej wiadomości
   if (part) for (const m of part.slice(0, 600).matchAll(/<?([A-Za-z0-9._%+'-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,})>?/g)) found.add(m[1].toLowerCase());
   for (const o of own) found.delete(o.toLowerCase());
   return [...found].filter((a) => !/^(mailer-daemon|postmaster)@/.test(a));
