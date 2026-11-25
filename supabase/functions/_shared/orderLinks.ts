@@ -103,6 +103,10 @@ export async function activateAccount(base44, email: string, name = "", password
   let created = false;
   if (!(await hasAccount(base44, mail))) {
     const r = await authAdmin(base44, "/admin/users", { method: "POST", body: JSON.stringify({ email: mail, email_confirm: true, ...(password ? { password } : {}), user_metadata: name ? { full_name: name } : {} }) });
+    // Hasło odrzucone przez zasady logowania (za słabe) — czytelny komunikat zamiast błędu.
+    if (!r.ok && password && /password/i.test(JSON.stringify(r.d || {})) && !/already|exists|registered/i.test(JSON.stringify(r.d || {}))) {
+      throw Object.assign(new Error("To hasło jest za słabe. Użyj co najmniej 8 znaków — najlepiej liter i cyfr."), { isValidation: true });
+    }
     // 422 = konto w Auth już jest (np. bez profilu) — wtedy tylko logowanie.
     if (!r.ok && r.status !== 422) throw new Error(`Konto: ${r.status}`);
     created = r.ok;
