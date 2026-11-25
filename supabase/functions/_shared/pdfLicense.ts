@@ -67,10 +67,10 @@ export async function personalizePdf(bytes: Uint8Array, o: { email: string; orde
     // więc nie ucina się przy krawędzi (26.11.2026: wcześniej stał 4 pt od lewej i bywał ucięty).
     const unit = Math.max(1, font.widthOfTextAtSize(label, 1));
     const fit = (max) => Math.max(4, Math.min(max, (box.width * 0.8) / unit));
-    const cx = (size) => box.x + (box.width - unit * size) / 2;
+    const centerX = (size) => box.x + (box.width - unit * size) / 2;
     const top = fit(7), bottom = fit(6);
-    page.drawText(label, { x: cx(top), y: box.y + box.height - 12, size: top, font, color, opacity: 0.7 });
-    page.drawText(label, { x: cx(bottom), y: box.y + 9, size: bottom, font, color, opacity: 0.45 });
+    page.drawText(label, { x: centerX(top), y: box.y + box.height - 12, size: top, font, color, opacity: 0.7 });
+    page.drawText(label, { x: centerX(bottom), y: box.y + 9, size: bottom, font, color, opacity: 0.45 });
     // Znak wodny po przekątnej przez środek strony — adres zamawiającego, trudny do wycięcia.
     const size = Math.max(14, Math.min(28, (Math.hypot(width, height) * 0.7) / Math.max(1, diag.length) * 1.9));
     const tw = font.widthOfTextAtSize(diag, size);
