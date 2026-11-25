@@ -92,6 +92,20 @@ const handler = async function (req) {
     if (body.ping) return Response.json({ ok: true });
 
     // --- Lista nadchodzących (Opublikowane + Odwołane) i minionych z nagraniami ---
+    // Ile nagrań (wideo/audio) czeka w Bibliotece dla wszystkich kont — do zaproszenia na /spotkania.
+    if (body.action === "nagrania") {
+      const r = await runSql(base44, `SELECT count(DISTINCT COALESCE(a.material_id::text, a.collection_id::text))::int AS n
+        FROM public.mb_assignments a
+        JOIN public.mb_groups g ON g.id = a.group_id AND g.kind = 'AUTOMATYCZNA' AND g.rule->>'typ' = 'wszystkie_konta'
+        LEFT JOIN public.mb_materials m ON m.id = a.material_id
+        LEFT JOIN public.mb_collections c ON c.id = a.collection_id
+        WHERE a.revoked_at IS NULL
+          AND (a.visible_from IS NULL OR a.visible_from <= now()) AND (a.visible_to IS NULL OR a.visible_to > now())
+          AND ((a.material_id IS NOT NULL AND m.deleted_at IS NULL AND m.kind IN ('WIDEO','AUDIO'))
+            OR (a.collection_id IS NOT NULL AND c.deleted_at IS NULL))`, true).catch(() => []);
+      return Response.json({ n: Number(r?.[0]?.n || 0) });
+    }
+
     if (body.action === "list") {
       const data = await getSnap(base44, "events:list", async () => {
       const [upcoming, past] = await Promise.all([

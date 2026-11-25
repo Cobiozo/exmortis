@@ -1,5 +1,5 @@
 import React from "react";
-import { ExternalLink, Music, Pause, Play, SkipBack, SkipForward } from "lucide-react";
+import { Music, Pause, Play, SkipBack, SkipForward, Youtube } from "lucide-react";
 import { Image } from "@/components/ui/image";
 import GlosPlayer from "./GlosPlayer";
 import { hasAudio, ytId } from "./musicUtils";
@@ -41,7 +41,9 @@ export default function MusicNowCard({ song, pos, n, started, live, onStart, onE
           )}
           <button type="button" className={ctrl} onClick={onNext} disabled={pos >= n}>Następny <SkipForward className="h-4 w-4" aria-hidden="true" /></button>
           {audio && vid && (
-            <a href={`https://www.youtube.com/watch?v=${vid}`} target="_blank" rel="noreferrer" className="btn-link">Obejrzyj na YouTube <ExternalLink className="h-3.5 w-3.5" aria-hidden="true" /></a>
+            <a href={`https://www.youtube.com/watch?v=${vid}`} target="_blank" rel="noreferrer" className={ctrl} aria-label={`Obejrzyj „${song.tytul}” na YouTube (nowa karta)`}>
+              <Youtube className="h-5 w-5 text-[#FF0033]" aria-hidden="true" /> YouTube
+            </a>
           )}
         </div>
         {song.tekst?.trim() && (

@@ -4,6 +4,7 @@ import { sendConfirmMail } from "../_shared/newsletter.ts";
 import { LISTY_TEXT } from "../_shared/registrations.ts";
 import { collectPerson, deletePerson, maskEmail } from "../_shared/gdpr.ts";
 import { consentFilter } from "../_shared/mirror.ts";
+import { mailOptedOut, setMailOptout } from "../_shared/libraryNotify.ts";
 
 // Ustawienia konta klienta: Listy powrotu (stan z bazy), eksport i usunięcie własnych danych.
 const handler = async function (req) {
@@ -43,6 +44,13 @@ const handler = async function (req) {
       if (given.length) await sr.Consent.bulkUpdate(given.map((c) => ({ id: c.id, status: "wycofana", withdrawn_at: at })));
       else await sr.Consent.create({ email, kind: "newsletter", text: `Wycofanie: ${LISTY_TEXT}`, source: "konto:ustawienia", given_at: at, ip, status: "wycofana", withdrawn_at: at, doc_version: "1.1" });
       return Response.json({ state: "off", withdrawn_at: at });
+    }
+
+    // E-maile o nowych materiałach w Bibliotece (np. nagrania z Wieczorów powrotu) — włącz / wyłącz.
+    if (body.action === "lib_mail") return Response.json({ on: !(await mailOptedOut(base44, email)) });
+    if (body.action === "lib_mail_on" || body.action === "lib_mail_off") {
+      await setMailOptout(base44, email, body.action === "lib_mail_off");
+      return Response.json({ on: body.action === "lib_mail_on" });
     }
 
     if (body.action === "export") {

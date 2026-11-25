@@ -8,6 +8,7 @@ import HowToJoin from "@/components/exmortis/events/HowToJoin";
 import PastEvents from "@/components/exmortis/events/PastEvents";
 import NoEvents from "@/components/exmortis/events/NoEvents";
 import OneOnOne from "@/components/exmortis/events/OneOnOne";
+import RecordingsInvite from "@/components/exmortis/events/RecordingsInvite";
 
 // Filtry mają sens tylko wtedy, gdy naprawdę rozróżniają spotkania (nie pokazujemy filtra, który nic nie zmienia).
 const FILTERS = [
@@ -99,6 +100,7 @@ export default function EventsListing() {
         </Container>
       </div>
 
+      <RecordingsInvite />
       <PastEvents events={data.past || []} />
       <HowToJoin />
       <OneOnOne />
