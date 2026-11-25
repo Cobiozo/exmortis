@@ -183,18 +183,20 @@ export function materialsEmailHtml({ materials, token, account, consent }) {
       <p style="color:#A3A3A6;font-size:14px;">Link jest osobisty i działa ${LINK_DAYS} dni. Gdy wygaśnie, na tej samej stronie poprosisz o nowy — przyjdzie na ten adres.</p>`;
   }
   if (courses.length) {
-    out += `<h2>${courses.length > 1 ? "Kursy na Twoim koncie" : "Kurs na Twoim koncie"}</h2>${list(courses)}
-      ${account ? emailButton("OTWÓRZ KURS", `${APP_URL}/konto`) : `${emailButton("AKTYWUJ DOSTĘP", url)}
-      <p style="color:#A3A3A6;font-size:14px;">Kurs oglądasz na bezpłatnym koncie exmortis. Jedno kliknięcie zakłada je na ten adres i od razu loguje — bez hasła.</p>`}`;
+    // 25.11.2026: konto zakłada się ustawieniem hasła na stronie /pobierz (a=1 — od razu formularz hasła).
+    const zestaw = courses.some((m) => m.type === "zestaw");
+    out += `<h2>${zestaw ? "Twoje materiały na koncie" : courses.length > 1 ? "Kursy na Twoim koncie" : "Kurs na Twoim koncie"}</h2>${list(courses)}
+      ${account ? emailButton("OTWÓRZ MOJE MATERIAŁY", `${APP_URL}/konto`) : `${emailButton("USTAW HASŁO I OTWÓRZ MATERIAŁY", `${url}&a=1`)}
+      <p style="color:#A3A3A6;font-size:14px;">${zestaw ? "E-book i nagrania są na Twoim bezpłatnym koncie exmortis." : "Kurs oglądasz na bezpłatnym koncie exmortis."} Po kliknięciu ustawisz hasło — konto powstanie na ten adres i od razu otworzą się Twoje materiały.</p>`}`;
   }
   if (account) {
     out += `<p style="color:#A3A3A6;font-size:14px;">Zakup jest też na Twoim koncie: <a href="${APP_URL}/konto" style="color:#C9A24A;">Moje produkty</a>.</p>`;
   } else if (files.length) {
     out += `<div style="border:1px solid #2A2A2C;padding:20px 22px;margin:28px 0 8px;">
       <p style="font-family:-apple-system,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;font-size:11px;letter-spacing:3px;color:#C9A24A;margin:0 0 10px;">BEZPŁATNE KONTO EXMORTIS</p>
-      <p style="margin:0 0 10px;">Załóż je jednym kliknięciem na ten sam adres — zakup już tam czeka.</p>
+      <p style="margin:0 0 10px;">Ustaw hasło i załóż konto na ten sam adres — zakup już tam czeka.</p>
       <p style="margin:0;color:#A3A3A6;font-size:14px;line-height:1.8;">· zakup na zawsze, bez szukania maili<br>· aktualizacje e-booka<br>· ROZDROŻA i Biblioteka<br>· 20 zł na kolejny materiał</p>
-      ${emailButton("AKTYWUJ KONTO", `${url}&a=1`, { secondary: true })}
+      ${emailButton("USTAW HASŁO I ZAŁÓŻ KONTO", `${url}&a=1`, { secondary: true })}
     </div>`;
   }
   if (consent) out += `<p style="color:#A3A3A6;font-size:13px;">Potwierdzam Twoje żądanie dostarczenia treści cyfrowych przed upływem 14 dni od zawarcia umowy oraz przyjęcie do wiadomości utraty prawa odstąpienia od umowy z chwilą rozpoczęcia dostarczania.</p>`;

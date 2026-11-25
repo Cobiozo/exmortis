@@ -1,12 +1,13 @@
 import React, { useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { ArrowRight, Download, PlayCircle, Check } from "lucide-react";
+import { ArrowRight, Download, PlayCircle, Check, Eye, EyeOff } from "lucide-react";
 import { base44 } from "@/api/base44Client";
 import { useAuth } from "@/lib/AuthContext";
 import { useDocMeta } from "@/lib/useDocMeta";
 import { track } from "@/lib/track";
 
-// Materiały z zakupu bez konta: /pobierz#t=TOKEN (z maila albo ze strony po zapłacie), &a=1 — od razu „Aktywuj konto”.
+// Materiały z zakupu bez konta: /pobierz#t=TOKEN (z maila albo ze strony po zapłacie), &a=1 — od razu formularz konta.
+// 25.11.2026: konto zakłada się ustawieniem hasła („Ustaw hasło i otwórz materiały”) — bez „Nie pamiętam hasła”.
 // Bez tokenu: formularz „wyślij mi nowy link” (na adres z zamówienia).
 const call = (data) => base44.functions.invoke("orderAccess", data).then((r) => r.data);
 const errText = (e, fb) => e?.response?.data?.error || fb;
@@ -48,6 +49,47 @@ function ResendForm({ token, note }) {
   );
 }
 
+// Ustawienie hasła do nowego konta (link z maila potwierdza adres). Wklejanie dozwolone (menedżery haseł).
+function SetPassword({ email, busy, onSubmit, label }) {
+  const [pw, setPw] = useState("");
+  const [pw2, setPw2] = useState("");
+  const [show, setShow] = useState(false);
+  const [err, setErr] = useState("");
+  const field = "w-full bg-transparent border hairline px-5 py-4 pr-14 focus:border-[#C9A24A] focus:outline-none transition-colors";
+  const submit = (e) => {
+    e.preventDefault();
+    if (pw.length < 8) { setErr("Hasło musi mieć co najmniej 8 znaków."); return; }
+    if (pw !== pw2) { setErr("Hasła się różnią. Wpisz to samo hasło w obu polach."); return; }
+    setErr("");
+    onSubmit(pw);
+  };
+  return (
+    <form onSubmit={submit} className="space-y-4" id="ustaw-haslo">
+      <input type="email" autoComplete="username" value={email} readOnly hidden />
+      <div>
+        <label htmlFor="pb-pw" className="technical text-[10px] text-foreground/55 block mb-3">HASŁO DO KONTA (MIN. 8 ZNAKÓW)</label>
+        <div className="relative">
+          <input id="pb-pw" type={show ? "text" : "password"} autoComplete="new-password" required minLength={8} maxLength={72}
+            value={pw} onChange={(e) => setPw(e.target.value)} className={field} />
+          <button type="button" onClick={() => setShow((v) => !v)} aria-label={show ? "Ukryj hasło" : "Pokaż hasło"}
+            className="absolute right-2 top-1/2 -translate-y-1/2 h-11 w-11 inline-flex items-center justify-center text-foreground/60 hover:text-[#C9A24A]">
+            {show ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
+          </button>
+        </div>
+      </div>
+      <div>
+        <label htmlFor="pb-pw2" className="technical text-[10px] text-foreground/55 block mb-3">POWTÓRZ HASŁO</label>
+        <input id="pb-pw2" type={show ? "text" : "password"} autoComplete="new-password" required minLength={8} maxLength={72}
+          value={pw2} onChange={(e) => setPw2(e.target.value)} className={field} />
+      </div>
+      {err && <p className="text-sm text-[#E8676A]" role="alert">{err}</p>}
+      <button type="submit" disabled={busy} className="btn-relic w-full sm:w-auto disabled:opacity-60">
+        {busy ? "Zakładam konto…" : label} <ArrowRight className="h-4 w-4" />
+      </button>
+    </form>
+  );
+}
+
 export default function Pobierz() {
   useDocMeta("Twoje materiały — exmortis", "Pobierz materiały z zamówienia i aktywuj bezpłatne konto exmortis.");
   const navigate = useNavigate();
@@ -67,10 +109,10 @@ export default function Pobierz() {
     call({ action: "info", t: token }).then(setInfo).catch((e) => setError(errText(e, "Nie udało się otworzyć linku.")));
   }, [token]);
 
-  const activate = async () => {
+  const activate = async (password) => {
     setBusy("activate"); setFileMsg("");
     try {
-      const r = await call({ action: "activate", t: token });
+      const r = await call({ action: "activate", t: token, password });
       if (r.exists) { setAct({ exists: true }); return; }
       await base44.auth.loginWithTokenHash(r.token_hash);
       track("CompleteRegistration", { content_name: "konto po zakupie" });
@@ -81,9 +123,15 @@ export default function Pobierz() {
     } finally { setBusy(""); }
   };
 
+  // Link z przycisku „Ustaw hasło…” w mailu (a=1): od razu do formularza hasła.
   useEffect(() => {
-    if (autoActivate && info && !info.account && info.can_activate && !act && !user) activate();
-    // jednorazowo po wczytaniu linku z przycisku „Aktywuj konto”
+    if (!autoActivate || !info || info.account || !info.can_activate || user) return;
+    const t = setTimeout(() => {
+      const el = document.getElementById("ustaw-haslo");
+      el?.scrollIntoView({ behavior: "smooth", block: "center" });
+      document.getElementById("pb-pw")?.focus({ preventScroll: true });
+    }, 300);
+    return () => clearTimeout(t);
   }, [info]);
 
   const download = async (m) => {
@@ -176,8 +224,8 @@ export default function Pobierz() {
         ) : (
           <p className="text-foreground/60 leading-relaxed mt-2">
             {courses.some((m) => m.type === "zestaw")
-              ? "E-book i nagrania odbierasz wyłącznie na bezpłatnym koncie: e-book pobierasz, nagrań słuchasz i oglądasz w odtwarzaczu. Konto aktywujesz przyciskiem poniżej, bez hasła."
-              : "Kurs oglądasz na bezpłatnym koncie — aktywujesz je przyciskiem poniżej, bez hasła."}
+              ? "E-book i nagrania są na Twoim bezpłatnym koncie: e-book czytasz albo pobierasz, nagrań słuchasz i oglądasz w odtwarzaczu. Ustaw hasło poniżej — konto będzie gotowe od razu."
+              : "Kurs oglądasz na bezpłatnym koncie. Ustaw hasło poniżej — konto będzie gotowe od razu."}
           </p>
         )}
       </div>
@@ -187,8 +235,8 @@ export default function Pobierz() {
       <div className="border border-[#C9A24A]/60 p-6 md:p-8">
         <p className="flex items-center gap-3 relic-heading text-2xl gold-text mb-3"><Check className="h-6 w-6" /> Konto gotowe</p>
         <p className="text-foreground/70 leading-relaxed">Zakup jest już w Moich produktach, razem z ROZDROŻAMI i Biblioteką.{act.code ? " Kod 20 zł na kolejny materiał wysłałem e-mailem — znajdziesz go także w powiadomieniach." : ""}</p>
-        <p className="text-sm text-foreground/55 leading-relaxed mt-3">Hasło możesz ustawić później: na stronie logowania „Nie pamiętam hasła”. Z adresem Gmail wejdziesz też przez Google.</p>
-        <button type="button" onClick={() => navigate("/konto")} className="btn-relic mt-6">Przejdź do konta <ArrowRight className="h-4 w-4" /></button>
+        <p className="text-sm text-foreground/55 leading-relaxed mt-3">Następnym razem zalogujesz się adresem {info.email} i ustawionym hasłem.</p>
+        <button type="button" onClick={() => navigate("/konto")} className="btn-relic mt-6">Otwórz moje materiały <ArrowRight className="h-4 w-4" /></button>
       </div>
     ) : act?.exists || (info.account && !user) ? (
       <div className="border hairline p-6">
@@ -198,18 +246,18 @@ export default function Pobierz() {
     ) : loggedIn ? null : info.can_activate ? (
       <div className="border hairline p-6 md:p-8">
         <p className="technical text-[10px] gold-text mb-4">BEZPŁATNE KONTO EXMORTIS</p>
-        <p className="relic-heading text-2xl mb-4">Zakup już czeka na Twoim koncie</p>
+        <p className="relic-heading text-2xl mb-4">{courses.length ? "Ustaw hasło, żeby otworzyć materiały" : "Zakup już czeka na Twoim koncie"}</p>
         <ul className="space-y-2 text-foreground/70 mb-6">
           <li>· zakupy zawsze dostępne w jednym miejscu</li>
           <li>· aktualizacje e-booka</li>
           <li>· ROZDROŻA i Biblioteka</li>
           <li>· 20 zł na kolejny materiał (od 49 zł, ważne 30 dni)</li>
         </ul>
-        <button type="button" onClick={activate} disabled={!!busy} className="btn-relic disabled:opacity-60">
-          {busy === "activate" ? "Zakładam konto..." : courses.length ? "Aktywuj dostęp i konto" : "Aktywuj konto"} <ArrowRight className="h-4 w-4" />
-        </button>
+        <SetPassword email={info.email} busy={busy === "activate"} onSubmit={activate}
+          label={courses.length ? "Ustaw hasło i otwórz materiały" : "Ustaw hasło i załóż konto"} />
+        {fileMsg && !files.length && <p className="text-sm text-[#E8C547] mt-4" role="alert">{fileMsg}</p>}
         <p className="text-xs text-foreground/55 leading-relaxed mt-4">
-          Jedno kliknięcie zakłada konto na adres {info.email} i od razu loguje. Zasady: <Link to="/regulamin" className="underline">Regulamin</Link> i <Link to="/polityka-prywatnosci" className="underline">Polityka prywatności</Link>. Konto usuniesz w każdej chwili w ustawieniach.
+          Konto powstaje na adres {info.email} i od razu Cię loguje. Zasady: <Link to="/regulamin" className="underline">Regulamin</Link> i <Link to="/polityka-prywatnosci" className="underline">Polityka prywatności</Link>. Konto usuniesz w każdej chwili w ustawieniach.
         </p>
       </div>
     ) : null}
