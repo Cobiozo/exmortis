@@ -28,13 +28,27 @@ async function pdfLib() {
 }
 
 // Wersja oznaczeń — zmiana wymusza ponowne wygenerowanie zapisanych kopii.
-export const WM_VERSION = "wm3";
+export const WM_VERSION = "wm4"; // wm4 (26.11.2026): napisy niezależne od przesunięć w treści strony
 
 // Osobista kopia PDF: napis licencji na każdej stronie, ukryte znaczniki, metadane, blokada edycji.
 export async function personalizePdf(bytes: Uint8Array, o: { email: string; orderNo: string; date: string; licenseId: string; title: string }) {
-  const { PDFDocument, StandardFonts, rgb, degrees } = await pdfLib();
+  const lib = await pdfLib();
+  const { PDFDocument, StandardFonts, rgb, degrees } = lib;
   const doc = await PDFDocument.load(bytes, { ignoreEncryption: true });
   const font = await doc.embedFont(StandardFonts.Helvetica);
+  // Treść strony bywa zostawiona z przesuniętym układem współrzędnych (brak q/Q w pliku z programu DTP) —
+  // wtedy napisy dopisane na końcu lądowały częściowo poza stroną. Otaczamy oryginał parą q…Q, więc
+  // napisy licencji rysują się zawsze w czystym układzie strony.
+  const wrap = (page) => {
+    try {
+      const ctx = doc.context;
+      const push = ctx.register(lib.PDFContentStream.of(ctx.obj({}), [lib.pushGraphicsState()]));
+      const pop = ctx.register(lib.PDFContentStream.of(ctx.obj({}), [lib.popGraphicsState()]));
+      page.node.wrapContentStreams(push, pop);
+    } catch (e) {
+      console.warn("pdfLicense: bez otoczenia q/Q", (e as any)?.message);
+    }
+  };
   // Lewy górny róg: zaczyna się od adresu e-mail osoby, która kupiła lub pobrała plik.
   const label = `${o.email} · licencja osobista · zam. ${o.orderNo} · ${o.date}`;
   const pages = doc.getPages();
@@ -43,13 +57,16 @@ export async function personalizePdf(bytes: Uint8Array, o: { email: string; orde
 
   const diag = `${o.email} · ${o.orderNo}`;
   pages.forEach((page, i) => {
+    wrap(page);
     const { width, height } = page.getSize();
     // Okładka (strona 1) zwykle ciemna — kolor kremowy; pozostałe szare.
     const color = i === 0 ? rgb(0.96, 0.94, 0.88) : rgb(0.45, 0.45, 0.45);
     // Uwzględnia przycięcie strony (CropBox) — napis zawsze tuż przy widocznej krawędzi, nie poza nią.
     const box = page.getCropBox ? page.getCropBox() : { x: 0, y: 0, width, height };
-    page.drawText(label, { x: box.x + 4, y: box.y + box.height - 8, size: 7, font, color, opacity: 0.7 });
-    page.drawText(label, { x: 14, y: 8, size: 6, font, color, opacity: 0.45 });
+    // Napis mieści się w szerokości widocznej strony (mniejsza czcionka na wąskich stronach).
+    const fit = (max) => Math.max(4, Math.min(max, (box.width - 16) / Math.max(1, font.widthOfTextAtSize(label, 1))));
+    page.drawText(label, { x: box.x + 8, y: box.y + box.height - 10, size: fit(7), font, color, opacity: 0.7 });
+    page.drawText(label, { x: box.x + 8, y: box.y + 8, size: fit(6), font, color, opacity: 0.45 });
     // Znak wodny po przekątnej przez środek strony — adres zamawiającego, trudny do wycięcia.
     const size = Math.max(14, Math.min(28, (Math.hypot(width, height) * 0.7) / Math.max(1, diag.length) * 1.9));
     const tw = font.widthOfTextAtSize(diag, size);
