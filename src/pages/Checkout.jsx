@@ -63,8 +63,8 @@ export default function Checkout() {
   const emailTip = suggestEmail(form.email);
   // Drugi raz wpisany adres (25.11.2026): wymagany, gdy adres nie pochodzi z konta zalogowanej osoby.
   const [email2, setEmail2] = useState("");
-  const needConfirm = !(user && sameEmail(user.email, form.email));
   const { user } = useAuth();
+  const needConfirm = !(user && sameEmail(user.email, form.email));
   useEffect(() => {
     if (user) setForm((f) => ({ ...f, name: f.name || user.imie || user.full_name || "", email: f.email || user.email }));
   }, [user]);
