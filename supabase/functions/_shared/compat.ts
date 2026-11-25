@@ -26,7 +26,10 @@ const LEGACY_BASE44_URL = () => Deno.env.get("EXM_LEGACY_BASE44_URL") || "https:
 const H = () => ({ apikey: SRK, Authorization: `Bearer ${SRK}`, "Content-Type": "application/json" });
 const val = (v: unknown) => encodeURIComponent(String(v));
 const inVal = (v: unknown) => `"${String(v).replace(/\\/g, "\\\\").replace(/"/g, '\\"')}"`;
-const col = (f: string) => `data->>${encodeURIComponent(f)}`;
+// Kolumny tabeli (nie pola w data). 25.11.2026: wcześniej filtr po created_date szukał data->>'created_date'
+// (zawsze puste) — limity prób (ipAllowed), retencja dzienników i filtry po id nie działały.
+const BUILT_COLS = new Set(["id", "created_date", "updated_date", "created_by_id"]);
+const col = (f: string) => (BUILT_COLS.has(f) ? f : `data->>${encodeURIComponent(f)}`);
 const OP_MAP: Record<string, string> = { $ne: "neq", $gt: "gt", $gte: "gte", $lt: "lt", $lte: "lte" };
 
 function atom(field: string, cond: unknown): string {
