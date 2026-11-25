@@ -2,6 +2,7 @@ import { runSql } from "./supabase.ts";
 import { sendMail, adminTo } from "./smtp.ts";
 import { APP_URL, loadAppUrl } from "./settings.ts";
 import { plWhen } from "./events.ts";
+import { collectBounces } from "./bounces.ts";
 
 // ============ Podsumowanie dnia ============
 // Jeden e-mail na dobę (22:00 czasu polskiego) zamiast powiadomień przy każdym zapisie i zamówieniu.
@@ -161,6 +162,20 @@ export async function dailySummary(base44) {
     if (podcastRows.length) body.push(p(`Zgłoszenia podcastu: <strong>${podcastRows.length}</strong> — ${podcastRows.map((r) => esc(r.full_name)).join(", ")}`));
     body.push(adminLink(`${appUrl}/admin/kontakty`, "Baza kontaktów"));
     parts.push(section("FORMULARZE I ZGŁOSZENIA", body.join("")));
+  }
+
+  // Maile, które nie doszły (25.11.2026): zwroty ze skrzynki z ostatnich 2 dni + powiązane zamówienia.
+  const bounces = await collectBounces(base44, 2).catch(() => []);
+  if (bounces.length) {
+    const list = bounces.map((b) => `'${String(b.email).replace(/'/g, "''")}'`).join(",");
+    const ords = await runSql(base44, `SELECT id::text AS id, lower(buyer_email) AS email, items, status, created_date FROM public.orders
+      WHERE lower(buyer_email) IN (${list}) AND created_date > now() - interval '30 days' ORDER BY created_date DESC`, true).catch(() => []);
+    const body = bounces.map((b) => {
+      const o = ords.find((x) => x.email === b.email);
+      return p(`<strong>${esc(b.email)}</strong>`) + small(esc(b.reason)) +
+        (o ? small(`Zamówienie ${esc(String(o.id).slice(0, 8).toUpperCase())} (${esc(itemsNames(o.items))}, ${esc(o.status === "COMPLETED" ? "opłacone" : o.status)}) — kupujący NIE dostał materiałów. Popraw adres: Panel → Zamówienia → zamówienie → „Popraw e-mail i wyślij dostęp ponownie”.`) : "");
+    }).join("");
+    parts.push(section("MAILE, KTÓRE NIE DOSZŁY", body + adminLink(`${appUrl}/admin/zamowienia`, "Zamówienia")));
   }
 
   // Dzień bez zdarzeń — krótki mail, który potwierdza, że wysyłka działa.
