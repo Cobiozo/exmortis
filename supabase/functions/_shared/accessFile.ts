@@ -9,7 +9,9 @@ import { loadAppUrl } from "./settings.ts";
 // url — do czytania/odtwarzania (inline); download_url — ten sam plik z nagłówkiem „zapisz jako” pod podaną nazwą.
 async function siteLinks(base44, signed: string, name: string) {
   const m = String(signed).match(/^https:\/\/[^/]+\.supabase\.co\/storage\/v1\/object\/sign\/([^?]+)\?token=([^&]+)/);
-  if (!m) {
+  // Nagrania (audio/wideo) zostają na bezpośrednim linku: odtwarzacz przewija je fragmentami, a serwer strony
+  // przekazuje pliki w całości (duże nagrania byłyby wolne). Przez exmortis.pl idą dokumenty (PDF, ZIP itp.).
+  if (!m || /\.(mp3|m4a|aac|wav|ogg|mp4|m4v|webm|mov)$/i.test(decodeURIComponent(m[1]))) {
     const sep = String(signed).includes("?") ? "&" : "?";
     return { url: signed, download_url: `${signed}${sep}download=${encodeURIComponent(name)}`, name };
   }
