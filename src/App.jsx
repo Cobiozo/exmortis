@@ -34,6 +34,7 @@ const Admin = lazyPage(() => import('@/pages/admin/Admin'));
 const AdminStyle = lazyPage(() => import('@/pages/AdminStyle'));
 const CmsPreview = lazyPage(() => import('@/pages/CmsPreview'));
 const CoursePlayer = lazyPage(() => import('@/pages/CoursePlayer'));
+const Czytnik = lazyPage(() => import('@/pages/Czytnik'));
 const Cisza = lazyPage(() => import('@/pages/Cisza'));
 const Karta = lazyPage(() => import('@/pages/Karta'));
 const Bilet = lazyPage(() => import('@/pages/Bilet'));
@@ -127,6 +128,7 @@ const AuthenticatedApp = () => {
           <Route element={<Layout />}>
             <Route path="/konto" element={<Account />} />
             <Route path="/konto/kurs/:accessId" element={<CoursePlayer />} />
+            <Route path="/konto/czytaj/:accessId" element={<Czytnik />} />
             <Route path="/konto/rozdroza/*" element={<Rozdroza />} />
           </Route>
         </Route>

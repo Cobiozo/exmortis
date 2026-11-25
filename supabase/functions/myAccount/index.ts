@@ -51,6 +51,8 @@ const handler = async function (req) {
           ]);
           const ids = new Set(lessons.map((l) => l.id));
           p.lessons_total = lessons.length;
+          p.audio_count = lessons.filter((l) => l.media_kind === "audio").length;
+          p.video_count = lessons.length - p.audio_count;
           p.lessons_done = prog.filter((x) => ids.has(x.lesson_id)).length;
         } catch { /* bez postępu */ }
       }));

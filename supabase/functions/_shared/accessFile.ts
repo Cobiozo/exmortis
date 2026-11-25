@@ -54,14 +54,14 @@ export async function accessFileResponse(base44, a, ip: string, email: string) {
     await sr.entities.SecurityLog.create({ type: "pdf", user_email: email, ip: ip, details: `${p.name} · ${lic.license_id}` });
     const { signed_url } = await sr.integrations.Core.CreateFileSignedUrl({ file_uri: lic.file_uri, expires_in: 600 });
     const safe = String(p.name).normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/ł/g, "l").replace(/[^A-Za-z0-9]+/g, "_").replace(/^_|_$/g, "");
-    return Response.json(await siteLinks(base44, signed_url, `${safe}_exmortis_${orderNo}.pdf`));
+    return Response.json({ ...(await siteLinks(base44, signed_url, `${safe}_exmortis_${orderNo}.pdf`)), title: p.name });
   }
   if (p?.private_file_uri) {
     const { signed_url } = await base44.asServiceRole.integrations.Core.CreateFileSignedUrl({
       file_uri: p.private_file_uri,
       expires_in: 600,
     });
-    return Response.json(await siteLinks(base44, signed_url, p.private_file_name || "plik"));
+    return Response.json({ ...(await siteLinks(base44, signed_url, p.private_file_name || "plik")), title: p.name });
   }
   if (p?.file_url) return Response.json({ url: p.file_url, download_url: p.file_url, name: "plik" });
   return Response.json({ error: "Plik nie jest jeszcze gotowy" }, { status: 404 });

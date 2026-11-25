@@ -29,7 +29,7 @@ export default function ProductTile({ p }) {
       setBusy(false);
     }
   };
-  // Pobierz — plik zapisuje się na urządzeniu; Czytaj — otwiera się w nowej karcie.
+  // Pobierz — plik zapisuje się na urządzeniu; Czytaj — czytnik na koncie (/konto/czytaj).
   const download = async () => {
     const d = await getUrl();
     if (!d) return;
@@ -37,7 +37,6 @@ export default function ProductTile({ p }) {
     a.href = d.download_url || d.url; a.download = d.name || "plik"; a.rel = "noopener";
     document.body.appendChild(a); a.click(); a.remove();
   };
-  const open = async () => { const d = await getUrl(); if (d?.url) window.open(d.url, "_blank", "noopener,noreferrer"); };
 
   return (
     <div className={`rounded-2xl border hairline bg-[#111113] overflow-hidden flex flex-col hover:border-[#C9A24A]/45 transition-colors ${p.active ? "" : "opacity-50"}`}>
@@ -60,16 +59,19 @@ export default function ProductTile({ p }) {
           {!p.active ? null : !p.has_file && (p.type === "pdf" || p.type === "audio") ? (
             <p className="text-xs text-foreground/55">Materiał jest w przygotowaniu. Poinformuję Cię e-mailem, gdy będzie dostępny.</p>
           ) : p.type === "zestaw" ? (
-            // Ebook do pobrania + nagrania tylko do odtwarzania w odtwarzaczu konta.
-            <div className="flex flex-wrap gap-3">
-              <Link to={`/konto/kurs/${p.access_id}`} className="btn-relic !px-4 !py-2.5"><Play className={ico} strokeWidth={1.25} /> {p.lessons_done > 0 && p.lessons_done < p.lessons_total ? "Kontynuuj nagrania" : "Słuchaj i oglądaj"}</Link>
-              {p.has_file && <button onClick={download} disabled={busy} className="btn-ghost !px-4 !py-2.5">{busy ? <Loader2 className={`${ico} animate-spin`} /> : <Download className={ico} strokeWidth={1.25} />} Pobierz ebook</button>}
-              {p.has_file && <button onClick={open} disabled={busy} className="btn-link">Czytaj w przeglądarce</button>}
+            // Zestaw: e-book (czytnik na koncie + pobranie) i nagrania (tylko w odtwarzaczu konta).
+            <div className="space-y-3">
+              <div className="flex flex-wrap gap-2">
+                {p.has_file && <Link to={`/konto/czytaj/${p.access_id}`} className="btn-relic !px-4 !py-2.5"><BookOpen className={ico} strokeWidth={1.25} /> Czytaj</Link>}
+                {(p.audio_count > 0 || !(p.video_count > 0)) && <Link to={`/konto/kurs/${p.access_id}${p.video_count > 0 ? "?tryb=audio" : ""}`} className={`${p.has_file ? "btn-ghost" : "btn-relic"} !px-4 !py-2.5`}><Headphones className={ico} strokeWidth={1.25} /> Słuchaj</Link>}
+                {p.video_count > 0 && <Link to={`/konto/kurs/${p.access_id}${p.audio_count > 0 ? "?tryb=wideo" : ""}`} className="btn-ghost !px-4 !py-2.5"><Film className={ico} strokeWidth={1.25} /> Oglądaj</Link>}
+              </div>
+              {p.has_file && <button onClick={download} disabled={busy} className="btn-link inline-flex items-center gap-2">{busy ? <Loader2 className={`${ico} animate-spin`} /> : <Download className={ico} strokeWidth={1.25} />} Pobierz e-book (PDF)</button>}
             </div>
           ) : p.type === "pdf" ? (
             <div className="flex flex-wrap gap-3">
-              <button onClick={download} disabled={busy} className="btn-relic !px-4 !py-2.5">{busy ? <Loader2 className={`${ico} animate-spin`} /> : <Download className={ico} strokeWidth={1.25} />} Pobierz</button>
-              <button onClick={open} disabled={busy} className="btn-ghost !px-4 !py-2.5"><BookOpen className={ico} strokeWidth={1.25} /> Czytaj w przeglądarce</button>
+              <Link to={`/konto/czytaj/${p.access_id}`} className="btn-relic !px-4 !py-2.5"><BookOpen className={ico} strokeWidth={1.25} /> Czytaj</Link>
+              <button onClick={download} disabled={busy} className="btn-ghost !px-4 !py-2.5">{busy ? <Loader2 className={`${ico} animate-spin`} /> : <Download className={ico} strokeWidth={1.25} />} Pobierz</button>
             </div>
           ) : p.type === "audio" ? (
             audio ? <audio src={audio} controls autoPlay controlsList="nodownload" className="w-full" /> : (

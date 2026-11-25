@@ -1,5 +1,5 @@
 import { createClientFromRequest } from "../_shared/compat.ts";
-import { clientIp } from "../_shared/supabase.ts";
+import { clientIp, runSql, escStr } from "../_shared/supabase.ts";
 import { isActive } from "../_shared/access.ts";
 import { checkVideoAbuse } from "../_shared/videoGuard.ts";
 import { normalizeServerVideo, normalizeVideo } from "../_shared/libraryMedia.ts";
@@ -27,8 +27,16 @@ const handler = async function (req) {
       const lessons = (await sr.CourseLesson.filter({ product_id: pid, published: true }, "order", 300));
       const prog = await sr.LessonProgress.filter({ user_email: email, product_id: pid }, "-updated_date", 300);
       const byL = new Map(prog.map((p) => [p.lesson_id, p]));
+      // Zestaw: czy jest e-book (plik produktu) — odtwarzacz pokazuje wtedy przycisk „Czytaj e-book”.
+      let hasFile = false;
+      if (a.product_type === "zestaw") {
+        const r = await runSql(base44, `SELECT (private_file_uri IS NOT NULL OR file_url IS NOT NULL) AS has_file FROM public.products WHERE id::text = ${escStr(pid)} LIMIT 1`, true).catch(() => []);
+        hasFile = !!r[0]?.has_file;
+      }
       return Response.json({
         name: a.product_name,
+        type: a.product_type,
+        has_file: hasFile,
         valid_until: a.valid_until || null,
         lessons: lessons.map((l) => ({
           id: l.id, module: l.module || "", title: l.title, description: l.description || "",
