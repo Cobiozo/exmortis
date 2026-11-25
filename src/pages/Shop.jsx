@@ -17,6 +17,7 @@ import VaultFeatured from "@/components/exmortis/shop/vault/VaultFeatured";
 import VaultServices from "@/components/exmortis/shop/vault/VaultServices";
 import VaultSoon from "@/components/exmortis/shop/vault/VaultSoon";
 import { isNewProduct, newSortKey } from "@/lib/productHighlight";
+import { unitPrice } from "@/lib/productPrice";
 
 // Skarbiec (etap 4): krótki nagłówek z bloku strony, pod nim jedna wskazówka, zakładki grup
 // i jeden czytelny widok kart. Kupno, kasa, lista oczekujących i pobieranie — bez zmian.
@@ -75,10 +76,12 @@ export default function Shop() {
   const groups = useMemo(() => buildGroups(visible), [visible]);
   const active = tab && groups.some((g) => g.key === tab) ? tab : groups[0]?.key;
   const current = groups.find((g) => g.key === active);
-  // Wyróżnione nad zakładkami: wszystkie dostępne płatne książki, „Wracam inny” pierwsza.
+  // Wyróżnione nad zakładkami: dostępne płatne książki od najtańszej (Dawid 25.11.2026: najpierw
+  // „Kiedy wreszcie…?” za 19 zł, pod nią „Wracam inny”). Przy tej samej cenie „Wracam inny” wyżej.
   const featured = useMemo(() => {
     const books = groups.find((g) => g.key === "ksiazki")?.items || [];
-    return [...books].sort((a, b) => (b.slug === BOOK) - (a.slug === BOOK));
+    const price = (p) => { const v = Number(unitPrice(p)); return Number.isFinite(v) ? v : Infinity; };
+    return [...books].sort((a, b) => price(a) - price(b) || (b.slug === BOOK) - (a.slug === BOOK));
   }, [groups]);
 
   const panel = () => {
