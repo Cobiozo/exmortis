@@ -196,6 +196,7 @@ const handler = async function (req) {
                 to_jsonb(p)->'price_steps' AS price_steps, to_jsonb(p)->'price_options' AS price_options,
                 to_jsonb(p)->'bundle_items' AS bundle_items, COALESCE((to_jsonb(p)->>'show_home')::boolean, FALSE) AS show_home,
                 COALESCE(NULLIF(to_jsonb(p)->>'wyroznienie', ''), 'auto') AS wyroznienie,
+                to_jsonb(p)->>'wyroznienie_od' AS wyroznienie_od, to_jsonb(p)->>'available_at' AS available_at,
                 -- data premiery: bez niej edytor otwierał się z pustym polem i zapis kasował premierę
                 to_jsonb(p)->>'release_at' AS release_at, to_jsonb(p)->>'release_note' AS release_note,
                 p.created_date, p.updated_date,
@@ -268,6 +269,9 @@ const handler = async function (req) {
              bundle_items = ${v.bundle_items},
              capacity = ${v.capacity},
              wyroznienie = ${v.wyroznienie},
+             -- Nowość trwa 30 dni od zaznaczenia (25.11.2026): data zapisuje się przy zmianie na „Nowość”.
+             wyroznienie_od = CASE WHEN ${v.wyroznienie} = 'nowosc' AND COALESCE(wyroznienie, 'auto') <> 'nowosc' THEN now()
+                                   WHEN ${v.wyroznienie} = 'nowosc' THEN COALESCE(wyroznienie_od, now()) ELSE NULL END,
              -- chwila premiery („wkrótce”/ukryty → „dostępny”) — dla powiadomień klientów o nowościach
              available_at = CASE WHEN ${v.status} = 'dostępny' AND COALESCE(status, 'dostępny') <> 'dostępny' THEN now() ELSE available_at END,
              updated_date = now()
@@ -291,6 +295,7 @@ const handler = async function (req) {
           base44,
           `UPDATE public.products SET available_at = now() WHERE slug = ${v.slug} AND available_at IS NULL AND COALESCE(status, 'dostępny') = 'dostępny' AND active = TRUE`
         );
+        await runSql(base44, `UPDATE public.products SET wyroznienie_od = now() WHERE slug = ${v.slug} AND wyroznienie = 'nowosc' AND wyroznienie_od IS NULL`);
       }
       await ensureWaitlistCols(base44);
       const rel = p.status === "wkrótce" ? releaseVal(p.release_at) : "NULL";

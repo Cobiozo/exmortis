@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from "react";
-import { ChevronLeft, ChevronRight } from "lucide-react";
+import { ChevronLeft, ChevronRight, Maximize2 } from "lucide-react";
+import useSwipe from "./useSwipe";
 import ProductThumbs from "./ProductThumbs";
 import ProductLightbox from "./ProductLightbox";
 import Logo from "@/components/exmortis/Logo";
@@ -25,9 +26,11 @@ export default function ProductCover({ product }) {
   useEffect(() => setActive(0), [product.id]);
   const src = images[active] || "";
   const go = (d) => setActive((i) => (i + d + images.length) % images.length);
+  // Galeria (25.11.2026): na karcie strzałki, miniatury i przesuwanie palcem; klik — pełny ekran z X.
+  const swipe = useSwipe(() => images.length > 1 && go(1), () => images.length > 1 && go(-1));
 
   const frame = (
-    <div className={cn("relative overflow-hidden rounded-[var(--exm-r-field)] bg-exm-surface-2", book ? "aspect-[3/4]" : "aspect-[4/3]")}>
+    <div {...swipe} className={cn("group relative overflow-hidden rounded-[var(--exm-r-field)] bg-exm-surface-2", book ? "aspect-[3/4]" : "aspect-[4/3]")}>
       {images.length > 1 && (
         <>
           <button type="button" onClick={() => go(-1)} aria-label="Poprzednie zdjęcie" className="absolute left-2 top-1/2 z-10 flex h-11 w-11 -translate-y-1/2 items-center justify-center rounded-full bg-exm-bg/70 text-exm-ivory hover:text-exm-gold">
@@ -46,6 +49,14 @@ export default function ProductCover({ product }) {
         <span className="absolute inset-0 flex items-center justify-center" aria-hidden="true">
           <Logo className="h-20 w-20 opacity-40" glow={false} />
         </span>
+      )}
+      {src && (
+        <span aria-hidden="true" className="pointer-events-none absolute bottom-2 right-2 z-10 flex h-9 w-9 items-center justify-center rounded-full bg-exm-bg/70 text-exm-ivory opacity-80 transition-opacity group-hover:opacity-100">
+          <Maximize2 className="h-4 w-4" />
+        </span>
+      )}
+      {images.length > 1 && (
+        <span aria-hidden="true" className="pointer-events-none absolute bottom-3 left-1/2 z-10 -translate-x-1/2 rounded-full bg-exm-bg/70 px-2.5 py-1 text-[11px] text-exm-ivory">{active + 1} / {images.length}</span>
       )}
       {hl && (
         <div className="absolute left-3 top-3">

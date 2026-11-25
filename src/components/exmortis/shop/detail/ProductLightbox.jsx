@@ -2,11 +2,13 @@ import React, { useEffect } from "react";
 import { createPortal } from "react-dom";
 import { ChevronLeft, ChevronRight, X } from "lucide-react";
 import { Image } from "@/components/ui/image";
+import useSwipe from "./useSwipe";
 
-// Powiększone zdjęcie produktu na pełnym ekranie: strzałki (także klawisze ←/→), Esc lub klik w tło zamyka.
+// Powiększone zdjęcie produktu na pełnym ekranie: strzałki (także klawisze ←/→ i przesunięcie palcem), X, Esc lub klik w tło zamyka.
 export default function ProductLightbox({ images, index, onIndex, onClose, name }) {
   const n = images.length;
   const go = (d) => onIndex((index + d + n) % n);
+  const swipe = useSwipe(() => n > 1 && go(1), () => n > 1 && go(-1));
 
   useEffect(() => {
     const onKey = (e) => {
@@ -36,7 +38,7 @@ export default function ProductLightbox({ images, index, onIndex, onClose, name 
           </button>
         </>
       )}
-      <div className="relative h-[85svh] w-full max-w-5xl" onClick={(e) => e.stopPropagation()}>
+      <div {...swipe} className="relative h-[85svh] w-full max-w-5xl touch-pan-y" onClick={(e) => e.stopPropagation()}>
         <Image key={images[index]} src={images[index]} alt={name} fittingType="fit" className="absolute inset-0 h-full w-full" />
       </div>
       {n > 1 && <p className="absolute bottom-[calc(1rem+env(safe-area-inset-bottom))] text-[13px] text-exm-muted">{index + 1} / {n}</p>}

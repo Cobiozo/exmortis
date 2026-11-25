@@ -9,7 +9,7 @@ import BundleItemsPicker from "./BundleItemsPicker";
 import LessonsManager from "./course/LessonsManager";
 import PriceSteps from "./PriceSteps";
 import CoverAiButton from "./CoverAiButton";
-import { HIGHLIGHT_OPTIONS, HIGHLIGHT_HINT } from "@/lib/productHighlight";
+import { HIGHLIGHT_OPTIONS, HIGHLIGHT_HINT, newUntil } from "@/lib/productHighlight";
 
 const CATEGORIES = ["ebook", "warsztat", "mentoring", "mastermind", "retreat", "darmowe"];
 const LEVELS = [
@@ -337,6 +337,13 @@ export default function ProductEditor({ product, onSaved, onCancel }) {
             ))}
           </select>
           <p className="text-[11px] text-foreground/50 mt-2 leading-relaxed">{HIGHLIGHT_HINT}</p>
+          {form.wyroznienie === "nowosc" && (
+            <p className="text-[11px] gold-text mt-1">
+              {product?.wyroznienie === "nowosc" && newUntil(product)
+                ? `Nowość widoczna do ${newUntil(product).toLocaleDateString("pl-PL", { day: "numeric", month: "long" })}.`
+                : "Po zapisaniu: Nowość przez 30 dni od dziś."}
+            </p>
+          )}
         </div>
       </div>
       <div className="flex flex-col sm:flex-row gap-6 mb-10">
