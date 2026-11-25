@@ -1,5 +1,6 @@
 import { createClientFromRequest } from "../_shared/compat.ts";
 import { runSql, escStr, textField, emailField, clientIp } from "../_shared/supabase.ts";
+import { requireMailDomain } from "../_shared/emailCheck.ts";
 import { ipAllowed, TOO_MANY } from "../_shared/rateLimit.ts";
 import { insertOrder } from "../_shared/orders.ts";
 import { addSubscriber } from "../_shared/newsletter.ts";
@@ -26,6 +27,7 @@ const handler = async function (req) {
 
     const name = textField(body, "name", { max: 100 });
     const email = emailField(body);
+    await requireMailDomain(email); // domena musi przyjmować pocztę (25.11.2026)
     const phone = textField(body, "phone", { max: 40, required: false }) || "";
     const slug = String(body.slug || "").trim();
     if (!/^[a-z0-9-]+$/.test(slug)) throw new Error("Brak produktu");

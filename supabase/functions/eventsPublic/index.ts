@@ -1,6 +1,7 @@
 import { createClientFromRequest } from "../_shared/compat.ts";
 import { waitUntil } from "../_shared/shim.ts";
 import { runSql, escStr, textField, emailField, clientIp } from "../_shared/supabase.ts";
+import { requireMailDomain } from "../_shared/emailCheck.ts";
 import { getSetting, loadAppUrl } from "../_shared/settings.ts";
 import { getSnap, clearSnap } from "../_shared/snapshot.ts";
 import { rpcRegister, RPC_ERRORS, saveConsents, afterSaved, enqueue, flushQueue, snapEvent, ensureTzColumn } from "../_shared/registrations.ts";
@@ -140,6 +141,7 @@ const handler = async function (req) {
       const slug = textField(body, "slug", { max: 200 });
       const firstName = textField(body, "first_name", { max: 120 });
       const email = emailField(body).toLowerCase();
+      await requireMailDomain(email); // domena musi przyjmować pocztę (25.11.2026)
       const question = textField(body, "question", { required: false, max: 2000 });
       if (body.consent !== true) {
         return Response.json({ error: "Zaznacz, żeby się zapisać." }, { status: 400 });

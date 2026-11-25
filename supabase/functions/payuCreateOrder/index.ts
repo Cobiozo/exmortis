@@ -1,6 +1,7 @@
 import { createClientFromRequest } from "../_shared/compat.ts";
 import { applyDiscount, reserveCode, releaseCode } from "../_shared/discounts.ts";
 import { runSql, escStr, textField, emailField, clientIp } from "../_shared/supabase.ts";
+import { requireMailDomain } from "../_shared/emailCheck.ts";
 import { ipAllowed, TOO_MANY } from "../_shared/rateLimit.ts";
 import { getSetting, loadAppUrl, APP_URL } from "../_shared/settings.ts";
 import {
@@ -188,6 +189,7 @@ const handler = async function (req) {
 
     const buyerName = textField(body, "name", { max: 100 });
     const buyerEmail = emailField(body);
+    await requireMailDomain(buyerEmail); // domena musi przyjmować pocztę (25.11.2026)
     const note = textField(body, "note", { max: 2000, required: false }) || "";
     const newsletterConsent = body.newsletter_consent === true;
     const createAccount = body.create_account === true;
