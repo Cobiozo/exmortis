@@ -20,7 +20,9 @@ const port = Number(process.env.PORT) || 3000;
 
 const app = express();
 app.disable("x-powered-by");
-app.set("trust proxy", true);
+// Jeden zaufany pośrednik (LiteSpeed na CyberFolks): req.ip = adres dopisany przez niego na końcu X-Forwarded-For.
+// Wcześniej `true` brało pierwszy adres z nagłówka, który podaje sam klient — dało się podrobić IP i obejść limity (25.11.2026).
+app.set("trust proxy", 1);
 
 // Adres z www → ten sam adres bez www (301). Tylko dokładnie www.exmortis.pl, więc bez ryzyka pętli.
 app.use((req, res, next) => {
