@@ -7,6 +7,7 @@ import RefundBox, { refundLabel } from "./RefundBox";
 import FakturaBlock from "./FakturaBlock";
 import RefundDialog from "./RefundDialog";
 import FreeDownloadsPanel from "./FreeDownloadsPanel";
+import FixEmailBox from "./FixEmailBox";
 
 const zl = (n) => `${Number(n || 0).toFixed(2).replace(".", ",")} zł`;
 const when = (iso) => (iso ? new Date(iso).toLocaleString("pl-PL", { timeZone: "Europe/Warsaw", day: "numeric", month: "short", year: "numeric", hour: "2-digit", minute: "2-digit" }) : "");
@@ -196,6 +197,7 @@ function SalesPanel() {
                       <p className="text-xs text-foreground/35 pt-2 break-all">Pełny numer: {o.id}{o.payu_order_id ? ` · PayU: ${o.payu_order_id}` : ""}</p>
                     </div>
                     <div className="space-y-4">
+                      <FixEmailBox o={o} onDone={load} />
                       <ResumeBox o={o} onDone={load} />
                       <FakturaBlock o={o} />
                       <InvoiceBox o={o} onSaved={(inv) => patch(o.id, inv)} />
