@@ -9,6 +9,7 @@ import EpisodeMedia from "@/components/exmortis/podcast/EpisodeMedia";
 import { usePodcastPlayer } from "@/components/exmortis/podcast/PlayerContext";
 import { loadPublished, loadSettings, fmtT, syncPodcast, TEMATY } from "@/components/exmortis/podcast/podcastUtils";
 import GlosSearch from "./GlosSearch";
+import ShareButton from "@/components/exmortis/podcast/ShareButton";
 
 const datePl = (v) => (v ? new Date(v).toLocaleDateString("pl-PL") : "");
 
@@ -127,6 +128,7 @@ export default function GlosPodcastPanel() {
                 <button type="button" className={ctrl} onClick={() => choose(queue[ci + 1], false)} disabled={ci < 0 || ci >= queue.length - 1}>
                   Następny <SkipForward className="h-4 w-4" aria-hidden="true" />
                 </button>
+                <ShareButton ep={current} />
                 <Link to={`/glos/${current.slug}`} className="btn-link">Otwórz odcinek</Link>
               </div>
               {current.audio && <p className="mt-2 text-[12px] text-exm-muted">Odcinki odtwarzają się po kolei — po zakończeniu jednego zaczyna się następny z listy.</p>}

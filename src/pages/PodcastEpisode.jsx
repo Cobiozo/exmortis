@@ -6,6 +6,7 @@ import { sanitizeHtml } from "@/lib/sanitizeHtml";
 import ContentWarning from "@/components/exmortis/podcast/ContentWarning";
 import EpisodeMedia from "@/components/exmortis/podcast/EpisodeMedia";
 import ShareBox from "@/components/exmortis/podcast/ShareBox";
+import ShareButton from "@/components/exmortis/podcast/ShareButton";
 import SubscribeLinks from "@/components/exmortis/podcast/SubscribeLinks";
 import QuietSignup from "@/components/exmortis/podcast/QuietSignup";
 import EpisodeSeo from "@/components/exmortis/podcast/EpisodeSeo";
@@ -61,6 +62,7 @@ export default function PodcastEpisode() {
         </header>
         <ContentWarning topics={ep.ostrzezenia} />
         <EpisodeMedia ep={ep} startAt={startAt} />
+        <ShareButton ep={ep} up={false} />
         {!!chapters.length && (
           <ol className="border-y hairline divide-y hairline">
             {chapters.map((c) => (

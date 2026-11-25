@@ -19,7 +19,13 @@ export default function CoursePlayer() {
   const [params, setParams] = useSearchParams();
   const mode = params.get("tryb") === "audio" || params.get("tryb") === "wideo" ? params.get("tryb") : "";
   const [dl, setDl] = useState(false);
-  useEffect(() => { if (user?.license_consent_at) setConsented(true); }, [user]);
+  // Komunikat licencji tylko przy pierwszym otwarciu: zgoda z konta albo zapamiętana na tym urządzeniu.
+  useEffect(() => {
+    let local = false;
+    try { local = !!localStorage.getItem("exm_license_ok"); } catch { /* bez pamięci */ }
+    if (user?.license_consent_at || local) setConsented(true);
+  }, [user]);
+  const acceptLicense = () => { try { localStorage.setItem("exm_license_ok", new Date().toISOString()); } catch { /* bez pamięci */ } setConsented(true); };
   useNoIndex();
 
   const load = () => {
@@ -115,7 +121,7 @@ export default function CoursePlayer() {
         <p className="mt-10 text-foreground/55">Lekcje są w przygotowaniu. Poinformuję Cię e-mailem, gdy będą dostępne.</p>
       ) : (
         <div className="mt-10 grid grid-cols-1 lg:grid-cols-[minmax(0,1fr)_340px] gap-10">
-          {lesson && (!consented ? <LicenseConsent onAccept={() => setConsented(true)} /> : lesson.kind === "audio"
+          {lesson && (!consented ? <LicenseConsent onAccept={acceptLicense} /> : lesson.kind === "audio"
             ? <AudioLessonPlayer key={lesson.id} accessId={accessId} courseName={data.name} lesson={lesson} onDone={markDone} onNext={nextShown ? () => pick(nextShown.id) : null} nextTitle={nextShown?.title} />
             : <LessonPlayer key={lesson.id} accessId={accessId} lesson={lesson} onDone={markDone} onNext={nextShown ? () => pick(nextShown.id) : null} nextTitle={nextShown?.title} />)}
           <LessonList lessons={shown} current={current} onPick={pick} />

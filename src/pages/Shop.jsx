@@ -16,6 +16,7 @@ import VaultCard from "@/components/exmortis/shop/vault/VaultCard";
 import VaultFeatured from "@/components/exmortis/shop/vault/VaultFeatured";
 import VaultServices from "@/components/exmortis/shop/vault/VaultServices";
 import VaultSoon from "@/components/exmortis/shop/vault/VaultSoon";
+import { isNewProduct, newSortKey } from "@/lib/productHighlight";
 
 // Skarbiec (etap 4): krótki nagłówek z bloku strony, pod nim jedna wskazówka, zakładki grup
 // i jeden czytelny widok kart. Kupno, kasa, lista oczekujących i pobieranie — bez zmian.
@@ -40,6 +41,8 @@ const freeRank = (p) => {
 // Grupy produktów — tylko te, które mają pozycje. Karta podarunkowa zawsze w „Prezencie”.
 const buildGroups = (list) =>
   [
+    // Nowości — pierwsza i domyślnie otwarta zakładka (Dawid 25.11.2026).
+    { key: "nowosci", label: "Nowości", items: list.filter((p) => !isSoon(p) && isNewProduct(p)).sort((a, b) => newSortKey(b) - newSortKey(a)) },
     { key: "bezplatnie", label: "Bezpłatnie", items: list.filter((p) => p.is_free && !isSoon(p)).sort((a, b) => freeRank(a) - freeRank(b)) },
     { key: "ksiazki", label: "Książki", items: list.filter((p) => !p.is_free && !isSoon(p) && p.product_type !== "usluga" && p.product_type !== "karta") },
     { key: "praca", label: "Praca indywidualna", items: list.filter((p) => !p.is_free && !isSoon(p) && p.product_type === "usluga") },

@@ -1,6 +1,7 @@
 import React, { useCallback, useEffect, useRef, useState } from "react";
 import { Download, Loader2, Maximize2, Minimize2, Minus, Plus, ChevronUp, ChevronDown } from "lucide-react";
 import * as pdfjs from "pdfjs-dist/legacy/build/pdf.mjs";
+import { base44 } from "@/api/base44Client";
 import workerUrl from "pdfjs-dist/legacy/build/pdf.worker.min.mjs?url";
 
 pdfjs.GlobalWorkerOptions.workerSrc = workerUrl;
@@ -56,7 +57,7 @@ function Page({ doc, num, width, ratio, register, root }) {
 }
 
 // Czytnik PDF w przeglądarce: przewijanie stron, powiększenie, pełny ekran, zapamiętana strona, pobieranie.
-export default function PdfReader({ src, downloadUrl, storageId, title }) {
+export default function PdfReader({ src, downloadUrl, storageId, title, onRetry }) {
   const box = useRef(null);
   const scroller = useRef(null);
   const pages = useRef(new Map());
@@ -70,22 +71,69 @@ export default function PdfReader({ src, downloadUrl, storageId, title }) {
   const [resume, setResume] = useState(0);
   const [jump, setJump] = useState("");
 
+  const [progress, setProgress] = useState(0);
+
+  // Plik pobieramy sami (postęp, czytelny powód błędu), potem pdf.js dostaje gotowe bajty.
   useEffect(() => {
     let dead = false;
     let loaded = null;
-    setErr(""); setDoc(null);
-    const task = pdfjs.getDocument({ url: src, isEvalSupported: false, disableRange: true, disableStream: true, standardFontDataUrl: "/pdfjs/standard_fonts/" });
-    task.promise.then(async (d) => {
-      loaded = d;
-      if (dead) { d.destroy(); return; }
-      const p1 = await d.getPage(1);
-      const v = p1.getViewport({ scale: 1 });
-      setRatio(v.height / v.width);
-      setDoc(d);
-      const saved = readSaved(storageId);
-      if (saved > 1 && saved <= d.numPages) setResume(saved);
-    }).catch(() => { if (!dead) setErr("Nie udało się otworzyć e-booka. Odśwież stronę albo pobierz plik."); });
-    return () => { dead = true; task.destroy?.(); if (loaded) loaded.destroy(); };
+    let task = null;
+    const ctrl = new AbortController();
+    setErr(""); setDoc(null); setProgress(0);
+    (async () => {
+      let stage = "pobieranie";
+      try {
+        const res = await fetch(src, { credentials: "same-origin", signal: ctrl.signal, cache: "no-store" });
+        if (!res.ok) throw Object.assign(new Error(`HTTP ${res.status}`), { name: "HttpError", status: res.status });
+        const total = Number(res.headers.get("content-length")) || 0;
+        let bytes;
+        if (res.body && res.body.getReader) {
+          const reader = res.body.getReader();
+          const parts = [];
+          let got = 0;
+          for (;;) {
+            const { done, value } = await reader.read();
+            if (done) break;
+            parts.push(value); got += value.length;
+            if (total && !dead) setProgress(Math.min(99, Math.round((got / total) * 100)));
+          }
+          bytes = new Uint8Array(got);
+          let o = 0;
+          for (const c of parts) { bytes.set(c, o); o += c.length; }
+        } else {
+          bytes = new Uint8Array(await res.arrayBuffer());
+        }
+        if (dead) return;
+        const head = String.fromCharCode(...bytes.slice(0, 1024)).indexOf("%PDF");
+        if (head < 0) throw Object.assign(new Error(`To nie jest PDF (${bytes.length} B, ${res.headers.get("content-type") || "?"})`), { name: "NotPdf" });
+        stage = "otwieranie";
+        task = pdfjs.getDocument({ data: bytes, isEvalSupported: false, standardFontDataUrl: "/pdfjs/standard_fonts/" });
+        const d = await task.promise;
+        loaded = d;
+        if (dead) { d.destroy(); return; }
+        const p1 = await d.getPage(1);
+        const v = p1.getViewport({ scale: 1 });
+        setRatio(v.height / v.width);
+        setDoc(d);
+        const saved = readSaved(storageId);
+        if (saved > 1 && saved <= d.numPages) setResume(saved);
+      } catch (e) {
+        if (dead || e?.name === "AbortError") return;
+        const reason = `${e?.name || "Error"}: ${String(e?.message || e).slice(0, 200)}`;
+        console.error("Czytnik PDF", stage, reason);
+        // Zgłoszenie do panelu (Bezpieczeństwo → błędy przeglądarki), bez adresu pliku z tokenem.
+        base44.functions.invoke("clientError", {
+          message: `Czytnik PDF (${stage}) ${reason}`.slice(0, 500),
+          url: window.location.pathname,
+          browser: navigator.userAgent.slice(0, 300),
+          at: new Date().toISOString(),
+        }).catch(() => {});
+        setErr(e?.status === 410 || e?.status === 404
+          ? "Link do pliku wygasł. Kliknij „Spróbuj ponownie”."
+          : "Nie udało się otworzyć e-booka w czytniku. Spróbuj ponownie albo pobierz plik.");
+      }
+    })();
+    return () => { dead = true; ctrl.abort(); task?.destroy?.(); if (loaded) loaded.destroy(); };
   }, [src, storageId]);
 
   // Szerokość dostępna na stronę (zmienia się przy obrocie telefonu i pełnym ekranie).
@@ -186,10 +234,14 @@ export default function PdfReader({ src, downloadUrl, storageId, title }) {
         {err ? (
           <div className="p-8 text-center text-sm text-foreground/70">
             <p>{err}</p>
-            {downloadUrl && <a href={downloadUrl} rel="noopener" className="btn-relic !px-5 !py-3 mt-5 inline-flex"><Download className="h-4 w-4" /> Pobierz PDF</a>}
+            <div className="mt-5 flex flex-wrap justify-center gap-3">
+              {onRetry && <button onClick={onRetry} className="btn-relic !px-5 !py-3">Spróbuj ponownie</button>}
+              {src && <a href={src} target="_blank" rel="noopener noreferrer" className="btn-ghost !px-5 !py-3 inline-flex">Otwórz w nowej karcie</a>}
+              {downloadUrl && <a href={downloadUrl} rel="noopener" className="btn-ghost !px-5 !py-3 inline-flex"><Download className="h-4 w-4" /> Pobierz PDF</a>}
+            </div>
           </div>
         ) : !doc ? (
-          <div className="py-24 flex flex-col items-center gap-3 text-xs text-foreground/55"><Loader2 className="h-6 w-6 animate-spin gold-text" />Otwieram e-book…</div>
+          <div className="py-24 flex flex-col items-center gap-3 text-xs text-foreground/55"><Loader2 className="h-6 w-6 animate-spin gold-text" />Otwieram e-book{progress > 0 ? ` · ${progress}%` : "…"}</div>
         ) : (
           <div className="py-3 space-y-3" style={{ minWidth: width + 24 }}>
             {Array.from({ length: total }, (_, i) => (

@@ -60,18 +60,16 @@ export default function ProductTile({ p }) {
             <p className="text-xs text-foreground/55">Materiał jest w przygotowaniu. Poinformuję Cię e-mailem, gdy będzie dostępny.</p>
           ) : p.type === "zestaw" ? (
             // Zestaw: e-book (czytnik na koncie + pobranie) i nagrania (tylko w odtwarzaczu konta).
-            <div className="space-y-3">
-              <div className="flex flex-wrap gap-2">
-                {p.has_file && <Link to={`/konto/czytaj/${p.access_id}`} className="btn-relic !px-4 !py-2.5"><BookOpen className={ico} strokeWidth={1.25} /> Czytaj</Link>}
-                {(p.audio_count > 0 || !(p.video_count > 0)) && <Link to={`/konto/kurs/${p.access_id}${p.video_count > 0 ? "?tryb=audio" : ""}`} className={`${p.has_file ? "btn-ghost" : "btn-relic"} !px-4 !py-2.5`}><Headphones className={ico} strokeWidth={1.25} /> Słuchaj</Link>}
-                {p.video_count > 0 && <Link to={`/konto/kurs/${p.access_id}${p.audio_count > 0 ? "?tryb=wideo" : ""}`} className="btn-ghost !px-4 !py-2.5"><Film className={ico} strokeWidth={1.25} /> Oglądaj</Link>}
-              </div>
-              {p.has_file && <button onClick={download} disabled={busy} className="btn-link inline-flex items-center gap-2">{busy ? <Loader2 className={`${ico} animate-spin`} /> : <Download className={ico} strokeWidth={1.25} />} Pobierz e-book (PDF)</button>}
+            <div className="flex flex-wrap gap-2">
+              {p.has_file && <Link to={`/konto/czytaj/${p.access_id}`} className="btn-relic !px-4 !py-2.5"><BookOpen className={ico} strokeWidth={1.25} /> Czytaj</Link>}
+              {(p.audio_count > 0 || !(p.video_count > 0)) && <Link to={`/konto/kurs/${p.access_id}${p.video_count > 0 ? "?tryb=audio" : ""}`} className={`${p.has_file ? "btn-ghost" : "btn-relic"} !px-4 !py-2.5`}><Headphones className={ico} strokeWidth={1.25} /> Słuchaj</Link>}
+              {p.video_count > 0 && <Link to={`/konto/kurs/${p.access_id}${p.audio_count > 0 ? "?tryb=wideo" : ""}`} className="btn-ghost !px-4 !py-2.5"><Film className={ico} strokeWidth={1.25} /> Oglądaj</Link>}
+              {p.has_file && <button onClick={download} disabled={busy} className="btn-ghost !px-4 !py-2.5">{busy ? <Loader2 className={`${ico} animate-spin`} /> : <Download className={ico} strokeWidth={1.25} />} Pobierz PDF</button>}
             </div>
           ) : p.type === "pdf" ? (
-            <div className="flex flex-wrap gap-3">
+            <div className="flex flex-wrap gap-2">
               <Link to={`/konto/czytaj/${p.access_id}`} className="btn-relic !px-4 !py-2.5"><BookOpen className={ico} strokeWidth={1.25} /> Czytaj</Link>
-              <button onClick={download} disabled={busy} className="btn-ghost !px-4 !py-2.5">{busy ? <Loader2 className={`${ico} animate-spin`} /> : <Download className={ico} strokeWidth={1.25} />} Pobierz</button>
+              <button onClick={download} disabled={busy} className="btn-ghost !px-4 !py-2.5">{busy ? <Loader2 className={`${ico} animate-spin`} /> : <Download className={ico} strokeWidth={1.25} />} Pobierz PDF</button>
             </div>
           ) : p.type === "audio" ? (
             audio ? <audio src={audio} controls autoPlay controlsList="nodownload" className="w-full" /> : (

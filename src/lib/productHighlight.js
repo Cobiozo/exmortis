@@ -36,3 +36,16 @@ export function productHighlight(p) {
   const age = Date.now() - t;
   return age >= 0 && age <= NEW_MS ? "nowosc" : null;
 }
+// Zakładka „Nowości” w Skarbcu: produkt dostępny, oznaczony w panelu jako Nowość albo (Automatycznie)
+// udostępniony w ciągu ostatnich 30 dni. „Brak” wyłącza produkt z nowości.
+export function isNewProduct(p) {
+  if (!p || p.status === "wkrótce") return false;
+  const mode = HIGHLIGHT_VALUES.includes(p.wyroznienie) ? p.wyroznienie : "auto";
+  if (mode === "nowosc") return true;
+  if (mode !== "auto") return false;
+  const t = stamp(p.available_at) ?? stamp(p.release_at);
+  if (t == null) return false;
+  const age = Date.now() - t;
+  return age >= 0 && age <= NEW_MS;
+}
+export const newSortKey = (p) => stamp(p.available_at) ?? stamp(p.release_at) ?? 0;

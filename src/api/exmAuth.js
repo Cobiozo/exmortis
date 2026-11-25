@@ -96,6 +96,8 @@ async function profile(s, supaUser) {
     email: supaUser.email,
     full_name: row?.full_name || supaUser.user_metadata?.full_name || "",
     role: row?.role || "user",
+    // Zgoda licencyjna (odtwarzacz kursów) — zapisywana przez updateMe w danych konta Supabase Auth.
+    license_consent_at: row?.license_consent_at || supaUser.user_metadata?.license_consent_at || null,
     created_date: supaUser.created_at,
     updated_date: supaUser.updated_at,
   };

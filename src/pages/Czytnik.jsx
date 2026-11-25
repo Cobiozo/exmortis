@@ -14,6 +14,7 @@ export default function Czytnik() {
   const [back, setBack] = useState(null);
   useNoIndex();
 
+  const [tick, setTick] = useState(0);
   useEffect(() => {
     try { const b = sessionStorage.getItem("exm-reader-back"); if (b) setBack(JSON.parse(b)); } catch { /* bez powrotu */ }
     setErr(""); setFile(null);
@@ -23,7 +24,7 @@ export default function Czytnik() {
         const s = e?.response?.status || e?.status || 0;
         setErr(s === 403 || s === 401 ? "Nie masz dostępu do tego e-booka albo dostęp wygasł." : "Nie udało się otworzyć e-booka. Spróbuj ponownie za chwilę.");
       });
-  }, [accessId]);
+  }, [accessId, tick]);
 
   const backTo = back?.id === accessId && back?.to ? back : { to: "/konto", label: "MOJE PRODUKTY" };
   return (
@@ -39,7 +40,7 @@ export default function Czytnik() {
         <div className="py-24 flex justify-center"><Loader2 className="h-6 w-6 animate-spin gold-text" /></div>
       ) : (
         <Suspense fallback={<div className="py-24 flex justify-center"><Loader2 className="h-6 w-6 animate-spin gold-text" /></div>}>
-          <PdfReader src={file.url} downloadUrl={file.download_url} storageId={accessId} title={file.title || ""} />
+          <PdfReader src={file.url} downloadUrl={file.download_url} storageId={accessId} title={file.title || ""} onRetry={() => setTick((t) => t + 1)} />
         </Suspense>
       )}
       <p className="mt-4 text-xs text-foreground/45">Plik zawiera Twój osobisty znak wodny. Ostatnio czytana strona zapamiętuje się na tym urządzeniu.</p>

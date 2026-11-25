@@ -9,7 +9,7 @@ const IMG = (id) => `/functions/media?id=${id}`;
 const FOTO = {
   // Portret pierwszego ekranu jako plik strony (19.11.2026): bez pośrednictwa funkcji media ładuje się od razu.
   portret: { url: "/img/dawid-portret.webp", alt: "Dawid Kowalczyk — mentor powrotu", fx: 50, fy: 35 },
-  zona: { url: IMG("9aa156b7c1615682c44a00ea3fb43c05"), alt: "Dawid z żoną", fx: 50, fy: 40 },
+  zona: { url: IMG("9aa156b7c1615682c44a00ea3fb43c05"), alt: "Dawid z żoną", fx: 50, fy: 30 },
   praca: { url: IMG("5d6b5925ff83d0e867dce577ce67efd4"), alt: "Dawid przy pracy nad EXMORTIS", fx: 50, fy: 45 },
   jezioro: { url: IMG("e55ce62f8144ead1bfe7aa810f4abc96"), alt: "Dawid na jeziorze", fx: 50, fy: 55 },
   ksiazka: { url: IMG("a916c6db7e8db20612dfaab705b2611a"), alt: "Dawid z książką Wracam inny", fx: 50, fy: 45 },
@@ -47,7 +47,7 @@ export const ABOUT_BLOCKS = [
     etykieta: "DZIŚ",
     tytul: "Mąż i ojciec",
     tresc: `<p>Dziś jestem mężem i ojcem.</p><p>Ważną częścią tej drogi była dla mnie wiara. Nie musisz podzielać moich przekonań, żeby znaleźć tu miejsce dla siebie.</p><p>To, co dostałem, chcę przekazywać dalej.</p>`,
-    zdjecie: FOTO.zona, strona: "lewo", proporcja: "4:5",
+    zdjecie: FOTO.zona, strona: "lewo", proporcja: "2:3",
     piosenka_wstep: "O miłości, dzięki której zostałem, opowiadam w piosence „Ocalenie”.",
     piosenka_url: "https://youtu.be/92kTN9ZBipc",
     piosenka_tytul: "Ocalenie",
