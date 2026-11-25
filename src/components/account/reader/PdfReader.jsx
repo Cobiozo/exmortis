@@ -12,11 +12,26 @@ const readSaved = (id) => { try { return Number(localStorage.getItem(keyFor(id))
 const save = (id, n) => { try { localStorage.setItem(keyFor(id), String(n)); } catch { /* bez zapamiętania */ } };
 
 // Jedna strona: rysowana dopiero, gdy jest blisko ekranu (oszczędza pamięć przy długich e-bookach).
-function Page({ doc, num, width, ratio, register, root }) {
+// Bezpieczne adresy z linków w PDF: tylko http(s), mailto i tel.
+const safeUrl = (u) => (/^(https?:|mailto:|tel:)/i.test(String(u || "").trim()) ? String(u).trim() : null);
+
+// Odnośnik wewnętrzny (spis treści, „zobacz rozdział”) → numer strony.
+async function destPage(doc, dest) {
+  try {
+    const d = typeof dest === "string" ? await doc.getDestination(dest) : dest;
+    if (!Array.isArray(d) || !d.length) return null;
+    const ref = d[0];
+    if (typeof ref === "number") return ref + 1;
+    return (await doc.getPageIndex(ref)) + 1;
+  } catch { return null; }
+}
+
+function Page({ doc, num, width, ratio, register, root, onGoTo }) {
   const holder = useRef(null);
   const canvas = useRef(null);
   const [near, setNear] = useState(false);
   const [h, setH] = useState(Math.round(width * ratio));
+  const [links, setLinks] = useState([]);
 
   useEffect(() => { register(num, holder.current); }, [num, register]);
   useEffect(() => {
@@ -45,6 +60,20 @@ function Page({ doc, num, width, ratio, register, root }) {
       setH(Math.floor(vp.height));
       task = page.render({ canvasContext: c.getContext("2d"), viewport: vp, transform: dpr !== 1 ? [dpr, 0, 0, dpr, 0, 0] : null });
       task.promise.catch(() => {});
+      // Klikalne odnośniki z PDF (26.11.2026): adresy WWW, e-mail i skoki do stron — jak w pobranym pliku.
+      page.getAnnotations({ intent: "display" }).then(async (anns) => {
+        if (dead) return;
+        const out = [];
+        for (const a of anns || []) {
+          if (a.subtype !== "Link" || !Array.isArray(a.rect)) continue;
+          const [x1, y1, x2, y2] = vp.convertToViewportRectangle(a.rect);
+          const box = { left: Math.min(x1, x2), top: Math.min(y1, y2), width: Math.abs(x2 - x1), height: Math.abs(y2 - y1) };
+          const url = safeUrl(a.url || a.unsafeUrl);
+          if (url) { out.push({ ...box, url }); continue; }
+          if (a.dest) { const to = await destPage(doc, a.dest); if (to) out.push({ ...box, page: to }); }
+        }
+        if (!dead) setLinks(out);
+      }).catch(() => {});
     });
     return () => { dead = true; if (task) task.cancel(); };
   }, [near, width, doc, num]);
@@ -52,6 +81,13 @@ function Page({ doc, num, width, ratio, register, root }) {
   return (
     <div ref={holder} data-page={num} className="relative mx-auto bg-white shadow-[0_6px_30px_rgba(0,0,0,0.45)]" style={{ width, height: h }}>
       {near ? <canvas ref={canvas} className="block" aria-label={`Strona ${num}`} /> : null}
+      {near && links.map((l, i) => {
+        const style = { left: l.left, top: l.top, width: l.width, height: l.height };
+        const cls = "absolute block rounded-sm hover:bg-[#C9A24A]/15 focus-visible:outline focus-visible:outline-2 focus-visible:outline-[#C9A24A]";
+        return l.url
+          ? <a key={i} href={l.url} target="_blank" rel="noopener noreferrer" className={cls} style={style} aria-label={`Link: ${l.url}`} title={l.url} />
+          : <button key={i} type="button" onClick={() => onGoTo(l.page)} className={cls} style={style} aria-label={`Przejdź do strony ${l.page}`} title={`Strona ${l.page}`} />;
+      })}
     </div>
   );
 }
@@ -245,7 +281,7 @@ export default function PdfReader({ src, downloadUrl, storageId, title, onRetry 
         ) : (
           <div className="py-3 space-y-3" style={{ minWidth: width + 24 }}>
             {Array.from({ length: total }, (_, i) => (
-              <Page key={i + 1} doc={doc} num={i + 1} width={width} ratio={ratio} register={register} root={scroller.current} />
+              <Page key={i + 1} doc={doc} num={i + 1} width={width} ratio={ratio} register={register} root={scroller.current} onGoTo={goTo} />
             ))}
           </div>
         )}
