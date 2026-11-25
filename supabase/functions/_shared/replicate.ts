@@ -117,6 +117,10 @@ export async function replicateFull(base44, { only, budgetMs = 210000 } = {}) {
 
 // ==== PRZYROST (tick) ====
 export async function replicateDelta(base44, { limitMs = 90000 } = {}) {
+  // 25.11.2026: dane aplikacji żyją w Supabase (warstwa compat czyta i pisze te same tabele exm_*).
+  // Przyrost przepisywałby rekordy same na siebie — po naprawie filtra po updated_date groziłoby to
+  // nadpisaniem świeższej zmiany starszą kopią. Zadanie zostaje w harmonogramie, ale nic nie kopiuje.
+  if (limitMs >= 0) return { pominiete: "dane są już w Supabase — przyrost niepotrzebny" };
   const st = (await getSetting(base44, "replikacja")) || { full_done: [], since: {} };
   const since = st.since || {};
   const zmiany = {};
