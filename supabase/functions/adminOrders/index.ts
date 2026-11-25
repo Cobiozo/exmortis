@@ -5,6 +5,7 @@ import { resumeFulfillment } from "../_shared/payuQueue.ts";
 import { createRefund, listRefunds, hasRefundsTable } from "../_shared/refunds.ts";
 import { issueInvoice } from "../_shared/invoices.ts";
 import { requireMailDomain } from "../_shared/emailCheck.ts";
+import { collectBounces } from "../_shared/bounces.ts";
 import { resendLinks } from "../_shared/orderLinks.ts";
 import { accessFilter, mirrorRecord } from "../_shared/mirror.ts";
 
@@ -196,6 +197,12 @@ const handler = async function (req) {
 
     // 25.11.2026: literówka w adresie kupującego — poprawka adresu w zamówieniu, dostępach i linkach,
     // potem nowy link do materiałów na poprawny adres (opłacone zamówienie).
+    // Zwroty poczty ze skrzynki (ostatnie dni) — do sprawdzenia, kto nie dostał maila.
+    if (body.action === "bounces") {
+      const days = Math.min(14, Math.max(1, Number(body.days) || 7));
+      return Response.json({ bounces: await collectBounces(base44, days) });
+    }
+
     if (body.action === "fix_email") {
       const id = String(body.id || "");
       if (!/^[0-9a-f-]{36}$/i.test(id)) return Response.json({ error: "Brak zamówienia" }, { status: 400 });
