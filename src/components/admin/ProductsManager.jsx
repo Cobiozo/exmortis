@@ -1,7 +1,7 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import { base44 } from "@/api/base44Client";
 import { Image } from "@/components/ui/image";
-import { Plus, Pencil, Trash2, Eye, EyeOff, Star } from "lucide-react";
+import { Plus, Pencil, Trash2, Eye, EyeOff, Star, Search } from "lucide-react";
 import ProductEditor from "./ProductEditor";
 import WaitlistPanel from "./WaitlistPanel";
 import ReviewsPanel from "./reviews/ReviewsPanel";
@@ -15,6 +15,25 @@ const LEVEL_NAMES = {
   5: "SPECJALNE",
 };
 
+// Porządek listy (25.11.2026): zakładki według tego, co klient widzi, a w „W sprzedaży” grupy.
+const isSoon = (p) => (p.status || "dostępny") === "wkrótce";
+const isHidden = (p) => !p.active || p.status === "ukryty";
+const TABS = [
+  ["sprzedaz", "W sprzedaży", (p) => !isHidden(p) && !isSoon(p)],
+  ["zapowiedzi", "Zapowiedzi", (p) => !isHidden(p) && isSoon(p)],
+  ["ukryte", "Ukryte", (p) => isHidden(p)],
+  ["wszystkie", "Wszystkie", () => true],
+];
+const GROUPS = [
+  ["platne", "Książki i materiały płatne", (p) => !p.is_free && !["usluga", "karta"].includes(p.product_type)],
+  ["darmowe", "Bezpłatne", (p) => p.is_free && p.product_type !== "usluga"],
+  ["uslugi", "Praca indywidualna i spotkania", (p) => p.product_type === "usluga"],
+  ["karty", "Karty podarunkowe", (p) => p.product_type === "karta"],
+];
+const priceOf = (p) => (p.price_regular != null ? Number(p.price_regular) : Number(p.price) || 0);
+const groupOf = (p) => (GROUPS.find(([, , m]) => m(p)) || GROUPS[0])[0];
+const readTab = () => { try { return localStorage.getItem("exm_admin_products_tab") || "sprzedaz"; } catch { return "sprzedaz"; } };
+
 export default function ProductsManager() {
   const [products, setProducts] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -24,6 +43,21 @@ export default function ProductsManager() {
   const [reviews, setReviews] = useState(false);
   const [pending, setPending] = useState(0);
   const [notice, setNotice] = useState(""); // np. „Powiadamiam N osób z listy oczekujących"
+  const [tab, setTabState] = useState(readTab);
+  const [q, setQ] = useState("");
+  const setTab = (t) => { setTabState(t); try { localStorage.setItem("exm_admin_products_tab", t); } catch { /* bez pamięci */ } };
+  const counts = useMemo(() => Object.fromEntries(TABS.map(([k, , m]) => [k, products.filter(m).length])), [products]);
+  const visible = useMemo(() => {
+    const m = (TABS.find(([k]) => k === tab) || TABS[0])[2];
+    const s = q.trim().toLowerCase();
+    return products.filter(m).filter((p) => !s || [p.name, p.slug, p.subtitle].some((x) => String(x || "").toLowerCase().includes(s)));
+  }, [products, tab, q]);
+  // W sprzedaży: grupy (płatne od najtańszych, bezpłatne, usługi, karty); pozostałe zakładki: jedna lista A–Z.
+  const sections = useMemo(() => {
+    if (tab !== "sprzedaz") return [[null, null, [...visible].sort((a, b) => String(a.name).localeCompare(String(b.name), "pl"))]];
+    return GROUPS.map(([k, label]) => [k, label, visible.filter((p) => groupOf(p) === k)
+      .sort((a, b) => priceOf(a) - priceOf(b) || String(a.name).localeCompare(String(b.name), "pl"))]).filter(([, , l]) => l.length);
+  }, [visible, tab]);
 
   const load = () => {
     setLoading(true);
@@ -92,7 +126,7 @@ export default function ProductsManager() {
     <div>
       <div className="flex items-center justify-between mb-8">
         <p className="technical text-[10px] text-foreground/40">
-          {loading ? "ŁADUJĘ..." : `${products.length} PRODUKTÓW`}
+          {loading ? "ŁADUJĘ..." : `${products.length} PRODUKTÓW · ${counts.sprzedaz || 0} W SPRZEDAŻY`}
         </p>
         <div className="flex items-center gap-3">
           <button
@@ -125,16 +159,52 @@ export default function ProductsManager() {
           Brak produktów. Dodaj pierwszy.
         </p>
       ) : (
-        <div className="border hairline divide-y divide-[#3D3D3F]/40">
-          {products.map((p) => (
+        <>
+          <div className="flex flex-col gap-4 mb-6 lg:flex-row lg:items-center lg:justify-between">
+            <div role="tablist" aria-label="Widok produktów" className="flex flex-wrap gap-2">
+              {TABS.map(([k, label]) => (
+                <button key={k} role="tab" aria-selected={tab === k} onClick={() => setTab(k)}
+                  className={`technical text-[10px] px-4 py-2.5 border transition-colors ${tab === k ? "border-[#C9A24A] bg-[#C9A24A] text-[#0A0A0B]" : "hairline text-foreground/60 hover:text-foreground"}`}>
+                  {label.toUpperCase()} <span className={tab === k ? "opacity-70" : "opacity-50"}>{counts[k] || 0}</span>
+                </button>
+              ))}
+            </div>
+            <label className="relative block lg:w-72">
+              <span className="sr-only">Szukaj produktu</span>
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-foreground/40" aria-hidden="true" />
+              <input value={q} onChange={(e) => setQ(e.target.value)} placeholder="Szukaj po nazwie"
+                className="w-full bg-[#0F0F10] border hairline pl-9 pr-3 py-2.5 text-sm focus:outline-none focus:border-[#C9A24A]/60" />
+            </label>
+          </div>
+          {visible.length === 0 ? (
+            <p className="text-foreground/50 border hairline p-8 text-center text-sm">
+              {q ? "Nic nie pasuje do wyszukiwania." : tab === "zapowiedzi" ? "Brak zapowiedzi." : tab === "ukryte" ? "Nic nie jest ukryte." : "Brak produktów w tej zakładce."}
+            </p>
+          ) : (
+            <div className="space-y-8">
+              {sections.map(([k, label, list]) => (
+                <section key={k || "lista"} aria-label={label || undefined}>
+                  {label && (
+                    <div className="flex items-baseline justify-between mb-3">
+                      <h3 className="technical text-[10px] gold-text">{label.toUpperCase()}</h3>
+                      <span className="technical text-[9px] text-foreground/40">{list.length}</span>
+                    </div>
+                  )}
+                  <div className="border hairline divide-y divide-[#3D3D3F]/40">
+                    {list.map((p) => (
             <div key={p.id} className="flex items-center gap-4 p-4 hover:bg-[#0F0F10] transition-colors">
               <div className="w-14 h-14 border hairline flex-shrink-0 overflow-hidden bg-[#0F0F10]">
                 {p.image_url && <Image src={p.image_url} className="w-full h-full" />}
               </div>
               <div className="flex-1 min-w-0">
-                <p className="text-sm truncate">{p.name}</p>
+                <div className="flex items-center gap-2 min-w-0">
+                  <p className="text-sm truncate">{p.name}</p>
+                  {isHidden(p) ? <span className="technical text-[8px] px-2 py-0.5 border hairline text-foreground/50 shrink-0">UKRYTY</span>
+                    : isSoon(p) ? <span className="technical text-[8px] px-2 py-0.5 border border-[#C9A24A]/40 gold-text shrink-0">ZAPOWIEDŹ</span>
+                    : <span className="technical text-[8px] px-2 py-0.5 border border-emerald-500/40 text-emerald-400 shrink-0">W SPRZEDAŻY</span>}
+                </div>
                 <p className="technical text-[9px] text-foreground/40 mt-1">
-                  {LEVEL_NAMES[p.level] || "BEZ POZIOMU"} · {(p.status || "dostępny").toUpperCase()} ·{" "}
+                  {LEVEL_NAMES[p.level] || "BEZ POZIOMU"} ·{" "}
                   {p.is_free
                     ? "BEZPŁATNE"
                     : p.price_regular != null
@@ -174,8 +244,13 @@ export default function ProductsManager() {
                 <Trash2 className="h-4 w-4" />
               </button>
             </div>
-          ))}
-        </div>
+                    ))}
+                  </div>
+                </section>
+              ))}
+            </div>
+          )}
+        </>
       )}
       {waitlist && <WaitlistPanel product={waitlist} onClose={() => { setWaitlist(null); load(); }} />}
     </div>
