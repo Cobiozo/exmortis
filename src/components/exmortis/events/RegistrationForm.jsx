@@ -7,11 +7,13 @@ import { track } from "@/lib/track";
 import { visitSource } from "@/lib/firstTouch";
 import { TXT } from "@/content/legal/seller";
 import { useAccountContact, AccountContactLine, SignInHint } from "@/components/common/AccountContact";
+import ConfirmEmailField, { sameEmail } from "@/components/common/ConfirmEmailField";
 
 // Formularz zapisu na wydarzenie (strona wydarzenia): imię, e-mail, pytanie, zgoda.
 export default function RegistrationForm({ event: ev }) {
   const [firstName, setFirstName] = useState("");
   const [email, setEmail] = useState("");
+  const [email2, setEmail2] = useState("");
   const [question, setQuestion] = useState("");
   const [consent, setConsent] = useState(false);
   const t = useSystemText();
@@ -42,6 +44,12 @@ export default function RegistrationForm({ event: ev }) {
     if (sending) return;
     if (!consent) {
       setConsentErr(true);
+      return;
+    }
+    // Adres wpisany ręcznie — drugi raz, bez wklejania (25.11.2026): link do spotkania musi dotrzeć.
+    if (!fromAccount && !sameEmail(email, email2)) {
+      setError("Adres e-mail i powtórzony adres się różnią. Popraw je — na ten adres wyślę link do spotkania.");
+      document.getElementById("reg-email2")?.focus();
       return;
     }
     setSending(true);
@@ -188,6 +196,11 @@ export default function RegistrationForm({ event: ev }) {
           />
         </label>}
       </div>
+      )}
+      {!fromAccount && (
+        <ConfirmEmailField id="reg-email2" email={email} value={email2} onChange={setEmail2} label="POWTÓRZ E-MAIL"
+          labelClassName="mb-2 block technical text-[10px] text-exm-muted"
+          className="min-h-[48px] w-full rounded-exm-field border border-exm-line bg-exm-bg px-4 py-3 text-[16px] text-exm-text placeholder:text-exm-muted focus:border-exm-gold focus:outline-none" />
       )}
       <div aria-hidden="true" className="absolute -left-[9999px] h-0 w-0 overflow-hidden">
         <label htmlFor="reg-web">Strona www</label>
