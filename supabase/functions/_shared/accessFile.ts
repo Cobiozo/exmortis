@@ -2,17 +2,20 @@
 // Wspólne dla konta (myAccount) i linku z zamówienia bez konta (orderAccess). Zwraca odpowiedź { url, name } albo błąd.
 import { runSql, escStr } from "./supabase.ts";
 import { personalizePdf, newLicenseId, WM_VERSION } from "./pdfLicense.ts";
+import { loadAppUrl } from "./settings.ts";
 
-// Link z magazynu Supabase → adres strony (exmortis.pl/pliki/…, server.js przekazuje dalej).
-// url — do odtwarzania/czytania; download_url — ten sam plik z nagłówkiem „pobierz” pod podaną nazwą.
-// 24.11.2026: serwer na exmortis.pl nie ma jeszcze trasy /pliki („Cannot GET”), więc link idzie wprost do magazynu
-// (podpisany, krótko ważny). Pobieranie: parametr download magazynu ustawia nagłówek „zapisz jako”.
-async function siteLinks(_base44, signed: string, name: string) {
-  const m = String(signed).match(/^https:\/\/[^/]+\.supabase\.co\/storage\/v1\/object\/sign\/(.+)$/);
-  const url = signed;
-  const sep = url.includes("?") ? "&" : "?";
-  const download_url = m ? `${url}${sep}download=${encodeURIComponent(name)}` : url;
-  return { url, download_url, name };
+// Link z magazynu Supabase → adres strony (25.11.2026): exmortis.pl/functions/plik?p=…&token=… — server.js przekazuje
+// /functions/* do funkcji „plik”, która oddaje plik z podpisanego linku. Klient nie widzi adresu magazynu.
+// url — do czytania/odtwarzania (inline); download_url — ten sam plik z nagłówkiem „zapisz jako” pod podaną nazwą.
+async function siteLinks(base44, signed: string, name: string) {
+  const m = String(signed).match(/^https:\/\/[^/]+\.supabase\.co\/storage\/v1\/object\/sign\/([^?]+)\?token=([^&]+)/);
+  if (!m) {
+    const sep = String(signed).includes("?") ? "&" : "?";
+    return { url: signed, download_url: `${signed}${sep}download=${encodeURIComponent(name)}`, name };
+  }
+  const app = (await loadAppUrl(base44).catch(() => "")) || "https://exmortis.pl";
+  const url = `${app}/functions/plik?p=${encodeURIComponent(decodeURIComponent(m[1])).replace(/%2F/g, "/")}&token=${m[2]}`;
+  return { url, download_url: `${url}&d=${encodeURIComponent(name)}`, name };
 }
 
 export async function accessFileResponse(base44, a, ip: string, email: string) {
