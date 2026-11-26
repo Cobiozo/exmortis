@@ -3,7 +3,7 @@ import { Link } from "react-router-dom";
 import { ArrowRight } from "lucide-react";
 import { useCart } from "../CartContext";
 import { releaseDay, soonLabel } from "@/lib/releaseDate";
-import { isPromoActive, isPresale, priceOnRequest, lowestPrice30, zl, kwota, nextPriceText } from "@/lib/productPrice";
+import { isPromoActive, isPresale, priceOnRequest, lowestPrice30, zl, kwota, nextPriceText, unitPrice } from "@/lib/productPrice";
 
 // Wspólne elementy kart Skarbca: znaczki, cena, przycisk.
 
@@ -77,6 +77,19 @@ export function CardTopBadge({ p, index }) {
 
 export { isPromoActive } from "@/lib/productPrice";
 
+// Pakiet: „Osobno 118 zł · taniej o 24 zł (20%)” — porównanie z sumą cen produktów (bez przekreślenia:
+// to nie obniżka ceny pakietu w rozumieniu Omnibusa, tylko informacja, ile kosztowałyby produkty kupione osobno).
+export function BundleSaveLine({ p, className = "" }) {
+  const b = p?.bundle;
+  if (p?.product_type !== "pakiet" || !b || !(Number(b.save) > 0) || !(Number(b.separately) > 0)) return null;
+  const pct = Math.round((Number(b.save) / Number(b.separately)) * 100);
+  return (
+    <span className={`block text-[11px] text-foreground/60 ${className}`}>
+      Osobno {zl(b.separately)} · <span className="text-[#C9A24A]">taniej o {zl(b.save)} ({pct}%)</span>
+    </span>
+  );
+}
+
 export function PriceBlock({ p }) {
   if (p.status === "wkrótce") {
     return <span className={`technical text-[10px] ${releaseDay(p) ? "gold-text" : "text-foreground/55"}`}>{soonLabel(p).toUpperCase()}</span>;
@@ -105,6 +118,14 @@ export function PriceBlock({ p }) {
   }
   if (priceOnRequest(p)) {
     return <span className="technical text-[10px] text-foreground/60">PO ROZMOWIE</span>;
+  }
+  if (p.product_type === "pakiet" && p.bundle?.save > 0) {
+    return (
+      <span className="flex flex-col">
+        <span>{kwota(unitPrice(p))} zł</span>
+        <BundleSaveLine p={p} className="font-sans normal-case tracking-normal" />
+      </span>
+    );
   }
   if (p.price_regular != null) {
     return <span>{kwota(p.price_regular)} zł</span>;

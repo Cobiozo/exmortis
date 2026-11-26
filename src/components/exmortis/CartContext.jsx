@@ -22,7 +22,7 @@ export function CartProvider({ children }) {
       const raw = localStorage.getItem(STORAGE_KEY);
       const list = raw ? JSON.parse(raw) : [];
       // Starsze koszyki: osobisty PDF zawsze w 1 sztuce.
-      return Array.isArray(list) ? list.map((i) => (i?.product_type === "pdf" && i.qty > 1 ? { ...i, qty: 1 } : i)) : [];
+      return Array.isArray(list) ? list.map((i) => ((i?.product_type === "pdf" || i?.product_type === "pakiet") && i.qty > 1 ? { ...i, qty: 1 } : i)) : [];
     } catch {
       return [];
     }
@@ -38,7 +38,8 @@ export function CartProvider({ children }) {
   }, [items]);
 
   // Osobisty PDF (znak wodny z adresem kupującego) — zawsze 1 sztuka; prezent: karta podarunkowa (audyt 17.11.2026, X-34).
-  const maxQty = (t) => (t === "pdf" ? 1 : MAX_QTY);
+  // Pakiet też w 1 sztuce (dostęp do produktów, nie egzemplarze) — kasa przyjmuje pakiet tylko pojedynczo.
+  const maxQty = (t) => (t === "pdf" || t === "pakiet" ? 1 : MAX_QTY);
 
   const addItem = useCallback((product, qty = 1, gift = null) => {
     if (product.seats && product.seats.left <= 0) return; // limit miejsc wykorzystany (kasa i tak by odrzuciła)
@@ -71,6 +72,7 @@ export function CartProvider({ children }) {
           slug: product.slug,
           product_type: product.product_type,
           access_months: product.access_months,
+          ...(product.product_type === "pakiet" && product.bundle?.items ? { bundle_ids: product.bundle.items.map((c) => String(c.id)) } : {}),
           qty: Math.min(maxQty(product.product_type), qty),
         },
       ];
@@ -123,7 +125,8 @@ export function CartProvider({ children }) {
       }
       const price = unitPrice(p);
       if (price !== i.price || p.name !== i.name) changed = true;
-      next.push({ ...i, price, name: p.name, image_url: p.image_url, product_type: p.product_type, access_months: p.access_months });
+      next.push({ ...i, price, name: p.name, image_url: p.image_url, product_type: p.product_type, access_months: p.access_months,
+        ...(p.product_type === "pakiet" && p.bundle?.items ? { bundle_ids: p.bundle.items.map((c) => String(c.id)) } : {}) });
     }
     if (changed) setItems(next);
     return changed;

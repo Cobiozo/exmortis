@@ -44,8 +44,10 @@ const buildGroups = (list) =>
   [
     // Nowości — pierwsza i domyślnie otwarta zakładka (Dawid 25.11.2026).
     { key: "nowosci", label: "Nowości", items: list.filter((p) => !isSoon(p) && isNewProduct(p)).sort((a, b) => newSortKey(b) - newSortKey(a)) },
+    // Pakiety (26.11.2026): kilka produktów w korzystniejszej cenie — zakładka tylko, gdy jakiś pakiet jest w sprzedaży.
+    { key: "pakiety", label: "Pakiety", items: list.filter((p) => p.product_type === "pakiet" && !isSoon(p)).sort((a, b) => (Number(b.bundle?.save) || 0) - (Number(a.bundle?.save) || 0)) },
     { key: "bezplatnie", label: "Bezpłatnie", items: list.filter((p) => p.is_free && !isSoon(p)).sort((a, b) => freeRank(a) - freeRank(b)) },
-    { key: "ksiazki", label: "Książki", items: list.filter((p) => !p.is_free && !isSoon(p) && p.product_type !== "usluga" && p.product_type !== "karta") },
+    { key: "ksiazki", label: "Książki", items: list.filter((p) => !p.is_free && !isSoon(p) && p.product_type !== "usluga" && p.product_type !== "karta" && p.product_type !== "pakiet") },
     { key: "praca", label: "Praca indywidualna", items: list.filter((p) => !p.is_free && !isSoon(p) && p.product_type === "usluga") },
     { key: "prezent", label: "Prezent", items: list.filter((p) => p.product_type === "karta") },
     { key: "zapowiedzi", label: "Zapowiedzi", items: list.filter(isSoon) },

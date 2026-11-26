@@ -10,6 +10,7 @@ import LessonsManager from "./course/LessonsManager";
 import PriceSteps from "./PriceSteps";
 import CoverAiButton from "./CoverAiButton";
 import { HIGHLIGHT_OPTIONS, HIGHLIGHT_HINT, newUntil } from "@/lib/productHighlight";
+import { makeBundleCover } from "@/lib/bundleCover";
 
 const CATEGORIES = ["ebook", "warsztat", "mentoring", "mastermind", "retreat", "darmowe"];
 const LEVELS = [
@@ -35,7 +36,7 @@ const toLocalInput = (iso) => {
   return new Date(d.getTime() - d.getTimezoneOffset() * 60000).toISOString().slice(0, 16);
 };
 
-export default function ProductEditor({ product, onSaved, onCancel }) {
+export default function ProductEditor({ product, preset, onSaved, onCancel }) {
   const [form, setForm] = useState({
     name: product?.name || "",
     slug: product?.slug || "",
@@ -60,7 +61,9 @@ export default function ProductEditor({ product, onSaved, onCancel }) {
     sort_order: product?.sort_order != null ? String(product.sort_order) : "",
     cover_image: product?.cover_image || "",
     file_url: product?.file_url || "",
-    product_type: product?.product_type || "pdf",
+    product_type: product?.product_type || preset?.product_type || "pdf",
+    // Pakiet: nowy pakiet domyślnie bez kodów rabatowych (decyzja 26.11.2026).
+    bez_kodow: product ? !!product.bez_kodow : preset?.product_type === "pakiet",
     access_months: product?.access_months != null ? String(product.access_months) : "",
     capacity: product?.capacity != null ? String(product.capacity) : "",
     private_file_uri: product?.private_file_uri || "",
@@ -92,6 +95,7 @@ export default function ProductEditor({ product, onSaved, onCancel }) {
   const [saving, setSaving] = useState(false);
   const [uploading, setUploading] = useState(false);
   const [error, setError] = useState("");
+  const [catalog, setCatalog] = useState([]); // produkty z wyboru składników (okładka pakietu przy zapisie)
 
   const set = (key, value) => setForm((f) => ({ ...f, [key]: value }));
   const toggleTag = (tag) =>
@@ -151,12 +155,34 @@ export default function ProductEditor({ product, onSaved, onCancel }) {
       setError("Produkt musi mieć nazwę.");
       return;
     }
+    if (form.product_type === "pakiet" && (form.bundle_items || []).length < 2) {
+      setError("Pakiet: wybierz co najmniej 2 produkty.");
+      return;
+    }
     setSaving(true);
     try {
+      // Pakiet bez własnej okładki: okładka z okładek produktów (gdy się nie uda — zapis i tak przechodzi).
+      const extra = {};
+      if (form.product_type === "pakiet" && !form.image_url && !form.cover_image) {
+        try {
+          const ids = (form.bundle_items || []).map(String);
+          const rows = ids.map((id) => catalog.find((p) => String(p.id) === id)).filter(Boolean);
+          if (rows.length) {
+            const file = await makeBundleCover(rows, form.name);
+            const { file_url } = await base44.integrations.Core.UploadPublicFile({ file });
+            extra.image_url = file_url;
+            extra.cover_image = file_url;
+            setForm((f) => ({ ...f, ...extra }));
+          }
+        } catch {
+          /* bez okładki — można ją dodać później */
+        }
+      }
       const res = await base44.functions.invoke("adminProducts", {
         action: "save",
         product: {
           ...form,
+          ...extra,
           id: product?.id,
           price: Number(form.price) || 0,
           old_price: form.old_price === "" ? null : Number(form.old_price),
@@ -186,7 +212,7 @@ export default function ProductEditor({ product, onSaved, onCancel }) {
       </button>
 
       <h2 className="relic-heading text-3xl mb-10">
-        {product ? "Edytuj produkt" : "Nowy produkt"}
+        {form.product_type === "pakiet" ? (product ? "Edytuj pakiet" : "Nowy pakiet") : product ? "Edytuj produkt" : "Nowy produkt"}
       </h2>
 
       {/* ===== DRABINA POWROTU ===== */}
@@ -463,7 +489,7 @@ export default function ProductEditor({ product, onSaved, onCancel }) {
       </div>
 
       <ProductAccessFields form={form} set={set} />
-      {form.product_type === "pakiet" && <BundleItemsPicker form={form} set={set} />}
+      {form.product_type === "pakiet" && <BundleItemsPicker form={form} set={set} onProducts={setCatalog} />}
       {["wideo", "kurs", "zestaw"].includes(form.product_type) && (
         product?.id ? <LessonsManager productId={product.id} /> : (
           <p className="mb-10 text-sm text-foreground/50">

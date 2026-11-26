@@ -10,10 +10,10 @@ import {
 } from "../_shared/orders.ts";
 import { payuToken, payuCreateOrder } from "../_shared/payu.ts";
 import { errorResponse } from "../_shared/errors.ts";
-import { mirrorRecord } from "../_shared/mirror.ts";
+import { mirrorRecord, accessFilter } from "../_shared/mirror.ts";
 import { markPaid, fulfillPaid, nudgeOrder } from "../_shared/payuQueue.ts";
 import { addSubscriber } from "../_shared/newsletter.ts";
-import { DIGITAL } from "../_shared/access.ts";
+import { DIGITAL, isActive } from "../_shared/access.ts";
 import { productSeats } from "../_shared/seats.ts";
 import { regulaminVersion } from "../_shared/legalDocs.ts";
 import { unitPrice } from "../_shared/productPrice.ts";
@@ -211,7 +211,8 @@ const handler = async function (req) {
       base44,
       `SELECT id, name, price::float8 AS price, price_regular::float8 AS price_regular, price_start::float8 AS price_start,
               promo_end_date::text AS promo_end_date, to_jsonb(p)->'price_steps' AS price_steps,
-              active, is_free, COALESCE(status, 'dostępny') AS status, product_type, to_jsonb(p)->'price_options' AS price_options
+              active, is_free, COALESCE(status, 'dostępny') AS status, product_type, to_jsonb(p)->'price_options' AS price_options,
+              to_jsonb(p)->'bundle_items' AS bundle_items
        FROM public.products p WHERE id IN (${idList})`,
       true
     );
@@ -252,6 +253,42 @@ const handler = async function (req) {
       products.push({ name: label, unitPrice: String(unit), quantity: qty });
       stored.push({ product_id: String(p.id), name: label, unitPrice: String(unit), quantity: qty, ...(card ? { gift: card.gift } : {}) });
       titleLines.push({ name: String(p.name || ""), type: card ? "karta" : String(p.product_type || "") });
+    }
+    // Pakiety (26.11.2026): ten sam produkt nie może być opłacony dwa razy (osobno i w pakiecie),
+    // pakiet kupuje się w 1 sztuce, a zalogowana osoba, która ma już wszystkie składniki, nie kupi go ponownie.
+    const pkgRows = rows.filter((r) => r.product_type === "pakiet");
+    if (pkgRows.length) {
+      const compsOf = (r) => (Array.isArray(r.bundle_items) ? r.bundle_items.map(String) : []);
+      const inCart = new Set(productItems.map((i) => String((i || {}).id || "")));
+      for (const it of productItems) {
+        const r = byId.get(String((it || {}).id));
+        if (r?.product_type === "pakiet" && Math.floor(Number((it || {}).qty) || 1) > 1) throw userErr(`Pakiet „${r.name}” można kupić w jednej sztuce`);
+      }
+      for (const r of pkgRows) {
+        for (const cid of compsOf(r)) {
+          if (!inCart.has(cid)) continue;
+          const c = byId.get(cid);
+          throw userErr(`„${c?.name || "Produkt"}” jest już w pakiecie „${r.name}”. Usuń go z koszyka — zapłacisz tylko raz.`);
+        }
+      }
+      for (let i = 0; i < pkgRows.length; i++) {
+        for (let j = i + 1; j < pkgRows.length; j++) {
+          const shared = compsOf(pkgRows[i]).filter((x) => compsOf(pkgRows[j]).includes(x));
+          if (shared.length) throw userErr(`Pakiety „${pkgRows[i].name}” i „${pkgRows[j].name}” mają wspólne produkty. Wybierz jeden z nich.`);
+        }
+      }
+      const me = await base44.auth.me().catch(() => null);
+      const meMail = String(me?.email || "").toLowerCase();
+      if (meMail && meMail === buyerEmail.toLowerCase()) {
+        const acc = await accessFilter(base44, { user_email: meMail }, "-created_date", 300).catch(() => []);
+        const owned = new Set((acc || []).filter(isActive).map((a) => String(a.product_id)));
+        for (const r of pkgRows) {
+          const comps = compsOf(r);
+          if (comps.length && comps.every((x) => owned.has(x))) {
+            throw userErr(`Masz już wszystkie produkty z pakietu „${r.name}”. Znajdziesz je w zakładce Moje produkty.`);
+          }
+        }
+      }
     }
     // Limit miejsc (kohorta, warsztat): sprzedane + płatności w toku z ostatnich 30 min — sprawdzane na serwerze.
     const need = new Map();

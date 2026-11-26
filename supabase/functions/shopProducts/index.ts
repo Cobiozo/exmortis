@@ -5,6 +5,7 @@ import { getSnap } from "../_shared/snapshot.ts";
 import { ratingMap } from "../_shared/reviews.ts";
 import { productSeats } from "../_shared/seats.ts";
 import { accessFilter } from "../_shared/mirror.ts";
+import { isActive } from "../_shared/access.ts";
 
 // Katalog z kopii (PublicSnapshot, odświeżanej w tle co minutę) — bez czekania na Supabase przy każdym wejściu.
 // Klucz zawiera dzisiejszą datę (czas polski), więc po północy ceny z drabinki nigdy nie są wczorajsze.
@@ -25,6 +26,7 @@ async function loadCatalog(base44, slug: string, today: string) {
             product_type, access_months, to_jsonb(p)->>'capacity' AS capacity,
             to_jsonb(p)->'price_steps' AS price_steps, to_jsonb(p)->'price_options' AS price_options,
             to_jsonb(p)->'bundle_items' AS bundle_items, COALESCE((to_jsonb(p)->>'show_home')::boolean, FALSE) AS show_home,
+            COALESCE((to_jsonb(p)->>'bez_kodow')::boolean, FALSE) AS bez_kodow,
             to_jsonb(p)->>'release_at' AS release_at,
             COALESCE(NULLIF(to_jsonb(p)->>'wyroznienie', ''), 'auto') AS wyroznienie,
             to_jsonb(p)->>'available_at' AS available_at,
@@ -82,7 +84,9 @@ async function loadCatalog(base44, slug: string, today: string) {
     if (p.status === "wkrótce") continue; // pakiet jeszcze niedostępny — nie proponujemy go pod składnikiem
     for (const c of items) {
       const l = inPkg.get(c.id) || [];
-      l.push({ slug: p.slug, name: p.name, price: now });
+      // Ramka „W pakiecie taniej” na stronie składnika: cena, oszczędność i pozostałe produkty z pakietu.
+      l.push({ slug: p.slug, name: p.name, price: now, separately, save: Math.round((separately - now) * 100) / 100,
+        count: items.length, others: items.filter((x) => x.id !== c.id).map((x) => x.name) });
       inPkg.set(c.id, l);
     }
   }
@@ -122,7 +126,7 @@ const handler = async function (req) {
       const mail = me?.email ? String(me.email).toLowerCase() : "";
       if (mail) {
         const access = await accessFilter(base44, { user_email: mail }, "-created_date", 300).catch(() => []);
-        const owned = new Set(access.filter((a) => !a.revoked).map((a) => String(a.product_id)));
+        const owned = new Set(access.filter(isActive).map((a) => String(a.product_id))); // aktywny dostęp (bez wygasłych)
         out = out.map((p) => p.bundle
           ? { ...p, bundle: { ...p.bundle, items: p.bundle.items.map((c) => ({ ...c, owned: owned.has(String(c.id)) })) } }
           : p);

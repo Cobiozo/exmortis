@@ -1,4 +1,5 @@
 // Regulamin — wersja z 9.11.2026 (zgodność z art. 12 upk i wymaganiami PayU 08.2026).
+// 26.11.2026: §7 ust. 10 — pakiety (skład, „osobno”, gwarancja w całości, „bez kodów”). Wersję publikuje panel (Dokumenty prawne → Zapisz).
 // 19.11.2026: §5 ust. 2 — kod 10 zł za potwierdzenie zapisu na Listy powrotu (od 49 zł, 30 dni, raz na adres).
 // Dane firmy w nawiasach kwadratowych wstawia src/lib/firma.js z Ustawień → Dane firmy.
 // Numer wersji nadaje archiwum w panelu (Ustawienia → Dokumenty prawne → Zapisz).
@@ -60,6 +61,7 @@ export const REGULAMIN = {
       "7. Po zawarciu umowy Klient otrzymuje e-mailem (trwały nośnik) potwierdzenie z treścią Regulaminu w wersji z dnia Zamówienia, złożonymi oświadczeniami i informacją o prawie odstąpienia od umowy albo jego utracie.",
       "8. Dokument sprzedaży: na każdą sprzedaż Sprzedawca wystawia fakturę bez VAT (zwolnienie podmiotowe) i wysyła ją e-mailem. Dane do faktury można podać w Zamówieniu.",
       "9. Serwis jest prowadzony w języku polskim, a sprzedaż odbywa się w złotych polskich. Treści cyfrowe, Karty podarunkowe i usługi online są dostępne bez ograniczeń terytorialnych, o ile prawo państwa Klienta nie zakazuje ich nabycia. Wydarzenia stacjonarne odbywają się w miejscu podanym w ich opisie.",
+      "10. Pakiet to kilka Treści cyfrowych sprzedawanych razem za jedną cenę, niższą niż suma ich cen kupowanych osobno. Skład pakietu, jego cena i czas dostępu są podane na stronie pakietu. Informacja „osobno” to suma bieżących cen produktów z pakietu, a nie poprzednia cena pakietu. Po opłaceniu Klient otrzymuje dostęp do każdego produktu z pakietu. Gwarancja 14 dni (§16) obejmuje pakiet w całości: zwrot dotyczy całej zapłaconej ceny pakietu i wyłącza dostęp do wszystkich jego produktów. Jeżeli przy pakiecie podano, że kody rabatowe go nie obejmują, kod rabatowy nie obniża jego ceny; Kartą podarunkową można zapłacić za pakiet bez ograniczeń.",
     ]},
     { id: "p8", title: "§8. Realizacja zamówienia i terminy", body: [
       "1. Wszystkie świadczenia są dostarczane elektronicznie albo wykonywane osobiście — Sprzedawca nie wysyła przesyłek. Terminy liczy się od zaksięgowania płatności; przy tradycyjnym przelewie bankowym księgowanie trwa zwykle do 2 dni roboczych.",

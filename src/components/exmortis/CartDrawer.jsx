@@ -5,6 +5,7 @@ import { useCart, lineKey } from "./CartContext";
 import BrandButton from "@/components/exmortis/ui/BrandButton";
 import CartLine from "./cart/CartLine";
 import CartEmpty from "./cart/CartEmpty";
+import BundleNotices from "./cart/BundleNotices";
 import { zl } from "@/lib/productPrice";
 
 // Liczba pozycji po polsku: 1 pozycja, 2 pozycje, 5 pozycji.
@@ -58,6 +59,8 @@ export default function CartDrawer() {
               <CartEmpty onNavigate={close} />
             </div>
           ) : (
+            <>
+            <BundleNotices className="pt-5" />
             <ul className="divide-y divide-exm-line">
               {items.map((item) => (
                 <CartLine
@@ -69,6 +72,7 @@ export default function CartDrawer() {
                 />
               ))}
             </ul>
+            </>
           )}
         </div>
 

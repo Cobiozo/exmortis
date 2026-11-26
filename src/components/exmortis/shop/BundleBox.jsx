@@ -43,12 +43,17 @@ export default function BundleBox({ product }) {
       </ul>
       <div className="flex flex-wrap items-baseline gap-x-4 gap-y-1 text-sm border-t hairline pt-4">
         <span className="text-foreground/60">
-          Osobno: <span className={strike ? "line-through" : ""}>{zl(b.separately)}</span>
+          {/* Bez przekreślenia (26.11.2026): suma cen osobno to porównanie, nie poprzednia cena pakietu (Omnibus). */}
+          Osobno: <span>{zl(b.separately)}</span>
         </span>
         <span className="text-foreground/60">
           Pakiet: <span className="gold-text font-mono">{zl(price)}</span>
         </span>
-        {b.save > 0 && <span className="technical text-[10px] gold-text">OSZCZĘDZASZ {zl(b.save)}</span>}
+        {b.save > 0 && (
+          <span className="technical text-[10px] gold-text">
+            OSZCZĘDZASZ {zl(b.save).toUpperCase()}{strike ? ` (${Math.round((b.save / b.separately) * 100)}%)` : ""}
+          </span>
+        )}
       </div>
       {owned.length > 0 && (
         <p className="text-sm text-foreground/60 mt-3">Masz już: {owned.map((c) => c.name).join(", ")}.</p>

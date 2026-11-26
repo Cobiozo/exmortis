@@ -1,7 +1,8 @@
 import React, { useEffect, useMemo, useState } from "react";
 import { base44 } from "@/api/base44Client";
 import { Image } from "@/components/ui/image";
-import { Plus, Pencil, Trash2, Eye, EyeOff, Star, Search } from "lucide-react";
+import { Plus, Pencil, Trash2, Eye, EyeOff, Star, Search, Package, AlertTriangle } from "lucide-react";
+import { unitPrice, zl } from "@/lib/productPrice";
 import ProductEditor from "./ProductEditor";
 import WaitlistPanel from "./WaitlistPanel";
 import ReviewsPanel from "./reviews/ReviewsPanel";
@@ -21,17 +22,35 @@ const isHidden = (p) => !p.active || p.status === "ukryty";
 const TABS = [
   ["sprzedaz", "W sprzedaży", (p) => !isHidden(p) && !isSoon(p)],
   ["zapowiedzi", "Zapowiedzi", (p) => !isHidden(p) && isSoon(p)],
+  ["pakiety", "Pakiety", (p) => p.product_type === "pakiet"],
   ["ukryte", "Ukryte", (p) => isHidden(p)],
   ["wszystkie", "Wszystkie", () => true],
 ];
 const GROUPS = [
+  ["pakiety", "Pakiety", (p) => p.product_type === "pakiet"],
   ["platne", "Książki i materiały płatne", (p) => !p.is_free && !["usluga", "karta"].includes(p.product_type)],
   ["darmowe", "Bezpłatne", (p) => p.is_free && p.product_type !== "usluga"],
   ["uslugi", "Praca indywidualna i spotkania", (p) => p.product_type === "usluga"],
   ["karty", "Karty podarunkowe", (p) => p.product_type === "karta"],
 ];
 const priceOf = (p) => (p.price_regular != null ? Number(p.price_regular) : Number(p.price) || 0);
-const groupOf = (p) => (GROUPS.find(([, , m]) => m(p)) || GROUPS[0])[0];
+const groupOf = (p) => (GROUPS.find(([, , m]) => m(p)) || ["platne"])[0];
+// Pakiet: stan składników i opłacalność — ostrzeżenie na liście, gdy coś się zmieniło po zapisie.
+const onSale = (p) => p && p.active !== false && (p.status || "dostępny") === "dostępny";
+function bundleState(p, byId) {
+  const ids = Array.isArray(p.bundle_items) ? p.bundle_items.map(String) : [];
+  const rows = ids.map((id) => byId.get(id));
+  const issues = [];
+  if (rows.some((r) => !r)) issues.push("produkt z pakietu został usunięty");
+  const off = rows.filter((r) => r && !onSale(r));
+  if (off.length) issues.push(`nie w sprzedaży: ${off.map((r) => r.name).join(", ")}`);
+  const separately = Math.round(rows.reduce((s, r) => s + (r && !r.is_free ? unitPrice(r) : 0), 0) * 100) / 100;
+  const own = unitPrice(p);
+  const save = Math.round((separately - own) * 100) / 100;
+  if (!p.is_free && own > 0 && rows.length && save <= 0) issues.push("pakiet nie jest tańszy niż produkty osobno");
+  if (ids.length < 2) issues.push("mniej niż 2 produkty");
+  return { count: ids.length, separately, save, pct: separately > 0 ? Math.round((save / separately) * 100) : 0, issues };
+}
 const readTab = () => { try { return localStorage.getItem("exm_admin_products_tab") || "sprzedaz"; } catch { return "sprzedaz"; } };
 
 export default function ProductsManager() {
@@ -46,6 +65,7 @@ export default function ProductsManager() {
   const [tab, setTabState] = useState(readTab);
   const [q, setQ] = useState("");
   const setTab = (t) => { setTabState(t); try { localStorage.setItem("exm_admin_products_tab", t); } catch { /* bez pamięci */ } };
+  const byId = useMemo(() => new Map(products.map((p) => [String(p.id), p])), [products]);
   const counts = useMemo(() => Object.fromEntries(TABS.map(([k, , m]) => [k, products.filter(m).length])), [products]);
   const visible = useMemo(() => {
     const m = (TABS.find(([k]) => k === tab) || TABS[0])[2];
@@ -86,7 +106,8 @@ export default function ProductsManager() {
   if (editing !== null) {
     return (
       <ProductEditor
-        product={editing === "new" ? null : editing}
+        product={editing === "new" || editing === "new-pakiet" ? null : editing}
+        preset={editing === "new-pakiet" ? { product_type: "pakiet" } : null}
         onSaved={(data) => {
           setEditing(null);
           // Premiera „wkrótce” → „dostępny”: funkcja wysyła maile w tle i mówi, ile osób obejmuje.
@@ -106,6 +127,8 @@ export default function ProductsManager() {
         product: { ...p, active: !p.active },
       });
       load();
+    } catch (e) {
+      window.alert(e?.response?.data?.error || "Nie udało się zmienić widoczności.");
     } finally {
       setBusy(false);
     }
@@ -137,6 +160,9 @@ export default function ProductsManager() {
             title="Opinie kupujących: moderacja i odpowiedzi"
           >
             <Star className="h-4 w-4" /> OPINIE{pending ? ` (${pending})` : ""}
+          </button>
+          <button onClick={() => setEditing("new-pakiet")} className="technical text-[9px] px-4 py-3 border border-[#C9A24A]/50 gold-text hover:bg-[#C9A24A]/10 transition-colors inline-flex items-center gap-2" title="Kilka produktów cyfrowych w korzystniejszej cenie">
+            <Package className="h-4 w-4" /> NOWY PAKIET
           </button>
           <button onClick={() => setEditing("new")} className="btn-relic !px-5 !py-3">
             <Plus className="h-4 w-4" /> Nowy produkt
@@ -178,7 +204,7 @@ export default function ProductsManager() {
           </div>
           {visible.length === 0 ? (
             <p className="text-foreground/50 border hairline p-8 text-center text-sm">
-              {q ? "Nic nie pasuje do wyszukiwania." : tab === "zapowiedzi" ? "Brak zapowiedzi." : tab === "ukryte" ? "Nic nie jest ukryte." : "Brak produktów w tej zakładce."}
+              {q ? "Nic nie pasuje do wyszukiwania." : tab === "pakiety" ? "Nie ma jeszcze pakietów. Kliknij „Nowy pakiet”, żeby połączyć kilka produktów w korzystniejszej cenie." : tab === "zapowiedzi" ? "Brak zapowiedzi." : tab === "ukryte" ? "Nic nie jest ukryte." : "Brak produktów w tej zakładce."}
             </p>
           ) : (
             <div className="space-y-8">
@@ -214,6 +240,23 @@ export default function ProductsManager() {
                     : `${p.price} ZŁ`}
                   {p.seats ? ` · ${p.seats.sold} / ${p.seats.capacity} MIEJSC` : ""}
                 </p>
+                {p.product_type === "pakiet" && (() => {
+                  const b = bundleState(p, byId);
+                  return (
+                    <>
+                      <p className="technical text-[9px] text-foreground/50 mt-1">
+                        PAKIET · {b.count} PROD. · OSOBNO {zl(b.separately).toUpperCase()}
+                        {b.save > 0 ? <span className="text-emerald-400"> · TANIEJ O {zl(b.save).toUpperCase()} ({b.pct}%)</span> : ""}
+                        {p.bez_kodow ? " · BEZ KODÓW" : ""}
+                      </p>
+                      {b.issues.length > 0 && !isHidden(p) && (
+                        <p className="flex items-start gap-1.5 text-[11px] text-red-300 mt-1">
+                          <AlertTriangle className="h-3.5 w-3.5 flex-shrink-0 mt-px" /> Sprawdź pakiet: {b.issues.join("; ")}.
+                        </p>
+                      )}
+                    </>
+                  );
+                })()}
               </div>
               {p.waitlist_count > 0 && (
                 <button onClick={() => setWaitlist(p)} className="technical text-[9px] px-3 py-2 border border-[#C9A24A]/40 gold-text hover:bg-[#C9A24A]/10 whitespace-nowrap" title="Lista oczekujących: podgląd, CSV, powiadomienie o premierze">

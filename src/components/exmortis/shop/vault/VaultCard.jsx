@@ -12,6 +12,15 @@ import ShopPrice from "./ShopPrice";
 // Karta produktu w siatce Skarbca: okładka 3:4, jedna etykieta, cena i przycisk na dole.
 // Bezpłatne: „Pobierz” prowadzi na stronę materiału (formularz wysyła plik mailem — bez zmian).
 // Użycie: <VaultCard product={p} />
+// Pakiet: „Pakiet · 3 produkty” zamiast formy (26.11.2026).
+const pkgCount = (p) => {
+  const n = Array.isArray(p.bundle?.items) ? p.bundle.items.length : 0;
+  if (!n) return "kilka produktów";
+  const d = n % 10;
+  const dd = n % 100;
+  return d >= 2 && d <= 4 && (dd < 12 || dd > 14) ? `${n} produkty` : `${n} produktów`;
+};
+
 export default function VaultCard({ product: p }) {
   const hl = productHighlight(p);
   const href = productHref(p);
@@ -23,7 +32,7 @@ export default function VaultCard({ product: p }) {
       variant="produkt"
       media={<Link to={href} aria-label={p.name} tabIndex={-1} className="absolute inset-0 block"><ShopMedia product={p} /></Link>}
       highlight={hl ? <ProductHighlight kind={hl} /> : null}
-      label={free ? "Bezpłatnie" : p.form || null}
+      label={free ? "Bezpłatnie" : p.product_type === "pakiet" ? `Pakiet · ${pkgCount(p)}` : p.form || null}
       title={p.name}
       meta={p.format_details || p.format || null}
       action={

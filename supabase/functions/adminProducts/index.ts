@@ -1,7 +1,7 @@
 import { createClientFromRequest } from "../_shared/compat.ts";
 import { waitUntil } from "../_shared/shim.ts";
 import { runSql, escStr, requireAdmin } from "../_shared/supabase.ts";
-import { recordPrices, readSteps } from "../_shared/productPrice.ts";
+import { recordPrices, readSteps, unitPrice } from "../_shared/productPrice.ts";
 import { DIGITAL } from "../_shared/access.ts";
 import { requireMail } from "../_shared/smtp.ts";
 import { ensureWaitlistCols, notifyBatch, waitlistPending, notifyAll } from "../_shared/waitlist.ts";
@@ -76,6 +76,8 @@ function optionsVal(p) {
 }
 
 // Pakiet: 2–10 produktów cyfrowych (PDF/audio/wideo/kurs) — bez pakietów, kart, usług i samego siebie.
+// Pakiety (26.11.2026): składniki muszą być w sprzedaży (aktywne, „dostępny”), a cena pakietu niższa niż suma osobno.
+// Wyjątek: pakiet zapisywany jako ukryty (szkic) — wtedy tylko podstawowe sprawdzenie składu.
 async function bundleVal(base44, p, selfId) {
   if (p.product_type !== "pakiet") return "'[]'::jsonb";
   const raw = Array.isArray(p.bundle_items) ? p.bundle_items : [];
@@ -83,9 +85,23 @@ async function bundleVal(base44, p, selfId) {
   if (ids.length < 2) throw new Error("Pakiet: wybierz co najmniej 2 produkty.");
   if (ids.length > 10) throw new Error("Pakiet: składników może być najwyżej 10.");
   if (selfId && ids.includes(String(selfId))) throw new Error("Pakiet nie może zawierać samego siebie.");
-  const rows = await runSql(base44, `SELECT id::text AS id, product_type FROM public.products WHERE id::text IN (${ids.map(escStr).join(",")})`, true);
+  const rows = await runSql(base44, `SELECT id::text AS id, name, product_type, active, COALESCE(status, 'dostępny') AS status, is_free,
+      price::float8 AS price, price_regular::float8 AS price_regular, price_start::float8 AS price_start,
+      promo_end_date::text AS promo_end_date, to_jsonb(p)->'price_steps' AS price_steps
+    FROM public.products p WHERE id::text IN (${ids.map(escStr).join(",")})`, true);
   if (!rows || rows.length !== ids.length) throw new Error("Pakiet: jeden ze składników nie istnieje.");
   if (rows.some((r) => !DIGITAL.includes(r.product_type))) throw new Error("Pakiet: składnikami mogą być tylko produkty cyfrowe (PDF, audio, wideo, kurs).");
+  const draft = p.active === false || p.status === "ukryty";
+  if (!draft) {
+    const off = rows.filter((r) => r.active === false || r.status !== "dostępny");
+    if (off.length) throw new Error(`Pakiet: ${off.map((r) => `„${r.name}”`).join(", ")} nie jest w sprzedaży. Pakiet może zawierać tylko dostępne produkty (albo zapisz go jako ukryty).`);
+    if (!p.is_free) {
+      const sum = rows.reduce((s, r) => s + (r.is_free ? 0 : unitPrice(r)), 0);
+      const own = unitPrice({ price: p.price, price_regular: p.price_regular, price_start: p.price_start, promo_end_date: p.promo_end_date, price_steps: p.price_steps });
+      if (!(own > 0)) throw new Error("Pakiet: ustaw cenę pakietu.");
+      if (own >= sum) throw new Error(`Pakiet: cena (${own} zł) musi być niższa niż suma produktów osobno (${Math.round(sum * 100) / 100} zł).`);
+    }
+  }
   return `${escStr(JSON.stringify(ids))}::jsonb`;
 }
 
@@ -195,6 +211,7 @@ const handler = async function (req) {
                 p.product_type, p.access_months, p.private_file_uri, p.private_file_name, to_jsonb(p)->>'capacity' AS capacity,
                 to_jsonb(p)->'price_steps' AS price_steps, to_jsonb(p)->'price_options' AS price_options,
                 to_jsonb(p)->'bundle_items' AS bundle_items, COALESCE((to_jsonb(p)->>'show_home')::boolean, FALSE) AS show_home,
+                COALESCE((to_jsonb(p)->>'bez_kodow')::boolean, FALSE) AS bez_kodow,
                 COALESCE(NULLIF(to_jsonb(p)->>'wyroznienie', ''), 'auto') AS wyroznienie,
                 to_jsonb(p)->>'wyroznienie_od' AS wyroznienie_od, to_jsonb(p)->>'available_at' AS available_at,
                 -- data premiery: bez niej edytor otwierał się z pustym polem i zapis kasował premierę
@@ -305,6 +322,8 @@ const handler = async function (req) {
       // „Pokaż na stronie głównej” — moduł Skarbca na stronie głównej.
       await runSql(base44, `ALTER TABLE public.products ADD COLUMN IF NOT EXISTS show_home boolean DEFAULT false`);
       await runSql(base44, `UPDATE public.products SET show_home = ${p.show_home ? "TRUE" : "FALSE"} WHERE slug = ${v.slug}`);
+      // Pakiet: „bez kodów rabatowych” (kolumna z migracji products_bez_kodow). Inne typy — zawsze FALSE.
+      await runSql(base44, `UPDATE public.products SET bez_kodow = ${p.product_type === "pakiet" && p.bez_kodow ? "TRUE" : "FALSE"} WHERE slug = ${v.slug}`);
       await recordPrices(base44, true).catch(() => {}); // historia cen (Omnibus) od razu po zmianie
       await clearSnap(base44, "products:").catch(() => {}); // katalog w Skarbcu odświeży się przy najbliższym wejściu
 

@@ -89,8 +89,27 @@ export default function ProductActions({ product, qty, setQty, onBuy, onAdd, add
     );
   }
 
+  // Pakiet (26.11.2026): osoba, która ma już wszystkie produkty z pakietu, nie kupi go ponownie;
+  // przy części — wyraźna informacja przed zakupem (cena pakietu się nie zmienia).
+  const pkgItems = product.product_type === "pakiet" && Array.isArray(product.bundle?.items) ? product.bundle.items : [];
+  const ownedItems = pkgItems.filter((c) => c.owned);
+  if (pkgItems.length && ownedItems.length === pkgItems.length) {
+    return (
+      <div className="space-y-3">
+        <button disabled className="btn-relic w-full opacity-50 cursor-not-allowed">Masz już wszystko z tego pakietu</button>
+        <Link to="/konto" className="btn-ghost w-full">Przejdź do Moich produktów <ArrowRight className="h-4 w-4" /></Link>
+      </div>
+    );
+  }
+
   return (
     <div className="space-y-4">
+      {ownedItems.length > 0 && (
+        <p className="rounded-[var(--exm-r-field)] border border-exm-gold-line bg-[#C9A24A]/10 px-4 py-3 text-[13px] leading-relaxed text-exm-text">
+          Masz już {ownedItems.length} z {pkgItems.length} produktów z tego pakietu: {ownedItems.map((c) => c.name).join(", ")}.
+          Cena pakietu się nie zmienia — sprawdź, czy brakujące produkty nie wyjdą taniej osobno.
+        </p>
+      )}
       {product.product_type === "pdf" && (
         <p className="text-[13px] leading-relaxed text-exm-muted">
           Plik jest osobisty — oznaczony Twoim adresem e-mail i numerem zamówienia. Chcesz go komuś podarować?{" "}
@@ -99,7 +118,7 @@ export default function ProductActions({ product, qty, setQty, onBuy, onAdd, add
       )}
       <div className="flex items-center gap-3">
         {/* Osobisty plik PDF (znak wodny z adresem kupującego) — bez wyboru ilości. */}
-        {product.product_type !== "pdf" && product.product_type !== "usluga" && (
+        {!["pdf", "usluga", "pakiet"].includes(product.product_type) && (
           <div className="flex items-center rounded-[var(--exm-r-field)] border border-exm-line">
             <button onClick={() => setQty((q) => Math.max(1, q - 1))} aria-label="Mniej" className="p-3 text-exm-muted hover:text-exm-gold">
               <Minus className="h-4 w-4" />
@@ -124,6 +143,9 @@ export default function ProductActions({ product, qty, setQty, onBuy, onAdd, add
         </p>
       )}
       {isDigital(product) && <p className="text-sm text-exm-muted">{accessLabel(product)}</p>}
+      {product.product_type === "pakiet" && product.bez_kodow && (
+        <p className="text-[13px] text-exm-muted">Cena pakietu jest już obniżona, więc kody rabatowe go nie obejmują. Kartą podarunkową zapłacisz jak zwykle.</p>
+      )}
       {isDigital(product) && <GuaranteeInfo />}
     </div>
   );

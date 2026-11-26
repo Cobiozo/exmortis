@@ -41,6 +41,15 @@ export async function applyDiscount(base44, rawCode, lines, buyerEmail = "", ses
   const rows = pids.length ? await runSql(base44, `SELECT id::text AS id FROM public.products WHERE product_type = 'karta' AND id::text IN (${pids.map(escStr).join(",")})`, true) : [];
   const cards = rows.map((r) => r.id);
   const fromCard = String(found.opis || "").startsWith("Karta podarunkowa");
+  // Pakiety „bez kodów rabatowych” (26.11.2026): pakiet ma już obniżoną cenę, więc zwykły kod go nie obejmuje.
+  // Kod z karty podarunkowej to zapłacone pieniądze — działa także na takie pakiety.
+  if (!fromCard && pids.length) {
+    const nc = await runSql(base44, `SELECT id::text AS id FROM public.products WHERE COALESCE((to_jsonb(products)->>'bez_kodow')::boolean, FALSE) AND id::text IN (${pids.map(escStr).join(",")})`, true).catch(() => []);
+    for (const r of nc || []) cards.push(String(r.id));
+    if (nc?.length && lines.every((l) => cards.includes(String(l.product_id)))) {
+      throw bad("Pakiety mają już obniżoną cenę — kodu rabatowego nie łączy się z pakietem");
+    }
+  }
   // Ograniczenia kodu: rodzaje produktów (typy) i tylko cena regularna (bez_promocji — bez przedsprzedaży i promocji).
   const typy = Array.isArray(found.typy) ? found.typy.map(String) : [];
   let allowed = null;

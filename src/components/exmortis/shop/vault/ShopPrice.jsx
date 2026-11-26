@@ -53,5 +53,17 @@ export default function ShopPrice({ p, size = "card", showEnd = false, className
   }
 
   const regular = regularPrice(p);
+  // Pakiet: pod ceną „Osobno X zł · taniej o Y zł (Z%)” — porównanie z sumą cen produktów, bez przekreślenia (26.11.2026).
+  const b = p.product_type === "pakiet" ? p.bundle : null;
+  if (regular > 0 && b && Number(b.save) > 0 && Number(b.separately) > 0) {
+    return (
+      <span className={cn("flex flex-wrap items-baseline gap-x-3 gap-y-1", className)}>
+        <span className={value}>{zl(regular)}</span>
+        <span className="basis-full text-[12px] text-exm-muted">
+          Osobno {zl(b.separately)} · <span className="text-exm-gold">taniej o {zl(b.save)} ({Math.round((Number(b.save) / Number(b.separately)) * 100)}%)</span>
+        </span>
+      </span>
+    );
+  }
   return regular > 0 ? <span className={cn(value, className)}>{zl(regular)}</span> : null;
 }

@@ -12,6 +12,7 @@ import InvoiceFields, { validNip } from "@/components/exmortis/shop/InvoiceField
 import CheckoutSection from "@/components/exmortis/shop/checkout/CheckoutSection";
 import CheckoutField, { fieldCls } from "@/components/exmortis/shop/checkout/CheckoutField";
 import SummaryCard from "@/components/exmortis/shop/checkout/SummaryCard";
+import BundleNotices from "@/components/exmortis/cart/BundleNotices";
 import CheckoutSummaryBar from "@/components/exmortis/shop/checkout/CheckoutSummaryBar";
 import CheckoutResult from "@/components/exmortis/shop/checkout/CheckoutResult";
 import EmptyCheckout from "@/components/exmortis/shop/checkout/EmptyCheckout";
@@ -229,6 +230,7 @@ export default function Checkout() {
 
           {/* Formularz — komputer: lewa kolumna, telefon: pod zwiniętym podsumowaniem */}
           <div className="min-w-0 lg:order-1">
+            <BundleNotices className="mb-6" />
             <CheckoutSummaryBar
               items={items}
               total={total}
