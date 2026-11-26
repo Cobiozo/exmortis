@@ -4,7 +4,8 @@ import { base44 } from "@/api/base44Client";
 import { uploadAudio } from "@/components/admin/silence/library/libUtils";
 import { extractVideoId } from "@/components/exmortis/glos/youtube";
 import { statusOf } from "@/components/exmortis/glos/musicUtils";
-import { inp, lbl, uploadImage } from "./podAdmin";
+import { inp, lbl } from "./podAdmin";
+import CoverField from "./CoverField";
 import SongPreview from "./SongPreview";
 
 const ST = { szkic: "Szkic", opublikowany: "Opublikowany", ukryty: "Ukryty" };
@@ -66,9 +67,8 @@ export default function SongForm({ song, nextOrder, onDone, onCancel }) {
       </div>
       <div className="grid sm:grid-cols-2 gap-4">
         <label className={lbl}>Oficjalny link YouTube (opcjonalnie)<input className={inp} value={f.youtube_url || ""} onChange={(e) => set({ youtube_url: e.target.value.trim() })} /></label>
-        <label className={lbl}>Okładka {busy === "img" && <Loader2 className="inline h-3 w-3 animate-spin" />}
-          <input type="file" accept="image/*" className="text-xs" onChange={(e) => { const x = e.target.files[0]; if (x) up("img", async () => ({ okladka: await uploadImage(x) })); }} /></label>
       </div>
+      <CoverField value={f.okladka || ""} youtubeUrl={f.youtube_url} onChange={(url) => set({ okladka: url })} onError={setErr} />
       <label className={lbl}>Opis<textarea rows={2} className={inp} value={f.opis || ""} onChange={(e) => set({ opis: e.target.value })} /></label>
       <label className={lbl}>Tekst utworu (pokazuje się jako rozwijany „Tekst utworu”)<textarea rows={6} className={inp} value={f.tekst || ""} onChange={(e) => set({ tekst: e.target.value })} /></label>
       <SongPreview song={f} />

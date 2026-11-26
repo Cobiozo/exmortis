@@ -1,8 +1,33 @@
 import React, { useEffect, useState } from "react";
-import { ArrowDown, ArrowUp, Eye, EyeOff, Plus, Trash2, X } from "lucide-react";
+import { ArrowDown, ArrowUp, Eye, EyeOff, ImagePlus, Loader2, Plus, Trash2, X } from "lucide-react";
 import { base44 } from "@/api/base44Client";
 import { useAuth } from "@/lib/AuthContext";
 import { extractVideoId } from "./youtube";
+
+// Okładka w wierszu (27.11.2026): kliknięcie miniatury wgrywa nową okładkę utworu.
+function RowCover({ r, onSave }) {
+  const [busy, setBusy] = useState(false);
+  const pick = async (e) => {
+    const file = e.target.files?.[0];
+    e.target.value = "";
+    if (!file) return;
+    setBusy(true);
+    try {
+      const { file_url } = await base44.integrations.Core.UploadPublicFile({ file });
+      await onSave({ okladka: file_url });
+    } finally {
+      setBusy(false);
+    }
+  };
+  return (
+    <label className="relative h-14 w-14 shrink-0 cursor-pointer overflow-hidden border hairline bg-[#070708] hover:border-[#C9A24A]/60" title={r.okladka ? "Zmień okładkę" : "Dodaj okładkę"}>
+      {r.okladka ? <img src={r.okladka} alt="" className="h-full w-full object-cover" /> : <span className="grid h-full w-full place-items-center text-foreground/50"><ImagePlus className="h-5 w-5" /></span>}
+      {busy && <span className="absolute inset-0 grid place-items-center bg-black/60"><Loader2 className="h-4 w-4 animate-spin gold-text" /></span>}
+      <span className="sr-only">{r.okladka ? "Zmień okładkę" : "Dodaj okładkę"}</span>
+      <input type="file" accept="image/*" className="hidden" onChange={pick} />
+    </label>
+  );
+}
 
 // Panel „Zarządzaj playlistą" — widoczny tylko dla administratora.
 export default function PlaylistManager({ onMutate }) {
@@ -186,6 +211,7 @@ export default function PlaylistManager({ onMutate }) {
               <span className="technical text-[10px] text-foreground/55 w-8 shrink-0">
                 {String(i + 1).padStart(2, "0")}
               </span>
+              <RowCover r={r} onSave={(patch) => saveRow(r, patch)} />
               <div className="flex-1 min-w-0 grid md:grid-cols-2 gap-3">
                 <input
                   defaultValue={r.tytul}

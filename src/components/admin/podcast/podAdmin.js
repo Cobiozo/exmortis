@@ -1,7 +1,25 @@
 import { base44 } from "@/api/base44Client";
 
-export const EP = base44.entities.PodcastEpisode;
-export const PL = base44.entities.PodcastPlaylist;
+// Panel czyta odcinki i playlisty przez bramkę supabaseData (reguły na serwerze: administrator widzi wszystko).
+// Zwykły odczyt tych kolekcji idzie wprost z kopii kluczem publicznym, a ten pokazuje tylko opublikowane odcinki
+// i widoczne playlisty — po ukryciu playlista znikała z panelu (27.11.2026).
+function adminRead(name) {
+  const entity = base44.entities[name];
+  const read = async (op, args) => (await base44.functions.invoke("supabaseData", { entity: name, op, args })).data?.result;
+  return new Proxy(entity, {
+    get(target, prop) {
+      if (prop === "filter") {
+        return (query = {}, opts = {}) =>
+          read("filter", { query, sort: opts.sort, limit: opts.limit, cursor: opts.cursor }).catch(() => target.filter(query, opts));
+      }
+      if (prop === "get") return (id) => read("get", { id: String(id) }).catch(() => target.get(id));
+      return target[prop];
+    },
+  });
+}
+
+export const EP = adminRead("PodcastEpisode");
+export const PL = adminRead("PodcastPlaylist");
 export const GU = base44.entities.PodcastGuest;
 export const inp = "w-full bg-transparent border hairline px-3 py-2 text-sm";
 export const lbl = "block text-xs text-foreground/60 space-y-1.5";
