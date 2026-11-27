@@ -1,10 +1,11 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { Loader2 } from "lucide-react";
 import { base44 } from "@/api/base44Client";
 import { uploadAudio } from "@/components/admin/silence/library/libUtils";
 import { extractVideoId } from "@/components/exmortis/glos/youtube";
 import { statusOf } from "@/components/exmortis/glos/musicUtils";
-import { inp, lbl } from "./podAdmin";
+import { inp, lbl, PL } from "./podAdmin";
+import SongPlaylists from "./SongPlaylists";
 import CoverField from "./CoverField";
 import SongPreview from "./SongPreview";
 
@@ -26,6 +27,25 @@ export default function SongForm({ song, nextOrder, firstOrder = 0, onDone, onCa
   const [note, setNote] = useState("");
   // Nowy utwór: domyślnie na końcu listy (decyzja 27.11.2026), z wyborem „na początku”.
   const [pos, setPos] = useState("koniec");
+  // Playlisty muzyczne: lista i te, w których utwór już jest (zapis razem z utworem).
+  const [pls, setPls] = useState(null);
+  const [plSel, setPlSel] = useState([]);
+  useEffect(() => {
+    PL.filter({}, { sort: "kolejnosc", limit: 100 }).then((r) => {
+      const list = (r?.items || []).filter((p) => p.typ === "muzyka");
+      setPls(list);
+      if (song?.id) setPlSel(list.filter((p) => (p.utwory || []).includes(song.id)).map((p) => p.id));
+    }).catch(() => setPls([]));
+  }, [song?.id]);
+  // Dodaje utwór na koniec zaznaczonych playlist i usuwa z odznaczonych.
+  const savePlaylists = async (songId) => {
+    for (const p of pls || []) {
+      const has = (p.utwory || []).includes(songId);
+      const want = plSel.includes(p.id);
+      if (want && !has) await PL.update(p.id, { utwory: [...(p.utwory || []), songId] });
+      if (!want && has) await PL.update(p.id, { utwory: (p.utwory || []).filter((x) => x !== songId) });
+    }
+  };
   const set = (p) => setF((v) => ({ ...v, ...p }));
   const up = async (k, fn) => { setBusy(k); setErr(""); try { set(await fn()); } catch (x) { setErr(x.message); } setBusy(""); };
 
@@ -43,7 +63,11 @@ export default function SongForm({ song, nextOrder, firstOrder = 0, onDone, onCa
     const { id, created_date, updated_date, created_by_id, ...data } = f;
     const rec = { ...data, tytul: f.tytul.trim(), kolejnosc: id ? Number(f.kolejnosc) || 0 : pos === "poczatek" ? firstOrder : nextOrder, widoczny: f.status === "opublikowany", data_dodania: f.data_dodania || new Date().toISOString() };
     try {
-      if (id) await base44.entities.Utwor.update(id, rec); else await base44.entities.Utwor.create(rec);
+      let songId = id;
+      if (id) await base44.entities.Utwor.update(id, rec); else songId = (await base44.entities.Utwor.create(rec))?.id;
+      if (songId) {
+        try { await savePlaylists(songId); } catch { setErr("Utwór zapisany, ale nie udało się zapisać playlist — sprawdź w zakładce „Playlisty muzyczne”."); setBusy(""); return; }
+      }
       onDone();
     } catch (x) { setErr(x.message || "Nie udało się zapisać utworu."); setBusy(""); }
   };
@@ -81,6 +105,7 @@ export default function SongForm({ song, nextOrder, firstOrder = 0, onDone, onCa
       <CoverField value={f.okladka || ""} youtubeUrl={f.youtube_url} onChange={(url) => set({ okladka: url })} onError={setErr} />
       <label className={lbl}>Opis<textarea rows={2} className={inp} value={f.opis || ""} onChange={(e) => set({ opis: e.target.value })} /></label>
       <label className={lbl}>Tekst utworu (pokazuje się jako rozwijany „Tekst utworu”)<textarea rows={6} className={inp} value={f.tekst || ""} onChange={(e) => set({ tekst: e.target.value })} /></label>
+      <SongPlaylists playlists={pls} selected={plSel} onChange={setPlSel} />
       <SongPreview song={f} />
       {note && <p className="text-xs text-foreground/60">{note}</p>}
       {err && <p className="text-xs blood-text" role="alert">{err}</p>}
