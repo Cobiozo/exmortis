@@ -1,0 +1,1 @@
+import"./rolldown-runtime-XKyaHtl9.js";import{ur as e}from"./icons-D8PpDmRN.js";import{t}from"./jsx-runtime-sPP5Y4A1.js";import{t as n}from"./utils-BtJdSxzs.js";e();var r=t();function i({className:e=``,children:t,...i}){return(0,r.jsx)(`div`,{className:n(`rounded-[var(--exm-r-card)] bg-exm-ivory p-6 text-exm-bg md:p-8`,e),...i,children:t})}export{i as t};
