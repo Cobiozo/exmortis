@@ -11,6 +11,21 @@ import { kindOf, isMusic, saveState, loadState, clearState, verifyItem, podRate,
 const Ctx = createContext(null);
 export const usePodcastPlayer = () => useContext(Ctx);
 export const savedPos = (id) => Number(localStorage.getItem(`pod_pos_${id}`)) || 0;
+// Tryby muzyki (27.11.2026): losowo i powtarzanie (wył. / wszystkich / utworu) — tylko dla utworów, nie dla podcastu.
+const MODE_KEY = "exm_muz_mode";
+const REPEATS = ["off", "all", "one"];
+const readMode = () => {
+  try {
+    const m = JSON.parse(localStorage.getItem(MODE_KEY) || "{}");
+    return { shuffle: !!m.shuffle, repeat: REPEATS.includes(m.repeat) ? m.repeat : "off" };
+  } catch { return { shuffle: false, repeat: "off" }; }
+};
+const shuffled = (arr, firstId) => {
+  const a = arr.filter((x) => String(x.id) !== String(firstId));
+  for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; }
+  const first = arr.find((x) => String(x.id) === String(firstId));
+  return first ? [first, ...a] : a;
+};
 export const subtitleOf = (x) => x?.autor || (isMusic(x) ? "EXMORTIS" : kindOf(x) === "obok" ? "Obok" : "Podcast Głos EXMORTIS");
 const HIDE_ON = /^\/(admin|skaner)(\/|$)/;
 
@@ -28,6 +43,10 @@ export function PodcastPlayerProvider({ children }) {
   const [rate, setRateS] = useState(podRate);
   const [volume, setVolumeS] = useState(1);
   const [holds, setHolds] = useState(0);
+  const [mode, setModeS] = useState(readMode);
+  const modeRef = useRef(mode);
+  modeRef.current = mode;
+  const shufRef = useRef({ key: "", list: [] }); // kolejność losowa dla bieżącej kolejki
   const { pathname } = useLocation();
   const R = useRef({});
   const queueRef = useRef([]);
@@ -61,12 +80,27 @@ export function PodcastPlayerProvider({ children }) {
     el.play().catch(() => {});
   };
 
+  // Kolejka do przechodzenia: zwykła albo (muzyka + losowo) wylosowana raz dla tej kolejki, z bieżącym utworem na początku.
+  const order = () => {
+    const q = queueRef.current, ep = R.current.ep;
+    if (!isMusic(ep) || !modeRef.current.shuffle) return q;
+    const key = q.map((x) => x.id).join(",");
+    if (shufRef.current.key !== key || !shufRef.current.list.some((x) => String(x.id) === String(ep?.id))) {
+      shufRef.current = { key, list: shuffled(q, ep?.id) };
+    }
+    return shufRef.current.list;
+  };
   const step = (dir) => {
-    const q = queueRef.current, id = R.current.ep?.id;
+    const q = order(), id = R.current.ep?.id;
     const i = q.findIndex((x) => String(x.id) === String(id));
     if (i < 0) return null;
-    return dir > 0 ? q.slice(i + 1).find((x) => x.audio) : q.slice(0, i).reverse().find((x) => x.audio);
+    const n = dir > 0 ? q.slice(i + 1).find((x) => x.audio) : q.slice(0, i).reverse().find((x) => x.audio);
+    if (n) return n;
+    // Powtarzanie wszystkich: po ostatnim pierwszy (i odwrotnie) — tylko muzyka.
+    if (isMusic(R.current.ep) && modeRef.current.repeat === "all") return dir > 0 ? q.find((x) => x.audio) : [...q].reverse().find((x) => x.audio);
+    return null;
   };
+  const saveMode = (m) => { setModeS(m); modeRef.current = m; try { localStorage.setItem(MODE_KEY, JSON.stringify(m)); } catch { /* bez pamięci */ } };
   const next = () => { const n = step(1); if (n) play(n, 0); };
   const prev = () => {
     if (a.current.currentTime > 5) { a.current.currentTime = 0; return; }
@@ -102,7 +136,10 @@ export function PodcastPlayerProvider({ children }) {
       if (pending.current) { el.currentTime = pending.current; pending.current = null; }
     };
     const onEnd = () => {
-      localStorage.removeItem(`pod_pos_${el.dataset.id}`); setPlaying(false);
+      localStorage.removeItem(`pod_pos_${el.dataset.id}`);
+      // Powtarzanie utworu: ten sam od początku.
+      if (isMusic(R.current.ep) && modeRef.current.repeat === "one") { el.currentTime = 0; el.play().catch(() => {}); return; }
+      setPlaying(false);
       const n = step(1);
       if (n) play(n, 0); // koniec kolejki — odtwarzanie się zatrzymuje
     };
@@ -131,6 +168,11 @@ export function PodcastPlayerProvider({ children }) {
     ep, queue, playing, buffering, error, restored, t, dur, volume, play, pause, resume, next, prev, seek, skip,
     rate: isMusic(ep) ? 1 : rate,
     hasNext: !!step(1), hasPrev: !!step(-1),
+    shuffle: mode.shuffle, repeat: mode.repeat,
+    // Losowo: nowa kolejność od bieżącego utworu przy każdym włączeniu.
+    setShuffle: (on) => { shufRef.current = { key: "", list: [] }; saveMode({ ...modeRef.current, shuffle: !!on }); },
+    // Powtarzanie: wył. → wszystkich → utworu → wył.
+    cycleRepeat: () => saveMode({ ...modeRef.current, repeat: REPEATS[(REPEATS.indexOf(modeRef.current.repeat) + 1) % REPEATS.length] }),
     setQueue: (list) => { queueRef.current = Array.isArray(list) ? list : []; setQueueS(queueRef.current); },
     toggle: () => (a.current.paused || R.current.restored || R.current.error ? resume() : pause()),
     retry: () => { const c = R.current; if (c.ep) { load(c.ep, c.t); a.current.play().catch(() => {}); } },
