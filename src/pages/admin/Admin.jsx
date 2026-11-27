@@ -1,6 +1,6 @@
 import React, { Suspense, useEffect } from "react";
 import lazyPage from "@/lib/lazyPage";
-import { Link, useParams } from "react-router-dom";
+import { Link, Navigate, useParams } from "react-router-dom";
 import { useAuth } from "@/lib/AuthContext";
 import MfaGate from "@/components/admin/MfaGate";
 import { useNoIndex } from "@/lib/useNoIndex";
@@ -23,11 +23,10 @@ const LOAD = {
   free: () => import("@/components/admin/stats/FreeMaterialsPanel"),
   silenceStats: () => import("@/components/admin/SilenceStatsPanel"),
   testy: () => import("@/components/admin/TestCountPanel"),
-  glos: () => import("@/components/exmortis/glos/PlaylistManager"),
+  glos: () => import("@/components/admin/glos/GlosAdmin"),
   kontakty: () => import("@/components/admin/ContactsTabs"),
   powrot: () => import("@/components/admin/powrot/PowrotPanel"),
   rozmowa: () => import("@/components/admin/prog/ProgPanel"),
-  podcast: () => import("@/components/admin/podcast/PodcastAdmin"),
   obok: () => import("@/components/admin/obok/ObokAdmin"),
   rozdroza: () => import("@/components/admin/rozdroza/RozdrozaAdmin"),
   klienci: () => import("@/components/admin/clients/ClientsPanel"),
@@ -64,11 +63,12 @@ const SECTIONS = {
   skarbiec: ["Skarbiec", () => <C.skarbiec />],
   zamowienia: ["Zamówienia", () => <C.zamowienia />],
   statystyki: ["Statystyki", () => <div className="space-y-16"><C.funnel /><C.free /><C.silenceStats /><C.testy /></div>],
-  glos: ["Głos", () => <C.glos onMutate={() => {}} />],
+  glos: ["Głos — podcast i muzyka", () => <C.glos />],
   kontakty: ["Baza kontaktów", () => <C.kontakty />],
   powrot: ["Zgłoszenia POWRÓT", () => <C.powrot />],
   rozmowa: ["Rozmowa na progu — uczestnicy", () => <C.rozmowa />],
-  podcast: ["Podcast", () => <C.podcast />],
+  // Dawna sekcja „Podcast” (do 27.11.2026) — adres prowadzi do Głosu, widok Podcast.
+  podcast: ["Głos — podcast i muzyka", () => <Navigate to="/admin/glos?widok=podcast" replace />],
   obok: ["Obok", () => <C.obok />],
   rozdroza: ["Rozdroża", () => <C.rozdroza />],
   klienci: ["Klienci i dostępy", () => <C.klienci />],
@@ -132,7 +132,7 @@ export default function Admin() {
   const badges = isAdmin ? {
     powrot: d.powrot?.todo || 0,
     zamowienia: d.stats?.invoices_todo || 0,
-    kontakty: d.podcastNew || 0,
+    glos: d.podcastNew || 0,
   } : {};
 
   const today = new Date().toLocaleDateString("pl-PL", { weekday: "long", day: "numeric", month: "long", timeZone: "Europe/Warsaw" });

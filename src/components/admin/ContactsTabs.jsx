@@ -1,17 +1,16 @@
-import React, { useState } from "react";
+import React from "react";
+import { Link } from "react-router-dom";
 import ContactsPanel from "./ContactsPanel";
-import ApplicationsTab from "./applications/ApplicationsTab";
 
+// Zgłoszenia gości do podcastu są od 27.11.2026 w sekcji Głos → Podcast → Zgłoszenia gości.
 export default function ContactsTabs() {
-  const [tab, setTab] = useState(new URLSearchParams(window.location.search).get("tab") === "podcast" ? "podcast" : "all");
-  const b = (id) => `technical text-[10px] px-4 py-2 border-b-2 ${tab === id ? "border-[#C9A24A] gold-text" : "border-transparent text-foreground/50"}`;
   return (
     <div className="space-y-6">
-      <div className="flex gap-2 border-b hairline">
-        <button onClick={() => setTab("all")} className={b("all")}>Wszystkie kontakty</button>
-        <button onClick={() => setTab("podcast")} className={b("podcast")}>Zgłoszenia do podcastu</button>
-      </div>
-      {tab === "all" ? <ContactsPanel /> : <ApplicationsTab />}
+      <p className="text-xs text-foreground/55">
+        Zgłoszenia do podcastu znajdziesz teraz w{" "}
+        <Link to="/admin/glos?widok=podcast&tab=zgloszenia" className="gold-text hover:underline">Głos → Podcast → Zgłoszenia gości</Link>.
+      </p>
+      <ContactsPanel />
     </div>
   );
 }

@@ -43,7 +43,7 @@ const handler = async function (req) {
     waitUntil((async () => {
       const admin = await adminTo(base44);
       const smtp = base44;
-      const link = `${APP}/admin/kontakty`;
+      const link = `${APP}/admin/glos?widok=podcast&tab=zgloszenia`; // Głos → Podcast → Zgłoszenia gości (27.11.2026)
       if (pilne) {
         await sendMail(smtp, { to: email, subject: "Dziękuję za Twoją wiadomość", html: wrap(`<p>Dziękuję za tę wiadomość. Przeczytam Twoje zgłoszenie osobiście.</p><p>Jeśli jest Ci teraz bardzo ciężko, nie czekaj na moją odpowiedź. Zadzwoń teraz:</p>${HELP}<p>Twoja historia poczeka. Ty jesteś ważniejszy(-a).</p><p>Dawid, exmortis</p>`) }).catch(() => {});
         await notifyUrgent(base44);

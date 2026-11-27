@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import { Music, ExternalLink } from "lucide-react";
 import YouTubePlaylist from "@/components/exmortis/glos/YouTubePlaylist";
-import PlaylistManager from "@/components/exmortis/glos/PlaylistManager";
+import AdminEditLink from "@/components/exmortis/glos/AdminEditLink";
 import { SPOTIFY_ARTIST } from "@/lib/spotify";
 
 // Linki platform z jednego źródła (src/lib/spotify.js) — muzyka prowadzi do profilu artysty.
@@ -64,7 +64,7 @@ export default function MusicSection() {
           ))}
         </div>
 
-        <PlaylistManager onMutate={() => setPlaylistVer((v) => v + 1)} />
+        <AdminEditLink />
       </div>
     </section>
   );

@@ -5,7 +5,7 @@ import { base44 } from "@/api/base44Client";
 import useMarketingConsent from "@/lib/useMarketingConsent";
 import { SPOTIFY_ARTIST } from "@/lib/spotify";
 import { usePodcastPlayer } from "@/components/exmortis/podcast/PlayerContext";
-import PlaylistManager from "./PlaylistManager";
+import AdminEditLink from "./AdminEditLink";
 import GlosSearch from "./GlosSearch";
 import MusicNowCard from "./MusicNowCard";
 import MusicRow from "./MusicRow";
@@ -154,7 +154,7 @@ export default function GlosMusicPanel() {
         </div>
       )}
 
-      <PlaylistManager onMutate={() => setVer((v) => v + 1)} />
+      <AdminEditLink />
     </div>
   );
 }

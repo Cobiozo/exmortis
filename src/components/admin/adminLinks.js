@@ -5,7 +5,7 @@ export function panelFor(path) {
   if (path.startsWith("/spotkania")) return "/admin/spotkania";
   if (path.startsWith("/skarbiec") || path.startsWith("/produkt")) return "/admin/skarbiec";
   if (path.startsWith("/cisza")) return "/admin/cisza";
-  if (path.startsWith("/glos/")) return "/admin/podcast";
+  if (path.startsWith("/glos/")) return "/admin/glos?widok=podcast";
   if (path === "/glos") return "/admin/tresci?slug=glos";
   if (path === "/o-mnie") return "/admin/tresci?slug=o-mnie";
   if (path === "/kontakt") return "/admin/tresci?slug=kontakt";

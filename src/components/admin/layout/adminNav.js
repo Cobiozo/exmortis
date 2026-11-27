@@ -1,6 +1,6 @@
 import {
   CalendarDays, CalendarClock, Users, Mail, Library, UsersRound, Megaphone, FileText,
-  ShoppingBag, Gem, Percent, PenLine, Menu as MenuIcon, Headphones, Mic, Podcast, Signpost, Newspaper,
+  ShoppingBag, Gem, Percent, PenLine, Menu as MenuIcon, Headphones, Mic, Signpost, Newspaper,
   BarChart3, Contact, ListChecks, Settings, Plug, Shield, UserSearch, History, Eye,
 } from "lucide-react";
 
@@ -26,8 +26,7 @@ export const NAV_GROUPS = [
     { key: "tresci", label: "Treści stron", icon: PenLine },
     { key: "menu", label: "Menu i stopka", icon: MenuIcon },
     { key: "cisza", label: "Cisza", icon: Headphones },
-    { key: "glos", label: "Głos", icon: Mic },
-    { key: "podcast", label: "Podcast", icon: Podcast },
+    { key: "glos", label: "Głos (podcast i muzyka)", icon: Mic },
     { key: "rozdroza", label: "Rozdroża", icon: Signpost },
     { key: "newsletter", label: "Newsletter", icon: Newspaper },
   ]],

@@ -56,6 +56,17 @@ function conditions(query) {
   return parts;
 }
 
+// Porównanie wartości pola: liczby (także zapisane tekstem) numerycznie, reszta tekstowo po polsku; puste na końcu.
+function cmpValues(x, y) {
+  const empty = (v) => v === null || v === undefined || v === "";
+  if (empty(x) && empty(y)) return 0;
+  if (empty(x)) return 1;
+  if (empty(y)) return -1;
+  const nx = Number(x), ny = Number(y);
+  if (!isNaN(nx) && !isNaN(ny) && String(x).trim() !== "" && String(y).trim() !== "") return nx - ny;
+  return String(x).localeCompare(String(y), "pl");
+}
+
 function orderExpr(sort) {
   // "-created_date" → malejąco po kolumnie systemowej; pole danych → data->>pole
   const dir = String(sort).startsWith("-") ? "desc" : "asc";
@@ -96,6 +107,17 @@ export function supabaseEntityOps(entityName) {
       }
       const offset = Number(options.cursor ?? 0) || 0;
       const limit = Math.max(1, Math.min(Number(options.limit) || 50, 2000));
+      // Sortowanie po polu danych (np. „kolejnosc”): baza porównuje je jako tekst („10” przed „2”),
+      // więc pobieramy pasujące wiersze i sortujemy tu — liczby jak liczby (27.11.2026). Kolekcje publiczne są małe.
+      const field = options?.sort ? String(options.sort).replace(/^-/, "") : "";
+      if (field && !["created_date", "updated_date"].includes(field)) {
+        const all = await fetchRows(table, `${parts.join("&") || "select=*"}&limit=2000`);
+        const dir = String(options.sort).startsWith("-") ? -1 : 1;
+        const sorted = [...all].sort((a, b) => dir * cmpValues(a?.[field], b?.[field]));
+        const page = sorted.slice(offset, offset + limit);
+        const more = sorted.length > offset + limit;
+        return { items: page, next_cursor: more ? String(offset + limit) : null, has_more: more };
+      }
       const qs = `${parts.join("&")}${sort}&limit=${limit + 1}&offset=${offset}`;
       const rows = await fetchRows(table, qs);
       const has_more = rows.length > limit;

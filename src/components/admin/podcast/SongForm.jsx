@@ -19,11 +19,13 @@ const probe = (url) => new Promise((ok, no) => {
   a.src = url;
 });
 
-export default function SongForm({ song, nextOrder, onDone, onCancel }) {
+export default function SongForm({ song, nextOrder, firstOrder = 0, onDone, onCancel }) {
   const [f, setF] = useState(() => (song ? { ...song, status: statusOf(song) } : { tytul: "", autor: "EXMORTIS", status: "szkic", kolejnosc: nextOrder }));
   const [busy, setBusy] = useState("");
   const [err, setErr] = useState("");
   const [note, setNote] = useState("");
+  // Nowy utwór: domyślnie na końcu listy (decyzja 27.11.2026), z wyborem „na początku”.
+  const [pos, setPos] = useState("koniec");
   const set = (p) => setF((v) => ({ ...v, ...p }));
   const up = async (k, fn) => { setBusy(k); setErr(""); try { set(await fn()); } catch (x) { setErr(x.message); } setBusy(""); };
 
@@ -39,7 +41,7 @@ export default function SongForm({ song, nextOrder, onDone, onCancel }) {
     if (f.status === "opublikowany" && !f.audio_url && !f.youtube_url) return setErr("Do publikacji potrzebny jest plik audio albo link YouTube.");
     setBusy("save");
     const { id, created_date, updated_date, created_by_id, ...data } = f;
-    const rec = { ...data, tytul: f.tytul.trim(), kolejnosc: Number(f.kolejnosc) || 0, widoczny: f.status === "opublikowany", data_dodania: f.data_dodania || new Date().toISOString() };
+    const rec = { ...data, tytul: f.tytul.trim(), kolejnosc: id ? Number(f.kolejnosc) || 0 : pos === "poczatek" ? firstOrder : nextOrder, widoczny: f.status === "opublikowany", data_dodania: f.data_dodania || new Date().toISOString() };
     try {
       if (id) await base44.entities.Utwor.update(id, rec); else await base44.entities.Utwor.create(rec);
       onDone();
@@ -48,10 +50,18 @@ export default function SongForm({ song, nextOrder, onDone, onCancel }) {
 
   return (
     <div className="border border-[#C9A24A]/40 p-5 space-y-5">
-      <div className="grid sm:grid-cols-[1fr_1fr_140px] gap-4">
+      <h3 className="shop-heading text-xl">{song ? "Edytuj utwór" : "Nowy utwór"}</h3>
+      <div className="grid sm:grid-cols-[1fr_1fr_160px] gap-4">
         <label className={lbl}>Tytuł<input className={inp} value={f.tytul} onChange={(e) => set({ tytul: e.target.value })} /></label>
         <label className={lbl}>Autor<input className={inp} value={f.autor || ""} onChange={(e) => set({ autor: e.target.value })} /></label>
-        <label className={lbl}>Kolejność<input type="number" className={inp} value={f.kolejnosc ?? ""} onChange={(e) => set({ kolejnosc: e.target.value })} /></label>
+        {song ? (
+          <label className={lbl}>Kolejność<input type="number" className={inp} value={f.kolejnosc ?? ""} onChange={(e) => set({ kolejnosc: e.target.value })} /></label>
+        ) : (
+          <label className={lbl}>Miejsce na liście<select className={inp} value={pos} onChange={(e) => setPos(e.target.value)}>
+            <option value="koniec" className="bg-black">Na końcu</option>
+            <option value="poczatek" className="bg-black">Na początku</option>
+          </select></label>
+        )}
       </div>
       <div className="grid sm:grid-cols-[1fr_1fr_1fr] gap-4">
         <label className={lbl}>Status<select className={inp} value={f.status} onChange={(e) => set({ status: e.target.value })}>{Object.entries(ST).map(([v, l]) => <option key={v} value={v} className="bg-black">{l}</option>)}</select></label>

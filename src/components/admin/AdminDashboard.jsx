@@ -54,7 +54,7 @@ function todoList(d) {
     const todo = d.powrot.todo || 0;
     if (todo) out.push({ tone: "warn", title: `Zgłoszenia POWRÓT — ankiety do wysłania: ${todo}`, detail: "Krótkie zgłoszenia czekają na pełną ankietę.", to: "/admin/powrot", cta: "Przejrzyj" });
   }
-  if (d.podcastNew) out.push({ tone: "warn", title: `Nowe zgłoszenia do podcastu: ${d.podcastNew}`, detail: "Baza kontaktów → Podcast.", to: "/admin/kontakty", cta: "Przejrzyj" });
+  if (d.podcastNew) out.push({ tone: "warn", title: `Nowe zgłoszenia do podcastu: ${d.podcastNew}`, detail: "Głos → Podcast → Zgłoszenia gości.", to: "/admin/glos?widok=podcast&tab=zgloszenia", cta: "Przejrzyj" });
   if (d.soundWarnings) out.push({ tone: "info", title: `Cisza — ostrzeżenia w utworach: ${d.soundWarnings}`, detail: "Brakujące pliki lub opisy w bibliotece dźwięków.", to: "/admin/cisza", cta: "Otwórz" });
   let via = null;
   try { via = localStorage.getItem("exm_login_via"); } catch { /* */ }
