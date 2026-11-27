@@ -1,9 +1,10 @@
 import React, { useState } from "react";
-import { ArrowDown, ArrowUp, Eye, EyeOff, Trash2, X } from "lucide-react";
+import { ArrowDown, ArrowUp, ChevronDown, Eye, EyeOff, Trash2, X } from "lucide-react";
 import { inp } from "./podAdmin";
 
 // Jedna playlista muzyczna: nazwa, opis, widoczność, utwory w kolejności (dodaj, przesuń, usuń).
-export default function MusicPlaylistCard({ p, songs, onSave, onDelete }) {
+// Zwinięta (27.11.2026): sam nagłówek — nazwa, liczba utworów, widoczność; po rozwinięciu opis i utwory.
+export default function MusicPlaylistCard({ p, songs, open = true, onToggle, onSave, onDelete }) {
   const [nazwa, setNazwa] = useState(p.nazwa || "");
   const [opis, setOpis] = useState(p.opis || "");
   const ids = p.utwory || [];
@@ -12,13 +13,18 @@ export default function MusicPlaylistCard({ p, songs, onSave, onDelete }) {
   const move = (i, d) => { const l = [...ids]; [l[i], l[i + d]] = [l[i + d], l[i]]; onSave({ utwory: l }); };
 
   return (
-    <div className="border hairline p-4 space-y-3">
+    <div className={`border hairline p-4 ${open ? "space-y-3" : ""}`}>
       <div className="flex items-center gap-3">
+        <button onClick={onToggle} aria-expanded={open} aria-label={open ? "Zwiń playlistę" : "Rozwiń playlistę"} className="text-foreground/60 hover:gold-text">
+          <ChevronDown className={`h-5 w-5 transition-transform ${open ? "" : "-rotate-90"}`} />
+        </button>
         <input value={nazwa} onChange={(e) => setNazwa(e.target.value)} onBlur={() => nazwa.trim() && nazwa !== p.nazwa && onSave({ nazwa: nazwa.trim() })} aria-label="Nazwa playlisty" className="bg-transparent shop-heading text-lg flex-1 min-w-0" />
+        <button onClick={onToggle} className="text-xs text-foreground/50 whitespace-nowrap hover:text-foreground">{ids.length} {ids.length === 1 ? "utwór" : ids.length % 10 >= 2 && ids.length % 10 <= 4 && (ids.length % 100 < 12 || ids.length % 100 > 14) ? "utwory" : "utworów"}</button>
         <span className="text-xs text-foreground/50">{p.widoczna ? "Widoczna" : "Ukryta"}</span>
         <button onClick={() => onSave({ widoczna: !p.widoczna })} aria-label="Widoczność" className="text-foreground/50">{p.widoczna ? <Eye className="h-4 w-4" /> : <EyeOff className="h-4 w-4" />}</button>
         <button onClick={onDelete} aria-label="Usuń playlistę" className="text-foreground/40 hover:text-[#BC1E22]"><Trash2 className="h-4 w-4" /></button>
       </div>
+      {open && (<>
       <input value={opis} onChange={(e) => setOpis(e.target.value)} onBlur={() => opis !== (p.opis || "") && onSave({ opis })} placeholder="Krótki opis (opcjonalnie)" className={inp} />
       <ol className="space-y-1">
         {ids.map((id, i) => (
@@ -38,6 +44,7 @@ export default function MusicPlaylistCard({ p, songs, onSave, onDelete }) {
           {free.map((s) => <option key={s.id} value={s.id}>{s.tytul}</option>)}
         </select>
       )}
+      </>)}
     </div>
   );
 }
