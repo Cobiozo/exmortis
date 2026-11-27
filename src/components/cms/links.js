@@ -5,8 +5,12 @@ export const ROUTES = [
   ["/cisza", "Cisza"], ["/kontakt", "Kontakt"], ["/konto", "Moje konto"], ["/login", "Logowanie"],
   ["/polityka-prywatnosci", "Polityka prywatności"], ["/regulamin", "Regulamin"],
   ["/polityka-cookies", "Polityka cookies"], ["/odstapienie", "Odstąpienie od umowy"],
+  // 27.11.2026: brakujące strony publiczne — walidator menu zgłaszał je jako nieistniejące.
+  ["/zacznij", "Zacznij bezpłatnie"], ["/rozmowa-na-progu/zgloszenie", "Rozmowa na progu — zgłoszenie"],
+  ["/powrot/ankieta", "POWRÓT — ankieta"], ["/umowa-powrot", "Umowa POWRÓT"], ["/register", "Rejestracja"],
+  ["/karta", "Karta podarunkowa — sprawdzenie"], ["/obok", "Obok"],
 ];
-const DYNAMIC = ["/spotkania/", "/skarbiec/", "/glos/"];
+const DYNAMIC = ["/spotkania/", "/skarbiec/", "/glos/", "/rezerwacja/", "/strona/", "/obok/"];
 
 const FIXED = { zapowiedz: "/", home: "/", "o-mnie": "/o-mnie", glos: "/glos", kontakt: "/kontakt", powrot: "/powrot", test: "/test", spotkania: "/spotkania", sklep: "/skarbiec" };
 export const pagePath = (slug) => FIXED[slug] || `/strona/${slug}`;
