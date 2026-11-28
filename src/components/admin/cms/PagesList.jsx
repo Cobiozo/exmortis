@@ -7,6 +7,7 @@ import { SITE_MAP, FILTERS } from "./siteMap";
 import { PAGE_DEFAULTS } from "@/components/cms/defaults/otherDefaults";
 import PageRow from "./PageRow";
 import { inputCls, tabBtn } from "./ui";
+import { confirmDialog } from "@/components/admin/ui/confirmDialog";
 
 import { slugify, duplicatePage, renamePage } from "./pageActions";
 
@@ -55,7 +56,7 @@ export default function PagesList({ onOpen }) {
   const duplicate = async (p) => { const c = await duplicatePage(p, taken); if (c) load(); };
   const rename = async (p) => { if (await renamePage(p, taken)) load(); };
   const remove = async (p) => {
-    if (!window.confirm(`Usunąć szkic „${p.tytul}”? Tej operacji nie można cofnąć.`)) return;
+    if (!(await confirmDialog(`Usunąć szkic „${p.tytul}”? Tej operacji nie można cofnąć.`))) return;
     await base44.entities.SitePage.delete(p.id);
     load();
   };

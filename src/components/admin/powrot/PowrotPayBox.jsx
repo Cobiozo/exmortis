@@ -2,6 +2,7 @@ import React, { useState } from "react";
 import { Loader2, CreditCard, AlertTriangle } from "lucide-react";
 import { base44 } from "@/api/base44Client";
 import { POWROT } from "@/lib/powrotOffer";
+import { confirmDialog } from "@/components/admin/ui/confirmDialog";
 
 const d = (v) => (v ? new Date(v).toLocaleDateString("pl-PL") : "");
 
@@ -27,7 +28,7 @@ export default function PowrotPayBox({ a, onDone }) {
   const send = async () => {
     const n = Number(String(amount).replace(",", ".").replace(/\s/g, ""));
     const label = `${n.toLocaleString("pl-PL")} zł`;
-    if (!window.confirm(`Wysłać ${a.full_name} umowę i link do płatności na ${label}?`)) return;
+    if (!(await confirmDialog(`Wysłać ${a.full_name} umowę i link do płatności na ${label}?`))) return;
     setBusy(true);
     setErr("");
     setMsg("");

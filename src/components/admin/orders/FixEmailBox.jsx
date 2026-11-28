@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import { Loader2, Mail } from "lucide-react";
 import { base44 } from "@/api/base44Client";
+import { confirmDialog } from "@/components/admin/ui/confirmDialog";
 
 // Poprawka adresu kupującego (25.11.2026): literówka → materiały nie docierają. Zmienia adres w zamówieniu,
 // przenosi dostępy z tego zamówienia na nowy adres i wysyła nowy link do materiałów (dla opłaconych).
@@ -12,7 +13,7 @@ export default function FixEmailBox({ o, onDone }) {
   const save = async () => {
     const v = email.trim();
     if (!v) return;
-    if (!window.confirm(`Zmienić adres w zamówieniu ${String(o.id).slice(0, 8).toUpperCase()} na ${v} i wysłać tam dostęp do materiałów?`)) return;
+    if (!(await confirmDialog(`Zmienić adres w zamówieniu ${String(o.id).slice(0, 8).toUpperCase()} na ${v} i wysłać tam dostęp do materiałów?`))) return;
     setBusy(true); setMsg("");
     try {
       const r = await base44.functions.invoke("adminOrders", { action: "fix_email", id: o.id, email: v });

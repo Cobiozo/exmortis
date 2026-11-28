@@ -6,6 +6,7 @@ import { unitPrice, zl } from "@/lib/productPrice";
 import ProductEditor from "./ProductEditor";
 import WaitlistPanel from "./WaitlistPanel";
 import ReviewsPanel from "./reviews/ReviewsPanel";
+import { confirmDialog, alertDialog } from "@/components/admin/ui/confirmDialog";
 
 const LEVEL_NAMES = {
   0: "BRAMA",
@@ -129,14 +130,14 @@ export default function ProductsManager() {
       });
       load();
     } catch (e) {
-      window.alert(e?.response?.data?.error || "Nie udało się zmienić widoczności.");
+      alertDialog(e?.response?.data?.error || "Nie udało się zmienić widoczności.");
     } finally {
       setBusy(false);
     }
   };
 
   const remove = async (p) => {
-    if (!window.confirm(`Usunąć produkt „${p.name}"? Tej operacji nie da się cofnąć.`)) return;
+    if (!(await confirmDialog(`Usunąć produkt „${p.name}"? Tej operacji nie da się cofnąć.`))) return;
     setBusy(true);
     try {
       await base44.functions.invoke("adminProducts", { action: "delete", id: p.id });

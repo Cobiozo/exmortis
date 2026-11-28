@@ -66,7 +66,7 @@ export default function InboxPanel() {
   const [rows, setRows] = useState(null);
   const [err, setErr] = useState("");
   const [tab, setTab] = useState("aktywne");
-  const [q, setQ] = useState("");
+  const [q, setQ] = useState(() => { try { return new URLSearchParams(window.location.search).get("q") || ""; } catch { return ""; } });
   const [open, setOpen] = useState(null);
   const load = () => base44.functions.invoke("adminDashboard", { action: "inbox" })
     .then((r) => setRows(r.data.messages || [])).catch((e) => { setErr(e?.response?.data?.error || "Nie udało się wczytać wiadomości."); setRows([]); });

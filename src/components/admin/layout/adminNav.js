@@ -4,38 +4,43 @@ import {
   BarChart3, Contact, Settings, Plug, Shield, UserSearch, History, Eye,
 } from "lucide-react";
 
-// Menu panelu: te same 27 modułów i ta sama kolejność, co na dawnym pulpicie.
+// Menu panelu.
 // lib: true — moduł widoczny tylko przy włączonej bibliotece/wiadomościach (jak dotąd).
 // preview: true — „Podgląd strony” otwiera stronę z paskiem admina, nie sekcję panelu.
 export const NAV_GROUPS = [
-  ["Codzienna praca", [
+  // Układ według codziennej pracy (28.11.2026): klienci → sprzedaż → praca indywidualna i spotkania → treści → wyniki → ustawienia.
+  ["Klienci", [
     { key: "skrzynka", label: "Skrzynka", icon: Inbox },
+    { key: "klienci", label: "Klienci i dostępy", icon: Users },
+    { key: "kontakty", label: "Baza kontaktów", icon: Contact },
+    { key: "newsletter", label: "Newsletter", icon: Newspaper },
+    { key: "wiadomosci", label: "Wiadomości w koncie", icon: Mail, lib: true },
+  ]],
+  ["Sprzedaż", [
+    { key: "zamowienia", label: "Zamówienia", icon: ShoppingBag },
+    { key: "skarbiec", label: "Skarbiec i pakiety", icon: Gem },
+    { key: "rabaty", label: "Kody rabatowe", icon: Percent },
+  ]],
+  ["Praca indywidualna i spotkania", [
     { key: "spotkania", label: "Spotkania", icon: CalendarDays },
     { key: "rezerwacje", label: "Rezerwacje", icon: CalendarClock },
-    { key: "klienci", label: "Klienci i dostępy", icon: Users },
-    { key: "wiadomosci", label: "Wiadomości", icon: Mail, lib: true },
-    { key: "biblioteka", label: "Biblioteka", icon: Library, lib: true },
-    { key: "grupy", label: "Grupy", icon: UsersRound, lib: true },
-    { key: "ogloszenia", label: "Ogłoszenia", icon: Megaphone },
-    { key: "powrot", label: "Zgłoszenia POWRÓT", icon: FileText },
     { key: "rozmowa", label: "Rozmowa na progu", icon: FileText },
+    { key: "powrot", label: "Zgłoszenia POWRÓT", icon: FileText },
   ]],
-  ["Sklep i treści", [
-    { key: "zamowienia", label: "Zamówienia", icon: ShoppingBag },
-    { key: "skarbiec", label: "Skarbiec", icon: Gem },
-    { key: "rabaty", label: "Kody rabatowe", icon: Percent },
+  ["Treści", [
     { key: "tresci", label: "Treści stron", icon: PenLine },
     { key: "menu", label: "Menu i stopka", icon: MenuIcon },
-    { key: "cisza", label: "Cisza", icon: Headphones },
     { key: "glos", label: "Głos (podcast i muzyka)", icon: Mic },
+    { key: "cisza", label: "Cisza", icon: Headphones },
     { key: "rozdroza", label: "Rozdroża", icon: Signpost },
-    { key: "newsletter", label: "Newsletter", icon: Newspaper },
+    { key: "ogloszenia", label: "Ogłoszenia i pop-upy", icon: Megaphone },
+    { key: "biblioteka", label: "Biblioteka", icon: Library, lib: true },
+    { key: "grupy", label: "Grupy", icon: UsersRound, lib: true },
   ]],
-  ["Dane i wyniki", [
+  ["Wyniki", [
     { key: "statystyki", label: "Statystyki", icon: BarChart3 },
-    { key: "kontakty", label: "Baza kontaktów", icon: Contact },
   ]],
-  ["Ustawienia i bezpieczeństwo", [
+  ["Ustawienia", [
     { key: "ustawienia", label: "Ustawienia strony", icon: Settings },
     { key: "integracje", label: "Integracje", icon: Plug },
     { key: "bezpieczenstwo", label: "Bezpieczeństwo", icon: Shield },

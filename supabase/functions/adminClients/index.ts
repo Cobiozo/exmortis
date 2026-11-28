@@ -117,6 +117,32 @@ const handler = async function (req) {
         messages: msgs || [], bookings: bookings || [],
       });
     }
+    // Wyszukiwarka panelu (28.11.2026): osoby, zamówienia, produkty, spotkania, wiadomości — po jednym zapytaniu na rodzaj.
+    if (body.action === "search") {
+      const q = String(body.q || "").trim().slice(0, 80);
+      if (q.length < 2) return Response.json({ people: [], orders: [], products: [], events: [], messages: [] });
+      const like = escStr(`%${q.replace(/[%_\\]/g, "")}%`);
+      const part = (sql) => runSql(base44, sql, true).catch(() => []);
+      const [people, orders, products, events, messages] = await Promise.all([
+        part(`SELECT email, MAX(name) AS name, string_agg(DISTINCT src, ', ') AS sources FROM (
+            SELECT lower(data->>'email') AS email, data->>'full_name' AS name, 'konto' AS src FROM public.exm_user WHERE data->>'email' ILIKE ${like} OR data->>'full_name' ILIKE ${like}
+            UNION ALL SELECT lower(buyer_email), buyer_name, 'zamówienie' FROM public.orders WHERE buyer_email ILIKE ${like} OR buyer_name ILIKE ${like}
+            UNION ALL SELECT lower(email), name, 'newsletter' FROM public.subscribers WHERE email ILIKE ${like} OR name ILIKE ${like}
+            UNION ALL SELECT lower(email), first_name, 'spotkanie' FROM public.registrations WHERE email ILIKE ${like} OR first_name ILIKE ${like}
+            UNION ALL SELECT lower(email), full_name, 'POWRÓT' FROM public.powrot_applications WHERE email ILIKE ${like} OR full_name ILIKE ${like}
+            UNION ALL SELECT lower(email), name, 'wiadomość' FROM public.contact_messages WHERE email ILIKE ${like} OR name ILIKE ${like}
+          ) x WHERE email IS NOT NULL GROUP BY email ORDER BY email LIMIT 20`),
+        part(`SELECT o.id::text AS id, o.created_date, o.buyer_name, o.buyer_email, o.total::float8 AS total, o.status,
+            (SELECT string_agg(it->>'name', ', ') FROM jsonb_array_elements(CASE WHEN jsonb_typeof(o.items) = 'array' THEN o.items ELSE '[]'::jsonb END) it) AS items
+          FROM public.orders o WHERE o.id::text ILIKE ${like} OR o.buyer_email ILIKE ${like} OR o.buyer_name ILIKE ${like} OR o.items::text ILIKE ${like}
+          ORDER BY o.created_date DESC LIMIT 15`),
+        part(`SELECT id::text AS id, name, slug, product_type, COALESCE(status, 'dostępny') AS status FROM public.products WHERE name ILIKE ${like} OR slug ILIKE ${like} ORDER BY name LIMIT 10`),
+        part(`SELECT id::text AS id, title, slug, start_datetime, status FROM public.events WHERE title ILIKE ${like} ORDER BY start_datetime DESC LIMIT 10`),
+        part(`SELECT id::text AS id, name, email, created_date, left(message, 120) AS preview FROM public.contact_messages WHERE message ILIKE ${like} OR name ILIKE ${like} OR email ILIKE ${like} ORDER BY created_date DESC LIMIT 10`),
+      ]);
+      return Response.json({ people, orders, products, events, messages });
+    }
+
     if (body.action === "note_save") {
       if (!email.includes("@")) return Response.json({ error: "Podaj e-mail" }, { status: 400 });
       const note = String(body.note || "").slice(0, 8000);

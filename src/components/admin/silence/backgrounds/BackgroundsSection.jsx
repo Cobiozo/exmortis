@@ -3,6 +3,7 @@ import { DragDropContext, Droppable, Draggable } from "@hello-pangea/dnd";
 import { base44 } from "@/api/base44Client";
 import BackgroundRow from "./BackgroundRow";
 import BackgroundEditor, { loadTrackNames } from "./BackgroundEditor";
+import { confirmDialog } from "@/components/admin/ui/confirmDialog";
 
 const E = base44.entities.SilenceBackground;
 const NEW = { nazwa: "", typ: "zdjecie", przyciemnienie: 55, rozmycie: 0, fokus_x: 50, fokus_y: 50, kolor: "#0A0A0A", kolory: ["#0A0A0A", "#1A1410"], kierunek: 180, aktywne: true };
@@ -28,7 +29,7 @@ export default function BackgroundsSection() {
   };
   const setDefault = async (b) => { await clearDefaults(b.id); await E.update(b.id, { domyslne: true }); load(); };
   const toggle = async (b) => { await E.update(b.id, { aktywne: !b.aktywne }); load(); };
-  const remove = async (b) => { if (window.confirm(`Usunąć tło „${b.nazwa}”?`)) { await E.delete(b.id); load(); } };
+  const remove = async (b) => { if (await confirmDialog(`Usunąć tło „${b.nazwa}”?`)) { await E.delete(b.id); load(); } };
 
   const onDragEnd = async ({ source, destination }) => {
     if (!destination) return;

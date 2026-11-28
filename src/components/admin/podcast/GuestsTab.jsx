@@ -2,6 +2,7 @@ import React, { useEffect, useState } from "react";
 import { Pencil, Trash2 } from "lucide-react";
 import { base44 } from "@/api/base44Client";
 import { GU, FORMA, inp, lbl, uploadImage } from "./podAdmin";
+import { confirmDialog } from "@/components/admin/ui/confirmDialog";
 
 const ZGODA = { brak: "Brak", wyslana: "Wysłana", podpisana: "Podpisana" };
 const EMPTY = { nazwa: "", forma: "imie", bio: "", zgoda_status: "brak" };
@@ -38,7 +39,7 @@ export default function GuestsTab() {
           <div className="flex-1"><p>{g.nazwa}</p><p className="text-xs text-foreground/45">{FORMA[g.forma]} · zgoda: {ZGODA[g.zgoda_status]}{g.zgoda_data ? ` (${g.zgoda_data})` : ""}</p></div>
           {(g.forma === "pelne" || g.zdjecie) && g.zgoda_status !== "podpisana" && <span className="text-xs text-[#E8C547]">Brak zgody gościa na publikację</span>}
           <button onClick={() => setF(g)} aria-label="Edytuj" className="text-foreground/50 hover:text-[#C9A24A]"><Pencil className="h-4 w-4" /></button>
-          <button onClick={async () => { if (window.confirm("Usunąć gościa?")) { await GU.delete(g.id); load(); } }} aria-label="Usuń" className="text-foreground/40 hover:text-[#BC1E22]"><Trash2 className="h-4 w-4" /></button>
+          <button onClick={async () => { if (await confirmDialog("Usunąć gościa?")) { await GU.delete(g.id); load(); } }} aria-label="Usuń" className="text-foreground/40 hover:text-[#BC1E22]"><Trash2 className="h-4 w-4" /></button>
         </div>
       ))}
     </div>

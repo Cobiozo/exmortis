@@ -2,6 +2,7 @@ import React, { useState } from "react";
 import { X } from "lucide-react";
 import { base44 } from "@/api/base44Client";
 import { APP, STATUSES, SMIERC, FORMA, label } from "./appUtils";
+import { confirmDialog } from "@/components/admin/ui/confirmDialog";
 
 export default function ApplicationCard({ a, onChange, onClose }) {
   const [notes, setNotes] = useState(a.notatki || "");
@@ -14,7 +15,7 @@ export default function ApplicationCard({ a, onChange, onClose }) {
     await patch({ guest_id: g.id });
     setBusy(false);
   };
-  const del = async () => { if (window.confirm("Usunąć to zgłoszenie na stałe?")) { await APP.delete(a.id); onChange(null); } };
+  const del = async () => { if (await confirmDialog("Usunąć to zgłoszenie na stałe?")) { await APP.delete(a.id); onChange(null); } };
 
   return (
     <div className="border border-[#C9A24A]/40 p-6 space-y-5 bg-[#0A0A0B]">

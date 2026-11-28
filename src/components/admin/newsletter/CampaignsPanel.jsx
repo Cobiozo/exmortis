@@ -3,6 +3,7 @@ import { base44 } from "@/api/base44Client";
 import { Plus, Trash2, X, Pencil, Send, Eye, Smartphone, Monitor, FlaskConical, CalendarClock } from "lucide-react";
 import RichTextEditor from "@/components/admin/RichTextEditor";
 import useMailStatus, { MAIL_REQUIRED } from "@/lib/useMailStatus";
+import { confirmDialog } from "@/components/admin/ui/confirmDialog";
 
 const inputCls =
   "w-full bg-transparent border hairline px-4 py-2.5 focus:border-[#C9A24A] focus:outline-none transition-colors text-sm";
@@ -139,7 +140,7 @@ export default function CampaignsPanel() {
       return;
     }
     const at = new Date(editor.when);
-    if (!window.confirm(`Zaplanować „${editor.subject.trim()}” na ${plWhen(at.toISOString())} do ${remaining ?? "wszystkich"} odbiorców?`)) return;
+    if (!(await confirmDialog(`Zaplanować „${editor.subject.trim()}” na ${plWhen(at.toISOString())} do ${remaining ?? "wszystkich"} odbiorców?`))) return;
     setInfo("");
     const id = await save();
     if (!id) return;
@@ -203,7 +204,7 @@ export default function CampaignsPanel() {
       setError("Najpierw zapisz szkic kampanii.");
       return;
     }
-    if (!window.confirm(`Wysłać „${editor.subject.trim()}" do ${remaining ?? "wszystkich"} odbiorców? Tego nie da się cofnąć.`)) return;
+    if (!(await confirmDialog(`Wysłać „${editor.subject.trim()}" do ${remaining ?? "wszystkich"} odbiorców? Tego nie da się cofnąć.`))) return;
     setError("");
     setBusy(true);
     setSending({ sent: 0, total: null, failures: [] });
@@ -231,7 +232,7 @@ export default function CampaignsPanel() {
   };
 
   const remove = async (c) => {
-    if (!window.confirm(`Usunąć kampanię „${c.subject}"?`)) return;
+    if (!(await confirmDialog(`Usunąć kampanię „${c.subject}"?`))) return;
     setBusy(true);
     try {
       await base44.functions.invoke("adminNewsletter", { action: "campaigns.delete", id: c.id });

@@ -2,6 +2,7 @@ import React, { useEffect, useState } from "react";
 import { base44 } from "@/api/base44Client";
 import { PL, inp } from "./podAdmin";
 import MusicPlaylistCard from "./MusicPlaylistCard";
+import { confirmDialog } from "@/components/admin/ui/confirmDialog";
 
 const OPEN_KEY = "exm_admin_pl_open";
 
@@ -29,7 +30,7 @@ export default function MusicPlaylistsTab() {
     load();
   };
   const save = async (p, patch) => { setPls((l) => l.map((x) => (x.id === p.id ? { ...x, ...patch } : x))); await PL.update(p.id, patch); };
-  const del = async (p) => { if (window.confirm(`Usunąć playlistę „${p.nazwa}”? Utwory zostają.`)) { await PL.delete(p.id); load(); } };
+  const del = async (p) => { if (await confirmDialog(`Usunąć playlistę „${p.nazwa}”? Utwory zostają.`)) { await PL.delete(p.id); load(); } };
 
   if (!pls) return <p className="text-sm text-foreground/50">Ładowanie…</p>;
   return (

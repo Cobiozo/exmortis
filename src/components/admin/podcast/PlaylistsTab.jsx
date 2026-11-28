@@ -2,6 +2,7 @@ import React, { useEffect, useState } from "react";
 import { DragDropContext, Droppable, Draggable } from "@hello-pangea/dnd";
 import { Eye, EyeOff, Trash2, X } from "lucide-react";
 import { EP, PL, inp } from "./podAdmin";
+import { confirmDialog } from "@/components/admin/ui/confirmDialog";
 
 const TYP = { sezon: "Sezon", seria: "Seria tematyczna", wybor: "Wybór" };
 
@@ -15,7 +16,7 @@ export default function PlaylistsTab() {
 
   const save = async (p, patch) => { setPls((l) => l.map((x) => (x.id === p.id ? { ...x, ...patch } : x))); await PL.update(p.id, patch); };
   const add = async (e) => { e.preventDefault(); if (!name.trim()) return; await PL.create({ nazwa: name.trim(), typ, odcinki: [], widoczna: true, kolejnosc: pls.length }); setName(""); load(); };
-  const del = async (p) => { if (window.confirm(`Usunąć playlistę „${p.nazwa}”?`)) { await PL.delete(p.id); load(); } };
+  const del = async (p) => { if (await confirmDialog(`Usunąć playlistę „${p.nazwa}”?`)) { await PL.delete(p.id); load(); } };
   const onDrag = ({ source, destination }) => {
     if (!destination) return;
     const p = pls.find((x) => x.id === destination.droppableId);

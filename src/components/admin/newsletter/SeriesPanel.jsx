@@ -3,6 +3,7 @@ import { base44 } from "@/api/base44Client";
 import { Plus, Trash2, X, Pencil, Eye, Smartphone, Monitor, FlaskConical, ArrowUp, ArrowDown } from "lucide-react";
 import RichTextEditor from "@/components/admin/RichTextEditor";
 import useMailStatus, { MAIL_REQUIRED } from "@/lib/useMailStatus";
+import { confirmDialog } from "@/components/admin/ui/confirmDialog";
 
 // Seria startowa „Listy powrotu — początek drogi”: każda nowa osoba dostaje listy po kolei,
 // co poniedziałek o 8:00 (list 1 — w pierwszy poniedziałek po dniu zapisu). Potem — bieżące kampanie.
@@ -73,12 +74,12 @@ export default function SeriesPanel() {
     setInfo(`Wysłano list testowy na ${d.to}.`);
   }, "Nie udało się wysłać testu.");
 
-  const toggle = (on) => {
+  const toggle = async (on) => {
     const s = state;
     const msg = on
       ? `Włączyć serię „${s.series.name}”?\n\nOsoby zapisane (${s.stats.bez_serii + s.stats.w_trakcie}) dostaną list 1 w najbliższy poniedziałek o 8:00${s.pierwszy_poniedzialek ? ` (${plWhen(s.pierwszy_poniedzialek)})` : ""}, a potem kolejne co tydzień. Do czasu ukończenia serii nie dostaną bieżących kampanii.`
       : "Wyłączyć serię? Wysyłka listów serii zatrzyma się (postęp osób zostaje), a bieżące kampanie znów trafią do wszystkich.";
-    if (!window.confirm(msg)) return;
+    if (!(await confirmDialog(msg))) return;
     run(async () => {
       const d = await api("series.setActive", { on });
       setState(d);

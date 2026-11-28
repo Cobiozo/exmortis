@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { base44 } from "@/api/base44Client";
 import { Plus, Trash2, X, Check, Pencil } from "lucide-react";
+import { confirmDialog } from "@/components/admin/ui/confirmDialog";
 
 const inputCls =
   "w-full bg-transparent border hairline px-4 py-2.5 focus:border-[#C9A24A] focus:outline-none transition-colors text-sm";
@@ -57,7 +58,7 @@ export default function GroupsPanel() {
   };
 
   const remove = async (g) => {
-    if (!window.confirm(`Usunąć grupę „${g.name}"? Subskrybenci pozostaną na liście.`)) return;
+    if (!(await confirmDialog(`Usunąć grupę „${g.name}"? Subskrybenci pozostaną na liście.`))) return;
     setBusy(true);
     try {
       await base44.functions.invoke("adminNewsletter", { action: "groups.delete", id: g.id });

@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { Loader2, Star, Trash2 } from "lucide-react";
 import { SIGNAL, uploadAudio, fmt } from "./libUtils";
+import { confirmDialog } from "@/components/admin/ui/confirmDialog";
 
 const TYPES = [{ id: "wstep", label: "Wstęp (3–10 s)" }, { id: "zakonczenie", label: "Zakończenie (ok. 15 s)" }];
 
@@ -32,7 +33,7 @@ export default function SignalsTab() {
     load();
   };
   const patch = async (s, p) => { await SIGNAL.update(s.id, p); load(); };
-  const remove = async (s) => { if (window.confirm(`Usunąć „${s.nazwa}”?`)) { await SIGNAL.delete(s.id); load(); } };
+  const remove = async (s) => { if (await confirmDialog(`Usunąć „${s.nazwa}”?`)) { await SIGNAL.delete(s.id); load(); } };
 
   if (!list) return <p className="text-foreground/50 text-sm">Ładowanie…</p>;
   return (

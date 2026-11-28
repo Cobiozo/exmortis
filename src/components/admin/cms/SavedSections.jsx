@@ -2,6 +2,7 @@ import React, { useEffect, useState } from "react";
 import { Trash2 } from "lucide-react";
 import { base44 } from "@/api/base44Client";
 import { TYPES } from "@/components/cms/blockTypes";
+import { confirmDialog } from "@/components/admin/ui/confirmDialog";
 
 // Własne sekcje zapisane z bloków — wstawiane jako kopia.
 export default function SavedSections({ open, onPick }) {
@@ -9,7 +10,7 @@ export default function SavedSections({ open, onPick }) {
   const load = () => base44.entities.CmsSection.filter({}, { sort: "nazwa", limit: 100 }).then((r) => setItems(r.items));
   useEffect(() => { if (open) load(); }, [open]);
   const remove = async (s) => {
-    if (!window.confirm(`Usunąć sekcję „${s.nazwa}”? Strony, na których już jest, nie zmienią się.`)) return;
+    if (!(await confirmDialog(`Usunąć sekcję „${s.nazwa}”? Strony, na których już jest, nie zmienią się.`))) return;
     await base44.entities.CmsSection.delete(s.id);
     load();
   };

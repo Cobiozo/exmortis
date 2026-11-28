@@ -4,6 +4,7 @@ import { X, Download, Send, Bell, Video, ArrowUpCircle, UserMinus } from "lucide
 import { base44 } from "@/api/base44Client";
 import useMailStatus, { MAIL_REQUIRED } from "@/lib/useMailStatus";
 import SourcesReport from "./SourcesReport";
+import { confirmDialog } from "@/components/admin/ui/confirmDialog";
 
 const STATUS_STYLE = {
   Zapisany: "text-[#C9A24A]",
@@ -65,7 +66,7 @@ export default function ParticipantsPanel({ event, onClose }) {
   };
 
   const removeParticipant = async (id) => {
-    if (!window.confirm("Usunąć dane tego uczestnika (imię, e-mail, pytanie)?")) return;
+    if (!(await confirmDialog("Usunąć dane tego uczestnika (imię, e-mail, pytanie)?"))) return;
     await base44.functions.invoke("eventsAdmin", { action: "deleteParticipant", id });
     load();
   };

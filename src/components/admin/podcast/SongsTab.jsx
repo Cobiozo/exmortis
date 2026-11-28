@@ -5,6 +5,7 @@ import { base44 } from "@/api/base44Client";
 import { sourceOf, statusOf } from "@/components/exmortis/glos/musicUtils";
 import SongForm from "./SongForm";
 import SourceBadge from "./SourceBadge";
+import { confirmDialog } from "@/components/admin/ui/confirmDialog";
 
 const U = base44.entities.Utwor;
 const ST = { szkic: "Szkic", opublikowany: "Opublikowany", ukryty: "Ukryty" };
@@ -46,7 +47,7 @@ export default function SongsTab() {
     setRows((l) => l.map((x) => (x.id === r.id ? { ...x, ...patch } : x)));
     await U.update(r.id, patch).catch(() => load());
   };
-  const del = async (r) => { if (window.confirm(`Usunąć utwór „${r.tytul}”? Tej operacji nie da się cofnąć.`)) { await U.delete(r.id); load(); } };
+  const del = async (r) => { if (await confirmDialog(`Usunąć utwór „${r.tytul}”? Tej operacji nie da się cofnąć.`)) { await U.delete(r.id); load(); } };
   const done = () => { setEdit(null); load(); };
 
   if (!rows) return <p className="text-sm text-foreground/50">Ładowanie…</p>;

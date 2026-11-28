@@ -4,6 +4,7 @@ import { base44 } from "@/api/base44Client";
 import PowrotPayBox from "./PowrotPayBox";
 import { STATUS_LABEL, TEMPLATES, INVITE_INTRO } from "./powrotTemplates";
 import { POWROT } from "@/lib/powrotOffer";
+import { confirmDialog } from "@/components/admin/ui/confirmDialog";
 
 // Karta osoby w panelu „Kandydaci i uczestnicy POWRÓT” (v2, 18.11.2026):
 // status z historią, akcje z podglądem wiadomości, odpowiedzi, notatka, czas obsługi,
@@ -51,7 +52,7 @@ function Composer({ a, onDone, onCancel, initialKey }) {
   }, [key]); // eslint-disable-line react-hooks/exhaustive-deps
   const send = async () => {
     if (body.includes("[wpisz")) { setErr("Uzupełnij fragmenty w nawiasach kwadratowych."); return; }
-    if (!window.confirm(`Wysłać wiadomość do ${a.full_name} (${a.email})?`)) return;
+    if (!(await confirmDialog(`Wysłać wiadomość do ${a.full_name} (${a.email})?`))) return;
     setBusy(true); setErr("");
     try {
       const r = key === "invite" ? await call({ action: "invite", id: a.id, body }) : await call({ action: "mail", id: a.id, template: key, subject, body });
@@ -78,7 +79,7 @@ function SessionNotes({ a, notes, reload }) {
   const [edit, setEdit] = useState(null);
   const [busy, setBusy] = useState(false);
   const save = async () => { setBusy(true); try { await call({ action: "session_note", id: a.id, note: edit }); setEdit(null); reload(); } finally { setBusy(false); } };
-  const del = async (n) => { if (!window.confirm(`Usunąć notatkę z sesji ${n.nr}? Tego nie da się cofnąć.`)) return; await call({ action: "session_note_delete", id: a.id, note_id: n.id }); reload(); };
+  const del = async (n) => { if (!(await confirmDialog(`Usunąć notatkę z sesji ${n.nr}? Tego nie da się cofnąć.`))) return; await call({ action: "session_note_delete", id: a.id, note_id: n.id }); reload(); };
   return (
     <Box title="NOTATKI Z SESJI · WIDZISZ JE TYLKO TY" right={!edit && <button onClick={() => setEdit(empty)} className="text-xs gold-text">+ Dodaj notatkę</button>}>
       {edit && (

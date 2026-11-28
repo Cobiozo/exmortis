@@ -4,6 +4,7 @@ import { Save, Trash2, CreditCard, Mail } from "lucide-react";
 import AppUrlSettings from "./AppUrlSettings";
 import { useAuth } from "@/lib/AuthContext";
 import { ACTIVE_BACKEND } from "@/api/exmAdapter";
+import { confirmDialog } from "@/components/admin/ui/confirmDialog";
 
 const inputCls =
   "w-full bg-transparent border hairline px-4 py-2.5 focus:border-[#C9A24A] focus:outline-none transition-colors text-sm";
@@ -86,7 +87,7 @@ export default function IntegrationsManager() {
   };
 
   const clearData = async (target, setBusy, setMsg) => {
-    if (!window.confirm("Usunąć zapisane dane tej integracji?")) return;
+    if (!(await confirmDialog("Usunąć zapisane dane tej integracji?"))) return;
     setBusy(true);
     setMsg(null);
     try {

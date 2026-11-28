@@ -25,6 +25,7 @@ const LOAD = {
   testy: () => import("@/components/admin/TestCountPanel"),
   glos: () => import("@/components/admin/glos/GlosAdmin"),
   skrzynka: () => import("@/components/admin/inbox/InboxPanel"),
+  szukaj: () => import("@/components/admin/search/SearchPanel"),
   kontakty: () => import("@/components/admin/ContactsTabs"),
   powrot: () => import("@/components/admin/powrot/PowrotPanel"),
   rozmowa: () => import("@/components/admin/prog/ProgPanel"),
@@ -58,6 +59,7 @@ const preload = (key) => {
 
 const SECTIONS = {
   skrzynka: ["Skrzynka — wiadomości z formularza", () => <C.skrzynka />],
+  szukaj: ["Szukaj w panelu", () => <C.szukaj />],
   spotkania: ["Spotkania", () => <C.spotkania />],
   rezerwacje: ["Rezerwacje — praca indywidualna", () => <C.rezerwacje />],
   ogloszenia: ["Ogłoszenia", () => <C.ogloszenia />],

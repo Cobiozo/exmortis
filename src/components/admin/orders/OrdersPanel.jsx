@@ -109,7 +109,7 @@ function SalesPanel() {
   const [status, setStatus] = useState("");
   const [todo, setTodo] = useState(false);
   const [withTest, setWithTest] = useState(false); // zamówienia testowe domyślnie ukryte (28.11.2026)
-  const [q, setQ] = useState("");
+  const [q, setQ] = useState(() => { try { return new URLSearchParams(window.location.search).get("q") || ""; } catch { return ""; } });
   const [data, setData] = useState(null);
   const [err, setErr] = useState("");
   const [open, setOpen] = useState(null);

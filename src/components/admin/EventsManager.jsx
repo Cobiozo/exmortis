@@ -8,6 +8,7 @@ import TicketsPanel from "@/components/admin/tickets/TicketsPanel";
 import ScannersPanel from "@/components/admin/tickets/ScannersPanel";
 import { whenText } from "@/components/exmortis/events/time";
 import { SITE_URL } from "@/config/site";
+import { confirmDialog } from "@/components/admin/ui/confirmDialog";
 
 const STATUS_STYLE = {
   Opublikowane: "text-[#C9A24A]",
@@ -93,7 +94,7 @@ export default function EventsManager() {
 
   const remove = (id) =>
     run(async () => {
-      if (!window.confirm("Usunąć szkic wydarzenia? Tej operacji nie da się cofnąć.")) return;
+      if (!(await confirmDialog("Usunąć szkic wydarzenia? Tej operacji nie da się cofnąć."))) return;
       try {
         await base44.functions.invoke("eventsAdmin", { action: "delete", id });
       } catch (err) {

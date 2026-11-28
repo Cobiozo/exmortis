@@ -3,6 +3,7 @@ import { Loader2 } from "lucide-react";
 import { base44 } from "@/api/base44Client";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { smallBtn } from "./ui";
+import { confirmDialog } from "@/components/admin/ui/confirmDialog";
 
 const when = (d) => new Date(d).toLocaleString("pl-PL", { timeZone: "Europe/Warsaw", dateStyle: "medium", timeStyle: "short" });
 
@@ -16,7 +17,7 @@ export default function VersionHistory({ open, onOpenChange, page, onLoad, onRep
     base44.entities.PageVersion.filter({ slug: page.slug }, { sort: "-wersja", limit: 50 }).then((r) => setItems(r.items));
   }, [open, page.slug, page.wersja]);
   const republish = async (v) => {
-    if (!window.confirm(`Opublikować ponownie wersję ${v.wersja}? Strona publiczna od razu się zmieni.`)) return;
+    if (!(await confirmDialog(`Opublikować ponownie wersję ${v.wersja}? Strona publiczna od razu się zmieni.`))) return;
     setBusy(v.id); await onRepublish(v); setBusy(null); onOpenChange(false);
   };
   return (

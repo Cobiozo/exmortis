@@ -2,6 +2,7 @@ import React, { useState } from "react";
 import { base44 } from "@/api/base44Client";
 import { isoToWarsawLocal, warsawLocalToIso } from "@/lib/warsawTime";
 import RecordingUpload from "./RecordingUpload";
+import { confirmDialog } from "@/components/admin/ui/confirmDialog";
 
 const inp = "w-full bg-transparent border hairline px-4 py-3 focus:border-[#C9A24A] focus:outline-none";
 const F = ({ l, children }) => <label className="block"><span className="block technical text-[10px] text-foreground/60 mb-2">{l}</span>{children}</label>;
@@ -14,7 +15,7 @@ export default function RecordingForm({ rec, seria, onClose }) {
     const { pub, id, created_date, updated_date, created_by_id, ...rest } = r;
     await base44.entities.ObokNagranie.update(rec.id, { ...rest, publikacja: pub ? warsawLocalToIso(pub) : null }); onClose();
   };
-  const del = async () => { if (window.confirm("Usunąć nagranie?")) { await base44.entities.ObokNagranie.delete(rec.id); onClose(); } };
+  const del = async () => { if (await confirmDialog("Usunąć nagranie?")) { await base44.entities.ObokNagranie.delete(rec.id); onClose(); } };
   return (
     <section className="border hairline p-6 md:p-8 space-y-5">
       <button onClick={onClose} className="technical text-[10px] gold-text">← NAGRANIA</button>

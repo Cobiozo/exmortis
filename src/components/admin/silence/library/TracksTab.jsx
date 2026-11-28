@@ -3,6 +3,7 @@ import { base44 } from "@/api/base44Client";
 import { TRACK } from "./libUtils";
 import TrackForm from "./TrackForm";
 import TrackRow from "./TrackRow";
+import { confirmDialog } from "@/components/admin/ui/confirmDialog";
 
 export default function TracksTab() {
   const [tracks, setTracks] = useState(null);
@@ -23,7 +24,7 @@ export default function TracksTab() {
     load();
   };
   const remove = async (t) => {
-    if (!window.confirm(`Usunąć utwór „${t.nazwa}”?`)) return;
+    if (!(await confirmDialog(`Usunąć utwór „${t.nazwa}”?`))) return;
     await TRACK.delete(t.id);
     load();
   };

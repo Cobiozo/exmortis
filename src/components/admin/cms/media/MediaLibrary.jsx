@@ -4,6 +4,7 @@ import { base44 } from "@/api/base44Client";
 import SafeImg from "@/components/cms/SafeImg";
 import { inputCls, smallBtn } from "../ui";
 import { uploadMedia, rebuildMedia } from "./uploadMedia";
+import { confirmDialog } from "@/components/admin/ui/confirmDialog";
 
 // Biblioteka mediów: wyszukiwanie, wgrywanie (WebP), usuwanie. onPick — tryb wyboru.
 export default function MediaLibrary({ onPick }) {
@@ -30,7 +31,7 @@ export default function MediaLibrary({ onPick }) {
     setWm(null);
   };
   const remove = async (m) => {
-    if (!window.confirm(`Usunąć „${m.nazwa}” z biblioteki? Strony, które go używają, zachowają obraz.`)) return;
+    if (!(await confirmDialog(`Usunąć „${m.nazwa}” z biblioteki? Strony, które go używają, zachowają obraz.`))) return;
     await base44.entities.MediaAsset.delete(m.id);
     setItems((x) => x.filter((i) => i.id !== m.id));
   };

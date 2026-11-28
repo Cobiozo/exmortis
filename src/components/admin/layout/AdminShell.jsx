@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
-import { Home, Globe, Menu, X, Eye, ExternalLink, UserRound, LogOut, ShoppingBag, CalendarDays, Contact, PenLine, Settings } from "lucide-react";
+import { Home, Globe, Menu, X, Eye, ExternalLink, UserRound, LogOut, ShoppingBag, CalendarDays, PenLine, Settings, Search, Inbox } from "lucide-react";
 import { base44 } from "@/api/base44Client";
 import Logo from "@/components/exmortis/Logo";
 import { useAdminMode } from "@/components/admin/AdminModeContext";
@@ -81,6 +81,7 @@ function NavContent({ me, groups, active, badges, onPreload, onNavigate }) {
 }
 
 export default function AdminShell({ me, tech, techKeys, libOn, badges, active, title, actions, onPreload, children }) {
+  const navigate = useNavigate();
   const [open, setOpen] = useState(false);
   const { pathname } = useLocation();
   const { setMode } = useAdminMode();
@@ -96,7 +97,7 @@ export default function AdminShell({ me, tech, techKeys, libOn, badges, active, 
   const nav = { me, groups, active, badges, onPreload };
   const tabs = tech
     ? [["", "Pulpit", Home], ["tresci", "Treści", PenLine], ["ustawienia", "Ustawienia", Settings]]
-    : [["", "Pulpit", Home], ["zamowienia", "Zamówienia", ShoppingBag], ["spotkania", "Spotkania", CalendarDays], ["kontakty", "Kontakty", Contact]];
+    : [["", "Pulpit", Home], ["zamowienia", "Zamówienia", ShoppingBag], ["spotkania", "Spotkania", CalendarDays], ["skrzynka", "Skrzynka", Inbox]];
 
   return (
     <div className="adm min-h-screen bg-[#0A0A0B] lg:flex">
@@ -128,7 +129,15 @@ export default function AdminShell({ me, tech, techKeys, libOn, badges, active, 
       <div className="flex-1 min-w-0 pb-24 lg:pb-12">
         <header className="flex flex-wrap items-center justify-between gap-4 px-5 md:px-8 lg:px-10 pt-6 lg:pt-8 pb-5 border-b hairline">
           <h1 className="relic-heading text-3xl md:text-4xl">{title}</h1>
-          {actions}
+          <div className="flex flex-wrap items-center gap-3 ml-auto">
+            {!tech && active !== "szukaj" && (
+              <form role="search" onSubmit={(e) => { e.preventDefault(); const v = new FormData(e.currentTarget).get("q")?.toString().trim(); if (v) navigate(`/admin/szukaj?q=${encodeURIComponent(v)}`); }} className="relative">
+                <Search className="h-4 w-4 absolute left-3 top-1/2 -translate-y-1/2 text-foreground/40" />
+                <input name="q" placeholder="Szukaj: e-mail, zamówienie, produkt…" aria-label="Szukaj w panelu" className="w-56 md:w-72 bg-[#0F0F10] border hairline rounded-md pl-9 pr-3 py-2 text-sm focus:outline-none focus:border-[#C9A24A]/60" />
+              </form>
+            )}
+            {actions}
+          </div>
         </header>
         <main className="px-5 md:px-8 lg:px-10 pt-6 lg:pt-8 max-w-[1400px]">{children}</main>
       </div>

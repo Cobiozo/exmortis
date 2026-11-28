@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { Copy, RefreshCw } from "lucide-react";
 import { bk, plDateTime } from "./api";
+import { confirmDialog } from "@/components/admin/ui/confirmDialog";
 
 // MUSI 6: najpierw prywatny kanał iCal — tajny adres, obrót, w treści tylko rodzaj i imię.
 export default function IcalPanel() {
@@ -11,7 +12,7 @@ export default function IcalPanel() {
   useEffect(() => { load(); }, []);
 
   const rotate = async () => {
-    if (!window.confirm("Obrócić adres? Stary przestanie działać i trzeba go podmienić w kalendarzu.")) return;
+    if (!(await confirmDialog("Obrócić adres? Stary przestanie działać i trzeba go podmienić w kalendarzu."))) return;
     setErr("");
     try { setD(await bk("ical", { rotate: true })); } catch (e) { setErr(e.message); }
   };
