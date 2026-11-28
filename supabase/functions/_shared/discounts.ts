@@ -34,6 +34,13 @@ export async function applyDiscount(base44, rawCode, lines, buyerEmail = "", ses
     if (!who) throw bad("Ten kod jest przypisany do konta — najpierw wpisz w kasie adres e-mail tego konta");
     if (who !== String(found.email).toLowerCase()) throw bad("Ten kod jest przypisany do innego adresu e-mail");
   }
+  // Kod tylko dla wybranych adresów (28.11.2026): lista z panelu, porównanie bez wielkości liter.
+  const allowed = Array.isArray(found.emails) ? found.emails.map((x) => String(x).trim().toLowerCase()).filter(Boolean) : [];
+  if (allowed.length) {
+    const who = String(buyerEmail || "").trim().toLowerCase();
+    if (!who) throw bad("Ten kod jest przypisany do konkretnych adresów — najpierw wpisz w kasie swój adres e-mail");
+    if (!allowed.includes(who)) throw bad("Ten kod jest przypisany do innego adresu e-mail");
+  }
   const ids = found.product_ids || [];
   // Karty podarunkowe nie wchodzą do podstawy żadnego rabatu: kodem z karty nie opłaca się innej karty,
   // a zwykły kod nie obniża ceny karty (karta ma wartość równą zapłaconej kwocie).

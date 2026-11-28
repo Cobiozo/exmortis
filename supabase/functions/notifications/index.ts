@@ -211,6 +211,8 @@ async function buildFeed(base44, me) {
   // Kody rabatowe, które Dawid oznaczył do pokazania.
   for (const c of g.codes) {
     if (c.valid_until && c.valid_until < today) continue;
+    // Kod dla wybranych adresów — w powiadomieniach tylko u tych osób.
+    if (Array.isArray(c.emails) && c.emails.length && !c.emails.map((x) => String(x).toLowerCase()).includes(String(email || "").toLowerCase())) continue;
     if (c.max_uses && (c.uses || 0) >= c.max_uses) continue;
     const val = c.kind === "kwota" ? `−${zl(c.value)}` : `−${c.value}%`;
     push({ key: `code:${c.id}`, kind: "kod", title: `Kod rabatowy ${c.code}: ${val}`,

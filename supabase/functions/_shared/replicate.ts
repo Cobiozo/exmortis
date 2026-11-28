@@ -18,6 +18,8 @@ export const REPLICATE = [
   "ActiveStream", "EmailChange", "PendingRegistration", "SilenceBackground", "SilenceTrack",
   "SilenceSoundtrack", "SilenceSignal", "BackupFile", "ClientError", "DataAccessLog",
   "SecurityLog", "MailQueue", "RozdrozaChoice", "RozdrozaScene", "RozdrozaStory",
+  // 28.11.2026: strony edytora (Treści stron → Strony) — bez tego bramka danych odmawiała odczytu (403).
+  "SitePage",
 ];
 
 export const TABLE = (entity) => `exm_${entity.toLowerCase()}`;

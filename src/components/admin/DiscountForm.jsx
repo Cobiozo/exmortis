@@ -4,12 +4,16 @@ import { base44 } from "@/api/base44Client";
 const inp = "w-full bg-[#0A0A0B] border hairline px-3 py-2 text-sm focus:border-[#C9A24A] focus:outline-none";
 const EMPTY = {
   code: "", kind: "procent", value: "", od: "", valid_until: "", max_uses: "", product_ids: [], w_powiadomieniach: false, opis: "",
-  bez_promocji: false, tylko_subskrybenci: false, tylko_konto: false,
+  bez_promocji: false, tylko_subskrybenci: false, tylko_konto: false, emails: "",
 };
+// Adresy e-mail: po przecinku, spacji, średniku albo w nowych liniach; bez powtórzeń, małymi literami.
+const parseEmails = (t) => [...new Set(String(t || "").split(/[\s,;]+/).map((x) => x.trim().toLowerCase()).filter(Boolean))];
+const EMAIL_RE = /^[^@\s]+@[^@\s]+\.[^@\s]+$/;
 const fromRecord = (c) => ({
   ...EMPTY, code: c.code || "", kind: c.kind || "procent", value: c.value ?? "", od: c.od || "", valid_until: c.valid_until || "",
   max_uses: c.max_uses ?? "", product_ids: (c.product_ids || []).map(String), w_powiadomieniach: c.w_powiadomieniach === true, opis: c.opis || "",
   bez_promocji: c.bez_promocji === true, tylko_subskrybenci: c.tylko_subskrybenci === true, tylko_konto: c.tylko_konto === true,
+  emails: [...(Array.isArray(c.emails) ? c.emails : []), ...(c.email && !c.powitalny ? [c.email] : [])].join("\n"),
 });
 
 // Nowy kod albo edycja istniejącego (editing = rekord DiscountCode). Licznik użyć i sam kod przy edycji się nie zmieniają.
@@ -31,11 +35,17 @@ export default function DiscountForm({ onDone, editing = null, onCancel }) {
     setMsg("");
     if (f.od && f.valid_until && f.valid_until < f.od) return setMsg("Data „ważny do” jest przed datą „ważny od”.");
     const code = f.code.trim().toUpperCase();
+    const emails = parseEmails(f.emails);
+    const bad = emails.filter((x) => !EMAIL_RE.test(x));
+    if (bad.length) return setMsg(`Nieprawidłowy adres: ${bad.slice(0, 3).join(", ")}`);
+    if (emails.length > 200) return setMsg("Najwyżej 200 adresów przy jednym kodzie.");
     const data = {
       kind: f.kind, value: Number(f.value), product_ids: f.product_ids,
       od: f.od || null, valid_until: f.valid_until || null, max_uses: f.max_uses ? Number(f.max_uses) : null,
       bez_promocji: f.bez_promocji, tylko_subskrybenci: f.tylko_subskrybenci, tylko_konto: f.tylko_konto,
       w_powiadomieniach: f.w_powiadomieniach, opis: f.w_powiadomieniach ? f.opis.trim().slice(0, 120) : (editing?.opis || ""),
+      // Lista adresów zastępuje dawne pojedyncze pole „email” (kody z panelu; kody powitalne mają własne).
+      emails, ...(editing && !editing.powitalny && editing.email ? { email: null } : {}),
     };
     setBusy(true);
     try {
@@ -74,6 +84,11 @@ export default function DiscountForm({ onDone, editing = null, onCancel }) {
           <label key={p.id} className="flex gap-2 text-xs items-center"><input type="checkbox" checked={f.product_ids.includes(String(p.id))} onChange={() => toggleP(String(p.id))} />{p.name}</label>
         ))}
       </div>
+      <label className="block text-xs text-foreground/50">
+        Tylko dla adresów e-mail (opcjonalnie)
+        <textarea value={f.emails} onChange={set("emails")} rows={3} placeholder={"np. anna@example.com\njan@example.com"} className={inp + " mt-1 font-mono"} />
+        <span className="block mt-1 text-foreground/40">Jeden albo kilka adresów — po przecinku albo w nowych liniach. Puste = każdy. {parseEmails(f.emails).length ? `Adresów: ${parseEmails(f.emails).length}.` : ""}</span>
+      </label>
       <fieldset className="space-y-2 border-t hairline pt-3">
         <legend className="sr-only">Kto i kiedy może użyć kodu</legend>
         <label className={chk}><input type="checkbox" checked={f.bez_promocji} onChange={flag("bez_promocji")} className="mt-0.5" />

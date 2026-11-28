@@ -60,6 +60,7 @@ export default function DiscountsPanel() {
                   −{c.value}{c.kind === "procent" ? "%" : " zł"} · użyto {c.uses || 0}{c.max_uses ? `/${c.max_uses}` : ""}
                   {c.od ? ` · od ${c.od}` : ""}{c.valid_until ? ` · do ${c.valid_until}` : ""} · {c.product_ids?.length ? `${c.product_ids.length} prod.` : "wszystkie produkty"}
                   {c.bez_promocji ? " · tylko cena regularna" : ""}{c.tylko_subskrybenci ? " · tylko subskrybenci Listów Powrotu" : ""}{c.tylko_konto ? " · tylko z kontem" : ""}
+                  {(() => { const em = [...(c.emails || []), ...(c.email ? [c.email] : [])]; return em.length ? ` · tylko dla: ${em.length > 2 ? `${em.slice(0, 2).join(", ")} i ${em.length - 2} innych` : em.join(", ")}` : ""; })()}
                   {c.w_powiadomieniach ? " · widoczny w powiadomieniach klientów" : ""}
                 </p>
               </div>
