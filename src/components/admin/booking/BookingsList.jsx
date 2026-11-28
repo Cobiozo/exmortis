@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { bk, plDateTime } from "./api";
+import { EmptyState } from "@/components/admin/ui/kit";
 
 // Odpowiedzi przychodzą pod kluczami pytań (q1, q2…). Podmieniamy je na treść pytania, żeby panel był czytelny.
 const labelOf = (booking, id) => (booking?.questions || []).find((q) => q.id === id)?.label || id;
@@ -11,7 +12,7 @@ export default function BookingsList() {
   useEffect(() => { bk("bookings").then((r) => setList(r.bookings)).catch(() => setList([])); }, []);
   const show = async (id) => setOpen(await bk("detail", { id }).catch((e) => ({ error: e.message })));
   if (!list) return <p className="text-sm text-foreground/50">Ładowanie…</p>;
-  if (!list.length) return <p className="text-sm text-foreground/50">Brak rezerwacji.</p>;
+  if (!list.length) return <EmptyState>Brak rezerwacji.</EmptyState>;
   return (
     <div className="grid lg:grid-cols-2 gap-6">
       <div className="space-y-2">

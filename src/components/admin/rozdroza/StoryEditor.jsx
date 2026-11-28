@@ -6,6 +6,7 @@ import { rz, statusBadge, thumb, isStartScene, isScheduled, fmtWhen } from "./rz
 import { isoToWarsawLocal, warsawLocalToIso } from "@/lib/warsawTime";
 import GenBlock from "./GenBlock";
 import BulkImages from "./BulkImages";
+import { SkeletonList } from "@/components/admin/ui/kit";
 
 const inp = "w-full bg-[#0A0A0B] border hairline px-3 py-2.5 text-sm text-foreground focus:border-[#C9A24A] focus:outline-none";
 const lab = "technical text-[10px] text-foreground/55 block mb-1.5";
@@ -132,7 +133,7 @@ export default function StoryEditor({ id, onClose }) {
   };
 
   if (err && !d) return <p className="text-sm text-[#E8676A]">{err} <button onClick={onClose} className="underline ml-2">Wróć</button></p>;
-  if (!d || !f) return <Loader2 className="h-5 w-5 animate-spin gold-text" />;
+  if (!d || !f) return <SkeletonList rows={3} />;
   const set = (k, v) => setF((x) => ({ ...x, [k]: v }));
   const keys = new Map(d.scenes.map((s) => [s.scene_key, s.title || ""]));
   const titleOf = (k) => (keys.has(k) ? keys.get(k) : null);

@@ -2,6 +2,7 @@ import React, { useEffect, useState } from "react";
 import { Loader2, ExternalLink } from "lucide-react";
 import { base44 } from "@/api/base44Client";
 import { INPUT, LABEL, toLocal, fromLocal, fmtPl } from "./annForm";
+import { SkeletonList } from "@/components/admin/ui/kit";
 
 const KOMU = [["wszyscy", "Wszyscy odwiedzający"], ["goscie", "Tylko niezalogowani (nowe osoby)"], ["zalogowani", "Tylko zalogowani"]];
 
@@ -18,7 +19,7 @@ export default function PopupSettings() {
       .catch((e) => setErr(e?.response?.data?.error || "Nie udało się wczytać popupu."));
   }, []);
 
-  if (!f) return err ? <p className="text-sm blood-text">{err}</p> : <Loader2 className="h-5 w-5 animate-spin gold-text" />;
+  if (!f) return err ? <p className="text-sm blood-text">{err}</p> : <SkeletonList rows={3} />;
   const set = (k, v) => setF((x) => ({ ...x, [k]: v }));
 
   const save = async (patch = {}) => {

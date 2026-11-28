@@ -1,7 +1,8 @@
 import React, { useEffect, useState } from "react";
-import { Plus, Loader2 } from "lucide-react";
+import { Plus } from "lucide-react";
 import { base44 } from "@/api/base44Client";
 import LessonRow from "./LessonRow";
+import { SkeletonList } from "@/components/admin/ui/kit";
 
 // Lekcje kursu / wideo produktu (tylko po zapisaniu produktu).
 export default function LessonsManager({ productId }) {
@@ -40,7 +41,7 @@ export default function LessonsManager({ productId }) {
         Wideo: wklej adres filmu z własnego serwera (https, .mp4 lub .webm) i kliknij „Sprawdź odtwarzanie”. Filmy do 500 MB można też wgrać. Kolejność = pole z numerem; „Moduł” grupuje lekcje w spisie.
         Podgląd jak klient: nadaj sobie dostęp w „Klienci i dostępy”.
       </p>
-      {!lessons ? <Loader2 className="h-5 w-5 animate-spin gold-text" /> : lessons.length === 0 && (
+      {!lessons ? <SkeletonList rows={3} /> : lessons.length === 0 && (
         <p className="text-sm text-foreground/50">Brak lekcji. Dodaj pierwszą i wgraj do niej wideo.</p>
       )}
       {domErr && <p className="text-xs text-[#E8C547]">{domErr}</p>}

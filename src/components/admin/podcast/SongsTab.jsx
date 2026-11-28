@@ -1,11 +1,12 @@
 import React, { useEffect, useMemo, useState } from "react";
-import { ArrowDown, ArrowUp, Eye, EyeOff, Headphones, Music, Pencil, Search, Star, Trash2 } from "lucide-react";
+import { ArrowDown, ArrowUp, Eye, EyeOff, Headphones, Music, Pencil, Star, Trash2 } from "lucide-react";
 import useSongPlays from "./useSongPlays";
 import { base44 } from "@/api/base44Client";
 import { sourceOf, statusOf } from "@/components/exmortis/glos/musicUtils";
 import SongForm from "./SongForm";
 import SourceBadge from "./SourceBadge";
 import { confirmDialog } from "@/components/admin/ui/confirmDialog";
+import { FilterChips, SearchField } from "@/components/admin/ui/kit";
 
 const U = base44.entities.Utwor;
 const ST = { szkic: "Szkic", opublikowany: "Opublikowany", ukryty: "Ukryty" };
@@ -62,19 +63,8 @@ export default function SongsTab() {
       <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
         <button onClick={() => setEdit("new")} className="btn-relic !py-2 !px-5 self-start">Dodaj utwór</button>
         <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
-          <div className="flex flex-wrap gap-1.5">
-            {FILTERS.map(([k, l]) => (
-              <button key={k || "all"} onClick={() => setSt(k)}
-                className={`technical text-[9px] px-3 py-2 border ${st === k ? "border-[#C9A24A] gold-text bg-[#C9A24A]/10" : "hairline text-foreground/55 hover:text-foreground"}`}>
-                {l.toUpperCase()} <span className="opacity-60">{counts[k]}</span>
-              </button>
-            ))}
-          </div>
-          <label className="relative block sm:w-60">
-            <span className="sr-only">Szukaj utworu</span>
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-foreground/40" aria-hidden="true" />
-            <input value={q} onChange={(e) => setQ(e.target.value)} placeholder="Szukaj po tytule" className="w-full bg-transparent border hairline pl-9 pr-3 py-2 text-sm" />
-          </label>
+          <FilterChips items={FILTERS.map(([k, l]) => [k, l, counts[k]])} value={st} onChange={setSt} label="Status utworów" />
+          <SearchField value={q} onChange={setQ} placeholder="Szukaj po tytule" label="Szukaj utworu" className="sm:w-60" />
         </div>
       </div>
       {err && <p className="text-xs blood-text" role="alert">{err}</p>}

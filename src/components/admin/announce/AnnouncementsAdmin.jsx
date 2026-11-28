@@ -4,6 +4,7 @@ import AnnForm from "@/components/admin/announce/AnnForm.jsx";
 import AnnRow from "./AnnRow";
 import { EMPTY, fmtPl } from "./annForm";
 import PopupCampaigns from "./PopupCampaigns";
+import { EmptyState } from "@/components/admin/ui/kit";
 
 // Panel → Ogłoszenia (tylko na stronie, bez e-maili). Dostęp: wyłącznie administrator.
 export default function AnnouncementsAdmin() {
@@ -31,7 +32,7 @@ export default function AnnouncementsAdmin() {
         : <button className="btn-relic" onClick={() => setEdit({ ...EMPTY })}>Nowe ogłoszenie</button>}
       {!data ? <p className="text-sm text-foreground/50">Wczytuję…</p> : (
         <div className="space-y-3">
-          {!data.items.length && <p className="text-sm text-foreground/50">Brak ogłoszeń.</p>}
+          {!data.items.length && <EmptyState>Brak ogłoszeń.</EmptyState>}
           {data.items.map((a) => <AnnRow key={a.id} a={a} onEdit={() => setEdit(a)} onAct={(action) => run(() => ann(action, { id: a.id }))} />)}
         </div>
       )}

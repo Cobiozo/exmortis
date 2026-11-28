@@ -1,15 +1,16 @@
 import React, { useEffect, useMemo, useState } from "react";
-import { Plus, Search } from "lucide-react";
+import { Plus } from "lucide-react";
 import { base44 } from "@/api/base44Client";
 import { pagePath } from "@/components/cms/links";
 import { newBlock } from "@/components/cms/blockTypes";
 import { SITE_MAP, FILTERS } from "./siteMap";
 import { PAGE_DEFAULTS } from "@/components/cms/defaults/otherDefaults";
 import PageRow from "./PageRow";
-import { inputCls, tabBtn } from "./ui";
+import { inputCls } from "./ui";
 import { confirmDialog } from "@/components/admin/ui/confirmDialog";
 
 import { slugify, duplicatePage, renamePage } from "./pageActions";
+import { FilterChips, SearchField, SkeletonList } from "@/components/admin/ui/kit";
 
 export default function PagesList({ onOpen }) {
   const [pages, setPages] = useState(null);
@@ -61,22 +62,17 @@ export default function PagesList({ onOpen }) {
     load();
   };
 
-  if (!pages) return <div className="h-48 border hairline animate-pulse bg-[#0F0F10]" />;
+  if (!pages) return <SkeletonList rows={5} h="h-14" />;
   return (
     <div className="space-y-6">
       <div className="flex flex-col lg:flex-row gap-4 lg:items-center justify-between">
-        <div className="flex flex-wrap gap-2">
-          {FILTERS.map(([k, l]) => <button key={k} className={tabBtn(filter === k)} onClick={() => setFilter(k)}>{l.toUpperCase()} · {count(k)}</button>)}
-        </div>
-        <div className="relative lg:w-72">
-          <Search className="h-4 w-4 absolute left-3 top-1/2 -translate-y-1/2 text-foreground/40" />
-          <input className={`${inputCls} pl-9`} value={q} onChange={(e) => setQ(e.target.value)} placeholder="Szukaj strony" />
-        </div>
+        <FilterChips items={FILTERS.map(([k, l]) => [k, l, count(k)])} value={filter} onChange={setFilter} label="Widok stron" />
+        <SearchField value={q} onChange={setQ} placeholder="Szukaj strony" className="lg:w-72" />
       </div>
       <div className="border hairline divide-y divide-[#3D3D3F]/60">
         {shown.map((p) => <PageRow key={p.slug} p={p} log={logs[p.slug]} onOpen={openRow} onRemove={remove} onDuplicate={duplicate}
           onRename={!SITE_MAP.some((s) => s.slug === p.slug) ? rename : null} />)}
-        {!shown.length && <p className="px-5 py-8 text-foreground/50">Brak stron w tym widoku.</p>}
+        {!shown.length && <p className="px-6 py-10 text-center text-sm text-foreground/55">Brak stron w tym widoku.</p>}
       </div>
       <div className="border hairline p-5">
         <p className="technical text-[10px] text-foreground/50 mb-3">NOWA STRONA</p>

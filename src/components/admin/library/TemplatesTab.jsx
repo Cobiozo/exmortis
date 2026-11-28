@@ -3,6 +3,7 @@ import { Loader2, Pencil, Trash2, Plus } from "lucide-react";
 import { lib } from "./libApi";
 import LibModal from "./LibModal";
 import RichLite from "./RichLite";
+import { SkeletonList } from "@/components/admin/ui/kit";
 
 // Szablony treści wiadomości: użycie w nowej wiadomości, edycja i usunięcie.
 export default function TemplatesTab({ onUse, onChanged }) {
@@ -29,7 +30,7 @@ export default function TemplatesTab({ onUse, onChanged }) {
     catch (e) { setErr(e.message); } finally { setBusy(""); }
   };
 
-  if (!items) return <Loader2 className="h-5 w-5 animate-spin gold-text" />;
+  if (!items) return <SkeletonList rows={3} />;
 
   return (
     <div className="space-y-6">

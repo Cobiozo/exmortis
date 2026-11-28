@@ -3,6 +3,7 @@ import { DragDropContext, Droppable, Draggable } from "@hello-pangea/dnd";
 import { Eye, EyeOff, Trash2, X } from "lucide-react";
 import { EP, PL, inp } from "./podAdmin";
 import { confirmDialog } from "@/components/admin/ui/confirmDialog";
+import { EmptyState } from "@/components/admin/ui/kit";
 
 const TYP = { sezon: "Sezon", seria: "Seria tematyczna", wybor: "Wybór" };
 
@@ -49,7 +50,7 @@ export default function PlaylistsTab() {
           )}
         </Droppable>
         <div className="space-y-4">
-          {!pls.length && <p className="text-sm text-foreground/45">Brak playlist.</p>}
+          {!pls.length && <EmptyState>Brak playlist.</EmptyState>}
           {pls.map((p) => (
             <div key={p.id} className="border hairline p-4">
               <div className="flex items-center gap-3 mb-3">

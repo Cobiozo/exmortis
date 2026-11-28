@@ -1,7 +1,8 @@
 import React, { useEffect, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
-import { AlertTriangle, ChevronDown, Loader2, Mail, Search, UserRound } from "lucide-react";
+import { AlertTriangle, ChevronDown, Loader2, Mail, UserRound } from "lucide-react";
 import { base44 } from "@/api/base44Client";
+import { FilterChips, SearchField } from "@/components/admin/ui/kit";
 
 // Skrzynka (28.11.2026): wiadomości z formularza Kontakt — treść, statusy, notatka, odpowiedź z Twojej poczty.
 // Pilne i nowe na górze. Odpowiedź otwiera Twój program pocztowy z adresem i tematem (nic nie wychodzi z panelu).
@@ -98,19 +99,8 @@ export default function InboxPanel() {
         „Odpowiedz z poczty” otwiera Twój program pocztowy z adresem i tematem.
       </p>
       <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
-        <div role="tablist" className="flex flex-wrap gap-2">
-          {TABS.map(([k, l]) => (
-            <button key={k} role="tab" aria-selected={tab === k} onClick={() => setTab(k)}
-              className={`technical text-[10px] px-4 py-2.5 border ${tab === k ? "border-[#C9A24A] bg-[#C9A24A] text-[#0A0A0B]" : "hairline text-foreground/60 hover:text-foreground"}`}>
-              {l.toUpperCase()} <span className="opacity-60">{k === "aktywne" ? counts.aktywne : k === "wszystkie" ? counts.wszystkie : counts[k] || 0}</span>
-            </button>
-          ))}
-        </div>
-        <label className="relative block lg:w-72">
-          <span className="sr-only">Szukaj w wiadomościach</span>
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-foreground/40" aria-hidden="true" />
-          <input value={q} onChange={(e) => setQ(e.target.value)} placeholder="Imię, e-mail albo treść" className="w-full bg-[#0F0F10] border hairline pl-9 pr-3 py-2.5 text-sm focus:outline-none focus:border-[#C9A24A]/60" />
-        </label>
+        <FilterChips items={TABS.map(([k, l]) => [k, l, k === "aktywne" ? counts.aktywne : k === "wszystkie" ? counts.wszystkie : counts[k] || 0])} value={tab} onChange={setTab} label="Status wiadomości" />
+        <SearchField value={q} onChange={setQ} placeholder="Imię, e-mail albo treść" label="Szukaj w wiadomościach" className="lg:w-72" />
       </div>
       {err && <p className="text-sm text-[#E8C547]" role="alert">{err}</p>}
       {!shown.length ? (

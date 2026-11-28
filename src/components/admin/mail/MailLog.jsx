@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import { base44 } from "@/api/base44Client";
 import { MAIL_KINDS } from "@/lib/useMailStatus";
+import { EmptyState } from "@/components/admin/ui/kit";
 
 const LABEL = { wyslany: "WYSŁANY", kolejka: "W KOLEJCE", blad: "BŁĄD", pominiety: "POMINIĘTY" };
 const COLOR = { wyslany: "gold-text", kolejka: "text-foreground/50", blad: "blood-text", pominiety: "text-foreground/30" };
@@ -15,7 +16,7 @@ export default function MailLog() {
         <p className="technical text-[10px] text-foreground/50">DZIENNIK WYSYŁEK</p>
         <button onClick={load} className="btn-ghost !px-3 !py-1.5">{rows ? "Odśwież" : "Pokaż"}</button>
       </div>
-      {rows && rows.length === 0 && <p className="text-sm text-foreground/40">Brak wpisów.</p>}
+      {rows && rows.length === 0 && <EmptyState>Brak wpisów.</EmptyState>}
       {rows && rows.length > 0 && (
         <ul className="divide-y hairline text-sm">
           {rows.map((m) => (

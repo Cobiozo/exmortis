@@ -3,6 +3,7 @@ import { base44 } from "@/api/base44Client";
 import { PL, inp } from "./podAdmin";
 import MusicPlaylistCard from "./MusicPlaylistCard";
 import { confirmDialog } from "@/components/admin/ui/confirmDialog";
+import { EmptyState } from "@/components/admin/ui/kit";
 
 const OPEN_KEY = "exm_admin_pl_open";
 
@@ -39,7 +40,7 @@ export default function MusicPlaylistsTab() {
         <input value={name} onChange={(e) => setName(e.target.value)} placeholder="Nazwa, np. Na trudne noce" className={`${inp} max-w-xs`} />
         <button className="btn-relic !py-2 !px-5">Dodaj playlistę</button>
       </form>
-      {!pls.length && <p className="text-sm text-foreground/45">Brak playlist muzycznych.</p>}
+      {!pls.length && <EmptyState>Brak playlist muzycznych.</EmptyState>}
       {pls.length > 1 && (
         <div className="flex gap-4 text-xs">
           <button onClick={() => setOpen(pls.map((p) => p.id))} className="text-foreground/60 hover:gold-text">Rozwiń wszystkie</button>

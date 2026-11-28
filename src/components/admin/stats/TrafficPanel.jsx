@@ -1,5 +1,6 @@
 import React, { useEffect, useMemo, useState } from "react";
 import { siteStats } from "@/lib/siteStats";
+import { EmptyState } from "@/components/admin/ui/kit";
 
 // RUCH NA STRONIE — własny, anonimowy licznik (sumy dzienne z funkcji site_stats_get).
 // Bez cookies i zgody, więc liczy wszystkich odwiedzających, ale nie rozróżnia osób: to odsłony, nie użytkownicy.
@@ -43,7 +44,7 @@ function Table({ title, rows, label }) {
   return (
     <div className="border hairline p-5 min-w-0">
       <p className="technical text-[11px] gold-text mb-4">{title}</p>
-      {rows.length === 0 ? <p className="text-sm text-foreground/50">Brak danych w tym okresie.</p> : (
+      {rows.length === 0 ? <EmptyState>Brak danych w tym okresie.</EmptyState> : (
         <ul className="space-y-2">
           {rows.map((r) => (
             <li key={r.name} className="text-sm">

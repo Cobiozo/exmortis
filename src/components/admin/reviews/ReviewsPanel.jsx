@@ -2,6 +2,7 @@ import React, { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { base44 } from "@/api/base44Client";
 import { ArrowLeft, Check, X, EyeOff, Star } from "lucide-react";
+import { FilterChips } from "@/components/admin/ui/kit";
 
 const FILTERS = [
   ["oczekuje", "Oczekujące"],
@@ -57,19 +58,7 @@ export default function ReviewsPanel({ onBack }) {
             {data === null ? "ŁADUJĘ..." : `${counts.oczekuje || 0} DO SPRAWDZENIA · ${counts.opublikowana || 0} OPUBLIKOWANYCH`}
           </p>
         </div>
-        <div className="flex flex-wrap gap-2">
-          {FILTERS.map(([k, l]) => (
-            <button
-              key={k}
-              onClick={() => setStatus(k)}
-              className={`technical text-[9px] px-3 py-2 border transition-colors ${
-                status === k ? "border-[#C9A24A] gold-text bg-[#C9A24A]/10" : "hairline text-foreground/50 hover:text-foreground"
-              }`}
-            >
-              {l.toUpperCase()} {counts[k] ? `(${counts[k]})` : ""}
-            </button>
-          ))}
-        </div>
+        <FilterChips items={FILTERS.map(([k, l]) => [k, l, counts[k] || null])} value={status} onChange={setStatus} label="Status opinii" />
       </div>
 
       {data === null ? (

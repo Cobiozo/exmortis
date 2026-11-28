@@ -5,6 +5,7 @@ import TicketsList from "./TicketsList";
 import TemplateEditor from "./TemplateEditor";
 import SharePanel from "./SharePanel";
 import ScannersPanel from "./ScannersPanel";
+import { ViewTabs } from "@/components/admin/ui/kit";
 
 const TABS = [["bilety", "Sprzedane bilety"], ["wzor", "Wzór biletu"], ["udostepnij", "Udostępnianie"], ["skanowanie", "Skanowanie"]];
 
@@ -37,12 +38,7 @@ export default function TicketsPanel({ event, onClose, initialTab = "bilety" }) 
           <a href="/skaner" target="_blank" rel="noreferrer" className="btn-ghost !px-3 !py-2 hidden sm:inline-flex"><ScanLine className="h-4 w-4" /> Skaner</a>
           <button type="button" onClick={onClose} className="h-11 w-11 flex items-center justify-center text-foreground/60 hover:text-foreground" aria-label="Zamknij"><X className="h-5 w-5" /></button>
         </div>
-        <div className="mx-auto max-w-[1200px] flex gap-2 mt-4 overflow-x-auto" role="tablist">
-          {TABS.map(([k, l]) => (
-            <button key={k} type="button" role="tab" aria-selected={tab === k} onClick={() => setTab(k)}
-              className={`technical text-[10px] px-4 py-2 border whitespace-nowrap ${tab === k ? "border-[#C9A24A] gold-text" : "hairline text-foreground/50 hover:text-foreground"}`}>{l.toUpperCase()}</button>
-          ))}
-        </div>
+        <div className="mx-auto max-w-[1200px] mt-4"><ViewTabs tabs={TABS} value={tab} onChange={setTab} label="Bilety" /></div>
       </div>
       <div className="mx-auto max-w-[1200px] px-4 sm:px-8 py-8">
         {err && <p role="alert" className="text-sm text-[#E5484D] mb-6">{err}</p>}

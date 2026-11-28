@@ -2,6 +2,7 @@ import React, { useEffect, useState } from "react";
 import { Copy, Pencil, Trash2, X } from "lucide-react";
 import { EP, GU, PL, STATUS } from "./podAdmin";
 import EpisodeForm from "./EpisodeForm";
+import { EmptyState } from "@/components/admin/ui/kit";
 
 export default function EpisodesTab() {
   const [eps, setEps] = useState(null);
@@ -40,7 +41,7 @@ export default function EpisodesTab() {
         <select value={status} onChange={(e) => setStatus(e.target.value)} className="bg-black border hairline px-3 text-sm"><option value="">Wszystkie statusy</option>{Object.entries(STATUS).map(([v, l]) => <option key={v} value={v}>{l}</option>)}</select>
         <input value={q} onChange={(e) => setQ(e.target.value)} placeholder="Szukaj tytułu" className="bg-transparent border hairline px-3 text-sm" />
       </div>
-      {!eps.length && <p className="text-sm text-foreground/45">Brak odcinków.</p>}
+      {!eps.length && <EmptyState>Brak odcinków.</EmptyState>}
       {eps.map((e) => (
         <div key={e.id} className="border hairline p-4 flex flex-wrap items-center gap-4 text-sm">
           <span className="font-mono gold-text w-10">#{e.numer ?? "—"}</span>

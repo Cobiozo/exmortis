@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { Loader2, Download, ShieldCheck, KeyRound } from "lucide-react";
 import { base44 } from "@/api/base44Client";
+import { SkeletonList } from "@/components/admin/ui/kit";
 
 // Skrypt dla serwera z filmami (PHP + Apache, typowy hosting). Wpuszcza tylko podpisane linki /v/… przed terminem
 // i obsługuje przewijanie (Range). Pliki leżą w katalogu _wideo/, do którego nie ma wejścia z przeglądarki.
@@ -98,7 +99,7 @@ export default function VideoProtectionSettings() {
         </div>
       </div>
 
-      {!s ? <Loader2 className="h-5 w-5 animate-spin gold-text" /> : (
+      {!s ? <SkeletonList rows={3} /> : (
         <>
           <div className="flex flex-wrap items-center gap-4 text-sm">
             <span className={s.enabled ? "text-[#9FD3A0]" : "text-foreground/50"}>{s.enabled ? "Ochrona włączona" : "Ochrona wyłączona"}</span>

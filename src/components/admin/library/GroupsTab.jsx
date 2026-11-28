@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { Loader2, Plus, Pencil, Trash2, Users } from "lucide-react";
+import { Plus, Pencil, Trash2, Users } from "lucide-react";
 import { lib } from "./libApi";
 import LibModal from "./LibModal";
 import GroupForm from "./GroupForm";
@@ -7,6 +7,7 @@ import GroupPanel from "./GroupPanel";
 // Rozwinięcie grupy pokazuje jej kartę: członków, materiały i wiadomości.
 import MessageForm from "./MessageForm";
 import AssignDialog from "./AssignDialog";
+import { SkeletonList } from "@/components/admin/ui/kit";
 
 export default function GroupsTab() {
   const [items, setItems] = useState(null);
@@ -44,7 +45,7 @@ export default function GroupsTab() {
 
       {err && <p className="text-sm blood-text">{err}</p>}
 
-      {!items ? <Loader2 className="h-5 w-5 animate-spin gold-text" /> : items.length === 0 ? (
+      {!items ? <SkeletonList rows={3} /> : items.length === 0 ? (
         <p className="text-sm text-foreground/50">Nie ma jeszcze żadnej grupy.</p>
       ) : (
         <div className="space-y-3">

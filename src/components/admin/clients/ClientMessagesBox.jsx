@@ -1,9 +1,9 @@
 import React, { useEffect, useState } from "react";
-import { Loader2 } from "lucide-react";
 import { lib, inputCls, plDateTime } from "@/components/admin/library/libApi";
 import AssignDialog from "@/components/admin/library/AssignDialog";
 import MessageForm from "@/components/admin/library/MessageForm";
 import { base44 } from "@/api/base44Client";
+import { SkeletonList } from "@/components/admin/ui/kit";
 
 // Sekcja „Wiadomości" karty klienta i szybkie akcje. „Umów sesję" pokazuje się tylko, gdy moduł rezerwacji działa.
 export default function ClientMessagesBox({ email, onChange }) {
@@ -34,7 +34,7 @@ export default function ClientMessagesBox({ email, onChange }) {
     catch (e) { setErr(e.message); } finally { setBusy(""); }
   };
 
-  if (!d) return err ? <p className="text-sm blood-text">{err}</p> : <Loader2 className="h-5 w-5 animate-spin gold-text" />;
+  if (!d) return err ? <p className="text-sm blood-text">{err}</p> : <SkeletonList rows={3} />;
 
   return (
     <section className="space-y-4">

@@ -2,6 +2,7 @@ import React from "react";
 import { X } from "lucide-react";
 import { bk, DAYS, plDateTime } from "./api";
 import BlockForm from "./BlockForm";
+import { EmptyState } from "@/components/admin/ui/kit";
 
 export default function BlocksPanel({ blocks, onSaved }) {
   const del = async (id) => { await bk("delete_block", { id }); onSaved(); };
@@ -10,7 +11,7 @@ export default function BlocksPanel({ blocks, onSaved }) {
       <BlockForm onSaved={onSaved} />
       <div className="space-y-2">
         <p className="technical text-[10px] gold-text">AKTYWNE BLOKADY</p>
-        {blocks.length === 0 && <p className="text-sm text-foreground/50">Brak blokad.</p>}
+        {blocks.length === 0 && <EmptyState>Brak blokad.</EmptyState>}
         {blocks.map((b) => (
           <div key={b.id} className="flex justify-between gap-3 border hairline p-3 text-sm">
             <span>

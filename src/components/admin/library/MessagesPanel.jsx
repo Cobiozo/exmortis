@@ -1,10 +1,11 @@
 import React, { useEffect, useState } from "react";
-import { Loader2, Plus, Info } from "lucide-react";
+import { Plus, Info } from "lucide-react";
 import { Link } from "react-router-dom";
 import { lib } from "./libApi";
 import MessageForm from "./MessageForm";
 import MessageRow from "./MessageRow";
 import TemplatesTab from "./TemplatesTab";
+import { ViewTabs, SkeletonList, EmptyState } from "@/components/admin/ui/kit";
 
 const TABS = [
   ["WYSLANA", "Wysłane", "wyslane"],
@@ -31,7 +32,7 @@ export default function MessagesPanel({ presetTarget }) {
   }, []);
   useEffect(() => { if (mode && mode !== "off") load(); }, [mode]);
 
-  if (mode === undefined) return <Loader2 className="h-5 w-5 animate-spin gold-text" />;
+  if (mode === undefined) return <SkeletonList rows={3} />;
   if (mode === "off") return (
     <p className="text-sm text-foreground/50">Moduł wiadomości jest wyłączony (Ustawienia strony → Moduły).</p>
   );
@@ -42,15 +43,8 @@ export default function MessagesPanel({ presetTarget }) {
 
   return (
     <div className="space-y-8">
-      <div className="flex flex-wrap items-center justify-between gap-4 border-b hairline">
-        <div className="flex flex-wrap gap-2">
-          {TABS.map(([k, l, c]) => (
-            <button key={k} onClick={() => setTab(k)}
-              className={`px-4 py-3 technical text-[10px] border-b-2 -mb-px ${tab === k ? "border-[#C9A24A] gold-text" : "border-transparent text-foreground/50 hover:gold-text"}`}>
-              {l}{c && cnt[c] !== undefined ? ` (${cnt[c]})` : ""}
-            </button>
-          ))}
-        </div>
+      <div className="flex flex-wrap items-end justify-between gap-4">
+        <div className="flex-1 min-w-0"><ViewTabs tabs={TABS.map(([k, l, c]) => [k, l, c && cnt[c] !== undefined ? cnt[c] : null])} value={tab} onChange={setTab} label="Wiadomości" /></div>
         <button className="btn-relic mb-2" onClick={() => setForm({ presetTarget })}><Plus className="h-4 w-4" /> Nowa wiadomość</button>
       </div>
 
@@ -66,8 +60,8 @@ export default function MessagesPanel({ presetTarget }) {
 
       {tab === "SZABLONY" ? (
         <TemplatesTab onUse={(t) => setForm({ template: t })} />
-      ) : !d ? <Loader2 className="h-5 w-5 animate-spin gold-text" /> : items.length === 0 ? (
-        <p className="text-sm text-foreground/50">Brak wiadomości w tym widoku.</p>
+      ) : !d ? <SkeletonList rows={3} /> : items.length === 0 ? (
+        <EmptyState>Brak wiadomości w tym widoku.</EmptyState>
       ) : (
         <div className="space-y-3">
           {items.map((m) => (

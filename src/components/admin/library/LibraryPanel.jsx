@@ -1,9 +1,9 @@
 import React, { useEffect, useState } from "react";
-import { Loader2 } from "lucide-react";
 import { lib } from "./libApi";
 import LibraryDisabled from "./LibraryDisabled";
 import MaterialsTab from "./MaterialsTab";
 import CollectionsTab from "./CollectionsTab";
+import { ViewTabs, SkeletonList } from "@/components/admin/ui/kit";
 
 const TABS = [["materialy", "Materiały"], ["kolekcje", "Kolekcje"]];
 
@@ -16,19 +16,12 @@ export default function LibraryPanel() {
     lib("settings").then((d) => setS(d.settings)).catch(() => setS({ library_mode: "off", messages_mode: "off" }));
   }, []);
 
-  if (!s) return <Loader2 className="h-5 w-5 animate-spin gold-text" />;
+  if (!s) return <SkeletonList rows={3} />;
   if (s.library_mode === "off" && s.messages_mode === "off") return <LibraryDisabled />;
 
   return (
     <div className="space-y-8">
-      <div className="flex flex-wrap gap-2 border-b hairline">
-        {TABS.map(([k, l]) => (
-          <button key={k} onClick={() => setTab(k)}
-            className={`px-4 py-3 technical text-[10px] border-b-2 -mb-px ${tab === k ? "border-[#C9A24A] gold-text" : "border-transparent text-foreground/50 hover:gold-text"}`}>
-            {l}
-          </button>
-        ))}
-      </div>
+      <ViewTabs tabs={TABS} value={tab} onChange={setTab} label="Biblioteka" />
       {tab === "materialy" ? <MaterialsTab /> : <CollectionsTab />}
     </div>
   );

@@ -4,6 +4,7 @@ import { lib } from "./libApi";
 import LibModal from "./LibModal";
 import CollectionForm from "./CollectionForm";
 import AssignDialog from "./AssignDialog";
+import { SkeletonList } from "@/components/admin/ui/kit";
 
 export default function CollectionsTab() {
   const [items, setItems] = useState(null);
@@ -33,7 +34,7 @@ export default function CollectionsTab() {
 
       {err && <p className="text-sm blood-text">{err}</p>}
 
-      {!items ? <Loader2 className="h-5 w-5 animate-spin gold-text" /> : items.length === 0 ? (
+      {!items ? <SkeletonList rows={3} /> : items.length === 0 ? (
         <p className="text-sm text-foreground/50">Nie ma jeszcze żadnej kolekcji.</p>
       ) : (
         <div className="space-y-3">

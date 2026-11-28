@@ -8,6 +8,7 @@ import { inputCls, labelCls, smallBtn } from "../ui";
 import LinkRows from "./LinkRows";
 import NavVersions from "./NavVersions";
 import NavPreview from "./NavPreview";
+import { SkeletonList } from "@/components/admin/ui/kit";
 
 // Menu i stopka: szkic z autozapisem, publikacja z zapisem wersji.
 export default function NavEditor() {
@@ -34,7 +35,7 @@ export default function NavEditor() {
     clearTimeout(timer.current);
     timer.current = setTimeout(async () => { await persist({ szkic: next, zmiany_niezapisane: true }); setState("szkic"); }, 800);
   };
-  if (!d) return <Loader2 className="h-5 w-5 animate-spin gold-text" />;
+  if (!d) return <SkeletonList rows={3} />;
 
   const setCol = (i, patch) => edit({ ...d, kolumny: d.kolumny.map((c, j) => (j === i ? { ...c, ...patch } : c)) });
   const bad = [...d.menu, d.test, ...d.kolumny.flatMap((c) => c.links)].some((l) => !l.label?.trim() || linkError(l.to));

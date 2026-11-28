@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
-import { Loader2 } from "lucide-react";
 import { lib, plDateTime, inputCls } from "./libApi";
+import { SkeletonList, EmptyState } from "@/components/admin/ui/kit";
 
 // Historia zmian (mb_log): filtr po rodzaju działania i okresie. Adresy e-mail przychodzą zamaskowane z serwera.
 // Czytelne nazwy działań (28.11.2026) — w bazie zostają nazwy techniczne.
@@ -46,8 +46,8 @@ export default function HistoryPanel() {
       {err && <p className="text-sm blood-text">{err}</p>}
       <p className="text-xs text-foreground/45">Bez treści wiadomości. Adresy e-mail są maskowane (da***@gmail.com).</p>
 
-      {!d ? <Loader2 className="h-5 w-5 animate-spin gold-text" /> : d.items.length === 0 ? (
-        <p className="text-sm text-foreground/50">Brak wpisów dla tych filtrów.</p>
+      {!d ? <SkeletonList rows={3} /> : d.items.length === 0 ? (
+        <EmptyState>Brak wpisów dla tych filtrów.</EmptyState>
       ) : (
         <div className="border hairline divide-y divide-[#3D3D3F]/60">
           {d.items.map((r, i) => (

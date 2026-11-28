@@ -1,8 +1,8 @@
 import React, { useEffect, useState } from "react";
-import { Loader2 } from "lucide-react";
 import { base44 } from "@/api/base44Client";
 import FindOwner from "./FindOwner";
 import ClientErrors from "./ClientErrors";
+import { SkeletonList, EmptyState } from "@/components/admin/ui/kit";
 
 const LABEL = { blokada: "Blokada wideo", wspoldzielenie: "Podejrzenie współdzielenia konta", znak_wodny: "Naruszenie znaku wodnego", wideo_limit: "Limit żądań wideo", rabat: "Limit prób kodu" };
 
@@ -50,7 +50,7 @@ export default function SecurityPanel() {
           <button onClick={block} disabled={busy} className="btn-ghost !px-4 !py-2 text-[10px]">{busy ? "Blokuję…" : "Zablokuj odtwarzanie"}</button>
         </div>
         {msg && <p className="text-xs gold-text mb-3">{msg}</p>}
-        {!alerts ? <Loader2 className="h-5 w-5 animate-spin gold-text" /> : alerts.length === 0 ? <p className="text-sm text-foreground/50">Brak alertów.</p> : (
+        {!alerts ? <SkeletonList rows={3} /> : alerts.length === 0 ? <EmptyState>Brak alertów.</EmptyState> : (
           <div className="border hairline divide-y divide-[#3D3D3F]/60">
             {alerts.map((a) => {
               const activeBlock = a.type === "blokada" && !a.resolved && a.until > new Date().toISOString();

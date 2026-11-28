@@ -3,6 +3,7 @@ import { Loader2, Plus, ArrowLeft, ExternalLink } from "lucide-react";
 import { base44 } from "@/api/base44Client";
 import PopupCard, { boxClass } from "@/components/exmortis/popup/PopupCard";
 import { toLocal, fromLocal } from "./annForm";
+import { FilterChips, EmptyState } from "@/components/admin/ui/kit";
 
 // Panel → Ogłoszenia i popupy → Kampanie popup (wariant M, 17.11.2026).
 // Wiele kampanii, ale odwiedzający widzi najwyżej jeden popup w wizycie (priorytet 1 = najważniejszy).
@@ -135,12 +136,7 @@ export default function PopupCampaigns() {
         </button>
       </div>
 
-      <div className="flex gap-2 overflow-x-auto pb-1 -mx-1 px-1" role="tablist" aria-label="Filtr kampanii">
-        {FILTERS.map(([k, l]) => (
-          <button key={k} type="button" role="tab" aria-selected={filter === k} onClick={() => setFilter(k)}
-            className={`flex-none min-h-[36px] px-3.5 rounded-full text-[13px] border ${filter === k ? "border-[#C9A24A]/60 bg-[#C9A24A]/15 text-[#F1EDE3]" : "border-white/12 text-foreground/65 hover:text-foreground"}`}>{l}</button>
-        ))}
-      </div>
+      <FilterChips items={FILTERS} value={filter} onChange={setFilter} label="Filtr kampanii" />
 
       <div className="flex items-start gap-3 rounded-xl border border-[#C9A24A]/30 bg-[#C9A24A]/[.06] px-4 py-3 text-sm">
         <span className={`mt-1.5 h-2 w-2 flex-none rounded-full ${live.length ? "bg-emerald-300" : "bg-white/30"}`} aria-hidden="true" />
@@ -153,7 +149,7 @@ export default function PopupCampaigns() {
 
       {err && <p role="alert" className="text-sm blood-text">{err}</p>}
 
-      {!shown.length ? <p className="text-sm text-foreground/55">Brak kampanii w tym widoku.</p> : (
+      {!shown.length ? <EmptyState>Brak kampanii w tym widoku.</EmptyState> : (
         <ul className="space-y-2.5">
           {shown.map((k) => {
             const s = stat[k.id] || {};

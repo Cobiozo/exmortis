@@ -1,5 +1,4 @@
 import React, { useEffect, useState } from "react";
-import { Loader2 } from "lucide-react";
 import { base44 } from "@/api/base44Client";
 import { plDate, TYPE_LABEL } from "@/components/account/accountUtils";
 import AccessActions from "./AccessActions";
@@ -8,12 +7,13 @@ import ClientDataBox from "./ClientDataBox";
 import ClientLibraryBox from "./ClientLibraryBox";
 import RoleBox from "./RoleBox";
 import ClientTimeline from "./ClientTimeline";
+import { SkeletonList } from "@/components/admin/ui/kit";
 
 export default function ClientDetail({ email, onChange, libOn }) {
   const [d, setD] = useState(null);
   const load = () => base44.functions.invoke("adminClients", { action: "detail", email }).then((r) => setD(r.data));
   useEffect(() => { load(); }, [email]);
-  if (!d) return <Loader2 className="h-5 w-5 animate-spin gold-text" />;
+  if (!d) return <SkeletonList rows={3} />;
 
   return (
     <div className="space-y-10">

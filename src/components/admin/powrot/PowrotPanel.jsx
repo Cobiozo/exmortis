@@ -5,6 +5,7 @@ import PowrotAppCard from "./PowrotAppCard";
 import PowrotDeleteDialog from "./PowrotDeleteDialog";
 import { STATUS_LABEL, TABS } from "./powrotTemplates";
 import { POWROT } from "@/lib/powrotOffer";
+import { FilterChips } from "@/components/admin/ui/kit";
 
 // Kandydaci i uczestnicy POWRÓT (v2, 18.11.2026): zakładki według etapu, wskaźniki lejka,
 // sygnał „czeka ponad 48 h” (obietnica odpowiedzi w 72 h) i nieprzeczytane wiadomości uczestników.
@@ -96,17 +97,7 @@ export default function PowrotPanel() {
       {open && (
         <PowrotAppCard key={open.id} a={open} onDelete={() => setDelId(open.id)} onReload={load} onClose={() => setOpenId(null)} />
       )}
-      <div className="flex flex-wrap gap-2" role="tablist" aria-label="Etap">
-        {TABS.map((t) => {
-          const n = rows.filter((r) => inTab(r, t)).length;
-          return (
-            <button key={t.key} role="tab" aria-selected={tab === t.key} onClick={() => setTab(t.key)}
-              className={`rounded-full border px-4 py-1.5 text-xs ${tab === t.key ? "border-[#C9A24A] gold-text bg-[#C9A24A]/10" : "hairline text-foreground/60"}`}>
-              {t.label} · {n}
-            </button>
-          );
-        })}
-      </div>
+      <FilterChips items={TABS.map((t) => [t.key, t.label, rows.filter((r) => inTab(r, t)).length])} value={tab} onChange={setTab} label="Etap" />
       <div className="overflow-x-auto border hairline rounded-xl">
         <table className="w-full text-sm">
           <thead className="technical text-[9px] text-foreground/40 text-left">

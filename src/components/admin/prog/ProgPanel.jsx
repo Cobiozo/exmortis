@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { base44 } from "@/api/base44Client";
+import { FilterChips } from "@/components/admin/ui/kit";
 
 // Rozmowa na progu — uczestnicy (18.11.2026). Osobna usługa, niezależna od POWRÓT.
 // Statusy liczy serwer z zamówienia, pakietu i rezerwacji; tu: przegląd, ankieta, podsumowanie, wiadomość, zamknięcie.
@@ -122,14 +123,9 @@ export default function ProgPanel() {
           <div key={l} className="border hairline rounded-xl px-4 py-3 min-w-[120px]"><p className="technical text-[9px] text-foreground/45">{l.toUpperCase()}</p><p className="text-xl text-[#F5EFE1] mt-1">{v ?? 0}</p></div>
         ))}
       </div>
-      <div className="flex flex-wrap gap-2" role="tablist">
-        {TABS.map(([k, l, fn]) => (
-          <button key={k} role="tab" aria-selected={tab === k} onClick={() => setTab(k)}
-            className={`text-sm px-4 py-2 border ${tab === k ? "border-[#C9A24A] gold-text" : "hairline text-foreground/60"}`}>{l} · {data.rows.filter(fn).length}</button>
-        ))}
-      </div>
+      <FilterChips items={TABS.map(([k, l, fn]) => [k, l, data.rows.filter(fn).length])} value={tab} onChange={setTab} label="Etap" />
       <div className="border hairline">
-        {rows.length === 0 && <p className="text-sm text-foreground/50 p-4">Brak zgłoszeń w tej zakładce.</p>}
+        {rows.length === 0 && <p className="text-sm text-foreground/55 px-6 py-10 text-center">Brak zgłoszeń w tej zakładce.</p>}
         {rows.map((r) => (
           <div key={r.id} className="border-b hairline last:border-b-0">
             <button onClick={() => setOpenId(openId === r.id ? null : r.id)} className="w-full text-left p-4 grid sm:grid-cols-4 gap-2 hover:bg-white/5">

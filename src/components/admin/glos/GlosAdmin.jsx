@@ -10,6 +10,7 @@ import MusicPlaylistsTab from "@/components/admin/podcast/MusicPlaylistsTab";
 import ApplicationsTab from "@/components/admin/applications/ApplicationsTab";
 import { APP } from "@/components/admin/applications/appUtils";
 import PlaysBox from "./PlaysBox";
+import { ViewTabs } from "@/components/admin/ui/kit";
 
 // Głos w panelu (27.11.2026): jedna sekcja zamiast „Głos” i „Podcast” — jak na stronie /glos:
 // Podcast (odcinki, sezony i serie, goście, zgłoszenia gości), Muzyka (utwory, playlisty), Ustawienia.
@@ -69,15 +70,7 @@ export default function GlosAdmin() {
         </div>
       </div>
 
-      <div role="tablist" aria-label={area[1]} className="flex flex-wrap gap-2 border-b hairline">
-        {tabs.map(([k, label]) => (
-          <button key={k} role="tab" aria-selected={k === tabKey} onClick={() => go(areaKey, k)}
-            className={`technical text-[10px] px-4 py-2 border-b-2 -mb-px ${k === tabKey ? "border-[#C9A24A] gold-text" : "border-transparent text-foreground/50 hover:text-foreground/80"}`}>
-            {label.toUpperCase()}
-            {k === "zgloszenia" && fresh > 0 && <span className="ml-1.5 gold-text">({fresh})</span>}
-          </button>
-        ))}
-      </div>
+      <ViewTabs tabs={tabs.map(([k, label]) => [k, label, k === "zgloszenia" && fresh > 0 ? fresh : null])} value={tabKey} onChange={(k) => go(areaKey, k)} label={area[1]} />
 
       <Cur key={`${areaKey}-${tabKey}`} />
     </div>

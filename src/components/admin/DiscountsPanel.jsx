@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
-import { Loader2 } from "lucide-react";
 import { base44 } from "@/api/base44Client";
 import DiscountForm from "./DiscountForm";
+import { SkeletonList, EmptyState } from "@/components/admin/ui/kit";
 
 const E = base44.entities.DiscountCode;
 
@@ -48,8 +48,8 @@ export default function DiscountsPanel() {
     <div className="grid lg:grid-cols-[360px_1fr] gap-10">
       {codes && <WelcomeBox codes={codes.filter((c) => c.powitalny)} />}
       <DiscountForm onDone={load} editing={editing} onCancel={() => setEditing(null)} />
-      {!codes ? <Loader2 className="h-5 w-5 animate-spin gold-text" /> : codes.filter((c) => !c.powitalny).length === 0 ? (
-        <p className="text-sm text-foreground/50">Brak kodów rabatowych.</p>
+      {!codes ? <SkeletonList rows={3} /> : codes.filter((c) => !c.powitalny).length === 0 ? (
+        <EmptyState>Brak kodów rabatowych.</EmptyState>
       ) : (
         <div className="border hairline divide-y divide-[#3D3D3F]/60">
           {codes.filter((c) => !c.powitalny).map((c) => (

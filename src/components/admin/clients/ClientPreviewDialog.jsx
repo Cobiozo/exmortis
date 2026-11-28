@@ -1,8 +1,8 @@
 import React, { useEffect, useState } from "react";
-import { Loader2 } from "lucide-react";
 import { lib, plDateTime, KIND_LABEL } from "@/components/admin/library/libApi";
 import { sanitizeHtml } from "@/lib/sanitizeHtml";
 import LibModal from "@/components/admin/library/LibModal";
+import { SkeletonList } from "@/components/admin/ui/kit";
 
 // „Podgląd oczami klienta" — tylko do odczytu. Nic nie jest oznaczane jako przeczytane
 // i nie otwieramy podpisanych linków do plików (same kafelki). Wpis w Historii zmian powstaje na serwerze.
@@ -19,7 +19,7 @@ export default function ClientPreviewDialog({ email, onClose }) {
       footer={<button className="btn-ghost" onClick={onClose}>Zamknij</button>}>
       <p className="technical text-[10px] gold-text border hairline px-3 py-2">Podgląd — nic nie zostanie oznaczone jako przeczytane</p>
       {err && <p className="text-sm blood-text">{err}</p>}
-      {!d ? <Loader2 className="h-5 w-5 animate-spin gold-text" /> : (
+      {!d ? <SkeletonList rows={3} /> : (
         <div className="space-y-8">
           <section>
             <p className="technical text-[10px] text-foreground/50 mb-3">Biblioteka ({d.library?.items?.length || 0})</p>

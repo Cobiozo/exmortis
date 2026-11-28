@@ -1,10 +1,11 @@
 import React, { useEffect, useState } from "react";
-import { Loader2, Plus } from "lucide-react";
+import { Plus } from "lucide-react";
 import { lib, inputCls, KINDS, KIND_LABEL } from "./libApi";
 import SpaceBar from "./SpaceBar";
 import MaterialRow from "./MaterialRow";
 import MaterialForm from "./MaterialForm";
 import AssignDialog from "./AssignDialog";
+import { SkeletonList, EmptyState } from "@/components/admin/ui/kit";
 
 export default function MaterialsTab() {
   const [items, setItems] = useState(null);
@@ -61,9 +62,9 @@ export default function MaterialsTab() {
       {err && <p className="text-sm blood-text">{err}</p>}
 
       {!items ? (
-        <Loader2 className="h-5 w-5 animate-spin gold-text" />
+        <SkeletonList rows={3} />
       ) : items.length === 0 ? (
-        <p className="text-sm text-foreground/50">Brak materiałów dla tego filtra.</p>
+        <EmptyState>Brak materiałów dla tego filtra.</EmptyState>
       ) : (
         <div className="space-y-3">
           {items.map((m) => (

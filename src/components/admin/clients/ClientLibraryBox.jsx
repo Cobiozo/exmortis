@@ -2,6 +2,7 @@ import React, { useEffect, useState } from "react";
 import { Loader2, X, Plus } from "lucide-react";
 import { lib, inputCls, KIND_LABEL, plDate } from "@/components/admin/library/libApi";
 import ClientMessagesBox from "./ClientMessagesBox";
+import { SkeletonList } from "@/components/admin/ui/kit";
 // Sekcja „Wiadomości" karty klienta żyje we własnym pliku (historia, stan przeczytania, szybkie akcje).
 
 const Dot = ({ c }) => <span className="h-2.5 w-2.5 inline-block" style={{ background: c || "#3D3D3F" }} />;
@@ -37,7 +38,7 @@ export default function ClientLibraryBox({ email, onChange }) {
     catch (e) { setErr(e.message); } finally { setBusy(""); }
   };
 
-  if (!d) return err ? <p className="text-sm blood-text">{err}</p> : <Loader2 className="h-5 w-5 animate-spin gold-text" />;
+  if (!d) return err ? <p className="text-sm blood-text">{err}</p> : <SkeletonList rows={3} />;
   const manual = grupy.filter((g) => g.kind === "RECZNA");
   const mine = new Set((d.groups || []).map((g) => g.id));
 

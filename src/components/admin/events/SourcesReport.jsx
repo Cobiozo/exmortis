@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import { Copy, Check } from "lucide-react";
 import { SITE_URL } from "@/config/site";
+import { EmptyState } from "@/components/admin/ui/kit";
 
 // Skąd przychodzą zapisy: zestawienie źródeł (oznaczenie ?src= w linku albo rozpoznana strona, z której ktoś przyszedł)
 // i obecność (wejście do pokoju przez osobisty link). Plus gotowe linki z oznaczeniem do wklejenia w kanałach.
@@ -51,7 +52,7 @@ export default function SourcesReport({ event, parts }) {
         {joinedTotal > 0 && <p className="technical text-[10px] text-foreground/50">WESZŁO DO POKOJU: <span className="gold-text">{joinedTotal}</span> z {total}</p>}
       </div>
       {total === 0 ? (
-        <p className="text-sm text-foreground/50">Brak zapisów.</p>
+        <EmptyState>Brak zapisów.</EmptyState>
       ) : (
         <table className="w-full text-sm">
           <thead>
