@@ -3,6 +3,7 @@
 // Token zostaje po stronie serwera: nigdy nie trafia do odpowiedzi, do rejestru ani do treści wydarzenia.
 // Każdy błąd Google trafia do kolejki ponowień i nigdy nie przewraca ani nie cofa rezerwacji.
 import { runSql, escStr } from "./supabase.ts";
+import { accessToken, authRow } from "./googleCal.ts";
 
 const API = "https://www.googleapis.com/calendar/v3";
 const CAL_NAME = "exmortis · sesje";
@@ -19,11 +20,8 @@ async function gerr(r) {
   return `${r.status}${m ? " · " + m.slice(0, 160) : ""}`;
 }
 
-async function token(base44) {
-  const { accessToken } = await base44.asServiceRole.connectors.getConnection("googlecalendar");
-  if (!accessToken) throw new Error("brak tokenu Google");
-  return accessToken;
-}
+// Token z własnego połączenia OAuth (googleCal.ts) — łącznik Base44 nie istnieje od migracji.
+const token = (base44) => accessToken(base44);
 
 const call = (tk, path, init = {}) =>
   fetch(`${API}${path}`, { ...init, headers: { Authorization: `Bearer ${tk}`, "Content-Type": "application/json", ...(init.headers || {}) } });
@@ -178,8 +176,9 @@ export async function googleStatus(base44) {
   const [s] = await runSql(base44, `SELECT google_calendar_id, google_busy, google_status, google_status_at, google_error
     FROM public.bk_settings WHERE id = 1`, true).catch(() => []);
   const [q] = await runSql(base44, `SELECT count(*)::int AS n FROM public.bk_gcal_queue`, true).catch(() => []);
-  let account = null, connected = false;
-  try {
+  const auth = await authRow(base44);
+  let account = auth?.account || null, connected = false;
+  if (auth) try {
     const tk = await token(base44);
     const r = await fetch("https://openidconnect.googleapis.com/v1/userinfo", { headers: { Authorization: `Bearer ${tk}` } });
     if (r.ok) { const j = await r.json(); account = j.email || null; connected = true; }
@@ -189,5 +188,6 @@ export async function googleStatus(base44) {
     connected, account, calendar_id: s?.google_calendar_id || null, busy: s?.google_busy !== false,
     status: s?.google_status || null, status_at: s?.google_status_at || null, error: s?.google_error || null,
     pending: q?.n || 0, scopes: ["calendar.app.created", "calendar.freebusy", "email"],
+    saved: !!auth, connected_at: auth?.connected_at || null,
   };
 }

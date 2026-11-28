@@ -1,4 +1,5 @@
 import { createClientFromRequest } from "../_shared/compat.ts";
+import { googleConnected } from "../_shared/googleCal.ts";
 import { runSql, escStr, requireAdmin } from "../_shared/supabase.ts";
 import { getSetting } from "../_shared/settings.ts";
 import { mailReady } from "../_shared/smtp.ts";
@@ -79,8 +80,7 @@ async function readiness(base44) {
   const lastBackup = (await base44.asServiceRole.entities.BackupFile
     .filter({ status: "gotowa" }, "-created_date", 1).catch(() => []))[0] || null;
   // Łącznik Google Calendar: sprawdzamy samo połączenie (token zostaje na serwerze).
-  const gcalConn = await base44.asServiceRole.connectors
-    .getConnection("googlecalendar").then(() => true).catch(() => false);
+  const gcalConn = await googleConnected(base44).catch(() => false);
 
   const mailOk = mailReady(smtp);
   const payuMissing = [["posId", "POS ID"], ["clientId", "Client ID"], ["clientSecret", "Client Secret"], ["secondKey", "klucz drugi"]]
