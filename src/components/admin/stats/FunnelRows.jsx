@@ -1,6 +1,8 @@
 import React from "react";
 
-const pct = (v, prev) => (prev > 0 ? `${Math.round((v / prev) * 100)}%` : "—");
+// Procent względem poprzedniego kroku; gdy krok ma więcej osób niż poprzedni (wejścia z innych źródeł niż test),
+// procent powyżej 100% wprowadzał w błąd — pokazujemy wtedy „więcej” (28.11.2026).
+const pct = (v, prev) => (prev > 0 ? (v > prev ? "więcej" : `${Math.round((v / prev) * 100)}%`) : "—");
 
 // Wiersze lejka: krok, liczba, % względem poprzedniego kroku.
 export default function FunnelRows({ rows }) {
@@ -23,6 +25,9 @@ export default function FunnelRows({ rows }) {
           <span className="text-right technical text-[10px] text-foreground/55 tabular-nums col-span-2 sm:col-span-1">
             {r.value === null ? "—" : pct(r.value, rows[i - 1]?.value || 0)}
           </span>
+          {i > 0 && r.value !== null && (rows[i - 1]?.value || 0) > 0 && r.value > rows[i - 1].value && !r.note && (
+            <span className="col-span-2 sm:col-span-3 text-xs text-foreground/45">Więcej niż w poprzednim kroku — część osób trafia tu z innych miejsc niż poprzedni krok.</span>
+          )}
           {r.note && <span className="col-span-2 sm:col-span-3 text-xs text-foreground/50">{r.note}</span>}
         </div>
       ))}

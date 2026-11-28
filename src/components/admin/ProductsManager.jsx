@@ -59,7 +59,8 @@ export default function ProductsManager() {
   const [editing, setEditing] = useState(null); // null | "new" | produkt
   const [busy, setBusy] = useState(false);
   const [waitlist, setWaitlist] = useState(null);
-  const [reviews, setReviews] = useState(false);
+  // ?opinie=1 (z pulpitu „Opinie do sprawdzenia”) otwiera od razu moderację opinii.
+  const [reviews, setReviews] = useState(() => { try { return new URLSearchParams(window.location.search).get("opinie") === "1"; } catch { return false; } });
   const [pending, setPending] = useState(0);
   const [notice, setNotice] = useState(""); // np. „Powiadamiam N osób z listy oczekujących"
   const [tab, setTabState] = useState(readTab);

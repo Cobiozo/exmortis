@@ -78,6 +78,15 @@ export default function MfaGate({ children }) {
   const [busy, setBusy] = useState(false);
   const [enroll, setEnroll] = useState(false);
   useEffect(() => { supaMfa.state().then(setSt).catch(() => setSt(null)); }, []);
+  // 28.11.2026: sesja może stracić potwierdzenie kodem, gdy panel jest otwarty (np. nowe logowanie w innej karcie).
+  // Sprawdzamy ponownie po powrocie do karty i co 2 minuty — wtedy zamiast „Brak uprawnień” w modułach pojawia się ekran kodu.
+  useEffect(() => {
+    const recheck = () => { if (document.visibilityState === "visible") supaMfa.state().then((v) => v && setSt(v)).catch(() => {}); };
+    const t = setInterval(recheck, 120000);
+    window.addEventListener("focus", recheck);
+    document.addEventListener("visibilitychange", recheck);
+    return () => { clearInterval(t); window.removeEventListener("focus", recheck); document.removeEventListener("visibilitychange", recheck); };
+  }, []);
 
   // Sprawdzanie trwa — panel rysuje się od razu (dane i tak chroni serwer: bez kodu me() odbiera
   // uprawnienia, więc zapytania zwrócą „Brak dostępu”). Gdy okaże się, że kod jest wymagany, ekran kodu zastępuje panel.

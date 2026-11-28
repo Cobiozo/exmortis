@@ -1,7 +1,7 @@
 import { createClientFromRequest } from "../_shared/compat.ts";
 import { waitUntil } from "../_shared/shim.ts";
 import { runSql, esc, textField, emailField, clientIp } from "../_shared/supabase.ts";
-import { isUrgent, notifyUrgent } from "../_shared/crisis.ts";
+import { isUrgent, notifyUrgent, notifyNewMessage } from "../_shared/crisis.ts";
 import { errorResponse } from "../_shared/errors.ts";
 
 const LIMIT_PER_HOUR = 5;
@@ -47,7 +47,8 @@ const handler = async function (req) {
        RETURNING id`
     );
 
-    if (pilne) waitUntil(notifyUrgent(base44));
+    // Pilna — osobny mail „Pilna wiadomość”; zwykła — „Nowa wiadomość w Skrzynce” (bez treści, 28.11.2026).
+    waitUntil(pilne ? notifyUrgent(base44) : notifyNewMessage(base44));
 
     return Response.json({ ok: true, id: rows && rows[0] ? rows[0].id : null, pilne });
   } catch (error) {

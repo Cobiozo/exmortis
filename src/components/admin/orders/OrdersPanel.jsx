@@ -17,7 +17,7 @@ const nipPretty = (n) => String(n || "").replace(/^(\d{3})(\d{3})(\d{2})(\d{2})$
 const STATUS_CLS = { COMPLETED: "text-[#9FD3A0] border-[#9FD3A0]/40", CANCELED: "text-foreground/45 border-foreground/20",
   CREATING: "text-foreground/45 border-foreground/20", FAILED: "text-[#E57373] border-[#E57373]/40" };
 // Opłacone, ale realizacja (dostęp, bilety, maile) jeszcze niezakończona albo płatność niezgodna z zamówieniem.
-const payNote = (o) => `${o.is_test ? " · TEST" : ""}${o.payu_status === "MISMATCH" ? " · NIEZGODNA" : o.status === "COMPLETED" && !o.fulfilled_at && (o.fulfill_error || o.fulfill_review) ? " · DO REALIZACJI" : ""}`;
+const payNote = (o) => `${o.is_test || o.test ? " · TEST" : ""}${o.payu_status === "MISMATCH" ? " · NIEZGODNA" : o.status === "COMPLETED" && !o.fulfilled_at && (o.fulfill_error || o.fulfill_review) ? " · DO REALIZACJI" : ""}`;
 // Wznowienie dotyczy zamówień z numerem PayU (albo FREE-), jeszcze niezrealizowanych; sporne wymagają drugiego kliknięcia.
 const canResume = (o) => !o.fulfilled_at && !!o.payu_order_id && (o.status === "COMPLETED" || o.payu_status === "MISMATCH" || ["PENDING", "NEW", "WAITING_FOR_CONFIRMATION", "FAILED", "CANCELED"].includes(o.status));
 
@@ -108,6 +108,7 @@ function InvoiceBox({ o, onSaved }) {
 function SalesPanel() {
   const [status, setStatus] = useState("");
   const [todo, setTodo] = useState(false);
+  const [withTest, setWithTest] = useState(false); // zamówienia testowe domyślnie ukryte (28.11.2026)
   const [q, setQ] = useState("");
   const [data, setData] = useState(null);
   const [err, setErr] = useState("");
@@ -118,11 +119,18 @@ function SalesPanel() {
   const load = () => {
     const my = ++seq.current;
     setErr("");
-    base44.functions.invoke("adminOrders", { action: "list", status, invoice: todo ? "todo" : "", q })
+    base44.functions.invoke("adminOrders", { action: "list", status, invoice: todo ? "todo" : "", q, include_test: withTest })
       .then((r) => { if (my === seq.current) setData(r.data); })
       .catch((e) => { if (my === seq.current) setErr(e?.response?.data?.error || "Nie udało się wczytać zamówień."); });
   };
-  useEffect(() => { const t = setTimeout(load, q ? 350 : 0); return () => clearTimeout(t); }, [status, todo, q]);
+  useEffect(() => { const t = setTimeout(load, q ? 350 : 0); return () => clearTimeout(t); }, [status, todo, q, withTest]); // eslint-disable-line react-hooks/exhaustive-deps
+  // CSV dla księgowości zawsze ze WSZYSTKIMI zamówieniami (także testowymi — to też prawdziwe płatności).
+  const exportAll = async () => {
+    try {
+      const r = await base44.functions.invoke("adminOrders", { action: "list", status, invoice: todo ? "todo" : "", q, include_test: true });
+      exportCsv(r.data?.orders || []);
+    } catch { setErr("Nie udało się przygotować pliku CSV."); }
+  };
 
   const s = data?.summary || {};
   const orders = data?.orders || [];
@@ -141,6 +149,8 @@ function SalesPanel() {
           </div>
         ))}
       </div>
+
+      <p className="-mt-6 text-xs text-foreground/45">Przychody i statystyki bez zamówień testowych. Faktury do wystawienia i plik CSV — ze wszystkimi.</p>
 
       <SalesStats />
 
@@ -161,7 +171,10 @@ function SalesPanel() {
           <input value={q} onChange={(e) => setQ(e.target.value)} placeholder="Szukaj: e-mail, imię, numer, produkt" aria-label="Szukaj zamówień"
             className="w-full bg-transparent border hairline pl-9 pr-3 py-2.5 text-sm focus:border-[#C9A24A] focus:outline-none" />
         </div>
-        <button onClick={() => exportCsv(orders)} disabled={!orders.length} className="btn-ghost !px-4 !py-2.5 text-[10px] disabled:opacity-40">
+        <label className="flex items-center gap-2 text-sm text-foreground/70 cursor-pointer min-h-[40px]" title="Twoje adresy z „+…”, kody z TEST w nazwie, produkty „test…”">
+          <input type="checkbox" checked={withTest} onChange={(e) => setWithTest(e.target.checked)} className="h-5 w-5 accent-[#C9A24A]" /> Pokaż testowe
+        </label>
+        <button onClick={exportAll} className="btn-ghost !px-4 !py-2.5 text-[10px]" title="Plik zawiera wszystkie zamówienia z filtra, także testowe">
           <Download className="h-4 w-4" /> CSV DLA KSIĘGOWOŚCI
         </button>
       </div>

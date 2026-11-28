@@ -19,13 +19,15 @@ const LIST_SQL = (where) => `SELECT o.id, o.payu_order_id, o.created_date, o.upd
     to_jsonb(o)->>'payu_status' AS payu_status, to_jsonb(o)->>'fulfilled_at' AS fulfilled_at,
     to_jsonb(o)->>'fulfill_error' AS fulfill_error, to_jsonb(o)->>'fulfill_review' AS fulfill_review,
     COALESCE((to_jsonb(o)->>'is_test')::boolean, false) AS is_test,
+    public.exm_test_order(o) AS test,
     COALESCE((to_jsonb(o)->>'refunded_total')::numeric, 0)::float8 AS refunded_total
   FROM public.orders o WHERE ${where} ORDER BY o.created_date DESC LIMIT 500`;
 
+// Przychody i liczby bez zamówień testowych (28.11.2026); faktury do wystawienia — wszystkie (to obowiązek księgowy).
 const SUMMARY_SQL = `SELECT
-  COALESCE(SUM(total) FILTER (WHERE status = 'COMPLETED' AND created_date >= date_trunc('month', now() AT TIME ZONE 'Europe/Warsaw') AT TIME ZONE 'Europe/Warsaw'), 0)::float8 AS revenue_month,
-  COUNT(*) FILTER (WHERE status = 'COMPLETED' AND created_date >= date_trunc('month', now() AT TIME ZONE 'Europe/Warsaw') AT TIME ZONE 'Europe/Warsaw')::int AS paid_month,
-  COALESCE(SUM(total) FILTER (WHERE status = 'COMPLETED'), 0)::float8 AS revenue_all,
+  COALESCE(SUM(total) FILTER (WHERE NOT public.exm_test_order(o) AND status = 'COMPLETED' AND created_date >= date_trunc('month', now() AT TIME ZONE 'Europe/Warsaw') AT TIME ZONE 'Europe/Warsaw'), 0)::float8 AS revenue_month,
+  COUNT(*) FILTER (WHERE NOT public.exm_test_order(o) AND status = 'COMPLETED' AND created_date >= date_trunc('month', now() AT TIME ZONE 'Europe/Warsaw') AT TIME ZONE 'Europe/Warsaw')::int AS paid_month,
+  COALESCE(SUM(total) FILTER (WHERE NOT public.exm_test_order(o) AND status = 'COMPLETED'), 0)::float8 AS revenue_all,
   COUNT(*) FILTER (WHERE status IN ('PENDING', 'WAITING_FOR_CONFIRMATION', 'NEW') AND created_date > now() - interval '2 days')::int AS pending,
   COUNT(*) FILTER (WHERE status = 'COMPLETED' AND to_jsonb(o)->'invoice' IS NOT NULL AND jsonb_typeof(to_jsonb(o)->'invoice') = 'object'
     AND COALESCE((to_jsonb(o)->'invoice'->>'wystawiona')::boolean, false) = false)::int AS invoices_todo
@@ -34,8 +36,8 @@ const SUMMARY_SQL = `SELECT
 // Statystyki sprzedaży za okres (dni) i poprzedni okres tej samej długości. Tylko opłacone zamówienia (COMPLETED).
 // Zwroty doliczane osobno (tabela order_refunds może jeszcze nie istnieć — wtedy zera).
 const STATS_SQL = (days, withRefunds) => `WITH win AS (SELECT now() - interval '${days} days' AS a, now() - interval '${days * 2} days' AS b),
-o AS (SELECT o.* FROM public.orders o, win WHERE o.status = 'COMPLETED' AND o.created_date::timestamptz >= win.a),
-prev AS (SELECT o.* FROM public.orders o, win WHERE o.status = 'COMPLETED' AND o.created_date::timestamptz >= win.b AND o.created_date::timestamptz < win.a)
+o AS (SELECT o.* FROM public.orders o, win WHERE o.status = 'COMPLETED' AND o.created_date::timestamptz >= win.a AND NOT public.exm_test_order(o)),
+prev AS (SELECT o.* FROM public.orders o, win WHERE o.status = 'COMPLETED' AND o.created_date::timestamptz >= win.b AND o.created_date::timestamptz < win.a AND NOT public.exm_test_order(o))
 SELECT
   (SELECT json_build_object(
     'revenue', COALESCE(SUM(total) FILTER (WHERE total > 0), 0)::float8,
@@ -84,6 +86,8 @@ const handler = async function (req) {
 
     if (body.action === "list") {
       const parts = ["COALESCE(o.total, 0) > 0"];
+      // Zamówienia testowe (adresy Dawida, kody TEST…, produkty „test…”) domyślnie ukryte; przełącznik w panelu.
+      if (body.include_test !== true) parts.push("NOT public.exm_test_order(o)");
       const st = String(body.status || "");
       if (st === "paid") parts.push("o.status = 'COMPLETED'");
       else if (st === "pending") parts.push("o.status IN ('PENDING', 'WAITING_FOR_CONFIRMATION', 'NEW')");

@@ -20,7 +20,23 @@ const EVENT_LABEL = {
   cta_rozpoznanie: "Strona główna — „Poznaj drogę powrotu”", cta_o_mnie: "Strona główna — „Poznaj moją historię”",
   cta_test_src_home: "Strona główna — „Sprawdź, która śmierć jest Twoja”", test_start: "Test — start", test_complete: "Test — ukończony",
   Purchase: "Zakup opłacony",
+  CompleteRegistration_konto_po_zakupie: "Konto założone po zakupie", CompleteRegistration_konto: "Założenie konta",
+  home_player_play: "Strona główna — odtworzenie nagrania",
 };
+// Nazwy techniczne bez opisu (28.11.2026): „cta_powrot_src_o_mnie” → „Przycisk „powrot” · strona: o mnie”.
+const PAGES = { o_mnie: "O mnie", powrot: "POWRÓT", powrot_hero: "POWRÓT (góra strony)", home: "strona główna", skarbiec: "Skarbiec", glos: "Głos", spotkania: "Spotkania" };
+function eventLabel(n) {
+  if (EVENT_LABEL[n]) return EVENT_LABEL[n];
+  const s = String(n || "");
+  const cta = s.match(/^cta_([a-z0-9]+)_src_(.+)$/i);
+  if (cta) return `Przycisk „${cta[1].replace(/_/g, " ")}” · strona: ${PAGES[cta[2]] || cta[2].replace(/_/g, " ")}`;
+  const reg = s.match(/^CompleteRegistration_(.+)$/);
+  if (reg) return `Rejestracja — ${reg[1].replace(/_/g, " ")}`;
+  const lead = s.match(/^Lead_(.+)$/);
+  if (lead) return `Zgłoszenie — ${lead[1].replace(/_/g, " ")}`;
+  const t = s.replace(/_/g, " ").trim();
+  return t ? t.charAt(0).toUpperCase() + t.slice(1) : s;
+}
 
 function Table({ title, rows, label }) {
   const max = Math.max(1, ...rows.map((r) => r.n));
@@ -72,7 +88,7 @@ export default function TrafficPanel({ range }) {
       <div className="grid md:grid-cols-3 gap-4">
         <Table title="NAJCZĘŚCIEJ OGLĄDANE" rows={data.pages.slice(0, 15)} />
         <Table title="SKĄD PRZYCHODZĄ" rows={data.sources} label={(n) => SOURCE_LABEL[n] || n} />
-        <Table title="KROKI I KLIKNIĘCIA" rows={data.events.slice(0, 15)} label={(n) => EVENT_LABEL[n] || n} />
+        <Table title="KROKI I KLIKNIĘCIA" rows={data.events.slice(0, 15)} label={eventLabel} />
       </div>
       <p className="text-xs text-foreground/50 mt-4">
         Własny licznik exmortis: tylko sumy dzienne, bez cookies, adresów IP i danych osobowych, więc liczy wszystkie wizyty, także bez zgody.

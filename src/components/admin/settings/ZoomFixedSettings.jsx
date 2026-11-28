@@ -27,7 +27,7 @@ export default function ZoomFixedSettings() {
         <Video className="h-5 w-5 gold-text mt-1 shrink-0" />
         <div>
           <h2 className="relic-heading text-xl">Mój stały link Zoom</h2>
-          <p className="text-sm text-foreground/50 mt-1">Twój osobisty pokój. Przy spotkaniu i przy rodzaju konsultacji 1:1 wybierasz potem jednym kliknięciem: „Mój stały link” albo „Inny link”. Zmiana tutaj nie zmienia linków już zapisanych w spotkaniach.</p>
+          <p className="text-sm text-foreground/50 mt-1">Twój osobisty pokój. Przy spotkaniu i przy rodzaju konsultacji indywidualnych wybierasz potem jednym kliknięciem: „Mój stały link” albo „Inny link”. Zmiana tutaj nie zmienia linków już zapisanych w spotkaniach.</p>
         </div>
       </div>
       <div className="grid md:grid-cols-[1fr_220px] gap-4">

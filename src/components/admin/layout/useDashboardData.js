@@ -49,6 +49,7 @@ const LEGACY = {
   libOn: () => call("libraryAdmin", { action: "settings" }, (d) => d.settings.library_mode !== "off" || d.settings.messages_mode !== "off"),
   bookingKeys: () => call("bookingAdmin", { action: "status" }, (d) => d.keys_ok !== false),
   podcastNew: () => base44.entities.PodcastApplication.count({ status: "nowe" }),
+  todo: () => Promise.resolve({}), // liczniki „Do zrobienia” tylko ze ścieżki „summary”
   soundWarnings: () => base44.entities.SilenceTrack.filter({}, { limit: 200 })
     .then((p) => (p.items || []).reduce((n, t) => n + trackWarnings(t).length, 0)),
 };

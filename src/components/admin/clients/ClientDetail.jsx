@@ -7,6 +7,7 @@ import EmailChangeBox from "./EmailChangeBox";
 import ClientDataBox from "./ClientDataBox";
 import ClientLibraryBox from "./ClientLibraryBox";
 import RoleBox from "./RoleBox";
+import ClientTimeline from "./ClientTimeline";
 
 export default function ClientDetail({ email, onChange, libOn }) {
   const [d, setD] = useState(null);
@@ -20,6 +21,7 @@ export default function ClientDetail({ email, onChange, libOn }) {
         <h2 className="shop-heading text-2xl text-[#F5EFE1]">{d.user?.full_name || email}</h2>
         <p className="text-sm text-foreground/50 mt-1">{email} · {d.user ? `konto od ${plDate(d.user.created_date)}` : "bez konta (zaproszenie wysłane)"} · ukończone lekcje: {d.completed}</p>
       </div>
+      <ClientTimeline email={email} />
       {d.user && <RoleBox email={email} onChange={onChange} />}
       {d.user && <EmailChangeBox email={email} />}
       <ClientDataBox email={email} onDone={() => { load(); onChange?.(); }} />

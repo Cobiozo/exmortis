@@ -15,7 +15,10 @@ export default function AccountsTab() {
   const [q, setQ] = useState("");
   const [filter, setFilter] = useState("all");
   const [sort, setSort] = useState({ key: "created_at", dir: "desc" });
-  const [picked, setPicked] = useState(null);
+  // ?email=… (ze Skrzynki, zamówień itd.) otwiera od razu kartę osoby.
+  const [picked, setPicked] = useState(() => { try { return new URLSearchParams(window.location.search).get("email") || null; } catch { return null; } });
+  // Konta testowe (adresy Dawida z aliasami itd.) domyślnie ukryte — 28.11.2026.
+  const [showTest, setShowTest] = useState(false);
 
   const load = () =>
     base44.functions
@@ -27,8 +30,9 @@ export default function AccountsTab() {
 
   const rows = useMemo(() => {
     if (!data) return [];
-    return sortRows(data.accounts.filter((a) => matchesFilter(a, filter) && matchesQuery(a, q)), sort.key, sort.dir);
-  }, [data, filter, q, sort]);
+    return sortRows(data.accounts.filter((a) => (showTest || !a.test) && matchesFilter(a, filter) && matchesQuery(a, q)), sort.key, sort.dir)
+      .map((a) => (a.test ? { ...a, role: `${a.role} · test` } : a));
+  }, [data, filter, q, sort, showTest]);
 
   const onSort = (key) => setSort((s) => ({ key, dir: s.key === key && s.dir === "asc" ? "desc" : "asc" }));
 
@@ -56,6 +60,12 @@ export default function AccountsTab() {
   return (
     <div className="space-y-6">
       <AccountsToolbar q={q} onQ={setQ} filter={filter} onFilter={setFilter} counts={data.counts} shown={rows.length} onExport={exportCsv} />
+      {data.counts?.tests > 0 && (
+        <label className="flex items-center gap-2 text-xs text-foreground/60 cursor-pointer">
+          <input type="checkbox" checked={showTest} onChange={(e) => setShowTest(e.target.checked)} className="accent-[#C9A24A]" />
+          Pokaż konta testowe ({data.counts.tests}) — Twoje adresy z „+…” i adresy z listy testowej
+        </label>
+      )}
       {err ? <p className="text-sm blood-text">{err}</p> : rows.length === 0 ? (
         <p className="text-sm text-foreground/50">Brak kont spełniających te warunki.</p>
       ) : (

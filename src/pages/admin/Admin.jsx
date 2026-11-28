@@ -24,6 +24,7 @@ const LOAD = {
   silenceStats: () => import("@/components/admin/SilenceStatsPanel"),
   testy: () => import("@/components/admin/TestCountPanel"),
   glos: () => import("@/components/admin/glos/GlosAdmin"),
+  skrzynka: () => import("@/components/admin/inbox/InboxPanel"),
   kontakty: () => import("@/components/admin/ContactsTabs"),
   powrot: () => import("@/components/admin/powrot/PowrotPanel"),
   rozmowa: () => import("@/components/admin/prog/ProgPanel"),
@@ -56,8 +57,9 @@ const preload = (key) => {
 };
 
 const SECTIONS = {
+  skrzynka: ["Skrzynka — wiadomości z formularza", () => <C.skrzynka />],
   spotkania: ["Spotkania", () => <C.spotkania />],
-  rezerwacje: ["Rezerwacje 1:1", () => <C.rezerwacje />],
+  rezerwacje: ["Rezerwacje — praca indywidualna", () => <C.rezerwacje />],
   ogloszenia: ["Ogłoszenia", () => <C.ogloszenia />],
   cisza: ["Cisza", () => <C.cisza />],
   skarbiec: ["Skarbiec", () => <C.skarbiec />],
@@ -130,7 +132,9 @@ export default function Admin() {
 
   const current = section ? SECTIONS[section] : null;
   const badges = isAdmin ? {
-    powrot: d.powrot?.todo || 0,
+    powrot: (d.powrot?.todo || 0) + (d.todo?.powrot_decision || 0),
+    rozmowa: d.todo?.prog_todo || 0,
+    skrzynka: d.todo?.contacts_new || 0,
     zamowienia: d.stats?.invoices_todo || 0,
     glos: d.podcastNew || 0,
   } : {};

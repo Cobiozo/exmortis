@@ -1,7 +1,7 @@
 import {
-  CalendarDays, CalendarClock, Users, Mail, Library, UsersRound, Megaphone, FileText,
+  Inbox, CalendarDays, CalendarClock, Users, Mail, Library, UsersRound, Megaphone, FileText,
   ShoppingBag, Gem, Percent, PenLine, Menu as MenuIcon, Headphones, Mic, Signpost, Newspaper,
-  BarChart3, Contact, ListChecks, Settings, Plug, Shield, UserSearch, History, Eye,
+  BarChart3, Contact, Settings, Plug, Shield, UserSearch, History, Eye,
 } from "lucide-react";
 
 // Menu panelu: te same 27 modułów i ta sama kolejność, co na dawnym pulpicie.
@@ -9,8 +9,9 @@ import {
 // preview: true — „Podgląd strony” otwiera stronę z paskiem admina, nie sekcję panelu.
 export const NAV_GROUPS = [
   ["Codzienna praca", [
+    { key: "skrzynka", label: "Skrzynka", icon: Inbox },
     { key: "spotkania", label: "Spotkania", icon: CalendarDays },
-    { key: "rezerwacje", label: "Rezerwacje 1:1", icon: CalendarClock },
+    { key: "rezerwacje", label: "Rezerwacje", icon: CalendarClock },
     { key: "klienci", label: "Klienci i dostępy", icon: Users },
     { key: "wiadomosci", label: "Wiadomości", icon: Mail, lib: true },
     { key: "biblioteka", label: "Biblioteka", icon: Library, lib: true },
@@ -33,7 +34,6 @@ export const NAV_GROUPS = [
   ["Dane i wyniki", [
     { key: "statystyki", label: "Statystyki", icon: BarChart3 },
     { key: "kontakty", label: "Baza kontaktów", icon: Contact },
-    { key: "testy", label: "Ukończenia testu", icon: ListChecks },
   ]],
   ["Ustawienia i bezpieczeństwo", [
     { key: "ustawienia", label: "Ustawienia strony", icon: Settings },

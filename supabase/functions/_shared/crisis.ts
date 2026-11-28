@@ -77,3 +77,18 @@ export async function notifyUrgent(base44: any) {
   </div>`;
   await sendMail(base44, { to: admin, subject: "Pilna wiadomość w panelu", html, kind: "inne" }).catch(() => {});
 }
+
+// Każda nowa wiadomość z formularza (28.11.2026): mail do administratora BEZ treści i bez danych osoby — tylko link do Skrzynki.
+export async function notifyNewMessage(base44: any) {
+  await loadAppUrl(base44).catch(() => {});
+  const admin = await adminTo(base44).catch(() => null);
+  if (!admin) return;
+  const link = `${APP_URL}/admin/skrzynka`;
+  const html = `<div style="background:#0A0A0B;color:#E2E2E2;font-family:Georgia,serif;padding:32px;max-width:520px">
+    <p style="letter-spacing:4px;color:#C9A24A;font-size:13px">EXMORTIS</p>
+    <h1 style="font-size:22px">Nowa wiadomość w Skrzynce</h1>
+    <p style="color:#8A8A8C;line-height:1.7">Ktoś napisał przez formularz na stronie. Treść przeczytasz w panelu.</p>
+    <p><a href="${link}" style="color:#C9A24A">Otwórz Skrzynkę</a></p>
+  </div>`;
+  await sendMail(base44, { to: admin, subject: "Nowa wiadomość w Skrzynce", html, kind: "inne" }).catch(() => {});
+}

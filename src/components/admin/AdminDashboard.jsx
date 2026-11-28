@@ -43,7 +43,7 @@ const TONE = { err: "bg-[#E07A6A]", warn: "bg-[#C9A24A]", info: "bg-foreground/3
 function todoList(d) {
   const out = [];
   const s = d.stats || {};
-  if (d.bookingKeys === false) out.push({ tone: "err", title: "Brak kluczy bezpieczeństwa rezerwacji", detail: "Rezerwacje 1:1 są niedostępne, dopóki w sekretach aplikacji nie będzie obu kluczy.", to: "/admin/rezerwacje", cta: "Sprawdź" });
+  if (d.bookingKeys === false) out.push({ tone: "err", title: "Brak kluczy bezpieczeństwa rezerwacji", detail: "Rezerwacje są niedostępne, dopóki w sekretach aplikacji nie będzie obu kluczy.", to: "/admin/rezerwacje", cta: "Sprawdź" });
   (s.zoom_missing || []).forEach((e) => out.push({ tone: "err", title: `Spotkanie bez linku do Zoom: „${e.title}”`, detail: plWhenFull(e.start), to: "/admin/spotkania", cta: "Uzupełnij" }));
   (d.ready?.items || []).filter((i) => i.status !== "ok").forEach((i) => out.push({ tone: i.status === "err" ? "err" : "warn", title: i.title, detail: i.detail, to: i.to, cta: "Otwórz" }));
   (d.events || []).filter((e) => fallbackFresh(e) === false).forEach((e) => out.push({ tone: "warn", title: `„${e.title}”`, detail: STALE_TEXT, to: "/admin/spotkania", cta: "Spotkania" }));
@@ -55,6 +55,13 @@ function todoList(d) {
     if (todo) out.push({ tone: "warn", title: `Zgłoszenia POWRÓT — ankiety do wysłania: ${todo}`, detail: "Krótkie zgłoszenia czekają na pełną ankietę.", to: "/admin/powrot", cta: "Przejrzyj" });
   }
   if (d.podcastNew) out.push({ tone: "warn", title: `Nowe zgłoszenia do podcastu: ${d.podcastNew}`, detail: "Głos → Podcast → Zgłoszenia gości.", to: "/admin/glos?widok=podcast&tab=zgloszenia", cta: "Przejrzyj" });
+  // 28.11.2026: wiadomości, opinie, decyzje POWRÓT, Rozmowa na progu, maile niedoręczone.
+  const t = d.todo || {};
+  if (t.contacts_new) out.push({ tone: "warn", title: `Nowe wiadomości z formularza: ${t.contacts_new}`, detail: "Ktoś napisał przez stronę Kontakt.", to: "/admin/skrzynka", cta: "Przeczytaj" });
+  if (t.powrot_decision) out.push({ tone: "warn", title: `POWRÓT — do decyzji: ${t.powrot_decision}`, detail: "Zgłoszenia po ankiecie albo po rozmowie czekają na Twój krok.", to: "/admin/powrot", cta: "Otwórz" });
+  if (t.prog_todo) out.push({ tone: "warn", title: `Rozmowa na progu — do działania: ${t.prog_todo}`, detail: "Opłacone bez terminu albo po spotkaniu bez podsumowania.", to: "/admin/rozmowa", cta: "Otwórz" });
+  if (t.reviews_pending) out.push({ tone: "warn", title: `Opinie do sprawdzenia: ${t.reviews_pending}`, detail: "Nowe opinie czekają na publikację.", to: "/admin/skarbiec?opinie=1", cta: "Sprawdź" });
+  if (t.bounces_7) out.push({ tone: "info", title: `Maile, które nie doszły (7 dni): ${t.bounces_7}`, detail: "Adres z literówką albo pełna skrzynka — popraw adres w zamówieniu.", to: "/admin/zamowienia", cta: "Sprawdź" });
   if (d.soundWarnings) out.push({ tone: "info", title: `Cisza — ostrzeżenia w utworach: ${d.soundWarnings}`, detail: "Brakujące pliki lub opisy w bibliotece dźwięków.", to: "/admin/cisza", cta: "Otwórz" });
   let via = null;
   try { via = localStorage.getItem("exm_login_via"); } catch { /* */ }
@@ -171,7 +178,7 @@ export default function AdminDashboard({ d = {} }) {
             </span>
             <span className="flex gap-2">
               <Link to="/admin/spotkania" className="inline-flex items-center gap-1.5 min-h-[36px] px-3 rounded-md border hairline text-sm hover:border-[#C9A24A]"><Plus className="h-4 w-4" /> Spotkanie</Link>
-              <Link to="/admin/rezerwacje" className="inline-flex items-center min-h-[36px] px-3 rounded-md border hairline text-sm hover:border-[#C9A24A]">Rezerwacje 1:1</Link>
+              <Link to="/admin/rezerwacje" className="inline-flex items-center min-h-[36px] px-3 rounded-md border hairline text-sm hover:border-[#C9A24A]">Rezerwacje</Link>
             </span>
           </div>
         </section>

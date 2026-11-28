@@ -96,7 +96,7 @@ function Card({ id, onChanged }) {
           if (c === "USUŃ") act("delete", { confirm: "USUŃ" }, "Usunięto.");
         }}>Usuń trwale</button>
       </div>
-      {["oplacone", "termin_wybrany"].includes(app.status) && <p className="text-xs text-foreground/50">Odwołanie spotkania ze zwrotem: Rezerwacje 1:1 (termin) i Zamówienia (zwrot).</p>}
+      {["oplacone", "termin_wybrany"].includes(app.status) && <p className="text-xs text-foreground/50">Odwołanie spotkania ze zwrotem: Rezerwacje (termin) i Zamówienia (zwrot).</p>}
       {msg && <p className="text-sm gold-text" role="status">{msg}</p>}
     </div>
   );

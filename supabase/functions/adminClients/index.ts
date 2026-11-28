@@ -68,15 +68,63 @@ const handler = async function (req) {
           accesses: accMap.get(mail) || 0,
         };
       }).sort((x, y) => String(y.created_at || "").localeCompare(String(x.created_at || "")));
+      // Konta testowe (28.11.2026): te same reguły co w zamówieniach (public.exm_test_email).
+      const mails = list.map((a) => a.email).filter(Boolean);
+      const tests = mails.length ? await runSql(base44, `SELECT e FROM unnest(ARRAY[${mails.map(escStr).join(",")}]::text[]) e WHERE public.exm_test_email(e)`, true).catch(() => []) : [];
+      const testSet = new Set((tests || []).map((r) => String(r.e)));
+      for (const a of list) a.test = testSet.has(a.email);
       const weekAgo = now - 7 * 86400000;
       return Response.json({
         accounts: list,
         counts: {
-          total: list.length,
-          new7: list.filter((a) => a.created_at && new Date(a.created_at).getTime() >= weekAgo).length,
-          logins7: list.filter((a) => a.last_sign_in_at && new Date(a.last_sign_in_at).getTime() >= weekAgo).length,
+          total: list.filter((a) => !a.test).length,
+          tests: list.filter((a) => a.test).length,
+          new7: list.filter((a) => !a.test && a.created_at && new Date(a.created_at).getTime() >= weekAgo).length,
+          logins7: list.filter((a) => !a.test && a.last_sign_in_at && new Date(a.last_sign_in_at).getTime() >= weekAgo).length,
         },
       });
+    }
+
+    // Karta klienta 360° (28.11.2026): wszystko o osobie w jednym miejscu — oś czasu i notatka.
+    if (body.action === "timeline") {
+      if (!email.includes("@")) return Response.json({ error: "Podaj e-mail" }, { status: 400 });
+      const e = escStr(email);
+      const part = (sql) => runSql(base44, sql, true).catch(() => []);
+      const [orders, regs, subs, powrot, prog, podcast, msgs, bookings, notes, test] = await Promise.all([
+        part(`SELECT o.id::text AS id, o.created_date AS at, o.status, o.total::float8 AS total, to_jsonb(o)->>'discount_code' AS code,
+            (SELECT string_agg(it->>'name', ', ') FROM jsonb_array_elements(CASE WHEN jsonb_typeof(o.items) = 'array' THEN o.items ELSE '[]'::jsonb END) it) AS items,
+            public.exm_test_order(o) AS test
+          FROM public.orders o WHERE lower(o.buyer_email) = ${e} ORDER BY o.created_date DESC LIMIT 100`),
+        part(`SELECT r.created_at AS at, r.status, ev.title, ev.start_datetime FROM public.registrations r LEFT JOIN public.events ev ON ev.id = r.event_id
+          WHERE lower(r.email) = ${e} ORDER BY r.created_at DESC LIMIT 100`),
+        part(`SELECT status, created_date AS at, confirmed_at FROM public.subscribers WHERE lower(email) = ${e} LIMIT 1`),
+        part(`SELECT id::text AS id, created_date AS at, status FROM public.powrot_applications WHERE lower(email) = ${e} ORDER BY created_date DESC`),
+        part(`SELECT id::text AS id, created_date AS at, status FROM public.prog_applications WHERE lower(email) = ${e} ORDER BY created_date DESC`),
+        part(`SELECT id::text AS id, created_date AS at, data->>'status' AS status FROM public.exm_podcastapplication WHERE lower(data->>'email') = ${e} ORDER BY created_date DESC`),
+        part(`SELECT id::text AS id, created_date AS at, COALESCE(status, 'nowa') AS status, left(message, 140) AS preview FROM public.contact_messages WHERE lower(email) = ${e} ORDER BY created_date DESC`),
+        part(`SELECT b.starts_at AS at, b.status, t.name FROM public.bk_bookings b LEFT JOIN public.bk_types t ON t.id = b.type_id
+          WHERE lower(COALESCE(b.email_norm, b.email)) = ${e} ORDER BY b.starts_at DESC LIMIT 50`),
+        part(`SELECT note, tags, updated_at FROM public.client_notes WHERE email = ${e}`),
+        part(`SELECT public.exm_test_email(${e}) AS t`),
+      ]);
+      const paid = (orders || []).filter((o) => o.status === "COMPLETED" && !o.test && Number(o.total) > 0);
+      return Response.json({
+        test: !!test?.[0]?.t,
+        totals: { spent: Math.round(paid.reduce((n, o) => n + Number(o.total || 0), 0) * 100) / 100, orders: paid.length },
+        subscriber: subs?.[0] || null,
+        note: notes?.[0] || null,
+        orders: orders || [], registrations: regs || [], powrot: powrot || [], prog: prog || [], podcast: podcast || [],
+        messages: msgs || [], bookings: bookings || [],
+      });
+    }
+    if (body.action === "note_save") {
+      if (!email.includes("@")) return Response.json({ error: "Podaj e-mail" }, { status: 400 });
+      const note = String(body.note || "").slice(0, 8000);
+      const tags = Array.isArray(body.tags) ? [...new Set(body.tags.map((t) => String(t).trim().slice(0, 40)).filter(Boolean))].slice(0, 20) : [];
+      const tagSql = tags.length ? `ARRAY[${tags.map(escStr).join(",")}]::text[]` : `'{}'::text[]`;
+      await runSql(base44, `INSERT INTO public.client_notes (email, note, tags, updated_at) VALUES (${escStr(email)}, ${escStr(note)}, ${tagSql}, now())
+        ON CONFLICT (email) DO UPDATE SET note = EXCLUDED.note, tags = EXCLUDED.tags, updated_at = now()`);
+      return Response.json({ ok: true });
     }
 
     if (body.action === "detail") {

@@ -15,7 +15,7 @@ export default function BookingWarnings() {
         <div className="mb-6 border border-[#BC1E22] bg-[#BC1E22]/15 p-5 flex gap-3 items-start" role="alert">
           <AlertTriangle className="h-5 w-5 blood-text shrink-0 mt-0.5" />
           <div><p className="technical text-xs blood-text">Brak kluczy bezpieczeństwa rezerwacji</p>
-            <p className="text-sm text-foreground/70 mt-1">Rezerwacje 1:1 są niedostępne, dopóki w sekretach aplikacji nie będzie obu kluczy (min. 32 bajty).</p></div>
+            <p className="text-sm text-foreground/70 mt-1">Rezerwacje są niedostępne, dopóki w sekretach aplikacji nie będzie obu kluczy (min. 32 bajty).</p></div>
         </div>
       )}
       {via === "haslo" && (

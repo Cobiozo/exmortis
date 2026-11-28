@@ -1,5 +1,5 @@
 import { createClientFromRequest } from "../_shared/compat.ts";
-import { runSql, requireAdmin } from "../_shared/supabase.ts";
+import { runSql, escStr, requireAdmin } from "../_shared/supabase.ts";
 import { getSetting } from "../_shared/settings.ts";
 import { mailReady } from "../_shared/smtp.ts";
 import { cleanFaktury, fakturyToken, FAKTURY_DEFAULT, DOKUMENT_OSOBA } from "../_shared/invoices.ts";
@@ -22,19 +22,19 @@ const STATS_SQL = `SELECT
   (SELECT COUNT(*)::int FROM public.registrations WHERE created_at > now() - interval '30 days') AS reg_30,
   (SELECT COUNT(*)::int FROM public.orders WHERE COALESCE(total, 0) = 0 AND created_date > now() - interval '30 days') AS downloads_30,
   (SELECT COUNT(*)::int FROM public.silence_sessions WHERE created_at > now() - interval '30 days') AS silence_30,
-  (SELECT COUNT(*)::int FROM public.orders WHERE status = 'COMPLETED' AND COALESCE(total, 0) > 0 AND created_date > now() - interval '30 days') AS paid_30,
+  (SELECT COUNT(*)::int FROM public.orders o WHERE status = 'COMPLETED' AND COALESCE(total, 0) > 0 AND created_date > now() - interval '30 days' AND NOT public.exm_test_order(o)) AS paid_30,
   (SELECT COUNT(*)::int FROM public.orders o WHERE o.status = 'COMPLETED' AND jsonb_typeof(to_jsonb(o)->'invoice') = 'object'
-     AND COALESCE((to_jsonb(o)->'invoice'->>'wystawiona')::boolean, false) = false) AS invoices_todo`;
+     AND COALESCE((to_jsonb(o)->'invoice'->>'wystawiona')::boolean, false) = false) AS invoices_todo`; // faktury: także testowe (obowiązek księgowy)
 
 const CONTACTS_SQL = `SELECT * FROM (
   SELECT 'Kontakt' AS source, cm.name, cm.email, NULL::text AS phone, cm.created_date::timestamptz AS at, COALESCE((to_jsonb(cm)->>'pilne')::boolean, false) AS pilne FROM public.contact_messages cm
   UNION ALL SELECT 'Podcast', pa.full_name, pa.email, pa.phone, pa.created_date::timestamptz, COALESCE((to_jsonb(pa)->>'pilne')::boolean, false) FROM public.podcast_applications pa
   UNION ALL SELECT 'Powrót', po.full_name, po.email, po.phone, po.created_date::timestamptz, COALESCE((to_jsonb(po)->>'pilne')::boolean, false) FROM public.powrot_applications po
-  UNION ALL SELECT 'Zamówienie', o.buyer_name, o.buyer_email, o.buyer_phone, o.created_date::timestamptz, false FROM public.orders o
+  UNION ALL SELECT 'Zamówienie', o.buyer_name, o.buyer_email, o.buyer_phone, o.created_date::timestamptz, false FROM public.orders o WHERE NOT public.exm_test_order(o)
   UNION ALL SELECT 'Spotkanie', r.first_name, r.email, NULL, r.created_at::timestamptz, false FROM public.registrations r
   UNION ALL SELECT 'Lista oczekujących', w.first_name, w.email, NULL, w.created_at::timestamptz, false FROM public.waitlist w
   UNION ALL SELECT 'Newsletter', s.name, s.email, NULL, s.created_date::timestamptz, false FROM public.subscribers s
-) c ORDER BY pilne DESC, at DESC NULLS LAST LIMIT 2000`;
+) c WHERE NOT public.exm_test_email(c.email) ORDER BY pilne DESC, at DESC NULLS LAST LIMIT 2000`;
 
 // ============ Gotowość platformy ============
 // Lista kontrolna: co jeszcze trzeba ustawić, żeby sprzedaż, maile i spotkania działały.
@@ -225,13 +225,28 @@ const AGENDA_SQL = `SELECT e.id, e.title, e.slug, e.status, e.format, e.start_da
 
 const ORDERS_SQL = `SELECT o.id, o.created_date, o.buyer_name, o.items, o.total::float8 AS total, o.status,
     COALESCE((to_jsonb(o)->>'is_test')::boolean, false) AS is_test
-  FROM public.orders o WHERE COALESCE(o.total, 0) > 0 ORDER BY o.created_date DESC LIMIT 5`;
+  FROM public.orders o WHERE COALESCE(o.total, 0) > 0 AND NOT public.exm_test_order(o) ORDER BY o.created_date DESC LIMIT 5`;
 
 const ORDER_SUM_SQL = `SELECT
   COALESCE(SUM(total) FILTER (WHERE status = 'COMPLETED' AND created_date >= date_trunc('month', now() AT TIME ZONE 'Europe/Warsaw') AT TIME ZONE 'Europe/Warsaw'), 0)::float8 AS revenue_month,
   COUNT(*) FILTER (WHERE status = 'COMPLETED' AND created_date >= date_trunc('month', now() AT TIME ZONE 'Europe/Warsaw') AT TIME ZONE 'Europe/Warsaw')::int AS paid_month,
   COUNT(*) FILTER (WHERE status = 'COMPLETED' AND COALESCE(to_jsonb(o)->>'fulfill_error', '') <> '')::int AS fulfill_failed
-  FROM public.orders o WHERE COALESCE(o.total, 0) > 0`;
+  FROM public.orders o WHERE COALESCE(o.total, 0) > 0 AND NOT public.exm_test_order(o)`;
+
+// „Do zrobienia” — rzeczy czekające na Dawida (28.11.2026). Każda tabela może jeszcze nie istnieć → osobne zapytania z zapasem 0.
+const TODO_PARTS = {
+  contacts_new: `SELECT COUNT(*)::int AS n FROM public.contact_messages c WHERE COALESCE(to_jsonb(c)->>'status', 'nowa') = 'nowa' AND NOT public.exm_test_email(c.email)`,
+  reviews_pending: `SELECT COUNT(*)::int AS n FROM public.product_reviews r WHERE r.status = 'oczekuje'`,
+  powrot_decision: `SELECT COUNT(*)::int AS n FROM public.powrot_applications a WHERE to_jsonb(a)->>'status' IN ('nowe', 'ankieta_wypelniona', 'rozmowa_odbyta') AND NOT public.exm_test_email(a.email)`,
+  prog_todo: `SELECT COUNT(*)::int AS n FROM public.prog_applications p WHERE p.status IN ('oplacone', 'odbyta') AND NOT public.exm_test_email(p.email)`,
+  bounces_7: `SELECT COUNT(DISTINCT lower(email))::int AS n FROM public.mail_undeliverable WHERE created_at > now() - interval '7 days'`,
+};
+async function todoCounts(base44) {
+  const out = {};
+  await Promise.all(Object.entries(TODO_PARTS).map(([k, sql]) =>
+    runSql(base44, sql, true).then((r) => { out[k] = Number(r?.[0]?.n || 0); }).catch(() => { out[k] = 0; })));
+  return out;
+}
 
 // Te same reguły co w panelu POWRÓT (surveyState): „do wysłania” = nie wysłano albo link wygasł.
 const POWROT_SQL = `SELECT
@@ -251,7 +266,7 @@ async function summary(base44, fresh) {
   if (!fresh && SUMMARY && Date.now() - SUMMARY_AT < 60000) return { ...SUMMARY, cached: true };
   if (fresh) READY_AT = 0;
   const part = (p) => p.catch((e) => { console.error("pulpit:", String(e?.message || e).slice(0, 200)); return null; });
-  const [stats, ready, events, orders, orderSum, powrot, podcast, lib, keys, tracks] = await Promise.all([
+  const [stats, ready, events, orders, orderSum, powrot, podcast, lib, keys, tracks, todo] = await Promise.all([
     part(runSql(base44, STATS_SQL, true).then((r) => r[0] || {})),
     part(readiness(base44)),
     part(runSql(base44, AGENDA_SQL, true)),
@@ -262,6 +277,7 @@ async function summary(base44, fresh) {
     part(libSettings(base44, true)),
     part(loadKeys()),
     part(base44.asServiceRole.entities.SilenceTrack.filter({}, { limit: 200 })),
+    part(todoCounts(base44)),
   ]);
   const list = Array.isArray(tracks) ? tracks : tracks?.items || null;
   // Ostrzeżenia Ciszy — te same reguły co w panelu (libUtils.trackWarnings).
@@ -274,6 +290,7 @@ async function summary(base44, fresh) {
     libOn: lib ? lib.library_mode !== "off" || lib.messages_mode !== "off" : null,
     bookingKeys: keys ? !!keys.ok : null,
     soundWarnings,
+    todo,
     at: new Date().toISOString(),
   };
   SUMMARY_AT = Date.now();
@@ -296,6 +313,28 @@ const handler = async function (req) {
     }
     if (body.action === "contacts") {
       return Response.json({ contacts: await runSql(base44, CONTACTS_SQL, true) });
+    }
+    // Skrzynka (28.11.2026): wiadomości z formularza Kontakt — treść, status, notatka.
+    if (body.action === "inbox") {
+      const rows = await runSql(base44, `SELECT id::text AS id, name, email, message, created_date, COALESCE(pilne, false) AS pilne,
+          COALESCE(status, 'nowa') AS status, status_at, notatka, public.exm_test_email(email) AS test,
+          (SELECT COUNT(*)::int FROM public.contact_messages c2 WHERE lower(c2.email) = lower(c.email)) AS count_from
+        FROM public.contact_messages c ORDER BY (COALESCE(status, 'nowa') = 'nowa') DESC, COALESCE(pilne, false) DESC, created_date DESC LIMIT 500`, true);
+      return Response.json({ messages: rows || [] });
+    }
+    if (body.action === "inbox_update") {
+      const id = String(body.id || "");
+      if (!/^[0-9a-f-]{36}$/i.test(id)) return Response.json({ error: "Brak wiadomości" }, { status: 400 });
+      const sets = [];
+      if (body.status !== undefined) {
+        if (!["nowa", "w_toku", "odpowiedziana", "zamknieta"].includes(String(body.status))) return Response.json({ error: "Nieznany status" }, { status: 400 });
+        sets.push(`status = ${escStr(String(body.status))}`, "status_at = now()");
+      }
+      if (body.notatka !== undefined) sets.push(`notatka = ${body.notatka ? escStr(String(body.notatka).slice(0, 4000)) : "NULL"}`);
+      if (!sets.length) return Response.json({ ok: true });
+      await runSql(base44, `UPDATE public.contact_messages SET ${sets.join(", ")}, updated_date = now() WHERE id::text = ${escStr(id)}`);
+      SUMMARY = null; // licznik „Do zrobienia” od razu aktualny
+      return Response.json({ ok: true });
     }
     // Darmowe materiały: tylko agregaty (bez e-maili, bez IP).
     if (body.action === "free_stats") {

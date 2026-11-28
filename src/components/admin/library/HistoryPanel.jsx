@@ -3,6 +3,20 @@ import { Loader2 } from "lucide-react";
 import { lib, plDateTime, inputCls } from "./libApi";
 
 // Historia zmian (mb_log): filtr po rodzaju działania i okresie. Adresy e-mail przychodzą zamaskowane z serwera.
+// Czytelne nazwy działań (28.11.2026) — w bazie zostają nazwy techniczne.
+const ACTIONS = {
+  grupa_dodana: "Dodano grupę", grupa_dodanie: "Dodano osobę do grupy", grupa_usunieta: "Usunięto grupę", grupa_zatwierdzona: "Zatwierdzono grupę",
+  kolekcja_dodana: "Dodano kolekcję", kolekcja_usunieta: "Usunięto kolekcję",
+  material_dodany: "Dodano materiał", material_usuniety: "Usunięto materiał", material_zmiana: "Zmieniono materiał",
+  migracja: "Migracja danych", plik_odrzucony: "Odrzucono plik", plik_wgrany: "Wgrano plik", podglad_klienta: "Podgląd konta klienta",
+  powiadomienie_ponowne: "Ponowne powiadomienie", przydzial: "Przydzielono materiał", przydzial_odebrany: "Odebrano przydział",
+  przydzial_zbiorczy: "Przydział zbiorczy", test_1c: "Test techniczny", ustawienia: "Zmiana ustawień",
+  wiadomosc_anulowana: "Anulowano wiadomość", wiadomosc_poprawiona: "Poprawiono wiadomość", wiadomosc_szkic: "Zapisano szkic wiadomości",
+  wiadomosc_usunieta: "Usunięto wiadomość", wiadomosc_wycofana: "Wycofano wiadomość", wiadomosc_wyslana: "Wysłano wiadomość",
+  wiadomosc_zmiana: "Zmieniono wiadomość", zmiana_adresu: "Zmiana adresu e-mail",
+};
+const actionLabel = (a) => ACTIONS[a] || String(a || "").replace(/_/g, " ").replace(/^./, (c) => c.toUpperCase());
+
 export default function HistoryPanel() {
   const [d, setD] = useState(null);
   const [action, setAction] = useState("");
@@ -19,7 +33,7 @@ export default function HistoryPanel() {
       <div className="flex flex-wrap gap-3">
         <select value={action} onChange={(e) => setAction(e.target.value)} className={`${inputCls} max-w-[280px]`}>
           <option value="">Wszystkie działania</option>
-          {(d?.akcje || []).map((a) => <option key={a} value={a}>{a}</option>)}
+          {(d?.akcje || []).map((a) => <option key={a} value={a}>{actionLabel(a)}</option>)}
         </select>
         <select value={days} onChange={(e) => setDays(e.target.value)} className={`${inputCls} max-w-[200px]`}>
           <option value="7">Ostatnie 7 dni</option>
@@ -39,7 +53,7 @@ export default function HistoryPanel() {
           {d.items.map((r, i) => (
             <div key={`${r.at}-${i}`} className="p-3 flex flex-wrap items-baseline gap-x-4 gap-y-1">
               <span className="text-[11px] text-foreground/40 w-[150px]">{plDateTime(r.at)}</span>
-              <span className="technical text-[10px] gold-text min-w-[150px]">{r.action}</span>
+              <span className="text-xs gold-text min-w-[150px]">{actionLabel(r.action)}</span>
               <span className="text-xs text-foreground/60 min-w-0 flex-1">{r.summary || "—"}</span>
               <span className="text-[11px] text-foreground/35">{r.actor}</span>
             </div>
