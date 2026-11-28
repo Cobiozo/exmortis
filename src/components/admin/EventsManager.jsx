@@ -9,6 +9,7 @@ import ScannersPanel from "@/components/admin/tickets/ScannersPanel";
 import { whenText } from "@/components/exmortis/events/time";
 import { SITE_URL } from "@/config/site";
 import { confirmDialog } from "@/components/admin/ui/confirmDialog";
+import { ModuleBar, FilterChips, SearchField, Toolbar, EmptyState, SkeletonList } from "@/components/admin/ui/kit";
 
 const STATUS_STYLE = {
   Opublikowane: "text-[#C9A24A]",
@@ -53,19 +54,20 @@ export default function EventsManager() {
     return end < new Date();
   };
 
-  const inTab = (ev) => {
-    if (tab === "odwolane") return ev.status === "Odwołane";
+  const inTab = (ev, t = tab) => {
+    if (t === "odwolane") return ev.status === "Odwołane";
     if (ev.status === "Odwołane") return false;
-    if (tab === "szkice") return ev.status === "Szkic";
-    if (tab === "zakonczone") return ev.status === "Opublikowane" && ended(ev);
+    if (t === "szkice") return ev.status === "Szkic";
+    if (t === "zakonczone") return ev.status === "Opublikowane" && ended(ev);
     return ev.status === "Opublikowane" && !ended(ev); // nadchodzące
   };
 
+  const tabCount = (k) => (events ? events.filter((ev) => inTab(ev, k)).length : null);
   const types = useMemo(() => [...new Set((events || []).map((e) => e.event_type))], [events]);
 
   const filtered = useMemo(() => {
     return (events || [])
-      .filter(inTab)
+      .filter((ev) => inTab(ev))
       .filter((ev) => typeFilter === "wszystkie" || ev.event_type === typeFilter)
       .filter(
         (ev) =>
@@ -143,63 +145,41 @@ export default function EventsManager() {
 
   return (
     <div>
-      <div className="flex flex-wrap items-center justify-between gap-4 mb-8">
-        <div>
-          <p className="technical text-[10px] gold-text mb-2">MODUŁ SPOTKAŃ</p>
-          <h2 className="relic-heading text-2xl">Wydarzenia i zapisy</h2>
-        </div>
-        <div className="flex flex-wrap gap-2">
+      <div className="mb-8">
+        <ModuleBar summary={events ? `${events.length} WYDARZEŃ · ${tabCount("nadchodzace")} NADCHODZĄCYCH` : "ŁADUJĘ…"}>
           <button onClick={() => setScanners(true)} className="btn-ghost !px-4 !py-3" title="Kto może sprawdzać bilety skanerem">
             <ScanLine className="h-4 w-4" /> Skanowanie biletów
           </button>
           <button onClick={() => setEditor({})} className="btn-relic !px-5 !py-3">
             <Plus className="h-4 w-4" /> Nowe wydarzenie
           </button>
-        </div>
+        </ModuleBar>
       </div>
 
-      <div className="flex flex-wrap items-center gap-3 mb-6">
-        {TABS.map((t) => (
-          <button
-            key={t.key}
-            onClick={() => setTab(t.key)}
-            className={`technical text-[10px] px-4 py-2 border transition-colors ${
-              tab === t.key ? "border-[#C9A24A] gold-text" : "hairline text-foreground/40 hover:text-foreground"
-            }`}
-          >
-            {t.label.toUpperCase()}
-          </button>
-        ))}
-        <input
-          value={query}
-          onChange={(e) => setQuery(e.target.value)}
-          placeholder="Szukaj po tytule lub slugu…"
-          className="bg-transparent border hairline px-4 py-2 text-foreground text-sm placeholder:text-foreground/30 focus:border-[#C9A24A] focus:outline-none min-w-[220px]"
-        />
+      <div className="flex flex-col gap-4 mb-6 lg:flex-row lg:items-center lg:justify-between">
+        <FilterChips items={TABS.map((t) => [t.key, t.label, tabCount(t.key)])} value={tab} onChange={setTab} label="Widok spotkań" />
+        <Toolbar>
+        <SearchField value={query} onChange={setQuery} placeholder="Szukaj po tytule lub slugu…" label="Szukaj spotkania" className="lg:w-64" />
         <select
           value={typeFilter}
           onChange={(e) => setTypeFilter(e.target.value)}
-          className="bg-[#0D0D0E] border hairline px-3 py-2 text-foreground/70 text-sm focus:border-[#C9A24A] focus:outline-none"
+          aria-label="Typ wydarzenia"
+          className="bg-[#0F0F10] border hairline px-3 py-2.5 text-foreground/70 text-sm focus:border-[#C9A24A]/60 focus:outline-none"
         >
           <option value="wszystkie">Wszystkie typy</option>
           {types.map((t) => (
             <option key={t} value={t}>{t}</option>
           ))}
         </select>
+        </Toolbar>
       </div>
 
       {info && <p className="technical text-[10px] gold-text mb-4">{info}</p>}
 
       {!events ? (
-        <div className="space-y-3">
-          {[...Array(3)].map((_, i) => (
-            <div key={i} className="h-16 border hairline bg-[#0D0D0E] animate-pulse" />
-          ))}
-        </div>
+        <SkeletonList rows={3} />
       ) : filtered.length === 0 ? (
-        <p className="text-foreground/50 border hairline p-8 text-center">
-          Brak wydarzeń w tej zakładce.
-        </p>
+        <EmptyState>{query || typeFilter !== "wszystkie" ? "Nic nie pasuje do wyszukiwania." : "Brak wydarzeń w tej zakładce."}</EmptyState>
       ) : (
         <div className="border hairline divide-y hairline">
           {filtered.map((ev) => (

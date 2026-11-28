@@ -1,5 +1,6 @@
 import React, { useEffect, useRef, useState } from "react";
-import { Loader2, Download, Search, Check } from "lucide-react";
+import { Download, Check } from "lucide-react";
+import { SearchField, SkeletonList, EmptyState, Notice } from "@/components/admin/ui/kit";
 import { base44 } from "@/api/base44Client";
 
 const when = (iso) => (iso ? new Date(iso).toLocaleString("pl-PL", { timeZone: "Europe/Warsaw", day: "numeric", month: "short", year: "numeric", hour: "2-digit", minute: "2-digit" }) : "");
@@ -51,18 +52,14 @@ export default function FreeDownloadsPanel() {
       </div>
 
       <div className="flex flex-wrap items-center gap-3">
-        <div className="relative flex-1 min-w-[220px]">
-          <Search className="h-4 w-4 absolute left-3 top-1/2 -translate-y-1/2 text-foreground/40" aria-hidden="true" />
-          <input value={q} onChange={(e) => setQ(e.target.value)} placeholder="Szukaj: e-mail, imię, materiał" aria-label="Szukaj pobrań"
-            className="w-full bg-transparent border hairline pl-9 pr-3 py-2.5 text-sm focus:border-[#C9A24A] focus:outline-none" />
-        </div>
+        <SearchField value={q} onChange={setQ} placeholder="Szukaj: e-mail, imię, materiał" label="Szukaj pobrań" className="flex-1" />
         <button onClick={() => exportCsv(rows)} disabled={!rows.length} className="btn-ghost !px-4 !py-2.5 text-[10px] disabled:opacity-40">
           <Download className="h-4 w-4" /> CSV
         </button>
       </div>
 
-      {err ? <p className="text-sm text-[#E8C547]">{err}</p> : !data ? <Loader2 className="h-5 w-5 animate-spin gold-text" /> : rows.length === 0 ? (
-        <p className="text-sm text-foreground/50 py-10">Brak pobrań{q ? " dla tego wyszukiwania" : ""}.</p>
+      {err ? <Notice tone="error">{err}</Notice> : !data ? <SkeletonList rows={5} /> : rows.length === 0 ? (
+        <EmptyState>Brak pobrań{q ? " dla tego wyszukiwania" : ""}.</EmptyState>
       ) : (
         <div className="border hairline divide-y divide-[#3D3D3F]/60">
           {rows.map((r) => (

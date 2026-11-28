@@ -1,7 +1,8 @@
 import React, { useEffect, useMemo, useState } from "react";
 import { base44 } from "@/api/base44Client";
 import { Image } from "@/components/ui/image";
-import { Plus, Pencil, Trash2, Eye, EyeOff, Star, Search, Package, AlertTriangle } from "lucide-react";
+import { Plus, Pencil, Trash2, Eye, EyeOff, Star, Package, AlertTriangle } from "lucide-react";
+import { ModuleBar, FilterChips, SearchField, EmptyState, SkeletonList, Notice } from "@/components/admin/ui/kit";
 import { unitPrice, zl } from "@/lib/productPrice";
 import ProductEditor from "./ProductEditor";
 import WaitlistPanel from "./WaitlistPanel";
@@ -149,65 +150,36 @@ export default function ProductsManager() {
 
   return (
     <div>
-      <div className="flex items-center justify-between mb-8">
-        <p className="technical text-[10px] text-foreground/40">
-          {loading ? "ŁADUJĘ..." : `${products.length} PRODUKTÓW · ${counts.sprzedaz || 0} W SPRZEDAŻY`}
-        </p>
-        <div className="flex items-center gap-3">
-          <button
-            onClick={() => setReviews(true)}
-            className={`technical text-[9px] px-4 py-3 border transition-colors inline-flex items-center gap-2 ${
-              pending ? "border-[#C9A24A] gold-text bg-[#C9A24A]/10" : "hairline text-foreground/50 hover:text-foreground"
-            }`}
-            title="Opinie kupujących: moderacja i odpowiedzi"
-          >
-            <Star className="h-4 w-4" /> OPINIE{pending ? ` (${pending})` : ""}
+      <div className="mb-8">
+        <ModuleBar summary={loading ? "ŁADUJĘ…" : `${products.length} PRODUKTÓW · ${counts.sprzedaz || 0} W SPRZEDAŻY`}>
+          <button onClick={() => setReviews(true)} className={`btn-ghost !px-4 !py-3 ${pending ? "!border-[#C9A24A] gold-text" : ""}`} title="Opinie kupujących: moderacja i odpowiedzi">
+            <Star className="h-4 w-4" /> Opinie{pending ? ` (${pending})` : ""}
           </button>
-          <button onClick={() => setEditing("new-pakiet")} className="technical text-[9px] px-4 py-3 border border-[#C9A24A]/50 gold-text hover:bg-[#C9A24A]/10 transition-colors inline-flex items-center gap-2" title="Kilka produktów cyfrowych w korzystniejszej cenie">
-            <Package className="h-4 w-4" /> NOWY PAKIET
+          <button onClick={() => setEditing("new-pakiet")} className="btn-ghost !px-4 !py-3" title="Kilka produktów cyfrowych w korzystniejszej cenie">
+            <Package className="h-4 w-4" /> Nowy pakiet
           </button>
           <button onClick={() => setEditing("new")} className="btn-relic !px-5 !py-3">
             <Plus className="h-4 w-4" /> Nowy produkt
           </button>
-        </div>
+        </ModuleBar>
       </div>
-      {notice && (
-        <p className="text-xs gold-text border border-[#C9A24A]/40 bg-[#C9A24A]/10 px-4 py-3 mb-6">
-          {notice}
-        </p>
-      )}
+      {notice && <div className="mb-6"><Notice>{notice}</Notice></div>}
       {loading ? (
-        <div className="space-y-3">
-          {[...Array(4)].map((_, i) => (
-            <div key={i} className="h-20 border hairline animate-pulse bg-[#0F0F10]" />
-          ))}
-        </div>
+        <SkeletonList h="h-20" />
       ) : products.length === 0 ? (
-        <p className="text-foreground/50 border hairline p-10 text-center">
-          Brak produktów. Dodaj pierwszy.
-        </p>
+        <EmptyState action={<button onClick={() => setEditing("new")} className="btn-relic !px-5 !py-3"><Plus className="h-4 w-4" /> Nowy produkt</button>}>
+          Nie ma jeszcze produktów. Dodaj pierwszy.
+        </EmptyState>
       ) : (
         <>
           <div className="flex flex-col gap-4 mb-6 lg:flex-row lg:items-center lg:justify-between">
-            <div role="tablist" aria-label="Widok produktów" className="flex flex-wrap gap-2">
-              {TABS.map(([k, label]) => (
-                <button key={k} role="tab" aria-selected={tab === k} onClick={() => setTab(k)}
-                  className={`technical text-[10px] px-4 py-2.5 border transition-colors ${tab === k ? "border-[#C9A24A] bg-[#C9A24A] text-[#0A0A0B]" : "hairline text-foreground/60 hover:text-foreground"}`}>
-                  {label.toUpperCase()} <span className={tab === k ? "opacity-70" : "opacity-50"}>{counts[k] || 0}</span>
-                </button>
-              ))}
-            </div>
-            <label className="relative block lg:w-72">
-              <span className="sr-only">Szukaj produktu</span>
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-foreground/40" aria-hidden="true" />
-              <input value={q} onChange={(e) => setQ(e.target.value)} placeholder="Szukaj po nazwie"
-                className="w-full bg-[#0F0F10] border hairline pl-9 pr-3 py-2.5 text-sm focus:outline-none focus:border-[#C9A24A]/60" />
-            </label>
+            <FilterChips items={TABS.map(([k, label]) => [k, label, counts[k] || 0])} value={tab} onChange={setTab} label="Widok produktów" />
+            <SearchField value={q} onChange={setQ} placeholder="Szukaj po nazwie" label="Szukaj produktu" className="lg:w-72" />
           </div>
           {visible.length === 0 ? (
-            <p className="text-foreground/50 border hairline p-8 text-center text-sm">
+            <EmptyState>
               {q ? "Nic nie pasuje do wyszukiwania." : tab === "pakiety" ? "Nie ma jeszcze pakietów. Kliknij „Nowy pakiet”, żeby połączyć kilka produktów w korzystniejszej cenie." : tab === "zapowiedzi" ? "Brak zapowiedzi." : tab === "ukryte" ? "Nic nie jest ukryte." : "Brak produktów w tej zakładce."}
-            </p>
+            </EmptyState>
           ) : (
             <div className="space-y-8">
               {sections.map(([k, label, list]) => (

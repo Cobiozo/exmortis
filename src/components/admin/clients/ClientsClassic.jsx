@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { logAccess } from "@/lib/auditLog";
-import { Loader2, Download } from "lucide-react";
+import { Download } from "lucide-react";
+import { SkeletonList, EmptyState } from "@/components/admin/ui/kit";
 import { base44 } from "@/api/base44Client";
 import ClientDetail from "./ClientDetail";
 import GrantForm from "./GrantForm";
@@ -37,8 +38,8 @@ export default function ClientsClassic() {
           <input value={q} onChange={(e) => setQ(e.target.value)} placeholder="Szukaj e-maila" className="flex-1 bg-[#0A0A0B] border hairline px-3 py-2 text-sm focus:border-[#C9A24A] focus:outline-none" />
           <button onClick={exportCsv} disabled={!clients} className="btn-ghost !px-3 !py-2" title="Eksport CSV"><Download className="h-4 w-4" /></button>
         </div>
-        {!clients ? <Loader2 className="h-5 w-5 animate-spin gold-text" /> : shown.length === 0 ? (
-          <p className="text-sm text-foreground/50">Brak klientów z dostępami.</p>
+        {!clients ? <SkeletonList rows={5} h="h-12" /> : shown.length === 0 ? (
+          <EmptyState>Brak klientów z dostępami.</EmptyState>
         ) : (
           <div className="border hairline divide-y divide-[#3D3D3F]/60">
             {shown.map((c) => (

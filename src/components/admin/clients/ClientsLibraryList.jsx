@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from "react";
-import { Loader2, Search } from "lucide-react";
+import { Loader2} from "lucide-react";
+import { SearchField, SkeletonList, EmptyState } from "@/components/admin/ui/kit";
 import { lib, inputCls } from "@/components/admin/library/libApi";
 import LibModal from "@/components/admin/library/LibModal";
 import AssignDialog from "@/components/admin/library/AssignDialog";
@@ -61,10 +62,7 @@ export default function ClientsLibraryList() {
   return (
     <div className="grid lg:grid-cols-2 gap-10">
       <div className="space-y-4">
-        <div className="relative">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-foreground/35" />
-          <input value={q} onChange={(e) => setQ(e.target.value)} placeholder="Szukaj osoby lub e-maila" className={`${inputCls} pl-9`} />
-        </div>
+        <SearchField value={q} onChange={setQ} placeholder="Szukaj osoby lub e-maila" />
 
         <div className="flex flex-wrap gap-3">
           <select value={groupId} onChange={(e) => setGroupId(e.target.value)} className={`${inputCls} flex-1 min-w-[160px]`}>
@@ -99,8 +97,8 @@ export default function ClientsLibraryList() {
 
         {err && <p className="text-sm blood-text">{err}</p>}
 
-        {!items ? <Loader2 className="h-5 w-5 animate-spin gold-text" /> : items.length === 0 ? (
-          <p className="text-sm text-foreground/50">Brak osób dla tych filtrów.</p>
+        {!items ? <SkeletonList rows={5} h="h-12" /> : items.length === 0 ? (
+          <EmptyState>Brak osób dla tych filtrów.</EmptyState>
         ) : (
           <div className="border hairline divide-y divide-[#3D3D3F]/60">
             <div className="flex items-center gap-3 px-3 py-2">

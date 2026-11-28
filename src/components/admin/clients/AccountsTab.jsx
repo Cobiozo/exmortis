@@ -1,5 +1,6 @@
 import React, { useEffect, useMemo, useState } from "react";
-import { ArrowLeft, Loader2 } from "lucide-react";
+import { ArrowLeft } from "lucide-react";
+import { SkeletonList, EmptyState } from "@/components/admin/ui/kit";
 import { base44 } from "@/api/base44Client";
 import { logAccess } from "@/lib/auditLog";
 import ClientDetail from "./ClientDetail";
@@ -55,7 +56,7 @@ export default function AccountsTab() {
     );
   }
 
-  if (!data) return <Loader2 className="h-5 w-5 animate-spin gold-text" />;
+  if (!data) return <SkeletonList rows={6} h="h-12" />;
 
   return (
     <div className="space-y-6">
@@ -67,7 +68,7 @@ export default function AccountsTab() {
         </label>
       )}
       {err ? <p className="text-sm blood-text">{err}</p> : rows.length === 0 ? (
-        <p className="text-sm text-foreground/50">Brak kont spełniających te warunki.</p>
+        <EmptyState>Brak kont spełniających te warunki.</EmptyState>
       ) : (
         <>
           <div className="hidden md:block"><AccountsTable rows={rows} sort={sort} onSort={onSort} onPick={setPicked} /></div>

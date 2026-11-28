@@ -1,5 +1,5 @@
 import React, { useEffect, useRef, useState } from "react";
-import { Loader2, Download, Search, ChevronDown, FileText, Check } from "lucide-react";
+import { Loader2, Download, ChevronDown, FileText, Check } from "lucide-react";
 import { base44 } from "@/api/base44Client";
 import { STATUS_LABEL } from "@/components/account/accountUtils";
 import SalesStats from "./SalesStats";
@@ -9,6 +9,7 @@ import RefundDialog from "./RefundDialog";
 import FreeDownloadsPanel from "./FreeDownloadsPanel";
 import FixEmailBox from "./FixEmailBox";
 import BouncesBox from "./BouncesBox";
+import { ViewTabs, FilterChips, SearchField, Toolbar, Toggle, EmptyState, SkeletonList, Notice } from "@/components/admin/ui/kit";
 
 const zl = (n) => `${Number(n || 0).toFixed(2).replace(".", ",")} zł`;
 const when = (iso) => (iso ? new Date(iso).toLocaleString("pl-PL", { timeZone: "Europe/Warsaw", day: "numeric", month: "short", year: "numeric", hour: "2-digit", minute: "2-digit" }) : "");
@@ -156,31 +157,20 @@ function SalesPanel() {
 
       <BouncesBox onPick={(email) => { setStatus(""); setTodo(false); setQ(email); }} />
 
-      <div className="flex flex-wrap items-center gap-3">
-        <div className="grid grid-cols-2 sm:flex border hairline w-full sm:w-auto" role="tablist" aria-label="Status">
-          {FILTERS.map(([k, l]) => (
-            <button key={k} role="tab" aria-selected={status === k} onClick={() => setStatus(k)}
-              className={`px-4 py-2.5 technical text-[10px] ${status === k ? "bg-[#C9A24A] text-[#0A0A0B]" : "text-foreground/60 hover:text-foreground"}`}>{l.toUpperCase()}</button>
-          ))}
-        </div>
-        <label className="flex items-center gap-2 text-sm text-foreground/70 cursor-pointer min-h-[40px]">
-          <input type="checkbox" checked={todo} onChange={(e) => setTodo(e.target.checked)} className="h-5 w-5 accent-[#C9A24A]" /> Tylko faktury do wystawienia
-        </label>
-        <div className="relative flex-1 min-w-[220px]">
-          <Search className="h-4 w-4 absolute left-3 top-1/2 -translate-y-1/2 text-foreground/40" aria-hidden="true" />
-          <input value={q} onChange={(e) => setQ(e.target.value)} placeholder="Szukaj: e-mail, imię, numer, produkt" aria-label="Szukaj zamówień"
-            className="w-full bg-transparent border hairline pl-9 pr-3 py-2.5 text-sm focus:border-[#C9A24A] focus:outline-none" />
-        </div>
-        <label className="flex items-center gap-2 text-sm text-foreground/70 cursor-pointer min-h-[40px]" title="Twoje adresy z „+…”, kody z TEST w nazwie, produkty „test…”">
-          <input type="checkbox" checked={withTest} onChange={(e) => setWithTest(e.target.checked)} className="h-5 w-5 accent-[#C9A24A]" /> Pokaż testowe
-        </label>
-        <button onClick={exportAll} className="btn-ghost !px-4 !py-2.5 text-[10px]" title="Plik zawiera wszystkie zamówienia z filtra, także testowe">
-          <Download className="h-4 w-4" /> CSV DLA KSIĘGOWOŚCI
-        </button>
+      <div className="space-y-3">
+        <FilterChips items={FILTERS} value={status} onChange={setStatus} label="Status" />
+        <Toolbar>
+          <SearchField value={q} onChange={setQ} placeholder="Szukaj: e-mail, imię, numer, produkt" label="Szukaj zamówień" className="flex-1" />
+          <Toggle checked={todo} onChange={setTodo}>Tylko faktury do wystawienia</Toggle>
+          <Toggle checked={withTest} onChange={setWithTest} title="Twoje adresy z „+…”, kody z TEST w nazwie, produkty „test…”">Pokaż testowe</Toggle>
+          <button onClick={exportAll} className="btn-ghost !px-4 !py-2.5 text-[10px]" title="Plik zawiera wszystkie zamówienia z filtra, także testowe">
+            <Download className="h-4 w-4" /> CSV DLA KSIĘGOWOŚCI
+          </button>
+        </Toolbar>
       </div>
 
-      {err ? <p className="text-sm text-[#E8C547]">{err}</p> : !data ? <Loader2 className="h-5 w-5 animate-spin gold-text" /> : orders.length === 0 ? (
-        <p className="text-sm text-foreground/50 py-10">Brak zamówień{status || todo || q ? " dla tego filtra" : ""}. Płatne zamówienia pojawią się tu po rozpoczęciu płatności w kasie.</p>
+      {err ? <Notice tone="error">{err}</Notice> : !data ? <SkeletonList rows={5} /> : orders.length === 0 ? (
+        <EmptyState>Brak zamówień{status || todo || q ? " dla tego filtra" : ""}. Płatne zamówienia pojawią się tu po rozpoczęciu płatności w kasie.</EmptyState>
       ) : (
         <div className="border hairline divide-y divide-[#3D3D3F]/60">
           {orders.map((o) => {
@@ -236,12 +226,7 @@ export default function OrdersPanel() {
   const [view, setView] = useState("sales");
   return (
     <div className="space-y-8">
-      <div className="flex border hairline w-full sm:w-auto sm:inline-flex" role="tablist" aria-label="Rodzaj">
-        {[["sales", "Sprzedaż"], ["free", "Darmowe pobrania"]].map(([k, l]) => (
-          <button key={k} role="tab" aria-selected={view === k} onClick={() => setView(k)}
-            className={`flex-1 sm:flex-none px-5 py-2.5 technical text-[10px] ${view === k ? "bg-[#C9A24A] text-[#0A0A0B]" : "text-foreground/60 hover:text-foreground"}`}>{l.toUpperCase()}</button>
-        ))}
-      </div>
+      <ViewTabs tabs={[["sales", "Sprzedaż"], ["free", "Darmowe pobrania"]]} value={view} onChange={setView} label="Rodzaj" />
       {view === "sales" ? <SalesPanel /> : <FreeDownloadsPanel />}
     </div>
   );
